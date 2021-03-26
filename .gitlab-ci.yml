@@ -1,0 +1,199 @@
+stages:
+  #- test
+  - build
+  - deploy
+
+variables:
+  # Required for docker-in-docker on GitLab shared runners:
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
+  # See https://github.com/docker-library/docker/pull/166
+  DOCKER_TLS_CERTDIR: ""
+
+################################################################
+# Backend
+################################################################
+
+.backend_only:
+  only:
+    refs:
+      - merge_requests
+      - main
+    changes:
+      - backend/**/*
+      - .gitlab-ci.yml
+
+build backend docker image:
+  stage: build
+  image: docker:20.10.2-dind
+  services:
+    # How to get docker-in-docker builds working: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4566#note_199261985
+    - name: docker:20.10.2-dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  script:
+    - ./backend/gitlab-build-backend-image.sh
+  artifacts:
+    reports:
+      # dotenv file will export the BACKEND_IMAGE_TAG variable to future pipeline stages
+      dotenv: variables.env
+  extends: .backend_only
+
+
+deploy backend to proto:
+  stage: deploy
+  environment:
+    name: proto
+    url: https://proto.technotes.org
+  extends: .backend_only
+  needs: ["build backend docker image"]
+  when: manual
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]  # https://gitlab.com/gitlab-org/gitlab-foss/-/issues/65110#note_198073241 - fixes 'unknown command "sh" for "kubectl"' error
+  script:
+    - echo "Deploying backend image '${BACKEND_IMAGE_TAG}' to ${CI_ENVIRONMENT_NAME}"
+    - |
+      kubectl apply -f - <<EOF
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: technotes-backend
+          namespace: tn-${CI_ENVIRONMENT_NAME}
+          annotations:
+            "app.gitlab.com/app": "$CI_PROJECT_PATH_SLUG"
+            "app.gitlab.com/env": "$CI_ENVIRONMENT_SLUG"
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: technotes-backend
+          template:
+            metadata:
+              labels:
+                app: technotes-backend
+            spec:
+              containers:
+              - name: technotes-backend
+                image: $CI_REGISTRY/technotes.org/technotes-app/backend:$BACKEND_IMAGE_TAG
+                imagePullPolicy: Always
+                envFrom:
+                - configMapRef:
+                    name: technotes-backend-config
+                - secretRef:
+                    name: technotes-backend-config
+                ports:
+                - containerPort: 5554
+              imagePullSecrets:
+              - name: gitlab-container-registry
+      EOF
+    # Note: the "gitlab-container-registry" secret here is managed by Terraform, as are all the config maps and secrets needed for the app
+    # Terraform (in technotes-infra / app) also deploys the "Service" and "IngressRoute" required to route traffic from
+    # the Traefik load balancer pod to this deployment's port 5554.
+    - kubectl rollout restart deployment/technotes-backend --namespace tn-${CI_ENVIRONMENT_NAME}
+
+################################################################
+# Frontend
+################################################################
+
+.frontend:
+  variables:
+    # Public URL of the TechNotes API server (backend)
+    NEXT_PUBLIC_API_SERVER_URL: https://api.${CI_ENVIRONMENT_NAME}.technotes.org
+    # Public URL of the TechNotes API server (backend), as seen from the frontend container
+    NEXT_PUBLIC_API_SERVER_INTERNAL_URL: http://technotes-backend.tn-${CI_ENVIRONMENT_NAME}
+    # Public URL of the authentication server
+    NEXT_PUBLIC_AUTHN_URL: http://authn.${CI_ENVIRONMENT_NAME}.technotes.org
+
+.frontend_only:
+  only:
+    refs:
+      - merge_requests
+      - main
+    changes:
+      - frontend/**/*
+      - .gitlab-ci.yml
+  extends: .frontend
+
+build frontend docker image:
+  stage: build
+  image: docker:20.10.2-dind
+  services:
+    # How to get docker-in-docker builds working: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4566#note_199261985
+    - name: docker:20.10.2-dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  script:
+    - ./frontend/gitlab-build-frontend-image.sh
+  artifacts:
+    reports:
+      # dotenv file will export the FRONTEND_IMAGE_TAG variable to future pipeline stages
+      dotenv: variables.env
+  extends: .frontend_only
+
+
+deploy frontend to proto:
+  stage: deploy
+  environment:
+    name: proto
+    url: https://proto.technotes.org
+  extends: .frontend_only
+  needs: ["build frontend docker image"]
+  when: manual
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]  # https://gitlab.com/gitlab-org/gitlab-foss/-/issues/65110#note_198073241 - fixes 'unknown command "sh" for "kubectl"' error
+  script:
+    - echo "Deploying frontend image '${FRONTEND_IMAGE_TAG}' to ${CI_ENVIRONMENT_NAME}"
+    - |
+      kubectl apply -f - <<EOF
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: technotes-frontend
+          namespace: tn-${CI_ENVIRONMENT_NAME}
+          annotations:
+            "app.gitlab.com/app": "$CI_PROJECT_PATH_SLUG"
+            "app.gitlab.com/env": "$CI_ENVIRONMENT_SLUG"
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: technotes-frontend
+          template:
+            metadata:
+              labels:
+                app: technotes-frontend
+            spec:
+              containers:
+              - name: technotes-frontend
+                image: $CI_REGISTRY/technotes.org/technotes-app/frontend:$FRONTEND_IMAGE_TAG
+                imagePullPolicy: Always
+                env:
+                - name: NEXT_PUBLIC_API_SERVER_URL
+                  value: ${NEXT_PUBLIC_API_SERVER_URL}
+                - name: NEXT_PUBLIC_API_SERVER_INTERNAL_URL
+                  value: ${NEXT_PUBLIC_API_SERVER_INTERNAL_URL}
+                - name: NEXT_PUBLIC_AUTHN_URL
+                  value: ${NEXT_PUBLIC_AUTHN_URL}
+                ports:
+                - containerPort: 5555
+                livenessProbe:
+                  httpGet:
+                    path: /
+                    port: 5555
+                  failureThreshold: 1
+                  periodSeconds: 20
+                startupProbe:
+                  httpGet:
+                    path: /
+                    port: 5555
+                  failureThreshold: 30
+                  periodSeconds: 10
+              imagePullSecrets:
+              - name: gitlab-container-registry
+      EOF
+    # Note: the "gitlab-container-registry" secret here is managed by Terraform.
+    # Terraform (in technotes-infra / app) also deploys the "Service" and "IngressRoute" required to route traffic from
+    # the Traefik load balancer pod to this deployment's port 5555.
+    - kubectl rollout restart deployment/technotes-frontend --namespace tn-${CI_ENVIRONMENT_NAME}

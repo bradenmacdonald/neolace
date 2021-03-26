@@ -1,0 +1,92 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run neolace (Development)",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["up"],
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}",
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: Open shell",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["exec", "backend", "/bin/bash"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: lint",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["exec", "backend", "npm", "run", "lint"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: test",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["exec", "backend", "npm", "test"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: Reset DB with Dev Data",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["exec", "backend", "npm", "run", "dev-data"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: Fully Reset/Wipe Neo4j Database",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["rm", "--stop", "--force", "-v", "neo4j"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: Apply migrations",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["exec", "backend", "npm", "run", "migrate"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Backend: restart dev server",
+            // Note that you can also restart the backend (in dev mode) by touching 'tsconfig.json' or any source file
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["restart", "backend"],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "focus": false,
+                "panel": "new",
+            }
+        },
+        {
+            "label": "Frontend: Open shell",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["exec", "frontend", "/bin/bash"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Frontend: restart dev server",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["restart", "frontend"],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "focus": false,
+                "panel": "new",
+            }
+        },
+    ]
+}

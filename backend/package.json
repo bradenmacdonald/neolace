@@ -1,0 +1,39 @@
+{
+  "name": "neolace-backend",
+  "version": "0.0.1",
+  "description": "neolace backend",
+  "main": "server.ts",
+  "scripts": {
+    "test": "NODE_ENV=test intern",
+    "start": "ts-node-dev --respawn --transpile-only --inspect=0.0.0.0:5553 -- neolace/server.ts",
+    "lint": "eslint . --ext .js,.ts",
+    "dev-data": "ts-node --script-mode --transpile-only neolace/core/scripts/dev-data.ts",
+    "entrypoint-dev": "rm -rf node_modules/vertex-framework && rm -rf node_modules/technotes-mdt && npm install && rm -rf node_modules/vertex-framework && rm -rf node_modules/technotes-mdt && ln -sf ../../dependencies/vertex-framework node_modules/ && ln -sf ../../dependencies/technotes-mdt node_modules/ && npm start",
+    "entrypoint-test": "npm install && /bin/bash",
+    "migrate": "ts-node --script-mode --transpile-only neolace/core/scripts/migrate.ts",
+    "transpile": "tsc --skipLibCheck"
+  },
+  "author": "neolace",
+  "license": "",
+  "dependencies": {
+    "@hapi/hapi": "19.2.0",
+    "authn-node": "git+https://github.com/bradenmacdonald/authn-node.git#master",
+    "minio": "7.0.18",
+    "vertex-framework": "git+https://tn-app-dep:1qRXwvg7jb_fA73JsSv6@gitlab.com/technotes.org/vertex-framework.git#dist",
+    "technotes-mdt": "git+https://gitlab.com/technotes.org/technotes-mdt.git#main"
+  },
+  "devDependencies": {
+    "@types/hapi__hapi": "19.0.4",
+    "@types/hapi__inert": "5.2.2",
+    "@types/hapi__joi": "17.1.6",
+    "@types/hapi__vision": "5.5.2",
+    "@types/minio": "7.0.7",
+    "@types/node": "14.14.34",
+    "@typescript-eslint/eslint-plugin": "4.17.0",
+    "@typescript-eslint/parser": "4.17.0",
+    "eslint": "7.22.0",
+    "intern": "4.9.0",
+    "ts-node-dev": "1.1.6",
+    "typescript": "4.2.3"
+  }
+}

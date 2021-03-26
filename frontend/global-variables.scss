@@ -1,0 +1,16 @@
+// TechNotes Theme
+$theme-colors: (
+    "primary": #5ecbf5,
+);
+// Fonts
+$font-family-sans-serif: "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+$h1-font-size: 64px;
+$headings-font-weight: bold;
+
+// Links
+$link-color: black;
+$link-decoration: underline;
+
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/mixins";

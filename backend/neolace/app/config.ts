@@ -1,0 +1,90 @@
+/**
+ * Configuration of the TechNotes backend application
+ */
+
+// What type of environment this is: development, production, or testing
+export const environment = (process.env.NODE_ENV as "production"|"development"|"test") || "development";
+if (!["production", "development", "test"].includes(environment)) {
+    throw new Error(`Invalid NODE_ENV: ${environment}`);
+}
+
+function defaultTo<T>(value: T, {production, test}: {production?: T, test?: T}): T {
+    if (environment === "production") {
+        return production ?? value;
+    } else if (environment === "test") {
+        return test ?? value;
+    }
+    return value;
+}
+
+export const config = (() => {
+    // Default configuration:
+    const config = {
+        // Backend App URL (URL at which the REST API is available)
+        apiUrl: defaultTo("http://localhost:5554", {test: "http://backend:4444"}),
+        // Domain of the TechNotes frontend without protocol, used by AuthN
+        frontendDomain: "localhost:5555",
+        // Is the frontend using insecure HTTP?
+        frontendInsecureHttp: defaultTo(true, {production: false}),
+        // URL of the frontend, no trailing slash (e.g. "https://technotes.org"). This cannot be set directly.
+        frontendUrl: "--- set automatically to htttp(s)://{frontendDomain} --",
+        // URL of the Neo4j server
+        neo4jUrl: defaultTo("bolt://neo4j", {test: "bolt://neo4j-test"}),
+        neo4jUser: "neo4j",
+        neo4jPassword: defaultTo("neolace", {production: "\u0000 setme!!"}),
+        // Should debug logs be printed to stdout?
+        debugLogging: defaultTo(true, {production: false}),
+        // Public URL of the authentication microservice (Keratin AuthN)
+        authnUrl: defaultTo("http://localhost:5552", {test: "http://authn-test:5552"}),
+        // Private URL of the authentication microservice (Keratin AuthN)
+        authnPrivateUrl: defaultTo("http://authn:5559", {test: "http://authn-test:5559"}),
+        // Username for making private API requests to the authentication microservice (Keratin AuthN)
+        authnApiUsername: "authn",
+        // Password for making private API requests to the authentication microservice (Keratin AuthN)
+        authnApiPassword: "neolace",
+        // S3-compatible object store used for assets like images, PDFs, etc.
+        objStoreEndpoint: "objstore",
+        objStorePort: 9000,
+        objStoreUseSSL: false,
+        objStoreAccessKey: "AKIA_NEOLACE_DEV",
+        objStoreSecretKey: "neolace123",
+        objStoreBucketName: "neolace-asset-lib-data",
+        objStorePublicUrlPrefix: "http://localhost:9000/neolace-asset-lib-data",
+    };
+    // Allow defaults to be overriden by environment variables:
+    for (const key in config) {
+        const value = process.env[key];
+        if (value !== undefined) {
+            try {
+                // Use JSON parsing to get nicely typed values from env vars:
+                (config as any)[key] = JSON.parse(value)
+            } catch (err) {
+                // Though JSON parsing will fail if it's just a regular unquoted string:
+                if (err instanceof SyntaxError) {
+                    (config as any)[key] = value; // It's a string value
+                } else {
+                    throw err;
+                }
+            }
+        }
+    }
+    // Derived values:
+    config.frontendUrl = `${config.frontendInsecureHttp ? "http" : "https"}://${config.frontendDomain}`;
+    // Sanity checks
+    const rootUrls = ["frontendUrl", "apiUrl", "authnUrl", "authnPrivateUrl"] as const;
+    for (const url of rootUrls) {
+        if (config[url].endsWith("/")) {
+            throw new Error(`${url} must not end with a /`);
+        }
+    }
+    if (environment === "production") {
+        // Enforce HTTPS
+        if (!config.apiUrl.startsWith("https://")) {
+            throw new Error("In production, apiUrl must be https://");
+        }
+        if (!config.frontendUrl.startsWith("https://")) {
+            throw new Error("In production, frontendUrl must be https://");
+        }
+    }
+    return Object.freeze(config);
+})();

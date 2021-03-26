@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "allowJs": false,
+        "checkJs": false,
+        "esModuleInterop": true,
+        "outDir": "./dist/",
+        "sourceMap": false,
+        "forceConsistentCasingInFileNames": true,
+        "module": "CommonJS",
+        "lib": ["DOM","DOM.Iterable","ES2019"],
+        "moduleResolution": "Node",
+        "strict": true,
+        "target": "ES2019",
+        "typeRoots" : ["./node_modules/@types"],
+        "declaration": true,
+    },
+    "include": ["src/**/*.ts"],
+}

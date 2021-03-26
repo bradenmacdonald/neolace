@@ -1,0 +1,12 @@
+{
+    "editor.rulers": [
+        120,
+    ],
+    "eslint.workingDirectories": [
+        "backend",
+        "technotes-api"
+    ],
+    "deno.enable": false,
+    "debug.javascript.usePreview": true,
+    "typescript.tsdk": "backend/node_modules/typescript/lib",
+}

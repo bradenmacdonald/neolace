@@ -1,0 +1,146 @@
+# Configuration for our development and test environments
+version: '3'
+x-service-templates:
+  neo4j:
+    &neo4j-defaults
+    image: neo4j:4.2
+    environment:
+      # Set default password to "neolace"
+      NEO4J_AUTH: neo4j/neolace
+      # Enable automatic UUID creation on nodes
+      NEO4JLABS_PLUGINS: '["apoc"]'
+      apoc.uuid.enabled: "true"
+      apoc.trigger.enabled: "true"
+  authn:
+    &authn-defaults
+    image: keratin/authn-server:1.10.2
+    depends_on:
+      - redis
+    environment:
+      &authn-environment-defaults
+      PORT: 5559
+      PUBLIC_PORT: 5552
+      APP_PASSWORDLESS_TOKEN_URL: http://backend:5554/auth-hooks/passwordless-login
+      APP_PASSWORD_RESET_URL: http://backend:5554/auth-hooks/password-reset
+      DATABASE_URL: sqlite3://localcontainer/data/authn.sqlite3?cache=shared
+      SECRET_KEY_BASE: neolace-dev
+      HTTP_AUTH_USERNAME: authn
+      HTTP_AUTH_PASSWORD: neolace
+      REDIS_URL: redis://:devpassword@redis:6379/8
+      USERNAME_IS_EMAIL: "true"
+      PASSWORD_CHANGE_LOGOUT: "true"  # user password changes will expire all other sessions
+      AUTHN_URL: http://localhost:5552  # Public URL as reachable by end users
+      APP_DOMAINS: localhost:5555
+    entrypoint: ["/bin/sh", "-c", "./authn migrate && ./authn server"]  # Override to ensure migrations get run
+
+
+services:
+  ################################################################
+  # Redis cache / message queue
+  ################################################################
+  redis:
+    image: redis:6.0-alpine
+    command: >
+     --requirepass devpassword 
+    # Redis DB 0 is used by the neolace backend.
+    # Redis DB 1 is used by the neolace backend (tests).
+    # Redis DB 8 is used by AuthN microservice.
+
+  ################################################################
+  # Neo4j graph database
+  ################################################################
+  neo4j:
+    << : *neo4j-defaults
+    ports:
+      - 7474:7474  # Browse on your host at http://localhost:7474/browser/?connectURL=neo4j://localhost:7687
+      - 7687:7687  # Bolt
+    volumes:
+      - neo4j-data:/data
+  # A separate copy of Neo4j just for the test suite; this one has ephemeral data.
+  # This is necessary because Neo4j community doesn't support multiple databases
+  neo4j-test:
+    << : *neo4j-defaults
+    ports:
+      - 4474:7474  # Browse on your host at http://localhost:4474/browser/?connectURL=neo4j://localhost:4687
+      - 4687:7687  # Bolt
+
+  ################################################################
+  # Authentication Server
+  ################################################################
+  authn:
+    << : *authn-defaults
+    ports:
+      - 5552:5552  # Expose public port to the host computer so users can log in
+    volumes:
+      - authn-data:/data
+  authn-test:
+    << : *authn-defaults
+    environment:
+      << : *authn-environment-defaults
+      AUTHN_URL: http://authn-test:4442  # Public URL as reachable by end users
+      APP_DOMAINS: backend:4445
+    ports:
+      - 4442:5552  # Expose public port to the host computer so users can log in
+    volumes:
+      - authn-data:/data
+
+  ################################################################
+  # S3-compatible object storage (used only for development)
+  ################################################################
+  objstore:
+    image: minio/minio:RELEASE.2020-05-08T02-40-49Z
+    command: ["server", "/data"]
+    environment:
+      MINIO_ACCESS_KEY: AKIA_NEOLACE_DEV
+      MINIO_SECRET_KEY: neolace123
+    ports:
+      - 9000:9000
+      - 5555:5555  # For the frontend, see note in "frontend" service definition
+    volumes:
+      - objstore-data:/data
+
+  ################################################################
+  # NodeJS container for the backend (dev mode)
+  ################################################################
+  backend:
+    build:
+      context: backend/
+      dockerfile: dev.Dockerfile
+    depends_on:
+      - neo4j
+      - redis
+      - authn
+      - objstore
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./backend/:/app/
+      # External repos that must be cloned to the parent directory:
+      - ../vertex-framework/:/dependencies/vertex-framework/:ro
+      - ../technotes-mdt/:/dependencies/technotes-mdt/:ro
+    ports:
+      - 5553:5553  # NodeJS debugger
+      - 5554:5554  # The Backend server (HTTP)
+
+  ################################################################
+  # NodeJS container for the frontend (dev mode)
+  ################################################################
+  # frontend:
+  #   build:
+  #     context: frontend/
+  #     dockerfile: dev.Dockerfile
+  #   stdin_open: true
+  #   tty: true
+  #   volumes:
+  #     - ./frontend/:/app/
+  #     # External repos that must be cloned to the parent directory:
+  #     - ../technotes-mdt/:/local-dependencies/technotes-mdt/
+  #   # Run the frontend on the same network as objstore, so that frontend can resolve "localhost:9000" URLs without us
+  #   # having to sometimes use "objstore:9000" and other times use "localhost:9000" depending on whether the end user's
+  #   # browser or the Node.js server is handling the request.
+  #   network_mode: "service:objstore"
+    
+volumes:
+  neo4j-data:
+  authn-data:
+  objstore-data:
