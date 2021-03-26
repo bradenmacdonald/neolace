@@ -20,7 +20,8 @@
     "authn-node": "git+https://github.com/bradenmacdonald/authn-node.git#master",
     "minio": "7.0.18",
     "vertex-framework": "git+https://tn-app-dep:1qRXwvg7jb_fA73JsSv6@gitlab.com/technotes.org/vertex-framework.git#dist",
-    "technotes-mdt": "git+https://gitlab.com/technotes.org/technotes-mdt.git#main"
+    "technotes-mdt": "git+https://gitlab.com/technotes.org/technotes-mdt.git#main",
+    "neolace-api": "file:../neolace-api/"
   },
   "devDependencies": {
     "@types/hapi__hapi": "19.0.4",

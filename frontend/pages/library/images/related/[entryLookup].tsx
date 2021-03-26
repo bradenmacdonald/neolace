@@ -8,7 +8,7 @@ import { ParsedUrlQuery } from 'querystring';
 import { Page } from 'components/Page';
 import { client } from 'lib/api-client';
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
-import { TechDbEntryData, TechDbEntryFlags } from 'technotes-api';
+import { TechDbEntryData, TechDbEntryFlags } from 'neolace-api';
 import { urlForShortId } from 'components/utils/urls';
 
 interface PageProps {

@@ -4,7 +4,7 @@
     ],
     "eslint.workingDirectories": [
         "backend",
-        "technotes-api"
+        "neolace-api"
     ],
     "deno.enable": false,
     "debug.javascript.usePreview": true,

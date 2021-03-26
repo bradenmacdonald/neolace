@@ -8,7 +8,7 @@ import { Page } from 'components/Page';
 import { MetadataTable, MetadataEntry } from 'components/techdb/MetadataTable';
 import { client } from 'lib/api-client';
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
-import { DesignData, TechDbEntryFlags } from 'technotes-api';
+import { DesignData, TechDbEntryFlags } from 'neolace-api';
 import { urlForShortId } from 'components/utils/urls';
 
 interface PageProps {

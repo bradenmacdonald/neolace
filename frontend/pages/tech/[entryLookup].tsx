@@ -10,7 +10,7 @@ import { TRLIndicator, TRL } from 'components/techdb/TRLIndicator';
 import { client } from 'lib/api-client';
 import { Redirect } from 'components/utils/Redirect';
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
-import { TechConceptData, TechDbEntryFlags } from 'technotes-api';
+import { TechConceptData, TechDbEntryFlags } from 'neolace-api';
 import { urlForShortId } from 'components/utils/urls';
 
 interface PageProps {

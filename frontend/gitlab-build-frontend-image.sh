@@ -1,8 +1,8 @@
 apk add --no-cache rsync
 cd frontend
 mkdir -p .build-temp
-# Copy the technotes-api folder into the build context:
-rsync -avr --exclude='node_modules' ../technotes-api .build-temp/
+# Copy the neolace-api folder into the build context:
+rsync -avr --exclude='node_modules' ../neolace-api .build-temp/
 
 if [ "$CI_COMMIT_REF_NAME" == "main" ]; then
     # On main, we tag with a release name like "build14-abcd678"
