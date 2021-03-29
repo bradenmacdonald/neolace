@@ -6,7 +6,7 @@ import { C } from "vertex-framework";
 
 import { config } from "../../app/config";
 import { log } from "../../app/log";
-import { User } from "../User";
+import { BotUser, HumanUser } from "../User";
 import { graph } from "../graph";
 
 export const authClient = new KeratinAuthNClient({
@@ -32,24 +32,46 @@ export const authnScheme: Hapi.ServerAuthScheme = function (server, options) {
             throw Boom.unauthorized("Authorization header is not a bearer token.")
         }
         const authToken = authHeader.substr(7);
-        const authInfo = await authClient.validateSessionToken(authToken);
-        if (authInfo === undefined) {
-            throw Boom.unauthorized("Authorization token is invalid or expired.")
-        }
+        if (authToken.includes(".")) {
+            // This is a JWT, used to authenticate a human user who has logged in with the app / our authn microservice:
+            const authInfo = await authClient.validateSessionToken(authToken);
+            if (authInfo === undefined) {
+                throw Boom.unauthorized("Authorization token is invalid or expired.")
+            }
 
-        const user = await graph.pullOne(User, u => u.allProps, {where: C`@this.authnId = ${authInfo.accountId}`});
+            const user = await graph.pullOne(HumanUser, u => u.allProps.username(), {where: C`@this.authnId = ${authInfo.accountId}`});
 
-        const credentials = {
-            user: {
-                uuid: user.uuid,
-                authnId: authInfo.accountId,
-                username: user.shortId,
-                email: user.email,
-                realname: user.realname,
-                country: user.country,
-            },
+            const credentials = {
+                user: {
+                    isBot: false,
+                    uuid: user.uuid,
+                    authnId: authInfo.accountId,
+                    username: user.username,
+                    email: user.email,
+                    fullName: user.fullName,
+                },
+            }
+            return h.authenticated({ credentials, artifacts: {} });
+        } else {
+            const users = await graph.pull(BotUser, u => u.uuid.fullName.username(), {where: C`@this.authToken = ${authToken}`});
+            if (users.length > 1) {
+                throw Boom.internal("Multiple users matched same auth token!");
+            } else if (users.length === 0) {
+                throw Boom.unauthorized("That bot's API authorization token is invalid or revoked.");
+            }
+            const user = users[0];
+            const credentials = {
+                user: {
+                    isBot: true,
+                    uuid: user.uuid,
+                    authnId: undefined,
+                    username: user.username,
+                    email: "",
+                    fullName: user.fullName,
+                },
+            }
+            return h.authenticated({ credentials, artifacts: {} });
         }
-        return h.authenticated({ credentials, artifacts: {} });
     };
 
     return {

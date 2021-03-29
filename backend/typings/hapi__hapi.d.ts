@@ -4,16 +4,15 @@ import { UUID } from "vertex-framework";
 declare module "@hapi/hapi" {
     // User credentials available on request.auth.credentials.user
     export interface UserCredentials {
-        authnId?: number;
         uuid: UUID;
+        isBot: boolean;
+        authnId?: number;
         // Email address. Empty if this user is a bot.
         email: string;
         // Public username. Unique but can be changed at any time.
         username: string;
         // Optional real name
-        realname: string;
-        // Optional Country code
-        country: string;
+        fullName: string;
     }
 
     // App credentials available on request.auth.credentials.app

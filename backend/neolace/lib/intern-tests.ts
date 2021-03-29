@@ -38,7 +38,7 @@ intern.on("beforeRun", async () => {
         // Take a snapshot, for test isolation
         dataSnapshot = await graph.snapshotDataForTesting();
     } catch (err) {
-        // No point in running the test sutie if beforeRun failed, but we don't have any good way to bail :-/
+        // No point in running the test suite if beforeRun failed, but we don't have any good way to bail :-/
         log.error(`Error during beforeRun: ${err}`);
         void graph.shutdown();
         process.exit(1);

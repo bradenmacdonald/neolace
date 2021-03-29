@@ -115,6 +115,7 @@ services:
     tty: true
     volumes:
       - ./backend/:/app/
+      - ./neolace-api/:/neolace-api/
       # External repos that must be cloned to the parent directory:
       - ../vertex-framework/:/dependencies/vertex-framework/:ro
       - ../technotes-mdt/:/dependencies/technotes-mdt/:ro

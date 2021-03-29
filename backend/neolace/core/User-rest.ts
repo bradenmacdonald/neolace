@@ -1,24 +1,18 @@
 import * as Hapi from "@hapi/hapi";
 import * as Boom from "@hapi/boom";
 import * as Joi from "@hapi/joi";
-import { User } from "./User";
+import { User, HumanUser, BotUser } from "./User";
 import { log } from "../app/log";
 import { authClient } from "./auth/authn";
 import { graph } from "./graph";
+import { UserData } from "neolace-api";
 import { C } from "vertex-framework";
 
 const prefix = `/user`;
 
-const UserType = Joi.object({
-    username: User.properties.shortId,
-    realname: User.properties.realname,
-    // Country code
-    country: User.properties.country,
-}).label("User");
-
 export const userRoutes: Hapi.ServerRoute[] = [
 
-    ///////////////////////////// Request passwordless login
+    ///////////////////////////// Request passwordless login. See also core/auth/authn-hooks.ts
     {
         method: "POST",
         path: `${prefix}/request-login`,
@@ -28,7 +22,7 @@ export const userRoutes: Hapi.ServerRoute[] = [
             tags: ["api"],
             validate: {
                 payload: Joi.object({
-                    email: User.properties.email.required(),
+                    email: HumanUser.properties.email.required(),
                 }).label("PasswordlessLoginRequest"),
             },
             response: { status: {
@@ -53,23 +47,55 @@ export const userRoutes: Hapi.ServerRoute[] = [
         method: "GET",
         path: `${prefix}/me`,
         options: {
-            description: "Get my account information",
+            description: "Get my public profile data",
             notes: "Get information about the logged in user (or bot)",
             auth: "technotes_strategy",
-            tags: ["api"],
             validate: {},
-            response: { status: { 200: UserType } },
         },
         handler: (request, h) => {
             const user = request.auth.credentials.user;
             if (user === undefined) {
                 throw Boom.internal("Auth Expected");
             }
-            return h.response({
-                username: user.username,
-                realname: user.realname,
-                country: user.country,
-            });
+            return h.response(getPublicUserData(user.username));
         },
     },
 ];
+
+
+/**
+ * A helper function to get the profile of a specific user.
+ *
+ * All information returned by this is considered public.
+ */
+async function getPublicUserData(username: string): Promise<UserData> {
+
+    // TODO: Create a Vertex Framework Proxy object that allows loading either a Human or a Bot
+
+    // Until then, try one at a time.
+    const key = User.shortIdPrefix + username;  // The user's shortId
+    const humanResult = await graph.pull(HumanUser, u => u.fullName.username(), {key,});
+    if (humanResult.length === 1) {
+        // This is a human user
+        return {
+            isBot: false,
+            email: "",
+            fullName: humanResult[0].fullName,
+            username: humanResult[0].username,
+        };
+    } else if (humanResult.length > 1) { throw Boom.internal("Inconsistent - Multiple users matched"); }
+
+    const botResult = await graph.pull(BotUser, u => u.fullName.username().ownedBy(h => h.username()), {key, });
+    if (botResult.length === 0) {
+        throw Boom.notFound(`No user found with the username "${username}".`);
+    } else if (botResult.length > 1) { throw Boom.internal("Inconsistent - Multiple users matched"); }
+
+    // This is a bot user:
+    return {
+        isBot: true,
+        email: "",
+        fullName: botResult[0].fullName,
+        username: botResult[0].username,
+        ownedByUsername: botResult[0].ownedBy?.username || "",  // Should never actually be null/""; an owner is required
+    };
+}
