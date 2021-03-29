@@ -1,15 +1,13 @@
 export interface HumanUserData {
-    email: string;  // The username of the user that owns this both
     isBot: false;
 }
 
 export interface BotUserData {
     isBot: true;
-    email: "";
     ownedByUsername: string;  // The username of the user that owns this both
 }
 
-export type UserData = {
+export type PublicUserData = {
     /** The user's username. Works as an ID but can be changed from time to time. A permanent identified is not provided for privacy reasons. */
     username: string;
     /** The user's full name if known. May be an empty string. */

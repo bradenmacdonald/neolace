@@ -1,4 +1,4 @@
-import { PasswordlessLoginResponse, UserData } from "./user";
+import { PasswordlessLoginResponse, PublicUserData } from "./user";
 import { DesignData, ProcessData, TechConceptData, TechDbEntryData, TechDbEntryFlags, XFlag } from "./techdb";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
@@ -64,7 +64,7 @@ export class TechNotesApiClient {
     /**
      * Get information about the currently logged-in user (or bot). Will throw an error if the user is not authenicated.
      */
-    public async whoAmI(): Promise<UserData> {
+    public async whoAmI(): Promise<PublicUserData> {
         return this.call("/user/me");
     }
 

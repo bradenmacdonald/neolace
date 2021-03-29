@@ -5,7 +5,7 @@ import { User, HumanUser, BotUser } from "./User";
 import { log } from "../app/log";
 import { authClient } from "./auth/authn";
 import { graph } from "./graph";
-import { UserData } from "neolace-api";
+import { PublicUserData } from "neolace-api";
 import { C } from "vertex-framework";
 
 const prefix = `/user`;
@@ -68,9 +68,19 @@ export const userRoutes: Hapi.ServerRoute[] = [
  *
  * All information returned by this is considered public.
  */
-async function getPublicUserData(username: string): Promise<UserData> {
+async function getPublicUserData(username: string): Promise<PublicUserData> {
 
     // TODO: Create a Vertex Framework Proxy object that allows loading either a Human or a Bot
+
+    if (username === "system") {
+        // Special case: the "system" user is neither a human nor a bot.
+        return {
+            isBot: false,
+            fullName: "System (Neolace)",
+            username: "system",
+        };
+    }
+
 
     // Until then, try one at a time.
     const key = User.shortIdPrefix + username;  // The user's shortId
@@ -79,7 +89,6 @@ async function getPublicUserData(username: string): Promise<UserData> {
         // This is a human user
         return {
             isBot: false,
-            email: "",
             fullName: humanResult[0].fullName,
             username: humanResult[0].username,
         };
@@ -93,7 +102,6 @@ async function getPublicUserData(username: string): Promise<UserData> {
     // This is a bot user:
     return {
         isBot: true,
-        email: "",
         fullName: botResult[0].fullName,
         username: botResult[0].username,
         ownedByUsername: botResult[0].ownedBy?.username || "",  // Should never actually be null/""; an owner is required
