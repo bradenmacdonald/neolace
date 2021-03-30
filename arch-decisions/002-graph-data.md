@@ -1,27 +1,27 @@
 # Architecture/Decisions: Graph Data
 
-All TechNotes data is stored in the Neo4j graph database.
+All Neolace data is stored in the Neo4j graph database.
 
-* The highly interconnected dataset about technology that TechNotes is designed for is most naturally represented as a graph.
+* The highly interconnected datasets that Neolace is designed for are most naturally represented as a graph.
 * Neo4j is the only production graph database that fully supports Cypher, which is a very nice query language to work with.
-* Neo4j is a mature technology trusted at enterprise scale. (TBD: how well can it handle the eventually huge dataset of TechNotes?)
+* Neo4j is a mature technology trusted at enterprise scale. (TBD: how well can it handle the eventually _huge_ datasets we'll have?)
 
 ## Vertex Framework
 
-TechNotes interacts with Neo4j via an intermediary framework created for TechNotes, called Vertex Framework.
+Neolace interacts with Neo4j via an intermediary framework called Vertex Framework.
 
-All data is represented as either a node in the graph or a relationship between nodes. TechNotes (and Vertex Framework) use only strongly typed nodes, which are called "VNodes". Each type of node (each VNodeType) has a label (e.g. `TechConcept`), a schema (set of allowed/required properties and relationships), and validation (arbitrary code to check constraints).
+All data is represented as either a node in the graph or a relationship between nodes. Neolace (and Vertex Framework) use only strongly typed nodes, which are called "VNodes". Each type of node (each VNodeType) has a label (e.g. `Entry`), a schema (set of allowed/required properties and relationships), and validation (arbitrary code to check constraints).
 
 Every VNode ("object") is identified by a UUID.
 
 * Neo4j node IDs are meant for internal use only and are not suitable for this purpose (they can be recycled etc.)
 * UUIDs allow the client to generate its own ID in advance of writing to the database, which can be handy for e.g. offline edits
 
-Most VNodes are also identified by a `shortId`, which is a short slug-like string such as `bob` or `boeing-747`. The "current" `shortId` of a VNode may be changed (e.g. a user changing their username, or an article changing its URL slug), but previously used `shortId`s will continue to work and point to the same VNode. This is considered important for the TechNotes use case, where shortIds will be a key part of URLs and links between articles/entries.
+Most VNodes are also identified by a `shortId`, which is a short slug-like string such as `user-bob` or `boeing-747`. The "current" `shortId` of a VNode may be changed (e.g. a user changing their username, or an article changing its URL slug), but previously used `shortId`s will continue to work and point to the same VNode. This is considered important for the Neolace use case, where shortIds will be a key part of URLs and links between articles/entries.
 
 For details on VNodes and Vertex Framework, see the Vertex Framework documentation.
 
-When a TechNode is "deleted", its labels are changed, e.g. from `:TechConcept:VNode` to `:TechConcept:DeletedVNode`. This preserves data and relationships and makes code for un-deleting/restoring nodes simpler.
+When a VNode is "deleted", its labels are changed, e.g. from `:Entry:VNode` to `:Entry:DeletedVNode`. This preserves data and relationships and makes code for un-deleting/restoring nodes simpler.
 
 ## Reading Data
 

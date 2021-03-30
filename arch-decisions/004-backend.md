@@ -1,4 +1,4 @@
-# TechNodes Backend
+# Neolace Backend
 
 The "backend" is the application which reads and writes the [graph database](./002-graph-data.md) and provides a REST API for interacting with it.
 
