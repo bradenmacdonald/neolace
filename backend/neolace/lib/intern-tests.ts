@@ -1,3 +1,6 @@
+// For some reason, when running tests with intern, ts-node cannot find these typings files unless we load them this way:
+/// <reference types="../typings/hapi__hapi" />
+
 /* istanbul ignore file */
 import intern from "intern";
 import {

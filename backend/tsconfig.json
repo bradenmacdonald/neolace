@@ -11,6 +11,7 @@
         "moduleResolution": "Node",
         "strict": true,
         "target": "ES2019",
+        // Note that some of these typings are also manually imported in intern-tests.ts
         "typeRoots" : ["./node_modules/@types", "./typings"],
         "experimentalDecorators": true,
     },
@@ -19,6 +20,7 @@
     ],
     "exclude": [
         "**/*.test.ts",
-        "node_modules"
+        "node_modules",
+        "./typings"
     ]
 }
