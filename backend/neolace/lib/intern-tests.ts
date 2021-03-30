@@ -13,6 +13,7 @@ import { log } from "../app/log";
 import { shutdown } from "../app/shutdown";
 import { Entry } from "../core/entry/Entry";
 import { graph } from "../core/graph";
+import { serverPromise } from "../server";
 
 export const { suite, test, before, beforeEach, after, afterEach } = intern.getPlugin("interface.tdd");
 export const { assert } = intern.getPlugin("chai");
@@ -40,6 +41,8 @@ intern.on("beforeRun", async () => {
         await graph.runMigrations();
         // Take a snapshot, for test isolation
         dataSnapshot = await graph.snapshotDataForTesting();
+        // Now make sure the server is running:
+        await serverPromise;
     } catch (err) {
         // No point in running the test suite if beforeRun failed, but we don't have any good way to bail :-/
         log.error(`Error during beforeRun: ${err}`);

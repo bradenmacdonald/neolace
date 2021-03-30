@@ -2,15 +2,18 @@ import * as Hapi from "@hapi/hapi";
 
 import { config, environment } from "./app/config";
 import { log } from "./app/log";
-import "./app/shutdown";
 import { authnScheme } from "./core/auth/authn";
 import { authnHooks } from "./core/auth/authn-hooks";
 import { userRoutes } from "./core/User-rest";
+import { onShutDown } from "./app/shutdown";
+
+let resolve = (): void => undefined, reject = (): void => undefined;
+export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve = _resolve; reject = _reject; });
 
 (async () => {
     const server = await new Hapi.Server({
         host: "0.0.0.0",
-        port: 5554,
+        port: config.port,
         routes: {
             cors: {
                 origin: [config.frontendUrl],
@@ -63,10 +66,13 @@ import { userRoutes } from "./core/User-rest";
     });
 
     await server.start();
+    onShutDown(server.stop.bind(server));
     log(`Server listening at ${server.info.uri}`);
+    resolve();
 
 })().then(() => {
     /* quitting normally...*/
 }).catch((err) => {
     log.error(err);
+    reject();
 });
