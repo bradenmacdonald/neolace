@@ -3,10 +3,15 @@ import { DesignData, ProcessData, TechConceptData, TechDbEntryData, TechDbEntryF
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
 export interface Config {
-    /** Path to the TechNotes API server ("backend"). Should not end with a slash. e.g. "http://backend:5554" */
+    /** Path to the Neolace API server ("backend"). Should not end with a slash. e.g. "http://backend:5554" */
     basePath: string;
     fetchApi: WindowOrWorkerGlobalScope["fetch"];
-    getExtraHeadersForRequest: (request: {method: HttpMethod, path: string}) => Promise<{[headerName: string]: string}>;
+    /**
+     * To authenticate with the API, you must either specify a token here (for a bot) or use getExtraHeadersForRequest
+     * to pass a JWT (for human users).
+     */
+    authToken?: string;
+    getExtraHeadersForRequest?: (request: {method: HttpMethod, path: string}) => Promise<{[headerName: string]: string}>;
 }
 
 interface RequestArgs {
@@ -17,14 +22,16 @@ interface RequestArgs {
     redirect?: RequestRedirect;
 }
 
-export class TechNotesApiClient {
+export class NeolaceApiClient {
     readonly basePath: string;
     readonly fetchApi: WindowOrWorkerGlobalScope["fetch"];
-    private readonly getExtraHeadersForRequest: Config["getExtraHeadersForRequest"];
+    readonly authToken?: string;
+    private readonly getExtraHeadersForRequest?: Config["getExtraHeadersForRequest"];
 
     constructor(config: Config) {
         this.basePath = config.basePath.replace(/\/+$/, "");
         this.fetchApi = config.fetchApi;
+        this.authToken = config.authToken;
         this.getExtraHeadersForRequest = config.getExtraHeadersForRequest;
     }
 
@@ -37,13 +44,19 @@ export class TechNotesApiClient {
         if (args.method === undefined) {
             args.method = "GET";
         }
-        const extraHeaders = await this.getExtraHeadersForRequest({method: args.method, path});
+        let extraHeaders: {[k: string]: string} = {};
+        if (this.getExtraHeadersForRequest) {
+            extraHeaders = await this.getExtraHeadersForRequest({method: args.method, path});
+        }
+        if (this.authToken) {
+            extraHeaders["Authorization"] = `Bearer ${this.authToken}`;
+        }
         args.headers = {"Content-Type": "application/json", ...args.headers, ...extraHeaders};
         return this.fetchApi(this.basePath + path, args);
     }
 
     /**
-     * Make a call to the TechNotes API and return the (JSON decoded) response
+     * Make a call to the Neolace API and return the (JSON decoded) response
      */
     private async call(path: string, args?: RequestArgs): Promise<any> {
         const response = await this.callRaw(path, args ?? {});
@@ -62,7 +75,7 @@ export class TechNotesApiClient {
     // User API Methods
 
     /**
-     * Get information about the currently logged-in user (or bot). Will throw an error if the user is not authenicated.
+     * Get information about the currently logged-in user (or bot). Will throw an error if the user is not authenticated.
      */
     public async whoAmI(): Promise<PublicUserData> {
         return this.call("/user/me");

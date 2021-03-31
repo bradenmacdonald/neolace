@@ -4,7 +4,7 @@ import { config, environment } from "./app/config";
 import { log } from "./app/log";
 import { authnScheme } from "./core/auth/authn";
 import { authnHooks } from "./core/auth/authn-hooks";
-import { userRoutes } from "./core/User-rest";
+import { allApiEndpoints } from "./api/endpoints";
 import { onShutDown } from "./app/shutdown";
 
 let resolve = (): void => undefined, reject = (): void => undefined;
@@ -47,7 +47,7 @@ export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve 
 
     // Configure routes
     server.route(authnHooks);
-    server.route(userRoutes);
+    server.route(allApiEndpoints);
 
     // Simple home page
     server.route({

@@ -112,7 +112,7 @@ export const CreateUser = defineAction<{
     email: string;
     // Username. Optional. If not specified, one will be auto-generated.
     username?: string;
-    realname?: string;
+    fullName?: string;
 }, {
     uuid: UUID;
 }>({
@@ -142,12 +142,12 @@ export const CreateUser = defineAction<{
         const authnData = await authClient.createUser({username: uuid});
 
         const result = await tx.query(C`
-            CREATE (u:${HumanUser} {
+            CREATE (u:Human:User:VNode {
                 uuid: ${uuid},
                 authnId: ${authnData.accountId},
                 email: ${data.email},
                 shortId: ${User.shortIdPrefix + username},
-                realname: ${data.realname || ""},
+                fullName: ${data.fullName || ""}
             })
         `.RETURN({"u.uuid": "uuid"}));
         const modifiedNodes = [result[0]["u.uuid"]];
@@ -165,8 +165,10 @@ export const CreateBot = defineAction<{
     // UUID of the user that is creating this bot
     ownedByUser: UUID;
     username: string;
+    fullName?: string;
 }, {
     uuid: UUID;
+    authToken: string;
 }>({
     type: "CreateBot",
     apply: async (tx, data) => {
@@ -175,17 +177,18 @@ export const CreateBot = defineAction<{
         }
 
         const uuid = UUID();
-        const authToken = createBotAuthToken();
+        const authToken = await createBotAuthToken();
         await tx.queryOne(C`
             MATCH (owner:${HumanUser} {uuid: ${data.ownedByUser}})
-            CREATE (u:${BotUser} {
+            CREATE (u:Bot:User:VNode {
                 uuid: ${uuid},
-                shortId: ${User.shortIdPrefix + username},
-                authToken: ${authToken}
+                shortId: ${User.shortIdPrefix + data.username},
+                authToken: ${authToken},
+                fullName: ${data.fullName || null}
             })-[:${BotUser.rel.OWNED_BY}]->(owner)
-        `);
+        `.RETURN({}));
         return {
-            resultData: { uuid, },
+            resultData: { uuid, authToken, },
             modifiedNodes: [uuid],
         };
     },
