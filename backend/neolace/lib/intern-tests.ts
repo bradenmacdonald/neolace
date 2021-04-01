@@ -31,6 +31,17 @@ export const assertRejects = async (what: Promise<any>, msg?: string): Promise<v
     });
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const assertRejectsWith = async (what: Promise<any>, errorClass: Function, msg?: string): Promise<void> => {
+    await what.then(() => {
+        assert.fail(undefined, undefined, "Expected promise to reject, but it resolved.");
+    }, err => {
+        if (msg) {
+            assert.throws(() => { throw err; }, errorClass, msg);
+        }
+    });
+}
+
 let emptySnapshot: VertexTestDataSnapshot;
 let dataSnapshot: VertexTestDataSnapshot;
 
@@ -117,7 +128,7 @@ setTestIsolation.levels = TestIsolationLevels;
  * @param user One of the default users, 
  * @returns 
  */
-export function getClient(user: {bot: {authToken: string}}|undefined): NeolaceApiClient {
+export function getClient(user?: {bot: {authToken: string}}): NeolaceApiClient {
 
     if (!defaultData.wasCreated) {
         throw new Error("Shared test data wasn't created yet.");

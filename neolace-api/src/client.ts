@@ -1,5 +1,6 @@
 import { PasswordlessLoginResponse, PublicUserData } from "./user";
 import { DesignData, ProcessData, TechConceptData, TechDbEntryData, TechDbEntryFlags, XFlag } from "./techdb";
+import * as errors from "./errors";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
 export interface Config {
@@ -61,11 +62,27 @@ export class NeolaceApiClient {
     private async call(path: string, args?: RequestArgs): Promise<any> {
         const response = await this.callRaw(path, args ?? {});
         if (response.status < 200 || response.status >= 300) {
+            // See if we can decode the error details (JSON):
+            let errorData: any = {};
+            let errorDataFormatted = "(invalid response - not JSON)";
             try {
-                // This may fail if the response cannot be decoded as JSON.
-                console.error(`${path} API call failed (${response.statusText}). Response from server: \n${JSON.stringify(await response.json())}`);
+                errorData = await response.json();
+                errorDataFormatted = JSON.stringify(errorData);
             } catch {}
-            throw new Error(response.statusText);
+
+            if (!errorData.message) {
+                errorData.message = response.statusText;
+            }
+
+            console.error(`${path} API call failed (${response.status} ${response.statusText}). Response from server: \n${errorDataFormatted}`);
+
+            if (response.status === 401) {
+                throw new errors.NotAuthenticated();
+            } else if (response.status === 403) {
+                throw new errors.NotAuthorized(errorData.message);
+            } else {
+                throw new errors.ApiError(errorData.message, response.status);
+            }
         }
         return await response.json();
     }
@@ -75,7 +92,9 @@ export class NeolaceApiClient {
     // User API Methods
 
     /**
-     * Get information about the currently logged-in user (or bot). Will throw an error if the user is not authenticated.
+     * Get information about the currently logged-in user (or bot).
+     *
+     * Will throw a NotAuthenticated error if the user is not authenticated.
      */
     public async whoAmI(): Promise<PublicUserData> {
         return this.call("/user/me");
