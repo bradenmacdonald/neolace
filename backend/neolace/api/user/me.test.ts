@@ -21,7 +21,7 @@ suite(__filename, () => {
             });
         });
 
-        test("can creport when not logged in", async () => {
+        test("can report when not logged in", async () => {
 
             // Get an API client, not logged in
             const client = getClient();

@@ -11,7 +11,7 @@ export type PublicUserData = {
     /** The user's username. Works as an ID but can be changed from time to time. A permanent identified is not provided for privacy reasons. */
     username: string;
     /** The user's full name if known. May be an empty string. */
-    fullName: string;
+    fullName: string|null;
 } & (HumanUserData | BotUserData);
 
 export interface PasswordlessLoginResponse {

@@ -147,7 +147,7 @@ export const CreateUser = defineAction<{
                 authnId: ${authnData.accountId},
                 email: ${data.email},
                 shortId: ${User.shortIdPrefix + username},
-                fullName: ${data.fullName || ""}
+                fullName: ${data.fullName || null}
             })
         `.RETURN({"u.uuid": "uuid"}));
         const modifiedNodes = [result[0]["u.uuid"]];

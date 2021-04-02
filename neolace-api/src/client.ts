@@ -101,6 +101,13 @@ export class NeolaceApiClient {
     }
 
     /**
+     * Register a new user account (human user)
+     */
+    public async registerHumanUser(data: {email: string, fullName?: string, username?: string}): Promise<PublicUserData> {
+        return this.call("/user", {method: "POST", data});
+    }
+
+    /**
      * Request passwordless login
      */
     public async requestPasswordlessLogin(data: {email: string}): Promise<PasswordlessLoginResponse> {
