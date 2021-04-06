@@ -1,4 +1,4 @@
-import { ApiError } from "neolace-api";
+import { ApiError, InvalidFieldValue, InvalidRequest, InvalidRequestReason } from "neolace-api";
 import { suite, test, assert, beforeEach, setTestIsolation, getClient, assertRejects, assertRejectsWith } from "../../lib/intern-tests";
 
 suite(__filename, () => {
@@ -37,6 +37,33 @@ suite(__filename, () => {
                 username: "JamieRocks",
             });
 
+        });
+
+        test("cannot create two accounts with the same email address", async () => {
+            
+            const client = getClient();
+
+            
+            await client.registerHumanUser({email: "jamie456@example.com"});
+            const err = await assertRejects(
+                client.registerHumanUser({email: "jamie456@example.com"}),
+            );
+            assert.instanceOf(err, InvalidRequest);
+            assert.strictEqual(err.reason, InvalidRequestReason.Email_already_registered);
+            assert.equal(err.message, "A user account is already registered with that email address.");
+        });
+
+        test("returns an appropriate error with invalid input", async () => {
+
+            const client = getClient();
+
+            const err = await assertRejects(
+                client.registerHumanUser({email: "foobar"}),
+            );
+            assert.instanceOf(err, InvalidFieldValue);
+            assert.strictEqual(err.reason, InvalidRequestReason.Invalid_field_value);
+            assert.deepStrictEqual(err.fields, ["email"]);
+            assert.equal(err.message, `"email" must be a valid email`);
         });
 
     });

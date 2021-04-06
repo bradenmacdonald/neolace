@@ -1,5 +1,5 @@
 import { C } from "vertex-framework";
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint } from "../";
+import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors } from "../";
 import { authClient } from "../../core/auth/authn";
 import { CreateUser, HumanUser, User } from "../../core/User";
 import { getPublicUserData } from "./_helpers";
@@ -11,13 +11,6 @@ defineEndpoint(__filename, {
         notes: "This is only for human users; bots should use the bot API. Every human should have one account; creating multiple accounts is discouraged.",
         auth: false,
         tags: ["api"],
-        validate: {
-            payload: Joi.object({
-                username: Joi.string().min(3).max(27),
-                fullName: HumanUser.properties.fullName,
-                email: HumanUser.properties.email.required(),
-            }).label("RegisterUserRequest"),
-        },
     },
     handler: async (request, h) => {
 
@@ -27,7 +20,7 @@ defineEndpoint(__filename, {
             email: payload.email,
             fullName: payload.fullName,
             username: payload.username,
-        }));
+        })).catch(adaptErrors("email", "fullName", "username"));
 
         const newUserData: api.PublicUserData = await getPublicUserData(result.uuid);
         return h.response(newUserData);

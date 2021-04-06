@@ -6,6 +6,8 @@ import { authnScheme } from "./core/auth/authn";
 import { authnHooks } from "./core/auth/authn-hooks";
 import { allApiEndpoints } from "./api/endpoints";
 import { onShutDown } from "./app/shutdown";
+import { Boom } from "./api";
+import { InvalidFieldValue, InvalidRequest } from "neolace-api";
 
 let resolve = (): void => undefined, reject = (): void => undefined;
 export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve = _resolve; reject = _reject; });
@@ -48,6 +50,25 @@ export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve 
     // Configure routes
     server.route(authnHooks);
     server.route(allApiEndpoints);
+
+    // Configure our exceptions
+    server.ext("onPreResponse", (request, h, err) => {
+        if (request.response instanceof Boom.Boom && request.response.isServer) {
+            // Note: here 'error' is the original error object, plus some Boom-specific annotations added by "boomify()".
+            const origError = request.response;
+            // Convert our API's InvalidRequest to the 400 format that Boom expects; the client will convert it
+            // back to this InvalidRequest class or sublcass.
+            if (origError instanceof InvalidRequest) {
+                const newError = Boom.badRequest(origError.message);
+                (newError.output.payload as any).reason = origError.reason;
+                if (origError instanceof InvalidFieldValue) {
+                    (newError.output.payload as any).fields = origError.fields;
+                }
+                return newError;
+            }
+        }
+        return h.continue;
+    });
 
     // Simple home page
     server.route({

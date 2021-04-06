@@ -7,6 +7,7 @@ import {
     ShortIdProperty,
     RawVNode,
     ValidationError,
+    PublicValidationError,
     WrappedTransaction,
     defineAction,
     UUID,
@@ -28,6 +29,7 @@ export class User extends VNodeType {
     };
 
     static async validate(dbObject: RawVNode<typeof User>, tx: WrappedTransaction): Promise<void> {
+        await super.validate(dbObject, tx);
         // Mostly done automatically by Vertex Framework
         const isHuman = dbObject._labels.includes(HumanUser.label);
         const isBot = dbObject._labels.includes(BotUser.label);

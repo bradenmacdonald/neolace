@@ -80,6 +80,12 @@ export class NeolaceApiClient {
                 throw new errors.NotAuthenticated();
             } else if (response.status === 403) {
                 throw new errors.NotAuthorized(errorData.message);
+            } else if (response.status === 400) {
+                if (errorData.reason === errors.InvalidRequestReason.Invalid_field_value) {
+                    throw new errors.InvalidFieldValue(errorData.fields, errorData.message);
+                } else {
+                    throw new errors.InvalidRequest(errorData.reason, errorData.message);
+                }
             } else {
                 throw new errors.ApiError(errorData.message, response.status);
             }

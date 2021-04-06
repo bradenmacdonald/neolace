@@ -21,14 +21,17 @@ import { installDefaultData } from "./intern-tests-default-data";
 export const { suite, test, before, beforeEach, after, afterEach } = intern.getPlugin("interface.tdd");
 export const { assert } = intern.getPlugin("chai");
 
-export const assertRejects = async (what: Promise<any>, msg?: string): Promise<void> => {
+export const assertRejects = async (what: Promise<any>, msg?: string): Promise<any> => {
+    let theError;
     await what.then(() => {
         assert.fail(undefined, undefined, "Expected promise to reject, but it resolved.");
     }, err => {
         if (msg) {
             assert.throws(() => { throw err; }, msg);
         }
+        theError = err;
     });
+    return theError;
 }
 
 // eslint-disable-next-line @typescript-eslint/ban-types
