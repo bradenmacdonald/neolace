@@ -4,10 +4,10 @@ import * as Boom from "@hapi/boom";
 import { KeratinAuthNClient } from "authn-node";
 import { C } from "vertex-framework";
 
-import { config } from "../../app/config";
-import { log } from "../../app/log";
-import { BotUser, HumanUser } from "../User";
-import { graph } from "../graph";
+import { config } from "../app/config";
+import { log } from "../app/log";
+import { BotUser, HumanUser } from "../core/User";
+import { graph } from "../core/graph";
 
 export const authClient = new KeratinAuthNClient({
     appDomain: config.frontendDomain,

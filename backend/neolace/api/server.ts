@@ -1,12 +1,11 @@
 import * as Hapi from "@hapi/hapi";
+import * as Boom from "@hapi/boom";
 
-import { config, environment } from "./app/config";
-import { log } from "./app/log";
-import { authnScheme } from "./core/auth/authn";
-import { authnHooks } from "./core/auth/authn-hooks";
-import { allApiEndpoints } from "./api/endpoints";
-import { onShutDown } from "./app/shutdown";
-import { Boom } from "./api";
+import { config, environment } from "../app/config";
+import { log } from "../app/log";
+import { authnScheme } from "./authn";
+import { allApiEndpoints } from "./endpoints";
+import { onShutDown } from "../app/shutdown";
 import { InvalidFieldValue, InvalidRequest } from "neolace-api";
 
 let resolve = (): void => undefined, reject = (): void => undefined;
@@ -48,7 +47,6 @@ export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve 
     server.auth.strategy("technotes_strategy", "technotes_scheme");
 
     // Configure routes
-    server.route(authnHooks);
     server.route(allApiEndpoints);
 
     // Configure our exceptions
@@ -88,7 +86,7 @@ export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve 
 
     await server.start();
     onShutDown(server.stop.bind(server));
-    log(`Server listening at ${server.info.uri}`);
+    log(`Neolace REST API server is now listening at ${server.info.uri}`);
     resolve();
 
 })().then(() => {

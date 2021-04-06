@@ -5,7 +5,7 @@
   "main": "server.ts",
   "scripts": {
     "test": "NODE_ENV=test intern",
-    "start": "ts-node-dev --respawn --transpile-only --inspect=0.0.0.0:5553 -- neolace/server.ts",
+    "start": "ts-node-dev --respawn --transpile-only --inspect=0.0.0.0:5553 -- neolace/api/server.ts",
     "lint": "eslint . --ext .js,.ts",
     "dev-data": "ts-node --script-mode --transpile-only neolace/core/scripts/dev-data.ts",
     "entrypoint-dev": "rm -rf node_modules/vertex-framework && rm -rf node_modules/technotes-mdt && npm install && rm -rf node_modules/vertex-framework && rm -rf node_modules/technotes-mdt && ln -sf ../../dependencies/vertex-framework node_modules/ && ln -sf ../../dependencies/technotes-mdt node_modules/ && npm start",

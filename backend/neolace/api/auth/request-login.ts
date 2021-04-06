@@ -1,6 +1,6 @@
 import { C } from "vertex-framework";
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint } from "../";
-import { authClient } from "../../core/auth/authn";
+import { Hapi, Boom, Joi, log, graph, api, defineEndpoint } from "..";
+import { authClient } from "../authn";
 import { HumanUser } from "../../core/User";
 
 // See also core/auth/authn-hooks.ts

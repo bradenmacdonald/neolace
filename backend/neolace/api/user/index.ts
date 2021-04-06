@@ -1,6 +1,6 @@
 import { C } from "vertex-framework";
 import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors } from "../";
-import { authClient } from "../../core/auth/authn";
+import { authClient } from "../authn";
 import { CreateUser, HumanUser, User } from "../../core/User";
 import { getPublicUserData } from "./_helpers";
 

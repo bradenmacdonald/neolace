@@ -14,7 +14,7 @@ import {
     DerivedProperty,
     VirtualPropType,
 } from "vertex-framework";
-import { authClient } from "./auth/authn";
+import { authClient } from "../api/authn";
 
 @VNodeType.declare
 export class User extends VNodeType {

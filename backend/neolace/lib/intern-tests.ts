@@ -15,7 +15,7 @@ import { log } from "../app/log";
 import { shutdown } from "../app/shutdown";
 import { Entry } from "../core/entry/Entry";
 import { graph } from "../core/graph";
-import { serverPromise } from "../server";
+import { serverPromise } from "../api/server";
 import { installDefaultData } from "./intern-tests-default-data";
 
 export const { suite, test, before, beforeEach, after, afterEach } = intern.getPlugin("interface.tdd");

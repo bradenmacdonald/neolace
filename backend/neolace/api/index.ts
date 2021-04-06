@@ -46,10 +46,8 @@ export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
     // validate all the fields of any changed models. If one of those fields is now invalid, we need to
     // map that error back to one of the request fields, if applicable.
     return function(err: unknown) {
-        log.debug("here, checking error");
 
         if (!(err instanceof Error)) {
-            log.error("not an instanceof Error");
             throw err;
         }
 
