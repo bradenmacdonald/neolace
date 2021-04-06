@@ -53,6 +53,19 @@ suite(__filename, () => {
             assert.equal(err.message, "A user account is already registered with that email address.");
         });
 
+        test("cannot create two accounts with the same username", async () => {
+            
+            const client = getClient();
+
+            await client.registerHumanUser({email: "jamie123@example.com", username: "jamie"});
+            const err = await assertRejects(
+                client.registerHumanUser({email: "jamie456@example.com", username: "jamie"}),
+            );
+            assert.instanceOf(err, InvalidRequest);
+            assert.strictEqual(err.reason, InvalidRequestReason.Username_already_registered);
+            assert.equal(err.message, `The username "jamie" is already taken.`);
+        });
+
         test("returns an appropriate error with invalid input", async () => {
 
             const client = getClient();
@@ -63,7 +76,20 @@ suite(__filename, () => {
             assert.instanceOf(err, InvalidFieldValue);
             assert.strictEqual(err.reason, InvalidRequestReason.Invalid_field_value);
             assert.deepStrictEqual(err.fields, ["email"]);
-            assert.equal(err.message, `"email" must be a valid email`);
+            assert.equal(err.message, `Invalid value given for email. Check the length, special characters used, and/or data type.`);
+        });
+
+        test("returns an appropriate error with invalid input (multiple issues)", async () => {
+
+            const client = getClient();
+
+            const err = await assertRejects(
+                client.registerHumanUser({email: "foo@example.com", fullName: "a".repeat(1_000), username: " @LEX "}),
+            );
+            assert.instanceOf(err, InvalidFieldValue);
+            assert.strictEqual(err.reason, InvalidRequestReason.Invalid_field_value);
+            assert.sameMembers(err.fields, ["fullName", "username"]);
+            assert.equal(err.message, `Invalid value given for username, fullName. Check the length, special characters used, and/or data type.`);
         });
 
     });

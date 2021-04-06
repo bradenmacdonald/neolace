@@ -63,8 +63,8 @@ export class InvalidFieldValue extends InvalidRequest {
 export const enum InvalidRequestReason {
     /** One or more of the fields you provided is invalid, e.g. blank, too short, too long, invalid character, etc. */
     Invalid_field_value = "400_INVALID_FIELD",
-    /** Tried to register an email account, but another account already exists with the same email */
+    /** Tried to register a user account, but another account already exists with the same email */
     Email_already_registered = "400_EMAIL_EXISTS",
-    /** Tried to register an email account, but another account already exists with the same username */
-    Username_already_registered = "400_EMAIL_EXISTS",
+    /** Tried to register a user account, but another account already exists with the same username */
+    Username_already_registered = "400_USERNAME_EXISTS"
 }

@@ -25,7 +25,7 @@ export class User extends VNodeType {
         // shortId: starts with "user-", then follows a unique code. Can be changed any time.
         shortId: ShortIdProperty,
         // Optional full name
-        fullName: Joi.string(),
+        fullName: Joi.string().max(100),
     };
 
     static async validate(dbObject: RawVNode<typeof User>, tx: WrappedTransaction): Promise<void> {

@@ -1,7 +1,5 @@
-import { C } from "vertex-framework";
 import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors } from "../";
-import { authClient } from "../authn";
-import { CreateUser, HumanUser, User } from "../../core/User";
+import { CreateUser } from "../../core/User";
 import { getPublicUserData } from "./_helpers";
 
 defineEndpoint(__filename, {
@@ -11,6 +9,13 @@ defineEndpoint(__filename, {
         notes: "This is only for human users; bots should use the bot API. Every human should have one account; creating multiple accounts is discouraged.",
         auth: false,
         tags: ["api"],
+        validate: {
+            payload: Joi.object({
+                email: Joi.string().required(),
+                fullName: Joi.string(),
+                username: Joi.string(),
+            }),
+        },
     },
     handler: async (request, h) => {
 
@@ -20,7 +25,7 @@ defineEndpoint(__filename, {
             email: payload.email,
             fullName: payload.fullName,
             username: payload.username,
-        })).catch(adaptErrors("email", "fullName", "username"));
+        })).catch(adaptErrors("email", "fullName", adaptErrors.remap("shortId", "username")));  // An error in the "shortId" property gets remapped into the "username" field
 
         const newUserData: api.PublicUserData = await getPublicUserData(result.uuid);
         return h.response(newUserData);

@@ -85,7 +85,7 @@ export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
                     throw err;
                 }
             });
-            throw new InvalidFieldValue(requestFields, err.message);
+            throw new InvalidFieldValue(requestFields, `Invalid value given for ${requestFields.join(", ")}. Check the length, special characters used, and/or data type.`);
         }
 
         // We don't know what this error is - it will result in an "Internal Server Error"
@@ -93,12 +93,23 @@ export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
         throw err;
     };
 }
+/**
+ * Simple helper function for adaptErrors.
+ * 
+ * Example:
+ *     .catch(adaptErrors(..., adaptErrors.remap("shortId", "username")))
+ * The above example means that any errors in validting the "shortId" field should be remapped to the "username" field,
+ * and the API consumer will see a message that the "username" field was invalid.
+ */
+adaptErrors.remap = (errorPath: string, requestPath: string) => (field: string) => field === errorPath ? requestPath : undefined;
 
 function convertStandardErrors(err: Error): void {
     if (err.name === "Neo4jError") {
         if (err.message.match(/Node(.*) already exists with label `Human` and property `email`/)) {
             throw new InvalidRequest(InvalidRequestReason.Email_already_registered, "A user account is already registered with that email address.");
         }
+    } else if (err.message.match(/The username ".*" is already taken./)) {
+        throw new InvalidRequest(InvalidRequestReason.Username_already_registered, err.message);
     }
 }
 
