@@ -1,6 +1,6 @@
-# TechNotes Coding Standards
+# Neolace Coding Standards
 
-TechNotes is entirely written in TypeScript.
+Neolace is entirely written in TypeScript.
 
 * TypeScript is a modern, strongly-typed language that is enjoyable to work with.
 * TypeScript code can be shared between the backend and frontend.

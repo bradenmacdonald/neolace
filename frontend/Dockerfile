@@ -6,8 +6,8 @@ ENV PATH /app/node_modules/.bin:$PATH
 COPY . /app/
 # Because this dependency is referenced as a path, not as an npm package, we have to do some hacky stuff to get it
 # to work.
-COPY .build-temp/technotes-api/ /technotes-api/
-RUN cd /technotes-api/ && npm install --also=dev && npm run build
+COPY .build-temp/neolace-api/ /neolace-api/
+RUN cd /neolace-api/ && npm install --also=dev && npm run build
 
 # Dependencies
 RUN apk add --no-cache git

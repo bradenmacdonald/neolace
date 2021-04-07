@@ -20,8 +20,8 @@ x-service-templates:
       &authn-environment-defaults
       PORT: 5559
       PUBLIC_PORT: 5552
-      APP_PASSWORDLESS_TOKEN_URL: http://backend:5554/auth-hooks/passwordless-login
-      APP_PASSWORD_RESET_URL: http://backend:5554/auth-hooks/password-reset
+      APP_PASSWORDLESS_TOKEN_URL: http://backend:5554/auth/hooks/passwordless-login
+      APP_PASSWORD_RESET_URL: http://backend:5554/auth/hooks/password-reset
       DATABASE_URL: sqlite3://localcontainer/data/authn.sqlite3?cache=shared
       SECRET_KEY_BASE: neolace-dev
       HTTP_AUTH_USERNAME: authn
@@ -115,6 +115,7 @@ services:
     tty: true
     volumes:
       - ./backend/:/app/
+      - ./neolace-api/:/neolace-api/
       # External repos that must be cloned to the parent directory:
       - ../vertex-framework/:/dependencies/vertex-framework/:ro
       - ../technotes-mdt/:/dependencies/technotes-mdt/:ro

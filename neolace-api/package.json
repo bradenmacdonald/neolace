@@ -1,11 +1,12 @@
 {
-    "name": "technotes-api",
+    "name": "neolace-api",
     "version": "0.0.1",
-    "description": "TechNotes API for TypeScript - data types and API client",
+    "description": "Neolace API for TypeScript - data types and API client",
     "main": "dist/index.js",
     "scripts": {
         "lint": "eslint src --ext .ts",
-        "build": "tsc"
+        "build": "tsc",
+        "watch": "tsc --watch"
     },
     "author": "TechNotes",
     "license": "MIT",
@@ -14,6 +15,6 @@
         "@typescript-eslint/eslint-plugin": ">=4.9.0 || More tooling for eslint to lint TypeScript",
         "@typescript-eslint/parser": ">=4.9.0 || Tooling for eslint to lint TypeScript",
         "eslint": ">=7.15.0 || TypeScript linter",
-        "typescript": ">=4.1.2"
+        "typescript": ">=4.2.3"
     }
 }

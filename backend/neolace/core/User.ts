@@ -1,53 +1,108 @@
 import * as Joi from "@hapi/joi";
+import {randomBytes} from "crypto";
+
 import {
     C,
     VNodeType,
     ShortIdProperty,
     RawVNode,
     ValidationError,
+    PublicValidationError,
     WrappedTransaction,
     defineAction,
     UUID,
+    DerivedProperty,
+    VirtualPropType,
 } from "vertex-framework";
-import { countryCodes } from "../lib/countries";
-import { authClient } from "./auth/authn";
+import { authClient } from "../api/authn";
 
 @VNodeType.declare
 export class User extends VNodeType {
-    static readonly label = "User";
+    static label = "User";
+    static readonly shortIdPrefix = "user-";
     static readonly properties = {
         ...VNodeType.properties,
+        // shortId: starts with "user-", then follows a unique code. Can be changed any time.
+        shortId: ShortIdProperty,
+        // Optional full name
+        fullName: Joi.string().max(100),
+    };
+
+    static async validate(dbObject: RawVNode<typeof User>, tx: WrappedTransaction): Promise<void> {
+        await super.validate(dbObject, tx);
+        // Mostly done automatically by Vertex Framework
+        const isHuman = dbObject._labels.includes(HumanUser.label);
+        const isBot = dbObject._labels.includes(BotUser.label);
+        if (isHuman === isBot) {
+            throw new ValidationError(`Every User must be either a Human or a Bot.`);
+        }
+    }
+
+    static readonly derivedProperties = VNodeType.hasDerivedProperties({
+        //isBot,
+        username,
+    });
+}
+
+@VNodeType.declare
+export class HumanUser extends User {
+    static readonly label = "Human";
+    static readonly properties = {
+        ...User.properties,
         // Account ID in the authentication microservice. Only set for human users. Should not be exposed to users.
         authnId: Joi.number(),
         // Email address. Not set if this user is a bot (owned by a user or group).
-        email: Joi.string().email({minDomainSegments: 1, tlds: false}),
-        // Public username. Unique but can be changed at any time.
-        shortId: ShortIdProperty,
-        // Optional real name
-        realname: Joi.string(),
-        // Country code
-        country: Joi.string().valid("", ...countryCodes).required(),
+        email: Joi.string().email({minDomainSegments: 1, tlds: false}).required(),
     };
-    static async validate(dbObject: RawVNode<typeof User>, tx: WrappedTransaction): Promise<void> {
-        if (dbObject.authnId === undefined) {
-            // This is a bot, not a human user
-            if (dbObject.email !== undefined) {
-                throw new ValidationError("Bots cannot have an email address.");
-            }
-            // TODO: assert that it's owned by a human user
-        } else {
-            if (!dbObject.email) {
-                throw new ValidationError("An email address is required for each (human) user.");
-            }
-        }
-    }
+
+    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+        /** If this user is a bot, it belongs to this user (todo in future; bots could be owned by groups) */
+        OWNED_BY: {
+            to: [User],
+            cardinality: VNodeType.Rel.ToOneOrNone,
+        },
+    });
+}
+
+@VNodeType.declare
+export class BotUser extends User {
+    static readonly label = "Bot";
+    static readonly properties = {
+        ...User.properties,
+        // Current auth token used to authenticate this user. This acts like a "password" for authenticating this bot.
+        authToken: Joi.string(),
+    };
+
+    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+        /** If this user is a bot, it belongs to this user (todo in future; bots could be owned by groups) */
+        OWNED_BY: {
+            to: [HumanUser],
+            cardinality: VNodeType.Rel.ToOneRequired,
+        },
+    });
+
+    static readonly virtualProperties = VNodeType.hasVirtualProperties({
+        ownedBy: {
+            type: VirtualPropType.OneRelationship,
+            query: C`(@this)-[:${BotUser.rel.OWNED_BY}]->(@target:${HumanUser})`,
+            target: HumanUser,
+        },
+    });
+
 }
 
 
+/** Get the username of a user */
+export function username(): DerivedProperty<string> { return DerivedProperty.make(
+    User,
+    user => user.shortId,
+    user => user.shortId.substr(User.shortIdPrefix.length),
+);}
+
 async function isUsernameTaken(tx: WrappedTransaction, username: string): Promise<boolean> {
     const result = await tx.query(C`
-        MATCH (:ShortId {shortId: ${username}})-[:IDENTIFIES]->(u:${User})
-    `.RETURN({"u.username": "string"}));
+        MATCH (:ShortId {shortId: ${User.shortIdPrefix + username}})-[:IDENTIFIES]->(u:${User})
+    `.RETURN({}));
     return result.length > 0;
 }
 
@@ -59,8 +114,7 @@ export const CreateUser = defineAction<{
     email: string;
     // Username. Optional. If not specified, one will be auto-generated.
     username?: string;
-    realname?: string;
-    country?: string;
+    fullName?: string;
 }, {
     uuid: UUID;
 }>({
@@ -90,13 +144,12 @@ export const CreateUser = defineAction<{
         const authnData = await authClient.createUser({username: uuid});
 
         const result = await tx.query(C`
-            CREATE (u:${User} {
+            CREATE (u:Human:User:VNode {
                 uuid: ${uuid},
                 authnId: ${authnData.accountId},
                 email: ${data.email},
-                shortId: ${username},
-                realname: ${data.realname || ""},
-                country: ${data.country || ""}
+                shortId: ${User.shortIdPrefix + username},
+                fullName: ${data.fullName || null}
             })
         `.RETURN({"u.uuid": "uuid"}));
         const modifiedNodes = [result[0]["u.uuid"]];
@@ -107,3 +160,65 @@ export const CreateUser = defineAction<{
     },
     invert: (data, resultData) => null,
 });
+
+
+/** Create a bot */
+export const CreateBot = defineAction<{
+    // UUID of the user that is creating this bot
+    ownedByUser: UUID;
+    username: string;
+    fullName?: string;
+}, {
+    uuid: UUID;
+    authToken: string;
+}>({
+    type: "CreateBot",
+    apply: async (tx, data) => {
+        if (await isUsernameTaken(tx, data.username)) {
+            throw new Error(`The username "${data.username}" is already taken.`);
+        }
+
+        const uuid = UUID();
+        const authToken = await createBotAuthToken();
+        await tx.queryOne(C`
+            MATCH (owner:${HumanUser} {uuid: ${data.ownedByUser}})
+            CREATE (u:Bot:User:VNode {
+                uuid: ${uuid},
+                shortId: ${User.shortIdPrefix + data.username},
+                authToken: ${authToken},
+                fullName: ${data.fullName || null}
+            })-[:${BotUser.rel.OWNED_BY}]->(owner)
+        `.RETURN({}));
+        return {
+            resultData: { uuid, authToken, },
+            modifiedNodes: [uuid],
+        };
+    },
+    invert: (data, resultData) => null,
+});
+
+
+/**
+ * Create a random token which acts like a password to authenticate bot (non-human) users
+ * @returns 
+ */
+function createBotAuthToken(): Promise<string> {
+    return new Promise((resolve, reject) => {
+        randomBytes(48, (err, buffer) => {
+            if (err) {
+                reject(err);
+            } else {
+                // Characters allowed in the result: A-Z, a-z, 0-9
+                // This doesn't have to be a reversible transform and already has high entropy, so we don't care that
+                // the base64 cleanup below creates a slight bias in favor of "a" or "b" appearing in the result.
+                const token = buffer.toString("base64").replace(/\+/g, "a").replace(/\//g, "b").replace(/=/g, "");
+                resolve(token);
+            }
+        });
+    });
+}
+
+// Things that are internal but available to the test suite:
+export const testExports = {
+    createBotAuthToken,
+};

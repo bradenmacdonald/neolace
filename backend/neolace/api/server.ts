@@ -1,16 +1,20 @@
 import * as Hapi from "@hapi/hapi";
+import * as Boom from "@hapi/boom";
 
-import { config, environment } from "./app/config";
-import { log } from "./app/log";
-import "./app/shutdown";
-import { authnScheme } from "./core/auth/authn";
-import { authnHooks } from "./core/auth/authn-hooks";
-import { userRoutes } from "./core/User-rest";
+import { config, environment } from "../app/config";
+import { log } from "../app/log";
+import { authnScheme } from "./authn";
+import { allApiEndpoints } from "./endpoints";
+import { onShutDown } from "../app/shutdown";
+import { InvalidFieldValue, InvalidRequest } from "neolace-api";
+
+let resolve = (): void => undefined, reject = (): void => undefined;
+export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve = _resolve; reject = _reject; });
 
 (async () => {
     const server = await new Hapi.Server({
         host: "0.0.0.0",
-        port: 5554,
+        port: config.port,
         routes: {
             cors: {
                 origin: [config.frontendUrl],
@@ -43,8 +47,26 @@ import { userRoutes } from "./core/User-rest";
     server.auth.strategy("technotes_strategy", "technotes_scheme");
 
     // Configure routes
-    server.route(authnHooks);
-    server.route(userRoutes);
+    server.route(allApiEndpoints);
+
+    // Configure our exceptions
+    server.ext("onPreResponse", (request, h, err) => {
+        if (request.response instanceof Boom.Boom && request.response.isServer) {
+            // Note: here 'error' is the original error object, plus some Boom-specific annotations added by "boomify()".
+            const origError = request.response;
+            // Convert our API's InvalidRequest to the 400 format that Boom expects; the client will convert it
+            // back to this InvalidRequest class or sublcass.
+            if (origError instanceof InvalidRequest) {
+                const newError = Boom.badRequest(origError.message);
+                (newError.output.payload as any).reason = origError.reason;
+                if (origError instanceof InvalidFieldValue) {
+                    (newError.output.payload as any).fields = origError.fields;
+                }
+                return newError;
+            }
+        }
+        return h.continue;
+    });
 
     // Simple home page
     server.route({
@@ -63,10 +85,13 @@ import { userRoutes } from "./core/User-rest";
     });
 
     await server.start();
-    log(`Server listening at ${server.info.uri}`);
+    onShutDown(server.stop.bind(server));
+    log(`Neolace REST API server is now listening at ${server.info.uri}`);
+    resolve();
 
 })().then(() => {
     /* quitting normally...*/
 }).catch((err) => {
     log.error(err);
+    reject();
 });

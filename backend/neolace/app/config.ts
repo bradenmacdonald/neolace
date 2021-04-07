@@ -20,6 +20,8 @@ function defaultTo<T>(value: T, {production, test}: {production?: T, test?: T}):
 export const config = (() => {
     // Default configuration:
     const config = {
+        // Port to listen on
+        port: defaultTo(5554, {test: 4444}),
         // Backend App URL (URL at which the REST API is available)
         apiUrl: defaultTo("http://localhost:5554", {test: "http://backend:4444"}),
         // Domain of the TechNotes frontend without protocol, used by AuthN

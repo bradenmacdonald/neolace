@@ -9,7 +9,7 @@ import { MetadataTable, MetadataEntry } from 'components/techdb/MetadataTable';
 import { TRLIndicator, TRL } from 'components/techdb/TRLIndicator';
 import { client } from 'lib/api-client';
 import { Redirect } from 'components/utils/Redirect';
-import { ProcessData } from 'technotes-api';
+import { ProcessData } from 'neolace-api';
 import { InlineMDT, MDTContext } from 'components/markdown-mdt/mdt';
 
 interface PageProps {

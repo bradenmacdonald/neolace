@@ -1,5 +1,5 @@
 /**
- * TechNotes logging functions.
+ * Neolace logging functions.
  */
 import { config } from "./config";
 
@@ -38,12 +38,12 @@ function getCallerFile(): string {
  */
 function prefix(): string {
     let shortFilePath = getCallerFile();
-    // Convert '/app/technotes/foo/bar.ts' to just 'foo/bar'
+    // Convert '/app/neolace/foo/bar.ts' to just 'foo/bar'
     if (shortFilePath.endsWith(".ts")) {
         shortFilePath = shortFilePath.substr(0, shortFilePath.length - 3);
     }
-    if (shortFilePath.indexOf("/technotes/") !== -1) {
-        shortFilePath = shortFilePath.substr(shortFilePath.indexOf("/technotes/") + 11);
+    if (shortFilePath.indexOf("/neolace/") !== -1) {
+        shortFilePath = shortFilePath.substr(shortFilePath.indexOf("/neolace/") + 9);
     }
     const prefix = `${(new Date()).toISOString().substr(0, 19)} ${shortFilePath} `;
     return applyColor(Colors.light, prefix);

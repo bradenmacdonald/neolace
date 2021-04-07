@@ -16,7 +16,7 @@
     "react": "17.0.1",
     "react-dom": "17.0.1",
     "sass": "1.26.10",
-    "technotes-api": "file:../technotes-api/",
+    "neolace-api": "file:../neolace-api/",
     "technotes-mdt": "git+https://gitlab.com/technotes.org/technotes-mdt.git#main"
   },
   "devDependencies": {

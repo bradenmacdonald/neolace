@@ -12,11 +12,11 @@ export const graph = new Vertex({
         userEmailUnique: {
             forward: async (dbWrite) => {
                 await dbWrite(async tx => {
-                    await tx.run("CREATE CONSTRAINT user_email_uniq ON (u:User) ASSERT u.email IS UNIQUE");
+                    await tx.run("CREATE CONSTRAINT user_email_uniq ON (u:Human) ASSERT u.email IS UNIQUE");
                 });
             },
             backward: async (dbWrite) => {
-                await dbWrite(tx => tx.run("DROP CONSTRAINT user_email_uniq"));
+                await dbWrite(tx => tx.run("DROP CONSTRAINT user_email_uniq IF EXISTS"));
             },
             dependsOn: [],
         },
@@ -24,11 +24,23 @@ export const graph = new Vertex({
         userAuthNIdUnique: {
             forward: async (dbWrite) => {
                 await dbWrite(async tx => {
-                    await tx.run("CREATE CONSTRAINT user_authnId_uniq ON (u:User) ASSERT u.authnId IS UNIQUE");
+                    await tx.run("CREATE CONSTRAINT user_authnId_uniq ON (u:Human) ASSERT u.authnId IS UNIQUE");
                 });
             },
             backward: async (dbWrite) => {
-                await dbWrite(tx => tx.run("DROP CONSTRAINT user_authnId_uniq"));
+                await dbWrite(tx => tx.run("DROP CONSTRAINT user_authnId_uniq IF EXISTS"));
+            },
+            dependsOn: [],
+        },
+        // Bots have unique auth token values:
+        botAuthTokenUnique: {
+            forward: async (dbWrite) => {
+                await dbWrite(async tx => {
+                    await tx.run("CREATE CONSTRAINT bot_authtoken_uniq ON (u:Bot) ASSERT u.authToken IS UNIQUE");
+                });
+            },
+            backward: async (dbWrite) => {
+                await dbWrite(tx => tx.run("DROP CONSTRAINT bot_authtoken_uniq IF EXISTS"));
             },
             dependsOn: [],
         },
@@ -40,7 +52,7 @@ export const graph = new Vertex({
                 ));
             },
             backward: async (dbWrite) => {
-                await dbWrite(tx => tx.run("DROP CONSTRAINT datafile_sha256Hash_uniq"));
+                await dbWrite(tx => tx.run("DROP CONSTRAINT datafile_sha256Hash_uniq IF EXISTS"));
             },
             dependsOn: [],
         },

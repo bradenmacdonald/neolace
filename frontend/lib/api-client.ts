@@ -1,6 +1,6 @@
 import * as KeratinAuthN from 'keratin-authn';
 import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
-import { TechNotesApiClient } from 'technotes-api';
+import { TechNotesApiClient } from 'neolace-api';
 
 /** Refresh the session token if needed */
 const getSessionPromise = () => {
