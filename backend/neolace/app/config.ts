@@ -22,6 +22,15 @@ export const config = (() => {
     const config = {
         // Port to listen on
         port: defaultTo(5554, {test: 4444}),
+        /**
+         * Admin site domain. The admin site is the only site that can be used to create other sites. Do not include
+         * protocol or port number.
+         * 
+         * The REST API (backend) is always available on `api.${adminSiteDomain}`
+         */
+        adminSiteDomain: defaultTo("admin.local.neolace.net", {test: "admin.local.neolace.net"}),
+
+
         // Backend App URL (URL at which the REST API is available)
         apiUrl: defaultTo("http://localhost:5554", {test: "http://backend:4444"}),
         // Domain of the TechNotes frontend without protocol, used by AuthN

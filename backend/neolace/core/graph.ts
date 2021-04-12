@@ -6,7 +6,7 @@ export const graph = new Vertex({
     neo4jUrl: config.neo4jUrl,
     neo4jUser: config.neo4jUser,
     neo4jPassword: config.neo4jPassword,
-    debugLogging: config.debugLogging,
+    debugLogging: false,
     extraMigrations: {
         // Users have unique email addresses:
         userEmailUnique: {
@@ -41,6 +41,18 @@ export const graph = new Vertex({
             },
             backward: async (dbWrite) => {
                 await dbWrite(tx => tx.run("DROP CONSTRAINT bot_authtoken_uniq IF EXISTS"));
+            },
+            dependsOn: [],
+        },
+        // Sites have unique "site code" values:
+        siteCodeUnique: {
+            forward: async (dbWrite) => {
+                await dbWrite(async tx => {
+                    await tx.run("CREATE CONSTRAINT site_sitecode_uniq ON (s:Site) ASSERT s.siteCode IS UNIQUE");
+                });
+            },
+            backward: async (dbWrite) => {
+                await dbWrite(tx => tx.run("DROP CONSTRAINT site_sitecode_uniq IF EXISTS"));
             },
             dependsOn: [],
         },

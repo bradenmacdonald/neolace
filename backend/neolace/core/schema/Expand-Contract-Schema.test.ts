@@ -11,7 +11,7 @@ suite(__filename, () => {
     let siteUUID: UUID;
 
     beforeEach(async () => {
-        const site = await graph.runAsSystem(CreateSite({shortId: "site-default", description: "Default site for testing."}));
+        const site = await graph.runAsSystem(CreateSite({shortId: "site-default", domain: "test.neolace.net"}));
         siteUUID = site.uuid;
     });
 
