@@ -45,7 +45,7 @@ const siteCodesMaxCount = (siteCodeChars.length - 1) * Math.pow(siteCodeChars.le
  */
 @VNodeType.declare
 export class Site extends VNodeType {
-    static label = "Site";
+    static readonly label = "Site";
     static readonly shortIdPrefix = "site-";
     static readonly properties = {
         ...VNodeType.properties,
@@ -102,16 +102,18 @@ export const UpdateSite = defaultUpdateActionFor(Site, s => s.shortId.descriptio
 export const [DeleteSite, UnDeleteSite] = defaultDeleteAndUnDeleteFor(Site);
 
 
-export const CreateSite = defineAction<{
-    shortId: string;
-    domain: string;
-    description?: string;
-    siteCode?: string;
-}, {
-    uuid: UUID;
-    siteCode: string;
-}>({
+export const CreateSite = defineAction({
     type: "CreateSite",
+    parameters: {} as {
+        shortId: string;
+        domain: string;
+        description?: string;
+        siteCode?: string;
+    },
+    resultData: {} as {
+        uuid: UUID;
+        siteCode: string;
+    },
     apply: async (tx, data) => {
         const uuid = UUID();
         let siteCode: string;

@@ -10,15 +10,17 @@ import { EntryType } from "./EntryType";
 /**
  * Add a new "EntryType" for a site.
  */
-export const ExpandSchema_AddEntryType = defineAction<{
-    siteUUID: UUID;
-    // The name of this entry type, e.g. "Note", "Article", "Technology", "Design"
-    name: string;
-    class: "regular";// class: regular (an article or just name+properties) vs. Image vs. DataTable
-}, {
-    uuid: UUID;
-}>({
+export const ExpandSchema_AddEntryType = defineAction({
     type: "ExpandSchema_AddEntryType",
+    parameters: {} as {
+        siteUUID: UUID;
+        // The name of this entry type, e.g. "Note", "Article", "Technology", "Design"
+        name: string;
+        class: "regular";// class: regular (an article or just name+properties) vs. Image vs. DataTable
+    },
+    resultData: {} as {
+        uuid: UUID;
+    },
     apply: async (tx, data) => {
         const uuid = UUID();
 

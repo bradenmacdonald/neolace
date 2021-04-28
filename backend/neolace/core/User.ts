@@ -109,16 +109,18 @@ async function isUsernameTaken(tx: WrappedTransaction, username: string): Promis
 
 
 /** Create a human user (not a bot) */
-export const CreateUser = defineAction<{
-    // The user's email must already be verified.
-    email: string;
-    // Username. Optional. If not specified, one will be auto-generated.
-    username?: string;
-    fullName?: string;
-}, {
-    uuid: UUID;
-}>({
+export const CreateUser = defineAction({
     type: "CreateUser",
+    parameters: {} as {
+        // The user's email must already be verified.
+        email: string;
+        // Username. Optional. If not specified, one will be auto-generated.
+        username?: string;
+        fullName?: string;
+    },
+    resultData: {} as {
+        uuid: UUID;
+    },
     apply: async (tx, data) => {
         const uuid = UUID();
 
@@ -163,16 +165,18 @@ export const CreateUser = defineAction<{
 
 
 /** Create a bot */
-export const CreateBot = defineAction<{
-    // UUID of the user that is creating this bot
-    ownedByUser: UUID;
-    username: string;
-    fullName?: string;
-}, {
-    uuid: UUID;
-    authToken: string;
-}>({
+export const CreateBot = defineAction({
     type: "CreateBot",
+    parameters: {} as {
+        // UUID of the user that is creating this bot
+        ownedByUser: UUID;
+        username: string;
+        fullName?: string;
+    },
+    resultData: {} as {
+        uuid: UUID;
+        authToken: string;
+    },
     apply: async (tx, data) => {
         if (await isUsernameTaken(tx, data.username)) {
             throw new Error(`The username "${data.username}" is already taken.`);
