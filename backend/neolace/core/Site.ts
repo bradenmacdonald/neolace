@@ -10,9 +10,16 @@ import {
     DerivedProperty,
     defineAction,
     UUID,
+    VNodeTypeRef,
 } from "vertex-framework";
 import { log } from "../app/log";
 import { graph } from "./graph";
+
+
+// Forward reference
+export const SiteRef: typeof Site = VNodeTypeRef("Site");
+
+import { CreateGroup, GroupRef as Group } from "./Group";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,11 +92,12 @@ export class Site extends VNodeType {
         // },
     });
     static readonly virtualProperties = VNodeType.hasVirtualProperties({
-        // users: {
-        //     type: VirtualPropType.ManyRelationship,
-        //     query: C`(@this)-[:${Site.rel.HAS_USER_ROLE}]->(@target:${User})`,
-        //     target: User,
-        // },
+        groupsFlat: {
+            // A flattened list of all the user groups that this site has
+            type: VirtualPropType.ManyRelationship,
+            query: C`(@target:${Group})-[:${Group.rel.BELONGS_TO}*1..5]->(@this)`,
+            target: Group,
+        },
     });
     static readonly derivedProperties = VNodeType.hasDerivedProperties({
         // None at the moment.
@@ -109,12 +117,15 @@ export const CreateSite = defineAction({
         domain: string;
         description?: string;
         siteCode?: string;
+        adminUser?: UUID;
     },
     resultData: {} as {
         uuid: UUID;
         siteCode: string;
+        adminGroup?: UUID;
     },
     apply: async (tx, data) => {
+        // Generate a UUID and "site code":
         const uuid = UUID();
         let siteCode: string;
         if (data.siteCode) {
@@ -126,7 +137,10 @@ export const CreateSite = defineAction({
                 siteCode = siteCodeFromNumber(Math.floor(Math.random() * siteCodesMaxCount));
             } while (await siteCodeIsTaken());
         }
+        const resultData: any = {uuid, siteCode};
+        const modifiedNodes: UUID[] = [uuid];
 
+        // Create the Site:
         await tx.queryOne(C`
             CREATE (s:${Site} {
                 uuid: ${uuid},
@@ -136,9 +150,28 @@ export const CreateSite = defineAction({
                 domain: ${data.domain}
             })
         `.RETURN({}));
+
+        // Create an administrators group and add the specified user as an admin
+        if (data.adminUser) {
+            const newGroupResult = await CreateGroup.apply(tx, {
+                type: CreateGroup.type,
+                name: "Administrators",
+                belongsTo: uuid,
+                administerSite: true,
+                administerGroups: true,
+                approveEntryChanges: true,
+                approveSchemaChanges: true,
+                proposeEntryChanges: true,
+                proposeSchemaChanges: true,
+                addUsers: [data.adminUser],
+            });
+            resultData.adminGroup = newGroupResult.resultData.uuid;
+            modifiedNodes.push(resultData.adminGroup);
+        }
+
         return {
-            resultData: { uuid, siteCode, },
-            modifiedNodes: [uuid],
+            resultData,
+            modifiedNodes,
         };
     },
     invert: (data, resultData) => DeleteSite({key: resultData.uuid}),

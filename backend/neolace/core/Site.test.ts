@@ -2,6 +2,7 @@ import { log } from "../api";
 import { suite, test, assert, beforeEach, setTestIsolation, assertRejects } from "../lib/intern-tests";
 import { graph } from "./graph";
 import { CreateSite, Site, testExports } from "./Site";
+import { CreateUser } from "./User";
 
 suite(__filename, () => {
 
@@ -82,6 +83,26 @@ suite(__filename, () => {
                 })).then(s => { siteCodesUsed.add(s.siteCode); })
             }
             assert.strictEqual(siteCodesUsed.size, 300);
+        });
+
+        test("Can create Sites with a default administrators group", async () => {
+            // Create a user:
+            const jamie = await graph.runAsSystem(CreateUser({
+                email: "jamie@neolace.net",
+                fullName: "Jamie Admin",
+            }));
+            // Create a site, specifying that user as the new administrator:
+            await graph.runAsSystem(CreateSite({
+                shortId: "site-test1",
+                domain: "test1.neolace.net",
+                description: "A site managed by Jamie",
+                adminUser: jamie.uuid,
+            }));
+            // Read the resulting site and its groups:
+            const siteResult = await graph.pullOne(Site, s => s.groupsFlat(g => g.allProps), {key: "site-test1"});
+            assert.strictEqual(siteResult.groupsFlat.length, 1);
+            assert.strictEqual(siteResult.groupsFlat[0].name, "Administrators");
+            assert.strictEqual(siteResult.groupsFlat[0].administerSite, true);
         });
     });
 });
