@@ -9,6 +9,9 @@ import {
     C,
     ValidationError,
     VNodeTypeRef,
+    VirtualPropType,
+    RawVNode,
+    WrappedTransaction,
 } from "vertex-framework";
 
 // Forward reference
@@ -35,10 +38,29 @@ export class Group extends VNodeType {
 
         // Membership in _any_ group grants permission to view entries and schema on the site
     };
+    // How many levels of groups a site can have (groups can be nested, e.g. Employees > Managers > C-level)
+    static readonly maxDepth = 4;
+    static readonly emptyPermissions = {
+        administerSite: false,
+        administerGroups: false,
+        approveSchemaChanges: false,
+        approveEntryChanges: false,
+        proposeSchemaChanges: false,
+        proposeEntryChanges: false,
+    };
 
-    // static async validate(dbObject: RawVNode<typeof Group>, tx: WrappedTransaction): Promise<void> {
-    //     await super.validate(dbObject, tx);
-    // }
+    static async validate(dbObject: RawVNode<typeof Group>, tx: WrappedTransaction): Promise<void> {
+        await super.validate(dbObject, tx);
+        // Check the depth of this group:
+        await tx.pullOne(Group, g => g.site(s=>s), {key: dbObject.uuid}).then(g => {
+            if (g.site === null) {
+                // The superclass validation should already have caught a missing Site, so the only reason Site would
+                // be null here is if the "site" virtual prop isn't able to find the site, because the path between the
+                // group and the site is longer than Group.maxDepth
+                throw new Error(`User groups cannot be nested more than ${Group.maxDepth} levels deep.`);
+            }
+        });
+    }
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
         // Which Site or group owns this one.
@@ -49,6 +71,20 @@ export class Group extends VNodeType {
         HAS_USER: {
             to: [User],
             cardinality: VNodeType.Rel.ToManyUnique,
+        },
+    });
+
+    static readonly virtualProperties = VNodeType.hasVirtualProperties({
+        // The site that this group belongs to
+        site: {
+            type: VirtualPropType.OneRelationship,
+            query: C`(@this)-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(@target:${Site})`,
+            target: Site,
+        },// The site that this group belongs to
+        parentGroup: {
+            type: VirtualPropType.OneRelationship,
+            query: C`(@this)-[:${Group.rel.BELONGS_TO}]->(@target:${Group})`,
+            target: Group,
         },
     });
 
@@ -82,7 +118,7 @@ export const UpdateGroup = defaultUpdateActionFor(Group, g => g
 
                 // Helper function: given the key (UUID or shortId) of a Group or Site, return the UUID of the associated site
                 const getSiteUuidForGS = async (key: string|UUID): Promise<UUID> => tx.queryOne(C`
-                    MATCH (parent:VNode)-[:${Group.rel.BELONGS_TO}*0..5]->(site:${Site}), parent HAS KEY ${key}
+                    MATCH (parent:VNode)-[:${Group.rel.BELONGS_TO}*0..${C(String(Group.maxDepth))}]->(site:${Site}), parent HAS KEY ${key}
                     WHERE parent:${Group} OR parent:${Site}
                 `.RETURN({"site.uuid": "uuid"})).then(r => r["site.uuid"]);
 
@@ -93,8 +129,7 @@ export const UpdateGroup = defaultUpdateActionFor(Group, g => g
                     to: args.belongsTo,
                 })).prevTo.key;
 
-                // Check which site this will belong to. This also serves to prevent groups from being nested more
-                // than five levels deep.
+                // Check which site this will belong to.
                 const newSiteUUID = await getSiteUuidForGS(args.belongsTo);
 
                 if (prevBelongedTo !== null) {
