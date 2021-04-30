@@ -19,6 +19,17 @@ export const GroupRef: typeof Group = VNodeTypeRef("Group");
 import { SiteRef as Site } from "./Site";
 import { User } from "./User";
 
+
+export const enum Permissions {
+    administerSite = "administerSite",
+    administerGroups = "administerGroups",
+    approveSchemaChanges = "approveSchemaChanges",
+    approveEntryChanges = "approveEntryChanges",
+    proposeSchemaChanges = "proposeSchemaChanges",
+    proposeEntryChanges = "proposeEntryChanges",
+}
+
+
 @VNodeType.declare
 export class Group extends VNodeType {
     static readonly label = "Group";
@@ -27,13 +38,13 @@ export class Group extends VNodeType {
         // Name of this group
         name: Joi.string().max(200),
         // Admin-level permissions:
-        administerSite: Joi.boolean().required(),  // Can set properties of the site like domain name, name, private/public, etc.
-        administerGroups: Joi.boolean().required(),  // Can administer users and groups on this site:
-        approveSchemaChanges: Joi.boolean().required(),  // Can approve change requests related to the site schema
-        approveEntryChanges: Joi.boolean().required(),  // Can approve change requests related to the site content
+        [Permissions.administerSite]: Joi.boolean().required(),  // Can set properties of the site like domain name, name, private/public, etc.
+        [Permissions.administerGroups]: Joi.boolean().required(),  // Can administer users and groups on this site:
+        [Permissions.approveSchemaChanges]: Joi.boolean().required(),  // Can approve change requests related to the site schema
+        [Permissions.approveEntryChanges]: Joi.boolean().required(),  // Can approve change requests related to the site content
         // Normal user level permissions:
-        proposeSchemaChanges: Joi.boolean().required(),
-        proposeEntryChanges: Joi.boolean().required(),
+        [Permissions.proposeSchemaChanges]: Joi.boolean().required(),
+        [Permissions.proposeEntryChanges]: Joi.boolean().required(),
         // future permission: participate in discussions
 
         // Membership in _any_ group grants permission to view entries and schema on the site
@@ -41,12 +52,12 @@ export class Group extends VNodeType {
     // How many levels of groups a site can have (groups can be nested, e.g. Employees > Managers > C-level)
     static readonly maxDepth = 4;
     static readonly emptyPermissions = {
-        administerSite: false,
-        administerGroups: false,
-        approveSchemaChanges: false,
-        approveEntryChanges: false,
-        proposeSchemaChanges: false,
-        proposeEntryChanges: false,
+        [Permissions.administerSite]: false,
+        [Permissions.administerGroups]: false,
+        [Permissions.approveSchemaChanges]: false,
+        [Permissions.approveEntryChanges]: false,
+        [Permissions.proposeSchemaChanges]: false,
+        [Permissions.proposeEntryChanges]: false,
     };
 
     static async validate(dbObject: RawVNode<typeof Group>, tx: WrappedTransaction): Promise<void> {
