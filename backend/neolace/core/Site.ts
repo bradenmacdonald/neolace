@@ -78,6 +78,11 @@ export class Site extends VNodeType {
          */
         domain: Joi.string().max(1_000).required(),
         description: Joi.string().max(5_000),
+
+        // Permissions:
+        // private: on a private site, access to entries is restricted to groups with the "ViewEntry" permission.
+        // public-contributions: anyone can read all entries and propose edits
+        // public-readonly: anyone can read all entries but only those with permission can propose edits
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
