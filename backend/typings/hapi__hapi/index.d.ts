@@ -1,10 +1,10 @@
 import * as Hapi from "@hapi/hapi"; // This line is requried to augment instead of replace the types
-import { UUID } from "vertex-framework";
+import { VNID } from "vertex-framework";
 
 declare module "@hapi/hapi" {
     // User credentials available on request.auth.credentials.user
     export interface UserCredentials {
-        uuid: UUID;
+        id: VNID;
         isBot: boolean;
         authnId?: number;
         // Email address. Empty if this user is a bot.

@@ -1,5 +1,3 @@
-import { C, newDataRequest, UUID } from "vertex-framework";
-
 import { suite, test, assert, beforeEach } from "../lib/intern-tests";
 import { graph } from "./graph";
 import { testExports } from "./User";

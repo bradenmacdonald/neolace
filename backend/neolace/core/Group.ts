@@ -5,13 +5,14 @@ import {
     defaultUpdateActionFor,
     defaultDeleteAndUnDeleteFor,
     defaultCreateFor,
-    UUID,
     C,
     ValidationError,
     VNodeTypeRef,
     VirtualPropType,
     RawVNode,
     WrappedTransaction,
+    VNodeKey,
+    VNID,
 } from "vertex-framework";
 
 // Forward reference
@@ -63,7 +64,7 @@ export class Group extends VNodeType {
     static async validate(dbObject: RawVNode<typeof Group>, tx: WrappedTransaction): Promise<void> {
         await super.validate(dbObject, tx);
         // Check the depth of this group:
-        await tx.pullOne(Group, g => g.site(s=>s), {key: dbObject.uuid}).then(g => {
+        await tx.pullOne(Group, g => g.site(s=>s), {key: dbObject.id}).then(g => {
             if (g.site === null) {
                 // The superclass validation should already have caught a missing Site, so the only reason Site would
                 // be null here is if the "site" virtual prop isn't able to find the site, because the path between the
@@ -112,14 +113,14 @@ export const UpdateGroup = defaultUpdateActionFor(Group, g => g
     .proposeEntryChanges
     ,{
         otherUpdates: async (args: {
-            // UUID or shortId of a Site or Group that this Group belongs to.
-            belongsTo?: string|UUID,
+            // VNID or slugId of a Site or Group that this Group belongs to.
+            belongsTo?: VNodeKey,
             // Add some users to this group:
-            addUsers?: UUID[],
+            addUsers?: VNID[],
             // Remove some users from this group:
-            removeUsers?: UUID[],
+            removeUsers?: VNID[],
         }, tx, nodeSnapshot) => {
-            const uuid = nodeSnapshot.uuid;
+            const id = nodeSnapshot.id;
             const previousValues: Partial<typeof args> = {};
 
             // Relationship updates:
@@ -127,27 +128,27 @@ export const UpdateGroup = defaultUpdateActionFor(Group, g => g
             // Change which Group/Site this Group belongs to (groups can be nested)
             if (args.belongsTo !== undefined) {
 
-                // Helper function: given the key (UUID or shortId) of a Group or Site, return the UUID of the associated site
-                const getSiteUuidForGS = async (key: string|UUID): Promise<UUID> => tx.queryOne(C`
+                // Helper function: given the key (VNID or slugId) of a Group or Site, return the VNID of the associated site
+                const getSiteIdForGS = async (key: VNodeKey): Promise<VNID> => tx.queryOne(C`
                     MATCH (parent:VNode)-[:${Group.rel.BELONGS_TO}*0..${C(String(Group.maxDepth))}]->(site:${Site}), parent HAS KEY ${key}
                     WHERE parent:${Group} OR parent:${Site}
-                `.RETURN({"site.uuid": "uuid"})).then(r => r["site.uuid"]);
+                `.RETURN({"site.id": "vnid"})).then(r => r["site.id"]);
 
                 // args.belongsTo is the key of the parent (a Group or a Site). Groups can be nested.
                 const prevBelongedTo = (await tx.updateToOneRelationship({
-                    from: [Group, uuid],
+                    from: [Group, id],
                     rel: Group.rel.BELONGS_TO,
                     to: args.belongsTo,
                 })).prevTo.key;
 
                 // Check which site this will belong to.
-                const newSiteUUID = await getSiteUuidForGS(args.belongsTo);
+                const newSiteId = await getSiteIdForGS(args.belongsTo);
 
                 if (prevBelongedTo !== null) {
                     // Validate that the new parent (site or group) is the same site as before - groups cannot move
                     // between sites.
-                    const prevSiteUUID = await getSiteUuidForGS(prevBelongedTo);
-                    if (prevSiteUUID !== newSiteUUID) {
+                    const prevSiteId = await getSiteIdForGS(prevBelongedTo);
+                    if (prevSiteId !== newSiteId) {
                         throw new ValidationError("Cannot move Group from one site to another.");
                     }
                     previousValues.belongsTo = prevBelongedTo;
@@ -157,12 +158,12 @@ export const UpdateGroup = defaultUpdateActionFor(Group, g => g
             if (args.addUsers) {
                 // Add some users to this group:
                 const added = await tx.query(C`
-                    MATCH (u:${User}) WHERE u.uuid IN ${args.addUsers}
-                    MATCH (g:${Group} {uuid: ${uuid}})
+                    MATCH (u:${User}) WHERE u.id IN ${args.addUsers}
+                    MATCH (g:${Group} {id: ${id}})
                     MERGE (g)-[:${Group.rel.HAS_USER}]->(u)
-                `.RETURN({"u.uuid": "uuid"}));
+                `.RETURN({"u.id": "vnid"}));
                 if (added.length !== args.addUsers.length) {
-                    throw new ValidationError("Invalid user UUID given to addUser.");
+                    throw new ValidationError("Invalid user VNID given to addUser.");
                 }
                 previousValues.removeUsers = args.addUsers;
             }
@@ -170,12 +171,12 @@ export const UpdateGroup = defaultUpdateActionFor(Group, g => g
             if (args.removeUsers) {
                 // Remove some users from this group:
                 const removed = await tx.query(C`
-                MATCH (g:${Group} {uuid: ${uuid}})-[rel:${Group.rel.HAS_USER}]->(u:${User})
-                WHERE u.uuid IN ${args.removeUsers}
+                MATCH (g:${Group} {id: ${id}})-[rel:${Group.rel.HAS_USER}]->(u:${User})
+                WHERE u.id IN ${args.removeUsers}
                 DELETE rel
-                `.RETURN({"u.uuid": "uuid"}));
+                `.RETURN({"u.id": "vnid"}));
                 if (removed.length !== args.removeUsers.length) {
-                    throw new ValidationError("Invalid user UUID given to addUser.");
+                    throw new ValidationError("Invalid user VNID given to addUser.");
                 }
                 previousValues.addUsers = args.removeUsers;
             }

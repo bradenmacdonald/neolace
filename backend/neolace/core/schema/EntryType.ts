@@ -1,6 +1,6 @@
 import Joi from "@hapi/joi";
 import {
-    ShortIdProperty,
+    SlugIdProperty,
     DerivedProperty,
     VirtualPropType,
     C,

@@ -61,7 +61,7 @@ intern.on("beforeRun", async () => {
         emptySnapshot = await graph.snapshotDataForTesting();
 
         // At this point, no data should exist in the database:
-        const foo = await graph.pull(Entry, e => e.uuid, {});
+        const foo = await graph.pull(Entry, e => e.id, {});
         if (foo.length !== 0) {
             throw new Error("Unexpected data in database.");
         }

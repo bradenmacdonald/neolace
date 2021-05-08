@@ -25,9 +25,9 @@ defineEndpoint(__filename, {
             email: payload.email,
             fullName: payload.fullName,
             username: payload.username,
-        })).catch(adaptErrors("email", "fullName", adaptErrors.remap("shortId", "username")));  // An error in the "shortId" property gets remapped into the "username" field
+        })).catch(adaptErrors("email", "fullName", adaptErrors.remap("slugId", "username")));  // An error in the "slugId" property gets remapped into the "username" field
 
-        const newUserData: api.PublicUserData = await getPublicUserData(result.uuid);
+        const newUserData: api.PublicUserData = await getPublicUserData(result.id);
         return h.response(newUserData);
 
     },

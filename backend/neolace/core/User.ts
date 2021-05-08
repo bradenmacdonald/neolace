@@ -4,13 +4,13 @@ import {randomBytes} from "crypto";
 import {
     C,
     VNodeType,
-    ShortIdProperty,
+    SlugIdProperty,
     RawVNode,
     ValidationError,
     PublicValidationError,
     WrappedTransaction,
     defineAction,
-    UUID,
+    VNID,
     DerivedProperty,
     VirtualPropType,
 } from "vertex-framework";
@@ -19,11 +19,11 @@ import { authClient } from "../api/authn";
 @VNodeType.declare
 export class User extends VNodeType {
     static label = "User";
-    static readonly shortIdPrefix = "user-";
+    static readonly slugIdPrefix = "user-";
     static readonly properties = {
         ...VNodeType.properties,
-        // shortId: starts with "user-", then follows a unique code. Can be changed any time.
-        shortId: ShortIdProperty,
+        // slugId: starts with "user-", then follows a unique code. Can be changed any time.
+        slugId: SlugIdProperty,
         // Optional full name
         fullName: Joi.string().max(100),
     };
@@ -95,13 +95,13 @@ export class BotUser extends User {
 /** Get the username of a user */
 export function username(): DerivedProperty<string> { return DerivedProperty.make(
     User,
-    user => user.shortId,
-    user => user.shortId.substr(User.shortIdPrefix.length),
+    user => user.slugId,
+    user => user.slugId.substr(User.slugIdPrefix.length),
 );}
 
 async function isUsernameTaken(tx: WrappedTransaction, username: string): Promise<boolean> {
     const result = await tx.query(C`
-        MATCH (:ShortId {shortId: ${User.shortIdPrefix + username}})-[:IDENTIFIES]->(u:${User})
+        MATCH (:SlugId {slugId: ${User.slugIdPrefix + username}})-[:IDENTIFIES]->(u:${User})
     `.RETURN({}));
     return result.length > 0;
 }
@@ -119,10 +119,10 @@ export const CreateUser = defineAction({
         fullName?: string;
     },
     resultData: {} as {
-        uuid: UUID;
+        id: VNID;
     },
     apply: async (tx, data) => {
-        const uuid = UUID();
+        const vnid = VNID();
 
         // Find a username that's not taken
         let username = data.username; // TODO: make sure 'data' is read-only
@@ -143,20 +143,20 @@ export const CreateUser = defineAction({
         }
 
         // Create a user in the auth service
-        const authnData = await authClient.createUser({username: uuid});
+        const authnData = await authClient.createUser({username: vnid});
 
         const result = await tx.query(C`
             CREATE (u:Human:User:VNode {
-                uuid: ${uuid},
+                id: ${vnid},
                 authnId: ${authnData.accountId},
                 email: ${data.email},
-                shortId: ${User.shortIdPrefix + username},
+                slugId: ${User.slugIdPrefix + username},
                 fullName: ${data.fullName || null}
             })
-        `.RETURN({"u.uuid": "uuid"}));
-        const modifiedNodes = [result[0]["u.uuid"]];
+        `.RETURN({"u.id": "vnid"}));
+        const modifiedNodes = [result[0]["u.id"]];
         return {
-            resultData: { uuid, },
+            resultData: { id: vnid, },
             modifiedNodes,
         };
     },
@@ -168,13 +168,13 @@ export const CreateUser = defineAction({
 export const CreateBot = defineAction({
     type: "CreateBot",
     parameters: {} as {
-        // UUID of the user that is creating this bot
-        ownedByUser: UUID;
+        // VNID of the user that is creating this bot
+        ownedByUser: VNID;
         username: string;
         fullName?: string;
     },
     resultData: {} as {
-        uuid: UUID;
+        id: VNID;
         authToken: string;
     },
     apply: async (tx, data) => {
@@ -182,20 +182,20 @@ export const CreateBot = defineAction({
             throw new Error(`The username "${data.username}" is already taken.`);
         }
 
-        const uuid = UUID();
+        const vnid = VNID();
         const authToken = await createBotAuthToken();
         await tx.queryOne(C`
-            MATCH (owner:${HumanUser} {uuid: ${data.ownedByUser}})
+            MATCH (owner:${HumanUser} {id: ${data.ownedByUser}})
             CREATE (u:Bot:User:VNode {
-                uuid: ${uuid},
-                shortId: ${User.shortIdPrefix + data.username},
+                id: ${vnid},
+                slugId: ${User.slugIdPrefix + data.username},
                 authToken: ${authToken},
                 fullName: ${data.fullName || null}
             })-[:${BotUser.rel.OWNED_BY}]->(owner)
         `.RETURN({}));
         return {
-            resultData: { uuid, authToken, },
-            modifiedNodes: [uuid],
+            resultData: { id: vnid, authToken, },
+            modifiedNodes: [vnid],
         };
     },
     invert: (data, resultData) => null,

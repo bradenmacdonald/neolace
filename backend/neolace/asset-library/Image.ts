@@ -6,7 +6,7 @@ import {
     defaultUpdateActionFor,
     defaultCreateFor,
     defaultDeleteAndUnDeleteFor,
-    ShortIdProperty,
+    SlugIdProperty,
     DerivedProperty,
 } from "vertex-framework";
 import { config } from "../app/config";
@@ -19,7 +19,7 @@ export class Image extends VNodeType {
     static label = "Image";
     static readonly properties = {
         ...VNodeType.properties,
-        shortId: ShortIdProperty,
+        slugId: SlugIdProperty,
         name: Joi.string().required(),
         description: Joi.string().max(5_000).required(),
         sourceUrl: Joi.string(),
@@ -65,29 +65,20 @@ export function imageUrl(): DerivedProperty<string> { return DerivedProperty.mak
 );}
 
 
-/** Update a new "Image" entry in the TechDB */
-interface UpdateImageArgs {
-    shortId?: string;
-    name?: string;
-    description?: string;
-    imageType?: string;
-    sourceUrl?: string;
-    licenseDetails?: string;
-}
 // Action to make changes to an existing Image entry:
-export const UpdateImage = defaultUpdateActionFor(Image, i => i.shortId.name.description.licenseDetails.sourceUrl.imageType, {
+export const UpdateImage = defaultUpdateActionFor(Image, i => i.slugId.name.description.licenseDetails.sourceUrl.imageType, {
     otherUpdates: async (args: {
         relatesTo?: {key: string, weight: number}[],
         /** SHA-256 hash of the data file for this image (required) */
         dataHash?: string
     }, tx, nodeSnapshot) => {
-        const uuid = nodeSnapshot.uuid;
+        const id = nodeSnapshot.id;
         const previousValues: Partial<typeof args> = {};
 
         // Relationship updates:
         if (args.relatesTo !== undefined) {
             previousValues.relatesTo = (await tx.updateToManyRelationship({
-                from: [Image, uuid],
+                from: [Image, id],
                 rel: Image.rel.RELATES_TO,
                 to: args.relatesTo,
             })).prevTo as any;
@@ -95,7 +86,7 @@ export const UpdateImage = defaultUpdateActionFor(Image, i => i.shortId.name.des
 
         if (args.dataHash) {
             const result = await tx.query(C`
-                MATCH (img:${Image} {uuid: ${uuid}})
+                MATCH (img:${Image} {id: ${id}})
                 WITH img
                     MATCH (df:${DataFile} {sha256Hash: ${args.dataHash}})
                     MERGE (img)-[:${Image.rel.HAS_DATA}]->(df)
@@ -114,6 +105,6 @@ export const UpdateImage = defaultUpdateActionFor(Image, i => i.shortId.name.des
 });
 
 /** Create a new "Image" entry in the TechDB */
-export const CreateImage = defaultCreateFor(Image, i => i.shortId.name.description.licenseDetails.imageType, UpdateImage);
+export const CreateImage = defaultCreateFor(Image, i => i.slugId.name.description.licenseDetails.imageType, UpdateImage);
 
 export const [DeleteImage, UnDeleteImage] = defaultDeleteAndUnDeleteFor(Image);

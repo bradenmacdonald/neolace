@@ -1,4 +1,4 @@
-import { C, newDataRequest, UUID } from "vertex-framework";
+import { C, newDataRequest, VNID } from "vertex-framework";
 
 import { suite, test, assert, beforeEach } from "../../lib/intern-tests";
 import { graph } from "../graph";
@@ -8,11 +8,11 @@ import { ExpandSchema_AddEntryType } from "./Expand-Contract-Schema";
 
 suite(__filename, () => {
 
-    let siteUUID: UUID;
+    let siteId: VNID;
 
     beforeEach(async () => {
-        const site = await graph.runAsSystem(CreateSite({shortId: "site-default", domain: "test.neolace.net"}));
-        siteUUID = site.uuid;
+        const site = await graph.runAsSystem(CreateSite({slugId: "site-default", domain: "test.neolace.net"}));
+        siteId = site.id;
     });
 
     suite("ExpandSchema_AddEntryType", () => {
@@ -29,7 +29,7 @@ suite(__filename, () => {
                 ExpandSchema_AddEntryType({
                     class: "regular",
                     name,
-                    siteUUID,
+                    siteId,
                 }),
             );
 

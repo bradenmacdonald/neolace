@@ -7,7 +7,7 @@ export interface ImageData extends VNodeData {
     imageUrl: string;
 }
 
-export interface ImageReferenceData extends Pick<VNodeData, "shortId"> {
+export interface ImageReferenceData extends Pick<VNodeData, "slugId"> {
     description: string;
     imageUrl: string;
 }

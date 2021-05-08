@@ -1,4 +1,4 @@
-import { C, defineAction, UUID } from "vertex-framework";
+import { C, defineAction, VNID } from "vertex-framework";
 import { Site } from "../Site";
 import { EntryType } from "./EntryType";
 
@@ -13,28 +13,28 @@ import { EntryType } from "./EntryType";
 export const ExpandSchema_AddEntryType = defineAction({
     type: "ExpandSchema_AddEntryType",
     parameters: {} as {
-        siteUUID: UUID;
+        siteId: VNID;
         // The name of this entry type, e.g. "Note", "Article", "Technology", "Design"
         name: string;
         class: "regular";// class: regular (an article or just name+properties) vs. Image vs. DataTable
     },
     resultData: {} as {
-        uuid: UUID;
+        id: VNID;
     },
     apply: async (tx, data) => {
-        const uuid = UUID();
+        const id = VNID();
 
         const result = await tx.queryOne(C`
-            MATCH (site:${Site} {uuid: ${data.siteUUID}})
+            MATCH (site:${Site} {id: ${data.siteId}})
             CREATE (et:${EntryType} {
-                uuid: ${uuid},
+                id: ${id},
                 name: ${data.name},
                 class: ${data.class}
             })-[:${EntryType.rel.FOR_SITE}]->(site)
         `.RETURN({}));
         return {
-            resultData: { uuid, },
-            modifiedNodes: [uuid],
+            resultData: { id, },
+            modifiedNodes: [id],
         };
     },
     invert: (data, resultData) => null,

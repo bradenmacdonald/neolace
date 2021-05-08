@@ -23,8 +23,8 @@ defineEndpoint(__filename, {
     handler: async (request, h) => {
         const email = (request.payload as any).email;
         try {
-            const user = await graph.pullOne(HumanUser, u => u.uuid, {where: C`@this.email = ${email}`});
-            await authClient.requestPasswordlessLogin({username: user.uuid});
+            const user = await graph.pullOne(HumanUser, u => u.id, {where: C`@this.email = ${email}`});
+            await authClient.requestPasswordlessLogin({username: user.id});
         } catch (err) {
             log.debug(`Passwordless login request failed: ${err}`);
             return h.response({requested: false});
