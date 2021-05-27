@@ -24,14 +24,14 @@ For example:
 
 ## Identifiers
 
-Vertex Framework uses "shortIds" that are up to 32 characters long. In order to support multi-tenancy, Neolace sites use shortIds that are prefixes with a **site code**. The site code is a 4 character code using the 62 alphanumeric characters (0-9, a-z, A-Z), so a site code may look like `AB3x`.
+Vertex Framework uses "slugIds" that share a common namespace. In order to support multi-tenancy, Neolace sites use slugIds that are prefixed with a **site code**. The site code is a 5 character code using the 62 alphanumeric characters (0-9, a-z, A-Z), so a site code may look like `AB3xx`.
 
 Example:
 
-* A TechNotes Entry has "ID" of `t-wind-turbine-rotor-r4-spxt` (this is the maximum length allowed)
-* The site code for TechNotes is `TNDB`
-* In the gaph database (vertex framework), it gets stored as shortId `TNDBt-wind-turbine-rotor-r4-spxt` (this is 32 characters long)
+* A TechNotes Entry has "ID" of `t-wind-turbine-rotor-r4-spxt`
+* The site code for TechNotes is `TNDB0`
+* In the gaph database (vertex framework), it gets stored as slugId `TNDB0t-wind-turbine-rotor-r4-spxt`
 
-The site code cannot start with `z`, to allow for future expansion. With these restrictions, each Neolace Realm can support 61*62*62*62 = 14,538,008 Sites.
+The site code cannot start with `z`, to allow for future expansion. With these restrictions, each Neolace Realm can support 61*62*62*62*62 = 901,356,496 Sites.
 
-**The `shortId` with the site code prefix is considered purely internal** (to give each Site a separate namespace for identifiers), so only the `id` (without the site code prefix) and `uuid` fields are exposed via the API.
+**The `slugId` with the site code prefix is considered purely internal** (to give each Site a separate namespace for identifiers), so only the `siteSlugId` (without the site code prefix) and `id` (VNID/UUID) fields are exposed via the API.

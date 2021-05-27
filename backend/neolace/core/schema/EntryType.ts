@@ -1,9 +1,5 @@
-import Joi from "@hapi/joi";
 import {
-    SlugIdProperty,
-    DerivedProperty,
-    VirtualPropType,
-    C,
+    Field,
     VNodeType,
     VNodeTypeRef,
 } from "vertex-framework";
@@ -19,9 +15,9 @@ export class EntryType extends VNodeType {
     static properties = {
         ...VNodeType.properties,
         // The name of this entry type
-        name: Joi.string().required(),
+        name: Field.String,
         // Description: Short, rich text summary of the entry type
-        description: Joi.string().max(5_000),
+        description: Field.NullOr.String.Check(desc => desc.max(5_000)),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({

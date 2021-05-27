@@ -1,6 +1,6 @@
 import * as Hapi from "@hapi/hapi";
 import * as Boom from "@hapi/boom";
-import * as Joi from "@hapi/joi";
+import Joi from "joi";
 
 import * as api from "neolace-api";
 
@@ -69,7 +69,7 @@ export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
                     // telling us the request field responsible for this error, we use that:
                     for (const mf of mapping) {
                         if (typeof mf === "function") {
-                            const requestField = mf(path, err._object);
+                            const requestField = mf(path, err._original);
                             if (requestField) {
                                 requestFields.push(requestField);
                                 found = true;

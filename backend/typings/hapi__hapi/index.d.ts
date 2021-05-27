@@ -12,7 +12,7 @@ declare module "@hapi/hapi" {
         // Public username. Unique but can be changed at any time.
         username: string;
         // Optional real name
-        fullName: string;
+        fullName: string|null;
     }
 
     // App credentials available on request.auth.credentials.app

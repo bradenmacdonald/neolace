@@ -13,7 +13,7 @@ defineEndpoint(__filename, {
         tags: ["api"],
         validate: {
             payload: Joi.object({
-                email: HumanUser.properties.email.required(),
+                email: Joi.string().required(),
             }).label("PasswordlessLoginRequest"),
         },
         response: { status: {

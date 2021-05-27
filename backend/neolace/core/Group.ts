@@ -1,9 +1,7 @@
-import * as Joi from "@hapi/joi";
-
 import {
     VNodeType,
-    defaultUpdateActionFor,
-    defaultDeleteAndUnDeleteFor,
+    defaultUpdateFor,
+    defaultDeleteFor,
     defaultCreateFor,
     C,
     ValidationError,
@@ -13,6 +11,7 @@ import {
     WrappedTransaction,
     VNodeKey,
     VNID,
+    Field,
 } from "vertex-framework";
 
 // Forward reference
@@ -37,15 +36,15 @@ export class Group extends VNodeType {
     static readonly properties = {
         ...VNodeType.properties,
         // Name of this group
-        name: Joi.string().max(200),
+        name: Field.String,
         // Admin-level permissions:
-        [Permissions.administerSite]: Joi.boolean().required(),  // Can set properties of the site like domain name, name, private/public, etc.
-        [Permissions.administerGroups]: Joi.boolean().required(),  // Can administer users and groups on this site:
-        [Permissions.approveSchemaChanges]: Joi.boolean().required(),  // Can approve change requests related to the site schema
-        [Permissions.approveEntryChanges]: Joi.boolean().required(),  // Can approve change requests related to the site content
+        [Permissions.administerSite]: Field.Boolean,  // Can set properties of the site like domain name, name, private/public, etc.
+        [Permissions.administerGroups]: Field.Boolean,  // Can administer users and groups on this site:
+        [Permissions.approveSchemaChanges]: Field.Boolean,  // Can approve change requests related to the site schema
+        [Permissions.approveEntryChanges]: Field.Boolean,  // Can approve change requests related to the site content
         // Normal user level permissions:
-        [Permissions.proposeSchemaChanges]: Joi.boolean().required(),
-        [Permissions.proposeEntryChanges]: Joi.boolean().required(),
+        [Permissions.proposeSchemaChanges]: Field.Boolean,
+        [Permissions.proposeEntryChanges]: Field.Boolean,
         // future permission: participate in discussions
 
         // Membership in _any_ group grants permission to view entries and schema on the site
@@ -103,7 +102,7 @@ export class Group extends VNodeType {
 }
 
 
-export const UpdateGroup = defaultUpdateActionFor(Group, g => g
+export const UpdateGroup = defaultUpdateFor(Group, g => g
     .name
     .administerSite
     .administerGroups
@@ -132,7 +131,7 @@ export const UpdateGroup = defaultUpdateActionFor(Group, g => g
                 const getSiteIdForGS = async (key: VNodeKey): Promise<VNID> => tx.queryOne(C`
                     MATCH (parent:VNode)-[:${Group.rel.BELONGS_TO}*0..${C(String(Group.maxDepth))}]->(site:${Site}), parent HAS KEY ${key}
                     WHERE parent:${Group} OR parent:${Site}
-                `.RETURN({"site.id": "vnid"})).then(r => r["site.id"]);
+                `.RETURN({"site.id": Field.VNID})).then(r => r["site.id"]);
 
                 // args.belongsTo is the key of the parent (a Group or a Site). Groups can be nested.
                 const prevBelongedTo = (await tx.updateToOneRelationship({
@@ -161,7 +160,7 @@ export const UpdateGroup = defaultUpdateActionFor(Group, g => g
                     MATCH (u:${User}) WHERE u.id IN ${args.addUsers}
                     MATCH (g:${Group} {id: ${id}})
                     MERGE (g)-[:${Group.rel.HAS_USER}]->(u)
-                `.RETURN({"u.id": "vnid"}));
+                `.RETURN({"u.id": Field.VNID}));
                 if (added.length !== args.addUsers.length) {
                     throw new ValidationError("Invalid user VNID given to addUser.");
                 }
@@ -174,7 +173,7 @@ export const UpdateGroup = defaultUpdateActionFor(Group, g => g
                 MATCH (g:${Group} {id: ${id}})-[rel:${Group.rel.HAS_USER}]->(u:${User})
                 WHERE u.id IN ${args.removeUsers}
                 DELETE rel
-                `.RETURN({"u.id": "vnid"}));
+                `.RETURN({"u.id": Field.VNID}));
                 if (removed.length !== args.removeUsers.length) {
                     throw new ValidationError("Invalid user VNID given to addUser.");
                 }
@@ -186,7 +185,7 @@ export const UpdateGroup = defaultUpdateActionFor(Group, g => g
     }
 );
 
-export const [DeleteGroup, UnDeleteGroup] = defaultDeleteAndUnDeleteFor(Group);
+export const DeleteGroup = defaultDeleteFor(Group);
 
 export const CreateGroup = defaultCreateFor(Group, g => g
     .name

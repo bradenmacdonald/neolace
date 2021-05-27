@@ -35,7 +35,7 @@ export const ExpandSchema_AddEntryType = defineAction({
         return {
             resultData: { id, },
             modifiedNodes: [id],
+            description: `Added ${EntryType.withId(id)}`,
         };
     },
-    invert: (data, resultData) => null,
 });

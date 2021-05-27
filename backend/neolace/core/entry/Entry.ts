@@ -1,11 +1,10 @@
-import Joi from "@hapi/joi";
 import {
-    SlugIdProperty,
     DerivedProperty,
     VirtualPropType,
     C,
     VNodeType,
     VNodeTypeRef,
+    Field,
 } from "vertex-framework";
 
 // Declare a forward reference, if needed:
@@ -30,12 +29,12 @@ export class Entry extends VNodeType {
         //
         // Note that slugIds can change but every slugId permanently points to the entry
         // for which is was first used. So slugIds are immutable but there can be several of them for one entry.
-        slugId: SlugIdProperty,
+        slugId: Field.Slug,
         // The name of this entry
         // This does not need to be unique or include disambiguation - so just put "Drive", not "Drive (computer science)"
-        name: Joi.string().required(),
+        name: Field.String,
         // Description: Short, rich text summary of the thing
-        description: Joi.string().max(5_000),
+        description: Field.String.Check(desc => desc.max(5_000)),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -49,7 +48,7 @@ export class Entry extends VNodeType {
             to: [Entry],
             properties: {
                 // More specific "type" of this relationship, according to the site's schema
-                detailedRelType: Joi.string().required(),
+                detailedRelType: Field.String,
             },
             cardinality: VNodeType.Rel.ToManyUnique,
         },

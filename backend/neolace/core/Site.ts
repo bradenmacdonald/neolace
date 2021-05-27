@@ -1,19 +1,14 @@
-import Joi from "@hapi/joi";
 import {
     C,
     VNodeType,
     VirtualPropType,
-    defaultUpdateActionFor,
-    defaultCreateFor,
-    defaultDeleteAndUnDeleteFor,
-    SlugIdProperty,
-    DerivedProperty,
+    defaultUpdateFor,
+    defaultDeleteFor,
+    Field,
     defineAction,
     VNID,
     VNodeTypeRef,
 } from "vertex-framework";
-import { log } from "../app/log";
-import { graph } from "./graph";
 
 
 // Forward reference
@@ -27,12 +22,12 @@ import { CreateGroup, GroupRef as Group } from "./Group";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Regex for validating a "site code"
-const siteCodeRegex = /^[0-9A-Za-y][0-9A-Za-z]{3}$/;
+const siteCodeRegex = /^[0-9A-Za-y][0-9A-Za-z]{4}$/;
 // Characters allowed in the site code, in ASCII sort order:
 const siteCodeChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-// There are 4 characters in each site code:
-const siteCodeLength = 4;
-// This is the total number of possible site codes: 14,538,008
+// There are 5 characters in each site code:
+const siteCodeLength = 5;
+// This is the total number of possible site codes: 901,356,496
 // The first character cannot start with "z"; this is reserved for future expansion.
 const siteCodesMaxCount = (siteCodeChars.length - 1) * Math.pow(siteCodeChars.length, siteCodeLength - 1);
 
@@ -57,27 +52,27 @@ export class Site extends VNodeType {
     static readonly properties = {
         ...VNodeType.properties,
         /**
-         * The slugId of this site (string up to 32 characters long). Must begin with "site-".
+         * The slugId of this site. Must begin with "site-".
          * In API URLs, the site's slugId is included without the "site-" prefix:
          *     https://api.neolace.com/site/braden/entry/fr-joel
          *                                  ^^^^^^- indicated slugId is "site-braden"
          */
-        slugId: SlugIdProperty,
+        slugId: Field.Slug,
         /** 
-         * The "site code" which gives this site's slugIds a unique namespace. Example: "0001" or "Yb3F"
+         * The "site code" which gives this site's slugIds a unique namespace. Example: "00001" or "Yb3FF"
          * See arch-decisions/007-sites-multitenancy for details.
          * 
          * This is an internal detail and is never exposed via the API. It should also never change.
          */
-        siteCode: Joi.string().regex(siteCodeRegex).required(),
+        siteCode: Field.String.Check(sc => sc.regex(siteCodeRegex)),
         /**
          * The canonical domain for this site, e.g. "mysite.neolace.com".
          *
          * Note that this is not forced to be unique!! We don't want to allow users to "block" a domain that they don't
          * own, e.g. by registering a site on Neolace.com and changing the domain to "microsoft.com"
          */
-        domain: Joi.string().max(1_000).required(),
-        description: Joi.string().max(5_000),
+        domain: Field.String,
+        description: Field.NullOr.String.Check(desc => desc.max(5_000)),
 
         // Permissions:
         // private: on a private site, access to entries is restricted to groups with the "ViewEntry" permission.
@@ -110,9 +105,9 @@ export class Site extends VNodeType {
 }
 
 // Action to make changes to an existing Site:
-export const UpdateSite = defaultUpdateActionFor(Site, s => s.slugId.description.domain, {});
+export const UpdateSite = defaultUpdateFor(Site, s => s.slugId.description.domain, {});
 
-export const [DeleteSite, UnDeleteSite] = defaultDeleteAndUnDeleteFor(Site);
+export const DeleteSite = defaultDeleteFor(Site);
 
 
 export const CreateSite = defineAction({
@@ -159,7 +154,6 @@ export const CreateSite = defineAction({
         // Create an administrators group and add the specified user as an admin
         if (data.adminUser) {
             const newGroupResult = await CreateGroup.apply(tx, {
-                type: CreateGroup.type,
                 name: "Administrators",
                 belongsTo: id,
                 administerSite: true,
@@ -177,9 +171,9 @@ export const CreateSite = defineAction({
         return {
             resultData,
             modifiedNodes,
+            description: `Created ${Site.withId(id)}`,
         };
     },
-    invert: (data, resultData) => DeleteSite({key: resultData.id}),
 });
 
 

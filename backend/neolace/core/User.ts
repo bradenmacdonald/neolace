@@ -1,10 +1,8 @@
-import * as Joi from "@hapi/joi";
 import {randomBytes} from "crypto";
 
 import {
     C,
     VNodeType,
-    SlugIdProperty,
     RawVNode,
     ValidationError,
     PublicValidationError,
@@ -13,6 +11,7 @@ import {
     VNID,
     DerivedProperty,
     VirtualPropType,
+    Field,
 } from "vertex-framework";
 import { authClient } from "../api/authn";
 
@@ -23,9 +22,9 @@ export class User extends VNodeType {
     static readonly properties = {
         ...VNodeType.properties,
         // slugId: starts with "user-", then follows a unique code. Can be changed any time.
-        slugId: SlugIdProperty,
+        slugId: Field.Slug,
         // Optional full name
-        fullName: Joi.string().max(100),
+        fullName: Field.NullOr.String.Check(name => name.max(100)),
     };
 
     static async validate(dbObject: RawVNode<typeof User>, tx: WrappedTransaction): Promise<void> {
@@ -50,9 +49,9 @@ export class HumanUser extends User {
     static readonly properties = {
         ...User.properties,
         // Account ID in the authentication microservice. Only set for human users. Should not be exposed to users.
-        authnId: Joi.number(),
+        authnId: Field.Int,
         // Email address. Not set if this user is a bot (owned by a user or group).
-        email: Joi.string().email({minDomainSegments: 1, tlds: false}).required(),
+        email: Field.String.Check(e => e.email({minDomainSegments: 1, tlds: false})),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -70,7 +69,7 @@ export class BotUser extends User {
     static readonly properties = {
         ...User.properties,
         // Current auth token used to authenticate this user. This acts like a "password" for authenticating this bot.
-        authToken: Joi.string(),
+        authToken: Field.String,
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -145,7 +144,7 @@ export const CreateUser = defineAction({
         // Create a user in the auth service
         const authnData = await authClient.createUser({username: vnid});
 
-        const result = await tx.query(C`
+        await tx.queryOne(C`
             CREATE (u:Human:User:VNode {
                 id: ${vnid},
                 authnId: ${authnData.accountId},
@@ -153,14 +152,13 @@ export const CreateUser = defineAction({
                 slugId: ${User.slugIdPrefix + username},
                 fullName: ${data.fullName || null}
             })
-        `.RETURN({"u.id": "vnid"}));
-        const modifiedNodes = [result[0]["u.id"]];
+        `.RETURN({}));
         return {
             resultData: { id: vnid, },
-            modifiedNodes,
+            modifiedNodes: [vnid],
+            description: `Created ${HumanUser.withId(vnid)}`,
         };
     },
-    invert: (data, resultData) => null,
 });
 
 
@@ -196,9 +194,9 @@ export const CreateBot = defineAction({
         return {
             resultData: { id: vnid, authToken, },
             modifiedNodes: [vnid],
+            description: `Created ${BotUser.withId(vnid)}`,
         };
     },
-    invert: (data, resultData) => null,
 });
 
 

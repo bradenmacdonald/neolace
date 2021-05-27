@@ -2,7 +2,7 @@
 import crypto from "crypto";
 import { Readable, Transform } from "stream";
 import * as Minio from "minio";
-import { UUID } from "vertex-framework";
+import { VNID } from "vertex-framework";
 
 import { config } from "../app/config";
 
@@ -30,7 +30,7 @@ export const __forScriptsOnly = { objStoreClient };
 
 export async function uploadFileToObjStore(fileStream: Readable, contentType: string): Promise<{sha256Hash: string, size: number}> {
     // First we upload to a temporary filename
-    const tempFilename = `temp/${UUID()}`;
+    const tempFilename = `temp/${VNID()}`;
     // Stream the file to object storage, calculating its SHA-256 hash as we go
     const hasher = crypto.createHash("sha256");
     let sizeCalculator = 0;

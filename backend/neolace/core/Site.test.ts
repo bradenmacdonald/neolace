@@ -10,24 +10,24 @@ suite(__filename, () => {
 
         const {siteCodeFromNumber, siteCodesMaxCount} = testExports;
 
-        test("has 14 million+ possibilities", () => {
-            assert.strictEqual(siteCodesMaxCount, 14_538_008);
+        test("has 901 million+ possibilities", () => {
+            assert.strictEqual(siteCodesMaxCount, 901_356_496);
         });
 
-        test("starts with codes like 0000, 0001, 0002, ...", () => {
-            assert.equal(siteCodeFromNumber(0), "0000");
-            assert.equal(siteCodeFromNumber(1), "0001");
-            assert.equal(siteCodeFromNumber(2), "0002");
+        test("starts with codes like 00000, 00001, 00002, ...", () => {
+            assert.equal(siteCodeFromNumber(0), "00000");
+            assert.equal(siteCodeFromNumber(1), "00001");
+            assert.equal(siteCodeFromNumber(2), "00002");
         });
 
-        test("ends with codes yzzx, yzzy, yzzz", () => {
-            assert.equal(siteCodeFromNumber(siteCodesMaxCount - 3), "yzzx");
-            assert.equal(siteCodeFromNumber(siteCodesMaxCount - 2), "yzzy");
-            assert.equal(siteCodeFromNumber(siteCodesMaxCount - 1), "yzzz");
+        test("ends with codes yzzzx, yzzzy, yzzzz", () => {
+            assert.equal(siteCodeFromNumber(siteCodesMaxCount - 3), "yzzzx");
+            assert.equal(siteCodeFromNumber(siteCodesMaxCount - 2), "yzzzy");
+            assert.equal(siteCodeFromNumber(siteCodesMaxCount - 1), "yzzzz");
         });
 
         test("gives expected results from certain values", () => {
-            assert.strictEqual(siteCodeFromNumber(7268454), "UUr8");
+            assert.strictEqual(siteCodeFromNumber(7268454), "0UUr8");
         });
 
         test("rejects out of range values", () => {
@@ -46,31 +46,31 @@ suite(__filename, () => {
         // for things that are easier to test at this level (like specific site code tests)
 
         test("Can create a Site with a specific values, including site code", async () => {
-            const result = await graph.runAsSystem(CreateSite({siteCode: "ABC1", slugId: "site-test1", domain: "test.neolace.net"}));
-            assert.equal(result.siteCode, "ABC1");
+            const result = await graph.runAsSystem(CreateSite({siteCode: "ABC10", slugId: "site-test1", domain: "test.neolace.net"}));
+            assert.equal(result.siteCode, "ABC10");
             const result2 = await graph.pullOne(Site, s => s.slugId.domain.siteCode);
             assert.strictEqual(result2.slugId, "site-test1");
-            assert.strictEqual(result2.siteCode, "ABC1");
+            assert.strictEqual(result2.siteCode, "ABC10");
             assert.strictEqual(result2.domain, "test.neolace.net");
         });
 
         test("Cannot create two sites with the same site code", async () => {
-            const result = await graph.runAsSystem(CreateSite({siteCode: "ABC1", slugId: "site-test1", domain: "test.neolace.net"}));
-            assert.equal(result.siteCode, "ABC1");
+            const result = await graph.runAsSystem(CreateSite({siteCode: "ABC10", slugId: "site-test1", domain: "test.neolace.net"}));
+            assert.equal(result.siteCode, "ABC10");
             await assertRejects(
-                graph.runAsSystem(CreateSite({siteCode: "ABC1", slugId: "site-test2", domain: "test2.neolace.net"})),
-                "already exists with label `Site` and property `siteCode` = 'ABC1'",
+                graph.runAsSystem(CreateSite({siteCode: "ABC10", slugId: "site-test2", domain: "test2.neolace.net"})),
+                "already exists with label `Site` and property `siteCode` = 'ABC10'",
             );
         });
 
         test("Can create Sites with auto-generated random site code", async () => {
             const result1 = await graph.runAsSystem(CreateSite({slugId: "site-test1", domain: "test1.neolace.net"}));
             assert.isString(result1.siteCode);
-            assert.lengthOf(result1.siteCode, 4);
+            assert.lengthOf(result1.siteCode, 5);
 
             const result2 = await graph.runAsSystem(CreateSite({slugId: "site-test2", domain: "test2.neolace.net"}));
             assert.isString(result2.siteCode);
-            assert.lengthOf(result2.siteCode, 4);
+            assert.lengthOf(result2.siteCode, 5);
 
             assert.notStrictEqual(result1.siteCode, result2.siteCode);
 

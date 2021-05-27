@@ -1,4 +1,3 @@
-import Joi from "@hapi/joi";
 import {
     VNodeType,
     defineAction,
@@ -9,6 +8,7 @@ import {
     DerivedProperty,
     VNodeKey,
     VNID,
+    Field,
 } from "vertex-framework";
 
 
@@ -67,7 +67,7 @@ export class Article extends VNodeType {
         ...VNodeType.properties,
 
         // Sections for a "TechConcept" article type:
-        ...(Object.fromEntries(Object.values(Article.Sections).map(s => [s.code, Joi.string()]))),
+        ...(Object.fromEntries(Object.values(Article.Sections).map(s => [s.code, Field.String]))),
     };
 }
 
@@ -121,7 +121,7 @@ export function articleSections(vnodeType: VNodeType): DerivedProperty<ArticleSe
                 return vnodeType.Sections.map(s => ({
                     title: s.title,
                     code: s.code,
-                    content: entryData.articleVNode?.[s.code] || "",
+                    content: (entryData as any).articleVNode?.[s.code] || "",
                 }));
             },
         )
@@ -172,7 +172,7 @@ export const EditArticle = defineAction({
             MERGE (entry)-[:HAS_ARTICLE]->(a:${Article})
                 ON CREATE SET a.id = ${VNID()}
             RETURN entry.id as entryId, a.id as articleId, a.${C(sectionCodeSafe)} as articleMarkdown
-        `.givesShape({"entryId": "vnid", "articleId": "vnid", "articleMarkdown": {nullOr: "string"}}));
+        `.givesShape({"entryId": Field.VNID, "articleId": Field.VNID, "articleMarkdown": Field.NullOr.String}));
         const articleId = result.articleId;
 
         // Now update the article section:
@@ -196,7 +196,7 @@ export const EditArticle = defineAction({
             },
             // Editing an article counts as modifying both the entry and the article:
             modifiedNodes: [result.entryId, articleId],
+            description: `Edited ${Article.withId(articleId)}`,
         };
     },
-    invert: (data, resultData) => null,
 });
