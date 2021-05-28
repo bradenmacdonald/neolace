@@ -10,7 +10,7 @@ import { BotUser, HumanUser } from "../core/User";
 import { graph } from "../core/graph";
 
 export const authClient = new KeratinAuthNClient({
-    appDomain: config.frontendDomain,
+    appDomain: "localhost:5555",
     authnUrl: config.authnUrl,
     authnPrivateUrl: config.authnPrivateUrl,
     username: config.authnApiUsername,
@@ -44,7 +44,7 @@ export const authnScheme: Hapi.ServerAuthScheme = function (server, options) {
             const credentials = {
                 user: {
                     isBot: false,
-                    uuid: user.uuid,
+                    id: user.id,
                     authnId: authInfo.accountId,
                     username: user.username,
                     email: user.email,
@@ -53,7 +53,7 @@ export const authnScheme: Hapi.ServerAuthScheme = function (server, options) {
             }
             return h.authenticated({ credentials, artifacts: {} });
         } else {
-            const users = await graph.pull(BotUser, u => u.uuid.fullName.username(), {where: C`@this.authToken = ${authToken}`});
+            const users = await graph.pull(BotUser, u => u.id.fullName.username(), {where: C`@this.authToken = ${authToken}`});
             if (users.length > 1) {
                 throw Boom.internal("Multiple users matched same auth token!");
             } else if (users.length === 0) {
@@ -63,7 +63,7 @@ export const authnScheme: Hapi.ServerAuthScheme = function (server, options) {
             const credentials = {
                 user: {
                     isBot: true,
-                    uuid: user.uuid,
+                    id: user.id,
                     authnId: undefined,
                     username: user.username,
                     email: "",

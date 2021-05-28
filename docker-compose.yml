@@ -7,9 +7,8 @@ x-service-templates:
     environment:
       # Set default password to "neolace"
       NEO4J_AUTH: neo4j/neolace
-      # Enable automatic UUID creation on nodes
+      # We need trigger functionality, which is part of "APOC" and must be enabled:
       NEO4JLABS_PLUGINS: '["apoc"]'
-      apoc.uuid.enabled: "true"
       apoc.trigger.enabled: "true"
   authn:
     &authn-defaults

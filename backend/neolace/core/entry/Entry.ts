@@ -1,11 +1,10 @@
-import Joi from "@hapi/joi";
 import {
-    ShortIdProperty,
     DerivedProperty,
     VirtualPropType,
     C,
     VNodeType,
     VNodeTypeRef,
+    Field,
 } from "vertex-framework";
 
 // Declare a forward reference, if needed:
@@ -23,19 +22,19 @@ export class Entry extends VNodeType {
     static label = "Entry";
     static properties = {
         ...VNodeType.properties,
-        // shortId: A short slug that identifies this entry
+        // slugId: A short slug that identifies this entry
         // Ideally something very concise, so it doesn't need to be changed even if the article is renamed, and also so
         // that it can be used in other languages without being weird.
         // e.g. "p-geoeng-sas" for "stratospheric aerosol scattering" (p- means Process, t- means TechConcept/Thing, etc.)
         //
-        // Note that shortIds can change but every shortId permanently points to the entry
-        // for which is was first used. So shortIds are immutable but there can be several of them for one entry.
-        shortId: ShortIdProperty,
+        // Note that slugIds can change but every slugId permanently points to the entry
+        // for which is was first used. So slugIds are immutable but there can be several of them for one entry.
+        slugId: Field.Slug,
         // The name of this entry
         // This does not need to be unique or include disambiguation - so just put "Drive", not "Drive (computer science)"
-        name: Joi.string().required(),
+        name: Field.String,
         // Description: Short, rich text summary of the thing
-        description: Joi.string().max(5_000),
+        description: Field.String.Check(desc => desc.max(5_000)),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -49,7 +48,7 @@ export class Entry extends VNodeType {
             to: [Entry],
             properties: {
                 // More specific "type" of this relationship, according to the site's schema
-                detailedRelType: Joi.string().required(),
+                detailedRelType: Field.String,
             },
             cardinality: VNodeType.Rel.ToManyUnique,
         },
@@ -80,21 +79,21 @@ export class Entry extends VNodeType {
 
 
 /**
- * A property that provides the shortId without its site-specific prefix
+ * A property that provides the slugId without its site-specific prefix
  */
  export function id(): DerivedProperty<string> { return DerivedProperty.make(
     Entry,
-    e => e.shortId,
+    e => e.slugId,
     e => {
-        // A normal VNode shortId is up to 32 chars long: "foo-bar-tribble-bat-wan-tresadfm"
+        // A normal VNode slugId is up to 32 chars long: "foo-bar-tribble-bat-wan-tresadfm"
         // To support multi-tenancy, we put a 3-5 character site ID (like "001") and a hyphen
-        // at the start of the shortId. So "s-test" is stored as "XY6-s-test". This reverses
-        // that prefix to return the site-specific shortId.
-        const start = e.shortId.indexOf("-") + 1;
+        // at the start of the slugId. So "s-test" is stored as "XY6-s-test". This reverses
+        // that prefix to return the site-specific slugId.
+        const start = e.slugId.indexOf("-") + 1;
         if (start === 0) {
-            throw new Error(`shortId ${e.shortId} is missing a site prefix.`);
+            throw new Error(`slugId ${e.slugId} is missing a site prefix.`);
         }
-        return e.shortId.substr(start);
+        return e.slugId.substr(start);
     },
 );}
 

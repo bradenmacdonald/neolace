@@ -22,7 +22,7 @@ export interface TechDbEntryData extends VNodeData {
     description: string;
     entryType: TechDbEntryType;
     relatedImages?: {
-        shortId: string;
+        slugId: string;
         uuid: string;
         name: string;
         description: string;
@@ -53,7 +53,7 @@ export interface TechConceptData extends TechDbEntryData {
 }
 
 /** A minimal subset of information, used when listing a bunch of TechConcepts */
-export type TechConceptReferenceData = Pick<TechConceptData, "uuid"|"shortId"|"name"|"description"|"readinessLevel">
+export type TechConceptReferenceData = Pick<TechConceptData, "uuid"|"slugId"|"name"|"description"|"readinessLevel">
 
 
 export interface ProcessData extends TechDbEntryData {
@@ -68,7 +68,7 @@ export interface ProcessData extends TechDbEntryData {
 }
 
 /** A minimal subset of information, used when listing a bunch of Processes */
-export type ProcessReferenceData = Pick<ProcessData, "uuid"|"shortId"|"name"|"description"|"readinessLevel">
+export type ProcessReferenceData = Pick<ProcessData, "uuid"|"slugId"|"name"|"description"|"readinessLevel">
 
 
 export interface DesignData extends TechDbEntryData {
@@ -86,4 +86,4 @@ export interface DesignData extends TechDbEntryData {
 }
 
 /** A minimal subset of information, used when listing a bunch of TechConcepts */
-export type DesignReferenceData = Pick<DesignData, "uuid"|"shortId"|"name"|"description">
+export type DesignReferenceData = Pick<DesignData, "uuid"|"slugId"|"name"|"description">

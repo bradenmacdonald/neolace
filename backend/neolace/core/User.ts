@@ -1,31 +1,30 @@
-import * as Joi from "@hapi/joi";
 import {randomBytes} from "crypto";
 
 import {
     C,
     VNodeType,
-    ShortIdProperty,
     RawVNode,
     ValidationError,
     PublicValidationError,
     WrappedTransaction,
     defineAction,
-    UUID,
+    VNID,
     DerivedProperty,
     VirtualPropType,
+    Field,
 } from "vertex-framework";
 import { authClient } from "../api/authn";
 
 @VNodeType.declare
 export class User extends VNodeType {
     static label = "User";
-    static readonly shortIdPrefix = "user-";
+    static readonly slugIdPrefix = "user-";
     static readonly properties = {
         ...VNodeType.properties,
-        // shortId: starts with "user-", then follows a unique code. Can be changed any time.
-        shortId: ShortIdProperty,
+        // slugId: starts with "user-", then follows a unique code. Can be changed any time.
+        slugId: Field.Slug,
         // Optional full name
-        fullName: Joi.string().max(100),
+        fullName: Field.NullOr.String.Check(name => name.max(100)),
     };
 
     static async validate(dbObject: RawVNode<typeof User>, tx: WrappedTransaction): Promise<void> {
@@ -50,9 +49,9 @@ export class HumanUser extends User {
     static readonly properties = {
         ...User.properties,
         // Account ID in the authentication microservice. Only set for human users. Should not be exposed to users.
-        authnId: Joi.number(),
+        authnId: Field.Int,
         // Email address. Not set if this user is a bot (owned by a user or group).
-        email: Joi.string().email({minDomainSegments: 1, tlds: false}).required(),
+        email: Field.String.Check(e => e.email({minDomainSegments: 1, tlds: false})),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -70,7 +69,7 @@ export class BotUser extends User {
     static readonly properties = {
         ...User.properties,
         // Current auth token used to authenticate this user. This acts like a "password" for authenticating this bot.
-        authToken: Joi.string(),
+        authToken: Field.String,
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -95,13 +94,13 @@ export class BotUser extends User {
 /** Get the username of a user */
 export function username(): DerivedProperty<string> { return DerivedProperty.make(
     User,
-    user => user.shortId,
-    user => user.shortId.substr(User.shortIdPrefix.length),
+    user => user.slugId,
+    user => user.slugId.substr(User.slugIdPrefix.length),
 );}
 
 async function isUsernameTaken(tx: WrappedTransaction, username: string): Promise<boolean> {
     const result = await tx.query(C`
-        MATCH (:ShortId {shortId: ${User.shortIdPrefix + username}})-[:IDENTIFIES]->(u:${User})
+        MATCH (:SlugId {slugId: ${User.slugIdPrefix + username}})-[:IDENTIFIES]->(u:${User})
     `.RETURN({}));
     return result.length > 0;
 }
@@ -109,18 +108,20 @@ async function isUsernameTaken(tx: WrappedTransaction, username: string): Promis
 
 
 /** Create a human user (not a bot) */
-export const CreateUser = defineAction<{
-    // The user's email must already be verified.
-    email: string;
-    // Username. Optional. If not specified, one will be auto-generated.
-    username?: string;
-    fullName?: string;
-}, {
-    uuid: UUID;
-}>({
+export const CreateUser = defineAction({
     type: "CreateUser",
+    parameters: {} as {
+        // The user's email must already be verified.
+        email: string;
+        // Username. Optional. If not specified, one will be auto-generated.
+        username?: string;
+        fullName?: string;
+    },
+    resultData: {} as {
+        id: VNID;
+    },
     apply: async (tx, data) => {
-        const uuid = UUID();
+        const vnid = VNID();
 
         // Find a username that's not taken
         let username = data.username; // TODO: make sure 'data' is read-only
@@ -141,60 +142,61 @@ export const CreateUser = defineAction<{
         }
 
         // Create a user in the auth service
-        const authnData = await authClient.createUser({username: uuid});
+        const authnData = await authClient.createUser({username: vnid});
 
-        const result = await tx.query(C`
+        await tx.queryOne(C`
             CREATE (u:Human:User:VNode {
-                uuid: ${uuid},
+                id: ${vnid},
                 authnId: ${authnData.accountId},
                 email: ${data.email},
-                shortId: ${User.shortIdPrefix + username},
+                slugId: ${User.slugIdPrefix + username},
                 fullName: ${data.fullName || null}
             })
-        `.RETURN({"u.uuid": "uuid"}));
-        const modifiedNodes = [result[0]["u.uuid"]];
+        `.RETURN({}));
         return {
-            resultData: { uuid, },
-            modifiedNodes,
+            resultData: { id: vnid, },
+            modifiedNodes: [vnid],
+            description: `Created ${HumanUser.withId(vnid)}`,
         };
     },
-    invert: (data, resultData) => null,
 });
 
 
 /** Create a bot */
-export const CreateBot = defineAction<{
-    // UUID of the user that is creating this bot
-    ownedByUser: UUID;
-    username: string;
-    fullName?: string;
-}, {
-    uuid: UUID;
-    authToken: string;
-}>({
+export const CreateBot = defineAction({
     type: "CreateBot",
+    parameters: {} as {
+        // VNID of the user that is creating this bot
+        ownedByUser: VNID;
+        username: string;
+        fullName?: string;
+    },
+    resultData: {} as {
+        id: VNID;
+        authToken: string;
+    },
     apply: async (tx, data) => {
         if (await isUsernameTaken(tx, data.username)) {
             throw new Error(`The username "${data.username}" is already taken.`);
         }
 
-        const uuid = UUID();
+        const vnid = VNID();
         const authToken = await createBotAuthToken();
         await tx.queryOne(C`
-            MATCH (owner:${HumanUser} {uuid: ${data.ownedByUser}})
+            MATCH (owner:${HumanUser} {id: ${data.ownedByUser}})
             CREATE (u:Bot:User:VNode {
-                uuid: ${uuid},
-                shortId: ${User.shortIdPrefix + data.username},
+                id: ${vnid},
+                slugId: ${User.slugIdPrefix + data.username},
                 authToken: ${authToken},
                 fullName: ${data.fullName || null}
             })-[:${BotUser.rel.OWNED_BY}]->(owner)
         `.RETURN({}));
         return {
-            resultData: { uuid, authToken, },
-            modifiedNodes: [uuid],
+            resultData: { id: vnid, authToken, },
+            modifiedNodes: [vnid],
+            description: `Created ${BotUser.withId(vnid)}`,
         };
     },
-    invert: (data, resultData) => null,
 });
 
 

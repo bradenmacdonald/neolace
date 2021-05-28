@@ -1,13 +1,14 @@
-import Joi from "@hapi/joi";
 import {
     VNodeType,
-    UUID,
     defineAction,
     VirtualPropType,
     getVNodeType,
     C,
     isVNodeType,
     DerivedProperty,
+    VNodeKey,
+    VNID,
+    Field,
 } from "vertex-framework";
 
 
@@ -66,7 +67,7 @@ export class Article extends VNodeType {
         ...VNodeType.properties,
 
         // Sections for a "TechConcept" article type:
-        ...(Object.fromEntries(Object.values(Article.Sections).map(s => [s.code, Joi.string()]))),
+        ...(Object.fromEntries(Object.values(Article.Sections).map(s => [s.code, Field.String]))),
     };
 }
 
@@ -120,7 +121,7 @@ export function articleSections(vnodeType: VNodeType): DerivedProperty<ArticleSe
                 return vnodeType.Sections.map(s => ({
                     title: s.title,
                     code: s.code,
-                    content: entryData.articleVNode?.[s.code] || "",
+                    content: (entryData as any).articleVNode?.[s.code] || "",
                 }));
             },
         )
@@ -131,19 +132,21 @@ export function articleSections(vnodeType: VNodeType): DerivedProperty<ArticleSe
 
 
 /** Edit the article for an entry in TechDb */
-export const EditArticle = defineAction<{
-    // Which type of article we're editing, e.g. "TechConcept"
-    entryTypeLabel: string,
-    // The shortId or UUID of the article to edit.
-    entryId: UUID|string,
-    // The code of the specific section to edit, e.g. "ov" for Overview
-    sectionCode: string,
-    // The new markdown string for the entire section
-    newMarkdown: string,
-}, {
-    oldMarkdown: string,
-}>({
+export const EditArticle = defineAction({
     type: "EditArticle",
+    parameters: {} as {
+        // Which type of article we're editing, e.g. "TechConcept"
+        entryTypeLabel: string,
+        // The slugId or VNID of the article to edit.
+        entryId: VNodeKey,
+        // The code of the specific section to edit, e.g. "ov" for Overview
+        sectionCode: string,
+        // The new markdown string for the entire section
+        newMarkdown: string,
+    },
+    resultData: {} as {
+        oldMarkdown: string,
+    },
     apply: async (tx, data) => {
 
         // Get the entry type we're editing
@@ -167,21 +170,21 @@ export const EditArticle = defineAction<{
         const result = await tx.queryOne(C`
             MATCH (entry:${entryType}), entry HAS KEY ${data.entryId}
             MERGE (entry)-[:HAS_ARTICLE]->(a:${Article})
-                ON CREATE SET a.uuid = apoc.create.uuid()
-            RETURN entry.uuid as entryUuid, a.uuid as articleUuid, a.${C(sectionCodeSafe)} as articleMarkdown
-        `.givesShape({"entryUuid": "uuid", "articleUuid": "uuid", "articleMarkdown": {nullOr: "string"}}));
-        const articleUuid = result.articleUuid;
+                ON CREATE SET a.id = ${VNID()}
+            RETURN entry.id as entryId, a.id as articleId, a.${C(sectionCodeSafe)} as articleMarkdown
+        `.givesShape({"entryId": Field.VNID, "articleId": Field.VNID, "articleMarkdown": Field.NullOr.String}));
+        const articleId = result.articleId;
 
         // Now update the article section:
         if (data.newMarkdown.trim() === "") {
             // We are removing this section from the article:
             await tx.query(C`
-                MATCH (a:${Article} {uuid: ${articleUuid}})
+                MATCH (a:${Article} {id: ${articleId}})
                 REMOVE a.${C(sectionCodeSafe)}
             `);
         } else {
             await tx.query(C`
-                MATCH (a:${Article} {uuid: ${articleUuid}})
+                MATCH (a:${Article} {id: ${articleId}})
                 SET a.${C(sectionCodeSafe)} = ${data.newMarkdown}
             `);
         }
@@ -192,8 +195,8 @@ export const EditArticle = defineAction<{
                 oldMarkdown: result.articleMarkdown ?? "",
             },
             // Editing an article counts as modifying both the entry and the article:
-            modifiedNodes: [result.entryUuid, articleUuid],
+            modifiedNodes: [result.entryId, articleId],
+            description: `Edited ${Article.withId(articleId)}`,
         };
     },
-    invert: (data, resultData) => null,
 });

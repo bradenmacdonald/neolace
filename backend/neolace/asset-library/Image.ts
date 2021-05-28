@@ -1,13 +1,12 @@
-import Joi from "@hapi/joi";
 import {
     C,
     VNodeType,
     VirtualPropType,
-    defaultUpdateActionFor,
+    defaultUpdateFor,
     defaultCreateFor,
-    defaultDeleteAndUnDeleteFor,
-    ShortIdProperty,
+    defaultDeleteFor,
     DerivedProperty,
+    Field,
 } from "vertex-framework";
 import { config } from "../app/config";
 import { TechDbEntryRef as TechDbEntry } from "../core/entry/Entry";
@@ -19,19 +18,19 @@ export class Image extends VNodeType {
     static label = "Image";
     static readonly properties = {
         ...VNodeType.properties,
-        shortId: ShortIdProperty,
-        name: Joi.string().required(),
-        description: Joi.string().max(5_000).required(),
-        sourceUrl: Joi.string(),
-        licenseDetails: Joi.string().max(5_000).required(),
-        imageType: Joi.string().valid("photo", "screenshot", "chart", "drawing").required(),
+        slugId: Field.Slug,
+        name: Field.String,
+        description: Field.NullOr.String.Check(desc => desc.max(5_000)),
+        //sourceUrl: Field.NullOr.String,
+        //licenseDetails: Field.NullOr.String.Check(ld => ld.max(5_000)),
+        imageType: Field.String.Check(it => it.valid("photo", "screenshot", "chart", "drawing")),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
         /** Things depicted or explained by this image */
         RELATES_TO: {
             to: [TechDbEntry],
-            properties: {weight: Joi.number().min(1).max(12).required()},
+            properties: {weight: Field.Int.Check(w => w.min(1).max(12))},
             cardinality: VNodeType.Rel.ToManyUnique,
         },
         HAS_DATA: {
@@ -65,29 +64,20 @@ export function imageUrl(): DerivedProperty<string> { return DerivedProperty.mak
 );}
 
 
-/** Update a new "Image" entry in the TechDB */
-interface UpdateImageArgs {
-    shortId?: string;
-    name?: string;
-    description?: string;
-    imageType?: string;
-    sourceUrl?: string;
-    licenseDetails?: string;
-}
 // Action to make changes to an existing Image entry:
-export const UpdateImage = defaultUpdateActionFor(Image, i => i.shortId.name.description.licenseDetails.sourceUrl.imageType, {
+export const UpdateImage = defaultUpdateFor(Image, i => i.slugId.name.description.imageType, {
     otherUpdates: async (args: {
         relatesTo?: {key: string, weight: number}[],
         /** SHA-256 hash of the data file for this image (required) */
         dataHash?: string
     }, tx, nodeSnapshot) => {
-        const uuid = nodeSnapshot.uuid;
+        const id = nodeSnapshot.id;
         const previousValues: Partial<typeof args> = {};
 
         // Relationship updates:
         if (args.relatesTo !== undefined) {
             previousValues.relatesTo = (await tx.updateToManyRelationship({
-                from: [Image, uuid],
+                from: [Image, id],
                 rel: Image.rel.RELATES_TO,
                 to: args.relatesTo,
             })).prevTo as any;
@@ -95,7 +85,7 @@ export const UpdateImage = defaultUpdateActionFor(Image, i => i.shortId.name.des
 
         if (args.dataHash) {
             const result = await tx.query(C`
-                MATCH (img:${Image} {uuid: ${uuid}})
+                MATCH (img:${Image} {id: ${id}})
                 WITH img
                     MATCH (df:${DataFile} {sha256Hash: ${args.dataHash}})
                     MERGE (img)-[:${Image.rel.HAS_DATA}]->(df)
@@ -103,7 +93,7 @@ export const UpdateImage = defaultUpdateActionFor(Image, i => i.shortId.name.des
                     MATCH (img)-[oldRel:${Image.rel.HAS_DATA}]->(old:DataFile)
                     WHERE old <> df
                     DELETE oldRel
-            `.RETURN({old: DataFile}));
+            `.RETURN({old: Field.VNode(DataFile)}));
             if (result.length) {
                 previousValues.dataHash = result[result.length - 1].old.sha256Hash;
             }
@@ -114,6 +104,6 @@ export const UpdateImage = defaultUpdateActionFor(Image, i => i.shortId.name.des
 });
 
 /** Create a new "Image" entry in the TechDB */
-export const CreateImage = defaultCreateFor(Image, i => i.shortId.name.description.licenseDetails.imageType, UpdateImage);
+export const CreateImage = defaultCreateFor(Image, i => i.slugId.name.description.imageType, UpdateImage);
 
-export const [DeleteImage, UnDeleteImage] = defaultDeleteAndUnDeleteFor(Image);
+export const DeleteImage = defaultDeleteFor(Image);

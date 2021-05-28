@@ -1,7 +1,7 @@
-import Joi from "@hapi/joi";
 import {
     VNodeType,
     defaultCreateFor,
+    Field,
 } from "vertex-framework";
 
 /**
@@ -16,11 +16,11 @@ export class DataFile extends VNodeType {
     static readonly properties = {
         ...VNodeType.properties,
         /** SHA-256 hash (in hex) of this data file */
-        sha256Hash: Joi.string().min(64).max(64).lowercase().required(),
+        sha256Hash: Field.String.Check(h => h.min(64).max(64).lowercase()),
         /** Size in bytes */
-        size: Joi.number().min(1).required(),
+        size: Field.Int.Check(s => s.min(1)),
         /** IANA media type for this file */
-        contentType: Joi.string().lowercase().required(),
+        contentType: Field.String.Check(ct => ct.lowercase()),
     };
     //validate: async (node, tx) => {
         // TODO: validate content type

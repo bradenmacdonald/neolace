@@ -1,7 +1,7 @@
 ################################################################
 # Stage 1: Transpile the typescript
 ################################################################
-FROM node:14 as transpile
+FROM node:16 as transpile
 WORKDIR /build
 ENV NODE_ENV production
 ENV PATH /build/node_modules/.bin:$PATH
@@ -15,7 +15,7 @@ RUN npm run transpile
 ################################################################
 # Stage 2: Install only minimal dependencies to run the app
 ################################################################
-FROM node:14-alpine
+FROM node:16-alpine
 WORKDIR /app
 ENV NODE_ENV production
 ENV PATH /app/node_modules/.bin:$PATH

@@ -1,6 +1,6 @@
 import * as Hapi from "@hapi/hapi";
 import * as Boom from "@hapi/boom";
-import * as Joi from "@hapi/joi";
+import Joi from "joi";
 
 import * as api from "neolace-api";
 
@@ -69,7 +69,7 @@ export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
                     // telling us the request field responsible for this error, we use that:
                     for (const mf of mapping) {
                         if (typeof mf === "function") {
-                            const requestField = mf(path, err._object);
+                            const requestField = mf(path, err._original);
                             if (requestField) {
                                 requestFields.push(requestField);
                                 found = true;
@@ -97,8 +97,8 @@ export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
  * Simple helper function for adaptErrors.
  * 
  * Example:
- *     .catch(adaptErrors(..., adaptErrors.remap("shortId", "username")))
- * The above example means that any errors in validting the "shortId" field should be remapped to the "username" field,
+ *     .catch(adaptErrors(..., adaptErrors.remap("slugId", "username")))
+ * The above example means that any errors in validting the "slugId" field should be remapped to the "username" field,
  * and the API consumer will see a message that the "username" field was invalid.
  */
 adaptErrors.remap = (errorPath: string, requestPath: string) => (field: string) => field === errorPath ? requestPath : undefined;

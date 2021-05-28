@@ -18,7 +18,7 @@ defineEndpoint(__filename, {
         const accountId = (request.payload as any).account_id;
         const token = (request.payload as any).token;
         log.debug(`Passwordless login for account ID ${accountId}`);
-        const loginUrl = `${config.frontendUrl}/login/passwordless#${token}`;
+        const loginUrl = `${config.realmAdminUrl}/login/passwordless#${token}`;
         // TODO in future: email this link to the user
         log.success(`To log in, go to ${loginUrl}`);
         return h.response({});

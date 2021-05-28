@@ -17,7 +17,7 @@ export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve 
         port: config.port,
         routes: {
             cors: {
-                origin: [config.frontendUrl],
+                origin: [config.realmAdminUrl],
                 headers: ["Accept", "Authorization", "Content-Type", "If-None-Match"], // Headers that are allowed
                 //exposedHeaders: ['Accept'],
                 maxAge: (environment === "development" ? 240 : undefined),
