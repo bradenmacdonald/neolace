@@ -10,7 +10,7 @@ import { BotUser, HumanUser } from "../core/User";
 import { graph } from "../core/graph";
 
 export const authClient = new KeratinAuthNClient({
-    appDomain: config.frontendDomain,
+    appDomain: "localhost:5555",
     authnUrl: config.authnUrl,
     authnPrivateUrl: config.authnPrivateUrl,
     username: config.authnApiUsername,

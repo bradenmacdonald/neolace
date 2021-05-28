@@ -20,25 +20,20 @@ function defaultTo<T>(value: T, {production, test}: {production?: T, test?: T}):
 export const config = (() => {
     // Default configuration:
     const config = {
+
+        // The REST API
+
         // Port to listen on
         port: defaultTo(5554, {test: 4444}),
-        /**
-         * Admin site domain. The admin site is the only site that can be used to create other sites. Do not include
-         * protocol or port number.
-         * 
-         * The REST API (backend) is always available on `api.${adminSiteDomain}`
-         */
-        adminSiteDomain: defaultTo("admin.local.neolace.net", {test: "admin.local.neolace.net"}),
-
-
-        // Backend App URL (URL at which the REST API is available)
+        // Full URL at which the REST API is available
         apiUrl: defaultTo("http://localhost:5554", {test: "http://backend:4444"}),
-        // Domain of the TechNotes frontend without protocol, used by AuthN
-        frontendDomain: "localhost:5555",
-        // Is the frontend using insecure HTTP?
-        frontendInsecureHttp: defaultTo(true, {production: false}),
-        // URL of the frontend, no trailing slash (e.g. "https://technotes.org"). This cannot be set directly.
-        frontendUrl: "--- set automatically to htttp(s)://{frontendDomain} --",
+
+        /**
+         * URL for the Realm admin UI. This is where you can create a new site, register a user account, etc.
+         */
+        realmAdminUrl: defaultTo("http://0.0.0.0:5555", {test: "http://frontend-realm-admin"}),
+
+
         // URL of the Neo4j server
         neo4jUrl: defaultTo("bolt://neo4j", {test: "bolt://neo4j-test"}),
         neo4jUser: "neo4j",
@@ -79,10 +74,8 @@ export const config = (() => {
             }
         }
     }
-    // Derived values:
-    config.frontendUrl = `${config.frontendInsecureHttp ? "http" : "https"}://${config.frontendDomain}`;
     // Sanity checks
-    const rootUrls = ["frontendUrl", "apiUrl", "authnUrl", "authnPrivateUrl"] as const;
+    const rootUrls = ["realmAdminUrl", "apiUrl", "authnUrl", "authnPrivateUrl"] as const;
     for (const url of rootUrls) {
         if (config[url].endsWith("/")) {
             throw new Error(`${url} must not end with a /`);
@@ -93,7 +86,7 @@ export const config = (() => {
         if (!config.apiUrl.startsWith("https://")) {
             throw new Error("In production, apiUrl must be https://");
         }
-        if (!config.frontendUrl.startsWith("https://")) {
+        if (!config.realmAdminUrl.startsWith("https://")) {
             throw new Error("In production, frontendUrl must be https://");
         }
     }
