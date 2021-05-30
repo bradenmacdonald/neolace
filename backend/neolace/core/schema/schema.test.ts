@@ -2,7 +2,7 @@ import { VNID } from "vertex-framework";
 import { suite, test, assert, beforeEach, assertRejects, setTestIsolation } from "../../lib/intern-tests";
 import { graph } from "../graph";
 import { CreateSite } from "../Site";
-import { getCurrentSchema } from "./GetSchema";
+import { getCurrentSchema } from "./get-schema";
 import { ApplyEdits } from "../edit/ApplyEdits";
 import { ContentType, SiteSchemaData } from "neolace-api";
 
@@ -15,10 +15,7 @@ suite(__filename, () => {
 
         test("can add a new entry type.", async () => {
             // First make sure the schema is empty
-            assert.deepStrictEqual(await getSchema(), {
-                entryTypes: {},
-                relationshipTypes: {},
-            });
+            assert.deepStrictEqual(await getSchema(), defaultData.schema);
 
             // Create a new entry type:
             const id = VNID();
@@ -29,6 +26,7 @@ suite(__filename, () => {
 
             assert.deepStrictEqual(await getSchema(), {
                 entryTypes: {
+                    ...defaultData.schema.entryTypes,
                     // Here is the new entry type:
                     [id]: {
                         id,

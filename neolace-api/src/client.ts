@@ -1,6 +1,6 @@
 import { PasswordlessLoginResponse, PublicUserData } from "./user";
-import { DesignData, ProcessData, TechConceptData, TechDbEntryData, TechDbEntryFlags, XFlag } from "./techdb";
 import * as errors from "./errors";
+import { SiteSchemaData } from "./schema";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
 export interface Config {
@@ -12,6 +12,8 @@ export interface Config {
      * to pass a JWT (for human users).
      */
     authToken?: string;
+    /** Default siteId to use for requests involving a specific site. */
+    siteId?: string;
     getExtraHeadersForRequest?: (request: {method: HttpMethod, path: string}) => Promise<{[headerName: string]: string}>;
 }
 
@@ -27,12 +29,14 @@ export class NeolaceApiClient {
     readonly basePath: string;
     readonly fetchApi: WindowOrWorkerGlobalScope["fetch"];
     readonly authToken?: string;
+    readonly siteId?: string;
     private readonly getExtraHeadersForRequest?: Config["getExtraHeadersForRequest"];
 
     constructor(config: Config) {
         this.basePath = config.basePath.replace(/\/+$/, "");
         this.fetchApi = config.fetchApi;
         this.authToken = config.authToken;
+        this.siteId = config.siteId;
         this.getExtraHeadersForRequest = config.getExtraHeadersForRequest;
     }
 
@@ -93,6 +97,17 @@ export class NeolaceApiClient {
         return await response.json();
     }
 
+    /** Helper method to get a siteId, either as given to the current method or falling back to the default. */
+    private getSiteId(methodOptions?: {siteId?: string}): string {
+        if (methodOptions?.siteId) {
+            return methodOptions.siteId;
+        }
+        if (!this.siteId) {
+            throw new Error("siteId is required, either in the constructor or the API method.");
+        }
+        return this.siteId;
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // User API Methods
@@ -121,8 +136,13 @@ export class NeolaceApiClient {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // TechDB API Methods
+    // Site API Methods
 
+    public async getSiteSchema(options?: {siteId?: string}): Promise<SiteSchemaData> {
+        const siteId = this.getSiteId(options);
+        return this.call(`/site/${siteId}/schema`, {method: "GET"});
+    }
+    /*
     public getTechDbEntry<Flags extends readonly TechDbEntryFlags[]|undefined>(args: {key: string, flags?: Flags}): Promise<ApplyFlags<TechDbEntryFlags, Flags, TechDbEntryData>> {
         return this.call(`/techdb/db/${encodeURIComponent(args.key)}` + (args.flags && args.flags.length ? `?fields=${args.flags.join(",")}` : ""));
     }
@@ -135,7 +155,7 @@ export class NeolaceApiClient {
     }
     public getDesign(args: {key: string, flags?: TechDbEntryFlags[]}): Promise<DesignData> {
         return this.call(`/techdb/design/${encodeURIComponent(args.key)}` + (args.flags && args.flags.length ? `?fields=${args.flags.join(",")}` : ""));
-    }
+    }*/
 }
 
 

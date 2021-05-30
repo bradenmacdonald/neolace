@@ -5,7 +5,7 @@
 import intern from "intern";
 import { NeolaceApiClient } from "neolace-api";
 import {
-    VertexTestDataSnapshot
+    VertexTestDataSnapshot, VNID
 } from "vertex-framework";
 export { intern };
 import fetch from "node-fetch";
@@ -131,7 +131,7 @@ setTestIsolation.levels = TestIsolationLevels;
  * @param user One of the default users, 
  * @returns 
  */
-export function getClient(user?: {bot: {authToken: string}}): NeolaceApiClient {
+export function getClient(user?: {bot: {authToken: string}}, siteId?: VNID): NeolaceApiClient {
 
     if (!defaultData.wasCreated) {
         throw new Error("Shared test data wasn't created yet.");
@@ -141,5 +141,6 @@ export function getClient(user?: {bot: {authToken: string}}): NeolaceApiClient {
         basePath: config.apiUrl,
         fetchApi: fetch,
         authToken: user?.bot.authToken,
+        siteId,
     });
 }

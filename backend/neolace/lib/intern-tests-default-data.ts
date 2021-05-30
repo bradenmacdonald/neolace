@@ -5,6 +5,8 @@ import { log } from "../app/log";
 import { CreateBot, CreateUser } from "../core/User";
 import { CreateSite } from "../core/Site";
 import { CreateGroup } from "../core/Group";
+import { ImportSchema } from "../core/schema/import-schema";
+import { ContentType } from "neolace-api";
 
 // Data that gets created by default. 
 // To access this, use the return value of setTestIsolation(setTestIsolation.levels.DEFAULT_...)
@@ -14,28 +16,47 @@ const data = {
             email: "alex@example.com",
             fullName: "Alex Admin",
             username: "alex",
-            id: "will be set once created." as VNID,
+            id: undefined as any as VNID,  // will be set once created.
             bot: {
                 username: "alex-bot",
                 fullName: "Alex Bot 1",
-                id: "will be set once created." as VNID,
-                authToken: "will be set once created.",
+                id: undefined as any as VNID,  // will be set once created.
+                authToken: undefined as any as string,  // will be set once created.
             }
         },
         jamie: {
             email: "jamie@example.com",
             fullName: "Jamie User",
             username: "jamie",
-            id: "will be set once created." as VNID,
+            id: undefined as any as VNID,  // will be set once created.
         },
     },
     // A Site, with Alex as the admin and Jamie as a regular user
     site: {
         domain: "testsite.neolace.net",
         slugId: "site-test",
-        id: "will be set once created." as VNID,
-        adminsGroupId: "will be set once created." as VNID,
-        usersGroupId: "will be set once created." as VNID,
+        id: undefined as any as VNID,  // will be set once created.
+        adminsGroupId: undefined as any as VNID,  // will be set once created.
+        usersGroupId: undefined as any as VNID,  // will be set once created.
+    },
+    schema: {
+        entryTypes: {
+            "_ETCOMPUTER": {
+                id: VNID("_ETCOMPUTER"),
+                name: "Computer",
+                contentType: ContentType.Article,
+                description: "A computer is a general purpose machine that can be programmed to do different tasks or provide entertainment functions.",
+                friendlyIdPrefix: "comp-",
+            },
+            "_ETCOMPONENT": {
+                id: VNID("_ETCOMPONENT"),
+                name: "Component",
+                contentType: ContentType.Article,
+                description: "A component is a part of a computer.",
+                friendlyIdPrefix: "cn-",
+            },
+        },
+        relationshipTypes: {},
     },
     wasCreated: false,
 };
@@ -89,7 +110,9 @@ export async function installDefaultData(): Promise<void> {
         approveSchemaChanges: false,
         proposeEntryChanges: true,
         proposeSchemaChanges: true,
-    })).then(result => data.site.usersGroupId = result.id );
+    })).then(result => data.site.usersGroupId = result.id);
+
+    await graph.runAsSystem(ImportSchema({siteId: data.site.id, schema: data.schema}));
 
     Object.freeze(data);
 }
