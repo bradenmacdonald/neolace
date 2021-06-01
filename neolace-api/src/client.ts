@@ -12,7 +12,7 @@ export interface Config {
      * to pass a JWT (for human users).
      */
     authToken?: string;
-    /** Default siteId to use for requests involving a specific site. */
+    /** Default site ID to use for requests involving a specific site. This is the site's shortId, e.g. "technotes" */
     siteId?: string;
     getExtraHeadersForRequest?: (request: {method: HttpMethod, path: string}) => Promise<{[headerName: string]: string}>;
 }

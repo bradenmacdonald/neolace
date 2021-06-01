@@ -1,6 +1,6 @@
 import "./auth/request-login";
 import "./auth/hooks/passwordless-login";
-import "./site/{siteId}/schema"
+import "./site/{siteShortId}/schema"
 import "./user";
 import "./user/me";
 

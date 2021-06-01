@@ -1,6 +1,11 @@
+/**
+ * This file contains all the common imports and helper methods needed to implement REST API endpoints.
+ *
+ */
 import * as Hapi from "@hapi/hapi";
 import * as Boom from "@hapi/boom";
 import Joi from "joi";
+import { VNID } from "vertex-framework";
 
 import * as api from "neolace-api";
 
@@ -8,6 +13,7 @@ import { log } from "../app/log";
 import { graph } from "../core/graph";
 import { InvalidFieldValue, InvalidRequest, InvalidRequestReason } from "neolace-api";
 import { Check, CheckContext, permissions } from "../core/permissions";
+import { siteCodeForSite, siteIdFromShortId } from "../core/Site";
 
 // This should only be imported from the "api/endpoints" file, to ensure that all API endpoints get registered.
 export const ____allApiEndpoints: Hapi.ServerRoute[] = [];
@@ -115,7 +121,7 @@ function convertStandardErrors(err: Error): void {
 }
 
 export async function requirePermission(request: Hapi.Request, check: Check, ...otherChecks: Check[]): Promise<void> {
-    const siteId = request.params.siteId ?? undefined;
+    const siteId = request.params.siteShortId ? (await getSiteDetails(request)).siteId : undefined;
     const userId = request.auth.credentials.user?.id ?? undefined;
 
     const checksPassed = await graph.read(async tx => {
@@ -138,6 +144,31 @@ export async function requirePermission(request: Hapi.Request, check: Check, ...
             throw new api.NotAuthorized("You do not have sufficient permissions.");
         }
     }
+}
+
+/**
+ * Get siteId and siteCode from the siteShortId parameter that's in the URL.
+ * 
+ * Most of our REST API methods include a human-readable "shortId" for the Site in the URL, like this:
+ * https://api.neolace.com/site/braden/entry/fr-joel
+ *                              ^^^^^^ - shortId is "braden", and so the full slugId would be "site-braden"
+ * This helper function looks up the Site based on this shortId and returns the siteId (VNID) and siteCode (the code
+ * used to give Entries for the site a slugId namespace).
+ * 
+ * This method will throw an exception if the site shortId is not in the URL or is not valid.
+ * 
+ * @param request The current REST API request
+ * @returns 
+ */
+export async function getSiteDetails(request: Hapi.Request): Promise<{siteId: VNID, siteCode: string}> {
+    const siteShortId = request.params.siteShortId;
+    if (typeof siteShortId !== "string") {
+        throw new Error("Expected the API endpoint URL to contain a siteShortId parameter.")
+    }
+
+    const siteId = await siteIdFromShortId(siteShortId);
+    const siteCode = await siteCodeForSite(siteId);
+    return {siteId, siteCode};
 }
 
 export {

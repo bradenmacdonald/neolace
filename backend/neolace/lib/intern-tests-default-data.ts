@@ -34,7 +34,7 @@ const data = {
     // A Site, with Alex as the admin and Jamie as a regular user
     site: {
         domain: "testsite.neolace.net",
-        slugId: "site-test",
+        shortId: "test",
         id: undefined as any as VNID,  // will be set once created.
         adminsGroupId: undefined as any as VNID,  // will be set once created.
         usersGroupId: undefined as any as VNID,  // will be set once created.
@@ -92,7 +92,7 @@ export async function installDefaultData(): Promise<void> {
 
     await graph.runAsSystem(CreateSite({
         domain: data.site.domain,
-        slugId: data.site.slugId,
+        slugId: `site-${data.site.shortId}`,
         adminUser: data.users.alex.id,
     })).then(result => {
         data.site.id = result.id;

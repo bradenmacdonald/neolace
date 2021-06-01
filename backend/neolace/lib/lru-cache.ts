@@ -51,3 +51,14 @@ export class LruCache<KeyType, ValueType> {
         return this.#cache.keys().next().value;
     }
 }
+
+/**
+ * Memoize an expensive function, storing results in an LRU cache.
+ * @param fn The expensive function whose result we want to cache.
+ * @param cacheSize 
+ * @returns A lookup function; given a key it will return the corresponding value, using the cache as much as possible.
+ */
+export function makeCachedLookup<KeyType, ValueType>(fn: (key: KeyType) => ValueType|Promise<ValueType>, cacheSize = 1_000): (key: KeyType) => Promise<ValueType> {
+    const cache = new LruCache<KeyType, ValueType>(cacheSize);
+    return (key: KeyType) => cache.cachedResult(key, fn);
+}

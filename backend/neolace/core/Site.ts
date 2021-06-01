@@ -9,6 +9,8 @@ import {
     VNID,
     VNodeTypeRef,
 } from "vertex-framework";
+import { makeCachedLookup } from "../lib/lru-cache";
+import { graph } from "./graph";
 
 
 // Forward reference
@@ -110,6 +112,21 @@ export class Site extends VNodeType {
         // None at the moment.
     });
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Site helper functions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/** Cache to look up a siteId (Site VNID) from a site's shortId (slugId without the "site-" prefix) */
+export const siteIdFromShortId = makeCachedLookup((shortId: string) => graph.vnidForKey(`site-${shortId}`), 10_000);
+
+/** Cache to look up a Site's siteCode from its VNID */
+export const siteCodeForSite = makeCachedLookup((siteId: VNID) => graph.pullOne(Site, s => s.siteCode, {key: siteId}).then(s => s.siteCode), 10_000);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Site actions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Action to make changes to an existing Site:
 export const UpdateSite = defaultUpdateFor(Site, s => s.slugId.description.domain.accessMode, {});

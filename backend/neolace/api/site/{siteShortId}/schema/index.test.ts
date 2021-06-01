@@ -13,7 +13,7 @@ suite(__filename, () => {
          */
         test("can get a site's schema", async () => {
             // Get an API client, logged in as a bot that belongs to Alex
-            const client = getClient(defaultData.users.alex, defaultData.site.id);
+            const client = getClient(defaultData.users.alex, defaultData.site.shortId);
             const result = await client.getSiteSchema();
 
             assert.deepStrictEqual(result, defaultData.schema);
