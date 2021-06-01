@@ -1,4 +1,4 @@
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors } from "../../../";
+import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors, requirePermission, permissions } from "../../../";
 import { getCurrentSchema } from "../../../../core/schema/get-schema";
 
 defineEndpoint(__filename, {
@@ -11,6 +11,8 @@ defineEndpoint(__filename, {
         validate: {},
     },
     handler: async (request, h) => {
+
+        await requirePermission(request, permissions.CanViewSchema);
 
         const siteId = request.params.siteId;
 

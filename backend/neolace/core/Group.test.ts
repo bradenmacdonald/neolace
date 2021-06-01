@@ -1,5 +1,4 @@
 import { suite, test, assert, beforeEach, setTestIsolation, assertRejects } from "../lib/intern-tests";
-import { log } from "../api";
 import { graph } from "./graph";
 import { CreateGroup, Group, UpdateGroup } from "./Group";
 import { CreateSite, Site } from "./Site";

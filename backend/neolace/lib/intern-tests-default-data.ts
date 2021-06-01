@@ -106,9 +106,9 @@ export async function installDefaultData(): Promise<void> {
         addUsers: [data.users.jamie.id],
         administerSite: false,
         administerGroups: false,
-        approveEntryChanges: false,
+        approveEntryEdits: false,
         approveSchemaChanges: false,
-        proposeEntryChanges: true,
+        proposeEntryEdits: true,
         proposeSchemaChanges: true,
     })).then(result => data.site.usersGroupId = result.id);
 

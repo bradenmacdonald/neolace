@@ -7,6 +7,7 @@ import * as api from "neolace-api";
 import { log } from "../app/log";
 import { graph } from "../core/graph";
 import { InvalidFieldValue, InvalidRequest, InvalidRequestReason } from "neolace-api";
+import { Check, CheckContext, permissions } from "../core/permissions";
 
 // This should only be imported from the "api/endpoints" file, to ensure that all API endpoints get registered.
 export const ____allApiEndpoints: Hapi.ServerRoute[] = [];
@@ -113,6 +114,31 @@ function convertStandardErrors(err: Error): void {
     }
 }
 
+export async function requirePermission(request: Hapi.Request, check: Check, ...otherChecks: Check[]): Promise<void> {
+    const siteId = request.params.siteId ?? undefined;
+    const userId = request.auth.credentials.user?.id ?? undefined;
+
+    const checksPassed = await graph.read(async tx => {
+        const context: CheckContext = {tx, siteId, userId};
+        for (const c of [check, ...otherChecks]) {
+            if (await c(context) !== true) {
+                return false;  // This check was not passed
+            }
+        }
+        return true;  // All checks passed
+    });
+
+    if (!checksPassed) {
+
+        if (userId === undefined) {
+            // We don't know who this user is, so we don't know if they have permission or not.
+            throw new api.NotAuthenticated();
+        } else {
+            // We know who this user is, and they're not allowed to do that.
+            throw new api.NotAuthorized("You do not have sufficient permissions.");
+        }
+    }
+}
 
 export {
     Hapi,
@@ -122,4 +148,5 @@ export {
     graph,
     api,
     defineEndpoint,
+    permissions,
 };
