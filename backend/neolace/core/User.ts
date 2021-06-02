@@ -50,16 +50,11 @@ export class HumanUser extends User {
         ...User.properties,
         // Account ID in the authentication microservice. Only set for human users. Should not be exposed to users.
         authnId: Field.Int,
-        // Email address. Not set if this user is a bot (owned by a user or group).
+        // Email address. TODO: allow multiple email addresses
         email: Field.String.Check(e => e.email({minDomainSegments: 1, tlds: false})),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
-        /** If this user is a bot, it belongs to this user (todo in future; bots could be owned by groups) */
-        OWNED_BY: {
-            to: [User],
-            cardinality: VNodeType.Rel.ToOneOrNone,
-        },
     });
 }
 
@@ -73,10 +68,20 @@ export class BotUser extends User {
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
-        /** If this user is a bot, it belongs to this user (todo in future; bots could be owned by groups) */
+        /** 
+         * If this user is a bot, it belongs to this user.
+         * Every bot has exactly one human user who is responsible for it.
+         */
         OWNED_BY: {
             to: [HumanUser],
             cardinality: VNodeType.Rel.ToOneRequired,
+            properties: {
+                /**
+                 * Inherit permissions: if this is true, then the bot has all the same permissions as the user that owns
+                 * it (is a personal bot). If false, the bot must be explicitly added to groups to grant it permissions.
+                 */
+                inheritPermissions: Field.Boolean,
+            },
         },
     });
 
@@ -170,6 +175,7 @@ export const CreateBot = defineAction({
         ownedByUser: VNID;
         username: string;
         fullName?: string;
+        inheritPermissions?: boolean;
     },
     resultData: {} as {
         id: VNID;
@@ -189,7 +195,7 @@ export const CreateBot = defineAction({
                 slugId: ${User.slugIdPrefix + data.username},
                 authToken: ${authToken},
                 fullName: ${data.fullName || null}
-            })-[:${BotUser.rel.OWNED_BY}]->(owner)
+            })-[:${BotUser.rel.OWNED_BY} {inheritPermissions: ${data.inheritPermissions ?? false}}]->(owner)
         `.RETURN({}));
         return {
             resultData: { id: vnid, authToken, },

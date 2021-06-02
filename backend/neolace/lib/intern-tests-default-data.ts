@@ -12,7 +12,7 @@ import { ContentType } from "neolace-api";
 // To access this, use the return value of setTestIsolation(setTestIsolation.levels.DEFAULT_...)
 const data = {
     users: {
-        alex: {
+        admin: {
             email: "alex@example.com",
             fullName: "Alex Admin",
             username: "alex",
@@ -24,7 +24,7 @@ const data = {
                 authToken: undefined as any as string,  // will be set once created.
             }
         },
-        jamie: {
+        regularUser: {
             email: "jamie@example.com",
             fullName: "Jamie User",
             username: "jamie",
@@ -70,40 +70,40 @@ export async function installDefaultData(): Promise<void> {
     data.wasCreated = true;
 
     await graph.runAsSystem(CreateUser({
-        email: data.users.alex.email,
-        fullName: data.users.alex.fullName,
-        username: data.users.alex.username,
-    })).then(result => data.users.alex.id = result.id);
+        email: data.users.admin.email,
+        fullName: data.users.admin.fullName,
+        username: data.users.admin.username,
+    })).then(result => data.users.admin.id = result.id);
 
     await graph.runAsSystem(CreateBot({
-        ownedByUser: data.users.alex.id,
-        username: data.users.alex.bot.username,
-        fullName: data.users.alex.bot.fullName,
+        ownedByUser: data.users.admin.id,
+        username: data.users.admin.bot.username,
+        fullName: data.users.admin.bot.fullName,
+        inheritPermissions: true,
     })).then(result => {
-        data.users.alex.bot.id = result.id;
-        data.users.alex.bot.authToken = result.authToken;
+        data.users.admin.bot.id = result.id;
+        data.users.admin.bot.authToken = result.authToken;
     });
 
     await graph.runAsSystem(CreateUser({
-        email: data.users.jamie.email,
-        fullName: data.users.jamie.fullName,
-        username: data.users.jamie.username,
-    })).then(result => data.users.jamie.id = result.id);
+        email: data.users.regularUser.email,
+        fullName: data.users.regularUser.fullName,
+        username: data.users.regularUser.username,
+    })).then(result => data.users.regularUser.id = result.id);
 
     await graph.runAsSystem(CreateSite({
         domain: data.site.domain,
         slugId: `site-${data.site.shortId}`,
-        adminUser: data.users.alex.id,
+        adminUser: data.users.admin.id,
     })).then(result => {
         data.site.id = result.id;
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        data.site.usersGroupId = result.adminGroup!;
+        data.site.adminsGroupId = result.adminGroup;
     });
 
     await graph.runAsSystem(CreateGroup({
         name: "Users",
         belongsTo: data.site.id,
-        addUsers: [data.users.jamie.id],
+        addUsers: [data.users.regularUser.id],
         administerSite: false,
         administerGroups: false,
         approveEntryEdits: false,

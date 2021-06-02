@@ -11,13 +11,13 @@ suite(__filename, () => {
         test("can check who is logged in", async () => {
 
             // Get an API client, logged in as a bot that belongs to Alex
-            const client = getClient(defaultData.users.alex);
+            const client = getClient(defaultData.users.admin);
             const result = await client.whoAmI();
             assert.deepStrictEqual(result, {
                 isBot: true,
-                fullName: defaultData.users.alex.bot.fullName,
-                ownedByUsername: defaultData.users.alex.username,
-                username: defaultData.users.alex.bot.username,
+                fullName: defaultData.users.admin.bot.fullName,
+                ownedByUsername: defaultData.users.admin.username,
+                username: defaultData.users.admin.bot.username,
             });
         });
 

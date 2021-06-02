@@ -1,8 +1,10 @@
 import { suite, test, assert, beforeEach, setTestIsolation, assertRejects } from "../lib/intern-tests";
 import { graph } from "./graph";
 import { AccessMode, CreateSite, Site, UpdateSite } from "./Site";
-import { AllOf, CanEditSiteSettings, CanViewEntries, Check, CheckContext, CheckSiteIsPublic, CheckSiteIsPublicContributions, OneOf } from "./permissions";
-import { WrappedTransaction } from "vertex-framework";
+import { AllOf, CanEditSiteSettings, CanViewEntries, Check, CheckContext, CheckSiteIsPublic, CheckSiteIsPublicContributions, CheckUserHasGrants, OneOf } from "./permissions";
+import { C, VNID, WrappedTransaction } from "vertex-framework";
+import { BotUser, CreateBot, HumanUser, User } from "./User";
+import { PermissionGrant, UpdateGroup } from "./Group";
 
 suite(__filename, () => {
 
@@ -42,6 +44,11 @@ suite(__filename, () => {
 
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
+        const check = async (check: Check, userId?: VNID): Promise<boolean> => {
+            return graph.read(async tx => check({tx, siteId: defaultData.site.id, userId}));
+        };
+
+
         test(`site access mode checks`, async () => {
 
             const siteId = defaultData.site.id;
@@ -51,55 +58,64 @@ suite(__filename, () => {
             // The site is in "public contributions" mode:
             assert.equal(initialSite.accessMode, AccessMode.PublicContributions);
 
-            assert.isTrue(await graph.read(async tx =>
-                CheckSiteIsPublic({tx, siteId})
-            ));
-            assert.isTrue(await graph.read(async tx =>
-                CheckSiteIsPublicContributions({tx, siteId})
-            ));
-            assert.isTrue(await graph.read(async tx =>
-                CanViewEntries({tx, siteId})  // An anonymous user should have permission to view entries
-            ));
+            assert.isTrue(await check(CheckSiteIsPublic));
+            assert.isTrue(await check(CheckSiteIsPublicContributions));
+            assert.isTrue(await check(CanViewEntries));  // An anonymous user should have permission to view entries
+
             ////////////////////////////////////////////////////////////////////////
             // Change the site to "public read-only" mode:
             await graph.runAsSystem(UpdateSite({key: siteId, accessMode: AccessMode.PublicReadOnly}));
 
-            assert.isTrue(await graph.read(async tx =>
-                CheckSiteIsPublic({tx, siteId})
-            ));
-            assert.isFalse(await graph.read(async tx =>
-                CheckSiteIsPublicContributions({tx, siteId})  // This is now false
-            ));
-            assert.isTrue(await graph.read(async tx =>
-                CanViewEntries({tx, siteId})  // An anonymous user should still have permission to view entries
-            ));
+            assert.isTrue(await check(CheckSiteIsPublic));
+            assert.isFalse(await check(CheckSiteIsPublicContributions));  // This is now false
+            assert.isTrue(await check(CanViewEntries));  // An anonymous user should still have permission to view entries
+
             ////////////////////////////////////////////////////////////////////////
             // Change the site to "private" mode:
             await graph.runAsSystem(UpdateSite({key: siteId, accessMode: AccessMode.Private}));
 
-            assert.isFalse(await graph.read(async tx =>
-                CheckSiteIsPublic({tx, siteId})  // This is now false
-            ));
-            assert.isFalse(await graph.read(async tx =>
-                CheckSiteIsPublicContributions({tx, siteId})  // This is still false
-            ));
-            assert.isFalse(await graph.read(async tx =>
-                CanViewEntries({tx, siteId})  // Now an anonymous user will not have permission to view entries
-            ));
+            assert.isFalse(await check(CheckSiteIsPublic));  // This is now false
+            assert.isFalse(await check(CheckSiteIsPublicContributions));  // This is still false
+            assert.isFalse(await check(CanViewEntries));  // Now an anonymous user will not have permission to view entries
         });
 
         test(`check permissions granted via groups`, async () => {
-
-            const siteId = defaultData.site.id;
-
             // "Alex" is in the administrators group so can edit site settings:
-            assert.isTrue(await graph.read(async tx =>
-                CanEditSiteSettings({userId: defaultData.users.alex.id, tx, siteId})
-            ));
+            assert.isTrue(await check(CanEditSiteSettings, defaultData.users.admin.id));
             // Whereas Jamie is in the users group so cannot:
-            assert.isFalse(await graph.read(async tx =>
-                CanEditSiteSettings({userId: defaultData.users.jamie.id, tx, siteId})
-            ));
+            assert.isFalse(await check(CanEditSiteSettings, defaultData.users.regularUser.id));
+        });
+
+        test(`bot user permissions - inheriting from owner user`, async () => {
+            // A bot user can optionally inherit permissions from its owner
+
+            const inheritingBot = await graph.runAsSystem(CreateBot({
+                ownedByUser: defaultData.users.admin.id,
+                username: "inheriting-bot",
+                fullName: "Inheriting Bot",
+                inheritPermissions: true,
+            }));
+
+            const regularBot = await graph.runAsSystem(CreateBot({
+                ownedByUser: defaultData.users.admin.id,
+                username: "regular-bot",
+                fullName: "Regular Bot",
+                inheritPermissions: false,
+            }));
+
+            // Alex has permission to administer the site:
+            assert.isTrue(await check(CheckUserHasGrants(PermissionGrant.administerSite), defaultData.users.admin.id));
+            // So a bot that he owns with "inerhit permissions" should too:
+            assert.isTrue(await check(CheckUserHasGrants(PermissionGrant.administerSite), inheritingBot.id));
+            // But a bot that he owns, without "inherit permissions" will not:
+            assert.isFalse(await check(CheckUserHasGrants(PermissionGrant.administerSite), regularBot.id));
+
+            // ... unless we add it to a group
+            await graph.runAsSystem(UpdateGroup({
+                key: defaultData.site.adminsGroupId,
+                addUsers: [regularBot.id],
+            }));
+            assert.isTrue(await check(CheckUserHasGrants(PermissionGrant.administerSite), regularBot.id));
         });
 
     });

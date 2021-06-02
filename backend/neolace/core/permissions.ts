@@ -14,7 +14,7 @@
 import { C, Field, VNID, WrappedTransaction } from "vertex-framework";
 import { Group, PermissionGrant } from "./Group";
 import { AccessMode, Site } from "./Site";
-import { User } from "./User";
+import { BotUser, User } from "./User";
 
 
 export interface CheckContext {
@@ -90,8 +90,9 @@ export const CheckUserBelongsToAnyGroup: Check = async (context) => {
     }
     const result = await context.tx.query(C`
         MATCH (user:${User} {id: ${context.userId}})
-        MATCH (site:${Site} {id: ${context.siteId}})
-        MATCH (user)<-[:${Group.rel.HAS_USER}]-(group:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(site)
+        MATCH (group:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(site:${Site} {id: ${context.siteId}})
+        // The following will match if the user is in one of those groups OR if the user is a bot inheriting permissions from its owner who is in one of those groups
+        MATCH (group)-[:${Group.rel.HAS_USER}]->(userOrOwner:${User})<-[:${BotUser.rel.OWNED_BY}*0..1 {inheritPermissions: true}]-(user)
         RETURN group.id LIMIT 1
     `);
     return result.length > 0;
@@ -112,8 +113,9 @@ export const CheckUserBelongsToAnyGroup: Check = async (context) => {
         }
         const result = await context.tx.query(C`
             MATCH (user:${User} {id: ${context.userId}})
-            MATCH (site:${Site} {id: ${context.siteId}})
-            MATCH (user)<-[:${Group.rel.HAS_USER}]-(group:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(site)
+            MATCH (group:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(site:${Site} {id: ${context.siteId}})
+            // The following will match if the user is in one of those groups OR if the user is a bot inheriting permissions from its owner who is in one of those groups
+            MATCH (group)-[:${Group.rel.HAS_USER}]->(userOrOwner:${User})<-[:${BotUser.rel.OWNED_BY}*0..1 {inheritPermissions: true}]-(user)
         `.RETURN({group: Field.VNode(Group)}));
 
         for (const grant of grants) {

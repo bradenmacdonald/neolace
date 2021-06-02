@@ -81,6 +81,8 @@ intern.on("beforeRun", async () => {
 });
 
 intern.on("afterRun", async () => {
+    // Leave the default data in the database in case developers want to make queries and play with it:
+    await graph.resetDBToSnapshot(dataSnapshot);
     shutdown();
 });
 
