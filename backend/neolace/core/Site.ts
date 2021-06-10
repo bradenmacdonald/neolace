@@ -16,7 +16,7 @@ import { graph } from "./graph";
 // Forward reference
 export const SiteRef: typeof Site = VNodeTypeRef("Site");
 
-import { CreateGroup, GroupRef as Group } from "./Group";
+import { CreateGroup, GroupMaxDepth, GroupRef as Group } from "./Group";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +104,7 @@ export class Site extends VNodeType {
         groupsFlat: {
             // A flattened list of all the user groups that this site has
             type: VirtualPropType.ManyRelationship,
-            query: C`(@target:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(@this)`,
+            query: C`(@target:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(@this)`,
             target: Group,
         },
     });

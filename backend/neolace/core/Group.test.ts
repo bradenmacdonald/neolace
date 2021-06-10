@@ -1,6 +1,6 @@
 import { suite, test, assert, beforeEach, setTestIsolation, assertRejects } from "../lib/intern-tests";
 import { graph } from "./graph";
-import { CreateGroup, Group, UpdateGroup } from "./Group";
+import { CreateGroup, Group, UpdateGroup, GroupMaxDepth } from "./Group";
 import { CreateSite, Site } from "./Site";
 import { VNodeKey } from "vertex-framework";
 
@@ -20,8 +20,8 @@ suite(__filename, () => {
             );
         });
 
-        test(`Can create nested groups up to ${Group.maxDepth} levels deep, but no more`, async () => {
-            assert.equal(Group.maxDepth, 4);
+        test(`Can create nested groups up to ${GroupMaxDepth} levels deep, but no more`, async () => {
+            assert.equal(GroupMaxDepth, 4);
 
             // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
             const getGroup = (key: VNodeKey) => graph.pullOne(Group, g => g.id.name.parentGroup(pg => pg.id).site(s => s.id), {key,});

@@ -14,6 +14,9 @@ import {
     Field,
 } from "vertex-framework";
 
+// How many levels of groups a site can have (groups can be nested, e.g. Employees > Managers > C-level)
+export const GroupMaxDepth = 4;
+
 // Forward reference
 export const GroupRef: typeof Group = VNodeTypeRef("Group");
 import { SiteRef as Site } from "./Site";
@@ -49,8 +52,7 @@ export class Group extends VNodeType {
 
         // Membership in _any_ group grants permission to view entries and schema on the site
     };
-    // How many levels of groups a site can have (groups can be nested, e.g. Employees > Managers > C-level)
-    static readonly maxDepth = 4;
+
     static readonly emptyPermissions = {
         [PermissionGrant.administerSite]: false,
         [PermissionGrant.administerGroups]: false,
@@ -67,8 +69,8 @@ export class Group extends VNodeType {
             if (g.site === null) {
                 // The superclass validation should already have caught a missing Site, so the only reason Site would
                 // be null here is if the "site" virtual prop isn't able to find the site, because the path between the
-                // group and the site is longer than Group.maxDepth
-                throw new Error(`User groups cannot be nested more than ${Group.maxDepth} levels deep.`);
+                // group and the site is longer than GroupMaxDepth
+                throw new Error(`User groups cannot be nested more than ${GroupMaxDepth} levels deep.`);
             }
         });
     }
@@ -89,7 +91,7 @@ export class Group extends VNodeType {
         // The site that this group belongs to
         site: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(@target:${Site})`,
+            query: C`(@this)-[:${Group.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(@target:${Site})`,
             target: Site,
         },// The site that this group belongs to
         parentGroup: {
@@ -129,7 +131,7 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
 
                 // Helper function: given the key (VNID or slugId) of a Group or Site, return the VNID of the associated site
                 const getSiteIdForGS = async (key: VNodeKey): Promise<VNID> => tx.queryOne(C`
-                    MATCH (parent:VNode)-[:${Group.rel.BELONGS_TO}*0..${C(String(Group.maxDepth))}]->(site:${Site}), parent HAS KEY ${key}
+                    MATCH (parent:VNode)-[:${Group.rel.BELONGS_TO}*0..${C(String(GroupMaxDepth))}]->(site:${Site}), parent HAS KEY ${key}
                     WHERE parent:${Group} OR parent:${Site}
                 `.RETURN({"site.id": Field.VNID})).then(r => r["site.id"]);
 

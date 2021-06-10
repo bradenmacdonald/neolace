@@ -12,7 +12,7 @@
  * group with the "approveSchemaChanges" Grant, for example, then the user is authorized to approve schema changes.
  */
 import { C, Field, VNID, WrappedTransaction } from "vertex-framework";
-import { Group, PermissionGrant } from "./Group";
+import { Group, GroupMaxDepth, PermissionGrant } from "./Group";
 import { AccessMode, Site } from "./Site";
 import { BotUser, User } from "./User";
 
@@ -90,7 +90,7 @@ export const CheckUserBelongsToAnyGroup: Check = async (context) => {
     }
     const result = await context.tx.query(C`
         MATCH (user:${User} {id: ${context.userId}})
-        MATCH (group:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(site:${Site} {id: ${context.siteId}})
+        MATCH (group:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(site:${Site} {id: ${context.siteId}})
         // The following will match if the user is in one of those groups OR if the user is a bot inheriting permissions from its owner who is in one of those groups
         MATCH (group)-[:${Group.rel.HAS_USER}]->(userOrOwner:${User})<-[:${BotUser.rel.OWNED_BY}*0..1 {inheritPermissions: true}]-(user)
         RETURN group.id LIMIT 1
@@ -113,7 +113,7 @@ export const CheckUserBelongsToAnyGroup: Check = async (context) => {
         }
         const result = await context.tx.query(C`
             MATCH (user:${User} {id: ${context.userId}})
-            MATCH (group:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(site:${Site} {id: ${context.siteId}})
+            MATCH (group:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(site:${Site} {id: ${context.siteId}})
             // The following will match if the user is in one of those groups OR if the user is a bot inheriting permissions from its owner who is in one of those groups
             MATCH (group)-[:${Group.rel.HAS_USER}]->(userOrOwner:${User})<-[:${BotUser.rel.OWNED_BY}*0..1 {inheritPermissions: true}]-(user)
         `.RETURN({group: Field.VNode(Group)}));
