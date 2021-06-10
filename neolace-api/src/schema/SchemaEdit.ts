@@ -1,4 +1,4 @@
-import { VNID, ContentType, SiteSchemaData, EntryTypeData } from "./SiteSchemaData";
+import { VNID, ContentType, SiteSchemaData, EntryTypeData, RelationshipCategory } from "./SiteSchemaData";
 
 const typed: any = undefined;  // Helper for declaring types below, where the value doesn't matter, only the type.
 
@@ -35,8 +35,8 @@ export const CreateEntryType = SchemaEditType({
     },
     apply: (currentSchema, data) => {
 
-        if (data.id in currentSchema.entryTypes) {
-            throw new Error(`EntryType with ID ${data.id} already in schema.`);
+        if (data.id in currentSchema.entryTypes || data.id in currentSchema.relationshipTypes) {
+            throw new Error(`ID ${data.id} is already in this schema.`);
         }
 
         const newSchema: SiteSchemaData = {
@@ -53,7 +53,7 @@ export const CreateEntryType = SchemaEditType({
             relationshipTypes: currentSchema.relationshipTypes,
         };
 
-        return newSchema;
+        return Object.freeze(newSchema);
     },
     describe: (data) => `Created \`EntryType ${data.id}\``,  // TODO: get withId to accept a second "fallback" parameter so we can pass in "Name" and display that even before the object with this ID is saved into the database.
 });
@@ -86,9 +86,103 @@ export const UpdateEntryType = SchemaEditType({
             }
         }
         newSchema.entryTypes[data.id] = {...currentValues, ...changes};
-        return newSchema;
+        return Object.freeze(newSchema);
     },
     describe: (data) => `Updated \`EntryType ${data.id}\``,
+});
+
+export const CreateRelationshipType = SchemaEditType({
+    changeType: "schema",
+    code: "CreateRelationshipType",
+    dataSchema: typed as {
+        nameForward: string,
+        nameReverse: string,
+        id: VNID,
+        category: RelationshipCategory,
+    },
+    apply: (currentSchema, data) => {
+
+        if (data.id in currentSchema.entryTypes || data.id in currentSchema.relationshipTypes) {
+            throw new Error(`ID ${data.id} is already in this schema.`);
+        }
+
+        const newSchema: SiteSchemaData = {
+            entryTypes: currentSchema.entryTypes,
+            relationshipTypes: {
+                ...currentSchema.relationshipTypes,
+                [data.id]: {
+                    id: data.id,
+                    nameForward: data.nameForward,
+                    nameReverse: data.nameReverse,
+                    category: data.category,
+                    description: null,
+                    fromEntryTypes: [],
+                    toEntryTypes: [],
+                },
+            },
+        };
+
+        return Object.freeze(newSchema);
+    },
+    describe: (data) => `Created \`RelationshipType ${data.id}\``,  // TODO: get withId to accept a second "fallback" parameter so we can pass in "Name" and display that even before the object with this ID is saved into the database.
+});
+
+export const UpdateRelationshipType = SchemaEditType({
+    changeType: "schema",
+    code: "UpdateRelationshipType",
+    dataSchema: typed as {
+        id: VNID,
+        nameForward?: string,
+        nameReverse?: string,
+        description?: string|null,
+        addFromTypes?: VNID[],
+        removeFromTypes?: VNID[],
+        addToTypes?: VNID[],
+        removeToTypes?: VNID[],
+    },
+    apply: (currentSchema, data) => {
+
+        const currentValues = currentSchema.relationshipTypes[data.id];
+        if (currentValues === undefined) {
+            throw new Error(`RelationshipType with ID ${data.id} not found.`);
+        }
+
+        const relType = {...currentValues};
+
+        // Updates to the fromEntryTypes field:
+        if (data.removeFromTypes) {
+            relType.fromEntryTypes = relType.fromEntryTypes.filter(id => !data.removeFromTypes?.includes(id));
+        }
+        data.addFromTypes?.forEach(entryTypeId => {
+            if (!relType.fromEntryTypes.includes(entryTypeId)) {
+                relType.fromEntryTypes = [...relType.fromEntryTypes, entryTypeId];
+            }
+        });
+
+        // Updates to the toEntryTypes field:
+        if (data.removeToTypes) {
+            relType.toEntryTypes = relType.toEntryTypes.filter(id => !data.removeToTypes?.includes(id));
+        }
+        data.addToTypes?.forEach(entryTypeId => {
+            if (!relType.toEntryTypes.includes(entryTypeId)) {
+                relType.toEntryTypes = [...relType.toEntryTypes, entryTypeId];
+            }
+        });
+
+        // Updates to other fields:
+        for (const key of ["nameForward", "nameReverse", "description"] as const) {
+            if (data[key] !== undefined) {
+                relType[key] = (data)[key] as any;
+            }
+        }
+
+        const newSchema: SiteSchemaData = {
+            entryTypes: currentSchema.entryTypes,
+            relationshipTypes: {...currentSchema.relationshipTypes, [data.id]: relType},
+        };
+        return Object.freeze(newSchema);
+    },
+    describe: (data) => `Updated \`RelationshipType ${data.id}\``,
 });
 
 
@@ -98,5 +192,7 @@ export interface EditSet {
     edits: (
         | Edit<typeof CreateEntryType>
         | Edit<typeof UpdateEntryType>
+        | Edit<typeof CreateRelationshipType>
+        | Edit<typeof UpdateRelationshipType>
     )[];
 }

@@ -6,7 +6,7 @@ import { CreateBot, CreateUser } from "../core/User";
 import { CreateSite } from "../core/Site";
 import { CreateGroup } from "../core/Group";
 import { ImportSchema } from "../core/schema/import-schema";
-import { ContentType } from "neolace-api";
+import { ContentType, RelationshipCategory } from "neolace-api";
 
 // Data that gets created by default. 
 // To access this, use the return value of setTestIsolation(setTestIsolation.levels.DEFAULT_...)
@@ -56,7 +56,35 @@ const data = {
                 friendlyIdPrefix: "cn-",
             },
         },
-        relationshipTypes: {},
+        relationshipTypes: {
+            "_ISA": {
+                id: VNID("_ISA"),
+                nameForward: "is a",
+                nameReverse: "has type",
+                category: RelationshipCategory.IS_A,
+                description: null,
+                fromEntryTypes: [VNID("_ETCOMPUTER")],
+                toEntryTypes: [VNID("_ETCOMPUTER")],
+            },
+            "_ISA2": {
+                id: VNID("_ISA2"),
+                nameForward: "is a",
+                nameReverse: "has type",
+                category: RelationshipCategory.IS_A,
+                description: null,
+                fromEntryTypes: [VNID("_ETCOMPONENT")],
+                toEntryTypes: [VNID("_ETCOMPONENT")],
+            },
+            "_HASA": {
+                id: VNID("_HASA"),
+                nameForward: "has a",
+                nameReverse: "used in",
+                category: RelationshipCategory.HAS_A,
+                description: null,
+                fromEntryTypes: [VNID("_ETCOMPUTER")],
+                toEntryTypes: [VNID("_ETCOMPONENT")],
+            },
+        },
     },
     wasCreated: false,
 };

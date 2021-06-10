@@ -74,7 +74,7 @@ intern.on("beforeRun", async () => {
         await serverPromise;
     } catch (err) {
         // No point in running the test suite if beforeRun failed, but we don't have any good way to bail :-/
-        log.error(`Error during beforeRun: ${err}`);
+        log.error(`Error during beforeRun: ${err}\n${err.stack}`);
         void graph.shutdown();
         process.exit(1);
     }

@@ -36,7 +36,7 @@ suite(__filename, () => {
                         friendlyIdPrefix: null,
                     },
                 },
-                relationshipTypes: {},
+                relationshipTypes: defaultData.schema.relationshipTypes,
             });
         });
 

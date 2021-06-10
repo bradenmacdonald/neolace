@@ -42,12 +42,12 @@ export enum RelationshipCategory {
     /**
      * DEPENDS_ON: e.g. An Task DEPENDS_ON another Task
      */
-    DEPENDS_ON = "DEPENDS_ON",
+    //DEPENDS_ON = "DEPENDS_ON",
     /**
      * RELATES_TO: e.g. An Email RELATES_TO a SubjectMatter
      * This is considered a symmetrical relationship.
      */
-    RELATES_TO = "RELATES_TO",
+    //RELATES_TO = "RELATES_TO",
 }
 
 export function CastRelationshipCategory(value: string): RelationshipCategory {
@@ -59,9 +59,26 @@ export function CastRelationshipCategory(value: string): RelationshipCategory {
 
 export interface RelationshipTypeData {
     id: VNID;
-    /** Name of this relationship type */
-    name: string;
+    /** The name of this RelationshipType (e.g. FROM_ENTRY_TYPE "is derived from" TO_ENTRY_TYPE) */
+    nameForward: string;
+    /** The name of the reverse of this RelationshipType (e.g. TO_ENTRY_TYPE "has derivatives" FROM_ENTRY_TYPE) */
+    nameReverse: string;
+    /** Relationship category - cannot be changed. */
     category: RelationshipCategory;
+    /** Description: Short, rich text summary of the relationship  */
+    description: string|null;
+
+    /**
+     * What entry types this relationship can be from.
+     * When a relationship is changed, the "From" entry counts as being modified.
+     * So if you create a new relationship that "Fork -> is a -> Utensil", it counts as a change to Fork (the from
+     * entry), not to Utensil. The change that made that relationship will only appear in the "Fork" change history.
+     */
+    fromEntryTypes: VNID[];
+    /**
+     * What entry types this relationship can be to.
+     */
+    toEntryTypes: VNID[];
 }
 
 
