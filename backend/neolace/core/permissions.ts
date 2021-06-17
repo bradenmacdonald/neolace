@@ -135,21 +135,24 @@ export const CanViewEntries: Check = OneOf(
     CheckSiteIsPublic,  // If the site is public, anyone can view entries, even if they're not logged in
     CheckUserBelongsToAnyGroup,  // If the site is private, the user can _view_ entries by belonging to any Group
 );
-export const CanProposeEntryEdits: Check = AllOf(CheckUserIsLoggedIn, OneOf(
-    CheckSiteIsPublicContributions,  // If the site is "public contributions" and the user is logged in, they can propose edits
-    CheckUserHasGrants(PermissionGrant.proposeEntryEdits),  // Or if the user's groups explicitly have the "proposeEntryChanges" grant
-));
-export const CanApproveEntryEdits: Check = CheckUserHasGrants(PermissionGrant.approveEntryEdits);
 // Schema
 export const CanViewSchema: Check = OneOf(
     CheckSiteIsPublic,  // If the site is public, anyone can view its schema, even if they're not logged in
     CheckUserBelongsToAnyGroup,  // If the site is private, the user can _view_ the schema by belonging to any Group
 );
+// Drafts:
+export const CanViewDrafts: Check = CanViewEntries;
+export const CanProposeEntryEdits: Check = AllOf(CheckUserIsLoggedIn, OneOf(
+    CheckSiteIsPublicContributions,  // If the site is "public contributions" and the user is logged in, they can propose edits
+    CheckUserHasGrants(PermissionGrant.proposeEntryEdits),  // Or if the user's groups explicitly have the "proposeEntryChanges" grant
+));
+export const CanApproveEntryEdits: Check = CheckUserHasGrants(PermissionGrant.approveEntryEdits);
 export const CanProposeSchemaChanges: Check = AllOf(CheckUserIsLoggedIn, OneOf(
     CheckSiteIsPublicContributions,  // If the site is "public contributions" and the user is logged in, they can propose schema changes
     CheckUserHasGrants(PermissionGrant.proposeSchemaChanges),  // Or if the user's groups explicitly have the "proposeSchemaChanges" grant
 ));
 export const CanApproveSchemaChanges: Check = CheckUserHasGrants(PermissionGrant.approveSchemaChanges);
+export const CanCreateDraft: Check = OneOf(CanProposeEntryEdits, CanProposeSchemaChanges);
 // General site admin:
 export const CanCreateSite: Check = CheckUserIsLoggedIn;  // For now, any logged in user can create new sites.
 export const CanEditSiteSettings: Check = CheckUserHasGrants(PermissionGrant.administerSite);
@@ -162,6 +165,8 @@ export const permissions = {
     CanViewSchema,
     CanProposeSchemaChanges,
     CanApproveSchemaChanges,
+    CanViewDrafts,
+    CanCreateDraft,
     CanCreateSite,
     CanEditSiteSettings,
     CanEditSiteGroups,

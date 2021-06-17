@@ -1,17 +1,12 @@
-import { VNID, ContentType, SiteSchemaData, EntryTypeData, RelationshipCategory } from "./SiteSchemaData";
+import { Edit, EditChangeType, EditType } from "../edit/Edit";
+import { VNID } from "../types";
+import { ContentType, SiteSchemaData, RelationshipCategory } from "./SiteSchemaData";
 
 const typed: any = undefined;  // Helper for declaring types below, where the value doesn't matter, only the type.
 
-interface EditType<Code extends string = string, DataSchema = Record<string, never>> {
-    changeType: "schema"|"content";
-    // A string that specifies what edit is being made
-    code: Code;
-    dataSchema: DataSchema;
-    describe: (data: DataSchema) => string;
-}
 
 interface SchemaEditType<Code extends string = string, DataSchema = Record<string, never>> extends EditType<Code, DataSchema> {
-    changeType: "schema";
+    changeType: EditChangeType.Schema;
     /**
      * If this edit "expands" the schema, it does something like adding a new Entry Type or a new Property, which are
      * guaranteed to be compatible with the data that came before.
@@ -27,7 +22,7 @@ function SchemaEditType<Code extends string, DataSchema>(args: SchemaEditType<Co
 }
 
 export const CreateEntryType = SchemaEditType({
-    changeType: "schema",
+    changeType: EditChangeType.Schema,
     code: "CreateEntryType",
     dataSchema: typed as {
         name: string,
@@ -59,7 +54,7 @@ export const CreateEntryType = SchemaEditType({
 });
 
 export const UpdateEntryType = SchemaEditType({
-    changeType: "schema",
+    changeType: EditChangeType.Schema,
     code: "UpdateEntryType",
     dataSchema: typed as {
         id: VNID,
@@ -92,7 +87,7 @@ export const UpdateEntryType = SchemaEditType({
 });
 
 export const CreateRelationshipType = SchemaEditType({
-    changeType: "schema",
+    changeType: EditChangeType.Schema,
     code: "CreateRelationshipType",
     dataSchema: typed as {
         nameForward: string,
@@ -128,7 +123,7 @@ export const CreateRelationshipType = SchemaEditType({
 });
 
 export const UpdateRelationshipType = SchemaEditType({
-    changeType: "schema",
+    changeType: EditChangeType.Schema,
     code: "UpdateRelationshipType",
     dataSchema: typed as {
         id: VNID,
@@ -186,13 +181,27 @@ export const UpdateRelationshipType = SchemaEditType({
 });
 
 
-type Edit<T extends EditType<string, any>> = {code: T["code"], data: T["dataSchema"]};
+const allEditTypes = {
+    CreateEntryType,
+    UpdateEntryType,
+    CreateRelationshipType,
+    UpdateRelationshipType,
+};
 
-export interface EditSet {
-    edits: (
-        | Edit<typeof CreateEntryType>
-        | Edit<typeof UpdateEntryType>
-        | Edit<typeof CreateRelationshipType>
-        | Edit<typeof UpdateRelationshipType>
-    )[];
+export function getEditType(code: string): EditType {
+    const et = (allEditTypes as any)[code];
+    if (et === undefined) {
+        throw new Error(`Unknown/unsupported edit code: "${code}"`);
+    }
+    return et;
 }
+getEditType.OrNone = function(code: string): EditType|undefined {
+    return (allEditTypes as any)[code];
+}
+
+export type AnySchemaEdit = (
+    | Edit<typeof CreateEntryType>
+    | Edit<typeof UpdateEntryType>
+    | Edit<typeof CreateRelationshipType>
+    | Edit<typeof UpdateRelationshipType>
+);

@@ -1,4 +1,5 @@
-import { NotAuthenticated } from "neolace-api";
+import { ContentType, NotAuthenticated } from "neolace-api";
+import { VNID } from "vertex-framework";
 import { graph } from "../../../../core/graph";
 import { AccessMode, UpdateSite } from "../../../../core/Site";
 import { suite, test, assert, before, beforeEach, setTestIsolation, getClient, assertRejectsWith, assertRejects } from "../../../../lib/intern-tests";
@@ -41,8 +42,35 @@ suite(__filename, () => {
         });
 
         test("can create a new entry type", async () => {
-
-            // TODO
+            const client = getClient(defaultData.users.admin, defaultData.site.shortId);
+            assert.deepStrictEqual(await client.getSiteSchema(), defaultData.schema);
+            // Create a draft with a new entry type:
+            const result = await client.createDraft({
+                title: "Add Software EntryType",
+                description: "This adds a new entry type, 'software'.",
+                edits: [
+                    {
+                        code: "CreateEntryType",
+                        data: { id: VNID("_ETSOFTWARE"), name: "Software"},
+                    },
+                ],
+            });
+            // Accept the draft:
+            await client.acceptDraft(result.id);
+            // Now the new entry type should exist:
+            assert.deepStrictEqual(await client.getSiteSchema(), {
+                entryTypes: {
+                    ...defaultData.schema.entryTypes,
+                    _ETSOFTWARE: {
+                        id: VNID("_ETSOFTWARE"),
+                        contentType: ContentType.None,
+                        description: null,
+                        friendlyIdPrefix: null,
+                        name: "Software",
+                    },
+                },
+                relationshipTypes: defaultData.schema.relationshipTypes,
+            });
         });
 
     })

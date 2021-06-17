@@ -1,8 +1,16 @@
+import {
+    EditList,
+    CastContentType,
+    CastRelationshipCategory,
+    EntryTypeData,
+    RelationshipTypeData,
+    SiteSchemaData,
+    UpdateRelationshipType,
+} from "neolace-api";
 import { C, VNID, WrappedTransaction } from "vertex-framework";
 import { Site } from "../Site";
 import { EntryType } from "./EntryType";
 import { RelationshipType } from "./RelationshipType";
-import { CastContentType, CastRelationshipCategory, EditSet, EntryTypeData, RelationshipTypeData, SiteSchemaData, UpdateRelationshipType } from "neolace-api";
 
 export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Promise<SiteSchemaData> {
     const result: SiteSchemaData = {
@@ -59,9 +67,9 @@ function difference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
 }
 
 
-export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Readonly<SiteSchemaData>): EditSet {
+export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Readonly<SiteSchemaData>): {edits: EditList} {
 
-    const result: EditSet = {edits: []};
+    const result: {edits: EditList} = {edits: []};
 
     // Do some quick validation of the schema IDs:
     for (const [id, val] of [

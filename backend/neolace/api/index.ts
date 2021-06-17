@@ -171,6 +171,14 @@ export async function getSiteDetails(request: Hapi.Request): Promise<{siteId: VN
     return {siteId, siteCode};
 }
 
+export function requireUserId(request: Hapi.Request): VNID {
+    const userId = request.auth.credentials.user?.id;
+    if (userId === undefined) {
+        throw new api.NotAuthenticated();
+    }
+    return userId;
+}
+
 export {
     Hapi,
     Boom,

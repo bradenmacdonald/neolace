@@ -1,0 +1,276 @@
+import { EditChangeType, EditList, getEditType, DraftStatus } from "neolace-api";
+import {
+    VNodeType,
+    defineAction,
+    VirtualPropType,
+    getVNodeType,
+    C,
+    isVNodeType,
+    DerivedProperty,
+    VNodeKey,
+    VNID,
+    Field,
+    RawVNode,
+    WrappedTransaction,
+    defaultUpdateFor,
+} from "vertex-framework";
+import { Entry } from "../entry/Entry";
+import { Site } from "../Site";
+import { User } from "../User";
+import { ApplyEdits } from "./ApplyEdits";
+
+
+
+/**
+ * A DraftEdit is a specific change within a Draft.
+ */
+ @VNodeType.declare
+ export class DraftEdit extends VNodeType {
+    static readonly label = "DraftEdit";
+ 
+    static readonly properties = {
+        ...VNodeType.properties,
+        code: Field.String,
+        changeType: Field.String.Check(ct => ct.valid(EditChangeType.Schema, EditChangeType.Content)),
+        dataJSON: Field.String,
+        timestamp: Field.DateTime,
+    };
+ 
+    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    });
+ 
+    static virtualProperties = VNodeType.hasVirtualProperties({
+    });
+ 
+    static derivedProperties = VNodeType.hasDerivedProperties({
+        data: dataFromJson,
+    });
+ 
+    static async validate(dbObject: RawVNode<typeof DraftEdit>, tx: WrappedTransaction): Promise<void> {
+        await super.validate(dbObject, tx);
+        // Very minimal validation - make sure this is valid JSON:
+        JSON.parse(dbObject.dataJSON);
+    }
+ 
+ }
+
+
+ export function dataFromJson(): DerivedProperty<any>{
+    return DerivedProperty.make(
+        DraftEdit,
+        edit => edit.dataJSON,
+        editData => JSON.parse(editData.dataJSON),
+    );
+}
+
+
+
+ 
+
+
+/**
+ * A Draft is a proposed set of edits to a site's content or schema.
+ * 
+ * Most changes to a site's content happen via Drafts. A user can push a set of edits as a draft, and optionally wait
+ * for others to review the draft, then accept the draft.
+ */
+@VNodeType.declare
+export class Draft extends VNodeType {
+    static readonly label = "Draft";
+
+    static readonly properties = {
+        ...VNodeType.properties,
+        title: Field.String,
+        description: Field.NullOr.String,
+        created: Field.DateTime,
+        status: Field.Int.Check(s => s.valid(DraftStatus.Open, DraftStatus.Accepted, DraftStatus.Cancelled)),
+    };
+
+
+    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+        FOR_SITE: {
+            to: [Site],
+            properties: {},
+            cardinality: VNodeType.Rel.ToOneRequired,
+        },
+        AUTHORED_BY: {
+            to: [User],
+            properties: {},
+            cardinality: VNodeType.Rel.ToOneRequired,
+        },
+        HAS_EDIT: {
+            to: [DraftEdit],
+            properties: {},
+            cardinality: VNodeType.Rel.ToManyUnique,
+        },
+        MODIFIES: {
+            to: [Entry],
+            properties: {},
+            cardinality: VNodeType.Rel.ToManyUnique,
+        },
+    });
+
+    static virtualProperties = VNodeType.hasVirtualProperties({
+        author: {
+            type: VirtualPropType.OneRelationship,
+            target: User,
+            query: C`(@this)-[:${Draft.rel.AUTHORED_BY}]->(@target:${User})`,
+        },
+        edits: {
+            type: VirtualPropType.ManyRelationship,
+            target: DraftEdit,
+            query: C`(@this)-[:${Draft.rel.HAS_EDIT}]->(@target:${DraftEdit})`,
+        },
+        modifiesEntries: {
+            type: VirtualPropType.ManyRelationship,
+            target: Entry,
+            query: C`(@this)-[:${Draft.rel.MODIFIES}]->(@target:${Entry})`,
+        },
+        site: {
+            type: VirtualPropType.OneRelationship,
+            target: Site,
+            query: C`(@this)-[:${Draft.rel.FOR_SITE}]->(@target:${Site})`,
+        },
+    });
+
+    static derivedProperties = VNodeType.hasDerivedProperties({
+        hasSchemaChanges,
+        hasContentChanges,
+    });
+
+    static async validate(dbObject: RawVNode<typeof Draft>, tx: WrappedTransaction): Promise<void> {
+        await super.validate(dbObject, tx);
+
+        // We don't verify if user is part of Site, because users can open a Draft then be removed from a Site but
+        // their Draft should live on.
+    }
+
+}
+
+/** Does this draft contain edits to the schema? */
+export function hasSchemaChanges(): DerivedProperty<boolean> { return DerivedProperty.make(
+    Draft,
+    draft => draft.edits(e => e.changeType),
+    data => !!data.edits.find(e => e.changeType === EditChangeType.Schema),
+);}
+/** Does this draft contain edits to the content? */
+export function hasContentChanges(): DerivedProperty<boolean> { return DerivedProperty.make(
+    Draft,
+    draft => draft.edits(e => e.changeType),
+    data => !!data.edits.find(e => e.changeType === EditChangeType.Content),
+);}
+
+
+export const UpdateDraft = defaultUpdateFor(Draft, d => d.title.description, {
+    otherUpdates: async (args: {
+        addEdits?: EditList,
+    }, tx, nodeSnapshot) => {
+        const additionalModifiedNodes: VNID[] = [];
+
+        if (args.addEdits?.length) {
+            // Add edits to this draft:
+
+            const editsExpanded = args.addEdits.map(e => ({
+                id: VNID(),
+                code: e.code,
+                dataJSON: JSON.stringify(e.data),
+                changeType: getEditType(e.code).changeType,
+            }));
+
+            await tx.query(C`
+                MATCH (draft:${Draft} {id: ${nodeSnapshot.id}})
+                UNWIND ${editsExpanded} AS editData
+                CREATE (edit:${DraftEdit} {id: editData.id})
+                CREATE (draft)-[:${Draft.rel.HAS_EDIT}]->(edit)
+                SET edit.code = editData.code
+                SET edit.dataJSON = editData.dataJSON
+                SET edit.changeType = editData.changeType
+                SET edit.timestamp = datetime.realtime()
+            `);
+
+            additionalModifiedNodes.push(...editsExpanded.map(e => e.id));
+        }
+
+        return {additionalModifiedNodes};
+    },
+});
+
+/**
+ * Create a draft
+ */
+ export const CreateDraft = defineAction({
+    type: "CreateDraft",
+    parameters: {} as {
+        id?: VNID;
+        siteId: VNID;
+        authorId: VNID;
+        edits: EditList;
+        title: string;
+        description: string;
+    },
+    resultData: {} as {id: VNID},
+    apply: async (tx, data) => {
+        const id = data.id ?? VNID();
+
+        await tx.queryOne(C`
+            MATCH (site:${Site} {id: ${data.siteId}})
+            MATCH (author:${User} {id: ${data.authorId}})
+            CREATE (draft:${Draft} {id: ${id}})
+            SET draft.title = ${data.title}
+            SET draft.description = ${data.description}
+            SET draft.status = ${DraftStatus.Open}
+            SET draft.created = datetime()
+            CREATE (draft)-[:${Draft.rel.FOR_SITE}]->(site)
+            CREATE (draft)-[:${Draft.rel.AUTHORED_BY}]->(author)
+        `.RETURN({}));
+
+        const otherModifiedNodes: VNID[] = [];
+        if (data.edits.length > 0) {
+            const {modifiedNodes} = await UpdateDraft.apply(tx, {key: id, addEdits: data.edits});
+            otherModifiedNodes.push(...modifiedNodes);
+        }
+
+
+        return {
+            resultData: {id, },
+            modifiedNodes: [id, ...otherModifiedNodes],
+            description: `Created ${Draft.withId(id)}`,
+        };
+    },
+});
+
+/**
+ * Accept a draft, applying its changes
+ */
+ export const AcceptDraft = defineAction({
+    type: "AcceptDraft",
+    parameters: {} as {
+        id: VNID;
+    },
+    resultData: {} as {id: VNID},
+    apply: async (tx, data) => {
+        const id = data.id ?? VNID();
+
+        const draft = await tx.pullOne(Draft, d => d.status.site(s => s.id).edits(e => e.code.data()))
+        if (draft.status !== DraftStatus.Open) {
+            throw new Error("Draft is not open.");
+        }
+
+        await tx.queryOne(C`
+            MATCH (draft:${Draft} {id: ${id}})
+            SET draft.status = ${DraftStatus.Accepted}
+        `.RETURN({}));
+
+        const {modifiedNodes} = await ApplyEdits.apply(tx, {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            siteId: draft.site!.id,
+            edits: draft.edits as any,
+        });
+
+        return {
+            resultData: {id, },
+            modifiedNodes: [id, ...modifiedNodes],
+            description: `Accepted ${Draft.withId(id)}`,
+        };
+    },
+});

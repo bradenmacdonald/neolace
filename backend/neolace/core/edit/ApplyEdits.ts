@@ -1,6 +1,6 @@
 import { C, defineAction, VNID } from "vertex-framework";
 import { Site } from "../Site";
-import { ContentType, CreateEntryType, CreateRelationshipType, EditSet, UpdateEntryType, UpdateRelationshipType } from "neolace-api";
+import { EditList, ContentType, CreateEntryType, CreateRelationshipType, UpdateEntryType, UpdateRelationshipType } from "neolace-api";
 import { EntryType } from "../schema/EntryType";
 import { RelationshipType } from "../schema/RelationshipType";
 
@@ -11,7 +11,7 @@ export const ApplyEdits = defineAction({
     type: "ApplyEdits",
     parameters: {} as {
         siteId: VNID;
-        edits: EditSet["edits"];
+        edits: EditList;
     },
     resultData: {},
     apply: async (tx, data) => {

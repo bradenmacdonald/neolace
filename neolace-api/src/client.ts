@@ -1,6 +1,7 @@
 import { PasswordlessLoginResponse, PublicUserData } from "./user";
 import * as errors from "./errors";
 import { SiteSchemaData } from "./schema";
+import { DraftData, EditList } from "./edit";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
 export interface Config {
@@ -142,6 +143,38 @@ export class NeolaceApiClient {
         const siteId = this.getSiteId(options);
         return this.call(`/site/${siteId}/schema`, {method: "GET"});
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Draft API Methods
+
+    private _parseDraft(rawDraft: any): DraftData {
+        rawDraft.created = Date.parse(rawDraft.created);
+        if (rawDraft.edits) {
+            rawDraft.edits.forEach((e: any) => { e.timestamp = Date.parse(e.timestamp); })
+        }
+        return rawDraft;
+    }
+
+    public async getDraft(draftId: string, options?: {siteId?: string}): Promise<DraftData> {
+        const siteId = this.getSiteId(options);
+        return this._parseDraft(await this.call(`/site/${siteId}/draft/${draftId}`, {method: "GET"}));
+    }
+
+    public async createDraft(data: Pick<DraftData, "title"|"description">&{edits?: EditList}, options?: {siteId?: string}): Promise<DraftData> {
+        const siteId = this.getSiteId(options);
+        const result = await this.call(`/site/${siteId}/draft`, {method: "POST", data: {
+            title: data.title,
+            description: data.description,
+            edits: data.edits ?? [],
+        }});
+        return this._parseDraft(result);
+    }
+
+    public async acceptDraft(draftId: string, options?: {siteId?: string}): Promise<void> {
+        const siteId = this.getSiteId(options);
+        await this.call(`/site/${siteId}/draft/${draftId}/accept`, {method: "POST"});
+    }
+
     /*
     public getTechDbEntry<Flags extends readonly TechDbEntryFlags[]|undefined>(args: {key: string, flags?: Flags}): Promise<ApplyFlags<TechDbEntryFlags, Flags, TechDbEntryData>> {
         return this.call(`/techdb/db/${encodeURIComponent(args.key)}` + (args.flags && args.flags.length ? `?fields=${args.flags.join(",")}` : ""));

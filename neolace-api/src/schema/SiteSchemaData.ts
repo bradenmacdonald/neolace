@@ -1,5 +1,4 @@
-declare type NominalType<T, K extends string> = T & {nominal: K;};  // Nominal type, compatible with Vertex Framework
-export declare type VNID = NominalType<string, "VNID">;  // Same definition as in Vertex Framework
+import { VNID } from "../types";
 
 export enum ContentType {
     /** Just a normal entry, with name, description, properties, relationships, but no "content" */
