@@ -5,7 +5,7 @@
 import intern from "intern";
 import { NeolaceApiClient } from "neolace-api";
 import {
-    VertexTestDataSnapshot
+    VertexTestDataSnapshot, VNID
 } from "vertex-framework";
 export { intern };
 import fetch from "node-fetch";
@@ -74,13 +74,15 @@ intern.on("beforeRun", async () => {
         await serverPromise;
     } catch (err) {
         // No point in running the test suite if beforeRun failed, but we don't have any good way to bail :-/
-        log.error(`Error during beforeRun: ${err}`);
+        log.error(`Error during beforeRun: ${err}\n${err.stack}`);
         void graph.shutdown();
         process.exit(1);
     }
 });
 
 intern.on("afterRun", async () => {
+    // Leave the default data in the database in case developers want to make queries and play with it:
+    await graph.resetDBToSnapshot(dataSnapshot);
     shutdown();
 });
 
@@ -131,7 +133,7 @@ setTestIsolation.levels = TestIsolationLevels;
  * @param user One of the default users, 
  * @returns 
  */
-export function getClient(user?: {bot: {authToken: string}}): NeolaceApiClient {
+export function getClient(user?: {bot: {authToken: string}}, siteShortId?: string): NeolaceApiClient {
 
     if (!defaultData.wasCreated) {
         throw new Error("Shared test data wasn't created yet.");
@@ -141,5 +143,6 @@ export function getClient(user?: {bot: {authToken: string}}): NeolaceApiClient {
         basePath: config.apiUrl,
         fetchApi: fetch,
         authToken: user?.bot.authToken,
+        siteId: siteShortId,
     });
 }

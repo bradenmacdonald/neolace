@@ -9,12 +9,14 @@ import {
     VNID,
     VNodeTypeRef,
 } from "vertex-framework";
+import { makeCachedLookup } from "../lib/lru-cache";
+import { graph } from "./graph";
 
 
 // Forward reference
 export const SiteRef: typeof Site = VNodeTypeRef("Site");
 
-import { CreateGroup, GroupRef as Group } from "./Group";
+import { CreateGroup, GroupMaxDepth, GroupRef as Group } from "./Group";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,6 +37,15 @@ const siteCodesMaxCount = (siteCodeChars.length - 1) * Math.pow(siteCodeChars.le
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Site model
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export enum AccessMode {
+    /** on a private site, access to entries is restricted to invited users */
+    Private = "private",
+    /** Public (contributions): anyone can read all entries and propose edits (default) */
+    PublicContributions = "pubcont",
+    /** Public (read only): anyone can read all entries but only those with permission can propose edits */
+    PublicReadOnly = "readonly", 
+}
 
 /**
  * Neolace is designed to support multi-tenant use cases (so lots of small sites can share a single large installation).
@@ -74,10 +85,8 @@ export class Site extends VNodeType {
         domain: Field.String,
         description: Field.NullOr.String.Check(desc => desc.max(5_000)),
 
-        // Permissions:
-        // private: on a private site, access to entries is restricted to groups with the "ViewEntry" permission.
-        // public-contributions: anyone can read all entries and propose edits
-        // public-readonly: anyone can read all entries but only those with permission can propose edits
+        // Access Mode: Determines what parts of the site are usable without logging in
+        accessMode: Field.String.Check(am => am.valid(...Object.values(AccessMode))),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -95,7 +104,7 @@ export class Site extends VNodeType {
         groupsFlat: {
             // A flattened list of all the user groups that this site has
             type: VirtualPropType.ManyRelationship,
-            query: C`(@target:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(@this)`,
+            query: C`(@target:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(@this)`,
             target: Group,
         },
     });
@@ -104,8 +113,23 @@ export class Site extends VNodeType {
     });
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Site helper functions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/** Cache to look up a siteId (Site VNID) from a site's shortId (slugId without the "site-" prefix) */
+export const siteIdFromShortId = makeCachedLookup((shortId: string) => graph.vnidForKey(`site-${shortId}`), 10_000);
+
+/** Cache to look up a Site's siteCode from its VNID */
+export const siteCodeForSite = makeCachedLookup((siteId: VNID) => graph.pullOne(Site, s => s.siteCode, {key: siteId}).then(s => s.siteCode), 10_000);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Site actions
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // Action to make changes to an existing Site:
-export const UpdateSite = defaultUpdateFor(Site, s => s.slugId.description.domain, {});
+export const UpdateSite = defaultUpdateFor(Site, s => s.slugId.description.domain.accessMode, {});
 
 export const DeleteSite = defaultDeleteFor(Site);
 
@@ -118,6 +142,7 @@ export const CreateSite = defineAction({
         description?: string;
         siteCode?: string;
         adminUser?: VNID;
+        accessMode?: AccessMode;
     },
     resultData: {} as {
         id: VNID;
@@ -147,7 +172,8 @@ export const CreateSite = defineAction({
                 slugId: ${data.slugId},
                 siteCode: ${siteCode},
                 description: ${data.description || null},
-                domain: ${data.domain}
+                domain: ${data.domain},
+                accessMode: ${data.accessMode ?? AccessMode.PublicContributions}
             })
         `.RETURN({}));
 
@@ -158,9 +184,9 @@ export const CreateSite = defineAction({
                 belongsTo: id,
                 administerSite: true,
                 administerGroups: true,
-                approveEntryChanges: true,
+                approveEntryEdits: true,
                 approveSchemaChanges: true,
-                proposeEntryChanges: true,
+                proposeEntryEdits: true,
                 proposeSchemaChanges: true,
                 addUsers: [data.adminUser],
             });

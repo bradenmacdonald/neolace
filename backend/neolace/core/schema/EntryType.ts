@@ -1,9 +1,12 @@
 import {
+    C,
     Field,
+    VirtualPropType,
     VNodeType,
     VNodeTypeRef,
 } from "vertex-framework";
 import { Site } from "../Site";
+import { ContentType } from "neolace-api";
 
 
 /**
@@ -14,10 +17,16 @@ export class EntryType extends VNodeType {
     static label = "EntryType";
     static properties = {
         ...VNodeType.properties,
-        // The name of this entry type
+        /** The name of this entry type */
         name: Field.String,
-        // Description: Short, rich text summary of the entry type
+        /** Description: Short, rich text summary of the entry type  */
         description: Field.NullOr.String.Check(desc => desc.max(5_000)),
+        /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
+        friendlyIdPrefix: Field.NullOr.Slug.Check(s => s.regex(/.*-$/)),  // Must end in a hyphen
+        contentType: Field.String.Check(c => c.valid(
+            ContentType.None,
+            ContentType.Article,
+        )),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -29,11 +38,11 @@ export class EntryType extends VNodeType {
     });
 
     static virtualProperties = VNodeType.hasVirtualProperties({
-        // relatedImages: {
-        //     type: VirtualPropType.ManyRelationship,
-        //     query: C`(@target:${Image})-[:${Image.rel.RELATES_TO}]->(:${Entry})-[:IS_A*0..10]->(@this)`,
-        //     target: Image,
-        // },
+        site: {
+            type: VirtualPropType.OneRelationship,
+            query: C`(@this)-[:${EntryType.rel.FOR_SITE}]->(@target)`,
+            target: Site,
+        },
     });
 
     static derivedProperties = VNodeType.hasDerivedProperties({

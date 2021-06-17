@@ -14,19 +14,22 @@ import {
     Field,
 } from "vertex-framework";
 
+// How many levels of groups a site can have (groups can be nested, e.g. Employees > Managers > C-level)
+export const GroupMaxDepth = 4;
+
 // Forward reference
 export const GroupRef: typeof Group = VNodeTypeRef("Group");
 import { SiteRef as Site } from "./Site";
 import { User } from "./User";
 
 
-export const enum Permissions {
+export const enum PermissionGrant {
     administerSite = "administerSite",
     administerGroups = "administerGroups",
     approveSchemaChanges = "approveSchemaChanges",
-    approveEntryChanges = "approveEntryChanges",
+    approveEntryEdits = "approveEntryEdits",
     proposeSchemaChanges = "proposeSchemaChanges",
-    proposeEntryChanges = "proposeEntryChanges",
+    proposeEntryEdits = "proposeEntryEdits",
 }
 
 
@@ -38,26 +41,25 @@ export class Group extends VNodeType {
         // Name of this group
         name: Field.String,
         // Admin-level permissions:
-        [Permissions.administerSite]: Field.Boolean,  // Can set properties of the site like domain name, name, private/public, etc.
-        [Permissions.administerGroups]: Field.Boolean,  // Can administer users and groups on this site:
-        [Permissions.approveSchemaChanges]: Field.Boolean,  // Can approve change requests related to the site schema
-        [Permissions.approveEntryChanges]: Field.Boolean,  // Can approve change requests related to the site content
+        [PermissionGrant.administerSite]: Field.Boolean,  // Can set properties of the site like domain name, name, private/public, etc.
+        [PermissionGrant.administerGroups]: Field.Boolean,  // Can administer users and groups on this site:
+        [PermissionGrant.approveSchemaChanges]: Field.Boolean,  // Can approve change requests related to the site schema
+        [PermissionGrant.approveEntryEdits]: Field.Boolean,  // Can approve change requests related to the site content
         // Normal user level permissions:
-        [Permissions.proposeSchemaChanges]: Field.Boolean,
-        [Permissions.proposeEntryChanges]: Field.Boolean,
+        [PermissionGrant.proposeSchemaChanges]: Field.Boolean,
+        [PermissionGrant.proposeEntryEdits]: Field.Boolean,
         // future permission: participate in discussions
 
         // Membership in _any_ group grants permission to view entries and schema on the site
     };
-    // How many levels of groups a site can have (groups can be nested, e.g. Employees > Managers > C-level)
-    static readonly maxDepth = 4;
+
     static readonly emptyPermissions = {
-        [Permissions.administerSite]: false,
-        [Permissions.administerGroups]: false,
-        [Permissions.approveSchemaChanges]: false,
-        [Permissions.approveEntryChanges]: false,
-        [Permissions.proposeSchemaChanges]: false,
-        [Permissions.proposeEntryChanges]: false,
+        [PermissionGrant.administerSite]: false,
+        [PermissionGrant.administerGroups]: false,
+        [PermissionGrant.approveSchemaChanges]: false,
+        [PermissionGrant.approveEntryEdits]: false,
+        [PermissionGrant.proposeSchemaChanges]: false,
+        [PermissionGrant.proposeEntryEdits]: false,
     };
 
     static async validate(dbObject: RawVNode<typeof Group>, tx: WrappedTransaction): Promise<void> {
@@ -67,8 +69,8 @@ export class Group extends VNodeType {
             if (g.site === null) {
                 // The superclass validation should already have caught a missing Site, so the only reason Site would
                 // be null here is if the "site" virtual prop isn't able to find the site, because the path between the
-                // group and the site is longer than Group.maxDepth
-                throw new Error(`User groups cannot be nested more than ${Group.maxDepth} levels deep.`);
+                // group and the site is longer than GroupMaxDepth
+                throw new Error(`User groups cannot be nested more than ${GroupMaxDepth} levels deep.`);
             }
         });
     }
@@ -89,7 +91,7 @@ export class Group extends VNodeType {
         // The site that this group belongs to
         site: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${Group.rel.BELONGS_TO}*1..${C(String(Group.maxDepth))}]->(@target:${Site})`,
+            query: C`(@this)-[:${Group.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(@target:${Site})`,
             target: Site,
         },// The site that this group belongs to
         parentGroup: {
@@ -107,9 +109,9 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
     .administerSite
     .administerGroups
     .approveSchemaChanges
-    .approveEntryChanges
+    .approveEntryEdits
     .proposeSchemaChanges
-    .proposeEntryChanges
+    .proposeEntryEdits
     ,{
         otherUpdates: async (args: {
             // VNID or slugId of a Site or Group that this Group belongs to.
@@ -120,7 +122,6 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
             removeUsers?: VNID[],
         }, tx, nodeSnapshot) => {
             const id = nodeSnapshot.id;
-            const previousValues: Partial<typeof args> = {};
 
             // Relationship updates:
 
@@ -129,7 +130,7 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
 
                 // Helper function: given the key (VNID or slugId) of a Group or Site, return the VNID of the associated site
                 const getSiteIdForGS = async (key: VNodeKey): Promise<VNID> => tx.queryOne(C`
-                    MATCH (parent:VNode)-[:${Group.rel.BELONGS_TO}*0..${C(String(Group.maxDepth))}]->(site:${Site}), parent HAS KEY ${key}
+                    MATCH (parent:VNode)-[:${Group.rel.BELONGS_TO}*0..${C(String(GroupMaxDepth))}]->(site:${Site}), parent HAS KEY ${key}
                     WHERE parent:${Group} OR parent:${Site}
                 `.RETURN({"site.id": Field.VNID})).then(r => r["site.id"]);
 
@@ -150,7 +151,6 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
                     if (prevSiteId !== newSiteId) {
                         throw new ValidationError("Cannot move Group from one site to another.");
                     }
-                    previousValues.belongsTo = prevBelongedTo;
                 }
             }
 
@@ -164,7 +164,6 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
                 if (added.length !== args.addUsers.length) {
                     throw new ValidationError("Invalid user VNID given to addUser.");
                 }
-                previousValues.removeUsers = args.addUsers;
             }
 
             if (args.removeUsers) {
@@ -177,10 +176,9 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
                 if (removed.length !== args.removeUsers.length) {
                     throw new ValidationError("Invalid user VNID given to addUser.");
                 }
-                previousValues.addUsers = args.removeUsers;
             }
 
-            return {previousValues};
+            return {};
         },
     }
 );
@@ -192,7 +190,7 @@ export const CreateGroup = defaultCreateFor(Group, g => g
     .administerSite
     .administerGroups
     .approveSchemaChanges
-    .approveEntryChanges
+    .approveEntryEdits
     .proposeSchemaChanges
-    .proposeEntryChanges,
+    .proposeEntryEdits,
     UpdateGroup);
