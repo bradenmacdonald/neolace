@@ -72,19 +72,18 @@ export const UpdateImage = defaultUpdateFor(Image, i => i.slugId.name.descriptio
         dataHash?: string
     }, tx, nodeSnapshot) => {
         const id = nodeSnapshot.id;
-        const previousValues: Partial<typeof args> = {};
 
         // Relationship updates:
         if (args.relatesTo !== undefined) {
-            previousValues.relatesTo = (await tx.updateToManyRelationship({
+            await tx.updateToManyRelationship({
                 from: [Image, id],
                 rel: Image.rel.RELATES_TO,
                 to: args.relatesTo,
-            })).prevTo as any;
+            });
         }
 
         if (args.dataHash) {
-            const result = await tx.query(C`
+            await tx.query(C`
                 MATCH (img:${Image} {id: ${id}})
                 WITH img
                     MATCH (df:${DataFile} {sha256Hash: ${args.dataHash}})
@@ -94,12 +93,9 @@ export const UpdateImage = defaultUpdateFor(Image, i => i.slugId.name.descriptio
                     WHERE old <> df
                     DELETE oldRel
             `.RETURN({old: Field.VNode(DataFile)}));
-            if (result.length) {
-                previousValues.dataHash = result[result.length - 1].old.sha256Hash;
-            }
         }
 
-        return {previousValues};
+        return {};
     },
 });
 

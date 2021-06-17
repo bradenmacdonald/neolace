@@ -122,7 +122,6 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
             removeUsers?: VNID[],
         }, tx, nodeSnapshot) => {
             const id = nodeSnapshot.id;
-            const previousValues: Partial<typeof args> = {};
 
             // Relationship updates:
 
@@ -152,7 +151,6 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
                     if (prevSiteId !== newSiteId) {
                         throw new ValidationError("Cannot move Group from one site to another.");
                     }
-                    previousValues.belongsTo = prevBelongedTo;
                 }
             }
 
@@ -166,7 +164,6 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
                 if (added.length !== args.addUsers.length) {
                     throw new ValidationError("Invalid user VNID given to addUser.");
                 }
-                previousValues.removeUsers = args.addUsers;
             }
 
             if (args.removeUsers) {
@@ -179,10 +176,9 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
                 if (removed.length !== args.removeUsers.length) {
                     throw new ValidationError("Invalid user VNID given to addUser.");
                 }
-                previousValues.addUsers = args.removeUsers;
             }
 
-            return {previousValues};
+            return {};
         },
     }
 );
