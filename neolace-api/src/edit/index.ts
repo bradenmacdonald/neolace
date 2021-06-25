@@ -1,3 +1,3 @@
-export * from "./AnyEdit";
-export * from "./Draft";
-export * from "./Edit";
+export * from "./AnyEdit.ts";
+export * from "./Draft.ts";
+export * from "./Edit.ts";

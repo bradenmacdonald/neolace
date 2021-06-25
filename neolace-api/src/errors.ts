@@ -63,7 +63,7 @@ export class InvalidRequest extends ApiError {
 export class InvalidFieldValue extends InvalidRequest {
     readonly fields: string[];
     constructor(fields: string[], message: string) {
-        super(InvalidRequestReason.Invalid_field_value, message);
+        super(InvalidRequestReason.InvalidFieldValue, message);
         this.fields = fields;
         this.name = "InvalidFieldValue";
     }
@@ -72,11 +72,11 @@ export class InvalidFieldValue extends InvalidRequest {
 // This is a const enum so that it has minimal overhead
 export const enum InvalidRequestReason {
     /** One or more of the fields you provided is invalid, e.g. blank, too short, too long, invalid character, etc. */
-    Invalid_field_value = "400_INVALID_FIELD",
+    InvalidFieldValue = "400_INVALID_FIELD",
     /** Tried to register a user account, but another account already exists with the same email */
-    Email_already_registered = "400_EMAIL_EXISTS",
+    EmailAlreadyRegistered = "400_EMAIL_EXISTS",
     /** Tried to register a user account, but another account already exists with the same username */
-    Username_already_registered = "400_USERNAME_EXISTS",
+    UsernameAlreadyRegistered = "400_USERNAME_EXISTS",
     /** Tried to accept a draft that contains no edits */
-    Draft_is_empty = "400_DRAFT_EMPTY",
+    DraftIsEmpty = "400_DRAFT_EMPTY",
 }

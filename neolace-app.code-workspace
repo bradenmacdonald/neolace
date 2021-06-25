@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "backend"
+		},
+		{
+			"path": "neolace-api"
+		}
+	],
+	"settings": {
+		"editor.rulers": [
+			120,
+		],
+		"deno.lint": true,
+		"deno.suggest.imports.hosts": {
+			"https://deno.land": false
+		},
+	}
+}

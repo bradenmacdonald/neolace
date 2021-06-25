@@ -1,5 +1,5 @@
-import { VNID } from "../types";
-import { EditChangeType } from "./Edit";
+import { VNID } from "../types.ts";
+import { EditChangeType } from "./Edit.ts";
 
 export enum DraftStatus {
     Open = 0,
@@ -11,6 +11,7 @@ export interface DraftEditData {
     id: VNID;
     code: string;
     changeType: EditChangeType;
+    // deno-lint-ignore no-explicit-any
     data: any;
     timestamp: Date;
 }

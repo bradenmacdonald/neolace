@@ -1,4 +1,4 @@
-import { VNodeData } from "./common";
+import { VNodeData } from "./common.ts";
 
 export interface ImageData extends VNodeData {
     name: string;

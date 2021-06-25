@@ -1,3 +1,3 @@
-import { AnySchemaEdit } from "../schema/SchemaEdit";
+import { AnySchemaEdit } from "../schema/SchemaEdit.ts";
 
 export type EditList = AnySchemaEdit[];

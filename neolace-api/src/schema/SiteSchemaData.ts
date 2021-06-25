@@ -1,4 +1,4 @@
-import { VNID } from "../types";
+import { VNID } from "../types.ts";
 
 export enum ContentType {
     /** Just a normal entry, with name, description, properties, relationships, but no "content" */

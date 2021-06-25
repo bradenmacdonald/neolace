@@ -1,6 +1,7 @@
-import { Edit, EditChangeType, EditType } from "../edit/Edit";
-import { VNID } from "../types";
-import { ContentType, SiteSchemaData, RelationshipCategory } from "./SiteSchemaData";
+// deno-lint-ignore-file no-explicit-any
+import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
+import { VNID } from "../types.ts";
+import { ContentType, SiteSchemaData, RelationshipCategory } from "./SiteSchemaData.ts";
 
 const typed: any = undefined;  // Helper for declaring types below, where the value doesn't matter, only the type.
 

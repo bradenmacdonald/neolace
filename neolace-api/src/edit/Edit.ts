@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 export enum EditChangeType {
     Schema = "schema",
     Content = "content",

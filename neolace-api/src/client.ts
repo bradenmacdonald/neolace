@@ -1,13 +1,14 @@
-import { PasswordlessLoginResponse, PublicUserData } from "./user";
-import * as errors from "./errors";
-import { SiteSchemaData } from "./schema";
-import { DraftData, EditList } from "./edit";
+// deno-lint-ignore-file no-explicit-any
+import { PasswordlessLoginResponse, PublicUserData } from "./user.ts";
+import * as errors from "./errors.ts";
+import { SiteSchemaData } from "./schema/index.ts";
+import { DraftData, EditList } from "./edit/index.ts";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
 export interface Config {
     /** Path to the Neolace API server ("backend"). Should not end with a slash. e.g. "http://backend:5554" */
     basePath: string;
-    fetchApi: WindowOrWorkerGlobalScope["fetch"];
+    fetchApi: typeof window["fetch"];
     /**
      * To authenticate with the API, you must either specify a token here (for a bot) or use getExtraHeadersForRequest
      * to pass a JWT (for human users).
@@ -28,7 +29,7 @@ interface RequestArgs {
 
 export class NeolaceApiClient {
     readonly basePath: string;
-    readonly fetchApi: WindowOrWorkerGlobalScope["fetch"];
+    readonly fetchApi: typeof window["fetch"];
     readonly authToken?: string;
     readonly siteId?: string;
     private readonly getExtraHeadersForRequest?: Config["getExtraHeadersForRequest"];
@@ -73,7 +74,7 @@ export class NeolaceApiClient {
             try {
                 errorData = await response.json();
                 errorDataFormatted = JSON.stringify(errorData);
-            } catch {}
+            } catch {/* couldn't parse this as JSON... */}
 
             if (!errorData.message) {
                 errorData.message = response.statusText;
@@ -86,7 +87,7 @@ export class NeolaceApiClient {
             } else if (response.status === 403) {
                 throw new errors.NotAuthorized(errorData.message);
             } else if (response.status === 400) {
-                if (errorData.reason === errors.InvalidRequestReason.Invalid_field_value) {
+                if (errorData.reason === errors.InvalidRequestReason.InvalidFieldValue) {
                     throw new errors.InvalidFieldValue(errorData.fields, errorData.message);
                 } else {
                     throw new errors.InvalidRequest(errorData.reason, errorData.message);
@@ -119,21 +120,21 @@ export class NeolaceApiClient {
      * Will throw a NotAuthenticated error if the user is not authenticated.
      */
     public async whoAmI(): Promise<PublicUserData> {
-        return this.call("/user/me");
+        return await this.call("/user/me");
     }
 
     /**
      * Register a new user account (human user)
      */
     public async registerHumanUser(data: {email: string, fullName?: string, username?: string}): Promise<PublicUserData> {
-        return this.call("/user", {method: "POST", data});
+        return await this.call("/user", {method: "POST", data});
     }
 
     /**
      * Request passwordless login
      */
     public async requestPasswordlessLogin(data: {email: string}): Promise<PasswordlessLoginResponse> {
-        return this.call("/user/request-login", {method: "POST", data});
+        return await this.call("/user/request-login", {method: "POST", data});
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +142,7 @@ export class NeolaceApiClient {
 
     public async getSiteSchema(options?: {siteId?: string}): Promise<SiteSchemaData> {
         const siteId = this.getSiteId(options);
-        return this.call(`/site/${siteId}/schema`, {method: "GET"});
+        return await this.call(`/site/${siteId}/schema`, {method: "GET"});
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
