@@ -2,7 +2,7 @@ import * as Hapi from "@hapi/hapi";
 import * as Boom from "@hapi/boom";
 
 import { KeratinAuthNClient } from "authn-node";
-import { C } from "vertex-framework";
+import { C } from "neolace/deps/vertex-framework.ts";
 
 import { config } from "../app/config";
 import { log } from "../app/log";

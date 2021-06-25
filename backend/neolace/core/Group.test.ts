@@ -2,7 +2,7 @@ import { suite, test, assert, beforeEach, setTestIsolation, assertRejects } from
 import { graph } from "./graph";
 import { CreateGroup, Group, UpdateGroup, GroupMaxDepth } from "./Group";
 import { CreateSite, Site } from "./Site";
-import { VNodeKey } from "vertex-framework";
+import { VNodeKey } from "neolace/deps/vertex-framework.ts";
 
 suite(__filename, () => {
 

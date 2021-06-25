@@ -3,7 +3,7 @@
  */
 
 // What type of environment this is: development, production, or testing
-export const environment = (process.env.NODE_ENV as "production"|"development"|"test") || "development";
+export const environment = (Deno.env.get("ENV_TYPE") as "production"|"development"|"test"|undefined) || "development";
 if (!["production", "development", "test"].includes(environment)) {
     throw new Error(`Invalid NODE_ENV: ${environment}`);
 }
@@ -59,14 +59,16 @@ export const config = (() => {
     };
     // Allow defaults to be overriden by environment variables:
     for (const key in config) {
-        const value = process.env[key];
+        const value = Deno.env.get(key);
         if (value !== undefined) {
             try {
                 // Use JSON parsing to get nicely typed values from env vars:
+                // deno-lint-ignore no-explicit-any
                 (config as any)[key] = JSON.parse(value)
             } catch (err) {
                 // Though JSON parsing will fail if it's just a regular unquoted string:
                 if (err instanceof SyntaxError) {
+                    // deno-lint-ignore no-explicit-any
                     (config as any)[key] = value; // It's a string value
                 } else {
                     throw err;

@@ -2,7 +2,7 @@ import { suite, test, assert, beforeEach, setTestIsolation, assertRejects } from
 import { graph } from "./graph";
 import { AccessMode, CreateSite, Site, UpdateSite } from "./Site";
 import { AllOf, CanEditSiteSettings, CanViewEntries, Check, CheckContext, CheckSiteIsPublic, CheckSiteIsPublicContributions, CheckUserHasGrants, OneOf } from "./permissions";
-import { C, VNID, WrappedTransaction } from "vertex-framework";
+import { C, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { BotUser, CreateBot, HumanUser, User } from "./User";
 import { PermissionGrant, UpdateGroup } from "./Group";
 

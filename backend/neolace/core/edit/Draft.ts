@@ -1,23 +1,21 @@
-import { EditChangeType, EditList, getEditType, DraftStatus } from "neolace-api";
+import * as check from "neolace/deps/computed-types.ts";
+import { EditChangeType, EditList, getEditType, DraftStatus } from "neolace/deps/neolace-api.ts";
 import {
     VNodeType,
     defineAction,
     VirtualPropType,
-    getVNodeType,
     C,
-    isVNodeType,
     DerivedProperty,
-    VNodeKey,
     VNID,
     Field,
     RawVNode,
     WrappedTransaction,
     defaultUpdateFor,
-} from "vertex-framework";
-import { Entry } from "../entry/Entry";
-import { Site } from "../Site";
-import { User } from "../User";
-import { ApplyEdits } from "./ApplyEdits";
+} from "neolace/deps/vertex-framework.ts";
+import { Entry } from "neolace/core/entry/Entry.ts";
+import { Site } from "neolace/core/Site.ts";
+import { User } from "neolace/core/User.ts";
+import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 
 
 
@@ -31,7 +29,7 @@ import { ApplyEdits } from "./ApplyEdits";
     static readonly properties = {
         ...VNodeType.properties,
         code: Field.String,
-        changeType: Field.String.Check(ct => ct.valid(EditChangeType.Schema, EditChangeType.Content)),
+        changeType: Field.String.Check(check.Schema.enum(EditChangeType)),
         dataJSON: Field.String,
         timestamp: Field.DateTime,
     };
@@ -52,10 +50,10 @@ import { ApplyEdits } from "./ApplyEdits";
         JSON.parse(dbObject.dataJSON);
     }
  
- }
+}
 
-
- export function dataFromJson(): DerivedProperty<any>{
+// deno-lint-ignore no-explicit-any
+export function dataFromJson(): DerivedProperty<any>{
     return DerivedProperty.make(
         DraftEdit,
         edit => edit.dataJSON,
@@ -83,7 +81,7 @@ export class Draft extends VNodeType {
         title: Field.String,
         description: Field.NullOr.String,
         created: Field.DateTime,
-        status: Field.Int.Check(s => s.valid(DraftStatus.Open, DraftStatus.Accepted, DraftStatus.Cancelled)),
+        status: Field.Int.Check(check.Schema.enum(DraftStatus)),
     };
 
 
@@ -110,7 +108,7 @@ export class Draft extends VNodeType {
         },
     });
 
-    static virtualProperties = VNodeType.hasVirtualProperties({
+    static virtualProperties = this.hasVirtualProperties({
         author: {
             type: VirtualPropType.OneRelationship,
             target: User,
@@ -133,7 +131,7 @@ export class Draft extends VNodeType {
         },
     });
 
-    static derivedProperties = VNodeType.hasDerivedProperties({
+    static derivedProperties = this.hasDerivedProperties({
         hasSchemaChanges,
         hasContentChanges,
     });
@@ -262,8 +260,8 @@ export const UpdateDraft = defaultUpdateFor(Draft, d => d.title.description, {
         `.RETURN({}));
 
         const {modifiedNodes} = await ApplyEdits.apply(tx, {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             siteId: draft.site!.id,
+            // deno-lint-ignore no-explicit-any
             edits: draft.edits as any,
         });
 

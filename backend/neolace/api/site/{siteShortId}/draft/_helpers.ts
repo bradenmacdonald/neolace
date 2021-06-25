@@ -1,5 +1,5 @@
-import { DraftData } from "neolace-api";
-import { C, VNID, WrappedTransaction } from "vertex-framework";
+import { DraftData } from "neolace/deps/neolace-api.ts";
+import { C, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Draft } from "../../../../core/edit/Draft";
 import { Site } from "../../../../core/Site";
 

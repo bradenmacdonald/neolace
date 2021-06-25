@@ -1,4 +1,4 @@
-import { ApiError, InvalidFieldValue, InvalidRequest, InvalidRequestReason } from "neolace-api";
+import { ApiError, InvalidFieldValue, InvalidRequest, InvalidRequestReason } from "neolace/deps/neolace-api.ts";
 import { suite, test, assert, beforeEach, setTestIsolation, getClient, assertRejects, assertRejectsWith } from "../../lib/intern-tests";
 
 suite(__filename, () => {

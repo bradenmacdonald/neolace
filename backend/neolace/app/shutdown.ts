@@ -3,10 +3,10 @@
  * is being used as a web server, a worker process, an admin shell, for tests,
  * or anything else.
  */
-import { log } from "./log";
+ import * as log from "std/log/mod.ts";
 
-const _onShutDown: Array<() => Promise<any>> = [];
-export const onShutDown = (handler: () => Promise<any>): void => { _onShutDown.push(handler); }
+const _onShutDown: Array<() => Promise<unknown>> = [];
+export const onShutDown = (handler: () => Promise<unknown>): void => { _onShutDown.push(handler); }
 let shutdownCleanly = false;
 
 /**
@@ -15,7 +15,7 @@ let shutdownCleanly = false;
  */
 async function prepareForShutdown(): Promise<void> {
     // Call each handler once, removing them from the _onShutDown array and then waiting for their promise.
-    const pendingShutdownHandlers: Array<Promise<any>> = [];
+    const pendingShutdownHandlers: Array<Promise<unknown>> = [];
     while (_onShutDown.length) {
         const nextHandler = _onShutDown.pop();
         if (nextHandler) { // Make TypeScript happy
@@ -32,24 +32,20 @@ export function shutdown(): void {
     prepareForShutdown();
 }
 
-process.on("SIGINT", async () => {
-    log("Shutting down (SIGINT)...");
+Deno.signal(Deno.Signal.SIGINT).then(async () => {
+    log.info("Shutting down (SIGINT)...");
     await prepareForShutdown();
-    process.exit(0);
+    Deno.exit(0);
 });
-process.on("SIGTERM", async () => {
-    log("Shutting down (SIGTERM)...")
+Deno.signal(Deno.Signal.SIGTERM).then(async () => {
+    log.info("Shutting down (SIGTERM)...")
     await prepareForShutdown();
-    process.exit(0);
-});
-process.on("uncaughtException", (err) => {
-    log.error(`Uncaught exception: ${err.message}\n${err.stack}`);
-    process.exit(1);
+    Deno.exit(0);
 });
 
 // Checks to run just before we actually quit. This function must be synchronous.
-process.on("exit", (code) => {
+window.addEventListener("unload", () => {
     if (!shutdownCleanly) {
-        log.warn(`Did not shut down cleanly; resources were not released.`);
+        log.warning(`Did not shut down cleanly; resources were not released.`);
     }
 });

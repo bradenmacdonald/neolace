@@ -6,11 +6,11 @@ import {
     RelationshipTypeData,
     SiteSchemaData,
     UpdateRelationshipType,
-} from "neolace-api";
-import { C, VNID, WrappedTransaction } from "vertex-framework";
-import { Site } from "../Site";
-import { EntryType } from "./EntryType";
-import { RelationshipType } from "./RelationshipType";
+} from "neolace/deps/neolace-api.ts";
+import { C, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { Site } from "neolace/core/Site.ts";
+import { EntryType } from "neolace/core/schema/EntryType.ts";
+import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 
 export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Promise<SiteSchemaData> {
     const result: SiteSchemaData = {
@@ -106,6 +106,7 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
         for (const entryTypeId of newEntryTypeIds) {
             const oldET: EntryTypeData|undefined = oldSchema.entryTypes[entryTypeId];
             const newET = newSchema.entryTypes[entryTypeId];
+            // deno-lint-ignore no-explicit-any
             const changes: any = {};
             for (const key of ["name", "description", "friendlyIdPrefix", "contentType"] as const) {
                 if (key === "name" && addedEntryTypeIds.has(entryTypeId)) {

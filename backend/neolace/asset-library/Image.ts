@@ -1,3 +1,4 @@
+import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
     VNodeType,
@@ -7,10 +8,17 @@ import {
     defaultDeleteFor,
     DerivedProperty,
     Field,
-} from "vertex-framework";
-import { config } from "../app/config";
-import { TechDbEntryRef as TechDbEntry } from "../core/entry/Entry";
-import { DataFile } from "./DataFile";
+} from "neolace/deps/vertex-framework.ts";
+import { config } from "../app/config.ts";
+import { TechDbEntryRef as TechDbEntry } from "../core/entry/Entry.ts";
+import { DataFile } from "./DataFile.ts";
+
+enum ImageType {
+    Photo = "photo",
+    Screenshot = "screenshot",
+    Chart = "chart",
+    Drawing = "drawing",
+}
 
 
 @VNodeType.declare
@@ -20,17 +28,17 @@ export class Image extends VNodeType {
         ...VNodeType.properties,
         slugId: Field.Slug,
         name: Field.String,
-        description: Field.NullOr.String.Check(desc => desc.max(5_000)),
+        description: Field.NullOr.String.Check(check.string.trim().max(5_000)),
         //sourceUrl: Field.NullOr.String,
         //licenseDetails: Field.NullOr.String.Check(ld => ld.max(5_000)),
-        imageType: Field.String.Check(it => it.valid("photo", "screenshot", "chart", "drawing")),
+        imageType: Field.String.Check(check.Schema.enum(ImageType)),
     };
 
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo({
         /** Things depicted or explained by this image */
         RELATES_TO: {
             to: [TechDbEntry],
-            properties: {weight: Field.Int.Check(w => w.min(1).max(12))},
+            properties: {weight: Field.Int.Check(check.number.integer().min(1).max(12))},
             cardinality: VNodeType.Rel.ToManyUnique,
         },
         HAS_DATA: {
@@ -38,14 +46,14 @@ export class Image extends VNodeType {
             cardinality: VNodeType.Rel.ToOneRequired,
         },
     });
-    static readonly virtualProperties = VNodeType.hasVirtualProperties({
+    static readonly virtualProperties = this.hasVirtualProperties({
         dataFile: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${Image.rel.HAS_DATA}]->(@target:${DataFile})`,
+            query: C`(@this)-[:${this.rel.HAS_DATA}]->(@target:${DataFile})`,
             target: DataFile,
         },
     });
-    static readonly derivedProperties = VNodeType.hasDerivedProperties({
+    static readonly derivedProperties = this.hasDerivedProperties({
         imageUrl,
     });
 }

@@ -1,7 +1,7 @@
 import { Hapi, Boom, Joi, log, graph, api } from "../";
-import { PublicUserData } from "neolace-api";
+import { PublicUserData } from "neolace/deps/neolace-api.ts";
 import { BotUser, HumanUser, User } from "../../core/User";
-import { SYSTEM_VNID, VNID, isVNID } from "vertex-framework";
+import { SYSTEM_VNID, VNID, isVNID } from "neolace/deps/vertex-framework.ts";
 
 /**
  * A helper function to get the profile of a specific user.

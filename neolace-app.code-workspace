@@ -15,5 +15,7 @@
 		"deno.suggest.imports.hosts": {
 			"https://deno.land": false
 		},
+		"deno.unstable": true,
+		"deno.importMap": "./import_map.json"
 	}
 }

@@ -1,4 +1,4 @@
-import { EditChangeType, EditList, getEditType } from "neolace-api";
+import { EditChangeType, EditList, getEditType } from "neolace/deps/neolace-api.ts";
 import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors, requirePermission, permissions, getSiteDetails, requireUserId } from "../../..";
 import { CreateDraft } from "../../../../core/edit/Draft";
 import { getDraft } from "./_helpers";

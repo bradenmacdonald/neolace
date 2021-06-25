@@ -1,12 +1,14 @@
-import { VNID } from "vertex-framework";
+// deno-lint-ignore-file no-explicit-any
+import * as log from "std/log/mod.ts";
+import { ContentType, RelationshipCategory } from "neolace/deps/neolace-api.ts";
+import { VNID, VertexTestDataSnapshot } from "neolace/deps/vertex-framework.ts";
 
-import { graph } from "../core/graph";
-import { log } from "../app/log";
-import { CreateBot, CreateUser } from "../core/User";
-import { CreateSite } from "../core/Site";
-import { CreateGroup } from "../core/Group";
-import { ImportSchema } from "../core/schema/import-schema";
-import { ContentType, RelationshipCategory } from "neolace-api";
+import { graph } from "neolace/core/graph.ts";
+import { CreateBot, CreateUser } from "../core/User.ts";
+import { CreateSite } from "neolace/core/Site.ts";
+import { CreateGroup } from "neolace/core/Group.ts";
+import { ImportSchema } from "neolace/core/schema/import-schema.ts";
+
 
 // Data that gets created by default. 
 // To access this, use the return value of setTestIsolation(setTestIsolation.levels.DEFAULT_...)
@@ -86,16 +88,25 @@ const data = {
             },
         },
     },
-    wasCreated: false,
 };
 
-export async function installDefaultData(): Promise<void> {
-    log(`Generating default data for tests...`);
 
-    if (data.wasCreated) {
-        throw new Error("installDefaultData() should only run once!");
-    }
-    data.wasCreated = true;
+
+export interface TestSetupData {
+    emptySnapshot: VertexTestDataSnapshot,
+    defaultDataSnapshot: VertexTestDataSnapshot,
+    data: typeof data,
+}
+export const testDataFile = ".neolace-tests-data.json";
+
+export async function generateTestFixtures(): Promise<TestSetupData> {
+
+    // Wipe out all existing Neo4j data
+    await graph.reverseAllMigrations();
+    await graph.runMigrations();
+    const emptySnapshot = await graph.snapshotDataForTesting();
+
+    log.info(`Generating default data for tests...`);
 
     await graph.runAsSystem(CreateUser({
         email: data.users.admin.email,
@@ -141,7 +152,7 @@ export async function installDefaultData(): Promise<void> {
     })).then(result => data.site.usersGroupId = result.id);
 
     await graph.runAsSystem(ImportSchema({siteId: data.site.id, schema: data.schema}));
+    const defaultDataSnapshot = await graph.snapshotDataForTesting();
 
-    Object.freeze(data);
+    return Object.freeze({emptySnapshot, defaultDataSnapshot, data});
 }
-installDefaultData.data = data;

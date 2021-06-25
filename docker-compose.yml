@@ -99,28 +99,28 @@ services:
       - objstore-data:/data
 
   ################################################################
-  # NodeJS container for the backend (dev mode)
+  # Deno container for the backend (dev mode)
   ################################################################
-  backend:
-    build:
-      context: backend/
-      dockerfile: dev.Dockerfile
-    depends_on:
-      - neo4j
-      - redis
-      - authn
-      - objstore
-    stdin_open: true
-    tty: true
-    volumes:
-      - ./backend/:/app/
-      - ./neolace-api/:/neolace-api/
-      # External repos that must be cloned to the parent directory:
-      - ../vertex-framework/:/dependencies/vertex-framework/:ro
-      - ../technotes-mdt/:/dependencies/technotes-mdt/:ro
-    ports:
-      - 5553:5553  # NodeJS debugger
-      - 5554:5554  # The Backend server (HTTP)
+  # backend:
+  #   build:
+  #     context: backend/
+  #     dockerfile: dev.Dockerfile
+  #   depends_on:
+  #     - neo4j
+  #     - redis
+  #     - authn
+  #     - objstore
+  #   stdin_open: true
+  #   tty: true
+  #   volumes:
+  #     - ./backend/:/app/
+  #     - ./neolace-api/:/neolace-api/
+  #     # External repos that must be cloned to the parent directory:
+  #     - ../vertex-framework/:/dependencies/vertex-framework/:ro
+  #     - ../technotes-mdt/:/dependencies/technotes-mdt/:ro
+  #   ports:
+  #     - 5553:5553  # NodeJS debugger
+  #     - 5554:5554  # The Backend server (HTTP)
 
   ################################################################
   # NodeJS container for the frontend (dev mode)

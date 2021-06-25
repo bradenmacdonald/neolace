@@ -1,5 +1,5 @@
-import * as api from "neolace-api";
-import { NotAuthenticated } from "neolace-api";
+import * as api from "neolace/deps/neolace-api.ts";
+import { NotAuthenticated } from "neolace/deps/neolace-api.ts";
 import { suite, test, assert, before, beforeEach, setTestIsolation, getClient, assertRejectsWith } from "../../lib/intern-tests";
 
 suite(__filename, () => {

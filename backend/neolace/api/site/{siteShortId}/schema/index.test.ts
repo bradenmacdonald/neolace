@@ -1,5 +1,5 @@
-import { ContentType, NotAuthenticated } from "neolace-api";
-import { VNID } from "vertex-framework";
+import { ContentType, NotAuthenticated } from "neolace/deps/neolace-api.ts";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 import { graph } from "../../../../core/graph";
 import { AccessMode, UpdateSite } from "../../../../core/Site";
 import { suite, test, assert, before, beforeEach, setTestIsolation, getClient, assertRejectsWith, assertRejects } from "../../../../lib/intern-tests";

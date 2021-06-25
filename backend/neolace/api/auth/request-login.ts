@@ -1,4 +1,4 @@
-import { C } from "vertex-framework";
+import { C } from "neolace/deps/vertex-framework.ts";
 import { Hapi, Boom, Joi, log, graph, api, defineEndpoint } from "..";
 import { authClient } from "../authn";
 import { HumanUser } from "../../core/User";

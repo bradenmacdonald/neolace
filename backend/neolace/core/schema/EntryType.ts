@@ -1,12 +1,12 @@
+import * as check from "neolace/deps/computed-types.ts";
+import { ContentType } from "neolace/deps/neolace-api.ts";
 import {
     C,
     Field,
     VirtualPropType,
     VNodeType,
-    VNodeTypeRef,
-} from "vertex-framework";
-import { Site } from "../Site";
-import { ContentType } from "neolace-api";
+} from "neolace/deps/vertex-framework.ts";
+import { Site } from "../Site.ts";
 
 
 /**
@@ -20,13 +20,10 @@ export class EntryType extends VNodeType {
         /** The name of this entry type */
         name: Field.String,
         /** Description: Short, rich text summary of the entry type  */
-        description: Field.NullOr.String.Check(desc => desc.max(5_000)),
+        description: Field.NullOr.String.Check(check.string.trim().max(5_000)),
         /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
-        friendlyIdPrefix: Field.NullOr.Slug.Check(s => s.regex(/.*-$/)),  // Must end in a hyphen
-        contentType: Field.String.Check(c => c.valid(
-            ContentType.None,
-            ContentType.Article,
-        )),
+        friendlyIdPrefix: Field.NullOr.Slug.Check(check.string.regexp(/.*-$/)),  // Must end in a hyphen
+        contentType: Field.String.Check(check.Schema.enum(ContentType)),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -40,7 +37,7 @@ export class EntryType extends VNodeType {
     static virtualProperties = VNodeType.hasVirtualProperties({
         site: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${EntryType.rel.FOR_SITE}]->(@target)`,
+            query: C`(@this)-[:${this.rel.FOR_SITE}]->(@target)`,
             target: Site,
         },
     });

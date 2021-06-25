@@ -1,10 +1,10 @@
-import { VNID } from "vertex-framework";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 import { suite, test, assert, beforeEach, assertRejects, setTestIsolation } from "../../lib/intern-tests";
 import { graph } from "../graph";
 import { CreateSite } from "../Site";
 import { getCurrentSchema } from "./get-schema";
 import { ApplyEdits } from "../edit/ApplyEdits";
-import { ContentType, SiteSchemaData } from "neolace-api";
+import { ContentType, SiteSchemaData } from "neolace/deps/neolace-api.ts";
 
 suite(__filename, () => {
 

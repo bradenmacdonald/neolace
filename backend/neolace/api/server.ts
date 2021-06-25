@@ -6,7 +6,7 @@ import { log } from "../app/log";
 import { authnScheme } from "./authn";
 import { allApiEndpoints } from "./endpoints";
 import { onShutDown } from "../app/shutdown";
-import { InvalidFieldValue, InvalidRequest } from "neolace-api";
+import { InvalidFieldValue, InvalidRequest } from "neolace/deps/neolace-api.ts";
 
 let resolve = (): void => undefined, reject = (): void => undefined;
 export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve = _resolve; reject = _reject; });

@@ -5,13 +5,13 @@
 import * as Hapi from "@hapi/hapi";
 import * as Boom from "@hapi/boom";
 import Joi from "joi";
-import { VNID } from "vertex-framework";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 
-import * as api from "neolace-api";
+import * as api from "neolace/deps/neolace-api.ts";
 
 import { log } from "../app/log";
 import { graph } from "../core/graph";
-import { InvalidFieldValue, InvalidRequest, InvalidRequestReason } from "neolace-api";
+import { InvalidFieldValue, InvalidRequest, InvalidRequestReason } from "neolace/deps/neolace-api.ts";
 import { Check, CheckContext, permissions } from "../core/permissions";
 import { siteCodeForSite, siteIdFromShortId } from "../core/Site";
 

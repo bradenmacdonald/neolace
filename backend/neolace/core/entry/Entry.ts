@@ -1,3 +1,4 @@
+import * as check from "neolace/deps/computed-types.ts";
 import {
     DerivedProperty,
     VirtualPropType,
@@ -5,13 +6,13 @@ import {
     VNodeType,
     VNodeTypeRef,
     Field,
-} from "vertex-framework";
+} from "neolace/deps/vertex-framework.ts";
 
 // Declare a forward reference, if needed:
 export const TechDbEntryRef: typeof Entry = VNodeTypeRef("Entry");
 
-import { Image } from "../../asset-library/Image";
-import { EntryType } from "../schema/EntryType";
+import { Image } from "neolace/asset-library/Image.ts";
+import { EntryType } from "neolace/core/schema/EntryType.ts";
 
 
 /**
@@ -34,7 +35,7 @@ export class Entry extends VNodeType {
         // This does not need to be unique or include disambiguation - so just put "Drive", not "Drive (computer science)"
         name: Field.String,
         // Description: Short, rich text summary of the thing
-        description: Field.String.Check(desc => desc.max(5_000)),
+        description: Field.String.Check(check.string.trim().max(5_000)),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -58,20 +59,20 @@ export class Entry extends VNodeType {
         // },
     });
 
-    static virtualProperties = VNodeType.hasVirtualProperties({
+    static virtualProperties = this.hasVirtualProperties({
         type: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${Entry.rel.IS_OF_TYPE}]->(@target:${EntryType})`,
+            query: C`(@this)-[:${this.rel.IS_OF_TYPE}]->(@target:${EntryType})`,
             target: EntryType,
         },
         relatedImages: {
             type: VirtualPropType.ManyRelationship,
-            query: C`(@target:${Image})-[:${Image.rel.RELATES_TO}]->(:${Entry})-[:IS_A*0..10]->(@this)`,
+            query: C`(@target:${Image})-[:${Image.rel.RELATES_TO}]->(:${this})-[:IS_A*0..10]->(@this)`,
             target: Image,
         },
     });
 
-    static derivedProperties = VNodeType.hasDerivedProperties({
+    static derivedProperties = this.hasDerivedProperties({
         id,
         numRelatedImages,
     });

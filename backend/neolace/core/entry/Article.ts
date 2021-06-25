@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import {
     VNodeType,
     defineAction,
@@ -9,7 +10,7 @@ import {
     VNodeKey,
     VNID,
     Field,
-} from "vertex-framework";
+} from "neolace/deps/vertex-framework.ts";
 
 
 interface ArticleSection {
@@ -94,7 +95,7 @@ interface TechDbEntryWithArticle {
 // Helper to ensure correct typing for VNodeTypes with associated articles.
 export function TechDbEntryWithArticle<T extends VNodeType>(t: T & TechDbEntryWithArticle): T {return t;}
 
-function isTechDbEntryWithArticle(vnt: any): vnt is TechDbEntryWithArticle {
+function isTechDbEntryWithArticle(vnt: unknown): vnt is TechDbEntryWithArticle {
     return (
         isVNodeType(vnt) && 
         vnt.rel.HAS_ARTICLE?.to?.[0] === Article &&

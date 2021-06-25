@@ -1,19 +1,17 @@
-import {randomBytes} from "crypto";
-
+import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
     VNodeType,
     RawVNode,
     ValidationError,
-    PublicValidationError,
     WrappedTransaction,
     defineAction,
     VNID,
     DerivedProperty,
     VirtualPropType,
     Field,
-} from "vertex-framework";
-import { authClient } from "../api/authn";
+} from "neolace/deps/vertex-framework.ts";
+import { authClient } from "neolace/api/authn.ts";
 
 @VNodeType.declare
 export class User extends VNodeType {
@@ -24,7 +22,7 @@ export class User extends VNodeType {
         // slugId: starts with "user-", then follows a unique code. Can be changed any time.
         slugId: Field.Slug,
         // Optional full name
-        fullName: Field.NullOr.String.Check(name => name.max(100)),
+        fullName: Field.NullOr.String.Check(check.string.max(100)),
     };
 
     static async validate(dbObject: RawVNode<typeof User>, tx: WrappedTransaction): Promise<void> {
@@ -51,7 +49,7 @@ export class HumanUser extends User {
         // Account ID in the authentication microservice. Only set for human users. Should not be exposed to users.
         authnId: Field.Int,
         // Email address. TODO: allow multiple email addresses
-        email: Field.String.Check(e => e.email({minDomainSegments: 1, tlds: false})),
+        email: Field.String.Check(Field.validators.email),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
@@ -210,20 +208,12 @@ export const CreateBot = defineAction({
  * Create a random token which acts like a password to authenticate bot (non-human) users
  * @returns 
  */
-function createBotAuthToken(): Promise<string> {
-    return new Promise((resolve, reject) => {
-        randomBytes(48, (err, buffer) => {
-            if (err) {
-                reject(err);
-            } else {
-                // Characters allowed in the result: A-Z, a-z, 0-9
-                // This doesn't have to be a reversible transform and already has high entropy, so we don't care that
-                // the base64 cleanup below creates a slight bias in favor of "a" or "b" appearing in the result.
-                const token = buffer.toString("base64").replace(/\+/g, "a").replace(/\//g, "b").replace(/=/g, "");
-                resolve(token);
-            }
-        });
-    });
+async function createBotAuthToken(): Promise<string> {
+    const array = new Uint8Array(48);  // 48 bytes
+    await crypto.getRandomValues(array);
+    const tokenB64 = btoa(String.fromCharCode.apply(null, Array.from(array)));
+    const token = tokenB64.replace(/\+/g, "a").replace(/\//g, "b").replace(/=/g, "");
+    return token;
 }
 
 // Things that are internal but available to the test suite:
