@@ -11,7 +11,7 @@ import {
     VirtualPropType,
     Field,
 } from "neolace/deps/vertex-framework.ts";
-import { authClient } from "neolace/api/authn.ts";
+import { authClient } from "neolace/core/authn-client.ts";
 
 @VNodeType.declare
 export class User extends VNodeType {
@@ -86,7 +86,7 @@ export class BotUser extends User {
     static readonly virtualProperties = VNodeType.hasVirtualProperties({
         ownedBy: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${BotUser.rel.OWNED_BY}]->(@target:${HumanUser})`,
+            query: C`(@this)-[:${this.rel.OWNED_BY}]->(@target:${HumanUser})`,
             target: HumanUser,
         },
     });

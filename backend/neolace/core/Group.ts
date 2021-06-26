@@ -19,7 +19,7 @@ export const GroupMaxDepth = 4;
 
 // Forward reference
 export const GroupRef: typeof Group = VNodeTypeRef("Group");
-import { SiteRef as Site } from "neolace/core/Site.ts";
+import { Site } from "neolace/core/Site.ts";
 import { User } from "neolace/core/User.ts";
 
 
@@ -75,19 +75,19 @@ export class Group extends VNodeType {
         });
     }
 
-    static readonly rel = this.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo(() => ({
         // Which Site or group owns this one.
         BELONGS_TO: {
-            to: [Site, Group],
+            to: [Site, this],
             cardinality: VNodeType.Rel.ToOneRequired,
         },
         HAS_USER: {
             to: [User],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
-    });
+    }));
 
-    static readonly virtualProperties = this.hasVirtualProperties({
+    static readonly virtualProperties = this.hasVirtualProperties(() => ({
         // The site that this group belongs to
         site: {
             type: VirtualPropType.OneRelationship,
@@ -99,7 +99,7 @@ export class Group extends VNodeType {
             query: C`(@this)-[:${this.rel.BELONGS_TO}]->(@target:${Group})`,
             target: this,
         },
-    });
+    }));
 
 }
 

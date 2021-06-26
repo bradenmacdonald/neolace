@@ -4,7 +4,7 @@ import { graph } from "../../../../core/graph";
 import { AccessMode, UpdateSite } from "../../../../core/Site";
 import { suite, test, assert, before, beforeEach, setTestIsolation, getClient, assertRejectsWith, assertRejects } from "../../../../lib/intern-tests";
 
-suite(__filename, () => {
+group(import.meta, () => {
 
     suite("Site Schema API", () => {
 

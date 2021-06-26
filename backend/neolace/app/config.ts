@@ -35,15 +35,15 @@ export const config = (() => {
 
 
         // URL of the Neo4j server
-        neo4jUrl: defaultTo("bolt://neo4j", {test: "bolt://neo4j-test"}),
+        neo4jUrl: defaultTo("bolt://localhost:7687", {test: "bolt://localhost:4687"}),
         neo4jUser: "neo4j",
         neo4jPassword: defaultTo("neolace", {production: "\u0000 setme!!"}),
         // Should debug logs be printed to stdout?
         debugLogging: defaultTo(true, {production: false}),
         // Public URL of the authentication microservice (Keratin AuthN)
-        authnUrl: defaultTo("http://localhost:5552", {test: "http://authn-test:5552"}),
+        authnUrl: defaultTo("http://localhost:5552", {test: "http://localhost:5552"}),
         // Private URL of the authentication microservice (Keratin AuthN)
-        authnPrivateUrl: defaultTo("http://authn:5559", {test: "http://authn-test:5559"}),
+        authnPrivateUrl: defaultTo("http://localhost:5559", {test: "http://localhost:4449"}),
         // Username for making private API requests to the authentication microservice (Keratin AuthN)
         authnApiUsername: "authn",
         // Password for making private API requests to the authentication microservice (Keratin AuthN)

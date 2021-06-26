@@ -1,36 +1,37 @@
-import { suite, test, assert, beforeEach, setTestIsolation, assertRejects } from "../lib/intern-tests";
-import { graph } from "./graph";
-import { CreateGroup, Group, UpdateGroup, GroupMaxDepth } from "./Group";
-import { CreateSite, Site } from "./Site";
+import { group, test, assertEquals, assertStrictEquals, setTestIsolation, assertThrowsAsync } from "neolace/lib/tests.ts";
+import { graph } from "neolace/core/graph.ts";
+import { CreateGroup, Group, UpdateGroup, GroupMaxDepth } from "neolace/core/Group.ts";
+import { CreateSite } from "neolace/core/Site.ts";
 import { VNodeKey } from "neolace/deps/vertex-framework.ts";
 
-suite(__filename, () => {
+group(import.meta, () => {
 
-    suite("CreateGroup", () => {
+    group("CreateGroup", () => {
 
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
         test(`Cannot create a group that doesn't belong to a site`, async () => {
-            await assertRejects(
-                graph.runAs(defaultData.users.admin.id, CreateGroup({
+            await assertThrowsAsync(
+                () => graph.runAs(defaultData.users.admin.id, CreateGroup({
                     name: "Site-less group",
                     ...Group.emptyPermissions,
                 })),
+                undefined,
                 "Required relationship type BELONGS_TO must point to one node, but does not exist.",
             );
         });
 
         test(`Can create nested groups up to ${GroupMaxDepth} levels deep, but no more`, async () => {
-            assert.equal(GroupMaxDepth, 4);
+            assertEquals(GroupMaxDepth, 4);
 
             // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
             const getGroup = (key: VNodeKey) => graph.pullOne(Group, g => g.id.name.parentGroup(pg => pg.id).site(s => s.id), {key,});
 
             // First check that there is a base users group (level 1, not a nested group)
             const usersGroup = await getGroup(defaultData.site.usersGroupId);
-            assert.strictEqual(usersGroup.name, "Users");
-            assert.strictEqual(usersGroup.site?.id, defaultData.site.id);
-            assert.strictEqual(usersGroup.parentGroup, null);
+            assertStrictEquals(usersGroup.name, "Users");
+            assertStrictEquals(usersGroup.site?.id, defaultData.site.id);
+            assertStrictEquals(usersGroup.parentGroup, null);
 
             // Create a level 2 group:
             const level2group = await graph.runAs(defaultData.users.admin.id, CreateGroup({
@@ -38,9 +39,9 @@ suite(__filename, () => {
                 belongsTo: usersGroup.id,
                 ...Group.emptyPermissions,
             })).then(cr => getGroup(cr.id));
-            assert.strictEqual(level2group.name, "Level 2 Users");
-            assert.strictEqual(level2group.site?.id, defaultData.site.id);
-            assert.strictEqual(level2group.parentGroup?.id, usersGroup.id);
+            assertStrictEquals(level2group.name, "Level 2 Users");
+            assertStrictEquals(level2group.site?.id, defaultData.site.id);
+            assertStrictEquals(level2group.parentGroup?.id, usersGroup.id);
 
             // Create a level 3 group:
             const level3group = await graph.runAs(defaultData.users.admin.id, CreateGroup({
@@ -48,9 +49,9 @@ suite(__filename, () => {
                 belongsTo: level2group.id,
                 ...Group.emptyPermissions,
             })).then(cr => getGroup(cr.id));
-            assert.strictEqual(level3group.name, "Level 3 Users");
-            assert.strictEqual(level3group.site?.id, defaultData.site.id);
-            assert.strictEqual(level3group.parentGroup?.id, level2group.id);
+            assertStrictEquals(level3group.name, "Level 3 Users");
+            assertStrictEquals(level3group.site?.id, defaultData.site.id);
+            assertStrictEquals(level3group.parentGroup?.id, level2group.id);
 
             // Create a level 4 group:
             const level4group = await graph.runAs(defaultData.users.admin.id, CreateGroup({
@@ -58,23 +59,24 @@ suite(__filename, () => {
                 belongsTo: level3group.id,
                 ...Group.emptyPermissions,
             })).then(cr => getGroup(cr.id));
-            assert.strictEqual(level4group.name, "Level 4 Users");
-            assert.strictEqual(level4group.site?.id, defaultData.site.id);
-            assert.strictEqual(level4group.parentGroup?.id, level3group.id);
+            assertStrictEquals(level4group.name, "Level 4 Users");
+            assertStrictEquals(level4group.site?.id, defaultData.site.id);
+            assertStrictEquals(level4group.parentGroup?.id, level3group.id);
 
             // Creating a level 5 group should fail though - too deep:
-            await assertRejects(
-                graph.runAs(defaultData.users.admin.id, CreateGroup({
+            await assertThrowsAsync(
+                () => graph.runAs(defaultData.users.admin.id, CreateGroup({
                     name: "Level 5 Users",
                     belongsTo: level4group.id,
                     ...Group.emptyPermissions,
                 })),
+                undefined,
                 "User groups cannot be nested more than 4 levels deep.",
             );
         });
     });
 
-    suite("UpdateGroup", () => {
+    group("UpdateGroup", () => {
 
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
@@ -88,20 +90,22 @@ suite(__filename, () => {
             }));
 
             // Move the "users group" from the first/default site to the second site - this should not be allowed:
-            await assertRejects(
-                graph.runAs(defaultData.users.admin.id, UpdateGroup({
+            await assertThrowsAsync(
+                () => graph.runAs(defaultData.users.admin.id, UpdateGroup({
                     key: defaultData.site.usersGroupId,
                     belongsTo: site2details.id,
                 })),
+                undefined,
                 "Cannot move Group from one site to another.",
             );
 
             // Also check that it rejects when moving to a group that's part of the second site:
-            await assertRejects(
-                graph.runAs(defaultData.users.admin.id, UpdateGroup({
+            await assertThrowsAsync(
+                () => graph.runAs(defaultData.users.admin.id, UpdateGroup({
                     key: defaultData.site.usersGroupId,
                     belongsTo: site2details.adminGroup,
                 })),
+                undefined,
                 "Cannot move Group from one site to another.",
             );
         });

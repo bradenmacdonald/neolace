@@ -28,23 +28,44 @@ async function prepareForShutdown(): Promise<void> {
 
 /** Do a clean, controlled shutdown. */
 export function shutdown(): void {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     prepareForShutdown();
 }
 
-Deno.signal(Deno.Signal.SIGINT).then(async () => {
+// Watch for signals:
+let watchingSignals = true;
+const sigintWatcher = Deno.signal(Deno.Signal.SIGINT);
+sigintWatcher.then(async () => {
+    if (!watchingSignals) {
+        return;  // The signal promise resolves on the signal OR when we call dispose() so ignore the latter
+    }
     log.info("Shutting down (SIGINT)...");
     await prepareForShutdown();
     Deno.exit(0);
 });
-Deno.signal(Deno.Signal.SIGTERM).then(async () => {
+const sigtermWatcher = Deno.signal(Deno.Signal.SIGTERM);
+sigtermWatcher.then(async () => {
+    if (!watchingSignals) {
+        return;  // The signal promise resolves on the signal OR when we call dispose() so ignore the latter
+    }
     log.info("Shutting down (SIGTERM)...")
     await prepareForShutdown();
     Deno.exit(0);
 });
+// deno-lint-ignore require-await
+onShutDown(async () => {
+    sigintWatcher.dispose();
+    sigtermWatcher.dispose();
+    watchingSignals = false;
+});
 
-// Checks to run just before we actually quit. This function must be synchronous.
-window.addEventListener("unload", () => {
+// Checks to run just before we actually quit.
+window.addEventListener("unload", async () => {
+    try {
+        await prepareForShutdown();
+    } catch (err) {
+        log.error(`Unable to cleanup before exit: ${err}`);
+        /* ignore errors, just log the message below. */
+    }
     if (!shutdownCleanly) {
         log.warning(`Did not shut down cleanly; resources were not released.`);
     }

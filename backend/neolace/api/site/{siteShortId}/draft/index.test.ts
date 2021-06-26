@@ -1,7 +1,7 @@
 import { isVNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { suite, test, assert, before, beforeEach, setTestIsolation, getClient, assertRejectsWith, assertRejects } from "../../../../lib/intern-tests";
 
-suite(__filename, () => {
+group(import.meta, () => {
 
     suite("Creating a draft", () => {
 

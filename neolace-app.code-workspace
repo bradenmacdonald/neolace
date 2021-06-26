@@ -5,6 +5,10 @@
 		},
 		{
 			"path": "neolace-api"
+		},
+		{
+			"path": ".",
+			"name": "(workspace root)"
 		}
 	],
 	"settings": {

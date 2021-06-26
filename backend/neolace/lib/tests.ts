@@ -35,7 +35,7 @@ export {
         return baseGroup(nameOrImportMeta, tests);
     }
     const url = nameOrImportMeta.url;
-    const idx = url.indexOf("/vertex/");
+    const idx = url.indexOf("/neolace/");
     if (idx === -1) {
         return baseGroup(url, tests);
     }
@@ -66,8 +66,9 @@ export function test(
 let dataStr: string;
 try {
     dataStr = await Deno.readTextFile(testDataFile);
-} catch {
-    log.error("Please run 'deno run --allow-net --allow-write vertex/lib/test-setup.ts'");
+} catch (err) {
+    log.error(err);
+    log.info("Please run 'ENV_TYPE=test deno run --import-map=import_map.json --allow-write --allow-net --unstable --allow-env neolace/scripts/test-setup.ts'");
     Deno.exit(1);
 }
 const {emptySnapshot, defaultDataSnapshot, data} = JSON.parse(dataStr) as TestSetupData;

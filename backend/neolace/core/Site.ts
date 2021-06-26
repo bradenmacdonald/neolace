@@ -106,7 +106,7 @@ export class Site extends VNodeType {
             // A flattened list of all the user groups that this site has
             type: VirtualPropType.ManyRelationship,
             query: C`(@target:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(@this)`,
-            target: this,
+            target: Group,
         },
     });
     static readonly derivedProperties = this.hasDerivedProperties({

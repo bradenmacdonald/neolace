@@ -70,6 +70,7 @@ services:
     << : *authn-defaults
     ports:
       - 5552:5552  # Expose public port to the host computer so users can log in
+      - 5559:5559  # Private port
     volumes:
       - authn-data:/data
   authn-test:
@@ -80,6 +81,7 @@ services:
       APP_DOMAINS: backend:4445
     ports:
       - 4442:5552  # Expose public port to the host computer so users can log in
+      - 4449:5559  # Expose public port to the host computer so users can log in
     volumes:
       - authn-data:/data
 

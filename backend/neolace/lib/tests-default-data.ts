@@ -108,11 +108,14 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
 
     log.info(`Generating default data for tests...`);
 
-    await graph.runAsSystem(CreateUser({
+    const action = CreateUser({
         email: data.users.admin.email,
         fullName: data.users.admin.fullName,
         username: data.users.admin.username,
-    })).then(result => data.users.admin.id = result.id);
+    });
+    log.info("next");
+
+    await graph.runAsSystem(action).then(result => data.users.admin.id = result.id);
 
     await graph.runAsSystem(CreateBot({
         ownedByUser: data.users.admin.id,

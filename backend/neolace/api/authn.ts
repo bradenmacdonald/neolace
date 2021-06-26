@@ -1,7 +1,7 @@
 import * as Hapi from "@hapi/hapi";
 import * as Boom from "@hapi/boom";
 
-import { KeratinAuthNClient } from "authn-node";
+import { authClient } from "neolace/core/authn-client.ts";
 import { C } from "neolace/deps/vertex-framework.ts";
 
 import { config } from "../app/config";
@@ -9,14 +9,6 @@ import { log } from "../app/log";
 import { BotUser, HumanUser } from "../core/User";
 import { graph } from "../core/graph";
 
-export const authClient = new KeratinAuthNClient({
-    appDomain: "localhost:5555",
-    authnUrl: config.authnUrl,
-    authnPrivateUrl: config.authnPrivateUrl,
-    username: config.authnApiUsername,
-    password: config.authnApiPassword,
-    debugLogger: log.debug,
-});
 
 /** Authentication scheme that integrates the Keratin AuthN Microservice into the hapi web server framework */
 export const authnScheme: Hapi.ServerAuthScheme = function (server, options) {
