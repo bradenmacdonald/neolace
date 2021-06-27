@@ -1,4 +1,4 @@
-import { VNID } from "../types.ts";
+import { Schema, Type, string, vnidString, nullable, array, DateType, object, } from "../api-schemas.ts";
 import { EditChangeType } from "./Edit.ts";
 
 export enum DraftStatus {
@@ -7,25 +7,30 @@ export enum DraftStatus {
     Cancelled = 2,
 }
 
-export interface DraftEditData {
-    id: VNID;
-    code: string;
-    changeType: EditChangeType;
-    // deno-lint-ignore no-explicit-any
-    data: any;
-    timestamp: Date;
-}
+// Parameters used when creating a new draft
+export const CreateDraftSchema = Schema({
+    title: string,
+    description: nullable(string),
+    edits: array.of(Schema({code: string, data: object})),
+});
 
-export interface DraftData {
-    id: VNID;
-    author: {
-        username: string;
-        fullName: string|null;
-    },
-    title: string;
-    description: string|null;
-    status: DraftStatus;
-    created: Date;
+// Information about one of the edits in a draft
+export const DraftEditSchema = Schema({
+    id: vnidString,
+    code: string,
+    changeType: Schema.enum(EditChangeType),
+    data: object.strictOptional(),
+    timestamp: DateType,
+});
+export type DraftEditData = Type<typeof DraftEditSchema>;
 
-    edits?: DraftEditData[];
-}
+export const DraftSchema = Schema({
+    id: vnidString,
+    author: Schema({username: string, fullName: nullable(string)}),
+    title: string,
+    description: nullable(string),
+    status: Schema.enum(DraftStatus),
+    created: DateType,
+    edits: array.of(DraftEditSchema).strictOptional(),
+});
+export type DraftData = Type<typeof DraftSchema>;

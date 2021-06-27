@@ -1,8 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import { PasswordlessLoginResponse, PublicUserData } from "./user.ts";
+import { PasswordlessLoginResponse } from "./user.ts";
 import * as errors from "./errors.ts";
 import { SiteSchemaData } from "./schema/index.ts";
-import { DraftData, EditList } from "./edit/index.ts";
+import { DraftData, CreateDraftSchema } from "./edit/index.ts";
+import * as schemas from "./api-schemas.ts";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
 export interface Config {
@@ -119,14 +120,14 @@ export class NeolaceApiClient {
      *
      * Will throw a NotAuthenticated error if the user is not authenticated.
      */
-    public async whoAmI(): Promise<PublicUserData> {
+    public async whoAmI(): Promise<schemas.Type<typeof schemas.UserDataResponse>> {
         return await this.call("/user/me");
     }
 
     /**
      * Register a new user account (human user)
      */
-    public async registerHumanUser(data: {email: string, fullName?: string, username?: string}): Promise<PublicUserData> {
+    public async registerHumanUser(data: {email: string, fullName?: string, username?: string}): Promise<schemas.Type<typeof schemas.UserDataResponse>> {
         return await this.call("/user", {method: "POST", data});
     }
 
@@ -161,7 +162,7 @@ export class NeolaceApiClient {
         return this._parseDraft(await this.call(`/site/${siteId}/draft/${draftId}`, {method: "GET"}));
     }
 
-    public async createDraft(data: Pick<DraftData, "title"|"description">&{edits?: EditList}, options?: {siteId?: string}): Promise<DraftData> {
+    public async createDraft(data: schemas.Type<typeof CreateDraftSchema>, options?: {siteId?: string}): Promise<DraftData> {
         const siteId = this.getSiteId(options);
         const result = await this.call(`/site/${siteId}/draft`, {method: "POST", data: {
             title: data.title,

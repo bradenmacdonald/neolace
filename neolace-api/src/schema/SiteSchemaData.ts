@@ -1,4 +1,4 @@
-import { VNID } from "../types.ts";
+import { Schema, Type, string, vnidString, nullable, array, Record, } from "../api-schemas.ts";
 
 export enum ContentType {
     /** Just a normal entry, with name, description, properties, relationships, but no "content" */
@@ -15,16 +15,19 @@ export function CastContentType(value: string): ContentType {
     return value as ContentType;
 }
 
-export interface EntryTypeData {
-    id: VNID;
+
+export const EntryTypeSchema = Schema({
+    id: vnidString,
     /** Name of this entry type, e.g. "Note", "Task", "Contact", "License", etc. Doesn't need to be unique. */
-    name: string;
+    name: string,
     /** Does this entry have a special type of content? e.g. is there an attached article or image? */
-    contentType: ContentType;
-    description: string|null;
+    contentType: Schema.enum(ContentType),
+    description: nullable(string),
     /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
-    friendlyIdPrefix: string|null;
-}
+    friendlyIdPrefix: nullable(string),
+});
+export type EntryTypeData = Type<typeof EntryTypeSchema>;
+
 
 
 export enum RelationshipCategory {
@@ -56,16 +59,16 @@ export function CastRelationshipCategory(value: string): RelationshipCategory {
     return value as RelationshipCategory;
 }
 
-export interface RelationshipTypeData {
-    id: VNID;
+export const RelationshipTypeSchema = Schema({
+    id: vnidString,
     /** The name of this RelationshipType (e.g. FROM_ENTRY_TYPE "is derived from" TO_ENTRY_TYPE) */
-    nameForward: string;
+    nameForward: string,
     /** The name of the reverse of this RelationshipType (e.g. TO_ENTRY_TYPE "has derivatives" FROM_ENTRY_TYPE) */
-    nameReverse: string;
+    nameReverse: string,
     /** Relationship category - cannot be changed. */
-    category: RelationshipCategory;
+    category: Schema.enum(RelationshipCategory),
     /** Description: Short, rich text summary of the relationship  */
-    description: string|null;
+    description: nullable(string),
 
     /**
      * What entry types this relationship can be from.
@@ -73,13 +76,19 @@ export interface RelationshipTypeData {
      * So if you create a new relationship that "Fork -> is a -> Utensil", it counts as a change to Fork (the from
      * entry), not to Utensil. The change that made that relationship will only appear in the "Fork" change history.
      */
-    fromEntryTypes: VNID[];
+    fromEntryTypes: array.of(vnidString),
     /**
      * What entry types this relationship can be to.
      */
-    toEntryTypes: VNID[];
-}
+    toEntryTypes: array.of(vnidString),
+});
+export type RelationshipTypeData = Type<typeof RelationshipTypeSchema>;
 
+
+export const SiteSchemaSchema = Schema({
+    entryTypes: Record(string, EntryTypeSchema),
+    relationshipTypes: Record(string, RelationshipTypeSchema),
+});
 
 /**
  * A complete specification of the schema of a neolace site.
@@ -89,3 +98,5 @@ export interface SiteSchemaData {
     // TODO: properties
     relationshipTypes: {[id: string]: RelationshipTypeData};
 }
+// This also works but is a bit verbose because it doesn't use our named interfaces:
+//export type SiteSchemaData = Type<typeof SiteSchemaSchema>;

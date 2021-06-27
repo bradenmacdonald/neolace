@@ -1,40 +1,39 @@
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors, requirePermission, permissions, getSiteDetails, requireUserId } from "../../../..";
-import { AcceptDraft, Draft } from "../../../../../core/edit/Draft";
+import { VNID } from "neolace/deps/vertex-framework.ts";
+import { NeolaceHttpResource, graph, api, permissions } from "neolace/api/mod.ts";
+import { AcceptDraft, Draft } from "neolace/core/edit/Draft.ts";
 
-defineEndpoint(__filename, {
-    method: "POST",
-    options: {
+
+export class AcceptDraftResource extends NeolaceHttpResource {
+    static paths = ["/site/:siteShortId/draft/:draftId/accept"];
+
+    POST = this.method({
+        responseSchema: api.schemas.Schema({}),
         description: "Accept a draft",
-        //notes: "...",
-        auth: {mode: "optional", strategy: "technotes_strategy"},
-        tags: ["api"],
-        validate: {},
-    },
-    handler: async (request, h) => {
+    }, async () => {
         // Permissions and parameters:
-        await requirePermission(request, permissions.CanViewDrafts);
-        const {siteId} = await getSiteDetails(request);
-        const userId = requireUserId(request);
-        const draftId = request.params.draftId;
+        await this.requirePermission(permissions.CanViewDrafts);
+        const userId = this.requireUser().id;
+        const {siteId} = await this.getSiteDetails();
+        const draftId = VNID(this.request.getPathParam("draftId") ?? "");
+
         // Some permissions depend on whether the draft contains schema changes or not:
         const draft = await graph.pullOne(Draft, d => d.site(s => s.id).hasSchemaChanges().hasContentChanges())
         if (draft.site?.id !== siteId) {
             throw new api.NotFound(`Draft not found`);
         }
         if (draft.hasContentChanges) {
-            await requirePermission(request, permissions.CanApproveEntryEdits);
+            await this.requirePermission(permissions.CanApproveEntryEdits);
         }
         if (draft.hasSchemaChanges) {
-            await requirePermission(request, permissions.CanApproveSchemaChanges);
+            await this.requirePermission(permissions.CanApproveSchemaChanges);
         }
         if (!(draft.hasContentChanges) && !(draft.hasSchemaChanges)) {
-            throw new api.InvalidRequest(api.InvalidRequestReason.Draft_is_empty, "Draft is emptyy");
+            throw new api.InvalidRequest(api.InvalidRequestReason.DraftIsEmpty, "Draft is emptyy");
         }
 
         await graph.runAs(userId, AcceptDraft({id: draftId, }));
 
         // Response:
-        return h.response({});
-
-    },
-});
+        return {};
+    });
+}

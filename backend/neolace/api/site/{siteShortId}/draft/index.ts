@@ -1,54 +1,45 @@
-import { EditChangeType, EditList, getEditType } from "neolace/deps/neolace-api.ts";
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors, requirePermission, permissions, getSiteDetails, requireUserId } from "../../..";
-import { CreateDraft } from "../../../../core/edit/Draft";
-import { getDraft } from "./_helpers";
+import { NeolaceHttpResource, graph, api, permissions } from "neolace/api/mod.ts";
+import { CreateDraft } from "neolace/core/edit/Draft.ts";
+import { getDraft } from "./_helpers.ts";
 
-defineEndpoint(__filename, {
-    method: "POST",
-    options: {
+
+
+export class DraftIndexResource extends NeolaceHttpResource {
+    static paths = ["/site/:siteShortId/draft"];
+
+    POST = this.method({
+        requestBodySchema: api.CreateDraftSchema,
+        responseSchema: api.DraftSchema,
         description: "Create a new draft",
-        //notes: "...",
-        auth: {mode: "optional", strategy: "technotes_strategy"},
-        tags: ["api"],
-        validate: {
-            payload: Joi.object({
-                title: Joi.string().required(),
-                description: Joi.string().allow(null),
-                edits: Joi.array(),
-            }),
-        },
-    },
-    handler: async (request, h) => {
+    }, async (payload) => {
         // Permissions and parameters:
-        await requirePermission(request, permissions.CanCreateDraft);
-        const {siteId} = await getSiteDetails(request);
-        const userId = requireUserId(request);
-        const payload = request.payload as any;
+        await this.requirePermission(permissions.CanCreateDraft);
+        const {siteId} = await this.getSiteDetails();
+        const userId = this.requireUser().id;
 
-        const edits: EditList = payload.edits ?? [];
+        // Response:
+        const edits = payload.edits as api.EditList;
 
         let hasSchemaChanges = false;
         let hasEntryChanges = false;
-        for (const e of edits) {
-            if (!e.code || !e.data) {
-                throw new api.InvalidFieldValue(["edits"], "An edit is missing its .code or .data property");
-            }
-            const editType = getEditType.OrNone(e.code);
+        for (const idx in edits) {
+            const e = edits[idx];  // The payload validator will have checked that "e" has .code and .data, but not check their value
+            const editType = api.getEditType.OrNone(e.code);
             if (editType === undefined) {
-                throw new api.InvalidFieldValue(["edits"], `Invalid edit code: ${e.code}`);
+                throw new api.InvalidFieldValue([{fieldPath: `edits.${idx}.code`, message: `Invalid edit code: "${e.code}"`}]);
             }
-            if (editType.changeType === EditChangeType.Schema) {
+            if (editType.changeType === api.EditChangeType.Schema) {
                 hasSchemaChanges = true;
-            } else if (editType.changeType === EditChangeType.Content) {
+            } else if (editType.changeType === api.EditChangeType.Content) {
                 hasEntryChanges = true;
             } else { throw `Unexpected entry change type ${editType.changeType}`; }
         }
 
         if (hasEntryChanges) {
-            await requirePermission(request, permissions.CanProposeEntryEdits);
+            await this.requirePermission(permissions.CanProposeEntryEdits);
         }
         if (hasSchemaChanges) {
-            await requirePermission(request, permissions.CanProposeSchemaChanges);
+            await this.requirePermission(permissions.CanProposeSchemaChanges);
         }
 
         const {id} = await graph.runAs(userId, CreateDraft({
@@ -60,7 +51,6 @@ defineEndpoint(__filename, {
         }));
 
         // Response:
-        const draftData = await graph.read(tx => getDraft(id, siteId, tx));
-        return h.response(draftData);
-    },
-});
+        return await graph.read(tx => getDraft(id, siteId, tx));
+    });
+}

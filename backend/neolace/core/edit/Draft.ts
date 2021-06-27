@@ -112,22 +112,22 @@ export class Draft extends VNodeType {
         author: {
             type: VirtualPropType.OneRelationship,
             target: User,
-            query: C`(@this)-[:${Draft.rel.AUTHORED_BY}]->(@target:${User})`,
+            query: C`(@this)-[:${this.rel.AUTHORED_BY}]->(@target:${User})`,
         },
         edits: {
             type: VirtualPropType.ManyRelationship,
             target: DraftEdit,
-            query: C`(@this)-[:${Draft.rel.HAS_EDIT}]->(@target:${DraftEdit})`,
+            query: C`(@this)-[:${this.rel.HAS_EDIT}]->(@target:${DraftEdit})`,
         },
         modifiesEntries: {
             type: VirtualPropType.ManyRelationship,
             target: Entry,
-            query: C`(@this)-[:${Draft.rel.MODIFIES}]->(@target:${Entry})`,
+            query: C`(@this)-[:${this.rel.MODIFIES}]->(@target:${Entry})`,
         },
         site: {
             type: VirtualPropType.OneRelationship,
             target: Site,
-            query: C`(@this)-[:${Draft.rel.FOR_SITE}]->(@target:${Site})`,
+            query: C`(@this)-[:${this.rel.FOR_SITE}]->(@target:${Site})`,
         },
     });
 
@@ -204,7 +204,7 @@ export const UpdateDraft = defaultUpdateFor(Draft, d => d.title.description, {
         authorId: VNID;
         edits: EditList;
         title: string;
-        description: string;
+        description: string|null;
     },
     resultData: {} as {id: VNID},
     apply: async (tx, data) => {

@@ -4,12 +4,8 @@ import {
     VirtualPropType,
     C,
     VNodeType,
-    VNodeTypeRef,
     Field,
 } from "neolace/deps/vertex-framework.ts";
-
-// Declare a forward reference, if needed:
-export const TechDbEntryRef: typeof Entry = VNodeTypeRef("Entry");
 
 import { Image } from "neolace/asset-library/Image.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
@@ -46,7 +42,7 @@ export class Entry extends VNodeType {
         },
         /** This entry is a child/subtype/variant/category of some other entry */
         IS_A: {
-            to: [Entry],
+            to: [this],
             properties: {
                 // More specific "type" of this relationship, according to the site's schema
                 detailedRelType: Field.String,
@@ -59,7 +55,7 @@ export class Entry extends VNodeType {
         // },
     });
 
-    static virtualProperties = this.hasVirtualProperties({
+    static virtualProperties = this.hasVirtualProperties(() => ({
         type: {
             type: VirtualPropType.OneRelationship,
             query: C`(@this)-[:${this.rel.IS_OF_TYPE}]->(@target:${EntryType})`,
@@ -70,7 +66,7 @@ export class Entry extends VNodeType {
             query: C`(@target:${Image})-[:${Image.rel.RELATES_TO}]->(:${this})-[:IS_A*0..10]->(@this)`,
             target: Image,
         },
-    });
+    }));
 
     static derivedProperties = this.hasDerivedProperties({
         id,

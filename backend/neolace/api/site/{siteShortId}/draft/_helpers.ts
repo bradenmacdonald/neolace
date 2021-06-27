@@ -1,12 +1,12 @@
-import { DraftData } from "neolace/deps/neolace-api.ts";
+import { api } from "neolace/api/mod.ts";
 import { C, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
-import { Draft } from "../../../../core/edit/Draft";
-import { Site } from "../../../../core/Site";
+import { Draft } from "neolace/core/edit/Draft.ts";
+import { Site } from "neolace/core/Site.ts";
 
 /**
  * A helper function to get a draft
  */
-export async function getDraft(id: VNID, siteId: VNID, tx: WrappedTransaction): Promise<DraftData> {
+export async function getDraft(id: VNID, siteId: VNID, tx: WrappedTransaction): Promise<api.DraftData> {
 
     const draftData = await tx.pullOne(Draft, d => d
         .title
@@ -31,5 +31,6 @@ export async function getDraft(id: VNID, siteId: VNID, tx: WrappedTransaction): 
         title: draftData.title,
         description: draftData.description,
         status: draftData.status,
+        edits: draftData.edits?.map(e => ({...e, changeType: e.changeType as api.EditChangeType, data: e.data ?? undefined})),
     };
 }

@@ -1,7 +1,7 @@
 /**
  * This file contains all the common imports and helper methods needed to implement REST API endpoints.
  */
- import * as log from "std/log/mod.ts";
+import * as log from "std/log/mod.ts";
 import { Drash } from "neolace/deps/drash.ts";
 import { FieldValidationError, VNID } from "neolace/deps/vertex-framework.ts";
 import * as api from "neolace/deps/neolace-api.ts";

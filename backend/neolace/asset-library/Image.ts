@@ -10,7 +10,7 @@ import {
     Field,
 } from "neolace/deps/vertex-framework.ts";
 import { config } from "../app/config.ts";
-import { TechDbEntryRef as TechDbEntry } from "../core/entry/Entry.ts";
+import { Entry } from "../core/entry/Entry.ts";
 import { DataFile } from "./DataFile.ts";
 
 enum ImageType {
@@ -34,10 +34,10 @@ export class Image extends VNodeType {
         imageType: Field.String.Check(check.Schema.enum(ImageType)),
     };
 
-    static readonly rel = this.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo(() => ({
         /** Things depicted or explained by this image */
         RELATES_TO: {
-            to: [TechDbEntry],
+            to: [Entry],
             properties: {weight: Field.Int.Check(check.number.integer().min(1).max(12))},
             cardinality: VNodeType.Rel.ToManyUnique,
         },
@@ -45,14 +45,14 @@ export class Image extends VNodeType {
             to: [DataFile],
             cardinality: VNodeType.Rel.ToOneRequired,
         },
-    });
-    static readonly virtualProperties = this.hasVirtualProperties({
+    }));
+    static readonly virtualProperties = this.hasVirtualProperties(() => ({
         dataFile: {
             type: VirtualPropType.OneRelationship,
             query: C`(@this)-[:${this.rel.HAS_DATA}]->(@target:${DataFile})`,
             target: DataFile,
         },
-    });
+    }));
     static readonly derivedProperties = this.hasDerivedProperties({
         imageUrl,
     });
