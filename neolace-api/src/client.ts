@@ -77,7 +77,7 @@ export class NeolaceApiClient {
             } catch {/* couldn't parse this as JSON... */}
 
             if (!errorData.message) {
-                errorData.message = response.statusText;
+                errorData = {message: typeof errorData === "string" ? errorData : response.statusText};
             }
 
             console.error(`${path} API call failed (${response.status} ${response.statusText}). Response from server: \n${errorDataFormatted}`);
@@ -87,10 +87,10 @@ export class NeolaceApiClient {
             } else if (response.status === 403) {
                 throw new errors.NotAuthorized(errorData.message);
             } else if (response.status === 400) {
-                if (errorData.reason === errors.InvalidRequestReason.InvalidFieldValue) {
-                    throw new errors.InvalidFieldValue(errorData.fields, errorData.message);
+                if (errorData.reason === errors.InvalidRequestReason.InvalidFieldValue && errorData.fieldErrors) {
+                    throw new errors.InvalidFieldValue(errorData.fieldErrors);
                 } else {
-                    throw new errors.InvalidRequest(errorData.reason, errorData.message);
+                    throw new errors.InvalidRequest(errorData.reason ?? errors.InvalidRequestReason.OtherReason, errorData.message);
                 }
             } else {
                 throw new errors.ApiError(errorData.message, response.status);

@@ -1,4 +1,4 @@
-import { Schema, string, boolean, unknown, Type } from "https://denoporter.sirjosh.workers.dev/v1/deno.land/x/computed_types@v1.9.0/src/index.ts";
+import { Schema, string, boolean, number, unknown, Type } from "./deps/computed-types.ts";
 
 // deno-lint-ignore no-explicit-any
 type Validator<T> = (value: any) => T;
@@ -7,6 +7,7 @@ export {
     Schema,
     string,
     boolean,
+    number,
     unknown,
 }
 export type {

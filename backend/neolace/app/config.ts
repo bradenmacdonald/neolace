@@ -26,7 +26,7 @@ export const config = (() => {
         // Port to listen on
         port: defaultTo(5554, {test: 4444}),
         // Full URL at which the REST API is available
-        apiUrl: defaultTo("http://localhost:5554", {test: "http://backend:4444"}),
+        apiUrl: defaultTo("http://localhost:5554", {test: "http://localhost:4444"}),
 
         /**
          * URL for the Realm admin UI. This is where you can create a new site, register a user account, etc.

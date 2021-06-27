@@ -1,8 +1,8 @@
 /** Base class for any error that can occur when using the Neolace API */
 export class ApiError extends Error {
-    readonly statusCode: number|undefined;
+    readonly statusCode: number;
 
-    constructor(message: string, statusCode?: number) {
+    constructor(message: string, statusCode: number) {
         super(message);
         this.name = "ApiError";
         this.statusCode = statusCode;
@@ -61,10 +61,11 @@ export class InvalidRequest extends ApiError {
  * One or more of the fields you provided is invalid, e.g. blank, too short, too long, invalid character, etc.
  */
 export class InvalidFieldValue extends InvalidRequest {
-    readonly fields: string[];
-    constructor(fields: string[], message: string) {
+    readonly fieldErrors: {fieldPath: string, message: string}[];
+    constructor(fieldErrors: {fieldPath: string, message: string}[]) {
+        const message = fieldErrors.map(fe => `${fe.fieldPath}: ${fe.message}`).join(", ");
         super(InvalidRequestReason.InvalidFieldValue, message);
-        this.fields = fields;
+        this.fieldErrors = fieldErrors;
         this.name = "InvalidFieldValue";
     }
 }
@@ -79,4 +80,6 @@ export const enum InvalidRequestReason {
     UsernameAlreadyRegistered = "400_USERNAME_EXISTS",
     /** Tried to accept a draft that contains no edits */
     DraftIsEmpty = "400_DRAFT_EMPTY",
+    /** The server returned a 400 bad request code without a 'reason' that this API client understands. */
+    OtherReason = "400",
 }
