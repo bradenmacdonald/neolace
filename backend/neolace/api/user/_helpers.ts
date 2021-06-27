@@ -1,6 +1,6 @@
-import { Hapi, Boom, Joi, log, graph, api } from "../";
+import { graph, Drash, log } from "neolace/api/mod.ts";
 import { PublicUserData } from "neolace/deps/neolace-api.ts";
-import { BotUser, HumanUser, User } from "../../core/User";
+import { BotUser, HumanUser, User } from "neolace/core/User.ts";
 import { SYSTEM_VNID, VNID, isVNID } from "neolace/deps/vertex-framework.ts";
 
 /**
@@ -30,18 +30,18 @@ export async function getPublicUserData(usernameOrVNID: string|VNID): Promise<Pu
             fullName: humanResult[0].fullName,
             username: humanResult[0].username,
         };
-    } else if (humanResult.length > 1) { throw Boom.internal("Inconsistent - Multiple users matched"); }
+    } else if (humanResult.length > 1) { throw new Error("Inconsistent - Multiple users matched"); }
 
     const botResult = await graph.pull(BotUser, u => u.fullName.username().ownedBy(h => h.username()), {key, });
     if (botResult.length === 0) {
         if (isVNID(usernameOrVNID)) {
             log.error(`Failed to fetch user with key ${usernameOrVNID}`);
             // Don't leak user VNIDs via the API, even if it seems to be invalid.
-            throw Boom.notFound(`No user found with that VNID.`);
+            throw new Drash.Exceptions.HttpException(404, `No user found with that VNID.`);
         } else {
-            throw Boom.notFound(`No user found with the username "${usernameOrVNID}".`);
+            throw new Drash.Exceptions.HttpException(404, `No user found with the username "${usernameOrVNID}".`);
         }
-    } else if (botResult.length > 1) { throw Boom.internal("Inconsistent - Multiple users matched"); }
+    } else if (botResult.length > 1) { throw new Error("Inconsistent - Multiple users matched"); }
 
     // This is a bot user:
     return {

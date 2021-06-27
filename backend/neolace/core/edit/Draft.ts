@@ -34,13 +34,13 @@ import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
         timestamp: Field.DateTime,
     };
  
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo({
     });
  
-    static virtualProperties = VNodeType.hasVirtualProperties({
+    static virtualProperties = this.hasVirtualProperties({
     });
  
-    static derivedProperties = VNodeType.hasDerivedProperties({
+    static derivedProperties = this.hasDerivedProperties({
         data: dataFromJson,
     });
  
@@ -85,7 +85,7 @@ export class Draft extends VNodeType {
     };
 
 
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo({
         FOR_SITE: {
             to: [Site],
             properties: {},

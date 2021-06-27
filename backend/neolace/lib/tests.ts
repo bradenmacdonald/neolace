@@ -4,7 +4,7 @@ import { NeolaceApiClient } from "neolace/deps/neolace-api.ts"
 import { config } from "neolace/app/config.ts";
 import { shutdown } from "neolace/app/shutdown.ts";
 import { graph } from "neolace/core/graph.ts";
-import { serverPromise } from "neolace/api/server.ts";
+//import { serverPromise } from "neolace/api/server.ts";
 import { testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
 
 import {test as baseTest, group as baseGroup, afterAll, afterEach, beforeAll, beforeEach} from "neolace/deps/hooked.ts";
@@ -73,11 +73,11 @@ try {
 }
 const {emptySnapshot, defaultDataSnapshot, data} = JSON.parse(dataStr) as TestSetupData;
 
-beforeAll(async () => {
-    log.debug("Waiting for server startup...");
-    await serverPromise;
-    log.debug("Server ready");
-})
+// beforeAll(async () => {
+//     log.debug("Waiting for server startup...");
+//     await serverPromise;
+//     log.debug("Server ready");
+// })
 
 afterAll(async () => {
     // Leave the default data in the database in case developers want to make queries and play with it:

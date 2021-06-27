@@ -8,6 +8,11 @@ class KeratinAuthNClient {
     createUser(_args: {username: string}) {
         return {accountId: Math.floor(Math.random() * 100_000)};
     }
+
+    // deno-lint-ignore require-await
+    async validateSessionToken(_token: string): Promise<{accountId: number}|undefined> {
+        return undefined;
+    }
 }
 
 

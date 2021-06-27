@@ -17,7 +17,7 @@ import { graph } from "neolace/core/graph.ts";
 // Forward reference
 export const SiteRef: typeof Site = VNodeTypeRef("Site");
 
-import { CreateGroup, GroupMaxDepth, GroupRef as Group } from "./Group.ts";
+import { CreateGroup, GroupMaxDepth, Group } from "./Group.ts";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,14 +101,14 @@ export class Site extends VNodeType {
         //     cardinality: VNodeType.Rel.ToMany,
         // },
     });
-    static readonly virtualProperties = this.hasVirtualProperties({
+    static readonly virtualProperties = this.hasVirtualProperties(() => ({
         groupsFlat: {
             // A flattened list of all the user groups that this site has
             type: VirtualPropType.ManyRelationship,
             query: C`(@target:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(@this)`,
             target: Group,
         },
-    });
+    }));
     static readonly derivedProperties = this.hasDerivedProperties({
         // None at the moment.
     });

@@ -35,7 +35,7 @@ export class User extends VNodeType {
         }
     }
 
-    static readonly derivedProperties = VNodeType.hasDerivedProperties({
+    static readonly derivedProperties = this.hasDerivedProperties({
         //isBot,
         username,
     });
@@ -52,7 +52,7 @@ export class HumanUser extends User {
         email: Field.String.Check(Field.validators.email),
     };
 
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo({
     });
 }
 
@@ -65,7 +65,7 @@ export class BotUser extends User {
         authToken: Field.String,
     };
 
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo({
         /** 
          * If this user is a bot, it belongs to this user.
          * Every bot has exactly one human user who is responsible for it.
@@ -83,7 +83,7 @@ export class BotUser extends User {
         },
     });
 
-    static readonly virtualProperties = VNodeType.hasVirtualProperties({
+    static readonly virtualProperties = this.hasVirtualProperties({
         ownedBy: {
             type: VirtualPropType.OneRelationship,
             query: C`(@this)-[:${this.rel.OWNED_BY}]->(@target:${HumanUser})`,
