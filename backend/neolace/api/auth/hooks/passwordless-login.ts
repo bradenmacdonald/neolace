@@ -1,26 +1,22 @@
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint } from "../../";
-import { config } from "../../../app/config";
+import { NeolaceHttpResource, api, log } from "neolace/api/mod.ts";
+import { config } from "neolace/app/config.ts";
 
-defineEndpoint(__filename, {
-    method: "POST",
-    options: {
+
+export class PasswordlessLoginWebhookResource extends NeolaceHttpResource {
+    static paths = ["/auth/request-login"];
+
+    POST = this.method({
+        requestBodySchema: api.schemas.Schema({account_id: api.schemas.number, token: api.schemas.string }),
+        responseSchema: api.schemas.Schema({}),
         description: "Passwordless login webhook",
         notes: "Passwordless login webhook (called by the Keratin AuthN microservice)",
-        auth: false, // This webhook can be called by our authn microservice without any authentication
-        validate: {
-            payload: Joi.object({
-                account_id: Joi.number().required(),
-                token: Joi.string().required(),
-            }),
-        },
-    },
-    handler: async (request, h) => {
-        const accountId = (request.payload as any).account_id;
-        const token = (request.payload as any).token;
+    }, async (payload) => {
+        const accountId = payload.account_id;
+        const token = payload.token;
         log.debug(`Passwordless login for account ID ${accountId}`);
         const loginUrl = `${config.realmAdminUrl}/login/passwordless#${token}`;
         // TODO in future: email this link to the user
-        log.success(`To log in, go to ${loginUrl}`);
-        return h.response({});
-    },
-});
+        log.info(`To log in, go to ${loginUrl}`);
+        return await {};  // 'await' is just to make the Deno linter happy
+    });
+}

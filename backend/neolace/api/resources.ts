@@ -1,6 +1,6 @@
 import { HomePageResource } from "./index.ts";
-// import "./auth/request-login";
-// import "./auth/hooks/passwordless-login";
+import { RequestLoginResource } from "./auth/request-login.ts";
+import { PasswordlessLoginWebhookResource } from "./auth/hooks/passwordless-login.ts";
 import { SchemaIndexResource } from "./site/{siteShortId}/schema/index.ts";
 import { DraftIndexResource } from "./site/{siteShortId}/draft/index.ts";
 import { DraftResource } from "./site/{siteShortId}/draft/{draftId}/index.ts";
@@ -10,7 +10,8 @@ import { UserMeResource } from "./user/me.ts";
 
 export const allResources = [
     HomePageResource,
-
+    RequestLoginResource,
+    PasswordlessLoginWebhookResource,
     SchemaIndexResource,
     DraftIndexResource,
     DraftResource,

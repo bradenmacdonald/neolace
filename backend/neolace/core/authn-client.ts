@@ -13,6 +13,11 @@ class KeratinAuthNClient {
     async validateSessionToken(_token: string): Promise<{accountId: number}|undefined> {
         return undefined;
     }
+
+    // deno-lint-ignore require-await
+    async requestPasswordlessLogin(_args: {username: string}) {
+        return undefined;
+    }
 }
 
 

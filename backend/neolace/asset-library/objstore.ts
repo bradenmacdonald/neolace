@@ -1,3 +1,4 @@
+/*
 // Use "minio" client to connect
 import crypto from "crypto";
 import { Readable, Transform } from "stream";
@@ -37,7 +38,7 @@ export async function uploadFileToObjStore(fileStream: Readable, contentType: st
 
     /**
      * Transform stream that passes data through while computing the hash and size of the data.
-     */
+     */ /*
     const hashTransform = new Transform({
         transform(chunk, encoding, callback) {
             sizeCalculator += chunk.length;
@@ -90,3 +91,4 @@ export async function uploadFileToObjStore(fileStream: Readable, contentType: st
         size,
     };
 }
+*/
