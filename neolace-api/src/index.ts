@@ -6,3 +6,4 @@ export * from "./user.ts";
 export * from "./schema/index.ts";
 export * from "./edit/index.ts";
 export * as schemas from "./api-schemas.ts";
+export * as types from "./types.ts";

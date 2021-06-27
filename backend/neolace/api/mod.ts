@@ -11,17 +11,21 @@ import { graph } from "neolace/core/graph.ts";
 import { Check, CheckContext, permissions } from "neolace/core/permissions.ts";
 import { siteCodeForSite, siteIdFromShortId } from "neolace/core/Site.ts";
 
+interface AuthenticatedUserData {
+    isBot: boolean,
+    id: VNID,
+    authnId: number|undefined,
+    username: string
+    email: string,
+    fullName: string|null,
+}
+
 export class NeolaceHttpRequest extends Drash.Http.Request {
-    user?: {
-        isBot: boolean,
-        id: VNID,
-        authnId: number|undefined,
-        username: string
-        email: string,
-        fullName: string|null,
-    };
+    user?: AuthenticatedUserData;
 }
 Drash.Http.Request = NeolaceHttpRequest;
+
+type JsonCompatibleValue = string | boolean | Record<string, unknown> | null | undefined;
 
 /**
  * Base class for defining a Neolace API resource.
@@ -32,6 +36,28 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
     // Override the type of this.request; Since we assigned NeolaceHttpRequest to the Drash.Http.Request global, this
     // will have the correct type.
     declare protected request: NeolaceHttpRequest;
+
+    method<Response extends JsonCompatibleValue, RequestBody extends JsonCompatibleValue = undefined>(
+        metadata: {
+            responseSchema: api.schemas.Validator<Response>,
+            requestBodySchema?: api.schemas.Validator<RequestBody>,
+            description?: string,
+            notes?: string,
+        },
+        fn: (bodyData: api.schemas.Type<api.schemas.Validator<RequestBody>>) => Promise<api.schemas.Type<api.schemas.Validator<Response>>>
+    ) {
+        return async (): Promise<Drash.Http.Response> => {
+            const requestBodyValidated = metadata.requestBodySchema !== undefined ?
+                // Validate the request body:
+                // deno-lint-ignore no-explicit-any
+                metadata.requestBodySchema(this.request.getAllBodyParams().data as any)
+            : undefined;
+
+            // deno-lint-ignore no-explicit-any
+            this.response.body = metadata.responseSchema(await fn(requestBodyValidated as any));
+            return this.response;
+        };
+    }
 
     // deno-lint-ignore no-explicit-any
     protected getRequestPayload<SchemaType extends (...args: any[]) => unknown>(schema: SchemaType): ReturnType<SchemaType> {
@@ -63,12 +89,12 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
         return {siteId, siteCode};
     }
 
-    protected requireUserId(): VNID {
-        const userId = this.request.user?.id;
-        if (userId === undefined) {
+    protected requireUser(): AuthenticatedUserData {
+        const user = this.request.user;
+        if (user === undefined) {
             throw new api.NotAuthenticated();
         }
-        return userId;
+        return user;
     }
 
     protected async requirePermission(check: Check, ...otherChecks: Check[]): Promise<void> {
@@ -97,19 +123,6 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
         }
     }
 }
-
-/**
- * Decorators that can be applied to methods (e.g. GET, POST) within a NeolaceHttpResource
- */
-export const method = {
-    description: (_description: string) => (_target: NeolaceHttpResource, _propertyKey: string, descriptor: PropertyDescriptor): PropertyDescriptor => {
-        return descriptor;
-    },
-    notes: (_notes: string) => (_target: NeolaceHttpResource, _propertyKey: string, descriptor: PropertyDescriptor): PropertyDescriptor => {
-        return descriptor;
-    },
-};
-
 
 
 

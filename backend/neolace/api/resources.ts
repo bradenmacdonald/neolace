@@ -6,9 +6,10 @@ import { HomePageResource } from "./index.ts";
 // import "./site/{siteShortId}/draft/{draftId}";
 // import "./site/{siteShortId}/draft/{draftId}/accept";
 import { UserIndexResource } from "./user/index.ts";
-//import "./user/me";
+import { UserMeResource } from "./user/me.ts";
 
 export const allResources = [
     HomePageResource,
     UserIndexResource,
+    UserMeResource,
 ];

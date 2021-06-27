@@ -1,5 +1,4 @@
-import { graph, Drash, log } from "neolace/api/mod.ts";
-import { PublicUserData } from "neolace/deps/neolace-api.ts";
+import { graph, Drash, log, api } from "neolace/api/mod.ts";
 import { BotUser, HumanUser, User } from "neolace/core/User.ts";
 import { SYSTEM_VNID, VNID, isVNID } from "neolace/deps/vertex-framework.ts";
 
@@ -8,7 +7,7 @@ import { SYSTEM_VNID, VNID, isVNID } from "neolace/deps/vertex-framework.ts";
  *
  * All information returned by this is considered public.
  */
-export async function getPublicUserData(usernameOrVNID: string|VNID): Promise<PublicUserData> {
+export async function getPublicUserData(usernameOrVNID: string|VNID): Promise<api.schemas.Type<typeof api.schemas.UserDataResponse>> {
     if (usernameOrVNID === "system" || usernameOrVNID === SYSTEM_VNID) {
         // Special case: the "system" user is neither a human nor a bot.
         return {
