@@ -20,8 +20,7 @@ export enum UserStatus {
 interface UserData {
     status: UserStatus;
     username: string;
-    realname: string;
-    country: string;
+    fullName: string;
 }
 
 export interface UserContextData extends UserData {
@@ -33,8 +32,7 @@ export const UserContext = React.createContext<UserContextData>({
     // The following defaults are only used when the UserProvider is absent from the React tree, i.e. during tests.
     status: UserStatus.Unknown,
     username: "JordanUCM",
-    realname: "Jordan UserContextMissing",
-    country: "CA",
+    fullName: "Jordan UserContextMissing",
     // Submit the token (that was emailed to the user), to finalize a passwordless login.
     submitPasswordlessLoginToken: async () => {},
     // Log the user out.
@@ -46,8 +44,7 @@ export const UserProvider: React.FunctionComponent<{}> = (props) => {
         // This is the data used when the page is loading, or when it's rendered on the server side.
         status: UserStatus.Unknown,
         username: "▅▅▅▅",
-        realname: "▅▅▅▅▅ ▅▅▅▅▅▅▅",
-        country: "",
+        fullName: "▅▅▅▅▅ ▅▅▅▅▅▅▅",
     });
 
     // If we're running in the browser, load the user status from the server
@@ -63,8 +60,7 @@ export const UserProvider: React.FunctionComponent<{}> = (props) => {
             setData({
                 status: UserStatus.Anonymous,
                 username: "",
-                realname: "",
-                country: "",
+                fullName: "",
             });
         } else {
             // The user is logged in.
@@ -72,12 +68,10 @@ export const UserProvider: React.FunctionComponent<{}> = (props) => {
                 // Fetch the user profile. But we need to avoid a race condition if the session token changes while we're fetching (e.g. user logs out)
                 const userData = await client.whoAmI();
                 if (currentToken === KeratinAuthN.session()) { // <-- This avoids the race condition.
-                    status: UserStatus.LoggedIn,
                     setData({
                         status: UserStatus.LoggedIn,
                         username: userData.username,
-                        realname: userData.realname,
-                        country: userData.country,
+                        fullName: userData.fullName,
                     });
                 }
             } catch (err) {
@@ -87,8 +81,7 @@ export const UserProvider: React.FunctionComponent<{}> = (props) => {
                 setData({
                     status: UserStatus.Anonymous,
                     username: "",
-                    realname: "",
-                    country: "",
+                    fullName: "",
                 });
             }
         }

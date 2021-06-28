@@ -12,3 +12,7 @@ if (IN_BROWSER) {
     KeratinAuthN.setHost(AUTHN_SERVER_URL);
     KeratinAuthN.setLocalStorageStore('tn-session');
 }
+
+if (typeof API_SERVER_URL !== "string") {
+    throw new Error("Environment variables are not set properly.");
+}

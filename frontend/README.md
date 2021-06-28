@@ -1,6 +1,6 @@
-# TechNotes Frontend
+# Neolace Frontend
 
-This is the frontend for [TechNotes](https://technotes.org).
+This is the frontend for Neolace
 
 The TechNotes frontend is built using:
 

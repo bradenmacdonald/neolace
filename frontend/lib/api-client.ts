@@ -1,6 +1,6 @@
 import * as KeratinAuthN from 'keratin-authn';
 import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
-import { TechNotesApiClient } from 'neolace-api';
+import { NeolaceApiClient } from 'neolace-api';
 
 /** Refresh the session token if needed */
 const getSessionPromise = () => {
@@ -24,7 +24,7 @@ const getSessionPromise = () => {
 export const apiSessionPromise: Promise<void> = getSessionPromise();
 
 /**
- * Helper that defines how to make authenticated API calls to the TechNotes API
+ * Helper that defines how to make authenticated API calls to the Neolace API
  */
 async function getExtraHeadersForRequest() {
     if (IN_BROWSER) {
@@ -42,7 +42,7 @@ async function getExtraHeadersForRequest() {
     return {};
 }
 
-export const client = new TechNotesApiClient({
+export const client = new NeolaceApiClient({
     basePath: API_SERVER_URL,
     fetchApi: IN_BROWSER ? window.fetch.bind(window) : require('node-fetch'),
     getExtraHeadersForRequest,
