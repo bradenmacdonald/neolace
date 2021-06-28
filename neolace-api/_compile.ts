@@ -47,4 +47,11 @@ const bundleResult = await Deno.emit(`${srcDir}/index.ts`, {
 });
 
 const bundleFile = bundleResult.files["deno:///bundle.js"];
-await Deno.writeTextFile(`${distDir}index.ts.js`, bundleFile);
+await Deno.writeTextFile(`${distDir}index.ts.js`, 'module.exports = ' + bundleFile);
+
+// Now emit a package.json file
+await Deno.writeTextFile(`${distDir}package.json`, `{
+    "dependencies": {},
+    "main": "./index.ts.js",
+    "types": "./index.ts.d.ts"
+}`);

@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Compile bundle for browser",
+            "label": "Compile bundle for Node.js",
             "type": "shell",
             "command": "deno",
             "args": ["run", "--allow-read", "--allow-write", "--unstable", "_compile.ts"],
