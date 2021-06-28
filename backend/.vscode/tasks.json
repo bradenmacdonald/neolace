@@ -1,0 +1,31 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run test suite setup (create data fixtures)",
+            "type": "shell",
+            "command": "deno",
+            "options": {
+                "env": {
+                    "ENV_TYPE": "test",
+                },
+            },
+            "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-write", "--unstable", "neolace/scripts/test-setup.ts"],
+            "problemMatcher": [],
+        },
+        {
+            "label": "Run test suite",
+            "type": "shell",
+            "command": "deno",
+            "options": {
+                "env": {
+                    "ENV_TYPE": "test",
+                },
+            },
+            "args": ["test", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "--unstable"],
+            "problemMatcher": [],
+        },
+    ]
+}

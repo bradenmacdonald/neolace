@@ -1,16 +1,15 @@
-import { suite, test, assert, beforeEach } from "../lib/intern-tests";
-import { graph } from "./graph";
-import { testExports } from "./User";
+import { group, test, assertEquals, assert } from "neolace/lib/tests.ts";
+import { testExports } from "neolace/core/User.ts";
 
-suite(__filename, () => {
+group(import.meta, () => {
 
-    suite("createBotAuthToken", () => {
+    group("createBotAuthToken", () => {
 
         const {createBotAuthToken} = testExports;
 
         test("has a length of 64 characters", async () => {
             const token: string = await createBotAuthToken();
-            assert.lengthOf(token, 64);
+            assertEquals(token.length, 64);
         });
 
         test("is different every time", async () => {
@@ -20,12 +19,12 @@ suite(__filename, () => {
             for (let i = 0; i < count; i++) {
                 tokens.add( await createBotAuthToken() );
             }
-            assert.equal(tokens.size, count);
+            assertEquals(tokens.size, count);
         });
 
         test("does not contain any '.' (so is easily distinguished from a JWT like our human users use)", async () => {
             const token: string = await createBotAuthToken();
-            assert.notInclude(token, ".");
+            assert(!token.includes("."));
         });
     });
 });

@@ -1,3 +1,4 @@
+import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
     VNodeType,
@@ -8,15 +9,15 @@ import {
     defineAction,
     VNID,
     VNodeTypeRef,
-} from "vertex-framework";
-import { makeCachedLookup } from "../lib/lru-cache";
-import { graph } from "./graph";
+} from "neolace/deps/vertex-framework.ts";
+import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
+import { graph } from "neolace/core/graph.ts";
 
 
 // Forward reference
 export const SiteRef: typeof Site = VNodeTypeRef("Site");
 
-import { CreateGroup, GroupMaxDepth, GroupRef as Group } from "./Group";
+import { CreateGroup, GroupMaxDepth, Group } from "./Group.ts";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +76,7 @@ export class Site extends VNodeType {
          * 
          * This is an internal detail and is never exposed via the API. It should also never change.
          */
-        siteCode: Field.String.Check(sc => sc.regex(siteCodeRegex)),
+        siteCode: Field.String.Check(check.string.regexp(siteCodeRegex)),
         /**
          * The canonical domain for this site, e.g. "mysite.neolace.com".
          *
@@ -83,13 +84,13 @@ export class Site extends VNodeType {
          * own, e.g. by registering a site on Neolace.com and changing the domain to "microsoft.com"
          */
         domain: Field.String,
-        description: Field.NullOr.String.Check(desc => desc.max(5_000)),
+        description: Field.NullOr.String.Check(check.string.max(5_000)),
 
         // Access Mode: Determines what parts of the site are usable without logging in
-        accessMode: Field.String.Check(am => am.valid(...Object.values(AccessMode))),
+        accessMode: Field.String.Check(check.Schema.enum(AccessMode)),
     };
 
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo({
         // HAS_USER_ROLE: {
         //     to: [User],
         //     properties: {role: Joi.string().allow("admin", "editor", "contributor", "viewer").required()},
@@ -100,15 +101,15 @@ export class Site extends VNodeType {
         //     cardinality: VNodeType.Rel.ToMany,
         // },
     });
-    static readonly virtualProperties = VNodeType.hasVirtualProperties({
+    static readonly virtualProperties = this.hasVirtualProperties(() => ({
         groupsFlat: {
             // A flattened list of all the user groups that this site has
             type: VirtualPropType.ManyRelationship,
             query: C`(@target:${Group})-[:${Group.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(@this)`,
             target: Group,
         },
-    });
-    static readonly derivedProperties = VNodeType.hasDerivedProperties({
+    }));
+    static readonly derivedProperties = this.hasDerivedProperties({
         // None at the moment.
     });
 }
@@ -162,6 +163,7 @@ export const CreateSite = defineAction({
                 siteCode = siteCodeFromNumber(Math.floor(Math.random() * siteCodesMaxCount));
             } while (await siteCodeIsTaken());
         }
+        // deno-lint-ignore no-explicit-any
         const resultData: any = {id, siteCode};
         const modifiedNodes: VNID[] = [id];
 

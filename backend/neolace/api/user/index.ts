@@ -1,34 +1,18 @@
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors } from "../";
-import { CreateUser } from "../../core/User";
-import { getPublicUserData } from "./_helpers";
+import { NeolaceHttpResource, graph, api, adaptErrors, } from "neolace/api/mod.ts";
+import { CreateUser } from "../../core/User.ts";
+import { getPublicUserData } from "./_helpers.ts";
 
-defineEndpoint(__filename, {
-    method: "POST",
-    options: {
+export class UserIndexResource extends NeolaceHttpResource {
+    static paths = ["/user"];
+
+    POST = this.method({
+        responseSchema: api.schemas.UserDataResponse,
+        requestBodySchema: api.schemas.CreateHumanUser,
         description: "Create a user account",
         notes: "This is only for human users; bots should use the bot API. Every human should have one account; creating multiple accounts is discouraged.",
-        auth: false,
-        tags: ["api"],
-        validate: {
-            payload: Joi.object({
-                email: Joi.string().required(),
-                fullName: Joi.string(),
-                username: Joi.string(),
-            }),
-        },
-    },
-    handler: async (request, h) => {
+    }, async (payload) => {
+        const result = await graph.runAsSystem(CreateUser(payload)).catch(adaptErrors("email", "fullName", adaptErrors.remap("slugId", "username")));  // An error in the "slugId" property gets remapped into the "username" field
 
-        const payload: {username?: string, fullName?: string, email: string} = request.payload as any;
-
-        const result = await graph.runAsSystem(CreateUser({
-            email: payload.email,
-            fullName: payload.fullName,
-            username: payload.username,
-        })).catch(adaptErrors("email", "fullName", adaptErrors.remap("slugId", "username")));  // An error in the "slugId" property gets remapped into the "username" field
-
-        const newUserData: api.PublicUserData = await getPublicUserData(result.id);
-        return h.response(newUserData);
-
-    },
-});
+        return await getPublicUserData(result.id);
+    });
+}

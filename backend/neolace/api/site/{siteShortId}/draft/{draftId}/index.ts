@@ -1,24 +1,22 @@
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors, requirePermission, permissions, getSiteDetails } from "../../../..";
-import { getDraft } from "../_helpers";
+import { NeolaceHttpResource, graph, api, permissions } from "neolace/api/mod.ts";
+import { getDraft } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 
-defineEndpoint(__filename, {
-    method: "GET",
-    options: {
+
+
+export class DraftResource extends NeolaceHttpResource {
+    static paths = ["/site/:siteShortId/draft/:draftId"];
+
+    GET = this.method({
+        responseSchema: api.DraftSchema,
         description: "Get a draft",
-        //notes: "...",
-        auth: {mode: "optional", strategy: "technotes_strategy"},
-        tags: ["api"],
-        validate: {},
-    },
-    handler: async (request, h) => {
+    }, async () => {
         // Permissions and parameters:
-        await requirePermission(request, permissions.CanViewDrafts);
-        const {siteId} = await getSiteDetails(request);
-        const draftId = request.params.draftId;
+        await this.requirePermission(permissions.CanViewDrafts);
+        const {siteId} = await this.getSiteDetails();
+        const draftId = VNID(this.request.getPathParam("draftId") ?? "");
 
         // Response:
-        const draftData = await graph.read(tx => getDraft(draftId, siteId, tx));
-        return h.response(draftData);
-
-    },
-});
+        return await graph.read(tx => getDraft(draftId, siteId, tx));
+    });
+}

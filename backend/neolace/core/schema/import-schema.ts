@@ -1,7 +1,7 @@
-import { SiteSchemaData } from "neolace-api";
-import { defineAction, VNID } from "vertex-framework";
-import { ApplyEdits } from "../edit/ApplyEdits";
-import { getCurrentSchema, diffSchema } from "./get-schema";
+import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { defineAction, VNID } from "neolace/deps/vertex-framework.ts";
+import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { getCurrentSchema, diffSchema } from "neolace/core/schema/get-schema.ts";
 
 
 /**

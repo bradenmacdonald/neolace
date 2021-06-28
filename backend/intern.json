@@ -1,6 +1,0 @@
-{
-    "$schema": "./node_modules/intern/schemas/config.json",
-    "suites": "./neolace/**/*.test.ts",
-    "environments": ["node"],
-    "coverage": ["./neolace/**/*.ts", "!./neolace/**/*.test.ts", "!./neolace/app/*"]
-}

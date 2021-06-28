@@ -1,35 +1,25 @@
-import { C } from "vertex-framework";
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint } from "..";
-import { authClient } from "../authn";
-import { HumanUser } from "../../core/User";
+import { C, Field } from "neolace/deps/vertex-framework.ts";
+import { NeolaceHttpResource, graph, api, log } from "neolace/api/mod.ts";
+import { authClient } from "neolace/core/authn-client.ts";
+import { HumanUser } from "../../core/User.ts";
 
-// See also core/auth/authn-hooks.ts
 
-defineEndpoint(__filename, {
-    method: "POST",
-    options: {
+export class RequestLoginResource extends NeolaceHttpResource {
+    static paths = ["/auth/request-login"];
+
+    POST = this.method({
+        requestBodySchema: api.schemas.Schema({email: Field.validators.email, }),
+        responseSchema: api.schemas.Schema({requested: api.schemas.boolean}),
         description: "Request passwordless login",
-        auth: false,
-        tags: ["api"],
-        validate: {
-            payload: Joi.object({
-                email: Joi.string().required(),
-            }).label("PasswordlessLoginRequest"),
-        },
-        response: { status: {
-            200: Joi.object({requested: Joi.boolean().required()}).label("PasswordlessLoginResponse"),
-        } },
-    },
-    handler: async (request, h) => {
-        const email = (request.payload as any).email;
+    }, async ({email}) => {
         try {
             const user = await graph.pullOne(HumanUser, u => u.id, {where: C`@this.email = ${email}`});
             await authClient.requestPasswordlessLogin({username: user.id});
         } catch (err) {
             log.debug(`Passwordless login request failed: ${err}`);
-            return h.response({requested: false});
+            return {requested: false};
         }
         log.debug(`Passwordless login request for ${email}`);
-        return h.response({requested: true});
-    },
-});
+        return {requested: true};
+    });
+}

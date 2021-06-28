@@ -1,6 +1,6 @@
-import { Vertex } from "vertex-framework";
-import { config } from "../app/config";
-import { onShutDown } from "../app/shutdown";
+import { Vertex } from "neolace/deps/vertex-framework.ts";
+import { config } from "neolace/app/config.ts";
+import { onShutDown } from "neolace/app/shutdown.ts";
 
 export const graph = new Vertex({
     neo4jUrl: config.neo4jUrl,

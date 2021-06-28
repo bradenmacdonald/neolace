@@ -12,15 +12,15 @@ import {
     VNodeKey,
     VNID,
     Field,
-} from "vertex-framework";
+} from "neolace/deps/vertex-framework.ts";
 
 // How many levels of groups a site can have (groups can be nested, e.g. Employees > Managers > C-level)
 export const GroupMaxDepth = 4;
 
 // Forward reference
 export const GroupRef: typeof Group = VNodeTypeRef("Group");
-import { SiteRef as Site } from "./Site";
-import { User } from "./User";
+import { Site } from "neolace/core/Site.ts";
+import { User } from "neolace/core/User.ts";
 
 
 export const enum PermissionGrant {
@@ -75,31 +75,31 @@ export class Group extends VNodeType {
         });
     }
 
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo(() => ({
         // Which Site or group owns this one.
         BELONGS_TO: {
-            to: [Site, Group],
+            to: [Site, this],
             cardinality: VNodeType.Rel.ToOneRequired,
         },
         HAS_USER: {
             to: [User],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
-    });
+    }));
 
-    static readonly virtualProperties = VNodeType.hasVirtualProperties({
+    static readonly virtualProperties = this.hasVirtualProperties(() => ({
         // The site that this group belongs to
         site: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${Group.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(@target:${Site})`,
+            query: C`(@this)-[:${this.rel.BELONGS_TO}*1..${C(String(GroupMaxDepth))}]->(@target:${Site})`,
             target: Site,
         },// The site that this group belongs to
         parentGroup: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${Group.rel.BELONGS_TO}]->(@target:${Group})`,
-            target: Group,
+            query: C`(@this)-[:${this.rel.BELONGS_TO}]->(@target:${Group})`,
+            target: this,
         },
-    });
+    }));
 
 }
 
@@ -129,7 +129,7 @@ export const UpdateGroup = defaultUpdateFor(Group, g => g
             if (args.belongsTo !== undefined) {
 
                 // Helper function: given the key (VNID or slugId) of a Group or Site, return the VNID of the associated site
-                const getSiteIdForGS = async (key: VNodeKey): Promise<VNID> => tx.queryOne(C`
+                const getSiteIdForGS = (key: VNodeKey): Promise<VNID> => tx.queryOne(C`
                     MATCH (parent:VNode)-[:${Group.rel.BELONGS_TO}*0..${C(String(GroupMaxDepth))}]->(site:${Site}), parent HAS KEY ${key}
                     WHERE parent:${Group} OR parent:${Site}
                 `.RETURN({"site.id": Field.VNID})).then(r => r["site.id"]);

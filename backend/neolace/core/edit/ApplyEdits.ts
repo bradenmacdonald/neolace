@@ -1,8 +1,9 @@
-import { C, defineAction, VNID } from "vertex-framework";
-import { Site } from "../Site";
-import { EditList, ContentType, CreateEntryType, CreateRelationshipType, UpdateEntryType, UpdateRelationshipType } from "neolace-api";
-import { EntryType } from "../schema/EntryType";
-import { RelationshipType } from "../schema/RelationshipType";
+// deno-lint-ignore-file no-explicit-any
+import { EditList, ContentType, CreateEntryType, CreateRelationshipType, UpdateEntryType, UpdateRelationshipType } from "neolace/deps/neolace-api.ts";
+import { C, defineAction, VNID } from "neolace/deps/vertex-framework.ts";
+import { Site } from "../Site.ts";
+import { EntryType } from "neolace/core/schema/EntryType.ts";
+import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 
 /**
  * Apply a set of edits (to schema and/or content)

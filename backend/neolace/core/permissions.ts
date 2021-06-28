@@ -11,10 +11,10 @@
  * Users can be assigned to "Groups", and groups can be granted additional authorization Grants. If a user belongs to a
  * group with the "approveSchemaChanges" Grant, for example, then the user is authorized to approve schema changes.
  */
-import { C, Field, VNID, WrappedTransaction } from "vertex-framework";
-import { Group, GroupMaxDepth, PermissionGrant } from "./Group";
-import { AccessMode, Site } from "./Site";
-import { BotUser, User } from "./User";
+import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { Group, GroupMaxDepth, PermissionGrant } from "neolace/core/Group.ts";
+import { AccessMode, Site } from "neolace/core/Site.ts";
+import { BotUser, User } from "neolace/core/User.ts";
 
 
 export interface CheckContext {

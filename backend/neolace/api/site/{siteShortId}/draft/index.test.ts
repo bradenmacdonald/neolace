@@ -1,9 +1,9 @@
-import { isVNID, VNID } from "vertex-framework";
-import { suite, test, assert, before, beforeEach, setTestIsolation, getClient, assertRejectsWith, assertRejects } from "../../../../lib/intern-tests";
+import { isVNID } from "neolace/deps/vertex-framework.ts";
+import { group, test, setTestIsolation, assert, getClient } from "neolace/api/tests.ts";
 
-suite(__filename, () => {
+group(import.meta, () => {
 
-    suite("Creating a draft", () => {
+    group("Creating a draft", () => {
 
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
@@ -12,12 +12,13 @@ suite(__filename, () => {
          */
         test("can create an empty draft", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
-            const client = getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
             const result = await client.createDraft({
                 title: "A Test Draft",
                 description: null,
+                edits: [],
             });
-            assert.isTrue(isVNID(result.id));
+            assert(isVNID(result.id));
         });
 
     });

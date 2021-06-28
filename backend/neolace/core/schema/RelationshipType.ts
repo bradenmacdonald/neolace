@@ -1,3 +1,5 @@
+import * as check from "neolace/deps/computed-types.ts";
+import { RelationshipCategory } from "neolace/deps/neolace-api.ts";
 import {
     C,
     Field,
@@ -5,12 +7,10 @@ import {
     ValidationError,
     VirtualPropType,
     VNodeType,
-    VNodeTypeRef,
     WrappedTransaction,
-} from "vertex-framework";
-import { Site } from "../Site";
-import { EntryType } from "./EntryType";
-import { RelationshipCategory } from "neolace-api";
+} from "neolace/deps/vertex-framework.ts";
+import { Site } from "neolace/core/Site.ts";
+import { EntryType } from "neolace/core/schema/EntryType.ts";
 
 
 /**
@@ -26,15 +26,12 @@ export class RelationshipType extends VNodeType {
         /** The name of the reverse of this RelationshipType (e.g. TO_ENTRY_TYPE "has derivatives" FROM_ENTRY_TYPE) */
         nameReverse: Field.String,
         /** Description: Short, rich text summary of the relationship  */
-        description: Field.NullOr.String.Check(desc => desc.max(5_000)),
+        description: Field.NullOr.String.Check(check.string.trim().max(5_000)),
         /** Relationship category - cannot be changed */
-        category: Field.String.Check(c => c.valid(
-            RelationshipCategory.IS_A,
-            RelationshipCategory.HAS_A,
-        )),
+        category: Field.String.Check(check.Schema.enum(RelationshipCategory)),
     };
 
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo({
         /** Which Site this relationship type is part of */
         FOR_SITE: {
             to: [Site],
@@ -51,25 +48,25 @@ export class RelationshipType extends VNodeType {
         },
     });
 
-    static virtualProperties = VNodeType.hasVirtualProperties({
+    static virtualProperties = this.hasVirtualProperties({
         site: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${RelationshipType.rel.FOR_SITE}]->(@target)`,
+            query: C`(@this)-[:${this.rel.FOR_SITE}]->(@target)`,
             target: Site,
         },
         fromTypes: {
             type: VirtualPropType.ManyRelationship,
-            query: C`(@this)-[:${RelationshipType.rel.FROM_ENTRY_TYPE}]->(@target)`,
+            query: C`(@this)-[:${this.rel.FROM_ENTRY_TYPE}]->(@target)`,
             target: EntryType,
         },
         toTypes: {
             type: VirtualPropType.ManyRelationship,
-            query: C`(@this)-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(@target)`,
+            query: C`(@this)-[:${this.rel.TO_ENTRY_TYPE}]->(@target)`,
             target: EntryType,
         },
     });
 
-    static derivedProperties = VNodeType.hasDerivedProperties({
+    static derivedProperties = this.hasDerivedProperties({
         // numRelatedImages,
     });
 

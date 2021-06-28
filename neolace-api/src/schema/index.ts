@@ -1,2 +1,2 @@
-export * from "./SchemaEdit";
-export * from "./SiteSchemaData";
+export * from "./SchemaEdit.ts";
+export * from "./SiteSchemaData.ts";

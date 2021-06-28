@@ -1,20 +1,15 @@
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint } from "../";
-import { getPublicUserData } from "./_helpers";
+import { NeolaceHttpResource, api } from "neolace/api/mod.ts";
+import { getPublicUserData } from "./_helpers.ts";
 
-defineEndpoint(__filename, {
-    method: "GET",
-    options: {
+export class UserMeResource extends NeolaceHttpResource {
+    static paths = ["/user/me"];
+
+    GET = this.method({
+        responseSchema: api.schemas.UserDataResponse,
         description: "Get my public profile data",
         notes: "Get information about the logged in user (or bot)",
-        auth: "technotes_strategy",
-        validate: {},
-    },
-    handler: async (request, h) => {
-        const user = request.auth.credentials.user;
-        if (user === undefined) {
-            throw Boom.internal("Auth Expected");
-        }
-        const data: api.PublicUserData = await getPublicUserData(user.username);
-        return h.response(data);
-    },
-});
+    }, async () => {
+        const user = this.requireUser();
+        return await getPublicUserData(user.username);
+    });
+}

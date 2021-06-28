@@ -1,0 +1,14 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile bundle for Node.js",
+            "type": "shell",
+            "command": "deno",
+            "args": ["run", "--allow-read", "--allow-write", "--unstable", "_compile.ts"],
+            "problemMatcher": []
+        },
+    ]
+}

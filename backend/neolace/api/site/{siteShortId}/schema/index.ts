@@ -1,23 +1,19 @@
-import { Hapi, Boom, Joi, log, graph, api, defineEndpoint, adaptErrors, requirePermission, permissions, getSiteDetails } from "../../..";
-import { getCurrentSchema } from "../../../../core/schema/get-schema";
+import { NeolaceHttpResource, graph, api, permissions } from "neolace/api/mod.ts";
+import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 
-defineEndpoint(__filename, {
-    method: "GET",
-    options: {
+
+export class SchemaIndexResource extends NeolaceHttpResource {
+    static paths = ["/site/:siteShortId/schema"];
+
+    GET = this.method({
+        responseSchema: api.SiteSchemaSchema,
         description: "Get the site's schema",
-        //notes: "...",
-        auth: {mode: "optional", strategy: "technotes_strategy"},
-        tags: ["api"],
-        validate: {},
-    },
-    handler: async (request, h) => {
+    }, async () => {
         // Permissions and parameters:
-        await requirePermission(request, permissions.CanViewSchema);
-        const {siteId} = await getSiteDetails(request);
+        await this.requirePermission(permissions.CanViewSchema);
+        const {siteId} = await this.getSiteDetails();
 
         // Response:
-        const schema = await graph.read(tx => getCurrentSchema(tx, siteId));
-        return h.response(schema);
-
-    },
-});
+        return await graph.read(tx => getCurrentSchema(tx, siteId));
+    });
+}

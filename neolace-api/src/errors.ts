@@ -1,8 +1,8 @@
 /** Base class for any error that can occur when using the Neolace API */
 export class ApiError extends Error {
-    readonly statusCode: number|undefined;
+    readonly statusCode: number;
 
-    constructor(message: string, statusCode?: number) {
+    constructor(message: string, statusCode: number) {
         super(message);
         this.name = "ApiError";
         this.statusCode = statusCode;
@@ -61,10 +61,11 @@ export class InvalidRequest extends ApiError {
  * One or more of the fields you provided is invalid, e.g. blank, too short, too long, invalid character, etc.
  */
 export class InvalidFieldValue extends InvalidRequest {
-    readonly fields: string[];
-    constructor(fields: string[], message: string) {
-        super(InvalidRequestReason.Invalid_field_value, message);
-        this.fields = fields;
+    readonly fieldErrors: {fieldPath: string, message: string}[];
+    constructor(fieldErrors: {fieldPath: string, message: string}[]) {
+        const message = fieldErrors.map(fe => `${fe.fieldPath}: ${fe.message}`).join(", ");
+        super(InvalidRequestReason.InvalidFieldValue, message);
+        this.fieldErrors = fieldErrors;
         this.name = "InvalidFieldValue";
     }
 }
@@ -72,11 +73,13 @@ export class InvalidFieldValue extends InvalidRequest {
 // This is a const enum so that it has minimal overhead
 export const enum InvalidRequestReason {
     /** One or more of the fields you provided is invalid, e.g. blank, too short, too long, invalid character, etc. */
-    Invalid_field_value = "400_INVALID_FIELD",
+    InvalidFieldValue = "400_INVALID_FIELD",
     /** Tried to register a user account, but another account already exists with the same email */
-    Email_already_registered = "400_EMAIL_EXISTS",
+    EmailAlreadyRegistered = "400_EMAIL_EXISTS",
     /** Tried to register a user account, but another account already exists with the same username */
-    Username_already_registered = "400_USERNAME_EXISTS",
+    UsernameAlreadyRegistered = "400_USERNAME_EXISTS",
     /** Tried to accept a draft that contains no edits */
-    Draft_is_empty = "400_DRAFT_EMPTY",
+    DraftIsEmpty = "400_DRAFT_EMPTY",
+    /** The server returned a 400 bad request code without a 'reason' that this API client understands. */
+    OtherReason = "400",
 }

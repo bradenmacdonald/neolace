@@ -3,7 +3,7 @@
  */
 
 // What type of environment this is: development, production, or testing
-export const environment = (process.env.NODE_ENV as "production"|"development"|"test") || "development";
+export const environment = (Deno.env.get("ENV_TYPE") as "production"|"development"|"test"|undefined) || "development";
 if (!["production", "development", "test"].includes(environment)) {
     throw new Error(`Invalid NODE_ENV: ${environment}`);
 }
@@ -26,7 +26,7 @@ export const config = (() => {
         // Port to listen on
         port: defaultTo(5554, {test: 4444}),
         // Full URL at which the REST API is available
-        apiUrl: defaultTo("http://localhost:5554", {test: "http://backend:4444"}),
+        apiUrl: defaultTo("http://localhost:5554", {test: "http://localhost:4444"}),
 
         /**
          * URL for the Realm admin UI. This is where you can create a new site, register a user account, etc.
@@ -35,15 +35,15 @@ export const config = (() => {
 
 
         // URL of the Neo4j server
-        neo4jUrl: defaultTo("bolt://neo4j", {test: "bolt://neo4j-test"}),
+        neo4jUrl: defaultTo("bolt://localhost:7687", {test: "bolt://localhost:4687"}),
         neo4jUser: "neo4j",
         neo4jPassword: defaultTo("neolace", {production: "\u0000 setme!!"}),
         // Should debug logs be printed to stdout?
         debugLogging: defaultTo(true, {production: false}),
         // Public URL of the authentication microservice (Keratin AuthN)
-        authnUrl: defaultTo("http://localhost:5552", {test: "http://authn-test:5552"}),
+        authnUrl: defaultTo("http://localhost:5552", {test: "http://localhost:5552"}),
         // Private URL of the authentication microservice (Keratin AuthN)
-        authnPrivateUrl: defaultTo("http://authn:5559", {test: "http://authn-test:5559"}),
+        authnPrivateUrl: defaultTo("http://localhost:5559", {test: "http://localhost:4449"}),
         // Username for making private API requests to the authentication microservice (Keratin AuthN)
         authnApiUsername: "authn",
         // Password for making private API requests to the authentication microservice (Keratin AuthN)
@@ -59,14 +59,16 @@ export const config = (() => {
     };
     // Allow defaults to be overriden by environment variables:
     for (const key in config) {
-        const value = process.env[key];
+        const value = Deno.env.get(key);
         if (value !== undefined) {
             try {
                 // Use JSON parsing to get nicely typed values from env vars:
+                // deno-lint-ignore no-explicit-any
                 (config as any)[key] = JSON.parse(value)
             } catch (err) {
                 // Though JSON parsing will fail if it's just a regular unquoted string:
                 if (err instanceof SyntaxError) {
+                    // deno-lint-ignore no-explicit-any
                     (config as any)[key] = value; // It's a string value
                 } else {
                     throw err;

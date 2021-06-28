@@ -1,0 +1,51 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run neolace server",
+            "request": "launch",
+            "type": "pwa-node",
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "deno",
+            "env": {
+                "ENV_TYPE": "development",
+            },
+            "runtimeArgs": [
+                "run",
+                "--unstable",
+                "--inspect",
+                "--import-map=import_map.json",
+                "--allow-net",
+                "--allow-env",
+                "neolace/api/server.ts"
+            ],
+            "attachSimplePort": 9229,
+            "console": "integratedTerminal",
+        }
+        /*{
+            "name": "Deno: Setup test data",
+            "request": "launch",
+            "type": "pwa-node",
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "deno",
+            "env": {
+                "ENV_TYPE": "test",
+            },
+            "runtimeArgs": [
+                "run",
+                "--unstable",
+                "--inspect",
+                "--import-map=import_map.json",
+                "--allow-write",
+                "--allow-net",
+                "--allow-env",
+                "neolace/scripts/test-setup.ts"
+            ],
+            "attachSimplePort": 9229,
+            "console": "integratedTerminal",
+        },*/
+    ]
+}

@@ -70,6 +70,7 @@ services:
     << : *authn-defaults
     ports:
       - 5552:5552  # Expose public port to the host computer so users can log in
+      - 5559:5559  # Private port
     volumes:
       - authn-data:/data
   authn-test:
@@ -80,6 +81,7 @@ services:
       APP_DOMAINS: backend:4445
     ports:
       - 4442:5552  # Expose public port to the host computer so users can log in
+      - 4449:5559  # Expose public port to the host computer so users can log in
     volumes:
       - authn-data:/data
 
@@ -99,28 +101,28 @@ services:
       - objstore-data:/data
 
   ################################################################
-  # NodeJS container for the backend (dev mode)
+  # Deno container for the backend (dev mode)
   ################################################################
-  backend:
-    build:
-      context: backend/
-      dockerfile: dev.Dockerfile
-    depends_on:
-      - neo4j
-      - redis
-      - authn
-      - objstore
-    stdin_open: true
-    tty: true
-    volumes:
-      - ./backend/:/app/
-      - ./neolace-api/:/neolace-api/
-      # External repos that must be cloned to the parent directory:
-      - ../vertex-framework/:/dependencies/vertex-framework/:ro
-      - ../technotes-mdt/:/dependencies/technotes-mdt/:ro
-    ports:
-      - 5553:5553  # NodeJS debugger
-      - 5554:5554  # The Backend server (HTTP)
+  # backend:
+  #   build:
+  #     context: backend/
+  #     dockerfile: dev.Dockerfile
+  #   depends_on:
+  #     - neo4j
+  #     - redis
+  #     - authn
+  #     - objstore
+  #   stdin_open: true
+  #   tty: true
+  #   volumes:
+  #     - ./backend/:/app/
+  #     - ./neolace-api/:/neolace-api/
+  #     # External repos that must be cloned to the parent directory:
+  #     - ../vertex-framework/:/dependencies/vertex-framework/:ro
+  #     - ../technotes-mdt/:/dependencies/technotes-mdt/:ro
+  #   ports:
+  #     - 5553:5553  # NodeJS debugger
+  #     - 5554:5554  # The Backend server (HTTP)
 
   ################################################################
   # NodeJS container for the frontend (dev mode)

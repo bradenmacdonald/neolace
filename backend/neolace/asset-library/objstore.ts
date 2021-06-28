@@ -1,10 +1,11 @@
+/*
 // Use "minio" client to connect
 import crypto from "crypto";
 import { Readable, Transform } from "stream";
 import * as Minio from "minio";
-import { VNID } from "vertex-framework";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 
-import { config } from "../app/config";
+import { config } from "../app/config.ts";
 
 // Backblaze B2 is not perfectly compatible with the S3 API, and in particular will
 // give an error when the MinIO client tries to auto-detect the "region", so if using
@@ -37,7 +38,7 @@ export async function uploadFileToObjStore(fileStream: Readable, contentType: st
 
     /**
      * Transform stream that passes data through while computing the hash and size of the data.
-     */
+     */ /*
     const hashTransform = new Transform({
         transform(chunk, encoding, callback) {
             sizeCalculator += chunk.length;
@@ -90,3 +91,4 @@ export async function uploadFileToObjStore(fileStream: Readable, contentType: st
         size,
     };
 }
+*/

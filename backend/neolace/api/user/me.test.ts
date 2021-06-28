@@ -1,19 +1,17 @@
-import * as api from "neolace-api";
-import { NotAuthenticated } from "neolace-api";
-import { suite, test, assert, before, beforeEach, setTestIsolation, getClient, assertRejectsWith } from "../../lib/intern-tests";
+import { group, test, assertEquals, setTestIsolation, getClient, assertThrowsAsync, api } from "neolace/api/tests.ts";
 
-suite(__filename, () => {
+group(import.meta, () => {
 
-    suite("Get information about my own account", () => {
+    group("Get information about my own account", () => {
 
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
 
         test("can check who is logged in", async () => {
 
             // Get an API client, logged in as a bot that belongs to Alex
-            const client = getClient(defaultData.users.admin);
+            const client = await getClient(defaultData.users.admin);
             const result = await client.whoAmI();
-            assert.deepStrictEqual(result, {
+            assertEquals(result, {
                 isBot: true,
                 fullName: defaultData.users.admin.bot.fullName,
                 ownedByUsername: defaultData.users.admin.username,
@@ -24,11 +22,11 @@ suite(__filename, () => {
         test("can report when not logged in", async () => {
 
             // Get an API client, not logged in
-            const client = getClient();
+            const client = await getClient();
 
-            await assertRejectsWith(
-                client.whoAmI(),
-                NotAuthenticated,
+            await assertThrowsAsync(
+                () => client.whoAmI(),
+                api.NotAuthenticated,
             );
         });
     })
