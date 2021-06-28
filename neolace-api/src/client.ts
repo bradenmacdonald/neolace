@@ -135,7 +135,7 @@ export class NeolaceApiClient {
      * Request passwordless login
      */
     public async requestPasswordlessLogin(data: {email: string}): Promise<PasswordlessLoginResponse> {
-        return await this.call("/user/request-login", {method: "POST", data});
+        return await this.call("/auth/request-login", {method: "POST", data});
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
