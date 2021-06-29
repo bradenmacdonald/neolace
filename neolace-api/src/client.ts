@@ -26,6 +26,7 @@ interface RequestArgs {
     body?: BodyInit | null;
     headers?: Record<string, string>;
     redirect?: RequestRedirect;
+    noAuth?: boolean;  // If true, the "Authorization" header/token will never be sent for this request. Avoids 401 errors when getting a new token if current token is invalid.
 }
 
 export class NeolaceApiClient {
@@ -58,6 +59,9 @@ export class NeolaceApiClient {
         }
         if (this.authToken) {
             extraHeaders["Authorization"] = `Bearer ${this.authToken}`;
+        }
+        if (args.noAuth) {
+            delete extraHeaders["Authorization"];
         }
         args.headers = {"Content-Type": "application/json", ...args.headers, ...extraHeaders};
         return this.fetchApi(this.basePath + path, args);
@@ -135,7 +139,7 @@ export class NeolaceApiClient {
      * Request passwordless login
      */
     public async requestPasswordlessLogin(data: {email: string}): Promise<PasswordlessLoginResponse> {
-        return await this.call("/auth/request-login", {method: "POST", data});
+        return await this.call("/auth/request-login", {method: "POST", data, noAuth: true});
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

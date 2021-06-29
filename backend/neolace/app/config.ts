@@ -31,7 +31,7 @@ export const config = (() => {
         /**
          * URL for the Realm admin UI. This is where you can create a new site, register a user account, etc.
          */
-        realmAdminUrl: defaultTo("http://0.0.0.0:5555", {test: "http://frontend-realm-admin"}),
+        realmAdminUrl: defaultTo("http://localhost:5555", {test: "http://frontend-realm-admin"}),
 
 
         // URL of the Neo4j server

@@ -20,7 +20,9 @@ export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve 
                 neolaceAuthMiddleware,
             ],
             after_request: [
-                Cors(),
+                Cors({
+                    allowHeaders: ["Accept", "Authorization", "Content-Type", "If-None-Match"],
+                }),
             ],
         },
     });

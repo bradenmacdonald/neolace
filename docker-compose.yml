@@ -19,8 +19,8 @@ x-service-templates:
       &authn-environment-defaults
       PORT: 5559
       PUBLIC_PORT: 5552
-      APP_PASSWORDLESS_TOKEN_URL: http://backend:5554/auth/hooks/passwordless-login
-      APP_PASSWORD_RESET_URL: http://backend:5554/auth/hooks/password-reset
+      APP_PASSWORDLESS_TOKEN_URL: http://host.docker.internal:5554/auth/passwordless-login
+      APP_PASSWORD_RESET_URL: http://host.docker.internal:5554/auth/password-reset
       DATABASE_URL: sqlite3://localcontainer/data/authn.sqlite3?cache=shared
       SECRET_KEY_BASE: neolace-dev
       HTTP_AUTH_USERNAME: authn
@@ -96,7 +96,7 @@ services:
       MINIO_SECRET_KEY: neolace123
     ports:
       - 9000:9000
-      - 5555:5555  # For the frontend, see note in "frontend" service definition
+      #- 5555:5555  # For the frontend, see note in "frontend" service definition
     volumes:
       - objstore-data:/data
 
@@ -141,7 +141,7 @@ services:
   #   # having to sometimes use "objstore:9000" and other times use "localhost:9000" depending on whether the end user's
   #   # browser or the Node.js server is handling the request.
   #   network_mode: "service:objstore"
-    
+
 volumes:
   neo4j-data:
   authn-data:
