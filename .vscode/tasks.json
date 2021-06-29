@@ -3,37 +3,5 @@
     // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
-        {
-            "label": "Run neolace database servers",
-            "type": "shell",
-            "command": "docker-compose",
-            "args": ["up"],
-            "isBackground": true,
-            "options": {
-                "cwd": "${workspaceFolder}",
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Reset DB with Dev Data",
-            "type": "shell",
-            "command": "docker-compose",
-            "args": ["exec", "backend", "npm", "run", "dev-data"],
-            "problemMatcher": []
-        },
-        {
-            "label": "Fully Reset/Wipe Neo4j Database",
-            "type": "shell",
-            "command": "docker-compose",
-            "args": ["rm", "--stop", "--force", "-v", "neo4j"],
-            "problemMatcher": []
-        },/*
-        {
-            "label": "Backend: Apply migrations",
-            "type": "shell",
-            "command": "docker-compose",
-            "args": ["exec", "backend", "npm", "run", "migrate"],
-            "problemMatcher": []
-        },*/
     ]
 }
