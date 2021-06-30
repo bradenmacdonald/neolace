@@ -3,10 +3,10 @@ import { config } from "neolace/app/config.ts";
 
 
 export class PasswordlessLoginWebhookResource extends NeolaceHttpResource {
-    static paths = ["/auth/request-login"];
+    static paths = ["/auth/passwordless-login"];
 
     POST = this.method({
-        requestBodySchema: api.schemas.Schema({account_id: api.schemas.number, token: api.schemas.string }),
+        requestBodySchema: api.schemas.Schema({account_id: api.schemas.string, token: api.schemas.string }),
         responseSchema: api.schemas.Schema({}),
         description: "Passwordless login webhook",
         notes: "Passwordless login webhook (called by the Keratin AuthN microservice)",

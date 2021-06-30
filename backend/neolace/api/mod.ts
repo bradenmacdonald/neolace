@@ -62,6 +62,7 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
                     if (err instanceof api.InvalidRequest) { errorData.reason = err.reason; }
                     if (err instanceof api.InvalidFieldValue) { errorData.fieldErrors = err.fieldErrors; }
                     this.response.body = errorData;
+                    log.warning(`Returned error response: ${err.message}`);
                 } else {
                     throw err;  // Let Drash log + handle this error as an internal error
                 }

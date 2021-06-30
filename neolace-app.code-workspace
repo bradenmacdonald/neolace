@@ -9,7 +9,10 @@
 		{
 			"path": ".",
 			"name": "(workspace root)"
-		}
+		},
+		{
+			"path": "frontend"
+		},
 	],
 	"settings": {
 		"editor.rulers": [
@@ -17,7 +20,8 @@
 		],
 		"deno.lint": true,
 		"deno.suggest.imports.hosts": {
-			"https://deno.land": false
+			"https://deno.land": false,
+			"https://raw.githubusercontent.com": false
 		},
 		"deno.unstable": true,
 		"deno.importMap": "./import_map.json"

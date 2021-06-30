@@ -27,5 +27,44 @@
             "args": ["test", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "--unstable"],
             "problemMatcher": [],
         },
+        {
+            "label": "Run backend",
+            "type": "shell",
+            "command": "deno",
+            "args": ["run", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "neolace/api/server.ts"],
+            "problemMatcher": [],
+        },
+        {
+            "label": "Run neolace database servers",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["up"],
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}",
+            },
+            "problemMatcher": [],
+        },
+        {
+            "label": "Set up example data (TechNotes)",
+            "type": "shell",
+            "command": "deno",
+            "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-env", "--unstable", "neolace/scripts/example-technotes.ts"],
+            "problemMatcher": [],
+        },
+        {
+            "label": "Fully reset/erase data",
+            "type": "shell",
+            "command": "docker-compose",
+            "args": ["down", "-v"],
+            "problemMatcher": [],
+        },
+        {
+            "label": "Apply database migrations",
+            "type": "shell",
+            "command": "deno",
+            "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-env", "--unstable", "neolace/scripts/migrate.ts"],
+            "problemMatcher": [],
+        },
     ]
 }

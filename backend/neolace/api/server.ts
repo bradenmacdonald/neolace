@@ -1,5 +1,6 @@
 import * as log from "std/log/mod.ts";
 import { Drash } from "neolace/deps/drash.ts";
+import { Cors } from "neolace/deps/drash-cors.ts";
 import { config } from "neolace/app/config.ts";
 import { neolaceAuthMiddleware } from "neolace/api/auth-middleware.ts";
 import { allResources } from "neolace/api/resources.ts";
@@ -17,6 +18,11 @@ export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve 
         middleware: {
             before_request: [
                 neolaceAuthMiddleware,
+            ],
+            after_request: [
+                Cors({
+                    allowHeaders: ["Accept", "Authorization", "Content-Type", "If-None-Match"],
+                }),
             ],
         },
     });
