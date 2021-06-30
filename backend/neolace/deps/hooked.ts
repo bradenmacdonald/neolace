@@ -1,5 +1,6 @@
 // Copied from https://deno.land/x/hooked@v0.1.0/mod.ts
 // With a bugfix to wrap the inner test case in a try {} finally {}
+// And add explicit exception logging to callAll()
 // The author's other similar JS libraries are MIT licensed so presumably this one is too.
 interface Hooks {
     beforeAll: Array<() => void | Promise<void>>;
@@ -42,7 +43,12 @@ function badArgs(): never {
 }
 
 async function callAll(fns: Array<() => void | Promise<void>>): Promise<void> {
-    await Promise.all(fns.map((fn) => fn()));
+    try {
+        await Promise.all(fns.map((fn) => fn()));
+    } catch (err) {
+        console.error(err);
+        throw err;
+    }
 }
 
 /**

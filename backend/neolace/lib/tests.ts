@@ -1,10 +1,7 @@
 import * as log from "std/log/mod.ts";
-import { NeolaceApiClient } from "neolace/deps/neolace-api.ts"
 
-import { config } from "neolace/app/config.ts";
 import { shutdown } from "neolace/app/shutdown.ts";
 import { graph } from "neolace/core/graph.ts";
-//import { serverPromise } from "neolace/api/server.ts";
 import { testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
 
 import {test as baseTest, group as baseGroup, afterAll, afterEach, beforeAll, beforeEach} from "neolace/deps/hooked.ts";
@@ -124,17 +121,3 @@ export function setTestIsolation(level: TestIsolationLevels): typeof data {
     return data;
 }
 setTestIsolation.levels = TestIsolationLevels;
-
-/**
- * Get an instance of the API client, to use for testing.
- * @param user One of the default users, 
- * @returns 
- */
-export function getClient(user?: {bot: {authToken: string}}, siteShortId?: string): NeolaceApiClient {
-    return new NeolaceApiClient({
-        basePath: config.apiUrl,
-        fetchApi: fetch,
-        authToken: user?.bot.authToken,
-        siteId: siteShortId,
-    });
-}
