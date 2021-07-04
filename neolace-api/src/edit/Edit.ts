@@ -1,16 +1,18 @@
 // deno-lint-ignore-file no-explicit-any
+import { Type, SchemaValidatorFunction } from "../deps/computed-types.ts";
+
 export enum EditChangeType {
     Schema = "schema",
     Content = "content",
 }
 
-export interface EditType<Code extends string = string, DataSchema = Record<string, never>> {
+export interface EditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> {
     changeType: EditChangeType;
     // A string that specifies what edit is being made
     code: Code;
     dataSchema: DataSchema;
-    describe: (data: DataSchema) => string;
+    describe: (data: Type<DataSchema>) => string;
 }
 
 /* Data structure describing a specific edit */
-export type Edit<T extends EditType<string, any>> = {code: T["code"], data: T["dataSchema"]};
+export type Edit<T extends EditType<string, any>> = {code: T["code"], data: Type<T["dataSchema"]>};
