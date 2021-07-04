@@ -5,10 +5,13 @@ import {
     C,
     VNodeType,
     Field,
+    RawVNode,
+    WrappedTransaction,
+    ValidationError,
 } from "neolace/deps/vertex-framework.ts";
 
-import { Image } from "neolace/asset-library/Image.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
+import { RelationshipFact } from "./RelationshipFact.ts";
 
 
 /**
@@ -40,13 +43,9 @@ export class Entry extends VNodeType {
             to: [EntryType],
             cardinality: VNodeType.Rel.ToOneRequired,
         },
-        /** This entry is a child/subtype/variant/category of some other entry */
-        IS_A: {
-            to: [this],
-            properties: {
-                // More specific "type" of this relationship, according to the site's schema
-                detailedRelType: Field.String,
-            },
+        /** This Entry has a relationship to another entry */
+        HAS_REL_FACT: {
+            to: [RelationshipFact],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
         // HAS_ENTRIES: {
@@ -61,48 +60,57 @@ export class Entry extends VNodeType {
             query: C`(@this)-[:${this.rel.IS_OF_TYPE}]->(@target:${EntryType})`,
             target: EntryType,
         },
+        /*
         relatedImages: {
             type: VirtualPropType.ManyRelationship,
             query: C`(@target:${Image})-[:${Image.rel.RELATES_TO}]->(:${this})-[:IS_A*0..10]->(@this)`,
             target: Image,
         },
+        */
     }));
 
     static derivedProperties = this.hasDerivedProperties({
         id,
-        numRelatedImages,
+        //numRelatedImages,
     });
+
+    static async validate(dbObject: RawVNode<typeof Entry>, tx: WrappedTransaction): Promise<void> {
+        await super.validate(dbObject, tx);
+        // Check that the slugId is prefixed with the site code.
+        const chain = await tx.pullOne(Entry, e => e.type(t => t.site(s => s.siteCode)));
+        const siteCode = chain.type?.site?.siteCode;
+        if (!siteCode) {
+            throw new ValidationError("Entry is unexpectedly not linked to a site with a sitecode.");
+        }
+        if (dbObject.slugId.substr(0, 5) !== siteCode) {
+            throw new ValidationError("Entry's slugId does not start with the site code.");
+        }
+    }
+
 }
 
 
 /**
  * A property that provides the slugId without its site-specific prefix
+ * See arch-decisions/007-sites-multitenancy for details.
  */
  export function id(): DerivedProperty<string> { return DerivedProperty.make(
     Entry,
     e => e.slugId,
     e => {
-        // A normal VNode slugId is up to 32 chars long: "foo-bar-tribble-bat-wan-tresadfm"
-        // To support multi-tenancy, we put a 3-5 character site ID (like "001") and a hyphen
-        // at the start of the slugId. So "s-test" is stored as "XY6-s-test". This reverses
-        // that prefix to return the site-specific slugId.
-        const start = e.slugId.indexOf("-") + 1;
-        if (start === 0) {
-            throw new Error(`slugId ${e.slugId} is missing a site prefix.`);
-        }
-        return e.slugId.substr(start);
+        return e.slugId.substr(5);
     },
 );}
 
 /**
  * A property that provides a simple string value stating what type this entry is (TechConcept, Process, etc.)
  */
-export function numRelatedImages(): DerivedProperty<number> { return DerivedProperty.make(
+/*export function numRelatedImages(): DerivedProperty<number> { return DerivedProperty.make(
     Entry,
     e => e.relatedImages(i => i),
     e => {
         return e.relatedImages.length;
     },
-);}
+);}*/
 
 // There are no actions to create a TechDbEntry because it is an abstract type.
