@@ -28,7 +28,7 @@ export class RelationshipFact extends VNodeType {
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo(() => ({
         /** The type of this fact */
-        IS_OF_TYPE: { to: [RelationshipType], cardinality: VNodeType.Rel.ToOneRequired, },
+        IS_OF_REL_TYPE: { to: [RelationshipType], cardinality: VNodeType.Rel.ToOneRequired, },
         /**
          * Where this fact comes from / what entry "owns" this fact.
          * e.g. a DataTable Entry may be the source of hundreds of facts about other entries.
@@ -46,7 +46,7 @@ export class RelationshipFact extends VNodeType {
     static virtualProperties = this.hasVirtualProperties(() => ({
         type: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${this.rel.IS_OF_TYPE}]->(@target:${RelationshipType})`,
+            query: C`(@this)-[:${this.rel.IS_OF_REL_TYPE}]->(@target:${RelationshipType})`,
             target: RelationshipType,
         },
         fromEntry: {

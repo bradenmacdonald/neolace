@@ -247,15 +247,13 @@ export const UpdateDraft = defaultUpdateFor(Draft, d => d.title.description, {
     },
     resultData: {} as {id: VNID},
     apply: async (tx, data) => {
-        const id = data.id ?? VNID();
-
-        const draft = await tx.pullOne(Draft, d => d.status.site(s => s.id).edits(e => e.code.data()))
+        const draft = await tx.pullOne(Draft, d => d.status.site(s => s.id).edits(e => e.code.data()), {key: data.id})
         if (draft.status !== DraftStatus.Open) {
             throw new Error("Draft is not open.");
         }
 
         await tx.queryOne(C`
-            MATCH (draft:${Draft} {id: ${id}})
+            MATCH (draft:${Draft} {id: ${data.id}})
             SET draft.status = ${DraftStatus.Accepted}
         `.RETURN({}));
 
@@ -266,9 +264,9 @@ export const UpdateDraft = defaultUpdateFor(Draft, d => d.title.description, {
         });
 
         return {
-            resultData: {id, },
-            modifiedNodes: [id, ...modifiedNodes],
-            description: `Accepted ${Draft.withId(id)}`,
+            resultData: {id: data.id, },
+            modifiedNodes: [data.id, ...modifiedNodes],
+            description: `Accepted ${Draft.withId(data.id)}`,
         };
     },
 });

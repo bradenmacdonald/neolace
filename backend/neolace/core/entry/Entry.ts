@@ -70,20 +70,26 @@ export class Entry extends VNodeType {
     }));
 
     static derivedProperties = this.hasDerivedProperties({
-        id,
+        friendlyId,
         //numRelatedImages,
     });
 
     static async validate(dbObject: RawVNode<typeof Entry>, tx: WrappedTransaction): Promise<void> {
         await super.validate(dbObject, tx);
         // Check that the slugId is prefixed with the site code.
-        const chain = await tx.pullOne(Entry, e => e.type(t => t.site(s => s.siteCode)));
-        const siteCode = chain.type?.site?.siteCode;
+        const entryData = await tx.pullOne(Entry, e => e.type(t => t.friendlyIdPrefix.site(s => s.siteCode)), {key: dbObject.id});
+        const siteCode = entryData.type?.site?.siteCode;
         if (!siteCode) {
             throw new ValidationError("Entry is unexpectedly not linked to a site with a sitecode.");
         }
         if (dbObject.slugId.substr(0, 5) !== siteCode) {
             throw new ValidationError("Entry's slugId does not start with the site code.");
+        }
+
+        // Check the friendlyIdPrefix:
+        const friendlyIdPrefix = entryData.type?.friendlyIdPrefix;
+        if (friendlyIdPrefix && !dbObject.slugId.substr(5).startsWith(friendlyIdPrefix)) {
+            throw new ValidationError(`Invalid friendlyId; expected it to start with ${friendlyIdPrefix}`);
         }
     }
 
@@ -94,7 +100,7 @@ export class Entry extends VNodeType {
  * A property that provides the slugId without its site-specific prefix
  * See arch-decisions/007-sites-multitenancy for details.
  */
- export function id(): DerivedProperty<string> { return DerivedProperty.make(
+ export function friendlyId(): DerivedProperty<string> { return DerivedProperty.make(
     Entry,
     e => e.slugId,
     e => {

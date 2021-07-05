@@ -180,23 +180,12 @@ export const UpdateRelationshipType = SchemaEditType({
 });
 
 
-const allEditTypes = {
+export const _allSchemaEditTypes = {
     CreateEntryType,
     UpdateEntryType,
     CreateRelationshipType,
     UpdateRelationshipType,
 };
-
-export function getEditType(code: string): EditType {
-    const et = (allEditTypes as any)[code];
-    if (et === undefined) {
-        throw new Error(`Unknown/unsupported edit code: "${code}"`);
-    }
-    return et;
-}
-getEditType.OrNone = function(code: string): EditType|undefined {
-    return (allEditTypes as any)[code];
-}
 
 export type AnySchemaEdit = (
     | Edit<typeof CreateEntryType>

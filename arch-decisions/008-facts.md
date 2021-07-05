@@ -44,5 +44,5 @@ And then to get the facts from that:
 
     UNWIND entries AS e
     WITH e.entry AS entry, e.distance AS distance
-    MATCH (entry)-[:HAS_REL_FACT]->(fact:VNode)
-    RETURN entry.id, distance, fact
+    MATCH (entry)-[:HAS_REL_FACT]->(fact:VNode)-[:IS_A|HAS_A|RELATES_TO|DEPENDS_ON]->(toEntry:VNode), (fact)-[:IS_OF_REL_TYPE]->(relType:VNode)
+    RETURN entry.id, distance, properties(fact), toEntry.id, relType.id
