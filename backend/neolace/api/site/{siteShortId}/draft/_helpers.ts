@@ -15,7 +15,10 @@ export async function getDraft(id: VNID, siteId: VNID, tx: WrappedTransaction): 
         .created
         .status
         .if("edits", d => d.edits(e => e.id.code.changeType.timestamp.if("editsData", e=> e.data()))),
-        {where: C`EXISTS { MATCH (@this)-[:${Draft.rel.FOR_SITE}]->(:${Site} {id: ${siteId}}) }`}
+        {
+            key: id,
+            where: C`EXISTS { MATCH (@this)-[:${Draft.rel.FOR_SITE}]->(:${Site} {id: ${siteId}}) }`,
+        },
     );
 
     const author = draftData.author;

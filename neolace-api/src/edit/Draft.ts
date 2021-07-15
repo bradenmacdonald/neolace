@@ -18,6 +18,7 @@ export const CreateDraftSchema = Schema({
     description: nullable(string),
     edits: array.of(Schema({code: string, data: object})),
 });
+export type CreateDraftData = Type<typeof CreateDraftSchema>;
 
 // Information about one of the edits in a draft
 export const DraftEditSchema = Schema({
