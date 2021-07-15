@@ -1,14 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "backend"
+			"path": "backend",
 		},
 		{
 			"path": "neolace-api"
-		},
-		{
-			"path": ".",
-			"name": "(workspace root)"
 		},
 		{
 			"path": "frontend"
