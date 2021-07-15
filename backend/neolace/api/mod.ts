@@ -64,7 +64,10 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
                     this.response.body = errorData;
                     log.warning(`Returned error response: ${err.message}`);
                 } else {
-                    throw err;  // Let Drash log + handle this error as an internal error
+                    this.response.status_code = 500;
+                    this.response.body = { message: "An internal error occurred" };
+                    log.warning(`Returned "Internal error" response`);
+                    log.error(err);
                 }
             }
             return this.response;
