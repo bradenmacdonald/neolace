@@ -5,7 +5,7 @@ import { VNID, VertexTestDataSnapshot } from "neolace/deps/vertex-framework.ts";
 
 import { graph } from "neolace/core/graph.ts";
 import { CreateBot, CreateUser } from "../core/User.ts";
-import { CreateSite } from "neolace/core/Site.ts";
+import { CreateSite, AccessMode } from "neolace/core/Site.ts";
 import { CreateGroup } from "neolace/core/Group.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
 
@@ -37,6 +37,8 @@ const data = {
     site: {
         domain: "testsite.neolace.net",
         shortId: "test",
+        // The site will default to "PublicContributions" access mode. To test different access modes, update the site's access mode in your test case.
+        initialAccessMode: AccessMode.PublicContributions as const,
         id: undefined as any as VNID,  // will be set once created.
         adminsGroupId: undefined as any as VNID,  // will be set once created.
         usersGroupId: undefined as any as VNID,  // will be set once created.
@@ -137,6 +139,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         domain: data.site.domain,
         slugId: `site-${data.site.shortId}`,
         adminUser: data.users.admin.id,
+        accessMode: data.site.initialAccessMode,
     })).then(result => {
         data.site.id = result.id;
         data.site.adminsGroupId = result.adminGroup;

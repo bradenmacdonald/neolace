@@ -1,4 +1,4 @@
-import { NeolaceHttpResource, graph, api, permissions } from "neolace/api/mod.ts";
+import { NeolaceHttpResource, graph, api, permissions, adaptErrors } from "neolace/api/mod.ts";
 import { CreateDraft } from "neolace/core/edit/Draft.ts";
 import { getDraft } from "./_helpers.ts";
 
@@ -33,6 +33,12 @@ export class DraftIndexResource extends NeolaceHttpResource {
             } else if (editType.changeType === api.EditChangeType.Content) {
                 hasEntryChanges = true;
             } else { throw `Unexpected entry change type ${editType.changeType}`; }
+            // Validate the data too:
+            try {
+                editType.dataSchema(e.data);
+            } catch (err) {
+                throw new api.InvalidFieldValue([{fieldPath: `edits.${idx}.data`, message: `Invalid edit data: "${err.message}"`}]);
+            }
         }
 
         if (hasEntryChanges) {
@@ -48,7 +54,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
             title: payload.title,
             description: payload.description,
             edits,
-        }));
+        })).catch(adaptErrors("title", "description", adaptErrors.remap("data", "edits.?.data")));
 
         // Response:
         return await graph.read(tx => getDraft(id, siteId, tx));
