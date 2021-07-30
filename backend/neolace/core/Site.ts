@@ -125,6 +125,11 @@ export const siteIdFromShortId = makeCachedLookup((shortId: string) => graph.vni
 /** Cache to look up a Site's siteCode from its VNID */
 export const siteCodeForSite = makeCachedLookup((siteId: VNID) => graph.pullOne(Site, s => s.siteCode, {key: siteId}).then(s => s.siteCode), 10_000);
 
+/** Convert a slugId (with siteCode prefix) into a "friendlyId" */
+export function slugIdToFriendlyId(slugId: string): string {
+    return slugId.substr(5);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Site actions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

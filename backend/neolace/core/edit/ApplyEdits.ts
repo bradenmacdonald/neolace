@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import * as log from "std/log/mod.ts";
 import {
     EditList,
     ContentType,
@@ -37,11 +38,14 @@ export const ApplyEdits = defineAction({
         for (const edit of data.edits) {
 
             const editTypeDefinition = getEditType(edit.code);
-            descriptions.push(editTypeDefinition.describe(edit.data));
+            const description = editTypeDefinition.describe(edit.data);
+            descriptions.push(description);
+
+            log.info(`Applying Draft (${edit.code}): ${description}`);
 
             switch (edit.code) {
 
-                case CreateEntry.code: {  // Create a new EntryType
+                case CreateEntry.code: {  // Create a new Entry of a specific EntryType
                     await tx.queryOne(C`
                         MATCH (et:${EntryType} {id: ${edit.data.type}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         CREATE (e:${Entry} {id: ${edit.data.id}})

@@ -3,6 +3,7 @@ import { PasswordlessLoginResponse } from "./user.ts";
 import * as errors from "./errors.ts";
 import { SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema } from "./edit/index.ts";
+import { EntryData, GetEntryFlags } from "./content/index.ts";
 import * as schemas from "./api-schemas.ts";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
@@ -181,20 +182,13 @@ export class NeolaceApiClient {
         await this.call(`/site/${siteId}/draft/${draftId}/accept`, {method: "POST"});
     }
 
-    /*
-    public getTechDbEntry<Flags extends readonly TechDbEntryFlags[]|undefined>(args: {key: string, flags?: Flags}): Promise<ApplyFlags<TechDbEntryFlags, Flags, TechDbEntryData>> {
-        return this.call(`/techdb/db/${encodeURIComponent(args.key)}` + (args.flags && args.flags.length ? `?fields=${args.flags.join(",")}` : ""));
-    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Entry API Methods
 
-    public getTechConcept(args: {key: string, flags?: TechDbEntryFlags[]}): Promise<TechConceptData> {
-        return this.call(`/techdb/tech/${encodeURIComponent(args.key)}` + (args.flags && args.flags.length ? `?fields=${args.flags.join(",")}` : ""));
+    public getEntry<Flags extends readonly GetEntryFlags[]|undefined>(key: string, options: {flags?: Flags, siteId?: string}): Promise<ApplyFlags<GetEntryFlags, Flags, EntryData>> {
+        const siteId = this.getSiteId(options);
+        return this.call(`/site/${siteId}/entry/${encodeURIComponent(key)}` + (options.flags?.length ? `?include=${options.flags.join(",")}` : ""));
     }
-    public getProcess(args: {key: string}): Promise<ProcessData> {
-        return this.call(`/techdb/process/${encodeURIComponent(args.key)}`);
-    }
-    public getDesign(args: {key: string, flags?: TechDbEntryFlags[]}): Promise<DesignData> {
-        return this.call(`/techdb/design/${encodeURIComponent(args.key)}` + (args.flags && args.flags.length ? `?fields=${args.flags.join(",")}` : ""));
-    }*/
 }
 
 
@@ -219,9 +213,7 @@ export class NeolaceApiClient {
  * const response = await client.getTechDbEntry({key, flags});
  * // response.numRelatedImages?: number|undefined, response.relatedImages?: {...}[]|undefined
  */
-export type ApplyFlags<AllFlags, EnabledFlags extends readonly string[]|undefined, DataType> = DataType
-// This is disabled until Next.js is compatible with TypeScript 4.1
-/*(
+export type ApplyFlags<AllFlags, EnabledFlags extends readonly string[]|undefined, DataType> = (
 
     undefined extends EnabledFlags ?
         // No flags are set, mark the conditional (flagged) fields as "never" type .
@@ -247,7 +239,10 @@ export type ApplyFlags<AllFlags, EnabledFlags extends readonly string[]|undefine
                 Key extends ElementType<EnabledFlags> ? DataType[Key] : undefined
             );
         }
-);*/
+);
+
+/** XFlag is not actually used, but helps us write typescript checks for when flags are specified exactly or not. */
+type XFlag = "x";
 
 /** Helper to get a union of the value types of an array, if known at compile time */
 type ElementType < T extends ReadonlyArray<unknown>|undefined > = (

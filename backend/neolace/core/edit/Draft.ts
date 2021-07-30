@@ -129,6 +129,7 @@ export class Draft extends VNodeType {
             type: VirtualPropType.ManyRelationship,
             target: DraftEdit,
             query: C`(@this)-[:${this.rel.HAS_EDIT}]->(@target:${DraftEdit})`,
+            defaultOrderBy: `@this.timestamp`,
         },
         modifiesEntries: {
             type: VirtualPropType.ManyRelationship,

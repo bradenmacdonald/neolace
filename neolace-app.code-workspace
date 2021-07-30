@@ -1,7 +1,7 @@
 {
 	"folders": [
 		{
-			"path": "backend",
+			"path": "backend"
 		},
 		{
 			"path": "neolace-api"
@@ -9,6 +9,9 @@
 		{
 			"path": "frontend"
 		},
+		{
+			"path": "arch-decisions"
+		}
 	],
 	"settings": {
 		"editor.rulers": [

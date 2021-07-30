@@ -1,4 +1,4 @@
-import * as check from "neolace/deps/computed-types.ts";
+//import * as check from "neolace/deps/computed-types.ts";
 import {
     VirtualPropType,
     C,
@@ -22,8 +22,8 @@ export class RelationshipFact extends VNodeType {
     static properties = {
         ...VNodeType.properties,
         weight: Field.NullOr.Int,
-        slot: Field.NullOr.String,
-        quantity: Field.NullOr.Int.Check(check.number.min(0)),
+        // slot: Field.NullOr.String,
+        // quantity: Field.NullOr.Int.Check(check.number.min(0)),
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo(() => ({
@@ -70,7 +70,8 @@ export class RelationshipFact extends VNodeType {
         const selfData = await tx.pullOne(RelationshipFact, self => self
             .fromEntry(e => e.type(et => et.id))
             .toEntry(e => e.type(et => et.id))
-            .type(rt => rt.category.fromTypes(et => et.id).toTypes(et => et.id))
+            .type(rt => rt.category.fromTypes(et => et.id).toTypes(et => et.id)),
+            {key: dbObject.id},
         );
 
         const relType = selfData.type;

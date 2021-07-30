@@ -67,12 +67,18 @@ export const AllOf = (...checks: Check[]): Check => {
 }
 
 export const CheckSiteIsPublic: Check = async (context) => {
-    const site = await context.tx.pullOne(Site, s=>s.accessMode);
+    if (context.siteId === undefined) {
+        return false;
+    }
+    const site = await context.tx.pullOne(Site, s=>s.accessMode, {key: context.siteId});
     return (site.accessMode === AccessMode.PublicReadOnly) || (site.accessMode === AccessMode.PublicContributions);
 };
 
 export const CheckSiteIsPublicContributions: Check = async (context) => {
-    const site = await context.tx.pullOne(Site, s=>s.accessMode);
+    if (context.siteId === undefined) {
+        return false;
+    }
+    const site = await context.tx.pullOne(Site, s=>s.accessMode, {key: context.siteId});
     return (site.accessMode === AccessMode.PublicContributions);
 };
 

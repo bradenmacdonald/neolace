@@ -100,7 +100,7 @@ export class Entry extends VNodeType {
  * A property that provides the slugId without its site-specific prefix
  * See arch-decisions/007-sites-multitenancy for details.
  */
- export function friendlyId(): DerivedProperty<string> { return DerivedProperty.make(
+export function friendlyId(): DerivedProperty<string> { return DerivedProperty.make(
     Entry,
     e => e.slugId,
     e => {

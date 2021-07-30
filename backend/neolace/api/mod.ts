@@ -98,6 +98,9 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
         }
     }
 
+    /**
+     * Given a schema, validate that the HTTP request's body payload matches that schema, and return the validated data.
+     */
     // deno-lint-ignore no-explicit-any
     protected getRequestPayload<SchemaType extends (...args: any[]) => unknown>(schema: SchemaType): ReturnType<SchemaType> {
         // deno-lint-ignore no-explicit-any
@@ -160,6 +163,27 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
                 throw new api.NotAuthorized("You do not have sufficient permissions.");
             }
         }
+    }
+
+    /**
+     * Parse the ?include=flag1,flag2,flag3 query parameter and return the set of included fields.
+     * @param flagsEnum a string enum which contains all the valid fields (flags) that can be enabled.
+     * @returns 
+     */
+    protected getRequestFlags<T extends string>(flagsEnum: {[K: string]: T}): Set<T> {
+        const include = this.request.getUrlQueryParam("include");
+        if (include === null) {
+            return new Set();
+        }
+        const enabledFlags = new Set<T>();
+        for (const includedFlag of include.split(",")) {
+            // deno-lint-ignore no-explicit-any
+            if (Object.values(flagsEnum).includes(includedFlag as any)) {
+                // deno-lint-ignore no-explicit-any
+                enabledFlags.add(includedFlag as any);
+            }
+        }
+        return enabledFlags;
     }
 }
 

@@ -47,3 +47,9 @@ export const client = new NeolaceApiClient({
     fetchApi: IN_BROWSER ? window.fetch.bind(window) : require('node-fetch'),
     getExtraHeadersForRequest,
 });
+
+// Store the API client on the global window object for development purposes.
+if (IN_BROWSER) {
+    // deno-lint-ignore no-explicit-any
+    (window as any).client = client;
+}
