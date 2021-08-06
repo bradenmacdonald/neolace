@@ -48,8 +48,9 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             nameForward: rt.nameForward,
             nameReverse: rt.nameReverse,
             description: rt.description,
-            fromEntryTypes: rt.fromTypes.map(et => et.id),
-            toEntryTypes: rt.toTypes.map(et => et.id),
+            // For consistency and to make tests easier, "from" and "to" IDs are sorted by ID.
+            fromEntryTypes: rt.fromTypes.map(et => et.id).sort(),
+            toEntryTypes: rt.toTypes.map(et => et.id).sort(),
             category: CastRelationshipCategory(rt.category),
         };
     });

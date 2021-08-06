@@ -215,7 +215,7 @@ group(import.meta, () => {
                             id: VNID(),
                             name: "A New Entry",
                             description: "",
-                            type: defaultData.schema.entryTypes._ETCOMPUTER.id,
+                            type: defaultData.schema.entryTypes._ETSPECIES.id,
                         }),
                     },
                 ],
