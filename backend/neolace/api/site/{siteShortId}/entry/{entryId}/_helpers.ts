@@ -1,5 +1,5 @@
 import { api } from "neolace/api/mod.ts";
-import { C, VNID, WrappedTransaction, isVNID, Field } from "neolace/deps/vertex-framework.ts";
+import { C, VNID, WrappedTransaction, isVNID, Field, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { slugIdToFriendlyId, siteCodeForSite } from "neolace/core/Site.ts";
 import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
@@ -19,7 +19,13 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
         .friendlyId()
         .type(et => et.id.name.contentType.site(s => s.id)),
         {key, }
-    );
+    ).catch((err) => {
+        if (err instanceof EmptyResultError) {
+            throw new api.NotFound(`Entry with key "${vnidOrFriendlyId}" not found.`);
+        } else {
+            throw err;
+        }
+    });
 
     // Remove the "site" field from the result
     const result: api.EntryData = {

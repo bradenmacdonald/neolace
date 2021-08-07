@@ -98,6 +98,8 @@ export class NeolaceApiClient {
                 } else {
                     throw new errors.InvalidRequest(errorData.reason ?? errors.InvalidRequestReason.OtherReason, errorData.message);
                 }
+            } else if (response.status === 404) {
+                throw new errors.NotFound(errorData.message);
             } else {
                 throw new errors.ApiError(errorData.message, response.status);
             }
@@ -185,9 +187,9 @@ export class NeolaceApiClient {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Entry API Methods
 
-    public getEntry<Flags extends readonly GetEntryFlags[]|undefined>(key: string, options: {flags?: Flags, siteId?: string}): Promise<ApplyFlags<GetEntryFlags, Flags, EntryData>> {
+    public getEntry<Flags extends readonly GetEntryFlags[]>(key: string, options: {flags?: Flags, siteId?: string} = {}): Promise<ApplyFlags<typeof GetEntryFlags, Flags, EntryData>> {
         const siteId = this.getSiteId(options);
-        return this.call(`/site/${siteId}/entry/${encodeURIComponent(key)}` + (options.flags?.length ? `?include=${options.flags.join(",")}` : ""));
+        return this.call(`/site/${siteId}/entry/${encodeURIComponent(key)}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""));
     }
 }
 
@@ -213,12 +215,12 @@ export class NeolaceApiClient {
  * const response = await client.getTechDbEntry({key, flags});
  * // response.numRelatedImages?: number|undefined, response.relatedImages?: {...}[]|undefined
  */
-export type ApplyFlags<AllFlags, EnabledFlags extends readonly string[]|undefined, DataType> = (
+export type ApplyFlags<AllFlags extends Record<string, string>, EnabledFlags extends readonly string[]|undefined, DataType> = (
 
     undefined extends EnabledFlags ?
         // No flags are set, mark the conditional (flagged) fields as "never" type .
         {
-            [Key in keyof DataType]: Key extends AllFlags ? never : DataType[Key];
+            [Key in keyof DataType]: Key extends EnumValues<AllFlags> ? never : DataType[Key];
         } :
     XFlag extends ElementType<EnabledFlags> ?
         // The exact flags passed are not known - we just have the generic flags type like string[] instead of a
@@ -229,15 +231,10 @@ export type ApplyFlags<AllFlags, EnabledFlags extends readonly string[]|undefine
         // In this case, we know at compile time exactly which flags were set, so we can convert properties from
         // optional to defined:
         {
-            // Every field that's not one of the conditional fields mentioned in "AllFlags" gets passed unchanged:
-            [Key in keyof DataType as Exclude<Key, AllFlags>]: DataType[Key];
-        } &
-        {
-            // Every field that is a conditional field:
-            [Key in keyof DataType as (Key extends AllFlags ? Key : never)]-?: (
-                // This field is conditional on a flag. Check if its flag is set.
-                Key extends ElementType<EnabledFlags> ? DataType[Key] : undefined
-            );
+            [Key in keyof DataType]: Key extends EnumValues<AllFlags> ? 
+                // Check if this specific flag is enabled:
+                (Key extends ToStringUnion<EnabledFlags> ? Defined<DataType[Key]> : never)
+            : DataType[Key];
         }
 );
 
@@ -249,3 +246,11 @@ type ElementType < T extends ReadonlyArray<unknown>|undefined > = (
     T extends ReadonlyArray<infer ElementType> ? ElementType
     : never
 );
+
+type ToStringUnion <T> = T extends readonly [infer Type1, ...infer Rest] ? (Type1 extends string ? `${Type1}` : never)|ToStringUnion<Rest> : never;
+
+/** Helper type to remove "undefined" from a type */
+type Defined<T> = T extends undefined ? never : T;
+
+/** Helper to get the values of an enum as a combined string type, like "Value1"|"Value2" */
+type EnumValues<Enum extends Record<string, string>> = keyof {[K in keyof Enum as `${Enum[K]}`]: undefined};
