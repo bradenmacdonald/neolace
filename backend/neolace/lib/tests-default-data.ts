@@ -160,6 +160,16 @@ const data = {
                 ],
                 toEntryTypes: [VNID("_ETPLANTPART")],
             },
+            // A plant part can be another type of plant part:
+            "_PARTisPART": {
+                id: VNID("_PARTisPART"),
+                nameForward: "is a",
+                nameReverse: "has type",
+                category: RelationshipCategory.IS_A,
+                description: null,
+                fromEntryTypes: [VNID("_ETPLANTPART")],
+                toEntryTypes: [VNID("_ETPLANTPART")],
+            },
         },
     },
     entries: {
@@ -341,11 +351,23 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 type: data.schema.entryTypes._ETPLANTPART.id,
                 description: "A pollen cone or male cone (formally \"microstrobilus\") is a small reproductive organ bearing pollen found on conifers, not to be confused with the familiar seed cone.",
             }},
+            {code: "CreateRelationshipFact", data: {
+                id: VNID(),
+                fromEntry: data.entries.pollenCone.id,
+                toEntry: data.entries.cone.id,
+                type: data.schema.relationshipTypes._PARTisPART.id,
+            }},
             // Female cone (seed cone), what you think of as a "pine cone"
             {code: "CreateEntry", data: {
                 ...data.entries.seedCone,
                 type: data.schema.entryTypes._ETPLANTPART.id,
                 description: "A seed cone or female cone (formally \"megastrobilus\") is a varied reproductive organ found on conifers. Examples include the well-known \"pine cone\".",
+            }},
+            {code: "CreateRelationshipFact", data: {
+                id: VNID(),
+                fromEntry: data.entries.seedCone.id,
+                toEntry: data.entries.cone.id,
+                type: data.schema.relationshipTypes._PARTisPART.id,
             }},
 
         // All conifers (Class Pinopsida) have both male and female cones:

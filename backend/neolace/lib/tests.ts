@@ -100,7 +100,12 @@ enum TestIsolationLevels {
     DEFAULT_ISOLATED,
 }
 
-export function setTestIsolation(level: TestIsolationLevels): typeof data {
+type ReturnedData<T extends TestIsolationLevels> = 
+    T extends TestIsolationLevels.DEFAULT_ISOLATED ? typeof data :
+    T extends TestIsolationLevels.DEFAULT_NO_ISOLATION ? typeof data :
+    void;
+
+export function setTestIsolation<Level extends TestIsolationLevels>(level: Level): ReturnedData<Level> {
     try {
         if (level === TestIsolationLevels.BLANK_NO_ISOLATION) {
             beforeAll(async () => { await graph.resetDBToSnapshot(emptySnapshot); });
@@ -108,14 +113,19 @@ export function setTestIsolation(level: TestIsolationLevels): typeof data {
             beforeEach(async () => { await graph.resetDBToSnapshot(emptySnapshot); });
         } else if (level === TestIsolationLevels.DEFAULT_NO_ISOLATION) {
             beforeAll(async () => { await graph.resetDBToSnapshot(defaultDataSnapshot); });
+            // deno-lint-ignore no-explicit-any
+            return data as any;
         } else if (level === TestIsolationLevels.DEFAULT_ISOLATED) {
             beforeEach(async () => { await graph.resetDBToSnapshot(defaultDataSnapshot); });
+            // deno-lint-ignore no-explicit-any
+            return data as any;
         }
+        // deno-lint-ignore no-explicit-any
+        return undefined as any;
     } catch (err) {
         log.error(`Error during setTestIsolation: ${err}`);
         throw err;
     }
-    return data;
 }
 setTestIsolation.levels = TestIsolationLevels;
 

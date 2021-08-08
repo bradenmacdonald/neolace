@@ -11,6 +11,7 @@ import {
 } from "neolace/deps/vertex-framework.ts";
 
 import { EntryType } from "neolace/core/schema/EntryType.ts";
+import { slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { RelationshipFact } from "./RelationshipFact.ts";
 
 
@@ -103,20 +104,5 @@ export class Entry extends VNodeType {
 export function friendlyId(): DerivedProperty<string> { return DerivedProperty.make(
     Entry,
     e => e.slugId,
-    e => {
-        return e.slugId.substr(5);
-    },
+    e => slugIdToFriendlyId(e.slugId),
 );}
-
-/**
- * A property that provides a simple string value stating what type this entry is (TechConcept, Process, etc.)
- */
-/*export function numRelatedImages(): DerivedProperty<number> { return DerivedProperty.make(
-    Entry,
-    e => e.relatedImages(i => i),
-    e => {
-        return e.relatedImages.length;
-    },
-);}*/
-
-// There are no actions to create a TechDbEntry because it is an abstract type.
