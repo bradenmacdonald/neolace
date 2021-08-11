@@ -2,7 +2,7 @@ import { Schema, Type, string, vnidString, nullable, array, number } from "../ap
 import { ContentType } from "../schema/SiteSchemaData.ts";
 
 export enum GetEntryFlags {
-    IncludeRelationshipFacts = "relationshipFacts",
+    IncludeAncestors = "ancestors",
 }
 
 export const EntrySchema = Schema({
@@ -18,18 +18,14 @@ export const EntrySchema = Schema({
 
     // TODO: content
 
-    /** Any relationships from this entry or its ancestor entries */
-    relationshipFacts: array.of(Schema({
-        entry: Schema({id: vnidString, name: string, friendlyId: string}),
+
+    /** All ancestors (IS_A relationships) of this entry (limited to 100 total / 50 levels deep) */
+    ancestors: array.of(Schema({
+        id: vnidString,
+        name: string,
+        friendlyId: string,
         distance: number,
-        relProps: Schema({
-            id: vnidString,
-            weight: nullable(number),
-            // slot: string.strictOptional(),
-            // quantity: number.strictOptional(),
-        }),
-        toEntry: Schema({id: vnidString, name: string, friendlyId: string}),
-        relType: Schema({id: vnidString}),
     })).strictOptional(),
+
 });
 export type EntryData = Type<typeof EntrySchema>;

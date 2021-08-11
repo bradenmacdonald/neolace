@@ -1,10 +1,11 @@
-import { group, test, setTestIsolation, api, getClient, assertEquals, assertThrowsAsync, assertObjectMatch } from "neolace/api/tests.ts";
+import { group, test, setTestIsolation, api, getClient, assertEquals, assertThrowsAsync } from "neolace/api/tests.ts";
 
 group(import.meta, () => {
 
     group("Get entry API", () => {
 
-        const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
+        // These tests are read-only so don't need isolation, but do use the default plantDB example data:
+        const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
         const speciesEntryType = defaultData.schema.entryTypes._ETSPECIES;
         const ponderosaPine = defaultData.entries.ponderosaPine;
 
@@ -38,33 +39,46 @@ group(import.meta, () => {
             assertEquals(result, basicResultExpected);
         });
 
-        test("Get basic information about an entry plus detailed relationship information", async () => {
+        test("Get basic information about an entry plus detailed ancestor information", async () => {
+
+            // Note that details of ancestor retrieval are mostly tested in neolace/core/entry/ancestors.test.ts
+
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
-            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludeRelationshipFacts] as const});
+            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludeAncestors] as const});
 
-            assertObjectMatch(result, {...basicResultExpected, relationshipFacts: [
+            assertEquals(result, {...basicResultExpected, ancestors: [
                 // The species "Pinus Ponderosa" is a member of the genus "Pinus":
                 {
-                    distance: 0,
-                    toEntry: {
-                        //id: ...,
-                        name: "Pinus",
-                        friendlyId: "g-pinus",
-                    },
-                    entry: {
-                        id: ponderosaPine.id,
-                        name: ponderosaPine.name,
-                        friendlyId: ponderosaPine.friendlyId,
-                    },
-                    relProps: {
-                        // The ID of this relationship:
-                        // id: ...,
-                        weight: null,
-                    },
-                    relType: {
-                        id: defaultData.schema.relationshipTypes._SisG.id,
-                    },
+                    distance: 1,
+                    id: defaultData.entries.genusPinus.id,
+                    name: defaultData.entries.genusPinus.name,
+                    friendlyId: defaultData.entries.genusPinus.friendlyId,
+                },
+                // And so on...
+                {
+                    distance: 2,
+                    id: defaultData.entries.familyPinaceae.id,
+                    name: defaultData.entries.familyPinaceae.name,
+                    friendlyId: defaultData.entries.familyPinaceae.friendlyId,
+                },
+                {
+                    distance: 3,
+                    id: defaultData.entries.orderPinales.id,
+                    name: defaultData.entries.orderPinales.name,
+                    friendlyId: defaultData.entries.orderPinales.friendlyId,
+                },
+                {
+                    distance: 4,
+                    id: defaultData.entries.classPinopsida.id,
+                    name: defaultData.entries.classPinopsida.name,
+                    friendlyId: defaultData.entries.classPinopsida.friendlyId,
+                },
+                {
+                    distance: 5,
+                    id: defaultData.entries.divisionTracheophyta.id,
+                    name: defaultData.entries.divisionTracheophyta.name,
+                    friendlyId: defaultData.entries.divisionTracheophyta.friendlyId,
                 },
             ]});
         });
