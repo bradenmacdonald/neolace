@@ -9,8 +9,6 @@ import { slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 
-type Ancestor = {id: VNID, name: string, friendlyId: string, distance: number};
-
 /**
  * Helper function to compute the ancestors of an entry.
  *
@@ -34,17 +32,23 @@ export async function getEntryAncestors(entryId: VNID, tx: WrappedTransaction) {
         })
         YIELD path
         WITH length(path)/2 AS distance, last(nodes(path)) AS ancestor
+
+        // Add in the entry type information. Note that this adds about 4 dbHits per ancestor :/
+        MATCH (ancestor)-[:IS_OF_TYPE]->(et:EntryType)
+
         // We want to only return DISTINCT ancestors, and return only the minimum distance to each one.
         // We are now handling with with the 'uniqueness: "NODE_GLOBAL"' argument above; an alternative is shown below:
         // WITH ancestor, min(distance) AS distance
-        RETURN ancestor.id AS id, ancestor.name AS name, ancestor.slugId as slugId, distance
+
+        RETURN ancestor.id AS id, ancestor.name AS name, ancestor.slugId as slugId, distance, et.id AS entryTypeId
         ORDER BY distance, ancestor.name
         LIMIT 100
-    `.givesShape({id: Field.VNID, name: Field.String, slugId: Field.String, distance: Field.Int}));
+    `.givesShape({id: Field.VNID, name: Field.String, slugId: Field.String, distance: Field.Int, entryTypeId: Field.VNID}));
     return ancData.map(e => ({
         id: e.id,
         name: e.name,
         friendlyId: slugIdToFriendlyId(e.slugId),
         distance: e.distance,
+        entryType: {id: e.entryTypeId},
     }));
 }

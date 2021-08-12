@@ -56,26 +56,26 @@ group(import.meta, () => {
 
             // Check the ancestor of C.
             assertEquals(await graph.read(tx => getEntryAncestors(C, tx)), [
-                {distance: 1, id: A, name: "Entry A", friendlyId: "a"},
+                {distance: 1, id: A, name: "Entry A", friendlyId: "a", entryType: {id: entryType}},
             ]);
 
             // Check the ancestor of I. Expect 2 immediate ancestors (E & G), plus one ancestor B at distance of 2.
             assertEquals(await graph.read(tx => getEntryAncestors(I, tx)), [
-                {distance: 1, id: E, name: "Entry E", friendlyId: "e"},
-                {distance: 1, id: G, name: "Entry G", friendlyId: "g"},
-                {distance: 2, id: B, name: "Entry B", friendlyId: "b"},
+                {distance: 1, id: E, name: "Entry E", friendlyId: "e", entryType: {id: entryType}},
+                {distance: 1, id: G, name: "Entry G", friendlyId: "g", entryType: {id: entryType}},
+                {distance: 2, id: B, name: "Entry B", friendlyId: "b", entryType: {id: entryType}},
             ]);
 
             // Check the ancestors of H.
             // We should find that H has 6 ancestors, and the distance from H to B is 2, from H to A is 3, and from H to E is 1
             assertEquals(await graph.read(tx => getEntryAncestors(H, tx)), [
                 // Sorted first by distance then alphabetically, so E is before F:
-                {distance: 1, id: E, name: "Entry E", friendlyId: "e"},
-                {distance: 1, id: F, name: "Entry F", friendlyId: "f"},
-                {distance: 2, id: B, name: "Entry B", friendlyId: "b"},
-                {distance: 2, id: C, name: "Entry C", friendlyId: "c"},
-                {distance: 2, id: D, name: "Entry D", friendlyId: "d"},
-                {distance: 3, id: A, name: "Entry A", friendlyId: "a"},
+                {distance: 1, id: E, name: "Entry E", friendlyId: "e", entryType: {id: entryType}},
+                {distance: 1, id: F, name: "Entry F", friendlyId: "f", entryType: {id: entryType}},
+                {distance: 2, id: B, name: "Entry B", friendlyId: "b", entryType: {id: entryType}},
+                {distance: 2, id: C, name: "Entry C", friendlyId: "c", entryType: {id: entryType}},
+                {distance: 2, id: D, name: "Entry D", friendlyId: "d", entryType: {id: entryType}},
+                {distance: 3, id: A, name: "Entry A", friendlyId: "a", entryType: {id: entryType}},
             ]);
 
         });
@@ -113,16 +113,16 @@ group(import.meta, () => {
 
             // Check the ancestor of D.
             assertEquals(await graph.read(tx => getEntryAncestors(D, tx)), [
-                {distance: 1, id: B, name: "Entry B", friendlyId: "b"},
-                {distance: 1, id: C, name: "Entry C", friendlyId: "c"},
-                {distance: 2, id: A, name: "Entry A", friendlyId: "a"},
+                {distance: 1, id: B, name: "Entry B", friendlyId: "b", entryType: {id: entryType}},
+                {distance: 1, id: C, name: "Entry C", friendlyId: "c", entryType: {id: entryType}},
+                {distance: 2, id: A, name: "Entry A", friendlyId: "a", entryType: {id: entryType}},
             ]);
 
             // Check the ancestor of A.
             assertEquals(await graph.read(tx => getEntryAncestors(A, tx)), [
-                {distance: 1, id: D, name: "Entry D", friendlyId: "d"},
-                {distance: 2, id: B, name: "Entry B", friendlyId: "b"},
-                {distance: 2, id: C, name: "Entry C", friendlyId: "c"},
+                {distance: 1, id: D, name: "Entry D", friendlyId: "d", entryType: {id: entryType}},
+                {distance: 2, id: B, name: "Entry B", friendlyId: "b", entryType: {id: entryType}},
+                {distance: 2, id: C, name: "Entry C", friendlyId: "c", entryType: {id: entryType}},
             ]);
         });
 

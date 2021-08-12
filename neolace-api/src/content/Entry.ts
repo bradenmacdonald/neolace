@@ -10,7 +10,7 @@ export const EntrySchema = Schema({
     name: string,
     description: nullable(string),
     friendlyId: string,
-    type: Schema({
+    entryType: Schema({
         id: vnidString,
         name: string,
         contentType: Schema.enum(ContentType),
@@ -24,6 +24,7 @@ export const EntrySchema = Schema({
         id: vnidString,
         name: string,
         friendlyId: string,
+        entryType: Schema({id: vnidString}),
         distance: number,
     })).strictOptional(),
 

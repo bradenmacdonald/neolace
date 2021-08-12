@@ -46,7 +46,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     // Remove the "site" field from the result
     const result: api.EntryData = {
         ...entryData,
-        type: {id: entryData.type!.id, name: entryData.type!.name, contentType: entryData.type!.contentType as api.ContentType},
+        entryType: {id: entryData.type!.id, name: entryData.type!.name, contentType: entryData.type!.contentType as api.ContentType},
         ancestors: undefined,
     };
 

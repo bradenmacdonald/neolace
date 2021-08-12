@@ -24,7 +24,7 @@ group(import.meta, () => {
             name: ponderosaPine.name,
             friendlyId: ponderosaPine.friendlyId,
             description: "Pinus ponderosa (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.",
-            type: {
+            entryType: {
                 id: speciesEntryType.id,
                 name: speciesEntryType.name,
                 contentType: speciesEntryType.contentType,
@@ -54,6 +54,7 @@ group(import.meta, () => {
                     id: defaultData.entries.genusPinus.id,
                     name: defaultData.entries.genusPinus.name,
                     friendlyId: defaultData.entries.genusPinus.friendlyId,
+                    entryType: {id: defaultData.schema.entryTypes._ETGENUS.id},
                 },
                 // And so on...
                 {
@@ -61,24 +62,30 @@ group(import.meta, () => {
                     id: defaultData.entries.familyPinaceae.id,
                     name: defaultData.entries.familyPinaceae.name,
                     friendlyId: defaultData.entries.familyPinaceae.friendlyId,
+                    entryType: {id: defaultData.schema.entryTypes._ETFAMILY.id},
                 },
                 {
                     distance: 3,
                     id: defaultData.entries.orderPinales.id,
                     name: defaultData.entries.orderPinales.name,
                     friendlyId: defaultData.entries.orderPinales.friendlyId,
+                    entryType: {id: defaultData.schema.entryTypes._ETORDER.id},
                 },
                 {
                     distance: 4,
                     id: defaultData.entries.classPinopsida.id,
                     name: defaultData.entries.classPinopsida.name,
                     friendlyId: defaultData.entries.classPinopsida.friendlyId,
+                    entryType: {id: defaultData.schema.entryTypes._ETCLASS.id},
+
                 },
                 {
                     distance: 5,
                     id: defaultData.entries.divisionTracheophyta.id,
                     name: defaultData.entries.divisionTracheophyta.name,
                     friendlyId: defaultData.entries.divisionTracheophyta.friendlyId,
+                    entryType: {id: defaultData.schema.entryTypes._ETDIVISION.id},
+
                 },
             ]});
         });
