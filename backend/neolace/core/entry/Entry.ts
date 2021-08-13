@@ -23,13 +23,8 @@ export class Entry extends VNodeType {
     static label = "Entry";
     static properties = {
         ...VNodeType.properties,
-        // slugId: A short slug that identifies this entry
-        // Ideally something very concise, so it doesn't need to be changed even if the article is renamed, and also so
-        // that it can be used in other languages without being weird.
-        // e.g. "p-geoeng-sas" for "stratospheric aerosol scattering" (p- means Process, t- means TechConcept/Thing, etc.)
-        //
-        // Note that slugIds can change but every slugId permanently points to the entry
-        // for which is was first used. So slugIds are immutable but there can be several of them for one entry.
+        // slugId: The friendlyId along with a Site-specific prefix.
+        // See arch-decisions/007-sites-multitenancy for details.
         slugId: Field.Slug,
         // The name of this entry
         // This does not need to be unique or include disambiguation - so just put "Drive", not "Drive (computer science)"
@@ -44,15 +39,22 @@ export class Entry extends VNodeType {
             to: [EntryType],
             cardinality: VNodeType.Rel.ToOneRequired,
         },
-        /** This Entry has a relationship to another entry */
-        HAS_REL_FACT: {
+        /** This Entry has a relationship to another entry, via a RelationshipFact */
+        REL_FACT: {
             to: [RelationshipFact],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
-        // HAS_ENTRIES: {
-        //     to: [Entry],
-        //     cardinality: VNodeType.Rel.ToMany,
-        // },
+        // If this Entry has an IS_A relationship to other entries (via RelationshipFact), it will also have a direct
+        // IS_A relationship to the Entry, which makes computing ancestors of an Entry much simpler.
+        // i.e. If there is (this:Entry)-[:REL_FACT]->(:RelationshipFact {category: "IS_A"})-[:REL_FACT]->(parent:Entry)
+        //      then there will also be a (this)-[:IS_A]->(parent) relationship
+        IS_A: {
+            to: [this],
+            cardinality: VNodeType.Rel.ToMany,
+            properties: {
+                relFactId: Field.VNID,
+            },
+        },
     });
 
     static virtualProperties = this.hasVirtualProperties(() => ({
@@ -91,6 +93,18 @@ export class Entry extends VNodeType {
         const friendlyIdPrefix = entryData.type?.friendlyIdPrefix;
         if (friendlyIdPrefix && !dbObject.slugId.substr(5).startsWith(friendlyIdPrefix)) {
             throw new ValidationError(`Invalid friendlyId; expected it to start with ${friendlyIdPrefix}`);
+        }
+
+        // Validate that all IS_A relationships have corresponding RelationshipFacts
+        // RelationshipFact validates the opposite, that all IS_A RelationshipFacts have corresponding IS_A relationships
+        const isACheck = await tx.query(C`
+            MATCH (entry:${this})-[rel:${this.rel.IS_A}]->(otherEntry:VNode)
+            WITH rel.relFactId AS expectedId
+            OPTIONAL MATCH (entry:${this})-[:${this.rel.REL_FACT}]->(relFact:VNode {id: expectedId})
+            RETURN expectedId, relFact.id AS actualId
+        `.givesShape({expectedId: Field.VNID, actualId: Field.VNID}));
+        if (!isACheck.every(row => row.actualId === row.expectedId)) {
+            throw new ValidationError(`Entry has a stranded IS_A relationship without a corresponding RelationshipFact`);
         }
     }
 

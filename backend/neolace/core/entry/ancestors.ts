@@ -21,28 +21,22 @@ import { Entry } from "neolace/core/entry/Entry.ts";
  * @returns 
  */
 export async function getEntryAncestors(entryId: VNID, tx: WrappedTransaction) {
+    const maxDepth = 50;
+    const limit = 100;
     const ancData = await tx.query(C`
         MATCH (entry:${Entry} {id: ${entryId}})
-        CALL apoc.path.expandConfig(entry, {
-            sequence: ">VNode,HAS_REL_FACT>,VNode,IS_A>",
-            minLevel: 1,
-            maxLevel: 50,
-            uniqueness: "NODE_GLOBAL",
-            limit: 100
-        })
-        YIELD path
-        WITH length(path)/2 AS distance, last(nodes(path)) AS ancestor
+        MATCH path = (entry)-[:${Entry.rel.IS_A}*..${C(String(maxDepth))}]->(ancestor:${Entry})
+        WHERE ancestor <> entry  // Never return the starting node as its own ancestor
+        // We want to only return DISTINCT ancestors, and return only the minimum distance to each one.
+        WITH ancestor, min(length(path)) AS distance
 
-        // Add in the entry type information. Note that this adds about 4 dbHits per ancestor :/
+        ORDER BY distance, ancestor.name
+        LIMIT ${BigInt(limit)}
+
+        // Add in the entry type information.
         MATCH (ancestor)-[:IS_OF_TYPE]->(et:EntryType)
 
-        // We want to only return DISTINCT ancestors, and return only the minimum distance to each one.
-        // We are now handling with with the 'uniqueness: "NODE_GLOBAL"' argument above; an alternative is shown below:
-        // WITH ancestor, min(distance) AS distance
-
         RETURN ancestor.id AS id, ancestor.name AS name, ancestor.slugId as slugId, distance, et.id AS entryTypeId
-        ORDER BY distance, ancestor.name
-        LIMIT 100
     `.givesShape({id: Field.VNID, name: Field.String, slugId: Field.String, distance: Field.Int, entryTypeId: Field.VNID}));
     return ancData.map(e => ({
         id: e.id,

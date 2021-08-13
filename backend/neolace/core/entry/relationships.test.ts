@@ -38,6 +38,7 @@ group(import.meta, () => {
 
             const A_has_B = VNID(), A_has_C = VNID(), A_has_D = VNID(), A_has_E = VNID(), A_has_F = VNID(), A_has_G = VNID();
             const A_has_H = VNID(), A_has_I = VNID(), A_has_J = VNID(), A_has_K = VNID(), A_has_L = VNID();
+            const M_has_N = VNID(), N_rel_O = VNID(), N_has_P = VNID(), N_has_Q = VNID(), O_has_P = VNID();
             const N_isa_A = VNID(), R_isa_N = VNID();
 
             const {id: siteId} = await graph.runAsSystem(CreateSite({domain: "test-site.neolace.net", slugId: "site-test"}));
@@ -82,6 +83,11 @@ group(import.meta, () => {
                 {code: "CreateRelationshipFact", data: {fromEntry: A, toEntry: J, id: A_has_J, type: entryHasPart}},  // A has a J
                 {code: "CreateRelationshipFact", data: {fromEntry: A, toEntry: K, id: A_has_K, type: entryHasPart}},  // A has a K
                 {code: "CreateRelationshipFact", data: {fromEntry: A, toEntry: L, id: A_has_L, type: entryHasPart}},  // A has a L
+                {code: "CreateRelationshipFact", data: {fromEntry: M, toEntry: N, id: M_has_N, type: entryHasPart}},  // M has a N
+                {code: "CreateRelationshipFact", data: {fromEntry: N, toEntry: O, id: N_rel_O, type: entryRelatesTo}},  // N relates to O
+                {code: "CreateRelationshipFact", data: {fromEntry: N, toEntry: P, id: N_has_P, type: entryHasPart}},  // N has a P
+                {code: "CreateRelationshipFact", data: {fromEntry: N, toEntry: Q, id: N_has_Q, type: entryHasPart}},  // N has a Q
+                {code: "CreateRelationshipFact", data: {fromEntry: O, toEntry: P, id: O_has_P, type: entryHasPart}},  // O has a P
                 {code: "CreateRelationshipFact", data: {fromEntry: N, toEntry: A, id: N_isa_A, type: entryIsA}},  // N is a A
                 {code: "CreateRelationshipFact", data: {fromEntry: R, toEntry: N, id: R_isa_N, type: entryIsA}},  // R is a N
             ]}));
@@ -116,6 +122,26 @@ group(import.meta, () => {
             assertEquals(await graph.read(tx => getEntryDirectRelationshipFacts(A, tx, {relTypeId: entryHasPart, skip: 10})), [
                 {direction: "from", relType: {id: entryHasPart}, relFactsCount: 11, relFacts: [
                     {id: A_has_L, entry: {id: L, name: "Entry L", friendlyId: "l", entryType: {id: entryType}}},
+                ]},
+            ]);
+
+            // Check the relationships of 🄽
+            assertEquals(await graph.read(tx => getEntryDirectRelationshipFacts(N, tx)), [
+                {direction: "from", relType: {id: entryHasPart}, relFactsCount: 2, relFacts: [
+                    {id: N_has_P, entry: {id: P, name: "Entry P", friendlyId: "p", entryType: {id: entryType}}},
+                    {id: N_has_Q, entry: {id: Q, name: "Entry Q", friendlyId: "q", entryType: {id: entryType}}},
+                ]},
+                {direction: "from", relType: {id: entryIsA}, relFactsCount: 1, relFacts: [
+                    {id: N_isa_A, entry: {id: A, name: "Entry A", friendlyId: "a", entryType: {id: entryType}}},
+                ]},
+                {direction: "from", relType: {id: entryRelatesTo}, relFactsCount: 1, relFacts: [
+                    {id: N_rel_O, entry: {id: O, name: "Entry O", friendlyId: "o", entryType: {id: entryType}}},
+                ]},
+                {direction: "to", relType: {id: entryHasPart}, relFactsCount: 1, relFacts: [
+                    {id: M_has_N, entry: {id: M, name: "Entry M", friendlyId: "m", entryType: {id: entryType}}},
+                ]},
+                {direction: "to", relType: {id: entryIsA}, relFactsCount: 1, relFacts: [
+                    {id: R_isa_N, entry: {id: R, name: "Entry R", friendlyId: "r", entryType: {id: entryType}}},
                 ]},
             ]);
 

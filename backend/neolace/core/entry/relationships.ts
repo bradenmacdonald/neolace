@@ -27,32 +27,34 @@ export async function getEntryDirectRelationshipFacts(entryId: VNID, tx: Wrapped
     const relTypeId = options.relTypeId ?? null;
 
     const relFactData = await tx.query(C`
-            MATCH (entry:Entry:VNode {id: ${entryId}})
-            MATCH (entry)-[:HAS_REL_FACT]-(relFact:RelFact:VNode)-[:IS_OF_REL_TYPE]->(relType:RelationshipType:VNode)
+            MATCH (entry:${Entry} {id: ${entryId}})
+            MATCH (entry)-[:${Entry.rel.REL_FACT}]-(relFact:${RelationshipFact})-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType:${RelationshipType})
             WHERE ${relTypeId} IS NULL OR relType.id = ${relTypeId}
             WITH DISTINCT entry, relType
+            ORDER BY relType.nameForward
                     
                 CALL {
                     WITH entry, relType
-                    MATCH (entry)-[:HAS_REL_FACT]->(relFact:VNode)-[:IS_A|HAS_A|DEPENDS_ON|RELATES_TO]->(otherEntry:VNode),
+                    MATCH (entry)-[:${Entry.rel.REL_FACT}]->(relFact:VNode)-[:${RelationshipFact.rel.REL_FACT}]->(otherEntry:VNode),
                         (otherEntry)-[:${Entry.rel.IS_OF_TYPE}]->(otherEntryType:VNode),
-                        (relFact)-[:IS_OF_REL_TYPE]->(relType)
+                        (relFact)-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType)
                     RETURN {id: relFact.id, entry: {id: otherEntry.id, name: otherEntry.name, slugId: otherEntry.slugId, entryTypeId: otherEntryType.id}} AS result
                     ORDER BY relFact.weight DESC, otherEntry.name
                     SKIP ${C.int(skip)} LIMIT ${C.int(limit)}
                 }
                 RETURN "from" as direction, relType.id as relTypeId, collect(result) as relFacts
         UNION
-            MATCH (entry:Entry:VNode {id: ${entryId}})
-            MATCH (entry)<-[:IS_A|HAS_A|DEPENDS_ON|RELATES_TO]-(relFact:VNode)-[:IS_OF_REL_TYPE]->(relType:VNode)
+            MATCH (entry:${Entry} {id: ${entryId}})
+            MATCH (entry)<-[:${RelationshipFact.rel.REL_FACT}]-(relFact:VNode)-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType:VNode)
             WHERE ${relTypeId} IS NULL OR relType.id = ${relTypeId}
             WITH DISTINCT entry, relType
+            ORDER BY relType.nameForward
                     
                 CALL {
                     WITH entry, relType
-                    MATCH (otherEntry:Entry:VNode)-[:HAS_REL_FACT]->(relFact:VNode)-[:IS_A|HAS_A|DEPENDS_ON|RELATES_TO]->(entry),
+                    MATCH (otherEntry:VNode)-[:${Entry.rel.REL_FACT}]->(relFact:VNode)-[:${RelationshipFact.rel.REL_FACT}]->(entry),
                         (otherEntry)-[:${Entry.rel.IS_OF_TYPE}]->(otherEntryType:VNode),
-                        (relFact)-[:IS_OF_REL_TYPE]->(relType)
+                        (relFact)-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType)
                     RETURN {id: relFact.id, entry: {id: otherEntry.id, name: otherEntry.name, slugId: otherEntry.slugId, entryTypeId: otherEntryType.id}} AS result
                     ORDER BY relFact.weight DESC, otherEntry.name
                     SKIP ${C.int(skip)} LIMIT ${C.int(limit)}
@@ -88,7 +90,7 @@ export async function getEntryDirectRelationshipFacts(entryId: VNID, tx: Wrapped
         MATCH (entry:${Entry} {id: ${entryId}})
         UNWIND ${relTypesToCountFrom} as relTypeId
         MATCH (relType:${RelationshipType} {id: relTypeId})
-        MATCH (entry)-[:HAS_REL_FACT]->(relFact:${RelationshipFact})-[:IS_OF_REL_TYPE]->(relType)
+        MATCH (entry)-[:${Entry.rel.REL_FACT}]->(relFact:${RelationshipFact})-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType)
         RETURN relTypeId, count(*) AS count
     `.givesShape({relTypeId: Field.VNID, count: Field.Int})).then(countsResult => {
         countsResult.forEach(cr => {
@@ -103,7 +105,7 @@ export async function getEntryDirectRelationshipFacts(entryId: VNID, tx: Wrapped
         MATCH (entry:${Entry} {id: ${entryId}})
         UNWIND ${relTypesToCountTo} as relTypeId
         MATCH (relType:${RelationshipType} {id: relTypeId})
-        MATCH (entry)<-[:IS_A|HAS_A|DEPENDS_ON|RELATES_TO]-(relFact:${RelationshipFact})-[:IS_OF_REL_TYPE]->(relType)
+        MATCH (entry)<-[:${Entry.rel.REL_FACT}]-(relFact:${RelationshipFact})-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType)
         RETURN relTypeId, count(*) AS count
     `.givesShape({relTypeId: Field.VNID, count: Field.Int})).then(countsResult => {
         countsResult.forEach(cr => {

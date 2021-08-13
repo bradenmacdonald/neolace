@@ -1,4 +1,5 @@
 //import * as check from "neolace/deps/computed-types.ts";
+import { RelationshipCategory } from "neolace/deps/neolace-api.ts";
 import {
     VirtualPropType,
     C,
@@ -36,11 +37,9 @@ export class RelationshipFact extends VNodeType {
          */
         HAS_FACT_SOURCE: { to: [Entry], cardinality: VNodeType.Rel.ToOneRequired, },
 
-        // Depending on the type of "RelationshipType", this has a relationship to a target Entry:
-        IS_A: { to: [Entry], cardinality: VNodeType.Rel.ToOneOrNone, },
-        HAS_A: { to: [Entry], cardinality: VNodeType.Rel.ToOneOrNone, },
-        DEPENDS_ON: { to: [Entry], cardinality: VNodeType.Rel.ToOneOrNone, },
-        RELATES_TO: { to: [Entry], cardinality: VNodeType.Rel.ToOneOrNone, },
+        // There will be a REL_FACT relationship *From* an Entry to this RelationshipFact,
+        // and there is a REL_FACT relationship *To* an Entry from this RelationshipFact:
+        REL_FACT: { to: [Entry], cardinality: VNodeType.Rel.ToOneRequired, },
     }));
 
     static virtualProperties = this.hasVirtualProperties(() => ({
@@ -51,12 +50,12 @@ export class RelationshipFact extends VNodeType {
         },
         fromEntry: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)<-[:${Entry.rel.HAS_REL_FACT}]-(@target:${Entry})`,
+            query: C`(@this)<-[:${Entry.rel.REL_FACT}]-(@target:${Entry})`,
             target: Entry,
         },
         toEntry: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${this.rel.IS_A}|${this.rel.HAS_A}|${this.rel.DEPENDS_ON}|${this.rel.RELATES_TO}]->(@target:${Entry})`,
+            query: C`(@this)-[:${this.rel.REL_FACT}]->(@target:${Entry})`,
             target: Entry,
         },
     }));
@@ -68,8 +67,8 @@ export class RelationshipFact extends VNodeType {
 
         // Load important data about this fact's relationships:
         const selfData = await tx.pullOne(RelationshipFact, self => self
-            .fromEntry(e => e.type(et => et.id))
-            .toEntry(e => e.type(et => et.id))
+            .fromEntry(e => e.id.type(et => et.id))
+            .toEntry(e => e.id.type(et => et.id))
             .type(rt => rt.category.fromTypes(et => et.id).toTypes(et => et.id)),
             {key: dbObject.id},
         );
@@ -79,18 +78,13 @@ export class RelationshipFact extends VNodeType {
         // virtual props can be non-nullable)
         if (!relType) { throw new ValidationError("Internal error, RelationshipType is missing"); }
 
-        // Make sure there is exactly one target Entry, and the relationship is of the correct type:
+        // Make sure there are exactly two REL_FACT relationships (one from and one to):
         const relChecks = await tx.query(C`
             MATCH (n:${RelationshipFact} {id: ${dbObject.id}})
-            MATCH (n)-[r:${RelationshipFact.rel.IS_A}|${RelationshipFact.rel.HAS_A}|${RelationshipFact.rel.DEPENDS_ON}|${RelationshipFact.rel.RELATES_TO}]->(:${Entry})
+            MATCH (n)-[r:${RelationshipFact.rel.REL_FACT}]-(:${Entry})
         `.RETURN({r: Field.Relationship}));
-
-        if (relChecks.length !== 1) {
-            throw new ValidationError(`RelationshipFact should have exactly one relationship to a target entry type; found ${relChecks.length}`);
-        }
-        const actualRelTypeToTarget = relChecks[0].r.type;
-        if (actualRelTypeToTarget !== relType.category) {
-            throw new ValidationError(`RelationshipFact should have a relationship of type ${relType.category} to the target entry, not ${actualRelTypeToTarget}`);
+        if (relChecks.length !== 2) {
+            throw new ValidationError(`RelationshipFact should have exactly one from relationship and one to relationship with Entry VNodes; found ${relChecks.length}`);
         }
 
         // Make sure that the entry types this relationship involves are permitted by the RelationshipType
@@ -101,6 +95,19 @@ export class RelationshipFact extends VNodeType {
         if (!selfData.toEntry?.type?.id) { throw new ValidationError("RelationshipFact toEntry is missing"); }
         if (!relType.toTypes.map(et => et.id).includes(selfData.toEntry?.type?.id)) {
             throw new ValidationError(`RelationshipType does not permit a relationship to an Entry of that EntryType`);
+        }
+
+        // Special case: for IS_A relationship types, we also need a direct Entry-[:IS_A]->Entry relationship created on
+        // the graph, which makes ancestor lookups much more efficient.
+        if (relType.category === RelationshipCategory.IS_A) {
+            const directRelCheck = await tx.query(C`
+                MATCH (fromEntry:${Entry} {id: ${selfData.fromEntry.id}})
+                MATCH (toEntry:${Entry} {id: ${selfData.toEntry.id}})
+                MATCH (fromEntry)-[:${Entry.rel.IS_A} {relFactId: ${dbObject.id}}]->(toEntry)
+            `.RETURN({}));
+            if (directRelCheck.length !== 1) {
+                throw new ValidationError(`RelationshipFact ${dbObject.id} is an IS_A relationship but the direct (Entry)-[IS_A]->(Entry) relationship is missing.`);
+            }
         }
     }
 

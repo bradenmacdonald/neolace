@@ -70,7 +70,6 @@ export const ApplyEdits = defineAction({
                     if (!Object.values(RelationshipCategory).includes(category)) {
                         throw new Error("Internal error - unexpected value for relationship category");
                     }
-                    const safeNewRelType = category;  // The relationship from this RelationshipFact to the "to Entry" will be of this type, e.g. IS_A, HAS_A, etc.
 
                     // Create the new relationship fact.
                     // This query is written in such a way that it will also validate:
@@ -88,9 +87,18 @@ export const ApplyEdits = defineAction({
                         CREATE (rf:${RelationshipFact} {id: ${edit.data.id}})
                         CREATE (rf)-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType)
                         CREATE (rf)-[:${RelationshipFact.rel.HAS_FACT_SOURCE}]->(fromEntry)
-                        CREATE (rf)-[:${C(safeNewRelType)}]->(toEntry)
-                        CREATE (fromEntry)-[:${Entry.rel.HAS_REL_FACT}]->(rf)
+                        CREATE (rf)-[:${RelationshipFact.rel.REL_FACT}]->(toEntry)
+                        CREATE (fromEntry)-[:${Entry.rel.REL_FACT}]->(rf)
+
+                        ${category === RelationshipCategory.IS_A ?
+                            // If this is an IS_A relationship, also create a direct Entry-[IS_A]->Entry relationship,
+                            // which makes computing ancestors much easier. We don't do this in general because there's
+                            // no "proper" way to link a relationship between two entries to a RelationshipType without
+                            // using an intermediate node like RelationshipFact, which is what we use.
+                            C`CREATE (fromEntry)-[:${Entry.rel.IS_A} {relFactId: rf.id}]->(toEntry)`
+                        : C('')}
                     `.RETURN({}));
+
                     modifiedNodes.add(edit.data.id);
                     modifiedNodes.add(edit.data.fromEntry);
                     break;
