@@ -11,6 +11,7 @@ import {
     RawVNode,
     WrappedTransaction,
     defaultUpdateFor,
+    FieldValidationError,
 } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { Site } from "neolace/core/Site.ts";
@@ -29,6 +30,7 @@ import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
     static readonly properties = {
         ...VNodeType.properties,
         code: Field.String,
+        // changeType: is this a content edit or a schema edit?
         changeType: Field.String.Check(check.Schema.enum(EditChangeType)),
         dataJSON: Field.String,
         timestamp: Field.DateTime,
@@ -46,8 +48,17 @@ import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
  
     static async validate(dbObject: RawVNode<typeof DraftEdit>, tx: WrappedTransaction): Promise<void> {
         await super.validate(dbObject, tx);
-        // Very minimal validation - make sure this is valid JSON:
-        JSON.parse(dbObject.dataJSON);
+        // Validate that "code", "changeType", and "data" are all consistent:
+        const editType = getEditType(dbObject.code);
+        if (dbObject.changeType !== editType.changeType) {
+            throw new FieldValidationError("changeType", "Edit's code does not match its changeType.");
+        }
+        const data = JSON.parse(dbObject.dataJSON);
+        try {
+            editType.dataSchema(data);
+        } catch (err) {
+            throw new FieldValidationError("data", err.message);
+        }
     }
  
 }
@@ -78,7 +89,7 @@ export class Draft extends VNodeType {
 
     static readonly properties = {
         ...VNodeType.properties,
-        title: Field.String,
+        title: Field.String.Check(check.string.min(1).max(1_000)),
         description: Field.NullOr.String,
         created: Field.DateTime,
         status: Field.Int.Check(check.Schema.enum(DraftStatus)),
@@ -118,6 +129,7 @@ export class Draft extends VNodeType {
             type: VirtualPropType.ManyRelationship,
             target: DraftEdit,
             query: C`(@this)-[:${this.rel.HAS_EDIT}]->(@target:${DraftEdit})`,
+            defaultOrderBy: `@this.timestamp`,
         },
         modifiesEntries: {
             type: VirtualPropType.ManyRelationship,
@@ -247,15 +259,13 @@ export const UpdateDraft = defaultUpdateFor(Draft, d => d.title.description, {
     },
     resultData: {} as {id: VNID},
     apply: async (tx, data) => {
-        const id = data.id ?? VNID();
-
-        const draft = await tx.pullOne(Draft, d => d.status.site(s => s.id).edits(e => e.code.data()))
+        const draft = await tx.pullOne(Draft, d => d.status.site(s => s.id).edits(e => e.code.data()), {key: data.id})
         if (draft.status !== DraftStatus.Open) {
             throw new Error("Draft is not open.");
         }
 
         await tx.queryOne(C`
-            MATCH (draft:${Draft} {id: ${id}})
+            MATCH (draft:${Draft} {id: ${data.id}})
             SET draft.status = ${DraftStatus.Accepted}
         `.RETURN({}));
 
@@ -266,9 +276,9 @@ export const UpdateDraft = defaultUpdateFor(Draft, d => d.title.description, {
         });
 
         return {
-            resultData: {id, },
-            modifiedNodes: [id, ...modifiedNodes],
-            description: `Accepted ${Draft.withId(id)}`,
+            resultData: {id: data.id, },
+            modifiedNodes: [data.id, ...modifiedNodes],
+            description: `Accepted ${Draft.withId(data.id)}`,
         };
     },
 });

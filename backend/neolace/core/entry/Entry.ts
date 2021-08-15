@@ -5,10 +5,14 @@ import {
     C,
     VNodeType,
     Field,
+    RawVNode,
+    WrappedTransaction,
+    ValidationError,
 } from "neolace/deps/vertex-framework.ts";
 
-import { Image } from "neolace/asset-library/Image.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
+import { slugIdToFriendlyId } from "neolace/core/Site.ts";
+import { RelationshipFact } from "./RelationshipFact.ts";
 
 
 /**
@@ -19,13 +23,8 @@ export class Entry extends VNodeType {
     static label = "Entry";
     static properties = {
         ...VNodeType.properties,
-        // slugId: A short slug that identifies this entry
-        // Ideally something very concise, so it doesn't need to be changed even if the article is renamed, and also so
-        // that it can be used in other languages without being weird.
-        // e.g. "p-geoeng-sas" for "stratospheric aerosol scattering" (p- means Process, t- means TechConcept/Thing, etc.)
-        //
-        // Note that slugIds can change but every slugId permanently points to the entry
-        // for which is was first used. So slugIds are immutable but there can be several of them for one entry.
+        // slugId: The friendlyId along with a Site-specific prefix.
+        // See arch-decisions/007-sites-multitenancy for details.
         slugId: Field.Slug,
         // The name of this entry
         // This does not need to be unique or include disambiguation - so just put "Drive", not "Drive (computer science)"
@@ -40,19 +39,22 @@ export class Entry extends VNodeType {
             to: [EntryType],
             cardinality: VNodeType.Rel.ToOneRequired,
         },
-        /** This entry is a child/subtype/variant/category of some other entry */
-        IS_A: {
-            to: [this],
-            properties: {
-                // More specific "type" of this relationship, according to the site's schema
-                detailedRelType: Field.String,
-            },
+        /** This Entry has a relationship to another entry, via a RelationshipFact */
+        REL_FACT: {
+            to: [RelationshipFact],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
-        // HAS_ENTRIES: {
-        //     to: [Entry],
-        //     cardinality: VNodeType.Rel.ToMany,
-        // },
+        // If this Entry has an IS_A relationship to other entries (via RelationshipFact), it will also have a direct
+        // IS_A relationship to the Entry, which makes computing ancestors of an Entry much simpler.
+        // i.e. If there is (this:Entry)-[:REL_FACT]->(:RelationshipFact {category: "IS_A"})-[:REL_FACT]->(parent:Entry)
+        //      then there will also be a (this)-[:IS_A]->(parent) relationship
+        IS_A: {
+            to: [this],
+            cardinality: VNodeType.Rel.ToMany,
+            properties: {
+                relFactId: Field.VNID,
+            },
+        },
     });
 
     static virtualProperties = this.hasVirtualProperties(() => ({
@@ -61,48 +63,60 @@ export class Entry extends VNodeType {
             query: C`(@this)-[:${this.rel.IS_OF_TYPE}]->(@target:${EntryType})`,
             target: EntryType,
         },
+        /*
         relatedImages: {
             type: VirtualPropType.ManyRelationship,
             query: C`(@target:${Image})-[:${Image.rel.RELATES_TO}]->(:${this})-[:IS_A*0..10]->(@this)`,
             target: Image,
         },
+        */
     }));
 
     static derivedProperties = this.hasDerivedProperties({
-        id,
-        numRelatedImages,
+        friendlyId,
+        //numRelatedImages,
     });
+
+    static async validate(dbObject: RawVNode<typeof Entry>, tx: WrappedTransaction): Promise<void> {
+        await super.validate(dbObject, tx);
+        // Check that the slugId is prefixed with the site code.
+        const entryData = await tx.pullOne(Entry, e => e.type(t => t.friendlyIdPrefix.site(s => s.siteCode)), {key: dbObject.id});
+        const siteCode = entryData.type?.site?.siteCode;
+        if (!siteCode) {
+            throw new ValidationError("Entry is unexpectedly not linked to a site with a sitecode.");
+        }
+        if (dbObject.slugId.substr(0, 5) !== siteCode) {
+            throw new ValidationError("Entry's slugId does not start with the site code.");
+        }
+
+        // Check the friendlyIdPrefix:
+        const friendlyIdPrefix = entryData.type?.friendlyIdPrefix;
+        if (friendlyIdPrefix && !dbObject.slugId.substr(5).startsWith(friendlyIdPrefix)) {
+            throw new ValidationError(`Invalid friendlyId; expected it to start with ${friendlyIdPrefix}`);
+        }
+
+        // Validate that all IS_A relationships have corresponding RelationshipFacts
+        // RelationshipFact validates the opposite, that all IS_A RelationshipFacts have corresponding IS_A relationships
+        const isACheck = await tx.query(C`
+            MATCH (entry:${this})-[rel:${this.rel.IS_A}]->(otherEntry:VNode)
+            WITH rel.relFactId AS expectedId
+            OPTIONAL MATCH (entry:${this})-[:${this.rel.REL_FACT}]->(relFact:VNode {id: expectedId})
+            RETURN expectedId, relFact.id AS actualId
+        `.givesShape({expectedId: Field.VNID, actualId: Field.VNID}));
+        if (!isACheck.every(row => row.actualId === row.expectedId)) {
+            throw new ValidationError(`Entry has a stranded IS_A relationship without a corresponding RelationshipFact`);
+        }
+    }
+
 }
 
 
 /**
  * A property that provides the slugId without its site-specific prefix
+ * See arch-decisions/007-sites-multitenancy for details.
  */
- export function id(): DerivedProperty<string> { return DerivedProperty.make(
+export function friendlyId(): DerivedProperty<string> { return DerivedProperty.make(
     Entry,
     e => e.slugId,
-    e => {
-        // A normal VNode slugId is up to 32 chars long: "foo-bar-tribble-bat-wan-tresadfm"
-        // To support multi-tenancy, we put a 3-5 character site ID (like "001") and a hyphen
-        // at the start of the slugId. So "s-test" is stored as "XY6-s-test". This reverses
-        // that prefix to return the site-specific slugId.
-        const start = e.slugId.indexOf("-") + 1;
-        if (start === 0) {
-            throw new Error(`slugId ${e.slugId} is missing a site prefix.`);
-        }
-        return e.slugId.substr(start);
-    },
+    e => slugIdToFriendlyId(e.slugId),
 );}
-
-/**
- * A property that provides a simple string value stating what type this entry is (TechConcept, Process, etc.)
- */
-export function numRelatedImages(): DerivedProperty<number> { return DerivedProperty.make(
-    Entry,
-    e => e.relatedImages(i => i),
-    e => {
-        return e.relatedImages.length;
-    },
-);}
-
-// There are no actions to create a TechDbEntry because it is an abstract type.

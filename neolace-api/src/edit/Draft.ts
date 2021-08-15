@@ -7,12 +7,18 @@ export enum DraftStatus {
     Cancelled = 2,
 }
 
-// Parameters used when creating a new draft
+/**
+ * Parameters used when creating a new draft.
+ * 
+ * This has nothing to do with the Site's "Schema"; Schema here just means the shape of this data structure, which
+ * can be accessed programatically.
+ */
 export const CreateDraftSchema = Schema({
     title: string,
     description: nullable(string),
     edits: array.of(Schema({code: string, data: object})),
 });
+export type CreateDraftData = Type<typeof CreateDraftSchema>;
 
 // Information about one of the edits in a draft
 export const DraftEditSchema = Schema({

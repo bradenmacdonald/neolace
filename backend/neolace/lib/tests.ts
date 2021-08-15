@@ -1,7 +1,10 @@
 import * as log from "std/log/mod.ts";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 
 import { shutdown } from "neolace/app/shutdown.ts";
 import { graph } from "neolace/core/graph.ts";
+import { CreateGroup, PermissionGrant } from "neolace/core/Group.ts";
+import { CreateBot, CreateUser } from "neolace/core/User.ts";
 import { testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
 
 import {test as baseTest, group as baseGroup, afterAll, afterEach, beforeAll, beforeEach} from "neolace/deps/hooked.ts";
@@ -70,12 +73,6 @@ try {
 }
 const {emptySnapshot, defaultDataSnapshot, data} = JSON.parse(dataStr) as TestSetupData;
 
-// beforeAll(async () => {
-//     log.debug("Waiting for server startup...");
-//     await serverPromise;
-//     log.debug("Server ready");
-// })
-
 afterAll(async () => {
     // Leave the default data in the database in case developers want to make queries and play with it:
     await graph.resetDBToSnapshot(defaultDataSnapshot);
@@ -103,7 +100,12 @@ enum TestIsolationLevels {
     DEFAULT_ISOLATED,
 }
 
-export function setTestIsolation(level: TestIsolationLevels): typeof data {
+type ReturnedData<T extends TestIsolationLevels> = 
+    T extends TestIsolationLevels.DEFAULT_ISOLATED ? typeof data :
+    T extends TestIsolationLevels.DEFAULT_NO_ISOLATION ? typeof data :
+    void;
+
+export function setTestIsolation<Level extends TestIsolationLevels>(level: Level): ReturnedData<Level> {
     try {
         if (level === TestIsolationLevels.BLANK_NO_ISOLATION) {
             beforeAll(async () => { await graph.resetDBToSnapshot(emptySnapshot); });
@@ -111,13 +113,58 @@ export function setTestIsolation(level: TestIsolationLevels): typeof data {
             beforeEach(async () => { await graph.resetDBToSnapshot(emptySnapshot); });
         } else if (level === TestIsolationLevels.DEFAULT_NO_ISOLATION) {
             beforeAll(async () => { await graph.resetDBToSnapshot(defaultDataSnapshot); });
+            // deno-lint-ignore no-explicit-any
+            return data as any;
         } else if (level === TestIsolationLevels.DEFAULT_ISOLATED) {
             beforeEach(async () => { await graph.resetDBToSnapshot(defaultDataSnapshot); });
+            // deno-lint-ignore no-explicit-any
+            return data as any;
         }
+        // deno-lint-ignore no-explicit-any
+        return undefined as any;
     } catch (err) {
         log.error(`Error during setTestIsolation: ${err}`);
         throw err;
     }
-    return data;
 }
 setTestIsolation.levels = TestIsolationLevels;
+
+
+
+let _userCounter = 0;  // A counter used by createUserWithPermissions
+/**
+ * Helper function to create a new user that has exactly the specified permissions, for test purposes.
+ * @param permissions 
+ */
+export async function createUserWithPermissions(permissions: Set<PermissionGrant>): Promise<{userId: VNID, groupId: VNID, userData: {bot: {authToken: string}}}> {
+
+    const userNumber = ++_userCounter;
+    const username = `user${userNumber}`;
+
+    const {id: userId} = await graph.runAsSystem(CreateUser({
+        email: `${username}@example.com`,
+        fullName: `User${userNumber} Tester`,
+        username,
+    }));
+
+    const {authToken: botAuthToken} = await graph.runAsSystem(CreateBot({
+        ownedByUser: userId,
+        username: `user${userNumber}bot`,
+        fullName: `User${userNumber} Tester's Bot`,
+        inheritPermissions: true,
+    }));
+
+    const {id: groupId} = await graph.runAsSystem(CreateGroup({
+        name: `TestGroup${userNumber}`,
+        belongsTo: data.site.id,
+        addUsers: [userId],
+        administerSite:       permissions.has(PermissionGrant.administerSite),
+        administerGroups:     permissions.has(PermissionGrant.administerGroups),
+        approveEntryEdits:    permissions.has(PermissionGrant.approveEntryEdits),
+        approveSchemaChanges: permissions.has(PermissionGrant.approveSchemaChanges),
+        proposeEntryEdits:    permissions.has(PermissionGrant.proposeEntryEdits),
+        proposeSchemaChanges: permissions.has(PermissionGrant.proposeSchemaChanges),
+    }));
+
+    return {userId, groupId, userData: {bot: {authToken: botAuthToken}}};
+}

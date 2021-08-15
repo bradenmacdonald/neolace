@@ -8,6 +8,7 @@ import {
     UpdateRelationshipType,
 } from "neolace/deps/neolace-api.ts";
 import { C, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { Type } from "neolace/deps/computed-types.ts";
 import { Site } from "neolace/core/Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
@@ -47,8 +48,9 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             nameForward: rt.nameForward,
             nameReverse: rt.nameReverse,
             description: rt.description,
-            fromEntryTypes: rt.fromTypes.map(et => et.id),
-            toEntryTypes: rt.toTypes.map(et => et.id),
+            // For consistency and to make tests easier, "from" and "to" IDs are sorted by ID.
+            fromEntryTypes: rt.fromTypes.map(et => et.id).sort(),
+            toEntryTypes: rt.toTypes.map(et => et.id).sort(),
             category: CastRelationshipCategory(rt.category),
         };
     });
@@ -150,7 +152,7 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
         for (const relTypeId of newRelTypeIds) {
             const oldRT: RelationshipTypeData|undefined = oldSchema.relationshipTypes[relTypeId];
             const newRT = newSchema.relationshipTypes[relTypeId];
-            const changes: Partial<typeof UpdateRelationshipType["dataSchema"]> = {};
+            const changes: Partial<Type<typeof UpdateRelationshipType["dataSchema"]>> = {};
 
             if (!addedRelTypeIds.has(relTypeId)) {
                 if (newRT.nameForward !== oldRT?.nameForward) { changes.nameForward = newRT.nameForward; }
@@ -177,7 +179,8 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
             if (Object.keys(changes).length > 0) {
                 result.edits.push({code: "UpdateRelationshipType", data: {
                     id: VNID(relTypeId),
-                    ...changes,
+                    // deno-lint-ignore no-explicit-any
+                    ...changes as any,
                 }});
             }
         }

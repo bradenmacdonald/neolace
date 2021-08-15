@@ -1,9 +1,23 @@
 // deno-lint-ignore-file no-explicit-any
-import { EditList, ContentType, CreateEntryType, CreateRelationshipType, UpdateEntryType, UpdateRelationshipType } from "neolace/deps/neolace-api.ts";
-import { C, defineAction, VNID } from "neolace/deps/vertex-framework.ts";
+import * as log from "std/log/mod.ts";
+import {
+    EditList,
+    ContentType,
+    CreateEntry,
+    CreateEntryType,
+    CreateRelationshipFact,
+    CreateRelationshipType,
+    UpdateEntryType,
+    UpdateRelationshipType,
+    getEditType,
+    RelationshipCategory,
+} from "neolace/deps/neolace-api.ts";
+import { C, defineAction, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { Site } from "../Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
+import { Entry } from "neolace/core/entry/Entry.ts";
+import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
 
 /**
  * Apply a set of edits (to schema and/or content)
@@ -22,7 +36,73 @@ export const ApplyEdits = defineAction({
         const descriptions: string[] = [];
 
         for (const edit of data.edits) {
+
+            const editTypeDefinition = getEditType(edit.code);
+            const description = editTypeDefinition.describe(edit.data);
+            descriptions.push(description);
+
+            log.info(`Applying Draft (${edit.code}): ${description}`);
+
             switch (edit.code) {
+
+                case CreateEntry.code: {  // Create a new Entry of a specific EntryType
+                    await tx.queryOne(C`
+                        MATCH (et:${EntryType} {id: ${edit.data.type}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                        CREATE (e:${Entry} {id: ${edit.data.id}})
+                        CREATE (e)-[:${Entry.rel.IS_OF_TYPE}]->(et)
+                        SET e.slugId = site.siteCode + ${edit.data.friendlyId}
+                        SET e += ${{
+                            name: edit.data.name,
+                            description: edit.data.description,
+                        }}
+                    `.RETURN({}));
+                    modifiedNodes.add(edit.data.id);
+                    break;
+                }
+
+                case CreateRelationshipFact.code: {  // Create a new Relationship Fact (record a relationship between two Entries)
+
+                    // We are about to put the relationship type into the query unescaped. Let's be very sure we validate it first:
+                    const relType = await tx.queryOne(C`
+                        MATCH (rt:${RelationshipType} {id: ${edit.data.type}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                    `.RETURN({"rt.category": Field.String}));
+                    const category = relType["rt.category"] as RelationshipCategory;
+                    if (!Object.values(RelationshipCategory).includes(category)) {
+                        throw new Error("Internal error - unexpected value for relationship category");
+                    }
+
+                    // Create the new relationship fact.
+                    // This query is written in such a way that it will also validate:
+                    // 1. That the RelationshipType for this new relationship is part of the current Site.
+                    // 2. That the "from entry" is of an EntryType allowed as a "from" EntryType for this RelationshipType
+                    // 3. That the "to entry" is of an EntryType allowed as a "to" EntryType for this RelationshipType
+                    // 4. 2 and 3 together with the validation code on RelationshipType also ensures that all referenced
+                    //    entries are part of the same Site.
+                    await tx.queryOne(C`
+                        MATCH (relType:${RelationshipType} {id: ${edit.data.type}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                        MATCH (fromEntry:${Entry} {id: ${edit.data.fromEntry}})-[:${Entry.rel.IS_OF_TYPE}]->(fromET:${EntryType}),
+                              (relType)-[:${RelationshipType.rel.FROM_ENTRY_TYPE}]->(fromET)
+                        MATCH (toEntry:${Entry} {id: ${edit.data.toEntry}})-[:${Entry.rel.IS_OF_TYPE}]->(toET:${EntryType}),
+                              (relType)-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(toET)
+                        CREATE (rf:${RelationshipFact} {id: ${edit.data.id}})
+                        CREATE (rf)-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType)
+                        CREATE (rf)-[:${RelationshipFact.rel.HAS_FACT_SOURCE}]->(fromEntry)
+                        CREATE (rf)-[:${RelationshipFact.rel.REL_FACT}]->(toEntry)
+                        CREATE (fromEntry)-[:${Entry.rel.REL_FACT}]->(rf)
+
+                        ${category === RelationshipCategory.IS_A ?
+                            // If this is an IS_A relationship, also create a direct Entry-[IS_A]->Entry relationship,
+                            // which makes computing ancestors much easier. We don't do this in general because there's
+                            // no "proper" way to link a relationship between two entries to a RelationshipType without
+                            // using an intermediate node like RelationshipFact, which is what we use.
+                            C`CREATE (fromEntry)-[:${Entry.rel.IS_A} {relFactId: rf.id}]->(toEntry)`
+                        : C('')}
+                    `.RETURN({}));
+
+                    modifiedNodes.add(edit.data.id);
+                    modifiedNodes.add(edit.data.fromEntry);
+                    break;
+                }
 
                 case CreateEntryType.code: {  // Create a new EntryType
                     await tx.queryOne(C`
@@ -33,7 +113,6 @@ export const ApplyEdits = defineAction({
                             contentType: ContentType.None,
                         }}
                     `.RETURN({}));
-                    descriptions.push(CreateEntryType.describe(edit.data));
                     modifiedNodes.add(edit.data.id);
                     break;
                 }
@@ -50,7 +129,6 @@ export const ApplyEdits = defineAction({
                         MATCH (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         SET et += ${changes}
                     `.RETURN({}));
-                    descriptions.push(UpdateEntryType.describe(edit.data));
                     modifiedNodes.add(edit.data.id);
                     break;
                 }
@@ -64,7 +142,6 @@ export const ApplyEdits = defineAction({
                             category: edit.data.category,
                         }}
                     `.RETURN({}));
-                    descriptions.push(CreateRelationshipType.describe(edit.data));
                     modifiedNodes.add(edit.data.id);
                     break;
                 }
@@ -117,8 +194,6 @@ export const ApplyEdits = defineAction({
                             CREATE (rt)-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(et)
                         `);
                     }
-
-                    descriptions.push(UpdateRelationshipType.describe(edit.data));
                     modifiedNodes.add(edit.data.id);
                     break;
                 }

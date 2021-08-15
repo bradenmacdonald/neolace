@@ -1,12 +1,10 @@
 // deno-lint-ignore-file no-explicit-any
+import { nullable, vnidString } from "../api-schemas.ts";
+import { Schema, SchemaValidatorFunction, string, array, Type } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
-import { VNID } from "../types.ts";
 import { ContentType, SiteSchemaData, RelationshipCategory } from "./SiteSchemaData.ts";
 
-const typed: any = undefined;  // Helper for declaring types below, where the value doesn't matter, only the type.
-
-
-interface SchemaEditType<Code extends string = string, DataSchema = Record<string, never>> extends EditType<Code, DataSchema> {
+interface SchemaEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Schema;
     /**
      * If this edit "expands" the schema, it does something like adding a new Entry Type or a new Property, which are
@@ -15,20 +13,20 @@ interface SchemaEditType<Code extends string = string, DataSchema = Record<strin
      * may break backwards compatibility.
      */
     // expands: boolean;
-    apply: (currentSchema: Readonly<SiteSchemaData>, data: DataSchema) => SiteSchemaData;
+    apply: (currentSchema: Readonly<SiteSchemaData>, data: Type<DataSchema>) => SiteSchemaData;
 }
 
-function SchemaEditType<Code extends string, DataSchema>(args: SchemaEditType<Code, DataSchema>): SchemaEditType<Code, DataSchema> {
+function SchemaEditType<Code extends string, DataSchema extends SchemaValidatorFunction<any>>(args: SchemaEditType<Code, DataSchema>): SchemaEditType<Code, DataSchema> {
     return args;
 }
 
 export const CreateEntryType = SchemaEditType({
     changeType: EditChangeType.Schema,
     code: "CreateEntryType",
-    dataSchema: typed as {
+    dataSchema: Schema({
         name: string,
-        id: VNID,
-    },
+        id: vnidString,
+    }),
     apply: (currentSchema, data) => {
 
         if (data.id in currentSchema.entryTypes || data.id in currentSchema.relationshipTypes) {
@@ -57,13 +55,13 @@ export const CreateEntryType = SchemaEditType({
 export const UpdateEntryType = SchemaEditType({
     changeType: EditChangeType.Schema,
     code: "UpdateEntryType",
-    dataSchema: typed as {
-        id: VNID,
-        name?: string,
-        contentType?: ContentType.None,
-        description?: string|null,
-        friendlyIdPrefix?: string|null,
-    },
+    dataSchema: Schema({
+        id: vnidString,
+        name: string.strictOptional(),
+        contentType: Schema.enum(ContentType).strictOptional(),
+        description: nullable(string).strictOptional(),
+        friendlyIdPrefix: nullable(string).strictOptional(),
+    }),
     apply: (currentSchema, data) => {
 
         const newSchema: SiteSchemaData = {
@@ -90,12 +88,12 @@ export const UpdateEntryType = SchemaEditType({
 export const CreateRelationshipType = SchemaEditType({
     changeType: EditChangeType.Schema,
     code: "CreateRelationshipType",
-    dataSchema: typed as {
+    dataSchema: Schema({
         nameForward: string,
         nameReverse: string,
-        id: VNID,
-        category: RelationshipCategory,
-    },
+        id: vnidString,
+        category: Schema.enum(RelationshipCategory),
+    }),
     apply: (currentSchema, data) => {
 
         if (data.id in currentSchema.entryTypes || data.id in currentSchema.relationshipTypes) {
@@ -126,16 +124,16 @@ export const CreateRelationshipType = SchemaEditType({
 export const UpdateRelationshipType = SchemaEditType({
     changeType: EditChangeType.Schema,
     code: "UpdateRelationshipType",
-    dataSchema: typed as {
-        id: VNID,
-        nameForward?: string,
-        nameReverse?: string,
-        description?: string|null,
-        addFromTypes?: VNID[],
-        removeFromTypes?: VNID[],
-        addToTypes?: VNID[],
-        removeToTypes?: VNID[],
-    },
+    dataSchema: Schema({
+        id: vnidString,
+        nameForward: string.strictOptional(),
+        nameReverse: string.strictOptional(),
+        description: nullable(string).strictOptional(),
+        addFromTypes: array.of(vnidString).strictOptional(),
+        removeFromTypes: array.of(vnidString).strictOptional(),
+        addToTypes: array.of(vnidString).strictOptional(),
+        removeToTypes: array.of(vnidString).strictOptional(),
+    }),
     apply: (currentSchema, data) => {
 
         const currentValues = currentSchema.relationshipTypes[data.id];
@@ -182,23 +180,12 @@ export const UpdateRelationshipType = SchemaEditType({
 });
 
 
-const allEditTypes = {
+export const _allSchemaEditTypes = {
     CreateEntryType,
     UpdateEntryType,
     CreateRelationshipType,
     UpdateRelationshipType,
 };
-
-export function getEditType(code: string): EditType {
-    const et = (allEditTypes as any)[code];
-    if (et === undefined) {
-        throw new Error(`Unknown/unsupported edit code: "${code}"`);
-    }
-    return et;
-}
-getEditType.OrNone = function(code: string): EditType|undefined {
-    return (allEditTypes as any)[code];
-}
 
 export type AnySchemaEdit = (
     | Edit<typeof CreateEntryType>
