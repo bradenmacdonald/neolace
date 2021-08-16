@@ -2,20 +2,29 @@ import { C } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { QueryExpression } from "../expression.ts";
-import { EntrySetValue, IntegerValue } from "../values.ts";
+import { LazyEntrySetValue, EntryValue, IntegerValue } from "../values.ts";
 import { QueryEvaluationError } from "../errors.ts";
+import { QueryContext } from "../context.ts";
 
 /**
- * entryAncestors(): returns the ancestors of the current entry (entries that the current entry has a IS_A relationnship
- * to, and entries they have an IS_A relationship to, and so on).
+ * ancestors(entry): returns the ancestors of the specified entry
  */
- export class EntryAncestors extends QueryExpression {
+ export class Ancestors extends QueryExpression {
 
-    public getValue() {
+    // An expression that specifies what entry's ancestors we want to retrieve
+    readonly entryExpr: QueryExpression;
+
+    constructor(entryExpr: QueryExpression) {
+        super();
+        this.entryExpr = entryExpr;
+    }
+
+    public async getValue(context: QueryContext) {
         const maxDepth = 50;
+        const startingEntry = await this.entryExpr.getValueAs(context, EntryValue);
 
-        return new EntrySetValue(C`
-            MATCH (entry:${Entry} {id: $entryId})
+        return new LazyEntrySetValue(context, C`
+            MATCH (entry:${Entry} {id: ${startingEntry.id}})
             MATCH path = (entry)-[:${Entry.rel.IS_A}*..${C(String(maxDepth))}]->(ancestor:${Entry})
             WHERE ancestor <> entry  // Never return the starting node as its own ancestor, if the graph is cyclic
             // We want to only return DISTINCT ancestors, and return only the minimum distance to each one.
@@ -23,7 +32,7 @@ import { QueryEvaluationError } from "../errors.ts";
             ORDER BY distance, ancestor.name
 
             WITH ancestor AS entry, {distance: distance} AS annotations
-        `, {requiresEntryId: true, annotations: {distance: (val) => {
+        `, {annotations: {distance: (val) => {
             if (typeof val === "bigint") {
                 return new IntegerValue(val);
             } else {
@@ -32,7 +41,7 @@ import { QueryEvaluationError } from "../errors.ts";
         }}});
     }
 
-    public asString(): string {
-        return "entryAncestors()";
+    public toString(): string {
+        return `ancestors(${this.entryExpr.toString()})`;
     }
 }

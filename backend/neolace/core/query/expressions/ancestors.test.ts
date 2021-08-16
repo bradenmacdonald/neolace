@@ -1,11 +1,12 @@
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
-import { EntryAncestors } from "./entryAncestors.ts";
+import { Ancestors } from "./ancestors.ts";
 import { AnnotatedEntryValue, IntegerValue, PageValue } from "../values.ts";
+import { This } from "./this.ts";
 
 group(import.meta, () => {
 
-    group("entryAncestors()", () => {
+    group("ancestors()", () => {
 
         // These tests are read-only so don't need isolation, but do use the default plantDB example data:
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
@@ -13,10 +14,11 @@ group(import.meta, () => {
         const ponderosaPine = defaultData.entries.ponderosaPine;
 
         test("It can give all the ancestors of the ponderosa pine", async () => {
-            const expression = new EntryAncestors();
+
+            const expression = new Ancestors(new This());
 
             const value = await graph.read(tx => 
-                expression.getValue().getValueFor({tx, siteId, entryId: ponderosaPine.id})
+                expression.getValue({tx, siteId, entryId: ponderosaPine.id}).then(v => v.makeConcrete())
             );
 
             assertEquals(

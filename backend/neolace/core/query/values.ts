@@ -3,39 +3,31 @@ import {
     CypherQuery,
     Field,
     VNID,
-    WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 
 import { QueryContext } from "./context.ts";
 import { QueryEvaluationError } from "./errors.ts";
 
-// Query language string > expression tree > abstract value > concrete value
+// Query language string > expression tree > lazy value > concrete value
 
 
 export abstract class QueryValue {
-    public static readonly isAbstract: boolean;
+    public static readonly isLazy: boolean;
+
+    /** If this is a LazyValue, convert it to a default non-lazy value. */
+    public makeConcrete(): Promise<ConcreteValue> { return new Promise(resolve => resolve(this)); }
 }
 
 /**
  * A value that respresents some concrete data, like the number 5 or a list of entries.
  */
 abstract class ConcreteValue extends QueryValue {
-    static readonly isAbstract = false;
-}
-
-/**
- * A value that respresents something abstract like "All Image Entries", and which
- * needs to be 
- */
-abstract class AbstractValue extends QueryValue {
-    static readonly isAbstract = true;
-
-    public abstract getValueFor(context: {tx: WrappedTransaction, siteId: VNID, entryId?: VNID}): Promise<ConcreteValue>;
+    static readonly isLazy = false;
 }
 
 interface ICountableValue {
     hasCount: true;
-    getCount(context: QueryContext): Promise<bigint>;
+    getCount(): Promise<bigint>;
 }
 
 
@@ -94,52 +86,84 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
 
 type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
 
+
 /**
- * An abstract value that represents a set of entries.
- * 
- * e.g. "All image entries", or "entries with ID A, B, or C"
- * 
- * Entries can be "annotated" with additional data, such as the distance between it and the current entry
+ * An intermediate value that represents something like a database query, which we haven't yet evaluated.
+ * The query (or whatever the lazy value is) may still be modified before it is evaluated. For example, a lazy entry
+ * list might be reduced to simply retrieving the total number of matching entries, before it is evaluated.
  */
-export class EntrySetValue extends AbstractValue implements ICountableValue {
+abstract class LazyValue extends QueryValue {
+    static readonly isLazy = true;
+    protected context: QueryContext;
+
+    constructor(context: QueryContext) {
+        super();
+        this.context = context;
+    }
+
+    /** If this is a LazyValue, convert it to a default non-lazy value. */
+    public override makeConcrete() { return this.toDefaultConcreteValue(); }
+    public abstract toDefaultConcreteValue(): Promise<ConcreteValue>;
+}
+
+
+
+/**
+ * A cypher-based lookup / query that has not yet been evaluated. Expressions can wrap this query to control things like
+ * pagination, annotations, or retrieve only the total count().
+ */
+abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue {
     readonly hasCount = true;
-    readonly query: CypherQuery;
     /**
-     * Many entry queries are designed to be evaluated in the context of a specific entry,
-     * e.g. a query for "All image entries related to (THIS ENTRY)". If this is such a query,
-     * it can only be evaluated if an entry ID is provided.
+     * The first part of the Cypher query, without a RETURN statement or SKIP, LIMIT, etc.
      */
-    readonly requiresEntryId: boolean;
+    readonly cypherQuery: CypherQuery;
+    readonly skip: bigint;  // How many rows to skip when retrieving the result (used for pagination)
+    readonly limit: bigint;  // How many rows to return per page
+
+    constructor(context: QueryContext, cypherQuery: CypherQuery, options: {skip?: bigint, limit?: bigint} = {}) {
+        super(context);
+        this.cypherQuery = cypherQuery;
+        this.skip = options.skip ?? 0n;
+        this.limit = options.limit ?? 100n;
+    }
+
+    /** Helper method for cloning instances of this */
+    protected getOptions() {
+        return {skip: this.skip, limit: this.limit};
+    }
+
+    protected getSkipLimitClause() {
+        if (typeof this.skip !== "bigint" || typeof this.limit !== "bigint") {
+            throw new QueryEvaluationError("Internal error - unsafe skip/limit value.");
+        }
+        return C`SKIP ${C(String(this.skip))} LIMIT ${C(String(this.limit))}`;
+    }
+
+    public async getCount(): Promise<bigint> {
+        const countQuery = this.cypherQuery.RETURN({"count(*)": Field.BigInt});
+        const result = await this.context.tx.query(countQuery);
+        return result[0]["count(*)"];
+    }
+}
+
+export class LazyEntrySetValue extends LazyCypherQueryValue {
     readonly annotations: Readonly<Record<string, AnnotationReviver>>|undefined;
 
-    constructor(query: CypherQuery, options: {requiresEntryId?: boolean, annotations?: Record<string, AnnotationReviver>} = {}) {
-        super();
-        this.query = query;
-        this.requiresEntryId = options.requiresEntryId ?? false;
+    constructor(context: QueryContext, cypherQuery: CypherQuery, options: {skip?: bigint, limit?: bigint, annotations?: Record<string, AnnotationReviver>} = {}) {
+        super(context, cypherQuery, options);
         this.annotations = options.annotations;
     }
 
-    private getBaseQuery(context: QueryContext) {
-        const params: {siteId: VNID, entryId?: VNID} = {siteId: context.siteId};
-        if (this.requiresEntryId) {
-            if (!context.entryId) {
-                throw new QueryEvaluationError("This expression can only be evaluated in the context of a specific entry.");
-            }
-            params.entryId = context.entryId;
-        }
-        return this.query.withParams(params);
-    }
-
-    public async getValueFor(context: QueryContext): Promise<PageValue<EntryValue>> {
-        const skip = 0n;
-        const limit = 100n;
+    public override async toDefaultConcreteValue(): Promise<PageValue<EntryValue>> {
         const query = C`
-            ${this.getBaseQuery(context)}
+            ${this.cypherQuery}
             RETURN entry.id, annotations
-            SKIP ${C(String(skip))} LIMIT ${C(String(limit))}
+            ${this.getSkipLimitClause()}
         `.givesShape({"entry.id": Field.VNID, annotations: Field.Any});
-        const result = await context.tx.query(query);
-        const totalCount = skip === 0n && result.length < limit ? BigInt(result.length) : await this.getCount(context);
+        const result = await this.context.tx.query(query);
+        const totalCount = this.skip === 0n && result.length < this.limit ? BigInt(result.length) : await this.getCount();
+
         return new PageValue<EntryValue>(
             result.map(r => {
                 if (this.annotations) {
@@ -153,16 +177,10 @@ export class EntrySetValue extends AbstractValue implements ICountableValue {
                 }
             }),
             {
-                startedAt: skip,
-                pageSize: limit,
+                startedAt: this.skip,
+                pageSize: this.limit,
                 totalCount,
             },
         );
-    }
-
-    public async getCount(context: QueryContext): Promise<bigint> {
-        const countQuery = this.getBaseQuery(context).RETURN({"count(*)": Field.BigInt});
-        const result = await context.tx.query(countQuery);
-        return result[0]["count(*)"];
     }
 }
