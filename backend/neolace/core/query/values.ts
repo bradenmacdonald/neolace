@@ -6,10 +6,6 @@ import {
     WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 
-import { Entry } from "neolace/core/entry/Entry.ts";
-import { EntryType } from "neolace/core/schema/EntryType.ts";
-import { slugIdToFriendlyId } from "neolace/core/Site.ts";
-
 import { QueryContext } from "./context.ts";
 import { QueryEvaluationError } from "./errors.ts";
 
@@ -17,14 +13,14 @@ import { QueryEvaluationError } from "./errors.ts";
 
 
 export abstract class QueryValue {
-    public abstract readonly isAbstract: boolean;
+    public static readonly isAbstract: boolean;
 }
 
 /**
  * A value that respresents some concrete data, like the number 5 or a list of entries.
  */
 abstract class ConcreteValue extends QueryValue {
-    readonly isAbstract = false;
+    static readonly isAbstract = false;
 }
 
 /**
@@ -32,7 +28,7 @@ abstract class ConcreteValue extends QueryValue {
  * needs to be 
  */
 abstract class AbstractValue extends QueryValue {
-    readonly isAbstract = true;
+    static readonly isAbstract = true;
 
     public abstract getValueFor(context: {tx: WrappedTransaction, siteId: VNID, entryId?: VNID}): Promise<ConcreteValue>;
 }
@@ -55,28 +51,26 @@ export class IntegerValue extends ConcreteValue {
     }
 }
 
-interface EntryData {
-    id: VNID,
-    name: string,
-    friendlyId: string,
-    entryType: {id: VNID},
-}
-
 /**
- * Basic data about a single entry
+ * Represents an Entry
  */
-export class EntrySummaryValue extends ConcreteValue {
+export class EntryValue extends ConcreteValue {
     readonly id: VNID;
-    readonly name: string;
-    readonly friendlyId: string;
-    readonly entryType: {id: VNID};
 
-    constructor(data: EntryData) {
+    constructor(id: VNID) {
         super();
-        this.id = data.id;
-        this.name = data.name;
-        this.friendlyId = data.friendlyId;
-        this.entryType = data.entryType;
+        this.id = id;
+    }
+}
+/**
+ * Represents an Entry, annotated with some extra information (like "distance" from another entry)
+ */
+export class AnnotatedEntryValue extends EntryValue {
+    readonly annotations: Readonly<Record<string, ConcreteValue>>;
+
+    constructor(id: VNID, annotations: Record<string, ConcreteValue>) {
+        super(id);
+        this.annotations = annotations;
     }
 }
 
@@ -98,13 +92,17 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
     }
 }
 
+type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
 
 /**
  * An abstract value that represents a set of entries.
  * 
  * e.g. "All image entries", or "entries with ID A, B, or C"
+ * 
+ * Entries can be "annotated" with additional data, such as the distance between it and the current entry
  */
 export class EntrySetValue extends AbstractValue implements ICountableValue {
+    readonly hasCount = true;
     readonly query: CypherQuery;
     /**
      * Many entry queries are designed to be evaluated in the context of a specific entry,
@@ -112,12 +110,13 @@ export class EntrySetValue extends AbstractValue implements ICountableValue {
      * it can only be evaluated if an entry ID is provided.
      */
     readonly requiresEntryId: boolean;
-    readonly hasCount = true;
+    readonly annotations: Readonly<Record<string, AnnotationReviver>>|undefined;
 
-    constructor(query: CypherQuery, requiresEntryId: boolean) {
+    constructor(query: CypherQuery, options: {requiresEntryId?: boolean, annotations?: Record<string, AnnotationReviver>} = {}) {
         super();
         this.query = query;
-        this.requiresEntryId = requiresEntryId;
+        this.requiresEntryId = options.requiresEntryId ?? false;
+        this.annotations = options.annotations;
     }
 
     private getBaseQuery(context: QueryContext) {
@@ -131,30 +130,28 @@ export class EntrySetValue extends AbstractValue implements ICountableValue {
         return this.query.withParams(params);
     }
 
-    public async getValueFor(context: QueryContext): Promise<PageValue<EntrySummaryValue>> {
+    public async getValueFor(context: QueryContext): Promise<PageValue<EntryValue>> {
         const skip = 0n;
         const limit = 100n;
         const query = C`
             ${this.getBaseQuery(context)}
-            WITH entry
-            MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
-            RETURN entry.id, entry.name, entry.slugId, entryType.id
+            RETURN entry.id, annotations
             SKIP ${C(String(skip))} LIMIT ${C(String(limit))}
-        `.givesShape({
-            "entry.id": Field.VNID,
-            "entry.name": Field.String,
-            "entry.slugId": Field.Slug,
-            "entryType.id": Field.VNID,
-        });
+        `.givesShape({"entry.id": Field.VNID, annotations: Field.Any});
         const result = await context.tx.query(query);
         const totalCount = skip === 0n && result.length < limit ? BigInt(result.length) : await this.getCount(context);
-        return new PageValue<EntrySummaryValue>(
-            result.map(r => new EntrySummaryValue({
-                id: r["entry.id"],
-                name: r["entry.name"],
-                friendlyId: slugIdToFriendlyId(r["entry.slugId"]),
-                entryType: {id: r["entryType.id"]},
-            })),
+        return new PageValue<EntryValue>(
+            result.map(r => {
+                if (this.annotations) {
+                    const annotatedValues: Record<string, ConcreteValue> = {};
+                    for (const key in this.annotations) {
+                        annotatedValues[key] = this.annotations[key](r.annotations[key]);
+                    }
+                    return new AnnotatedEntryValue(r["entry.id"], annotatedValues);
+                } else {
+                    return new EntryValue(r["entry.id"])
+                }
+            }),
             {
                 startedAt: skip,
                 pageSize: limit,

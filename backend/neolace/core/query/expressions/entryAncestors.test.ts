@@ -1,7 +1,7 @@
-import { group, test, setTestIsolation, assertEquals, assertThrowsAsync } from "neolace/lib/tests.ts";
+import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { EntryAncestors } from "./entryAncestors.ts";
-import { PageValue } from "../values.ts";
+import { AnnotatedEntryValue, IntegerValue, PageValue } from "../values.ts";
 
 group(import.meta, () => {
 
@@ -23,7 +23,11 @@ group(import.meta, () => {
                 value,
                 new PageValue(
                     [
-                        // TODO: should be AnnotatedEntryValue ({ID: x, distance: 1})
+                        new AnnotatedEntryValue(defaultData.entries.genusPinus.id,           {distance: new IntegerValue(1)}),
+                        new AnnotatedEntryValue(defaultData.entries.familyPinaceae.id,       {distance: new IntegerValue(2)}),
+                        new AnnotatedEntryValue(defaultData.entries.orderPinales.id,         {distance: new IntegerValue(3)}),
+                        new AnnotatedEntryValue(defaultData.entries.classPinopsida.id,       {distance: new IntegerValue(4)}),
+                        new AnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {distance: new IntegerValue(5)}),
                     ],
                     {
                         pageSize: 100n,

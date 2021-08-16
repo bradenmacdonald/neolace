@@ -2,7 +2,8 @@ import { C } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { QueryExpression } from "../expression.ts";
-import { EntrySetValue } from "../values.ts";
+import { EntrySetValue, IntegerValue } from "../values.ts";
+import { QueryEvaluationError } from "../errors.ts";
 
 /**
  * entryAncestors(): returns the ancestors of the current entry (entries that the current entry has a IS_A relationnship
@@ -21,8 +22,14 @@ import { EntrySetValue } from "../values.ts";
             WITH ancestor, min(length(path)) AS distance
             ORDER BY distance, ancestor.name
 
-            WITH ancestor AS entry, distance
-        `, true);
+            WITH ancestor AS entry, {distance: distance} AS annotations
+        `, {requiresEntryId: true, annotations: {distance: (val) => {
+            if (typeof val === "bigint") {
+                return new IntegerValue(val);
+            } else {
+                throw new QueryEvaluationError("Unexpected data type for 'distance' while evaluating Query Expression.");
+            }
+        }}});
     }
 
     public asString(): string {
