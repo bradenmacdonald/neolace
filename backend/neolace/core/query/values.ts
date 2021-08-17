@@ -21,11 +21,11 @@ export abstract class QueryValue {
 /**
  * A value that respresents some concrete data, like the number 5 or a list of entries.
  */
-abstract class ConcreteValue extends QueryValue {
+export abstract class ConcreteValue extends QueryValue {
     static readonly isLazy = false;
 }
 
-interface ICountableValue {
+export interface ICountableValue {
     hasCount: true;
     getCount(): Promise<bigint>;
 }

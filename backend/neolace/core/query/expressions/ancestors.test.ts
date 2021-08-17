@@ -3,6 +3,7 @@ import { graph } from "neolace/core/graph.ts";
 import { Ancestors, AndAncestors } from "./ancestors.ts";
 import { AnnotatedEntryValue, IntegerValue, PageValue } from "../values.ts";
 import { This } from "./this.ts";
+import { Count } from "./count.ts";
 
 group(import.meta, () => {
 
@@ -40,6 +41,17 @@ group(import.meta, () => {
             );
         });
 
+        test("It is compatible with count()", async () => {
+
+            const expression = new Count(new Ancestors(new This()));
+
+            const value = await graph.read(tx => 
+                expression.getValue({tx, siteId, entryId: ponderosaPine.id})
+            );
+
+            assertEquals(value, new IntegerValue(5));
+        });
+
     });
 
     group("andAncestors()", () => {
@@ -69,6 +81,17 @@ group(import.meta, () => {
                     },
                 ),
             );
+        });
+
+        test("It is compatible with count()", async () => {
+
+            const expression = new Count(new AndAncestors(new This()));
+
+            const value = await graph.read(tx => 
+                expression.getValue({tx, siteId, entryId: ponderosaPine.id})
+            );
+
+            assertEquals(value, new IntegerValue(6));
         });
 
         const maxTime = 40;
