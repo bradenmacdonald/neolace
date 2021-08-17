@@ -25,9 +25,26 @@ export abstract class ConcreteValue extends QueryValue {
     static readonly isLazy = false;
 }
 
+/**
+ * Value types that can be counted (lists, queries, strings, etc.) should conform to this interface, so they can be used
+ * with the standard count() function.
+ */
 export interface ICountableValue {
     hasCount: true;
     getCount(): Promise<bigint>;
+}
+
+/** Any data type that can be expressed as a simple literal (e.g. an integer "5") should conform to this interface. */
+export interface IHasLiteralExpression {
+    /**
+     * Return this value as a string, in Neolace Query Language format.
+     * This string should parse to an expression that yields the same value.
+     */
+    asLiteral(): string;
+}
+export function hasLiteralExpression(value: unknown): value is QueryValue & IHasLiteralExpression {
+    // deno-lint-ignore no-explicit-any
+    return value instanceof QueryValue && typeof (value as any).asLiteral === "function";
 }
 
 
@@ -40,6 +57,15 @@ export class IntegerValue extends ConcreteValue {
     constructor(value: bigint|number) {
         super();
         this.value = BigInt(value);
+    }
+
+    /**
+     * Return this value as a string, in Neolace Query Language format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public asLiteral(): string {
+        // An integer literal just looks like a plain integer, e.g. 5
+        return String(this.value);
     }
 }
 
