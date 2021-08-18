@@ -15,7 +15,12 @@ export abstract class QueryExpression {
         if (initialValue instanceof valueType) {
             return initialValue;
         }
-        throw new QueryEvaluationError(`Expected a ${valueType} value.`);
+        // Try casting it:
+        const castValue = initialValue.castTo(valueType, context);
+        if (castValue !== undefined) {
+            return castValue;
+        }
+        throw new QueryEvaluationError(`Expected a ${valueType.name} value, but got ${initialValue.constructor.name}.`);
     }
 
     /**

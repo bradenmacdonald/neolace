@@ -8,7 +8,7 @@ import { QueryExpression } from "../expression.ts";
 group(import.meta, () => {
 
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
-    const evalExpression = (expr: QueryExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId})).then(v => v.makeConcrete());
+    const evalExpression = (expr: QueryExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId}).then(v => v.makeConcrete()));
     const siteId = defaultData.site.id;
 
     group("LiteralExpression", () => {

@@ -9,9 +9,9 @@ Example 1:
     could be edited in the UI as
         Show [*] entries that [this entry and its ancestors] set as HAS_PARTS
     and defined as a "computed fact" with this NQL query:
-        related(andAncestors(this), toRelType=HAS_PARTS)
+        related(andAncestors(this), via=HAS_PARTS)
     or using flow syntax:
-        this.andAncestors().related(toRelType=HAS_PARTS)
+        this.andAncestors().related(via=HAS_PARTS)
         (this is just syntactic sugar and is equivalent to the version above)
 
 Example 2:
@@ -20,9 +20,9 @@ Example 2:
     could be edited in the UI as
         Show [Image] entries that are [RELATED_TO] [this entry and its descendants]
     and defined as a "computed fact" with this NQL query:
-        filter(related(descendantsAnd(this), fromRelType=RELATED_TO), type="Image")
+        filter(related(andDescendants(this), via=RELATED_TO), type="Image")
     or using flow syntax:
-        this.descendandsAnd().related(fromRelType=RELATED_TO).filter(type="Image")
+        this.andDescendants().related(via=RELATED_TO).filter(type="Image")
 
 Rules of Neolace Query Language:
 

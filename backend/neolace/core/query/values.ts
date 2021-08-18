@@ -4,15 +4,32 @@ import {
     Field,
     VNID,
 } from "neolace/deps/vertex-framework.ts";
+import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { QueryContext } from "./context.ts";
 import { QueryEvaluationError } from "./errors.ts";
 
-// Query language string > expression tree > lazy value > concrete value
-
+// deno-lint-ignore no-explicit-any
+type ClassOf<QV extends QueryValue> = {new(...args: any[]): QV};
 
 export abstract class QueryValue {
     public static readonly isLazy: boolean;
+
+    /** Convert this value to a different value type if possible, or otherwise return undefined */
+    public castTo<NewType extends QueryValue>(newType: ClassOf<NewType>, context: QueryContext): NewType|undefined {
+        const newValue = this.doCastTo(newType, context);
+        if (newValue) {
+            if (!(newValue instanceof newType)) {
+                throw new QueryEvaluationError(`Internal error, cast from ${this.constructor.name} to ${newType.name} failed.`);
+            }
+        }
+        return newValue;
+    }
+
+    /** Subclasses should override this method to implement type casting. */
+    protected doCastTo(_newType: ClassOf<QueryValue>, _context: QueryContext): QueryValue|undefined {
+        return undefined;
+    }
 
     /** If this is a LazyValue, convert it to a default non-lazy value. */
     public makeConcrete(): Promise<ConcreteValue> { return new Promise(resolve => resolve(this)); }
@@ -70,6 +87,19 @@ export class IntegerValue extends ConcreteValue {
 }
 
 /**
+ * A null value
+ */
+export class NullValue extends ConcreteValue {
+    /**
+     * Return this value as a string, in Neolace Query Language format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public asLiteral(): string {
+        return "null";
+    }
+}
+
+/**
  * Represents an Entry
  */
 export class EntryValue extends ConcreteValue {
@@ -79,7 +109,86 @@ export class EntryValue extends ConcreteValue {
         super();
         this.id = id;
     }
+
+    /**
+     * Return this value as a string, in Neolace Query Language format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public asLiteral(): string {
+        return `E[${this.id}]`;  // e.g. E[_6FisU5zxXggLcDz4Kb3Wmd]
+    }
+
+    protected override doCastTo(newType: ClassOf<QueryValue>, context: QueryContext): QueryValue|undefined {
+        if (newType === LazyEntrySetValue) {
+            return new LazyEntrySetValue(context, C`
+                MATCH (entry:${Entry} {id: ${this.id}})
+                WITH entry, {} AS annotations
+            `);
+        }
+        return undefined;
+    }
 }
+
+/**
+ * Represents an EntryType
+ */
+export class EntryTypeValue extends ConcreteValue {
+    readonly id: VNID;
+
+    constructor(id: VNID) {
+        super();
+        this.id = id;
+    }
+
+    /**
+     * Return this value as a string, in Neolace Query Language format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public asLiteral(): string {
+        return `ET[${this.id}]`;  // e.g. ET[_6FisU5zxXggLcDz4Kb3Wmd]
+    }
+}
+
+/**
+ * Represents a RelationshipType
+ */
+export class RelationshipTypeValue extends ConcreteValue {
+    readonly id: VNID;
+
+    constructor(id: VNID) {
+        super();
+        this.id = id;
+    }
+
+    /**
+     * Return this value as a string, in Neolace Query Language format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public asLiteral(): string {
+        return `RT[${this.id}]`;  // e.g. RT[_6FisU5zxXggLcDz4Kb3Wmd]
+    }
+}
+
+/**
+ * Represents a RelationshipFact
+ */
+export class RelationshipFactValue extends ConcreteValue {
+    readonly id: VNID;
+
+    constructor(id: VNID) {
+        super();
+        this.id = id;
+    }
+
+    /**
+     * Return this value as a string, in Neolace Query Language format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public asLiteral(): string {
+        return `RF[${this.id}]`;  // e.g. RF[_6FisU5zxXggLcDz4Kb3Wmd]
+    }
+}
+
 /**
  * Represents an Entry, annotated with some extra information (like "distance" from another entry)
  */
