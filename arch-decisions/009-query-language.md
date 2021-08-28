@@ -39,3 +39,14 @@ Rules of Neolace Query Language:
    Such attributes are never methods in the object oriented sense, however one
    can use the syntactic sugar to call (global) functions in a way that looks
    like a method.
+
+Basic Data Types:
+
+1. Integer, which can be of arbitrary size (uses JavaScript's BigInt)
+2. Quantity, a float with an optional unit (e.g. "350.2 g m^2 / s^3") (also QuantityRange and QuantityWithError?)
+3. Boolean
+4. Null
+5. String
+6. Date, DateTime, FuzzyDate ([YYYY-MM-DD or YYYY-MM or YYYY] -> [YYYY-MM-DD or YYYY-MM or YYYY])
+7. Entry, EntryType, RelationshipType, Property, RelationshipFact, PropertyValue
+8. List
