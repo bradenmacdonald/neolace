@@ -1,5 +1,5 @@
-// Import global SCSS
-import '../global-styles.scss';
+// Import global CSS (Tailwind-based)
+import '../global-styles.css';
 
 import { UserProvider } from 'components/user/UserContext';
 
