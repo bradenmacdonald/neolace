@@ -32,6 +32,10 @@ const HomePage: NextPage = function() {
             </ul>
             <h2>License</h2>
             <p>Text content (articles and descriptions) is available under the terms of the <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0 license</a>. Images and other media files are available under various licenses - refer to each item's page for details.</p>
+
+            <p className="text-purple-600">This is a purple text.</p>
+            <p className="text-primary text-opacity-50">This is a primary text.</p>
+            <p className="text-link text-opacity-50">This is a "link" colored text.</p>
         </Page>
     );
 }

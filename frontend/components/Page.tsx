@@ -21,6 +21,12 @@ export const Page: React.FunctionComponent<Props> = (props) => {
             <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico"/>
             {/* Load "Noto Sans" from Google's CDN */}
             <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet"/>
+            <style>{`
+                :root {
+                    --site-primary-color: 0, 255, 0;
+                    --site-link-color: 0, 0, 255;
+                }
+            `}</style>
         </Head>
 
         {/* Main header: */}
