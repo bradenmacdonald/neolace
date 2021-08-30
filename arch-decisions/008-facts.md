@@ -26,23 +26,10 @@ facts that are computed based on all descendants of an entry (e.g. the
 "electric car" article may show the range of "battery capacity" values for all
 electric cars currently in production).
 
-The cypher code for getting a list of ancestors based on facts:
+## Computed Facts
 
-    MATCH (entry:Entry:VNode {id: $id})
-    CALL apoc.path.expandConfig(entry, {
-        sequence: ">VNode,HAS_REL_FACT>,VNode,IS_A>",
-        minLevel: 1,
-        maxLevel: 50
-    })
-    YIELD path
-    WITH DISTINCT entry, length(path)/2 AS distance, last(nodes(path)) AS parent
-    WITH entry, collect({entry: parent, distance: distance}) AS parents
-    WITH [{entry: entry, distance: 0}] + parents AS entries
-    RETURN entries
+In addition to relationship facts and property facts, there are "computed facts"
+which use the Neolace Query Language (see decision 009) to calculate or format
+a value for display.
 
-And then to get the facts from that:
-
-    UNWIND entries AS e
-    WITH e.entry AS entry, e.distance AS distance
-    MATCH (entry)-[:HAS_REL_FACT]->(fact:VNode)-[:IS_A|HAS_A|RELATES_TO|DEPENDS_ON]->(toEntry:VNode), (fact)-[:IS_OF_REL_TYPE]->(relType:VNode)
-    RETURN entry.id, distance, properties(fact), toEntry.id, relType.id
+Computed facts can also be embedded inline in the text content of entries.
