@@ -36,7 +36,8 @@ const data = {
     },
     // A Site, with Alex as the admin and Jamie as a regular user
     site: {
-        domain: "plantdb.neolace.net",
+        name: "PlantDB",
+        domain: "plantdb.local.neolace.net",
         shortId: "plantdb",
         // The site will default to "PublicContributions" access mode. To test different access modes, update the site's access mode in your test case.
         initialAccessMode: AccessMode.PublicContributions as const,
@@ -211,7 +212,6 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         fullName: data.users.admin.fullName,
         username: data.users.admin.username,
     });
-    log.info("next");
 
     await graph.runAsSystem(action).then(result => data.users.admin.id = result.id);
 
@@ -232,6 +232,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     })).then(result => data.users.regularUser.id = result.id);
 
     await graph.runAsSystem(CreateSite({
+        name: data.site.name,
         domain: data.site.domain,
         slugId: `site-${data.site.shortId}`,
         adminUser: data.users.admin.id,

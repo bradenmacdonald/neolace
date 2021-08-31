@@ -31,7 +31,8 @@ const {id: jamieId} = await graph.pullOne(User, u => u.id, {key: "user-jamie"}).
 const {id: siteId} = await graph.pullOne(Site, s => s.id, {key: "site-technotes"}).catch(err =>{
     if (!(err instanceof EmptyResultError)) { throw err; }
     return graph.runAs(jamieId, CreateSite({
-        domain: "localhost:5555",
+        name: "TechNotes",
+        domain: "technotes.local.neolace.net",
         slugId: `site-technotes`,
         adminUser: jamieId,
     }));

@@ -45,7 +45,7 @@ group(import.meta, () => {
         // for things that are easier to test at this level (like specific site code tests)
 
         test("Can create a Site with a specific values, including site code", async () => {
-            const result = await graph.runAsSystem(CreateSite({siteCode: "ABC10", slugId: "site-test1", domain: "test.neolace.net"}));
+            const result = await graph.runAsSystem(CreateSite({name: "Test Site", siteCode: "ABC10", slugId: "site-test1", domain: "test.neolace.net"}));
             assertEquals(result.siteCode, "ABC10");
             const result2 = await graph.pullOne(Site, s => s.slugId.domain.siteCode);
             assertEquals(result2.slugId, "site-test1");
@@ -54,21 +54,21 @@ group(import.meta, () => {
         });
 
         test("Cannot create two sites with the same site code", async () => {
-            const result = await graph.runAsSystem(CreateSite({siteCode: "ABC10", slugId: "site-test1", domain: "test.neolace.net"}));
+            const result = await graph.runAsSystem(CreateSite({name: "Test Site", siteCode: "ABC10", slugId: "site-test1", domain: "test.neolace.net"}));
             assertEquals(result.siteCode, "ABC10");
             await assertThrowsAsync(
-                () => graph.runAsSystem(CreateSite({siteCode: "ABC10", slugId: "site-test2", domain: "test2.neolace.net"})),
+                () => graph.runAsSystem(CreateSite({name: "Test Site", siteCode: "ABC10", slugId: "site-test2", domain: "test2.neolace.net"})),
                 undefined,
                 "already exists with label `Site` and property `siteCode` = 'ABC10'",
             );
         });
 
         test("Can create Sites with auto-generated random site code", async () => {
-            const result1 = await graph.runAsSystem(CreateSite({slugId: "site-test1", domain: "test1.neolace.net"}));
+            const result1 = await graph.runAsSystem(CreateSite({name: "Test Site 1", slugId: "site-test1", domain: "test1.neolace.net"}));
             assertEquals(typeof result1.siteCode, "string");
             assertEquals(result1.siteCode.length, 5);
 
-            const result2 = await graph.runAsSystem(CreateSite({slugId: "site-test2", domain: "test2.neolace.net"}));
+            const result2 = await graph.runAsSystem(CreateSite({name: "Test Site 2", slugId: "site-test2", domain: "test2.neolace.net"}));
             assertEquals(typeof result2.siteCode, "string");
             assertEquals(result2.siteCode.length, 5);
 
@@ -78,8 +78,9 @@ group(import.meta, () => {
             const siteCodesUsed = new Set<string>();
             for (let i = 0; i < 300; i++) {
                 return graph.runAsSystem(CreateSite({
+                    name: `Test Site ${i}`,
                     slugId: `site-test-3-${i}`,
-                    domain: `test${i}.neolace.net`
+                    domain: `test${i}.neolace.net`,
                 })).then(s => { siteCodesUsed.add(s.siteCode); })
             }
             assertEquals(siteCodesUsed.size, 300);
@@ -93,6 +94,7 @@ group(import.meta, () => {
             }));
             // Create a site, specifying that user as the new administrator:
             await graph.runAsSystem(CreateSite({
+                name: "Test Site",
                 slugId: "site-test1",
                 domain: "test1.neolace.net",
                 description: "A site managed by Jamie",
