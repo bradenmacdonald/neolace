@@ -1,6 +1,6 @@
 import * as KeratinAuthN from 'keratin-authn';
 import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
-import { NeolaceApiClient } from 'neolace-api';
+import { NeolaceApiClient, NotFound} from 'neolace-api';
 
 /** Refresh the session token if needed */
 const getSessionPromise = () => {
@@ -47,6 +47,30 @@ export const client = new NeolaceApiClient({
     fetchApi: IN_BROWSER ? window.fetch.bind(window) : require('node-fetch'),
     getExtraHeadersForRequest,
 });
+
+export interface SiteData {
+    name: string;
+    domain: string;
+    shortId: string;
+}
+
+export async function getSiteData(domain: string): Promise<SiteData|null> {
+    try {
+        const siteData = await client.getSite({domain,});
+        return {
+            name: siteData.name,
+            domain: siteData.domain,
+            shortId: siteData.shortId,
+            // Don't pass through anything else returned by the API
+        };
+    } catch (err: unknown) {
+        if (err instanceof NotFound) {
+            console.error(`No site found with domain "${domain}"`);
+            return null;
+        }
+        throw err;
+    }
+}
 
 // Store the API client on the global window object for development purposes.
 if (IN_BROWSER) {
