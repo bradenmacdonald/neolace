@@ -1,6 +1,7 @@
 import React from 'react';
 import Head from 'next/head'
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { UserContext, UserStatus } from 'components/user/UserContext';
 
@@ -13,6 +14,7 @@ interface Props {
  */
 export const Page: React.FunctionComponent<Props> = (props) => {
     const user = React.useContext(UserContext);
+    const router = useRouter();
 
     return <div className="container">
         <Head>
@@ -62,6 +64,8 @@ export const Page: React.FunctionComponent<Props> = (props) => {
 
         <main role="main" className="pt-2 pt-md-3">
             {props.children}
+
+            <br/>According to the Router, you are on site {router.query.siteHost}.
         </main>
   </div>
 };
