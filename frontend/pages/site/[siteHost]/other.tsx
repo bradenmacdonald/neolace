@@ -14,25 +14,19 @@ interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
 }
 
-const HomePage: NextPage<PageProps> = function(props) {
+const OtherPage: NextPage<PageProps> = function(props) {
 
     
     const user = React.useContext(UserContext);
 
     return (
         <Page
-            title={props.site.name}
+            title={`Other ${props.site.name}`}
         >
-            <h1>
-                {`Welcome to ${props.site.name}${user.status == UserStatus.LoggedIn ? `, ${user.username}`: ''}!`}
-            </h1>
-            <p className="text-purple-600">This is a purple text.</p>
-            <p className="text-primary text-opacity-50">This is a primary text.</p>
-            <p className="text-link text-opacity-50">This is a "link" colored text.</p>
+            <h1>Other - {props.site.name}</h1>
+            This is a different page.
 
-            <p><Link href="/other"><a>Go to another page</a></Link></p>
-
-            According to the Page, you are on {props.site.domain}.
+            <p><Link href="/"><a>Go to home page</a></Link></p>
         </Page>
     );
 }
@@ -60,4 +54,4 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     };
 }
 
-export default HomePage;
+export default OtherPage;

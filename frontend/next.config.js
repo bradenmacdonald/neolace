@@ -22,7 +22,8 @@ module.exports = (phase, { defaultConfig }) => {
             // In order to support multitenancy with Next.js, we use a "rewrite" to include the host in the path
             return [
                 {
-                    source: '/:path*',
+                    //source: '/:path*', <-- not working (won't match '/') due to https://github.com/vercel/next.js/issues/14930
+                    source: '/:path*{/}?',
                     has: [
                         {
                             type: 'host',
@@ -32,7 +33,7 @@ module.exports = (phase, { defaultConfig }) => {
                     destination: '/admin-site/:path*',
                 },
                 {
-                    source: '/:path*',
+                    source: '/:path*{/}?',
                     has: [
                         {
                             type: 'host',
