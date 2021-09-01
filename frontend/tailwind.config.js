@@ -25,12 +25,19 @@ const themeColorFromRbgTupleVar = (runtimeCssVariableName) => ({ opacityVariable
 module.exports = {
     // Tell Tailwind how to check which styles are used and which can be removed in production:
     purge: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
+    // We don't support dark mode:
     darkMode: false, // or 'media' or 'class'
+    // Neolace theme:
     theme: {
         extend: {
             colors: {
                 primary: themeColorFromRbgTupleVar("--site-primary-color"),
                 link: themeColorFromRbgTupleVar("--site-link-color"),
+                "header-color": "#343a40",
+                "header-color-light": "#6c757d",
+            },
+            fontFamily: {
+                sans: ['"Inter Var"', '"Noto Sans"', "Inter", "Roboto", "sans-serif", '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
             },
         },
     },

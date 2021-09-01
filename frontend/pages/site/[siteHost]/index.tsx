@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ParsedUrlQuery } from 'querystring';
 import { getSiteData, SiteData } from 'lib/api-client';
 
-import { Page } from 'components/Page';
+import { SitePage } from 'components/SitePage';
 import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageProps {
@@ -20,8 +20,9 @@ const HomePage: NextPage<PageProps> = function(props) {
     const user = React.useContext(UserContext);
 
     return (
-        <Page
+        <SitePage
             title={props.site.name}
+            site={props.site}
         >
             <h1>
                 {`Welcome to ${props.site.name}${user.status == UserStatus.LoggedIn ? `, ${user.username}`: ''}!`}
@@ -33,7 +34,7 @@ const HomePage: NextPage<PageProps> = function(props) {
             <p><Link href="/other"><a>Go to another page</a></Link></p>
 
             According to the Page, you are on {props.site.domain}.
-        </Page>
+        </SitePage>
     );
 }
 
