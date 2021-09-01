@@ -1,7 +1,6 @@
 import React from 'react';
 import Head from 'next/head'
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData } from 'lib/api-client';
@@ -16,7 +15,11 @@ interface Props {
  */
 export const SitePage: React.FunctionComponent<Props> = (props) => {
     const user = React.useContext(UserContext);
-    const router = useRouter();
+
+    // props.site has the site data, but it can also be retrieved like this:
+    // import { useRouter } from 'next/router';
+    // const router = useRouter();
+    // router.query.siteHost gives the site's domain
 
     return <div className="container">
         <Head>
@@ -65,8 +68,6 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
 
         <main role="main" className="absolute top-8 md:top-24 p-2">
             {props.children}
-
-            <br/>According to the Router, you are on site {router.query.siteHost}.
         </main>
   </div>
 };

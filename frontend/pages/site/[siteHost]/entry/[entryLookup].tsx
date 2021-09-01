@@ -1,4 +1,82 @@
 import React from 'react';
+import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
+import Link from 'next/link';
+import { ParsedUrlQuery } from 'querystring';
+import { client, api, getSiteData, SiteData } from 'lib/api-client';
+
+import { SitePage } from 'components/SitePage';
+import { UserContext, UserStatus } from 'components/user/UserContext';
+
+interface PageProps {
+    site: SiteData;
+    entry: api.EntryData;
+}
+interface PageUrlQuery extends ParsedUrlQuery {
+    siteHost: string;
+    entryLookup: string;
+}
+
+const EntryPage: NextPage<PageProps> = function(props) {
+
+    
+    const user = React.useContext(UserContext);
+
+    return (
+        <SitePage
+            title={props.site.name}
+            site={props.site}
+        >
+            <h1>{props.entry.name} ({props.entry.entryType.name})</h1>
+
+            <p className="text-purple-600">ID: {props.entry.id}</p>
+
+            <Link href="/"><a>Back to home</a></Link>
+        </SitePage>
+    );
+}
+
+export default EntryPage;
+
+export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
+    return await {
+        // Which pages to pre-generate at build time. For now, we generate all pages on-demand.
+        paths: [],
+        // Enable statically generating any additional pages as needed
+        fallback: "blocking",
+    }
+}
+
+export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
+
+    // Look up the Neolace site by domain:
+    const site = await getSiteData(context.params.siteHost);
+    const entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId});
+    if (site === null) { return {notFound: true}; }
+
+    if (entry.friendlyId !== context.params.entryLookup) {
+        // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
+        return {
+            redirect: {
+                destination: `/entry/${entry.friendlyId}`,
+                permanent: true,
+            },
+        };
+    }
+
+    return {
+        props: {
+            site,
+            entry,
+        },
+    };
+}
+
+
+/*
+
+
+
+import React from 'react';
 import { NextPage, GetStaticProps, GetStaticPaths, } from 'next'
 import Link from 'next/link';
 import { useRouter } from 'next/router'
@@ -77,11 +155,11 @@ const ContentPage: NextPage<PageProps> = function({pageData, ...props}) {
 
     return <Page title={pageData.title}>
 
-        {/* Hero image */}
+        {/* Hero image * /}
         <div className="row mt-n2 mt-md-n3 mb-2 mb-md-3">
             <div className="col col-12">
                 <div className="tn-full-width-hero">
-                    <img src={/*pageData.heroImage?.imageUrl ?? */"/solar-geo-from-nasa-yZygONrUBe8-unsplash.jpg"} alt="" />
+                    <img src={/*pageData.heroImage?.imageUrl ?? * /"/solar-geo-from-nasa-yZygONrUBe8-unsplash.jpg"} alt="" />
                 </div>
             </div>
         </div>
@@ -154,7 +232,7 @@ const ContentPage: NextPage<PageProps> = function({pageData, ...props}) {
                 }
             </MetadataEntry>
         </MetadataTable>
-        */}
+        * /}
         {
             /*pageData.articleSections.map(section => {
                 const autoContent = (
@@ -178,7 +256,7 @@ const ContentPage: NextPage<PageProps> = function({pageData, ...props}) {
                         </div>
                     </div>
                 : null;
-            })*/
+            })* /
         }
     </Page>;
 }
@@ -197,5 +275,4 @@ const TechnologyTemp: React.FunctionComponent<{title: string, trl: TRL, id: stri
         </div>
     </div>;
 };
-
-export default ContentPage;
+*/

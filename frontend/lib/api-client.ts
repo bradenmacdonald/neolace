@@ -1,7 +1,9 @@
 import * as KeratinAuthN from 'keratin-authn';
 import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
-import { NeolaceApiClient, NotFound} from 'neolace-api';
+import { NeolaceApiClient, NotFound } from 'neolace-api';
 import { AsyncCache } from './async-cache';
+
+export * as api from 'neolace-api';
 
 /** Refresh the session token if needed */
 const getSessionPromise = () => {

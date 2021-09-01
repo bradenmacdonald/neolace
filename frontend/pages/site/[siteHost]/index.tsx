@@ -31,20 +31,19 @@ const HomePage: NextPage<PageProps> = function(props) {
             <p className="text-primary text-opacity-50">This is a primary text.</p>
             <p className="text-link text-opacity-50">This is a "link" colored text.</p>
 
-            <p><Link href="/other"><a>Go to another page</a></Link></p>
-
-            According to the Page, you are on {props.site.domain}.
+            <p><Link href="/entry/s-pinus-ponderosa"><a>Go to "Ponderosa Pine"</a></Link></p>
         </SitePage>
     );
 }
 
+export default HomePage;
+
 export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
     return await {
-        // Which pages (TechDB entries) to pre-generate at build time.
-        // This should be set to a list of popular pages.
+        // Which pages to pre-generate at build time. For now, we generate all pages on-demand.
         paths: [],
         // Enable statically generating any additional pages as needed
-        fallback: "blocking",  // https://github.com/vercel/next.js/pull/15672
+        fallback: "blocking",
     }
 }
 
@@ -60,5 +59,3 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         },
     };
 }
-
-export default HomePage;
