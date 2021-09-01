@@ -1,6 +1,7 @@
 import * as KeratinAuthN from 'keratin-authn';
 import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
 import { NeolaceApiClient, NotFound} from 'neolace-api';
+import { AsyncCache } from './async-cache';
 
 /** Refresh the session token if needed */
 const getSessionPromise = () => {
@@ -54,21 +55,27 @@ export interface SiteData {
     shortId: string;
 }
 
-export async function getSiteData(domain: string): Promise<SiteData|null> {
-    try {
+const siteDataCache = new AsyncCache<string, SiteData>(
+    async (domain) => {
         const siteData = await client.getSite({domain,});
         return {
             name: siteData.name,
             domain: siteData.domain,
             shortId: siteData.shortId,
-            // Don't pass through anything else returned by the API
         };
-    } catch (err: unknown) {
+    },
+    5 * 60_000,  // timeout is 5 minutes
+);
+
+export async function getSiteData(domain: string): Promise<SiteData|null> {
+    try {
+        // If the site has been previously retrieved, this cache will always return the cached value immediately.
+        // (Occasionally it will be refreshed in the background, but we still get an immediate result here.)
+        return await siteDataCache.get(domain);
+    } catch (err) {
         if (err instanceof NotFound) {
-            console.error(`No site found with domain "${domain}"`);
             return null;
         }
-        throw err;
     }
 }
 
