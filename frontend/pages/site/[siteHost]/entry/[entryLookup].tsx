@@ -18,12 +18,11 @@ interface PageUrlQuery extends ParsedUrlQuery {
 
 const EntryPage: NextPage<PageProps> = function(props) {
 
-    
-    const user = React.useContext(UserContext);
+    //const user = React.useContext(UserContext);
 
     return (
         <SitePage
-            title={props.site.name}
+            title={`${props.entry.name} - ${props.site.name}`}
             site={props.site}
         >
 
