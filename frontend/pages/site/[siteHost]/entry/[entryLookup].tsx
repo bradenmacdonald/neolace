@@ -26,11 +26,23 @@ const EntryPage: NextPage<PageProps> = function(props) {
             title={props.site.name}
             site={props.site}
         >
-            <h1>{props.entry.name} ({props.entry.entryType.name})</h1>
 
-            <p className="text-purple-600">ID: {props.entry.id}</p>
+            <div className="absolute top-0 bottom-0 left-0 right-0 bg-yellow-300 flex flex-row">
 
-            <Link href="/"><a>Back to home</a></Link>
+                {/* Left column, which shows table of contents, but only on desktop */}
+                <div id="left-toc-col" className="hidden md:block w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4">
+                    <h1 className="font-bold text-base">{props.entry.name}</h1>
+                    <span id="entry-type-name" className="font-light">{props.entry.entryType.name}</span>
+                    <br/><br/>
+                    <code id="entry-id" className="font-mono font-light">{props.entry.friendlyId}</code>
+                </div>
+
+                <div id="entry-content-wrapper" className="w-1/2 bg-white flex-auto p-4">
+                    <h1>{props.entry.name} ({props.entry.entryType.name})</h1>
+                    <p className="text-purple-600">ID: {props.entry.id}</p>
+                    <Link href="/"><a>Back to home</a></Link>
+                </div>
+            </div>
         </SitePage>
     );
 }

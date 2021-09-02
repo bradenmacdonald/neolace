@@ -40,6 +40,7 @@ module.exports = {
             },
             fontFamily: {
                 sans: ['"Inter Var"', '"Noto Sans"', "Inter", "Roboto", "sans-serif", '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
+                mono: ['"Roboto Mono"', "ui-monospace", "Menlo", "Monaco", "Consolas", "monospace", '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
             },
         },
     },
