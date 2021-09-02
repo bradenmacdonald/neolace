@@ -38,7 +38,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 </div>
 
                 {/* The main content of this entry */}
-                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 neo-typography overflow-y-scroll">
+                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 overflow-y-scroll">
                     {/* Hero image, if any */}
                     <div className="-m-4 mb-4 relative">
                         <img src={"/solar-geo-from-nasa-yZygONrUBe8-unsplash.jpg"} alt="" />
@@ -46,19 +46,33 @@ const EntryPage: NextPage<PageProps> = function(props) {
                             Image caption here. Lorem ipsum dolor sit amet sinctuir lasdkjfadl skfjsdalk asdlk fjasdlk fsadfhriugher aiundfkjnv lkfd kjsh iuwehvndjkn jdsff askjdlas as.
                         </div>
                     </div>
-                    <h1>{props.entry.name}</h1>
-                    <p>{props.entry.description}</p>
 
-                    <h2>Heading 2</h2>
-                    <p>Is it my imagination, or have tempers become a little frayed on the ship lately? I think you've let your personal feelings cloud your judgement. Now, how the hell do we defeat an enemy that knows us better than we know ourselves? Your head is not an artifact! Fear is the true enemy, the only enemy. Mr. Worf, you sound like a man who's asking his friend if he can start dating his sister.</p>
-                    <p>Travel time to the nearest starbase? My oath is between Captain Kargan and myself. Your only concern is with how you obey my orders. Or do you prefer the rank of prisoner to that of lieutenant?</p>
-                    <p>Not if I weaken first. Computer, lights up! Wouldn't that bring about chaos? Is it my imagination, or have tempers become a little frayed on the ship lately? Fear is the true enemy, the only enemy. Yesterday I did not know how to eat gagh. For an android with no feelings, he sure managed to evoke them in others. This should be interesting. We have a saboteur aboard. Our neural pathways have become accustomed to your sensory input patterns. Sure. You'd be surprised how far a hug goes with Geordi, or Worf.</p>
-                    <h3>Heading 3</h3>
-                    <p>I can't. As much as I care about you, my first duty is to the ship.</p>
-                    <h4>Heading 4</h4>
-                    <p>Well, that's certainly good to know.</p>
-                    <h5>Heading 5</h5>
-                    <p>But the probability of making a six is no greater than that of rolling a seven. And blowing into maximum warp speed, you appeared for an instant to be in two places at once.</p>
+                    {/* On mobile devices, some navigation appears here since the left bar / table of contents is hidden */}
+                    <nav className="md:hidden sticky -top-4 -mx-4 py-1 -mt-2 pb-2 -mb-2 bg-white bg-opacity-90 backdrop-blur-sm text-gray-600">
+                        <ul className="mx-auto text-center">
+                            <li className="inline-block p-1 mx-2 text-sm"><a href="#summary">Summary</a></li>
+                            <li className="inline-block p-1 mx-2 text-sm"><a href="#properties">Properties</a></li>
+                            <li className="inline-block p-1 mx-2 text-sm"><a href="#contents">Contents</a></li>
+                            <li className="inline-block p-1 mx-2 text-sm"><a href="#tools">Tools</a></li>
+                        </ul>
+                    </nav>
+
+                    <div className="neo-typography">
+
+                        <h1 id="summary">{props.entry.name}</h1>
+                        <p>{props.entry.description}</p>
+
+                        <h2>Heading 2</h2>
+                        <p>Is it my imagination, or have tempers become a little frayed on the ship lately? I think you've let your personal feelings cloud your judgement. Now, how the hell do we defeat an enemy that knows us better than we know ourselves? Your head is not an artifact! Fear is the true enemy, the only enemy. Mr. Worf, you sound like a man who's asking his friend if he can start dating his sister.</p>
+                        <p>Travel time to the nearest starbase? My oath is between Captain Kargan and myself. Your only concern is with how you obey my orders. Or do you prefer the rank of prisoner to that of lieutenant?</p>
+                        <p>Not if I weaken first. Computer, lights up! Wouldn't that bring about chaos? Is it my imagination, or have tempers become a little frayed on the ship lately? Fear is the true enemy, the only enemy. Yesterday I did not know how to eat gagh. For an android with no feelings, he sure managed to evoke them in others. This should be interesting. We have a saboteur aboard. Our neural pathways have become accustomed to your sensory input patterns. Sure. You'd be surprised how far a hug goes with Geordi, or Worf.</p>
+                        <h3>Heading 3</h3>
+                        <p>I can't. As much as I care about you, my first duty is to the ship.</p>
+                        <h4>Heading 4</h4>
+                        <p>Well, that's certainly good to know.</p>
+                        <h5>Heading 5</h5>
+                        <p>But the probability of making a six is no greater than that of rolling a seven. And blowing into maximum warp speed, you appeared for an instant to be in two places at once.</p>
+                    </div>
                 </article>
             </div>
         </SitePage>
