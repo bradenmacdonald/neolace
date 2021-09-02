@@ -1,6 +1,7 @@
 import * as log from "std/log/mod.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 
+import { environment } from "neolace/app/config.ts";
 import { shutdown } from "neolace/app/shutdown.ts";
 import { graph } from "neolace/core/graph.ts";
 import { CreateGroup, PermissionGrant } from "neolace/core/Group.ts";
@@ -72,6 +73,12 @@ try {
     Deno.exit(1);
 }
 const {emptySnapshot, defaultDataSnapshot, data} = JSON.parse(dataStr) as TestSetupData;
+
+if (environment !== "test") {
+    // TODO: is there a way to auto-detect when we're run via 'deno test'?
+    log.error("Please run tests using ENV_TYPE=test");
+    Deno.exit(1);
+}
 
 afterAll(async () => {
     // Leave the default data in the database in case developers want to make queries and play with it:

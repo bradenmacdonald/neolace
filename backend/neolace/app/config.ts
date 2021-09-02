@@ -5,7 +5,7 @@
 // What type of environment this is: development, production, or testing
 export const environment = (Deno.env.get("ENV_TYPE") as "production"|"development"|"test"|undefined) || "development";
 if (!["production", "development", "test"].includes(environment)) {
-    throw new Error(`Invalid NODE_ENV: ${environment}`);
+    throw new Error(`Invalid ENV_TYPE: ${environment}`);
 }
 
 function defaultTo<T>(value: T, {production, test}: {production?: T, test?: T}): T {

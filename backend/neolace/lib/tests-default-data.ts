@@ -202,8 +202,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
 
     // Wipe out all existing Neo4j data
     await graph.reverseAllMigrations();
+    const emptySnapshot = {cypherSnapshot: ""};
+    await graph.resetDBToSnapshot(emptySnapshot);
     await graph.runMigrations();
-    const emptySnapshot = await graph.snapshotDataForTesting();
 
     log.info(`Generating default data for tests...`);
 

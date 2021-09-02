@@ -46,10 +46,10 @@
             "problemMatcher": [],
         },
         {
-            "label": "Set up example data (TechNotes)",
+            "label": "Erase DB and populate example data (PlantDB & TechNotes)",
             "type": "shell",
             "command": "deno",
-            "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-env", "--unstable", "neolace/scripts/example-technotes.ts"],
+            "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-env", "--unstable", "neolace/scripts/create-dev-default-data-plantdb-technotes.ts"],
             "problemMatcher": [],
         },
         {
