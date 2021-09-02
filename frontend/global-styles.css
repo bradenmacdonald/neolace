@@ -4,4 +4,20 @@
 
 
 /* TechNotes color: 5ecbf5 */
-/* font: Inter Var, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; */
+
+/* Typography: apply this class to a section that contains prose, to ensure headings have reasonable size/weight, paragraphs are spaced, etc. */
+.neo-typography h1,
+.neo-typography h2,
+.neo-typography h3,
+.neo-typography h4,
+.neo-typography h5,
+.neo-typography h6  {
+    @apply font-semibold mt-3;
+}
+.neo-typography h1 { @apply text-4xl; }
+.neo-typography h2 { @apply text-3xl; }
+.neo-typography h3 { @apply text-2xl; }
+.neo-typography h4 { @apply text-xl; }
+.neo-typography h5 { @apply text-lg; }
+.neo-typography p { font-weight: 450; @apply my-1; }
+.neo-typography a { @apply underline; }
