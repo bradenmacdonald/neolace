@@ -94,8 +94,16 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
 
     // Look up the Neolace site by domain:
     const site = await getSiteData(context.params.siteHost);
-    const entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId});
     if (site === null) { return {notFound: true}; }
+    let entry: api.EntryData;
+    try {
+        entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId});
+    } catch (err) {
+        if (err instanceof api.NotFound) {
+            return {notFound: true};
+        }
+        throw err;
+    }
 
     if (entry.friendlyId !== context.params.entryLookup) {
         // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
