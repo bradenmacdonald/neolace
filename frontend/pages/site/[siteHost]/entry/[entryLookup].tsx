@@ -5,7 +5,8 @@ import { ParsedUrlQuery } from 'querystring';
 import { client, api, getSiteData, SiteData } from 'lib/api-client';
 
 import { SitePage } from 'components/SitePage';
-import { UserContext, UserStatus } from 'components/user/UserContext';
+import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
+//import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageProps {
     site: SiteData;
@@ -18,6 +19,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
 
 const EntryPage: NextPage<PageProps> = function(props) {
 
+    const mdtContext = React.useMemo(() => new MDTContext(), [props.entry.id]);
     //const user = React.useContext(UserContext);
 
     return (
@@ -59,7 +61,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                     <div className="neo-typography">
 
                         <h1 id="summary">{props.entry.name}</h1>
-                        <p>{props.entry.description}</p>
+                        <p id="description"><InlineMDT mdt={props.entry.description} context={mdtContext} /></p>
 
                         <h2>Heading 2</h2>
                         <p>Is it my imagination, or have tempers become a little frayed on the ship lately? I think you've let your personal feelings cloud your judgement. Now, how the hell do we defeat an enemy that knows us better than we know ourselves? Your head is not an artifact! Fear is the true enemy, the only enemy. Mr. Worf, you sound like a man who's asking his friend if he can start dating his sister.</p>

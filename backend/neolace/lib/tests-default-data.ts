@@ -327,7 +327,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                             {code: "CreateEntry", data: {
                                 ...data.entries.ponderosaPine,
                                 type: data.schema.entryTypes._ETSPECIES.id,
-                                description: "Pinus ponderosa (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.",
+                                description: "**Pinus ponderosa** (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.",
                             }},
                             // Species "pinus ponderosa" IS A member of genus "Pinus"
                             {code: "CreateRelationshipFact", data: {
