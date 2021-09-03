@@ -2,6 +2,7 @@ import React from 'react';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 import Router from 'next/router';
+import { FormattedMessage } from 'react-intl';
 
 import { getSiteData, SiteData } from 'lib/api-client';
 import { SitePage } from 'components/SitePage';
@@ -51,7 +52,9 @@ const LoginPage: NextPage<PageProps> = function(props) {
             title="Log in to TechNotes"
             site={props.site}
         >
-            <h1 className="text-3xl font-semibold">Log in to {props.site.name}</h1>
+            <h1 className="text-3xl font-semibold">
+                <FormattedMessage id="site.login.title" defaultMessage="Log in to {siteName}" values={{siteName: props.site.name}}/>
+            </h1>
 
             <p className="my-4">Account registration is not available yet. If you already have an account though, you can log in here.</p>
 

@@ -17,6 +17,10 @@ module.exports = (phase, { defaultConfig }) => {
             // Should match images.deviceSizes:
             imageSizesAttr: "640px, 1080px, 1920px, 3840px",
         },
+        i18n: {
+            locales: ["en", "fr"],
+            defaultLocale: "en",
+        },
         // deno-lint-ignore require-await
         rewrites: async () => {
             // In order to support multitenancy with Next.js, we use a "rewrite" to include the host in the path
