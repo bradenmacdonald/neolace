@@ -84,6 +84,7 @@ group(import.meta, () => {
 
             // Create a second site:
             const site2details = await graph.runAs(defaultData.users.admin.id, CreateSite({
+                name: "Test Site 2", 
                 domain: "test2.neolace.com",
                 slugId: "site-test2",
                 adminUser: defaultData.users.admin.id,

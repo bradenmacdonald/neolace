@@ -5,7 +5,7 @@
 // What type of environment this is: development, production, or testing
 export const environment = (Deno.env.get("ENV_TYPE") as "production"|"development"|"test"|undefined) || "development";
 if (!["production", "development", "test"].includes(environment)) {
-    throw new Error(`Invalid NODE_ENV: ${environment}`);
+    throw new Error(`Invalid ENV_TYPE: ${environment}`);
 }
 
 function defaultTo<T>(value: T, {production, test}: {production?: T, test?: T}): T {
@@ -26,12 +26,12 @@ export const config = (() => {
         // Port to listen on
         port: defaultTo(5554, {test: 4444}),
         // Full URL at which the REST API is available
-        apiUrl: defaultTo("http://localhost:5554", {test: "http://localhost:4444"}),
+        apiUrl: defaultTo("http://local.neolace.net:5554", {test: "http://localhost:4444"}),
 
         /**
          * URL for the Realm admin UI. This is where you can create a new site, register a user account, etc.
          */
-        realmAdminUrl: defaultTo("http://localhost:5555", {test: "http://frontend-realm-admin"}),
+        realmAdminUrl: defaultTo("http://local.neolace.net:5555", {test: "http://frontend-realm-admin"}),
 
 
         // URL of the Neo4j server

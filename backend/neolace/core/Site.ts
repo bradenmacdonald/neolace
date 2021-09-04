@@ -9,6 +9,7 @@ import {
     defineAction,
     VNID,
     VNodeTypeRef,
+DerivedProperty,
 } from "neolace/deps/vertex-framework.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -64,6 +65,10 @@ export class Site extends VNodeType {
     static readonly properties = {
         ...VNodeType.properties,
         /**
+         * Name: the name of this site (always public)
+         */
+        name: Field.String.Check(check.string.min(2).max(120)),
+        /**
          * The slugId of this site. Must begin with "site-".
          * In API URLs, the site's slugId is included without the "site-" prefix:
          *     https://api.neolace.com/site/braden/entry/fr-joel
@@ -80,10 +85,15 @@ export class Site extends VNodeType {
         /**
          * The canonical domain for this site, e.g. "mysite.neolace.com".
          *
-         * Note that this is not forced to be unique!! We don't want to allow users to "block" a domain that they don't
-         * own, e.g. by registering a site on Neolace.com and changing the domain to "microsoft.com"
+         * It is important to verify that the user actually controls this domain before setting it here.
+         * 
+         * This value msut be unique among all sites.
          */
         domain: Field.String,
+        /**
+         * Description: a public description of the website, displayed to users in a few different places as well as to
+         * search engines.
+         */
         description: Field.NullOr.String.Check(check.string.max(5_000)),
 
         // Access Mode: Determines what parts of the site are usable without logging in
@@ -110,7 +120,7 @@ export class Site extends VNodeType {
         },
     }));
     static readonly derivedProperties = this.hasDerivedProperties({
-        // None at the moment.
+        shortId,
     });
 }
 
@@ -122,13 +132,26 @@ export class Site extends VNodeType {
 /** Cache to look up a siteId (Site VNID) from a site's shortId (slugId without the "site-" prefix) */
 export const siteIdFromShortId = makeCachedLookup((shortId: string) => graph.vnidForKey(`site-${shortId}`), 10_000);
 
+/**
+ * A derived property that provides the shortId of a Site.
+ * 
+ * Note: Sites have "shortId", without the "site-" prefix. This is different from the siteCode.
+ * whereas Entries have "friendlyId", without the siteCode prefix, which varies.
+ */
+ export function shortId(): DerivedProperty<string> { return DerivedProperty.make(
+    Site,
+    s => s.slugId,
+    s => s.slugId.substr(5),  // Remove the "site-" prefix
+);}
+
 /** Cache to look up a Site's siteCode from its VNID */
 export const siteCodeForSite = makeCachedLookup((siteId: VNID) => graph.pullOne(Site, s => s.siteCode, {key: siteId}).then(s => s.siteCode), 10_000);
 
-/** Convert a slugId (with siteCode prefix) into a "friendlyId" */
+/** Convert an entry's slugId (with siteCode prefix) into a "friendlyId" */
 export function slugIdToFriendlyId(slugId: string): string {
     return slugId.substr(5);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Site actions
@@ -143,6 +166,7 @@ export const DeleteSite = defaultDeleteFor(Site);
 export const CreateSite = defineAction({
     type: "CreateSite",
     parameters: {} as {
+        name: string;
         slugId: string;
         domain: string;
         description?: string;
@@ -176,6 +200,7 @@ export const CreateSite = defineAction({
         await tx.queryOne(C`
             CREATE (s:${Site} {
                 id: ${id},
+                name: ${data.name},
                 slugId: ${data.slugId},
                 siteCode: ${siteCode},
                 description: ${data.description || null},

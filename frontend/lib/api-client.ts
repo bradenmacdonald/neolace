@@ -1,6 +1,9 @@
 import * as KeratinAuthN from 'keratin-authn';
 import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
-import { NeolaceApiClient } from 'neolace-api';
+import { NeolaceApiClient, NotFound } from 'neolace-api';
+import { AsyncCache } from './async-cache';
+
+export * as api from 'neolace-api';
 
 /** Refresh the session token if needed */
 const getSessionPromise = () => {
@@ -47,6 +50,36 @@ export const client = new NeolaceApiClient({
     fetchApi: IN_BROWSER ? window.fetch.bind(window) : require('node-fetch'),
     getExtraHeadersForRequest,
 });
+
+export interface SiteData {
+    name: string;
+    domain: string;
+    shortId: string;
+}
+
+const siteDataCache = new AsyncCache<string, SiteData>(
+    async (domain) => {
+        const siteData = await client.getSite({domain,});
+        return {
+            name: siteData.name,
+            domain: siteData.domain,
+            shortId: siteData.shortId,
+        };
+    },
+    5 * 60_000,  // timeout is 5 minutes
+);
+
+export async function getSiteData(domain: string): Promise<SiteData|null> {
+    try {
+        // If the site has been previously retrieved, this cache will always return the cached value immediately.
+        // (Occasionally it will be refreshed in the background, but we still get an immediate result here.)
+        return await siteDataCache.get(domain);
+    } catch (err) {
+        if (err instanceof NotFound) {
+            return null;
+        }
+    }
+}
 
 // Store the API client on the global window object for development purposes.
 if (IN_BROWSER) {

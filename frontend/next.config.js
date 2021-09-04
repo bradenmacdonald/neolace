@@ -2,6 +2,9 @@ const { PHASE_DEVELOPMENT_SERVER } = require('next/constants')
 
 module.exports = (phase, { defaultConfig }) => {
 
+    // When Neolace is accessed via this hostname, it shows the "admin site" for the Neolace domain
+    const adminSiteHost = process.env.NEOLACE_ADMIN_SITE_HOST ?? "local.neolace.net";
+
     const baseConfig = {
         ...defaultConfig,
         reactStrictMode: true,
@@ -13,7 +16,38 @@ module.exports = (phase, { defaultConfig }) => {
         env: {
             // Should match images.deviceSizes:
             imageSizesAttr: "640px, 1080px, 1920px, 3840px",
-        }
+        },
+        i18n: {
+            locales: ["en", "fr"],
+            defaultLocale: "en",
+        },
+        // deno-lint-ignore require-await
+        rewrites: async () => {
+            // In order to support multitenancy with Next.js, we use a "rewrite" to include the host in the path
+            return [
+                {
+                    //source: '/:path*', <-- not working (won't match '/') due to https://github.com/vercel/next.js/issues/14930
+                    source: '/:path*{/}?',
+                    has: [
+                        {
+                            type: 'host',
+                            value: adminSiteHost,
+                        },
+                    ],
+                    destination: '/admin-site/:path*',
+                },
+                {
+                    source: '/:path*{/}?',
+                    has: [
+                        {
+                            type: 'host',
+                            value: '(?<siteHost>.*)',
+                        },
+                    ],
+                    destination: '/site/:siteHost/:path*',
+                },
+            ];
+        },
     };
 
     if (phase === PHASE_DEVELOPMENT_SERVER) {
@@ -23,7 +57,7 @@ module.exports = (phase, { defaultConfig }) => {
             images: {
                 ...baseConfig.images,
                 // Allow images from these domains to be used with the Next.js image component:
-                domains: ["localhost"],
+                domains: ["localhost", "127.0.0.1", "local.neolace.net"],
             },
         }
     }

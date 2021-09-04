@@ -1,9 +1,18 @@
 import React, { ReactNode } from 'react';
-import { NextPage } from 'next'
+import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
+import { ParsedUrlQuery } from 'querystring';
 
-import { Page } from 'components/Page';
+import { getSiteData, SiteData } from 'lib/api-client';
+import { SitePage } from 'components/SitePage';
 import { UserContext, UserStatus, } from 'components/user/UserContext';
 import { Redirect } from 'components/utils/Redirect';
+
+interface PageProps {
+    site: SiteData;
+}
+interface PageUrlQuery extends ParsedUrlQuery {
+    siteHost: string;
+}
 
 /** If running in a browser, get the #hash from the URL, excluding the "#" itself. */
 function getHash() {
@@ -23,7 +32,7 @@ enum TokenStatus {
     TokenInvalid,
 }
 
-const PasswordlessLoginPage: NextPage = function() {
+const PasswordlessLoginPage: NextPage<PageProps>= function(props) {
     const user = React.useContext(UserContext);
     const [tokenStatus, setTokenStatus] = React.useState(TokenStatus.Unknown);
 
@@ -75,13 +84,36 @@ const PasswordlessLoginPage: NextPage = function() {
     }
 
     return (
-        <Page
-            title="Log in to TechNotes"
+        <SitePage
+            title={`Log in to ${props.site.name}`}
+            site={props.site}
         >
-            <h1>Log in to TechNotes</h1>
-            {detail}
-        </Page>
+            <h1 className="text-3xl font-semibold">Log in to {props.site.name}</h1>
+            
+            <p className="my-4">{detail}</p>
+        </SitePage>
     );
 }
 
 export default PasswordlessLoginPage;
+
+export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
+    return await {
+        // Which pages to pre-generate at build time. For now, we generate all pages on-demand.
+        paths: [],
+        // Enable statically generating any additional pages as needed
+        fallback: "blocking",
+    }
+}
+
+export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
+    // Look up the Neolace site by domain:
+    const site = await getSiteData(context.params.siteHost);
+    if (site === null) { return {notFound: true}; }
+
+    return {
+        props: {
+            site,
+        },
+    };
+}

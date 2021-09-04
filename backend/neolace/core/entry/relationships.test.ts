@@ -41,7 +41,7 @@ group(import.meta, () => {
             const M_has_N = VNID(), N_rel_O = VNID(), N_has_P = VNID(), N_has_Q = VNID(), O_has_P = VNID();
             const N_isa_A = VNID(), R_isa_N = VNID();
 
-            const {id: siteId} = await graph.runAsSystem(CreateSite({domain: "test-site.neolace.net", slugId: "site-test"}));
+            const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
 
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
                 {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},

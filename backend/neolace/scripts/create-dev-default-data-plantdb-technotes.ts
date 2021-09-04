@@ -2,7 +2,7 @@
  * Create example data (TechNotes)
  */
 import * as log from "std/log/mod.ts";
-import { C, Field, GenericCypherAction, VNID, EmptyResultError, } from "neolace/deps/vertex-framework.ts";
+import { VNID, EmptyResultError, } from "neolace/deps/vertex-framework.ts";
 import { SiteSchemaData, ContentType, RelationshipCategory, CreateEntry, CreateRelationshipFact } from "neolace/deps/neolace-api.ts";
 
 import { graph } from "neolace/core/graph.ts";
@@ -10,11 +10,13 @@ import { shutdown } from "neolace/app/shutdown.ts";
 import { CreateUser, User } from "neolace/core/User.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
 import { CreateSite, Site } from "neolace/core/Site.ts";
-import { CreateDraft, AcceptDraft } from "../core/edit/Draft.ts";
+import { generateTestFixtures } from "neolace/lib/tests-default-data.ts";
+import { CreateDraft, AcceptDraft } from "neolace/core/edit/Draft.ts";
  
+// First reset the database, apply migrations, and create the same PlantDB content used for tests.
+await generateTestFixtures();
 
-log.info("Checking migrations...");
-await graph.runMigrations();
+// Now create the TechNotes example content too:
 
 log.info("Checking users and site...");
 // Create "Jamie" user for development, if it doesn't already exist
@@ -31,7 +33,8 @@ const {id: jamieId} = await graph.pullOne(User, u => u.id, {key: "user-jamie"}).
 const {id: siteId} = await graph.pullOne(Site, s => s.id, {key: "site-technotes"}).catch(err =>{
     if (!(err instanceof EmptyResultError)) { throw err; }
     return graph.runAs(jamieId, CreateSite({
-        domain: "localhost:5555",
+        name: "TechNotes",
+        domain: "technotes.local.neolace.net",
         slugId: `site-technotes`,
         adminUser: jamieId,
     }));
@@ -81,25 +84,6 @@ log.info("Resetting and creating content...");
 
 const electricCarId = VNID();
 const carId = VNID();
-
-// Erase previous content:
-const oldIds = await graph.read(tx => tx.query(
-    C`MATCH (n:VNode) WHERE n:Entry OR n:RelationshipFact OR n:Draft RETURN n.id AS id`
-    .givesShape({id: Field.VNID}))).then(r => r.map(x => x.id)
-);
-
-await graph.runAsSystem(GenericCypherAction({
-    cypher: C`
-        MATCH (n:VNode) WHERE n.id IN ${oldIds}
-        REMOVE n:VNode
-        SET n:DeletedVNode
-        WITH n
-        OPTIONAL MATCH (s:SlugId)-[:IDENTIFIES]->(n)
-        DETACH DELETE s
-    `,
-    // TODO: fix Vertex Framework's slug triggers so that deleting slugids manually is not necessary
-    modifiedNodes: oldIds,
-}));
 
 const {id: draftId} = await graph.runAs(jamieId, CreateDraft({
     authorId: jamieId,

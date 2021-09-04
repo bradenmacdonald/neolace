@@ -1,6 +1,7 @@
 import React from 'react';
 import Head from 'next/head'
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { UserContext, UserStatus } from 'components/user/UserContext';
 
@@ -13,6 +14,7 @@ interface Props {
  */
 export const Page: React.FunctionComponent<Props> = (props) => {
     const user = React.useContext(UserContext);
+    const router = useRouter();
 
     return <div className="container">
         <Head>
@@ -21,6 +23,12 @@ export const Page: React.FunctionComponent<Props> = (props) => {
             <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico"/>
             {/* Load "Noto Sans" from Google's CDN */}
             <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap" rel="stylesheet"/>
+            <style>{`
+                :root {
+                    --site-primary-color: 0, 255, 0;
+                    --site-link-color: 0, 0, 255;
+                }
+            `}</style>
         </Head>
 
         {/* Main header: */}
@@ -56,6 +64,8 @@ export const Page: React.FunctionComponent<Props> = (props) => {
 
         <main role="main" className="pt-2 pt-md-3">
             {props.children}
+
+            <br/>According to the Router, you are on site {router.query.siteHost}.
         </main>
   </div>
 };

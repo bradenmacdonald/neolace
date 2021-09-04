@@ -42,7 +42,7 @@ group(import.meta, () => {
 
         test("cannot add an entry type with the same ID as already exists for another site", async () => {
             // Create another site:
-            const site2 = await graph.runAsSystem(CreateSite({slugId: "site-other", domain: "other.neolace.net"}));
+            const site2 = await graph.runAsSystem(CreateSite({name: "Other Site", slugId: "site-other", domain: "other.neolace.net"}));
             // Create a new entry type in site2:
             const id = VNID();
             const name = "NewEntryType";

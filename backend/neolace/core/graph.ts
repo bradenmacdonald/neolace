@@ -44,6 +44,18 @@ export const graph = new Vertex({
             },
             dependsOn: [],
         },
+        // Sites have unique "domain" values:
+        siteDomainUnique: {
+            forward: async (dbWrite) => {
+                await dbWrite(async tx => {
+                    await tx.run("CREATE CONSTRAINT site_domain_uniq ON (s:Site) ASSERT s.domain IS UNIQUE");
+                });
+            },
+            backward: async (dbWrite) => {
+                await dbWrite(tx => tx.run("DROP CONSTRAINT site_domain_uniq IF EXISTS"));
+            },
+            dependsOn: [],
+        },
         // Sites have unique "site code" values:
         siteCodeUnique: {
             forward: async (dbWrite) => {
