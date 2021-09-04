@@ -6,8 +6,9 @@ import {
     VirtualPropType,
     VNodeType,
 } from "neolace/deps/vertex-framework.ts";
-import { Site } from "../Site.ts";
+import { Site } from "neolace/core/Site.ts";
 
+import { ComputedFact } from "neolace/core/entry/ComputedFact.ts";
 
 /**
  * Schema definition for a type of entry
@@ -32,6 +33,11 @@ export class EntryType extends VNodeType {
             to: [Site],
             cardinality: VNodeType.Rel.ToOneRequired,
         },
+        /** Computed facts to display on entries of this type */
+        HAS_COMPUTED_FACT: {
+            to: [ComputedFact],
+            cardinality: VNodeType.Rel.ToManyUnique,
+        },
     });
 
     static virtualProperties = VNodeType.hasVirtualProperties({
@@ -39,6 +45,11 @@ export class EntryType extends VNodeType {
             type: VirtualPropType.OneRelationship,
             query: C`(@this)-[:${this.rel.FOR_SITE}]->(@target)`,
             target: Site,
+        },
+        computedFacts: {
+            type: VirtualPropType.ManyRelationship,
+            query: C`(@this)-[:HAS_COMPUTED_FACT]->(@target)`,
+            target: ComputedFact,
         },
     });
 

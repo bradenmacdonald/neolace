@@ -18,6 +18,7 @@ import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
+import { ComputedFact } from "../entry/ComputedFact.ts";
 
 /**
  * Apply a set of edits (to schema and/or content)
@@ -125,10 +126,32 @@ export const ApplyEdits = defineAction({
                     if (edit.data.contentType !== undefined) changes.contentType = edit.data.contentType;
                     if (edit.data.friendlyIdPrefix !== undefined) changes.friendlyIdPrefix = edit.data.friendlyIdPrefix;
 
+                    // The following query will also validate that the entry type exists and is linked to the site.
                     await tx.queryOne(C`
                         MATCH (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         SET et += ${changes}
                     `.RETURN({}));
+                    // From here on we don't need to validate the Site is correct.
+                    if (edit.data.addOrUpdateComputedFacts?.length) {
+                        await tx.query(C`
+                            MATCH (et:${EntryType} {id: ${edit.data.id}})
+                            WITH et
+                            UNWIND ${edit.data.addOrUpdateComputedFacts} AS newFact
+                            MERGE (et)-[:${EntryType.rel.HAS_COMPUTED_FACT}]->(cf:${ComputedFact} {id: newFact.id})
+                            SET cf.label = newFact.label
+                            SET cf.importance = newFact.importance
+                            SET cf.expression = newFact.expression
+                        `);
+                        edit.data.addOrUpdateComputedFacts.forEach(cf => modifiedNodes.add(cf.id));
+                    }
+                    if (edit.data.removeComputedFacts?.length) {
+                        await tx.queryOne(C`
+                            MATCH (cf:${ComputedFact})<-[:${EntryType.rel.HAS_COMPUTED_FACT}]-(et:${EntryType} {id: ${edit.data.id}})
+                            WHERE cf.id IN ${edit.data.removeComputedFacts}
+                            SET cf:DeletedVNode
+                            DELETE cf:VNode
+                        `.RETURN({}));
+                    }
                     modifiedNodes.add(edit.data.id);
                     break;
                 }

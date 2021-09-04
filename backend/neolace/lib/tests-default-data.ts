@@ -53,6 +53,7 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A division (also called Phylum outside of botany) is the main taxonomic classification within the Plant Kingdom.",
                 friendlyIdPrefix: "d-",
+                computedFacts: [],
             },
             "_ETCLASS": {
                 id: VNID("_ETCLASS"),
@@ -60,6 +61,7 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A class is a level of taxonomic classification between Division/Phylum and Order.",
                 friendlyIdPrefix: "c-",
+                computedFacts: [],
             },
             "_ETORDER": {
                 id: VNID("_ETORDER"),
@@ -67,6 +69,7 @@ const data = {
                 contentType: ContentType.Article,
                 description: "An order is a level of taxonomic classification between Class and Family.",
                 friendlyIdPrefix: "o-",
+                computedFacts: [],
             },
             "_ETFAMILY": {
                 id: VNID("_ETFAMILY"),
@@ -74,6 +77,7 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A family is a level of taxonomic classification between Order and Genus.",
                 friendlyIdPrefix: "f-",
+                computedFacts: [],
             },
             "_ETGENUS": {
                 id: VNID("_ETGENUS"),
@@ -81,6 +85,7 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A genus is a level of taxonomic classification between Family and Species.",
                 friendlyIdPrefix: "g-",
+                computedFacts: [],
             },
             "_ETSPECIES": {
                 id: VNID("_ETSPECIES"),
@@ -88,6 +93,9 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A species is a basic unit of classifying life.",
                 friendlyIdPrefix: "s-",
+                computedFacts: [
+                    {id: VNID(), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
+                ],
             },
             "_ETPLANTPART": {
                 id: VNID("_ETPLANTPART"),
@@ -95,6 +103,7 @@ const data = {
                 contentType: ContentType.Article,
                 description: "Describes a part of a plant.",
                 friendlyIdPrefix: "pp-",
+                computedFacts: [],
             },
         },
         relationshipTypes: {

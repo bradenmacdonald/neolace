@@ -10,7 +10,7 @@ import {
     WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 import { Site } from "neolace/core/Site.ts";
-import { EntryType } from "neolace/core/schema/EntryType.ts";
+import {EntryType} from "neolace/core/schema/EntryType.ts";
 
 
 /**

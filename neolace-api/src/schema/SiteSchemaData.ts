@@ -1,4 +1,4 @@
-import { Schema, Type, string, vnidString, nullable, array, Record, } from "../api-schemas.ts";
+import { Schema, Type, string, number, vnidString, nullable, array, Record, } from "../api-schemas.ts";
 
 export enum ContentType {
     /** Just a normal entry, with name, description, properties, relationships, but no "content" */
@@ -15,6 +15,15 @@ export function CastContentType(value: string): ContentType {
     return value as ContentType;
 }
 
+export const ComputedFactSchema = Schema({
+    id: vnidString,
+    /** Displayed label of this computed fact, e.g. "Is a type of" */
+    label: string,
+    expression: string,
+    importance: number,
+});
+export type ComputedFactData = Type<typeof ComputedFactSchema>;
+
 
 export const EntryTypeSchema = Schema({
     id: vnidString,
@@ -25,6 +34,8 @@ export const EntryTypeSchema = Schema({
     description: nullable(string),
     /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
     friendlyIdPrefix: nullable(string),
+    /** Computed facts always displayed on entries of this type */
+    computedFacts: array.of(ComputedFactSchema),
 });
 export type EntryTypeData = Type<typeof EntryTypeSchema>;
 

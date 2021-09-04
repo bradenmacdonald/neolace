@@ -2,7 +2,7 @@
 import { nullable, vnidString } from "../api-schemas.ts";
 import { Schema, SchemaValidatorFunction, string, array, Type } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
-import { ContentType, SiteSchemaData, RelationshipCategory } from "./SiteSchemaData.ts";
+import { ContentType, SiteSchemaData, RelationshipCategory, ComputedFactSchema } from "./SiteSchemaData.ts";
 
 interface SchemaEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Schema;
@@ -42,6 +42,7 @@ export const CreateEntryType = SchemaEditType({
                     contentType: ContentType.None,
                     description: null,
                     friendlyIdPrefix: null,
+                    computedFacts: [],
                 },
             },
             relationshipTypes: currentSchema.relationshipTypes,
@@ -61,25 +62,41 @@ export const UpdateEntryType = SchemaEditType({
         contentType: Schema.enum(ContentType).strictOptional(),
         description: nullable(string).strictOptional(),
         friendlyIdPrefix: nullable(string).strictOptional(),
+        addOrUpdateComputedFacts: array.of(ComputedFactSchema).strictOptional(),
+        removeComputedFacts: array.of(vnidString).strictOptional(),
     }),
     apply: (currentSchema, data) => {
-
         const newSchema: SiteSchemaData = {
             entryTypes: {...currentSchema.entryTypes},
             relationshipTypes: currentSchema.relationshipTypes,
         };
-        const currentValues = newSchema.entryTypes[data.id];
-        if (currentValues === undefined) {
+        const originalEntryType = newSchema.entryTypes[data.id];
+        if (originalEntryType === undefined) {
             throw new Error(`EntryType with ID ${data.id} not found.`);
         }
+        const newEntryType = {...originalEntryType};
+        newEntryType.computedFacts = [...newEntryType.computedFacts];  // Shallow copy the array so we can modify it
 
-        const changes: any = {};
-        for (const key in data) {
-            if (key !== "id") {
-                changes[key] = (data as any)[key];
-            }
+        for (const key of ["name", "contentType", "description", "friendlyIdPrefix"] as const) {
+            newEntryType[key] = (data as any)[key];
         }
-        newSchema.entryTypes[data.id] = {...currentValues, ...changes};
+
+        data.addOrUpdateComputedFacts?.forEach(newFact => {
+            const existingIndex = newEntryType.computedFacts.findIndex(cf => cf.id === newFact.id);
+            if (existingIndex !== -1) {
+                newEntryType.computedFacts[existingIndex] = newFact;
+            } else {
+                newEntryType.computedFacts.push(newFact);
+            }
+        });
+        data.removeComputedFacts?.forEach(id => {
+            newEntryType.computedFacts = newEntryType.computedFacts.filter(cf => cf.id !== id)
+        });
+        // Fix the sorting of the "computed facts" array, for consistency (has to match ComputedFact.defaultOrderBy):
+        // Sort first by importance (lowest first), then by label (A before B)
+        newEntryType.computedFacts.sort((b, a) => (b.importance - a.importance)*1000 + b.label.localeCompare(a.label));
+
+        newSchema.entryTypes[data.id] = newEntryType;
         return Object.freeze(newSchema);
     },
     describe: (data) => `Updated \`EntryType ${data.id}\``,
