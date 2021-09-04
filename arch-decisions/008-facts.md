@@ -32,4 +32,8 @@ In addition to relationship facts and property facts, there are "computed facts"
 which use the Neolace Query Language (see decision 009) to calculate or format
 a value for display.
 
-Computed facts can also be embedded inline in the text content of entries.
+Computed facts can be attached to / owned by:
+
+- An EntryType (then it will show for all entries of that type)
+- An Entry (then it will show on that Entry and all descendants)
+- The text content of article entries (also descriptions? relationship notes?)
