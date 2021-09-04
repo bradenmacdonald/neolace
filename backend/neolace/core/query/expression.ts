@@ -7,6 +7,14 @@ import { QueryValue } from "./values.ts";
  * Base class for a Query Expression, something that evaluates to a value.
  */
 export abstract class QueryExpression {
+    public readonly type: string;
+
+    constructor() {
+        // We must put the "type" (subclass name) of this QueryExpression as an actual object value, otherwise
+        // assertEquals() in the test suite will not be able to compare expressions by value properly.
+        this.type = this.constructor.name;
+    }
+
     public abstract getValue(context: QueryContext): Promise<QueryValue>;
 
     // deno-lint-ignore no-explicit-any
