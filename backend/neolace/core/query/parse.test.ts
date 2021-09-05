@@ -1,3 +1,4 @@
+import { VNID } from "neolace/deps/vertex-framework.ts";
 import { group, test, setTestIsolation, assertEquals, assertThrows, assertNotEquals } from "neolace/lib/tests.ts";
 import { QueryParseError } from "./errors.ts";
 import { QueryExpression } from "./expression.ts";
@@ -5,10 +6,11 @@ import {
     Ancestors,
     AndAncestors,
     // Count,
-    // LiteralExpression,
-    // RelatedEntries,
+    LiteralExpression,
+    RelatedEntries,
     This,
 } from "./expressions/index.ts";
+import * as V from "./values.ts";
 import { parseLookupString } from "./parse.ts";
 
 
@@ -40,6 +42,12 @@ group(import.meta, () => {
         checkParse("ancestors(this)", new Ancestors(new This()));
         checkParse("this.andAncestors()", new AndAncestors(new This()));
         checkParse("andAncestors(this)", new AndAncestors(new This()));
+    });
+    test("Related", () => {
+        checkParse(
+            "this.related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])",
+            new RelatedEntries(new This(), {via: new LiteralExpression(new V.RelationshipTypeValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd")))}),
+        );
     });
 
 });
