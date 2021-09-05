@@ -42,7 +42,7 @@ export const CreateEntryType = SchemaEditType({
                     contentType: ContentType.None,
                     description: null,
                     friendlyIdPrefix: null,
-                    computedFacts: [],
+                    computedFacts: {},
                 },
             },
             relationshipTypes: currentSchema.relationshipTypes,
@@ -75,26 +75,14 @@ export const UpdateEntryType = SchemaEditType({
             throw new Error(`EntryType with ID ${data.id} not found.`);
         }
         const newEntryType = {...originalEntryType};
-        newEntryType.computedFacts = [...newEntryType.computedFacts];  // Shallow copy the array so we can modify it
+        newEntryType.computedFacts = {...newEntryType.computedFacts};  // Shallow copy the array so we can modify it
 
         for (const key of ["name", "contentType", "description", "friendlyIdPrefix"] as const) {
             newEntryType[key] = (data as any)[key];
         }
 
-        data.addOrUpdateComputedFacts?.forEach(newFact => {
-            const existingIndex = newEntryType.computedFacts.findIndex(cf => cf.id === newFact.id);
-            if (existingIndex !== -1) {
-                newEntryType.computedFacts[existingIndex] = newFact;
-            } else {
-                newEntryType.computedFacts.push(newFact);
-            }
-        });
-        data.removeComputedFacts?.forEach(id => {
-            newEntryType.computedFacts = newEntryType.computedFacts.filter(cf => cf.id !== id)
-        });
-        // Fix the sorting of the "computed facts" array, for consistency (has to match ComputedFact.defaultOrderBy):
-        // Sort first by importance (lowest first), then by label (A before B)
-        newEntryType.computedFacts.sort((b, a) => (b.importance - a.importance)*1000 + b.label.localeCompare(a.label));
+        data.addOrUpdateComputedFacts?.forEach(newFact => newEntryType.computedFacts[newFact.id] = newFact);
+        data.removeComputedFacts?.forEach(id => delete newEntryType.computedFacts[id]);
 
         newSchema.entryTypes[data.id] = newEntryType;
         return Object.freeze(newSchema);

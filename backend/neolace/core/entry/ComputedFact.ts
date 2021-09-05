@@ -33,7 +33,6 @@ export class ComputedFact extends VNodeType {
     static derivedProperties = this.hasDerivedProperties({});
 
     // Always order first by importance (0 before 99), then by label (A before B)
-    // Needs to match UpdateEntryType.apply() in SchemaEdit.ts
     static defaultOrderBy = "@this.importance, @this.label";
 
     static async validate(dbObject: RawVNode<typeof ComputedFact>, tx: WrappedTransaction): Promise<void> {

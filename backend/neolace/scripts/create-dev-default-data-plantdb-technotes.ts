@@ -55,6 +55,7 @@ const schema: SiteSchemaData = {
             contentType: ContentType.Article,
             description: "A TechConcept is a description of some technical thing.",
             friendlyIdPrefix: "tc-",
+            computedFacts: {},
         }
     },
     relationshipTypes: {

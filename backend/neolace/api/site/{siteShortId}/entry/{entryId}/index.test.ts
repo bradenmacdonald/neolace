@@ -48,7 +48,7 @@ group(import.meta, () => {
             assertEquals(result, {...basicResultExpected, computedFactsSummary: [
                 // The species "Pinus Ponderosa" is a member of the genus "Pinus", and so on:
                 {
-                    id: defaultData.schema.entryTypes._ETSPECIES.computedFacts[0].id,
+                    id: defaultData.schema.entryTypes._ETSPECIES.computedFacts._CFSpeciesTaxonomy.id,
                     label: "Taxonomy",
                     value: {
                         type: "Page",
@@ -95,7 +95,7 @@ group(import.meta, () => {
                 {code: api.UpdateEntryType.code, data: {
                     id: defaultData.schema.entryTypes._ETSPECIES.id,
                     addOrUpdateComputedFacts: [{
-                        id: defaultData.schema.entryTypes._ETSPECIES.computedFacts[0].id,
+                        id: defaultData.schema.entryTypes._ETSPECIES.computedFacts._CFSpeciesTaxonomy.id,
                         label: "Broken Taxonomy",
                         importance: 5,
                         expression: "this is an invalid expression",
@@ -109,7 +109,7 @@ group(import.meta, () => {
             assertEquals(result, {...basicResultExpected, computedFactsSummary: [
                 // The species "Pinus Ponderosa" is a member of the genus "Pinus", and so on:
                 {
-                    id: defaultData.schema.entryTypes._ETSPECIES.computedFacts[0].id,
+                    id: defaultData.schema.entryTypes._ETSPECIES.computedFacts._CFSpeciesTaxonomy.id,
                     label: "Broken Taxonomy",
                     value: {
                         type: "Error",

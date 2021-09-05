@@ -35,7 +35,7 @@ export const EntryTypeSchema = Schema({
     /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
     friendlyIdPrefix: nullable(string),
     /** Computed facts always displayed on entries of this type */
-    computedFacts: array.of(ComputedFactSchema),
+    computedFacts: Record(string, ComputedFactSchema),
 });
 export type EntryTypeData = Type<typeof EntryTypeSchema>;
 
