@@ -31,9 +31,16 @@ export interface IntegerValue extends LookupValue {
     value: string;
 }
 
+export interface ErrorValue extends LookupValue {
+    type: "Error";
+    errorClass: string;
+    message: string;
+}
+
 export type AnyLookupValue = (
     | PageValue
     | EntryValue
     | AnnotatedEntryValue
     | IntegerValue
+    | ErrorValue
 );

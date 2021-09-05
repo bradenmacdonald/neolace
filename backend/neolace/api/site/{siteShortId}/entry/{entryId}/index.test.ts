@@ -87,6 +87,68 @@ group(import.meta, () => {
             ]});
         });
 
+        test("Get basic information about an entry plus a 'reference cache' with details of entries mentioned in computed facts", async () => {
+
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludeComputedFactsSummary, api.GetEntryFlags.IncludeReferenceCache] as const});
+
+            assertEquals(result.referenceCache, {
+                entryTypes: {
+                    [defaultData.schema.entryTypes._ETDIVISION.id]: {id: defaultData.schema.entryTypes._ETDIVISION.id, name: defaultData.schema.entryTypes._ETDIVISION.name},
+                    [defaultData.schema.entryTypes._ETCLASS.id]: {id: defaultData.schema.entryTypes._ETCLASS.id, name: defaultData.schema.entryTypes._ETCLASS.name},
+                    [defaultData.schema.entryTypes._ETORDER.id]: {id: defaultData.schema.entryTypes._ETORDER.id, name: defaultData.schema.entryTypes._ETORDER.name},
+                    [defaultData.schema.entryTypes._ETFAMILY.id]: {id: defaultData.schema.entryTypes._ETFAMILY.id, name: defaultData.schema.entryTypes._ETFAMILY.name},
+                    [defaultData.schema.entryTypes._ETGENUS.id]: {id: defaultData.schema.entryTypes._ETGENUS.id, name: defaultData.schema.entryTypes._ETGENUS.name},
+                    [defaultData.schema.entryTypes._ETSPECIES.id]: {id: defaultData.schema.entryTypes._ETSPECIES.id, name: defaultData.schema.entryTypes._ETSPECIES.name},
+                },
+                entries: {
+                    [defaultData.entries.divisionTracheophyta.id]: {
+                        id: defaultData.entries.divisionTracheophyta.id,
+                        name: defaultData.entries.divisionTracheophyta.name,
+                        friendlyId: defaultData.entries.divisionTracheophyta.friendlyId,
+                        description: "Division/phylum Tracheophyta are the vascular plants.",
+                        entryType: {id: defaultData.schema.entryTypes._ETDIVISION.id},
+                    },
+                    [defaultData.entries.classPinopsida.id]: {
+                        id: defaultData.entries.classPinopsida.id,
+                        name: defaultData.entries.classPinopsida.name,
+                        friendlyId: defaultData.entries.classPinopsida.friendlyId,
+                        description: "Class Pinopsida contains all extant conifers.",
+                        entryType: {id: defaultData.schema.entryTypes._ETCLASS.id},
+                    },
+                    [defaultData.entries.orderPinales.id]: {
+                        id: defaultData.entries.orderPinales.id,
+                        name: defaultData.entries.orderPinales.name,
+                        friendlyId: defaultData.entries.orderPinales.friendlyId,
+                        description: "Order Pinales contains all extant conifers, such as the pine family (Pinaceae) and yew family (Taxaceae).",
+                        entryType: {id: defaultData.schema.entryTypes._ETORDER.id},
+                    },
+                    [defaultData.entries.familyPinaceae.id]: {
+                        id: defaultData.entries.familyPinaceae.id,
+                        name: defaultData.entries.familyPinaceae.name,
+                        friendlyId: defaultData.entries.familyPinaceae.friendlyId,
+                        description: "Family Pinaceae is the pine family. It includes cedars, firs, hemlocks, larches, spruces, and of course pines.",
+                        entryType: {id: defaultData.schema.entryTypes._ETFAMILY.id},
+                    },
+                    [defaultData.entries.genusPinus.id]: {
+                        id: defaultData.entries.genusPinus.id,
+                        name: defaultData.entries.genusPinus.name,
+                        friendlyId: defaultData.entries.genusPinus.friendlyId,
+                        description: 'Genus Pinus, commonly known as "pines".',
+                        entryType: {id: defaultData.schema.entryTypes._ETGENUS.id},
+                    },
+                    [defaultData.entries.ponderosaPine.id]: {
+                        id: defaultData.entries.ponderosaPine.id,
+                        name: defaultData.entries.ponderosaPine.name,
+                        friendlyId: defaultData.entries.ponderosaPine.friendlyId,
+                        description: "**Pinus ponderosa** (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.",
+                        entryType: {id: defaultData.schema.entryTypes._ETSPECIES.id},
+                    },
+                },
+            });
+        });
+
         test("The summary of computed facts will display an error if the computed fact is invalid", async () => {
 
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);

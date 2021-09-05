@@ -300,7 +300,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 {code: "CreateEntry", data: {
                     ...data.entries.orderPinales,
                     type: data.schema.entryTypes._ETORDER.id,
-                    description: "Family Pinales contains all extant conifers, such as the pine family (Pinaceae) and yew family (Taxaceae).",
+                    description: "Order Pinales contains all extant conifers, such as the pine family (Pinaceae) and yew family (Taxaceae).",
                 }},
                 // order "Pinales" IS A member of class "Pinopsida"
                 {code: "CreateRelationshipFact", data: {
