@@ -1,4 +1,5 @@
 import React from 'react';
+import { FormattedMessage } from 'react-intl';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import Link from 'next/link';
 import { ParsedUrlQuery } from 'querystring';
@@ -6,6 +7,7 @@ import { client, api, getSiteData, SiteData } from 'lib/api-client';
 
 import { SitePage } from 'components/SitePage';
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
+import { LookupValue } from 'components/LookupValue';
 //import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageProps {
@@ -63,6 +65,27 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         <h1 id="summary">{props.entry.name}</h1>
                         <p id="description"><InlineMDT mdt={props.entry.description} context={mdtContext} /></p>
 
+                        <div className="flex flex-wrap xl:flex-nowrap">
+                            <div id="properties" className="flex-auto min-w-[400px]">
+                                <h2><FormattedMessage id="site.entry.propertiesHeading" defaultMessage="Properties"/></h2>
+                                <table>
+                                    <tbody>
+                                        {props.entry.computedFactsSummary?.map(cf => 
+                                            <tr key={cf.id}>
+                                                <th className="pr-2 align-top">{cf.label}</th>
+                                                <td className="pr-2"><LookupValue value={cf.value}/></td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="graph-thumbnail" className="hidden md:block flex-initial min-w-[400px]">
+                                <h2><FormattedMessage id="site.entry.graphHeading" defaultMessage="Explore Graph"/></h2>
+                                <div className="bg-gray-200 pb-[50%] text-center">(graph)</div>
+                            </div>
+                        </div>
+
+                        {/* Article content, if any */}
                         <h2>Heading 2</h2>
                         <p>Is it my imagination, or have tempers become a little frayed on the ship lately? I think you've let your personal feelings cloud your judgement. Now, how the hell do we defeat an enemy that knows us better than we know ourselves? Your head is not an artifact! Fear is the true enemy, the only enemy. Mr. Worf, you sound like a man who's asking his friend if he can start dating his sister.</p>
                         <p>Travel time to the nearest starbase? My oath is between Captain Kargan and myself. Your only concern is with how you obey my orders. Or do you prefer the rank of prisoner to that of lieutenant?</p>
@@ -98,7 +121,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     if (site === null) { return {notFound: true}; }
     let entry: api.EntryData;
     try {
-        entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId});
+        entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [api.GetEntryFlags.IncludeComputedFactsSummary]});
     } catch (err) {
         if (err instanceof api.NotFound) {
             return {notFound: true};

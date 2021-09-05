@@ -4,6 +4,7 @@ import {
     Field,
     VNID,
 } from "neolace/deps/vertex-framework.ts";
+import * as api from "neolace/deps/neolace-api.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { QueryContext } from "./context.ts";
@@ -42,14 +43,14 @@ export abstract class ConcreteValue extends QueryValue {
     static readonly isLazy = false;
 
     /** Return fields other than 'type' to be included in this value when serialized as a JSON object. */
-    protected abstract serialize(): Record<string, unknown>;
-    public toJSON() {
+    protected abstract serialize(): Omit<api.AnyLookupValue, "type">;
+    public toJSON(): api.AnyLookupValue {
         if (!this.constructor.name.endsWith("Value")) { throw new Error("Invalid value class name"); }
         return {
             // "type" is the name of the ____Value class without the "Value" part
             type: this.constructor.name.substr(0, this.constructor.name.length - 5),
             ...this.serialize(),
-        };
+        } as api.AnyLookupValue;
     }
 
     public makeConcrete(): Promise<ConcreteValue> { return new Promise(resolve => resolve(this)); }

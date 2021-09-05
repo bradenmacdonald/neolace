@@ -1,5 +1,7 @@
-import { Schema, Type, string, vnidString, nullable, array, number, unknown } from "../api-schemas.ts";
+import { Schema, Type, string, vnidString, nullable, array, number, object } from "../api-schemas.ts";
 import { ContentType } from "../schema/SiteSchemaData.ts";
+import { AnyLookupValue } from "./lookup-value.ts";
+
 
 export enum GetEntryFlags {
     IncludeAncestors = "ancestors",
@@ -22,7 +24,7 @@ export const EntrySchema = Schema({
     /** Summary of computed facts for this entry (up to 20 computed facts, with importance < 20) */
     computedFactsSummary: array.of(Schema({
         label: string,
-        value: unknown,
+        value: object.transform(obj => obj as AnyLookupValue),
         id: vnidString,
     })).strictOptional(),
 
