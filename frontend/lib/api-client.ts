@@ -78,6 +78,7 @@ export async function getSiteData(domain: string): Promise<SiteData|null> {
         if (err instanceof NotFound) {
             return null;
         }
+        throw err;
     }
 }
 

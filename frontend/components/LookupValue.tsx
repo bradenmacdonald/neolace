@@ -5,6 +5,7 @@ import { FormattedListParts, FormattedMessage } from 'react-intl';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
+    refCache: api.EntryData["referenceCache"];
     children?: never;
 }
 
@@ -22,7 +23,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Page": {
 
             const listValues = value.values.map((v, idx) => 
-                <LookupValue key={idx} value={v} />
+                <LookupValue key={idx} value={v} refCache={props.refCache} />
             );
             if (listValues.length < value.totalCount) {
                 listValues.push(
@@ -43,7 +44,11 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         }
         case "Entry":
         case "AnnotatedEntry": {
-            return <Link href={`/entry/${value.id}`}><a>{value.id}</a></Link>
+            const entry = props.refCache.entries[value.id];
+            if (entry === undefined) {
+                return <Link href={`/entry/${value.id}`}><a className="text-red-700 font-bold">{value.id}</a></Link>
+            }
+            return <Link href={`/entry/${entry.friendlyId}`}><a>{entry.name}</a></Link>
         }
         default: {
             return <code>{JSON.stringify(value)}</code>;

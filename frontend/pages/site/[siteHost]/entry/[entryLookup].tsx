@@ -72,8 +72,8 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                     <tbody>
                                         {props.entry.computedFactsSummary?.map(cf => 
                                             <tr key={cf.id}>
-                                                <th className="pr-2 align-top">{cf.label}</th>
-                                                <td className="pr-2"><LookupValue value={cf.value}/></td>
+                                                <th className="pr-2 align-top text-left font-normal text-gray-700 min-w-[120px]">{cf.label}</th>
+                                                <td className="pr-2"><LookupValue value={cf.value} refCache={props.entry.referenceCache} /></td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -121,7 +121,10 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     if (site === null) { return {notFound: true}; }
     let entry: api.EntryData;
     try {
-        entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [api.GetEntryFlags.IncludeComputedFactsSummary]});
+        entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [
+            api.GetEntryFlags.IncludeComputedFactsSummary,
+            api.GetEntryFlags.IncludeReferenceCache,
+        ]});
     } catch (err) {
         if (err instanceof api.NotFound) {
             return {notFound: true};
