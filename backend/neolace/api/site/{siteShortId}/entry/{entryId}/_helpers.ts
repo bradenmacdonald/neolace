@@ -8,7 +8,7 @@ import { ComputedFact } from "neolace/core/entry/ComputedFact.ts";
 import { parseLookupString } from "neolace/core/query/parse.ts";
 import { QueryContext } from "neolace/core/query/context.ts";
 import { QueryError } from "neolace/core/query/errors.ts";
-import { ConcreteValue, NullValue } from "neolace/core/query/values.ts";
+import { ErrorValue } from "neolace/core/query/values.ts";
 
 
 /**
@@ -79,14 +79,16 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
 
         result.computedFactsSummary = [];
         for (const cf of factsToCompute) {
-            const value: ConcreteValue = await parseLookupString(cf.expression).getValue(context).then(v => v.makeConcrete()).catch(err => {
+            let value;
+            try {
+                value = await parseLookupString(cf.expression).getValue(context).then(v => v.makeConcrete());
+            } catch (err: unknown) {
                 if (err instanceof QueryError) {
-                    console.log(`Error: ${err.message}`);
-                    return new NullValue();
+                    value = new ErrorValue(err);
                 } else {
                     throw err;
                 }
-            });
+            }
             result.computedFactsSummary.push({
                 id: cf.id,
                 label: cf.label,

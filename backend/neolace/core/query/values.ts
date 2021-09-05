@@ -7,7 +7,7 @@ import {
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { QueryContext } from "./context.ts";
-import { QueryEvaluationError } from "./errors.ts";
+import { QueryError, QueryEvaluationError } from "./errors.ts";
 
 // deno-lint-ignore no-explicit-any
 type ClassOf<QV extends QueryValue> = {new(...args: any[]): QV};
@@ -118,6 +118,23 @@ export class NullValue extends ConcreteValue {
     }
 
     protected serialize() { return {}; }
+}
+
+/**
+ * An error value - represents an error.
+ * 
+ * Evaluating expressions will always throw an exception, not return an error value. However, in some use cases it makes
+ * sense to catch those exceptions and convert them to error values, so that a value is always returned.
+ */
+export class ErrorValue extends ConcreteValue {
+    public readonly error: QueryError;
+
+    constructor(error: QueryError) {
+        super();
+        this.error = error;
+    }
+
+    protected serialize() { return {errorClass: this.error.constructor.name, message: this.error.message}; }
 }
 
 /**

@@ -87,6 +87,39 @@ group(import.meta, () => {
             ]});
         });
 
+        test("The summary of computed facts will display an error if the computed fact is invalid", async () => {
+
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+            const draft = await client.createDraft({title: "Change computed fact", description: null, edits: [
+                {code: api.UpdateEntryType.code, data: {
+                    id: defaultData.schema.entryTypes._ETSPECIES.id,
+                    addOrUpdateComputedFacts: [{
+                        id: defaultData.schema.entryTypes._ETSPECIES.computedFacts[0].id,
+                        label: "Broken Taxonomy",
+                        importance: 5,
+                        expression: "this is an invalid expression",
+                    }]
+                }}
+            ]});
+            await client.acceptDraft(draft.id);
+
+            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludeComputedFactsSummary] as const});
+
+            assertEquals(result, {...basicResultExpected, computedFactsSummary: [
+                // The species "Pinus Ponderosa" is a member of the genus "Pinus", and so on:
+                {
+                    id: defaultData.schema.entryTypes._ETSPECIES.computedFacts[0].id,
+                    label: "Broken Taxonomy",
+                    value: {
+                        type: "Error",
+                        errorClass: "QueryParseError",
+                        message: 'Simple/fake parser is unable to parse the lookup expression "this is an invalid expression"',
+                    },
+                },
+            ]});
+        });
+
         test("Get basic information about an entry plus detailed ancestor information", async () => {
 
             // Note that details of ancestor retrieval are mostly tested in neolace/core/entry/ancestors.test.ts
