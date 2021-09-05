@@ -39,6 +39,54 @@ group(import.meta, () => {
             assertEquals(result, basicResultExpected);
         });
 
+        test("Get basic information about an entry plus a summary of computed facts", async () => {
+
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludeComputedFactsSummary] as const});
+
+            assertEquals(result, {...basicResultExpected, computedFactsSummary: [
+                // The species "Pinus Ponderosa" is a member of the genus "Pinus", and so on:
+                {
+                    id: defaultData.schema.entryTypes._ETSPECIES.computedFacts[0].id,
+                    label: "Taxonomy",
+                    value: {
+                        type: "Page",
+                        startedAt: 0,
+                        totalCount: 5,
+                        pageSize: 100,
+                        values: [
+                            {
+                                type: "AnnotatedEntry",
+                                id: defaultData.entries.genusPinus.id,
+                                annotations: { distance: { type: "Integer", value: "1", } },
+                            },
+                            {
+                                type: "AnnotatedEntry",
+                                id: defaultData.entries.familyPinaceae.id,
+                                annotations: { distance: { type: "Integer", value: "2" } },
+                            },
+                            {
+                                type: "AnnotatedEntry",
+                                id: defaultData.entries.orderPinales.id,
+                                annotations: { distance: { type: "Integer", value: "3" } },
+                            },
+                            {
+                                type: "AnnotatedEntry",
+                                id: defaultData.entries.classPinopsida.id,
+                                annotations: { distance: { type: "Integer", value: "4"} },
+                            },
+                            {
+                                type: "AnnotatedEntry",
+                                id: defaultData.entries.divisionTracheophyta.id,
+                                annotations: { distance: { type: "Integer", value: "5"} },
+                            },
+                        ],
+                    },
+                },
+            ]});
+        });
+
         test("Get basic information about an entry plus detailed ancestor information", async () => {
 
             // Note that details of ancestor retrieval are mostly tested in neolace/core/entry/ancestors.test.ts

@@ -32,7 +32,7 @@ export abstract class QueryValue {
     }
 
     /** If this is a LazyValue, convert it to a default non-lazy value. */
-    public makeConcrete(): Promise<ConcreteValue> { return new Promise(resolve => resolve(this)); }
+    public abstract makeConcrete(): Promise<ConcreteValue>;
 }
 
 /**
@@ -40,6 +40,19 @@ export abstract class QueryValue {
  */
 export abstract class ConcreteValue extends QueryValue {
     static readonly isLazy = false;
+
+    /** Return fields other than 'type' to be included in this value when serialized as a JSON object. */
+    protected abstract serialize(): Record<string, unknown>;
+    public toJSON() {
+        if (!this.constructor.name.endsWith("Value")) { throw new Error("Invalid value class name"); }
+        return {
+            // "type" is the name of the ____Value class without the "Value" part
+            type: this.constructor.name.substr(0, this.constructor.name.length - 5),
+            ...this.serialize(),
+        };
+    }
+
+    public makeConcrete(): Promise<ConcreteValue> { return new Promise(resolve => resolve(this)); }
 }
 
 /**
@@ -84,6 +97,12 @@ export class IntegerValue extends ConcreteValue {
         // An integer literal just looks like a plain integer, e.g. 5
         return String(this.value);
     }
+
+    protected serialize() {
+        // Unfortunately JavaScript cannot serialize BigInt to JSON numbers (even though JSON numbers can have
+        // arbitrary digits), so we have to serialize it as a string.
+        return {value: String(this.value)};
+    }
 }
 
 /**
@@ -97,6 +116,8 @@ export class NullValue extends ConcreteValue {
     public asLiteral(): string {
         return "null";
     }
+
+    protected serialize() { return {}; }
 }
 
 /**
@@ -127,6 +148,8 @@ export class EntryValue extends ConcreteValue {
         }
         return undefined;
     }
+
+    protected serialize() { return {id: this.id}; }
 }
 
 /**
@@ -147,6 +170,8 @@ export class EntryTypeValue extends ConcreteValue {
     public asLiteral(): string {
         return `ET[${this.id}]`;  // e.g. ET[_6FisU5zxXggLcDz4Kb3Wmd]
     }
+
+    protected serialize() { return {id: this.id}; }
 }
 
 /**
@@ -167,6 +192,8 @@ export class RelationshipTypeValue extends ConcreteValue {
     public asLiteral(): string {
         return `RT[${this.id}]`;  // e.g. RT[_6FisU5zxXggLcDz4Kb3Wmd]
     }
+
+    protected serialize() { return {id: this.id}; }
 }
 
 /**
@@ -187,6 +214,8 @@ export class RelationshipFactValue extends ConcreteValue {
     public asLiteral(): string {
         return `RF[${this.id}]`;  // e.g. RF[_6FisU5zxXggLcDz4Kb3Wmd]
     }
+
+    protected serialize() { return {id: this.id}; }
 }
 
 /**
@@ -198,6 +227,15 @@ export class AnnotatedEntryValue extends EntryValue {
     constructor(id: VNID, annotations: Record<string, ConcreteValue>) {
         super(id);
         this.annotations = annotations;
+        if (Object.keys(annotations).length === 0) {throw new Error(`Missing annotations`);}
+    }
+
+    protected serialize() {
+        const annotations: Record<string, unknown> = {};
+        for (const key in this.annotations) {
+            annotations[key] = this.annotations[key].toJSON();
+        }
+        return {id: this.id, annotations}; 
     }
 }
 
@@ -216,6 +254,15 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
         this.startedAt = startedAt;
         this.pageSize = pageSize;
         this.totalCount = totalCount;
+    }
+
+    protected serialize() {
+        return {
+            values: this.values.map(v => v.toJSON()),
+            startedAt: Number(this.startedAt),
+            pageSize: Number(this.pageSize),
+            totalCount: Number(this.totalCount),
+        };
     }
 }
 
