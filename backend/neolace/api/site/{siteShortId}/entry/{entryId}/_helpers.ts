@@ -73,7 +73,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     if (flags.has(api.GetEntryFlags.IncludeComputedFactsSummary)) {
         // Include a summary of computed facts for this entry (up to 20 computed facts, with importance < 20)
         const factsToCompute = await getComputedFacts(entryData.id, {tx, summaryOnly: true, limit: 20});
-        const context: QueryContext = {tx, siteId, entryId: entryData.id};
+        const context: QueryContext = {tx, siteId, entryId: entryData.id, defaultPageSize: 5n};
 
         // ** In the near future, we'll need to resolve a dependency graph and compute these in parallel / async. **
 

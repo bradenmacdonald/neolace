@@ -324,7 +324,7 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
         super(context);
         this.cypherQuery = cypherQuery;
         this.skip = options.skip ?? 0n;
-        this.limit = options.limit ?? 100n;
+        this.limit = options.limit ?? context.defaultPageSize ?? 50n;
     }
 
     /** Helper method for cloning instances of this */

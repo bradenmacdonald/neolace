@@ -54,7 +54,7 @@ group(import.meta, () => {
                         type: "Page",
                         startedAt: 0,
                         totalCount: 5,
-                        pageSize: 100,
+                        pageSize: 5,
                         values: [
                             {
                                 type: "AnnotatedEntry",

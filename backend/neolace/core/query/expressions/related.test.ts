@@ -28,7 +28,7 @@ group(import.meta, () => {
                     weight: new NullValue(),
                 }),
             ], {
-                pageSize: 100n,
+                pageSize: 50n,
                 startedAt: 0n,
                 totalCount: 1n,
             }));
