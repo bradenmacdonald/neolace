@@ -30,8 +30,14 @@ export function parseLookupString(lookup: string): QueryExpression {
     if (lookup === "andAncestors(this)") { return new AndAncestors(new This()); }
 
     const otherTemplates: [RegExp, (match: RegExpMatchArray) => QueryExpression ][] = [
+        // "foo" (String literal)
+        [/^"(.*)"$/, _m => new LiteralExpression(new V.StringValue(JSON.parse(lookup)))],
         // RT[_6FisU5zxXg5LcDz4Kb3Wmd] (Relationship Type literal)
         [/^RT\[(_[0-9A-Za-z]{1,22})\]$/, m => new LiteralExpression(new V.RelationshipTypeValue(VNID(m[1])))],
+        // this.related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd], direction="from")
+        [/^this\.related\(via=(.*), direction=(.*)\)$/, m => new RelatedEntries(new This(), {via: parseLookupString(m[1]), direction: parseLookupString(m[2])})],
+        // related(this, via=RT[_6FisU5zxXg5LcDz4Kb3Wmd], direction="to")
+        [/^related\(this, via=(.*), direction=(.*)\)$/, m => new RelatedEntries(new This(), {via: parseLookupString(m[1]), direction: parseLookupString(m[2])})],
         // this.related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])
         [/^this\.related\(via=(.*)\)$/, m => new RelatedEntries(new This(), {via: parseLookupString(m[1])})],
         // related(this, via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])

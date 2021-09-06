@@ -107,6 +107,31 @@ export class IntegerValue extends ConcreteValue {
 }
 
 /**
+ * A value that respresents a string
+ */
+export class StringValue extends ConcreteValue {
+    readonly value: string;
+
+    constructor(value: string) {
+        super();
+        this.value = value;
+    }
+
+    /**
+     * Return this value as a string, in Neolace Query Language format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public asLiteral(): string {
+        // JSON.stringify() will create a "quoted" and \"escaped\" string for us.
+        return JSON.stringify(this.value);
+    }
+
+    protected serialize() {
+        return {value: this.value};
+    }
+}
+
+/**
  * A null value
  */
 export class NullValue extends ConcreteValue {

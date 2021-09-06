@@ -49,6 +49,13 @@ group(import.meta, () => {
             new RelatedEntries(new This(), {via: new LiteralExpression(new V.RelationshipTypeValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd")))}),
         );
         checkParse(
+            `this.related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd], direction="from")`,
+            new RelatedEntries(new This(), {
+                via: new LiteralExpression(new V.RelationshipTypeValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd"))),
+                direction: new LiteralExpression(new V.StringValue("from")),
+            }),
+        );
+        checkParse(
             "this.andAncestors().related(via=RT[_HASA])",
             new RelatedEntries(new AndAncestors(new This()), {via: new LiteralExpression(new V.RelationshipTypeValue(VNID("_HASA")))}),
         );

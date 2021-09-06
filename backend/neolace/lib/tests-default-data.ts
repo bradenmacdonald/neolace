@@ -123,6 +123,8 @@ const data = {
                 description: "Describes a part of a plant.",
                 friendlyIdPrefix: "pp-",
                 computedFacts: {
+                    "_CFPartTypeOf": {id: VNID("_CFPartTypeOf"), label: "Type of", importance: 1, expression: `this.related(via=RT[_PARTisPART], direction="from")`},
+                    "_CFPartTypes": {id: VNID("_CFPartTypes"), label: "Types", importance: 2, expression: `this.related(via=RT[_PARTisPART], direction="to")`},
                     "_CFPartsFoundIn": {id: VNID("_CFPartsFoundIn"), label: "Part of", importance: 5, expression: "this.related(via=RT[_HASA])"},
                 },
             },
