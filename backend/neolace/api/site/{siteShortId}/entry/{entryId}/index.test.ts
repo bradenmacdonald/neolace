@@ -23,7 +23,7 @@ group(import.meta, () => {
             id: ponderosaPine.id,
             name: ponderosaPine.name,
             friendlyId: ponderosaPine.friendlyId,
-            description: "**Pinus ponderosa** (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.",
+            description: ponderosaPine.description,
             entryType: {
                 id: speciesEntryType.id,
                 name: speciesEntryType.name,

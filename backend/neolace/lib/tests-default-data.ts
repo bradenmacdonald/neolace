@@ -206,14 +206,25 @@ const data = {
         },
     },
     entries: {
-        // Species:
-        ponderosaPine: {id: VNID(), friendlyId: "s-pinus-ponderosa", name: "Ponderosa Pine", description: "set below"},
-        // Other taxonomy levels:
+        // Our taxonomy tree:
         divisionTracheophyta: {id: VNID(), friendlyId: "d-tracheophyta", name: "Tracheophyta", description: "set below"},
             classPinopsida: {id: VNID(), friendlyId: "c-pinopsida", name: "Pinopsida", description: "set below"},
                 orderPinales: {id: VNID(), friendlyId: "o-pinales", name: "Pinales", description: "set below"},
                     familyPinaceae: {id: VNID(), friendlyId: "f-pinaceae", name: "Pinaceae", description: "set below"},
                         genusPinus: {id: VNID(), friendlyId: "g-pinus", name: "Pinus", description: "set below"},
+                            ponderosaPine: {id: VNID(), friendlyId: "s-pinus-ponderosa", name: "Ponderosa Pine", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/4J2F3
+                            stonePine: {id: VNID(), friendlyId: "s-pinus-pinea", name: "Stone Pine", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/77KSK
+                            jackPine: {id: VNID(), friendlyId: "s-pinus-banksiana", name: "Jack pine", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/4J237
+                            japaneseRedPine: {id: VNID(), friendlyId: "s-pinus-densiflora", name: "Japanese red pine", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/4J25P
+                            japaneseWhitePine: {id: VNID(), friendlyId: "s-pinus-parviflora", name: "Japanese white pine", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/77KTZ
+                            jeffreyPine: {id: VNID(), friendlyId: "s-pinus-jeffreyi", name: "Jeffrey pine", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/77KTP
+                            pinyonPine: {id: VNID(), friendlyId: "s-pinus-cembroides", name: "Pinyon pine", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/4J24K
+                            westernWhitePine: {id: VNID(), friendlyId: "s-pinus-monticola", name: "Western white pine", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/4J2CG
+                    familyCupressaceae: { id: VNID(), friendlyId: "f-cupressaceae", name: "Cupressaceae", description: "set below" },
+                        genusCupressus: {id: VNID(), friendlyId: "g-cupressus", name: "Cupressus", description: "set below"},
+                            mediterraneanCypress: {id: VNID(), friendlyId: "s-cupressus-sempervirens", name: "Mediterranean Cypress", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/32FXZ
+                        genusThuja: {id: VNID(), friendlyId: "g-thuja", name: "Thuja", description: "set below"},
+                            westernRedcedar: {id: VNID(), friendlyId: "s-thuja-plicata", name: "Western Redcedar", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/56NTV
         // Plant parts:
         cone: {id: VNID(), friendlyId: "pp-cone", name: "Cone (strobilus)", description: "set below"},
             pollenCone: {id: VNID(), friendlyId: "pp-pollen-cone", name: "Pollen cone", description: "set below"},
@@ -305,7 +316,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             ...data.entries.divisionTracheophyta,
             type: data.schema.entryTypes._ETDIVISION.id,
             description: (data.entries.divisionTracheophyta.description =
-                "Division/phylum **Tracheophyta** are the vascular plants."
+                "Division/phylum ***Tracheophyta*** are the vascular plants."
             ),
         }},
             // Create Class "Pinopsida" (conifers) - https://www.catalogueoflife.org/data/taxon/GG
@@ -313,7 +324,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 ...data.entries.classPinopsida,
                 type: data.schema.entryTypes._ETCLASS.id,
                 description: (data.entries.classPinopsida.description =
-                    "Class **Pinopsida** contains all extant conifers."
+                    "Class ***Pinopsida*** contains all extant conifers."
                 ),
             }},
             // Class "Pinopsida" IS A member of division "Tracheophyta"
@@ -328,7 +339,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                     ...data.entries.orderPinales,
                     type: data.schema.entryTypes._ETORDER.id,
                     description: (data.entries.orderPinales.description = `
-                        Order **Pinales** contains all extant conifers, such as the [pine family (Pinaceae)](/entry/${data.entries.familyPinaceae.id}) and yew family (Taxaceae).
+                        Order ***Pinales*** contains all extant conifers, such as the [pine family (Pinaceae)](/entry/${data.entries.familyPinaceae.id}) and yew family (Taxaceae).
                     `.trim()),
                 }},
                 // order "Pinales" IS A member of class "Pinopsida"
@@ -343,7 +354,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                         ...data.entries.familyPinaceae,
                         type: data.schema.entryTypes._ETFAMILY.id,
                         description: (data.entries.familyPinaceae.description = `
-                            Family **Pinaceae** is the **pine family**. It includes cedars, firs, hemlocks, larches, spruces, and of course pines.
+                            Family ***Pinaceae*** is the **pine family**. It includes cedars, firs, hemlocks, larches, spruces, and of course pines.
                         `.trim()),
                     }},
                     // family "Pinaceae" IS A member of order "Pinales"
@@ -358,7 +369,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                             ...data.entries.genusPinus,
                             type: data.schema.entryTypes._ETGENUS.id,
                             description: (data.entries.genusPinus.description = `
-                                Genus **Pinus**, commonly known as "pines".
+                                Genus ***Pinus***, commonly known as "pines".
                             `.trim()),
                         }},
                         // Genus "Pinus" IS A member of family "Pinaceae"
@@ -368,19 +379,191 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                             toEntry: data.entries.familyPinaceae.id,
                             type: data.schema.relationshipTypes._GisF.id,
                         }},
-                            // Create Species "Pinus Ponderosa" - https://www.catalogueoflife.org/data/taxon/4J2F3
+                            // Ponderosa Pine
                             {code: "CreateEntry", data: {
                                 ...data.entries.ponderosaPine,
                                 type: data.schema.entryTypes._ETSPECIES.id,
                                 description: (data.entries.ponderosaPine.description = `
-                                    **Pinus ponderosa** (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.
+                                    ***Pinus ponderosa*** (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.
                                 `.trim()),
                             }},
-                            // Species "pinus ponderosa" IS A member of genus "Pinus"
                             {code: "CreateRelationshipFact", data: {
                                 id: VNID(),
                                 fromEntry: data.entries.ponderosaPine.id,
                                 toEntry: data.entries.genusPinus.id,
+                                type: data.schema.relationshipTypes._SisG.id,
+                            }},
+                            // Stone Pine
+                            {code: "CreateEntry", data: {
+                                ...data.entries.stonePine,
+                                type: data.schema.entryTypes._ETSPECIES.id,
+                                description: (data.entries.stonePine.description = `
+                                    ***Pinus pinea***, known as the **stone pine**, is a pine tree native to the Mediterranean, known and cutivated for their edible pine nuts.
+                                `.trim()),
+                            }},
+                            {code: "CreateRelationshipFact", data: {
+                                id: VNID(),
+                                fromEntry: data.entries.stonePine.id,
+                                toEntry: data.entries.genusPinus.id,
+                                type: data.schema.relationshipTypes._SisG.id,
+                            }},
+                            // Jack Pine
+                            {code: "CreateEntry", data: {
+                                ...data.entries.jackPine,
+                                type: data.schema.entryTypes._ETSPECIES.id,
+                                description: (data.entries.jackPine.description = `
+                                    ***Pinus banksiana***, commonly called **jack pine**, is a pine tree native to eastern North America.
+                                `.trim()),
+                            }},
+                            {code: "CreateRelationshipFact", data: {
+                                id: VNID(),
+                                fromEntry: data.entries.jackPine.id,
+                                toEntry: data.entries.genusPinus.id,
+                                type: data.schema.relationshipTypes._SisG.id,
+                            }},
+                            // Japanese Red Pine
+                            {code: "CreateEntry", data: {
+                                ...data.entries.japaneseRedPine,
+                                type: data.schema.entryTypes._ETSPECIES.id,
+                                description: (data.entries.japaneseRedPine.description = `
+                                    ***Pinus densiflora***, also known as the **Japanese red pine**, the **Japanese pine**, or **Korean red pine**, is a species of pine tree native to Japan, the Korean Peninsula, northeastern China and the southeast of Russia.
+                                `.trim()),
+                            }},
+                            {code: "CreateRelationshipFact", data: {
+                                id: VNID(),
+                                fromEntry: data.entries.japaneseRedPine.id,
+                                toEntry: data.entries.genusPinus.id,
+                                type: data.schema.relationshipTypes._SisG.id,
+                            }},
+                            // Japanese White Pine
+                            {code: "CreateEntry", data: {
+                                ...data.entries.japaneseWhitePine,
+                                type: data.schema.entryTypes._ETSPECIES.id,
+                                description: (data.entries.japaneseWhitePine.description = `
+                                    ***Pinus parviflora***, also known as **Japanese white pine**, **five-needle pine**, or **Ulleungdo white pine**, is a pine tree species native to Korea and Japan.
+                                `.trim()),
+                            }},
+                            {code: "CreateRelationshipFact", data: {
+                                id: VNID(),
+                                fromEntry: data.entries.japaneseWhitePine.id,
+                                toEntry: data.entries.genusPinus.id,
+                                type: data.schema.relationshipTypes._SisG.id,
+                            }},
+                            // Jeffrey Pine
+                            {code: "CreateEntry", data: {
+                                ...data.entries.jeffreyPine,
+                                type: data.schema.entryTypes._ETSPECIES.id,
+                                description: (data.entries.jeffreyPine.description = `
+                                    ***Pinus jeffreyi***, commonly called the **Jeffrey pine**, is a pine tree found mainly in California as well as surrounding regions.
+                                `.trim()),
+                            }},
+                            {code: "CreateRelationshipFact", data: {
+                                id: VNID(),
+                                fromEntry: data.entries.jeffreyPine.id,
+                                toEntry: data.entries.genusPinus.id,
+                                type: data.schema.relationshipTypes._SisG.id,
+                            }},
+                            // Pinyon Pine
+                            {code: "CreateEntry", data: {
+                                ...data.entries.pinyonPine,
+                                type: data.schema.entryTypes._ETSPECIES.id,
+                                description: (data.entries.pinyonPine.description = `
+                                    ***Pinus cembroides***, also known as **pinyon pine**, **Mexican nut pine**, and **Mexican stone pine**, is a pine found in North America, primarily in Mexico. It lives in areas with little rainfall, and has edible pine nuts.
+                                `.trim()),
+                            }},
+                            {code: "CreateRelationshipFact", data: {
+                                id: VNID(),
+                                fromEntry: data.entries.pinyonPine.id,
+                                toEntry: data.entries.genusPinus.id,
+                                type: data.schema.relationshipTypes._SisG.id,
+                            }},
+                            // Western White Pine
+                            {code: "CreateEntry", data: {
+                                ...data.entries.westernWhitePine,
+                                type: data.schema.entryTypes._ETSPECIES.id,
+                                description: (data.entries.westernWhitePine.description = `
+                                    ***Pinus monticola***, the **Western white pine** (also called **silver pine**, and **California mountain pine**), is a large pine found in Western Canada and the United States.
+                                `.trim()),
+                            }},
+                            {code: "CreateRelationshipFact", data: {
+                                id: VNID(),
+                                fromEntry: data.entries.westernWhitePine.id,
+                                toEntry: data.entries.genusPinus.id,
+                                type: data.schema.relationshipTypes._SisG.id,
+                            }},
+                    // Create Family "Cupressaceae" (cypress family)
+                    {code: "CreateEntry", data: {
+                        ...data.entries.familyCupressaceae,
+                        type: data.schema.entryTypes._ETFAMILY.id,
+                        description: (data.entries.familyCupressaceae.description = `
+                            Family ***Cupressaceae*** is the **cypress family**. It includes the trees and shrubs with the common name "cypress", as well as several others such as the junipers and redwoods.
+                        `.trim()),
+                    }},
+                    // family "Cupressaceae" IS A member of order "Pinales"
+                    {code: "CreateRelationshipFact", data: {
+                        id: VNID(),
+                        fromEntry: data.entries.familyCupressaceae.id,
+                        toEntry: data.entries.orderPinales.id,
+                        type: data.schema.relationshipTypes._FisO.id,
+                    }},
+                        // Create Genus "Cupressus" (cypresses)
+                        {code: "CreateEntry", data: {
+                            ...data.entries.genusCupressus,
+                            type: data.schema.entryTypes._ETGENUS.id,
+                            description: (data.entries.genusCupressus.description = `
+                                Genus ***Cupressus*** contains the conifer species that have the common name "cypress", such as the [mediterranean cypress](/entry/${data.entries.mediterraneanCypress.id}).
+                            `.trim()),
+                        }},
+                        // Genus "Cupressus" IS A member of family "Cupressaceae"
+                        {code: "CreateRelationshipFact", data: {
+                            id: VNID(),
+                            fromEntry: data.entries.genusCupressus.id,
+                            toEntry: data.entries.familyCupressaceae.id,
+                            type: data.schema.relationshipTypes._GisF.id,
+                        }},
+                            // Create Species "Cupressus sempervirens" - https://www.catalogueoflife.org/data/taxon/32FXZ
+                            {code: "CreateEntry", data: {
+                                ...data.entries.mediterraneanCypress,
+                                type: data.schema.entryTypes._ETSPECIES.id,
+                                description: (data.entries.mediterraneanCypress.description = `
+                                    ***Cupressus sempervirens***, the **Mediterranean cypress** is a cypress tree native to the Mediterranean Basin. It grows up to 35m tall and can be very long-lived, with some trees known to be more than 1,000 years old.
+                                `.trim()),
+                            }},
+                            // Species "Cupressus sempervirens" IS A member of genus "Cupressus"
+                            {code: "CreateRelationshipFact", data: {
+                                id: VNID(),
+                                fromEntry: data.entries.mediterraneanCypress.id,
+                                toEntry: data.entries.genusCupressus.id,
+                                type: data.schema.relationshipTypes._SisG.id,
+                            }},
+                        // Create Genus "Thuja" (arborvitaes)
+                        {code: "CreateEntry", data: {
+                            ...data.entries.genusThuja,
+                            type: data.schema.entryTypes._ETGENUS.id,
+                            description: (data.entries.genusThuja.description = `
+                                Genus ***Thuja*** has several species of coniferous trees that are part of the cypress family. Thujas are commonly known as Members are commonly known as **arborvitaes** or **cedars**, although they should not be confused with true cedars, a separate genus.
+                            `.trim()),
+                        }},
+                        // Genus "Thuja" IS A member of family "Cupressaceae"
+                        {code: "CreateRelationshipFact", data: {
+                            id: VNID(),
+                            fromEntry: data.entries.genusThuja.id,
+                            toEntry: data.entries.familyCupressaceae.id,
+                            type: data.schema.relationshipTypes._GisF.id,
+                        }},
+                            // Create Species "Thuja plicata" - https://www.catalogueoflife.org/data/taxon/56NTV
+                            {code: "CreateEntry", data: {
+                                ...data.entries.westernRedcedar,
+                                type: data.schema.entryTypes._ETSPECIES.id,
+                                description: (data.entries.westernRedcedar.description = `
+                                    ***Thuja plicata***, the **western redcedar**, is a large conifer that is among the most widespread trees in the Pacific Northwest.
+                                `.trim()),
+                            }},
+                            // Species "Thuja plicata" IS A member of genus "Thuja"
+                            {code: "CreateRelationshipFact", data: {
+                                id: VNID(),
+                                fromEntry: data.entries.westernRedcedar.id,
+                                toEntry: data.entries.genusThuja.id,
                                 type: data.schema.relationshipTypes._SisG.id,
                             }},
         
