@@ -149,8 +149,9 @@ export const ApplyEdits = defineAction({
                             MATCH (cf:${ComputedFact})<-[:${EntryType.rel.HAS_COMPUTED_FACT}]-(et:${EntryType} {id: ${edit.data.id}})
                             WHERE cf.id IN ${edit.data.removeComputedFacts}
                             SET cf:DeletedVNode
-                            DELETE cf:VNode
+                            REMOVE cf:VNode
                         `.RETURN({}));
+                        edit.data.removeComputedFacts.forEach(cfId => modifiedNodes.add(cfId));
                     }
                     modifiedNodes.add(edit.data.id);
                     break;

@@ -28,6 +28,9 @@ const dbWeightToValue = (dbValue: unknown): IntegerValue|NullValue => {
  * 
  * e.g. if Lion IS A Mammal (there is an IS_A relationship FROM "Lion" TO "Mammal"), then related(lion, via=IS_A)
  * will return [Mammal].
+ * 
+ * For directed relationships like IS_A, this will follow relationships in both directions. A future change will allow
+ * following the relationship in only one direction via specifying an additional argument like limit="from"
  */
  export class RelatedEntries extends QueryExpression {
 
@@ -49,8 +52,8 @@ const dbWeightToValue = (dbValue: unknown): IntegerValue|NullValue => {
             ${startingEntrySet.cypherQuery}
             WITH entry AS fromEntry  // Continue the existing entry query, discard annotations if present
 
-            MATCH (fromEntry)-[:${Entry.rel.REL_FACT}]->(relFact:VNode)-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType:${RelationshipType} {id: ${viaRelType.id}}),
-                (relFact)-[:${RelationshipFact.rel.REL_FACT}]->(entry:VNode)
+            MATCH (fromEntry)-[:${Entry.rel.REL_FACT}]-(relFact:VNode)-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType:${RelationshipType} {id: ${viaRelType.id}}),
+                (relFact)-[:${RelationshipFact.rel.REL_FACT}]-(entry:VNode)
             WITH entry, {weight: relFact.weight} AS annotations
             ORDER BY annotations.weight DESC, entry.name
         `, {annotations: {weight: dbWeightToValue}});

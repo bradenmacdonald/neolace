@@ -36,6 +36,10 @@ export function parseLookupString(lookup: string): QueryExpression {
         [/^this\.related\(via=(.*)\)$/, m => new RelatedEntries(new This(), {via: parseLookupString(m[1])})],
         // related(this, via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])
         [/^related\(this, via=(.*)\)$/, m => new RelatedEntries(new This(), {via: parseLookupString(m[1])})],
+        // this.andAncestors().related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])
+        [/^this\.andAncestors\(\)\.related\(via=(.*)\)$/, m => new RelatedEntries(new AndAncestors(new This()), {via: parseLookupString(m[1])})],
+        // related(andAncestors(this), via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])
+        [/^related\(andAncestors\(this\), via=(.*)\)$/, m => new RelatedEntries(new AndAncestors(new This()), {via: parseLookupString(m[1])})],
     ];
 
     for (const [re, fn] of otherTemplates) {
