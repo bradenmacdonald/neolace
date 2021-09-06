@@ -58,6 +58,14 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 {attribs => <Link href={`/entry/${entry.friendlyId}`}><a {...attribs}>{entry.name}</a></Link>}
             </Tooltip>
         }
+        case "Error":
+            return <span className="neo-lookup-error text-sm text-red-900">
+                <FormattedMessage 
+                    id="common.lookup-expression.error"
+                    defaultMessage="Error ({errorType}): {errorMessage}"
+                    values={{errorType: value.errorClass, errorMessage: value.message}}
+                />
+            </span>
         default: {
             return <code>{JSON.stringify(value)}</code>;
         }
