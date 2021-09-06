@@ -53,6 +53,9 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A division (also called Phylum outside of botany) is the main taxonomic classification within the Plant Kingdom.",
                 friendlyIdPrefix: "d-",
+                computedFacts: {
+                    "_CFDivisionClasses": {id: VNID("_CFDivisionClasses"), label: "Classes", importance: 6, expression: `this.related(via=RT[_CisD])`},
+                },
             },
             "_ETCLASS": {
                 id: VNID("_ETCLASS"),
@@ -60,6 +63,11 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A class is a level of taxonomic classification between Division/Phylum and Order.",
                 friendlyIdPrefix: "c-",
+                computedFacts: {
+                    "_CFClassTaxonomy": {id: VNID("_CFClassTaxonomy"), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
+                    "_CFClassOrders": {id: VNID("_CFClassOrders"), label: "Orders", importance: 6, expression: `this.related(via=RT[_OisC])`},
+                    "_CFClassParts": {id: VNID("_CFClassParts"), label: "Parts", importance: 10, expression: "this.andAncestors().related(via=RT[_HASA])"},
+                },
             },
             "_ETORDER": {
                 id: VNID("_ETORDER"),
@@ -67,6 +75,11 @@ const data = {
                 contentType: ContentType.Article,
                 description: "An order is a level of taxonomic classification between Class and Family.",
                 friendlyIdPrefix: "o-",
+                computedFacts: {
+                    "_CFOrderTaxonomy": {id: VNID("_CFOrderTaxonomy"), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
+                    "_CFOrderFamilies": {id: VNID("_CFOrderFamilies"), label: "Families", importance: 6, expression: `this.related(via=RT[_FisO])`},
+                    "_CFOrderParts": {id: VNID("_CFOrderParts"), label: "Parts", importance: 10, expression: "this.andAncestors().related(via=RT[_HASA])"},
+                },
             },
             "_ETFAMILY": {
                 id: VNID("_ETFAMILY"),
@@ -74,6 +87,11 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A family is a level of taxonomic classification between Order and Genus.",
                 friendlyIdPrefix: "f-",
+                computedFacts: {
+                    "_CFFamilyTaxonomy": {id: VNID("_CFFamilyTaxonomy"), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
+                    "_CFFamilyGenera": {id: VNID("_CFFamilyGenera"), label: "Genera", importance: 6, expression: `this.related(via=RT[_GisF])`},
+                    "_CFFamilyParts": {id: VNID("_CFFamilyParts"), label: "Parts", importance: 10, expression: "this.andAncestors().related(via=RT[_HASA])"},
+                },
             },
             "_ETGENUS": {
                 id: VNID("_ETGENUS"),
@@ -81,6 +99,11 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A genus is a level of taxonomic classification between Family and Species.",
                 friendlyIdPrefix: "g-",
+                computedFacts: {
+                    "_CFGenusTaxonomy": {id: VNID("_CFGenusTaxonomy"), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
+                    "_CFGenusSpecies": {id: VNID("_CFGenusSpecies"), label: "Species", importance: 6, expression: `this.related(via=RT[_SisG])`},
+                    "_CFGenusParts": {id: VNID("_CFGenusParts"), label: "Parts", importance: 10, expression: "this.andAncestors().related(via=RT[_HASA])"},
+                },
             },
             "_ETSPECIES": {
                 id: VNID("_ETSPECIES"),
@@ -88,6 +111,10 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A species is a basic unit of classifying life.",
                 friendlyIdPrefix: "s-",
+                computedFacts: {
+                    "_CFSpeciesTaxonomy": {id: VNID("_CFSpeciesTaxonomy"), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
+                    "_CFSpeciesParts": {id: VNID("_CFSpeciesParts"), label: "Parts", importance: 10, expression: "this.andAncestors().related(via=RT[_HASA])"},
+                },
             },
             "_ETPLANTPART": {
                 id: VNID("_ETPLANTPART"),
@@ -95,6 +122,11 @@ const data = {
                 contentType: ContentType.Article,
                 description: "Describes a part of a plant.",
                 friendlyIdPrefix: "pp-",
+                computedFacts: {
+                    "_CFPartTypeOf": {id: VNID("_CFPartTypeOf"), label: "Type of", importance: 1, expression: `this.related(via=RT[_PARTisPART], direction="from")`},
+                    "_CFPartTypes": {id: VNID("_CFPartTypes"), label: "Types", importance: 2, expression: `this.related(via=RT[_PARTisPART], direction="to")`},
+                    "_CFPartsFoundIn": {id: VNID("_CFPartsFoundIn"), label: "Part of", importance: 5, expression: "this.related(via=RT[_HASA])"},
+                },
             },
         },
         relationshipTypes: {
@@ -175,17 +207,17 @@ const data = {
     },
     entries: {
         // Species:
-        ponderosaPine: {id: VNID(), friendlyId: "s-pinus-ponderosa", name: "Ponderosa Pine"},
+        ponderosaPine: {id: VNID(), friendlyId: "s-pinus-ponderosa", name: "Ponderosa Pine", description: "set below"},
         // Other taxonomy levels:
-        divisionTracheophyta: {id: VNID(), friendlyId: "d-tracheophyta", name: "Tracheophyta"},
-            classPinopsida: {id: VNID(), friendlyId: "c-pinopsida", name: "Pinopsida"},
-                orderPinales: {id: VNID(), friendlyId: "o-pinales", name: "Pinales"},
-                    familyPinaceae: {id: VNID(), friendlyId: "f-pinaceae", name: "Pinaceae"},
-                        genusPinus: {id: VNID(), friendlyId: "g-pinus", name: "Pinus"},
+        divisionTracheophyta: {id: VNID(), friendlyId: "d-tracheophyta", name: "Tracheophyta", description: "set below"},
+            classPinopsida: {id: VNID(), friendlyId: "c-pinopsida", name: "Pinopsida", description: "set below"},
+                orderPinales: {id: VNID(), friendlyId: "o-pinales", name: "Pinales", description: "set below"},
+                    familyPinaceae: {id: VNID(), friendlyId: "f-pinaceae", name: "Pinaceae", description: "set below"},
+                        genusPinus: {id: VNID(), friendlyId: "g-pinus", name: "Pinus", description: "set below"},
         // Plant parts:
-        cone: {id: VNID(), friendlyId: "pp-cone", name: "Cone (strobilus)"},
-            pollenCone: {id: VNID(), friendlyId: "pp-pollen-cone", name: "Pollen cone"},
-            seedCone: {id: VNID(), friendlyId: "pp-seed-cone", name: "Seed cone"},
+        cone: {id: VNID(), friendlyId: "pp-cone", name: "Cone (strobilus)", description: "set below"},
+            pollenCone: {id: VNID(), friendlyId: "pp-pollen-cone", name: "Pollen cone", description: "set below"},
+            seedCone: {id: VNID(), friendlyId: "pp-seed-cone", name: "Seed cone", description: "set below"},
     },
 };
 
@@ -202,9 +234,12 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
 
     // Wipe out all existing Neo4j data
     await graph.reverseAllMigrations();
-    const emptySnapshot = {cypherSnapshot: ""};
-    await graph.resetDBToSnapshot(emptySnapshot);
+    await graph.resetDBToSnapshot({cypherSnapshot: ""});
     await graph.runMigrations();
+
+    log.info(`Creating "empty" snapshot...`);
+    // We call this an "empty" snapshot but it actually includes any data created by migrations, like the system user
+    const emptySnapshot = await graph.snapshotDataForTesting();
 
     log.info(`Generating default data for tests...`);
 
@@ -269,13 +304,17 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         {code: "CreateEntry", data: {
             ...data.entries.divisionTracheophyta,
             type: data.schema.entryTypes._ETDIVISION.id,
-            description: "Division/phylum Tracheophyta are the vascular plants.",
+            description: (data.entries.divisionTracheophyta.description =
+                "Division/phylum **Tracheophyta** are the vascular plants."
+            ),
         }},
             // Create Class "Pinopsida" (conifers) - https://www.catalogueoflife.org/data/taxon/GG
             {code: "CreateEntry", data: {
                 ...data.entries.classPinopsida,
                 type: data.schema.entryTypes._ETCLASS.id,
-                description: "Class Pinopsida contains all extant conifers.",
+                description: (data.entries.classPinopsida.description =
+                    "Class **Pinopsida** contains all extant conifers."
+                ),
             }},
             // Class "Pinopsida" IS A member of division "Tracheophyta"
             {code: "CreateRelationshipFact", data: {
@@ -288,7 +327,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 {code: "CreateEntry", data: {
                     ...data.entries.orderPinales,
                     type: data.schema.entryTypes._ETORDER.id,
-                    description: "Family Pinales contains all extant conifers, such as the pine family (Pinaceae) and yew family (Taxaceae).",
+                    description: (data.entries.orderPinales.description = `
+                        Order **Pinales** contains all extant conifers, such as the [pine family (Pinaceae)](/entry/${data.entries.familyPinaceae.id}) and yew family (Taxaceae).
+                    `.trim()),
                 }},
                 // order "Pinales" IS A member of class "Pinopsida"
                 {code: "CreateRelationshipFact", data: {
@@ -301,7 +342,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                     {code: "CreateEntry", data: {
                         ...data.entries.familyPinaceae,
                         type: data.schema.entryTypes._ETFAMILY.id,
-                        description: "Family Pinaceae is the pine family. It includes cedars, firs, hemlocks, larches, spruces, and of course pines.",
+                        description: (data.entries.familyPinaceae.description = `
+                            Family **Pinaceae** is the **pine family**. It includes cedars, firs, hemlocks, larches, spruces, and of course pines.
+                        `.trim()),
                     }},
                     // family "Pinaceae" IS A member of order "Pinales"
                     {code: "CreateRelationshipFact", data: {
@@ -314,7 +357,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                         {code: "CreateEntry", data: {
                             ...data.entries.genusPinus,
                             type: data.schema.entryTypes._ETGENUS.id,
-                            description: "Genus Pinus, commonly known as \"pines\".",
+                            description: (data.entries.genusPinus.description = `
+                                Genus **Pinus**, commonly known as "pines".
+                            `.trim()),
                         }},
                         // Genus "Pinus" IS A member of family "Pinaceae"
                         {code: "CreateRelationshipFact", data: {
@@ -327,7 +372,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                             {code: "CreateEntry", data: {
                                 ...data.entries.ponderosaPine,
                                 type: data.schema.entryTypes._ETSPECIES.id,
-                                description: "**Pinus ponderosa** (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.",
+                                description: (data.entries.ponderosaPine.description = `
+                                    **Pinus ponderosa** (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.
+                                `.trim()),
                             }},
                             // Species "pinus ponderosa" IS A member of genus "Pinus"
                             {code: "CreateRelationshipFact", data: {
@@ -345,13 +392,17 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         {code: "CreateEntry", data: {
             ...data.entries.cone,
             type: data.schema.entryTypes._ETPLANTPART.id,
-            description: "A cone (formally \"strobilus\") is a reproductive organ found on conifers.",
+            description: (data.entries.cone.description = `
+                A **cone** (formally "strobilus") is a reproductive organ found on conifers.
+            `.trim()),
         }},
             // Male cone (pollen cone)
             {code: "CreateEntry", data: {
                 ...data.entries.pollenCone,
                 type: data.schema.entryTypes._ETPLANTPART.id,
-                description: "A pollen cone or male cone (formally \"microstrobilus\") is a small reproductive organ bearing pollen found on conifers, not to be confused with the familiar seed cone.",
+                description: (data.entries.pollenCone.description = `
+                    A **pollen cone** or **male cone** (formally "microstrobilus") is a small reproductive organ bearing pollen found on conifers, not to be confused with the familiar [seed cone](/entry/${data.entries.seedCone.id}).
+                `.trim()),
             }},
             {code: "CreateRelationshipFact", data: {
                 id: VNID(),
@@ -363,7 +414,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             {code: "CreateEntry", data: {
                 ...data.entries.seedCone,
                 type: data.schema.entryTypes._ETPLANTPART.id,
-                description: "A seed cone or female cone (formally \"megastrobilus\") is a varied reproductive organ found on conifers. Examples include the well-known \"pine cone\".",
+                description: (data.entries.seedCone.description = `
+                    A **seed cone** or **female cone** (formally "megastrobilus") is a varied reproductive organ found on conifers. Examples include the well-known "pine cone".
+                `.trim()),
             }},
             {code: "CreateRelationshipFact", data: {
                 id: VNID(),

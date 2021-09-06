@@ -4,10 +4,11 @@ import {
     Field,
     VNID,
 } from "neolace/deps/vertex-framework.ts";
+import * as api from "neolace/deps/neolace-api.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { QueryContext } from "./context.ts";
-import { QueryEvaluationError } from "./errors.ts";
+import { QueryError, QueryEvaluationError } from "./errors.ts";
 
 // deno-lint-ignore no-explicit-any
 type ClassOf<QV extends QueryValue> = {new(...args: any[]): QV};
@@ -32,7 +33,7 @@ export abstract class QueryValue {
     }
 
     /** If this is a LazyValue, convert it to a default non-lazy value. */
-    public makeConcrete(): Promise<ConcreteValue> { return new Promise(resolve => resolve(this)); }
+    public abstract makeConcrete(): Promise<ConcreteValue>;
 }
 
 /**
@@ -40,6 +41,19 @@ export abstract class QueryValue {
  */
 export abstract class ConcreteValue extends QueryValue {
     static readonly isLazy = false;
+
+    /** Return fields other than 'type' to be included in this value when serialized as a JSON object. */
+    protected abstract serialize(): Omit<api.AnyLookupValue, "type">;
+    public toJSON(): api.AnyLookupValue {
+        if (!this.constructor.name.endsWith("Value")) { throw new Error("Invalid value class name"); }
+        return {
+            // "type" is the name of the ____Value class without the "Value" part
+            type: this.constructor.name.substr(0, this.constructor.name.length - 5),
+            ...this.serialize(),
+        } as api.AnyLookupValue;
+    }
+
+    public makeConcrete(): Promise<ConcreteValue> { return new Promise(resolve => resolve(this)); }
 }
 
 /**
@@ -84,6 +98,37 @@ export class IntegerValue extends ConcreteValue {
         // An integer literal just looks like a plain integer, e.g. 5
         return String(this.value);
     }
+
+    protected serialize() {
+        // Unfortunately JavaScript cannot serialize BigInt to JSON numbers (even though JSON numbers can have
+        // arbitrary digits), so we have to serialize it as a string.
+        return {value: String(this.value)};
+    }
+}
+
+/**
+ * A value that respresents a string
+ */
+export class StringValue extends ConcreteValue {
+    readonly value: string;
+
+    constructor(value: string) {
+        super();
+        this.value = value;
+    }
+
+    /**
+     * Return this value as a string, in Neolace Query Language format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public asLiteral(): string {
+        // JSON.stringify() will create a "quoted" and \"escaped\" string for us.
+        return JSON.stringify(this.value);
+    }
+
+    protected serialize() {
+        return {value: this.value};
+    }
 }
 
 /**
@@ -97,6 +142,25 @@ export class NullValue extends ConcreteValue {
     public asLiteral(): string {
         return "null";
     }
+
+    protected serialize() { return {}; }
+}
+
+/**
+ * An error value - represents an error.
+ * 
+ * Evaluating expressions will always throw an exception, not return an error value. However, in some use cases it makes
+ * sense to catch those exceptions and convert them to error values, so that a value is always returned.
+ */
+export class ErrorValue extends ConcreteValue {
+    public readonly error: QueryError;
+
+    constructor(error: QueryError) {
+        super();
+        this.error = error;
+    }
+
+    protected serialize() { return {errorClass: this.error.constructor.name, message: this.error.message}; }
 }
 
 /**
@@ -127,6 +191,8 @@ export class EntryValue extends ConcreteValue {
         }
         return undefined;
     }
+
+    protected serialize() { return {id: this.id}; }
 }
 
 /**
@@ -147,6 +213,8 @@ export class EntryTypeValue extends ConcreteValue {
     public asLiteral(): string {
         return `ET[${this.id}]`;  // e.g. ET[_6FisU5zxXggLcDz4Kb3Wmd]
     }
+
+    protected serialize() { return {id: this.id}; }
 }
 
 /**
@@ -167,6 +235,8 @@ export class RelationshipTypeValue extends ConcreteValue {
     public asLiteral(): string {
         return `RT[${this.id}]`;  // e.g. RT[_6FisU5zxXggLcDz4Kb3Wmd]
     }
+
+    protected serialize() { return {id: this.id}; }
 }
 
 /**
@@ -187,6 +257,8 @@ export class RelationshipFactValue extends ConcreteValue {
     public asLiteral(): string {
         return `RF[${this.id}]`;  // e.g. RF[_6FisU5zxXggLcDz4Kb3Wmd]
     }
+
+    protected serialize() { return {id: this.id}; }
 }
 
 /**
@@ -198,6 +270,15 @@ export class AnnotatedEntryValue extends EntryValue {
     constructor(id: VNID, annotations: Record<string, ConcreteValue>) {
         super(id);
         this.annotations = annotations;
+        if (Object.keys(annotations).length === 0) {throw new Error(`Missing annotations`);}
+    }
+
+    protected serialize() {
+        const annotations: Record<string, unknown> = {};
+        for (const key in this.annotations) {
+            annotations[key] = this.annotations[key].toJSON();
+        }
+        return {id: this.id, annotations}; 
     }
 }
 
@@ -216,6 +297,15 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
         this.startedAt = startedAt;
         this.pageSize = pageSize;
         this.totalCount = totalCount;
+    }
+
+    protected serialize() {
+        return {
+            values: this.values.map(v => v.toJSON()),
+            startedAt: Number(this.startedAt),
+            pageSize: Number(this.pageSize),
+            totalCount: Number(this.totalCount),
+        };
     }
 }
 
@@ -260,7 +350,7 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
         super(context);
         this.cypherQuery = cypherQuery;
         this.skip = options.skip ?? 0n;
-        this.limit = options.limit ?? 100n;
+        this.limit = options.limit ?? context.defaultPageSize ?? 50n;
     }
 
     /** Helper method for cloning instances of this */

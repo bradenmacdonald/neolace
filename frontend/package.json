@@ -13,12 +13,14 @@
     "i18n": "npm run extract:i18n && npm run compile:i18n"
   },
   "dependencies": {
+    "@popperjs/core": "^2.10.1",
     "keratin-authn": "1.3.2",
     "neolace-api": "file:../neolace-api/dist/",
     "next": "11.1.2",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-intl": "^5.20.10",
+    "react-popper": "^2.2.5",
     "technotes-mdt": "git+https://gitlab.com/technotes.org/technotes-mdt.git#main"
   },
   "devDependencies": {

@@ -33,7 +33,7 @@ group(import.meta, () => {
                         new AnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {distance: new IntegerValue(5)}),
                     ],
                     {
-                        pageSize: 100n,
+                        pageSize: 50n,
                         startedAt: 0n,
                         totalCount: 5n
                     },
@@ -75,7 +75,7 @@ group(import.meta, () => {
                         new AnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {distance: new IntegerValue(5)}),
                     ],
                     {
-                        pageSize: 100n,
+                        pageSize: 50n,
                         startedAt: 0n,
                         totalCount: 6n
                     },

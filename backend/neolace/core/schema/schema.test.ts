@@ -34,6 +34,7 @@ group(import.meta, () => {
                         contentType: ContentType.None,
                         description: null,
                         friendlyIdPrefix: null,
+                        computedFacts: {},
                     },
                 },
                 relationshipTypes: defaultData.schema.relationshipTypes,

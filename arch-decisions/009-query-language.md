@@ -1,6 +1,6 @@
 # Neolace Query Language
 
-The Neolace Query Language is used to define "computed facts" (neolookups?)
+The Neolace Query Language is used to define "computed facts" (lookups?)
 whose value is determined by querying the graph database.
 
 Example 1:
@@ -43,10 +43,11 @@ Rules of Neolace Query Language:
 Basic Data Types:
 
 1. Integer, which can be of arbitrary size (uses JavaScript's BigInt)
-2. Quantity, a float with an optional unit (e.g. "350.2 g m^2 / s^3") (also QuantityRange and QuantityWithError?)
+2. Quantity, a float with an optional unit (e.g. "350.2 g m^2 / s^3") (and an optional error range?)
 3. Boolean
 4. Null
 5. String
 6. Date, DateTime, FuzzyDate ([YYYY-MM-DD or YYYY-MM or YYYY] -> [YYYY-MM-DD or YYYY-MM or YYYY])
 7. Entry, EntryType, RelationshipType, Property, RelationshipFact, PropertyValue
 8. List
+9. Range (Holds two Integer, Quantity, Date/DateTime/FuzzyDate of the same type, the second being larger or equal to the first)

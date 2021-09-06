@@ -2,6 +2,7 @@ import {
     EditList,
     CastContentType,
     CastRelationshipCategory,
+    ComputedFactData,
     EntryTypeData,
     RelationshipTypeData,
     SiteSchemaData,
@@ -22,7 +23,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
 
     const entryTypes = await tx.pull(
         EntryType,
-        et => et.id.name.contentType.description.friendlyIdPrefix,
+        et => et.id.name.contentType.description.friendlyIdPrefix.computedFacts(cf => cf.id.label.expression.importance),
         {where: siteFilter},
     );
 
@@ -33,6 +34,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             contentType: CastContentType(et.contentType),
             description: et.description,
             friendlyIdPrefix: et.friendlyIdPrefix,
+            computedFacts: Object.fromEntries(et.computedFacts.map(cf => [cf.id, cf])),
         };
     });
 
@@ -117,6 +119,32 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
                 if (newET[key] !== oldET?.[key]) {
                     changes[key] = newET[key];
                 }
+            }
+            // Check for changes to the computed facts:
+            const finalComputedFactIds = new Set(Object.keys(newET.computedFacts));  // The set of IDs in the new/final schema
+            const addOrUpdateComputedFacts: ComputedFactData[] = [];
+            Object.values(newET.computedFacts).forEach(newCF => {
+                const existingCF = oldET?.computedFacts[newCF.id];
+                if (existingCF) {
+                    if (existingCF.id !== newCF.id) {
+                        throw new Error("Computed fact id doesn't match key in computedFacts object.");
+                    }
+                    if (newCF.label === existingCF.label && newCF.importance === existingCF.importance && newCF.expression === existingCF.expression) {
+                        // Nothing to do; this computed fact is already in the schema and unchanged.
+                    } else {
+                        // This computed fact has been modified:
+                        addOrUpdateComputedFacts.push(newCF);
+                    }
+                } else {
+                    addOrUpdateComputedFacts.push(newCF);
+                }
+            });
+            if (addOrUpdateComputedFacts.length > 0) {
+                changes.addOrUpdateComputedFacts = addOrUpdateComputedFacts;
+            }
+            const removedComputedFacts = oldET?.computedFacts ? Object.keys(oldET.computedFacts).filter(id => !finalComputedFactIds.has(id)) : [];
+            if (removedComputedFacts.length > 0) {
+                changes.removeComputedFacts = removedComputedFacts;
             }
             if (Object.keys(changes).length > 0) {
                 result.edits.push({code: "UpdateEntryType", data: {
