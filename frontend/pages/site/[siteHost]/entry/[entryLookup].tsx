@@ -73,7 +73,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                         {props.entry.computedFactsSummary?.map(cf => 
                                             <tr key={cf.id}>
                                                 <th className="pr-2 align-top text-left font-normal text-gray-700 min-w-[120px]">{cf.label}</th>
-                                                <td className="pr-2"><LookupValue value={cf.value} refCache={props.entry.referenceCache} /></td>
+                                                <td className="pr-2"><LookupValue value={cf.value} refCache={props.entry.referenceCache} mdtContext={mdtContext} /></td>
                                             </tr>
                                         )}
                                     </tbody>

@@ -2,10 +2,13 @@ import React from 'react';
 import Link from 'next/link';
 import { api } from 'lib/api-client';
 import { FormattedListParts, FormattedMessage } from 'react-intl';
+import { Tooltip } from 'components/widgets/tooltip';
+import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
     refCache: api.EntryData["referenceCache"];
+    mdtContext: MDTContext;
     children?: never;
 }
 
@@ -23,7 +26,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Page": {
 
             const listValues = value.values.map((v, idx) => 
-                <LookupValue key={idx} value={v} refCache={props.refCache} />
+                <LookupValue key={idx} value={v} refCache={props.refCache} mdtContext={props.mdtContext} />
             );
             if (listValues.length < value.totalCount) {
                 listValues.push(
@@ -48,7 +51,12 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             if (entry === undefined) {
                 return <Link href={`/entry/${value.id}`}><a className="text-red-700 font-bold">{value.id}</a></Link>
             }
-            return <Link href={`/entry/${entry.friendlyId}`}><a>{entry.name}</a></Link>
+            return <Tooltip tooltipContent={<>
+                <strong>{entry.name}</strong> ({props.refCache.entryTypes[entry.entryType.id].name})<br/>
+                <p className="text-sm"><InlineMDT mdt={entry.description} context={props.mdtContext} /></p>
+            </>}>
+                {attribs => <Link href={`/entry/${entry.friendlyId}`}><a {...attribs}>{entry.name}</a></Link>}
+            </Tooltip>
         }
         default: {
             return <code>{JSON.stringify(value)}</code>;
