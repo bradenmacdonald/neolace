@@ -1,39 +1,39 @@
 import { C } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
-import { QueryExpression } from "../expression.ts";
+import { LookupExpression } from "../expression.ts";
 import { LazyEntrySetValue, EntryValue, IntegerValue } from "../values.ts";
-import { QueryEvaluationError } from "../errors.ts";
-import { QueryContext } from "../context.ts";
+import { LookupEvaluationError } from "../errors.ts";
+import { LookupContext } from "../context.ts";
 
 
 const MAX_DEPTH = 50;
 
 /**
- * Helper function to read annotated distance values from a database query result
+ * Helper function to read annotated distance values from a lookup result
  */
 const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
     if (typeof dbValue === "bigint") {
         return new IntegerValue(dbValue);
     } else {
-        throw new QueryEvaluationError("Unexpected data type for 'distance' while evaluating Query Expression.");
+        throw new LookupEvaluationError("Unexpected data type for 'distance' while evaluating lookup expression.");
     }
 }
 
 /**
  * ancestors(entry): returns the ancestors of the specified entry
  */
- export class Ancestors extends QueryExpression {
+ export class Ancestors extends LookupExpression {
 
     // An expression that specifies what entry's ancestors we want to retrieve
-    readonly entryExpr: QueryExpression;
+    readonly entryExpr: LookupExpression;
 
-    constructor(entryExpr: QueryExpression) {
+    constructor(entryExpr: LookupExpression) {
         super();
         this.entryExpr = entryExpr;
     }
 
-    public async getValue(context: QueryContext) {
+    public async getValue(context: LookupContext) {
         const startingEntry = await this.entryExpr.getValueAs(context, EntryValue);
 
         return new LazyEntrySetValue(context, C`
@@ -56,17 +56,17 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
 /**
  * andAncestors(entry): returns the ancestors of the specified entry AND the entry itself
  */
- export class AndAncestors extends QueryExpression {
+ export class AndAncestors extends LookupExpression {
 
     // An expression that specifies what entry's ancestors we want to retrieve
-    readonly entryExpr: QueryExpression;
+    readonly entryExpr: LookupExpression;
 
-    constructor(entryExpr: QueryExpression) {
+    constructor(entryExpr: LookupExpression) {
         super();
         this.entryExpr = entryExpr;
     }
 
-    public async getValue(context: QueryContext) {
+    public async getValue(context: LookupContext) {
         const startingEntry = await this.entryExpr.getValueAs(context, EntryValue);
 
         return new LazyEntrySetValue(context, C`

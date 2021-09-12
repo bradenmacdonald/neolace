@@ -3,10 +3,10 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 
-import { QueryExpression } from "../expression.ts";
+import { LookupExpression } from "../expression.ts";
 import { LazyEntrySetValue, IntegerValue, RelationshipTypeValue, NullValue, StringValue } from "../values.ts";
-import { QueryEvaluationError } from "../errors.ts";
-import { QueryContext } from "../context.ts";
+import { LookupEvaluationError } from "../errors.ts";
+import { LookupContext } from "../context.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 
 
@@ -19,7 +19,7 @@ const dbWeightToValue = (dbValue: unknown): IntegerValue|NullValue => {
     } else if (dbValue === null) {
         return new NullValue();
     } else {
-        throw new QueryEvaluationError("Unexpected data type for 'weight' while evaluating Query Expression.");
+        throw new LookupEvaluationError("Unexpected data type for 'weight' while evaluating lookup.");
     }
 }
 
@@ -33,23 +33,23 @@ const dbWeightToValue = (dbValue: unknown): IntegerValue|NullValue => {
  * For directed relationships like IS_A, this will follow relationships in both directions. To limit to relationships
  * "from" or "to" this entry, specify direction="from" or direction="to"
  */
- export class RelatedEntries extends QueryExpression {
+ export class RelatedEntries extends LookupExpression {
 
     // An expression that specifies what entry(ies)' related entries we want to retrieve
-    readonly fromEntriesExpr: QueryExpression;
-    readonly viaRelTypeExpr: QueryExpression;
-    readonly directionExpr?: QueryExpression;
+    readonly fromEntriesExpr: LookupExpression;
+    readonly viaRelTypeExpr: LookupExpression;
+    readonly directionExpr?: LookupExpression;
 
     static defaultDirection = new LiteralExpression(new StringValue("both"));
 
-    constructor(fromEntriesExpr: QueryExpression, extraParams: {via: QueryExpression, direction?: QueryExpression}) {
+    constructor(fromEntriesExpr: LookupExpression, extraParams: {via: LookupExpression, direction?: LookupExpression}) {
         super();
         this.fromEntriesExpr = fromEntriesExpr;
         this.viaRelTypeExpr = extraParams.via;
         this.directionExpr = extraParams.direction;
     }
 
-    public async getValue(context: QueryContext) {
+    public async getValue(context: LookupContext) {
         const startingEntrySet = await this.fromEntriesExpr.getValueAs(context, LazyEntrySetValue);
         const viaRelType = await this.viaRelTypeExpr.getValueAs(context, RelationshipTypeValue);
         const direction = this.directionExpr ? (await this.directionExpr.getValueAs(context, StringValue)).value : "both";
@@ -71,7 +71,7 @@ const dbWeightToValue = (dbValue: unknown): IntegerValue|NullValue => {
                 (relFact)<-[:${RelationshipFact.rel.REL_FACT}]-(entry:VNode)
             `;
         } else {
-            throw new QueryEvaluationError(`Invalid direction value passed to related(): "${direction}"`);
+            throw new LookupEvaluationError(`Invalid direction value passed to related(): "${direction}"`);
         }
 
         return new LazyEntrySetValue(context, C`

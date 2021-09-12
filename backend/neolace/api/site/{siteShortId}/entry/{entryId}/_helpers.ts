@@ -5,10 +5,10 @@ import { getEntryAncestors } from "neolace/core/entry/ancestors.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { ComputedFact } from "neolace/core/entry/ComputedFact.ts";
-import { parseLookupString } from "neolace/core/query/parse.ts";
-import { QueryContext } from "neolace/core/query/context.ts";
-import { QueryError } from "neolace/core/query/errors.ts";
-import { ErrorValue } from "neolace/core/query/values.ts";
+import { parseLookupString } from "neolace/core/lookup/parse.ts";
+import { LookupContext } from "neolace/core/lookup/context.ts";
+import { LookupError } from "neolace/core/lookup/errors.ts";
+import { ErrorValue } from "neolace/core/lookup/values.ts";
 
 
 /**
@@ -78,7 +78,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     if (flags.has(api.GetEntryFlags.IncludeComputedFactsSummary)) {
         // Include a summary of computed facts for this entry (up to 20 computed facts, with importance < 20)
         const factsToCompute = await getComputedFacts(entryData.id, {tx, summaryOnly: true, limit: 20});
-        const context: QueryContext = {tx, siteId, entryId: entryData.id, defaultPageSize: 5n};
+        const context: LookupContext = {tx, siteId, entryId: entryData.id, defaultPageSize: 5n};
 
         // ** In the near future, we'll need to resolve a dependency graph and compute these in parallel / async. **
 
@@ -88,7 +88,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
             try {
                 value = await parseLookupString(cf.expression).getValue(context).then(v => v.makeConcrete());
             } catch (err: unknown) {
-                if (err instanceof QueryError) {
+                if (err instanceof LookupError) {
                     value = new ErrorValue(err);
                 } else {
                     throw err;

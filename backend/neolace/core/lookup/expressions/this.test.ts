@@ -2,7 +2,7 @@ import { group, test, setTestIsolation, assertEquals, assertThrowsAsync } from "
 import { graph } from "neolace/core/graph.ts";
 import { EntryValue } from "../values.ts";
 import { This } from "./this.ts";
-import { QueryEvaluationError } from "../errors.ts";
+import { LookupEvaluationError } from "../errors.ts";
 
 group(import.meta, () => {
 
@@ -33,7 +33,7 @@ group(import.meta, () => {
 
             await assertThrowsAsync(
                 () => graph.read(tx => expression.getValue({tx, siteId, entryId: undefined})),
-                QueryEvaluationError,
+                LookupEvaluationError,
                 `The keyword "this" only works in the context of a specific entry.`,
             );
         });

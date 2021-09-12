@@ -3,10 +3,10 @@ import {
     WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 
-export interface QueryContext {
+export interface LookupContext {
     tx: WrappedTransaction;
     siteId: VNID;
     entryId?: VNID;
-    // If queries have to be paginated in this context, what's the default page size?
+    // If lookup result values have to be paginated in this context, what's the default page size?
     defaultPageSize?: bigint;
 }

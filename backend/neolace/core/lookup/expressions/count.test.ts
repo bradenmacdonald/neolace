@@ -4,13 +4,13 @@ import { graph } from "neolace/core/graph.ts";
 import { IntegerValue } from "../values.ts";
 import { Count } from "./count.ts";
 import { LiteralExpression } from "./literal-expr.ts";
-import { QueryEvaluationError } from "../errors.ts";
-import { QueryExpression } from "../expression.ts";
+import { LookupEvaluationError } from "../errors.ts";
+import { LookupExpression } from "../expression.ts";
 
 group(import.meta, () => {
 
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
-    const evalExpression = (expr: QueryExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId})).then(v => v.makeConcrete());
+    const evalExpression = (expr: LookupExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId})).then(v => v.makeConcrete());
     const siteId = defaultData.site.id;
 
     group("count()", () => {
@@ -20,7 +20,7 @@ group(import.meta, () => {
 
             await assertThrowsAsync(
                 () => evalExpression(expression),
-                QueryEvaluationError,
+                LookupEvaluationError,
                 `The expression "-30" cannot be counted with count().`,
             )
         });

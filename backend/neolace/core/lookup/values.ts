@@ -7,28 +7,28 @@ import {
 import * as api from "neolace/deps/neolace-api.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
-import { QueryContext } from "./context.ts";
-import { QueryError, QueryEvaluationError } from "./errors.ts";
+import { LookupContext } from "./context.ts";
+import { LookupError, LookupEvaluationError } from "./errors.ts";
 
 // deno-lint-ignore no-explicit-any
-type ClassOf<QV extends QueryValue> = {new(...args: any[]): QV};
+type ClassOf<QV extends LookupValue> = {new(...args: any[]): QV};
 
-export abstract class QueryValue {
+export abstract class LookupValue {
     public static readonly isLazy: boolean;
 
     /** Convert this value to a different value type if possible, or otherwise return undefined */
-    public castTo<NewType extends QueryValue>(newType: ClassOf<NewType>, context: QueryContext): NewType|undefined {
+    public castTo<NewType extends LookupValue>(newType: ClassOf<NewType>, context: LookupContext): NewType|undefined {
         const newValue = this.doCastTo(newType, context);
         if (newValue) {
             if (!(newValue instanceof newType)) {
-                throw new QueryEvaluationError(`Internal error, cast from ${this.constructor.name} to ${newType.name} failed.`);
+                throw new LookupEvaluationError(`Internal error, cast from ${this.constructor.name} to ${newType.name} failed.`);
             }
         }
         return newValue;
     }
 
     /** Subclasses should override this method to implement type casting. */
-    protected doCastTo(_newType: ClassOf<QueryValue>, _context: QueryContext): QueryValue|undefined {
+    protected doCastTo(_newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
         return undefined;
     }
 
@@ -39,7 +39,7 @@ export abstract class QueryValue {
 /**
  * A value that respresents some concrete data, like the number 5 or a list of entries.
  */
-export abstract class ConcreteValue extends QueryValue {
+export abstract class ConcreteValue extends LookupValue {
     static readonly isLazy = false;
 
     /** Return fields other than 'type' to be included in this value when serialized as a JSON object. */
@@ -68,14 +68,14 @@ export interface ICountableValue {
 /** Any data type that can be expressed as a simple literal (e.g. an integer "5") should conform to this interface. */
 export interface IHasLiteralExpression {
     /**
-     * Return this value as a string, in Neolace Query Language format.
+     * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
     asLiteral(): string;
 }
-export function hasLiteralExpression(value: unknown): value is QueryValue & IHasLiteralExpression {
+export function hasLiteralExpression(value: unknown): value is LookupValue & IHasLiteralExpression {
     // deno-lint-ignore no-explicit-any
-    return value instanceof QueryValue && typeof (value as any).asLiteral === "function";
+    return value instanceof LookupValue && typeof (value as any).asLiteral === "function";
 }
 
 
@@ -91,7 +91,7 @@ export class IntegerValue extends ConcreteValue {
     }
 
     /**
-     * Return this value as a string, in Neolace Query Language format.
+     * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
     public asLiteral(): string {
@@ -118,7 +118,7 @@ export class StringValue extends ConcreteValue {
     }
 
     /**
-     * Return this value as a string, in Neolace Query Language format.
+     * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
     public asLiteral(): string {
@@ -136,7 +136,7 @@ export class StringValue extends ConcreteValue {
  */
 export class NullValue extends ConcreteValue {
     /**
-     * Return this value as a string, in Neolace Query Language format.
+     * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
     public asLiteral(): string {
@@ -153,9 +153,9 @@ export class NullValue extends ConcreteValue {
  * sense to catch those exceptions and convert them to error values, so that a value is always returned.
  */
 export class ErrorValue extends ConcreteValue {
-    public readonly error: QueryError;
+    public readonly error: LookupError;
 
-    constructor(error: QueryError) {
+    constructor(error: LookupError) {
         super();
         this.error = error;
     }
@@ -175,14 +175,14 @@ export class EntryValue extends ConcreteValue {
     }
 
     /**
-     * Return this value as a string, in Neolace Query Language format.
+     * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
     public asLiteral(): string {
         return `E[${this.id}]`;  // e.g. E[_6FisU5zxXggLcDz4Kb3Wmd]
     }
 
-    protected override doCastTo(newType: ClassOf<QueryValue>, context: QueryContext): QueryValue|undefined {
+    protected override doCastTo(newType: ClassOf<LookupValue>, context: LookupContext): LookupValue|undefined {
         if (newType === LazyEntrySetValue) {
             return new LazyEntrySetValue(context, C`
                 MATCH (entry:${Entry} {id: ${this.id}})
@@ -207,7 +207,7 @@ export class EntryTypeValue extends ConcreteValue {
     }
 
     /**
-     * Return this value as a string, in Neolace Query Language format.
+     * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
     public asLiteral(): string {
@@ -229,7 +229,7 @@ export class RelationshipTypeValue extends ConcreteValue {
     }
 
     /**
-     * Return this value as a string, in Neolace Query Language format.
+     * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
     public asLiteral(): string {
@@ -251,7 +251,7 @@ export class RelationshipFactValue extends ConcreteValue {
     }
 
     /**
-     * Return this value as a string, in Neolace Query Language format.
+     * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
     public asLiteral(): string {
@@ -317,11 +317,11 @@ type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
  * The query (or whatever the lazy value is) may still be modified before it is evaluated. For example, a lazy entry
  * list might be reduced to simply retrieving the total number of matching entries, before it is evaluated.
  */
-abstract class LazyValue extends QueryValue {
+abstract class LazyValue extends LookupValue {
     static readonly isLazy = true;
-    protected context: QueryContext;
+    protected context: LookupContext;
 
-    constructor(context: QueryContext) {
+    constructor(context: LookupContext) {
         super();
         this.context = context;
     }
@@ -346,7 +346,7 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
     readonly skip: bigint;  // How many rows to skip when retrieving the result (used for pagination)
     readonly limit: bigint;  // How many rows to return per page
 
-    constructor(context: QueryContext, cypherQuery: CypherQuery, options: {skip?: bigint, limit?: bigint} = {}) {
+    constructor(context: LookupContext, cypherQuery: CypherQuery, options: {skip?: bigint, limit?: bigint} = {}) {
         super(context);
         this.cypherQuery = cypherQuery;
         this.skip = options.skip ?? 0n;
@@ -360,7 +360,7 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
 
     protected getSkipLimitClause() {
         if (typeof this.skip !== "bigint" || typeof this.limit !== "bigint") {
-            throw new QueryEvaluationError("Internal error - unsafe skip/limit value.");
+            throw new LookupEvaluationError("Internal error - unsafe skip/limit value.");
         }
         return C`SKIP ${C(String(this.skip))} LIMIT ${C(String(this.limit))}`;
     }
@@ -375,7 +375,7 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
 export class LazyEntrySetValue extends LazyCypherQueryValue {
     readonly annotations: Readonly<Record<string, AnnotationReviver>>|undefined;
 
-    constructor(context: QueryContext, cypherQuery: CypherQuery, options: {skip?: bigint, limit?: bigint, annotations?: Record<string, AnnotationReviver>} = {}) {
+    constructor(context: LookupContext, cypherQuery: CypherQuery, options: {skip?: bigint, limit?: bigint, annotations?: Record<string, AnnotationReviver>} = {}) {
         super(context, cypherQuery, options);
         this.annotations = options.annotations;
     }

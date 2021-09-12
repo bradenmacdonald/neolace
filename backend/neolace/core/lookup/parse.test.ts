@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { group, test, setTestIsolation, assertEquals, assertThrows, assertNotEquals } from "neolace/lib/tests.ts";
-import { QueryParseError } from "./errors.ts";
-import { QueryExpression } from "./expression.ts";
+import { LookupParseError } from "./errors.ts";
+import { LookupExpression } from "./expression.ts";
 import {
     Ancestors,
     AndAncestors,
@@ -19,7 +19,7 @@ group(import.meta, () => {
     // These tests just test parsing, so they don't use the database at all.
     setTestIsolation(setTestIsolation.levels.BLANK_NO_ISOLATION);
 
-    function checkParse(original: string, expected: QueryExpression) {
+    function checkParse(original: string, expected: LookupExpression) {
         const parsed = parseLookupString(original);
         assertEquals(parsed, expected);
         // Now, since "original" was hand-written, we can't necessarily go from the parsed version to the original,
@@ -35,7 +35,7 @@ group(import.meta, () => {
     });
 
     test("Invalid", () => {
-        assertThrows(() => parseLookupString("foobar"), QueryParseError);
+        assertThrows(() => parseLookupString("foobar"), LookupParseError);
     });
     test("Ancestors", () => {
         checkParse("this.ancestors()", new Ancestors(new This()));

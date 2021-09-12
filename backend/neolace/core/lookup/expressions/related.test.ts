@@ -3,7 +3,7 @@ import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.t
 import { graph } from "neolace/core/graph.ts";
 import { AnnotatedEntryValue, NullValue, PageValue, RelationshipTypeValue, StringValue } from "../values.ts";
 import { RelatedEntries } from "./related.ts";
-import { QueryExpression } from "../expression.ts";
+import { LookupExpression } from "../expression.ts";
 import { This } from "./this.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 
@@ -13,7 +13,7 @@ group(import.meta, () => {
     const siteId = defaultData.site.id;
     const cone = defaultData.entries.cone.id;
     const seedCone = defaultData.entries.seedCone.id;
-    const evalExpression = (expr: QueryExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId}).then(v => v.makeConcrete()));
+    const evalExpression = (expr: LookupExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId}).then(v => v.makeConcrete()));
 
     // A literal expression referencing the "[Plant part] IS A [Plant part]" relationship:
     const partIsAPart = new LiteralExpression(new RelationshipTypeValue(defaultData.schema.relationshipTypes._PARTisPART.id));

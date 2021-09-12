@@ -39,6 +39,7 @@ export class LruCache<KeyType, ValueType> {
         if (cachedValue !== undefined) {
             return cachedValue;  // The value was found in the cache, everyone is happy.
         } else if (this.#cache.has(key)) {
+            // deno-lint-ignore no-explicit-any
             return undefined as any as ValueType;  // This should be rare, but the value may actually be "undefined" 
         }
         // We need to use the expensive function to compute the value.

@@ -1,24 +1,24 @@
-import { QueryContext } from "./context.ts";
-import { QueryEvaluationError } from "./errors.ts";
-import { QueryValue } from "./values.ts";
+import { LookupContext } from "./context.ts";
+import { LookupEvaluationError } from "./errors.ts";
+import { LookupValue } from "./values.ts";
 
 
 /**
- * Base class for a Query Expression, something that evaluates to a value.
+ * Base class for a Lookup Expression, something that evaluates to a value.
  */
-export abstract class QueryExpression {
+export abstract class LookupExpression {
     public readonly type: string;
 
     constructor() {
-        // We must put the "type" (subclass name) of this QueryExpression as an actual object value, otherwise
+        // We must put the "type" (subclass name) of this LookupExpression as an actual object value, otherwise
         // assertEquals() in the test suite will not be able to compare expressions by value properly.
         this.type = this.constructor.name;
     }
 
-    public abstract getValue(context: QueryContext): Promise<QueryValue>;
+    public abstract getValue(context: LookupContext): Promise<LookupValue>;
 
     // deno-lint-ignore no-explicit-any
-    public async getValueAs<ValueType extends QueryValue>(context: QueryContext, valueType: {new(...args: any[]): ValueType}): Promise<ValueType> {
+    public async getValueAs<ValueType extends LookupValue>(context: LookupContext, valueType: {new(...args: any[]): ValueType}): Promise<ValueType> {
         const initialValue = await this.getValue(context);
         if (initialValue instanceof valueType) {
             return initialValue;
@@ -28,7 +28,7 @@ export abstract class QueryExpression {
         if (castValue !== undefined) {
             return castValue;
         }
-        throw new QueryEvaluationError(`Expected a ${valueType.name} value, but got ${initialValue.constructor.name}.`);
+        throw new LookupEvaluationError(`Expected a ${valueType.name} value, but got ${initialValue.constructor.name}.`);
     }
 
     /**

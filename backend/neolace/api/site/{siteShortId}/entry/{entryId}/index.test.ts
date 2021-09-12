@@ -190,7 +190,7 @@ group(import.meta, () => {
                     label: "Broken Taxonomy",
                     value: {
                         type: "Error",
-                        errorClass: "QueryParseError",
+                        errorClass: "LookupParseError",
                         message: 'Simple/fake parser is unable to parse the lookup expression "this is an invalid expression"',
                     },
                 },

@@ -1,6 +1,6 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { QueryParseError } from "./errors.ts";
-import { QueryExpression } from "./expression.ts";
+import { LookupParseError } from "./errors.ts";
+import { LookupExpression } from "./expression.ts";
 import {
     Ancestors,
     AndAncestors,
@@ -15,10 +15,10 @@ import * as V from "./values.ts";
 /**
  * Given a lookup expression as a string like
  *     this.andAncestors()
- * Parse it and return it as a QueryExpression object:
+ * Parse it and return it as a LookupExpression object:
  *     new AndAncestors(new This());
  */
-export function parseLookupString(lookup: string): QueryExpression {
+export function parseLookupString(lookup: string): LookupExpression {
 
     // To save time and make development faster, we are cheating with a working but very fake parser.
     // In the future this function should be replaced with a proper parser built using https://chevrotain.io/
@@ -29,7 +29,7 @@ export function parseLookupString(lookup: string): QueryExpression {
     if (lookup === "this.andAncestors()") { return new AndAncestors(new This()); }
     if (lookup === "andAncestors(this)") { return new AndAncestors(new This()); }
 
-    const otherTemplates: [RegExp, (match: RegExpMatchArray) => QueryExpression ][] = [
+    const otherTemplates: [RegExp, (match: RegExpMatchArray) => LookupExpression ][] = [
         // "foo" (String literal)
         [/^"(.*)"$/, _m => new LiteralExpression(new V.StringValue(JSON.parse(lookup)))],
         // RT[_6FisU5zxXg5LcDz4Kb3Wmd] (Relationship Type literal)
@@ -55,5 +55,5 @@ export function parseLookupString(lookup: string): QueryExpression {
         }
     }
 
-    throw new QueryParseError(`Simple/fake parser is unable to parse the lookup expression "${lookup}"`);
+    throw new LookupParseError(`Simple/fake parser is unable to parse the lookup expression "${lookup}"`);
 }
