@@ -26,6 +26,7 @@ export const CreateEntryType = SchemaEditType({
     dataSchema: Schema({
         name: string,
         id: vnidString,
+        contentType: Schema.enum(ContentType),
     }),
     apply: (currentSchema, data) => {
 
@@ -59,7 +60,6 @@ export const UpdateEntryType = SchemaEditType({
     dataSchema: Schema({
         id: vnidString,
         name: string.strictOptional(),
-        contentType: Schema.enum(ContentType).strictOptional(),
         description: nullable(string).strictOptional(),
         friendlyIdPrefix: nullable(string).strictOptional(),
         addOrUpdateComputedFacts: array.of(ComputedFactSchema).strictOptional(),
@@ -77,7 +77,7 @@ export const UpdateEntryType = SchemaEditType({
         const newEntryType = {...originalEntryType};
         newEntryType.computedFacts = {...newEntryType.computedFacts};  // Shallow copy the array so we can modify it
 
-        for (const key of ["name", "contentType", "description", "friendlyIdPrefix"] as const) {
+        for (const key of ["name", "description", "friendlyIdPrefix"] as const) {
             newEntryType[key] = (data as any)[key];
         }
 
@@ -163,6 +163,14 @@ export const UpdateRelationshipType = SchemaEditType({
             relType.toEntryTypes = relType.toEntryTypes.filter(id => !data.removeToTypes?.includes(id));
         }
         data.addToTypes?.forEach(entryTypeId => {
+            if (currentSchema.entryTypes[entryTypeId] === undefined) {
+                throw new Error(`No entry type exists with ID ${entryTypeId}`);
+            }
+            if (currentValues.category === RelationshipCategory.HAS_PROPERTY) {
+                if (currentSchema.entryTypes[entryTypeId].contentType !== ContentType.Property) {
+                    throw new Error(`A HAS_PROPERTY relationship can only be created to an EntryType with Content Type of "Property".`);
+                }
+            }
             if (!relType.toEntryTypes.includes(entryTypeId)) {
                 relType.toEntryTypes = [...relType.toEntryTypes, entryTypeId];
             }

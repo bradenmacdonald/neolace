@@ -111,7 +111,7 @@ export const ApplyEdits = defineAction({
                         CREATE (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site)
                         SET et += ${{
                             name: edit.data.name,
-                            contentType: ContentType.None,
+                            contentType: edit.data.contentType,
                         }}
                     `.RETURN({}));
                     modifiedNodes.add(edit.data.id);
@@ -123,7 +123,6 @@ export const ApplyEdits = defineAction({
                     // Be sure we only set allowed properties onto the EditType VNode:
                     if (edit.data.name !== undefined) changes.name = edit.data.name;
                     if (edit.data.description !== undefined) changes.description = edit.data.description;
-                    if (edit.data.contentType !== undefined) changes.contentType = edit.data.contentType;
                     if (edit.data.friendlyIdPrefix !== undefined) changes.friendlyIdPrefix = edit.data.friendlyIdPrefix;
 
                     // The following query will also validate that the entry type exists and is linked to the site.
@@ -179,12 +178,10 @@ export const ApplyEdits = defineAction({
                     // "category" is omitted because it's not allowed to change.
                     // (Would cause data issues with existing relationships of the old category.)
 
-                    if (Object.keys(changes).length > 0) {
-                        await tx.queryOne(C`
-                            MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                            SET rt += ${changes}
-                        `.RETURN({}));
-                    }
+                    const rtExistingData = await tx.queryOne(C`
+                        MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                        SET rt += ${changes}
+                    `.RETURN({"rt.category": Field.String}));
 
                     if (edit.data.removeFromTypes) {
                         await tx.query(C`
@@ -207,16 +204,24 @@ export const ApplyEdits = defineAction({
                             MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                             MATCH (et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
                             WHERE et.id IN ${edit.data.addFromTypes}
-                            CREATE (rt)-[:${RelationshipType.rel.FROM_ENTRY_TYPE}]->(et)
+                            MERGE (rt)-[:${RelationshipType.rel.FROM_ENTRY_TYPE}]->(et)
                         `);
                     }
                     if (edit.data.addToTypes) {
-                        await tx.query(C`
+                        const created = await tx.query(C`
                             MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                             MATCH (et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
                             WHERE et.id IN ${edit.data.addToTypes}
-                            CREATE (rt)-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(et)
-                        `);
+                            MERGE (rt)-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(et)
+                        `.RETURN({"et.contentType": Field.String}));
+                        if (created.length !== edit.data.addToTypes.length) {
+                            throw new Error(`UpdateRelationshipType.addToTypes failed: One or more of the "to" entry type IDs was invalid.`);
+                        }
+                        if (rtExistingData["rt.category"] === RelationshipCategory.HAS_PROPERTY) {
+                            if (!created.every(et => et["et.contentType"] === ContentType.Property)) {
+                                throw new Error(`UpdateRelationshipType.addToTypes: Cannot create a HAS_PROPERTY RelationshipType to an EntryType unless that EntryType has ContentType=Property`);
+                            }
+                        }
                     }
                     modifiedNodes.add(edit.data.id);
                     break;

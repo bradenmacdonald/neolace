@@ -128,6 +128,14 @@ const data = {
                     "_CFPartsFoundIn": {id: VNID("_CFPartsFoundIn"), label: "Part of", importance: 5, expression: "this.related(via=RT[_HASA])"},
                 },
             },
+            "_ETPROPERTY": {
+                id: VNID("_ETPROPERTY"),
+                name: "Property",
+                contentType: ContentType.Property,
+                description: "Properties of a PlantDB entry.",
+                friendlyIdPrefix: "p-",
+                computedFacts: {},
+            },
         },
         relationshipTypes: {
             "_CisD": {
@@ -202,6 +210,25 @@ const data = {
                 description: null,
                 fromEntryTypes: [VNID("_ETPLANTPART")],
                 toEntryTypes: [VNID("_ETPLANTPART")],
+            },
+            // Any other entry type can have a property
+            "_HASPROP": {
+                id: VNID("_HASPROP"),
+                nameForward: "has property",
+                nameReverse: "applies to",
+                category: RelationshipCategory.HAS_PROPERTY,
+                description: null,
+                fromEntryTypes: [
+                    // From every level of classification. These are in alphabetical order though to match how Neolace returns a site's schema.
+                    VNID("_ETCLASS"),
+                    VNID("_ETDIVISION"),
+                    VNID("_ETFAMILY"),
+                    VNID("_ETGENUS"),
+                    VNID("_ETORDER"),
+                    VNID("_ETPLANTPART"),
+                    VNID("_ETSPECIES"),
+                ],
+                toEntryTypes: [VNID("_ETPROPERTY")],
             },
         },
     },

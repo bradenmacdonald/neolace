@@ -50,7 +50,7 @@ group(import.meta, () => {
                 edits: [
                     {
                         code: "CreateEntryType",
-                        data: { id: VNID("_ETSOFTWARE"), name: "Software"},
+                        data: { id: VNID("_ETSOFTWARE"), name: "Software", contentType: api.ContentType.None},
                     },
                 ],
             });

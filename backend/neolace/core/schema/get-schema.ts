@@ -104,6 +104,7 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
             result.edits.push({code: "CreateEntryType", data: {
                 id: newSchema.entryTypes[newId].id,
                 name: newSchema.entryTypes[newId].name,
+                contentType: newSchema.entryTypes[newId].contentType,
             } })
         }
         // Set properties on existing and new EntryTypes
@@ -112,7 +113,7 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
             const newET = newSchema.entryTypes[entryTypeId];
             // deno-lint-ignore no-explicit-any
             const changes: any = {};
-            for (const key of ["name", "description", "friendlyIdPrefix", "contentType"] as const) {
+            for (const key of ["name", "description", "friendlyIdPrefix"] as const) {
                 if (key === "name" && addedEntryTypeIds.has(entryTypeId)) {
                     continue;  // Name was already set during the Create step, so skip that property
                 }

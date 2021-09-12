@@ -31,6 +31,24 @@ export class Entry extends VNodeType {
         name: Field.String,
         // Description: Short, rich text summary of the thing
         description: Field.String.Check(check.string.trim().max(5_000)),
+
+
+        /// CONTENT
+
+        // Todo: article text.
+
+        // If this entry is a "property" entry type (e.g. a "birth date" property entry), it will have these extra
+        // fields:
+
+        // Importance: Properties with importance < 20 are shown directly on the entry page, with 0 being the most
+        // important and first shown. Properties with importance > 20 are shown in a separate "All Properties"
+        // screen.
+        propertyImportance: Field.NullOr.Int.Check(check.number.min(0).max(99)),
+        // The data type for values of this property
+        propertyValueType: Field.NullOr.String,
+        // Should property values of this type be inherited by child entries?
+        propertyInherits: Field.NullOr.Boolean,
+
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({
