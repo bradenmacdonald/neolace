@@ -60,7 +60,13 @@ const schema: SiteSchemaData = {
                     id: VNID("_CFTYPEOF"),
                     importance: 1,
                     label: "Type of",
-                    expression: `this.related(via=RT[${techConceptIsAId}])`,
+                    expression: `this.related(via=RT[${techConceptIsAId}], direction="from")`,
+                },
+                "_CFTYPES": {
+                    id: VNID("_CFTYPES"),
+                    importance: 2,
+                    label: "Types",
+                    expression: `this.related(via=RT[${techConceptIsAId}], direction="to")`,
                 },
             },
         }
