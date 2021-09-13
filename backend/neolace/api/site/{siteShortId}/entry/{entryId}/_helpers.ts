@@ -4,7 +4,7 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { getEntryAncestors } from "neolace/core/entry/ancestors.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
-import { ComputedFact } from "neolace/core/entry/ComputedFact.ts";
+import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 import { parseLookupString } from "neolace/core/lookup/parse.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
@@ -54,7 +54,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
         ...entryData,
         entryType: {id: entryData.type!.id, name: entryData.type!.name, contentType: entryData.type!.contentType as api.ContentType},
         ancestors: undefined,
-        computedFactsSummary: undefined,
+        propertiesSummary: undefined,
         referenceCache: undefined,
     };
 
@@ -75,18 +75,18 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
         result.ancestors = await getAncestors();
     }
 
-    if (flags.has(api.GetEntryFlags.IncludeComputedFactsSummary)) {
+    if (flags.has(api.GetEntryFlags.IncludePropertiesSummary)) {
         // Include a summary of computed facts for this entry (up to 20 computed facts, with importance < 20)
-        const factsToCompute = await getComputedFacts(entryData.id, {tx, summaryOnly: true, limit: 20});
+        const simplePropValues = await getSimplePropertyValues(entryData.id, {tx, summaryOnly: true});
         const context: LookupContext = {tx, siteId, entryId: entryData.id, defaultPageSize: 5n};
 
         // ** In the near future, we'll need to resolve a dependency graph and compute these in parallel / async. **
 
-        result.computedFactsSummary = [];
-        for (const cf of factsToCompute) {
+        result.propertiesSummary = [];
+        for (const spv of simplePropValues) {
             let value;
             try {
-                value = await parseLookupString(cf.expression).getValue(context).then(v => v.makeConcrete());
+                value = await parseLookupString(spv.valueExpression).getValue(context).then(v => v.makeConcrete());
             } catch (err: unknown) {
                 if (err instanceof LookupError) {
                     value = new ErrorValue(err);
@@ -96,10 +96,14 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
             }
             const serializedValue = value.toJSON();
             extractReferences(serializedValue, {entryIdsUsed});
-            result.computedFactsSummary.push({
-                id: cf.id,
-                label: cf.label,
+            result.propertiesSummary.push({
+                type: "SimplePropertyValue",
+                source: {type: "EntryType"},
+                id: spv.id,
+                label: spv.label,
                 value: serializedValue,
+                importance: spv.importance,
+                note: spv.note,
             });
         }
     }
@@ -139,7 +143,33 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     return result;
 }
 
-async function getComputedFacts(entryId: VNID, options: {tx: WrappedTransaction, summaryOnly: boolean, skip?: number, limit?: number}): Promise<api.ComputedFactData[]> {
+
+/**
+ * Get all simple properties associated with an Entry
+ * 
+ * Simple properties are never inherited and assumed to be fairly limited, so are not paginated.
+ */
+async function getSimplePropertyValues(entryId: VNID, options: {tx: WrappedTransaction, summaryOnly: boolean}): Promise<api.SimplePropertyData[]> {
+
+    const simpleProps = await options.tx.query(C`
+        MATCH (entry:${Entry} {id: ${entryId}})
+        MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.HAS_SIMPLE_PROP}]->(spv:${SimplePropertyValue})
+        ${options.summaryOnly ? C`WHERE spv.importance <= 20` : C``}
+        RETURN spv.id AS id, spv.label AS label, spv.valueExpression AS valueExpression, spv.importance AS importance, spv.note AS note
+        ORDER BY spv.importance, spv.label  // This should match SimplePropertyValue.defaultOrderBy
+    `.givesShape({
+        id: Field.VNID,
+        label: Field.String,
+        valueExpression: Field.String,
+        importance: Field.Int,
+        note: Field.String,
+    }));
+
+    return simpleProps;
+}
+
+/*
+async function getProperties(entryId: VNID, options: {tx: WrappedTransaction, summaryOnly: boolean, skip?: number, limit?: number}): Promise<api.ComputedFactData[]> {
 
     // Neo4j doesn't allow normal query variables to be used for skip/limit so we have to carefully ensure these values
     // are safe (are just plain numbers) then format them for interpolation in the query string as part of the cypher
@@ -148,9 +178,9 @@ async function getComputedFacts(entryId: VNID, options: {tx: WrappedTransaction,
     const limitSafe = C(String(Number(Number(options.limit ?? 100))));
 
     // We can't use virtual props here because there's no way to limit/paginate them at the moment
-    const facts = await options.tx.query(C`
+    const simpleProps = await options.tx.query(C`
         MATCH (entry:${Entry} {id: ${entryId}})
-        MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.HAS_COMPUTED_FACT}]->(cf:${ComputedFact})
+        MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.HAS_SIMPLE_PROP}]->(cf:${SimplePropertyValue})
         ${options.summaryOnly ? C`WHERE cf.importance <= 20` : C``}
         RETURN cf.id AS id, cf.label AS label, cf.expression AS expression, cf.importance AS importance
         ORDER BY cf.importance, cf.label  // This should match ComputedFact.defaultOrderBy
@@ -163,7 +193,7 @@ async function getComputedFacts(entryId: VNID, options: {tx: WrappedTransaction,
     }));
 
     return facts;
-}
+}*/
 
 /**
  * Given a serialized "Lookup Value" that is the result of evaluating a Graph Lookup expression, find all unique entry

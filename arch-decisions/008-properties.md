@@ -39,6 +39,13 @@ More examples:
 * "Electric car" (Entry) shows "maximum range: 650 km" (property value, computed
   using a lookup expression based on the "range" value properties of all other "electric" car entries in the database)
 
+**Simple Property Values** refers to lookup expressions that are attached to an
+Entry Type, and which will be displayed on all entries of that type. Unlike
+regular properties, there is no associated "property entry" for a simple
+property value. They are useful for summarizing relationships between entries,
+and can be quickly added as part of the schema - but for more advanced use cases
+it's better to create full-fledged properties.
+
 ## Fact
 
 Internally in Neolace, whenever a relationship property is set on an entry, a

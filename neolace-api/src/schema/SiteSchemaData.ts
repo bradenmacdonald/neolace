@@ -17,14 +17,15 @@ export function CastContentType(value: string): ContentType {
     return value as ContentType;
 }
 
-export const ComputedFactSchema = Schema({
+export const SimplePropertySchema = Schema({
     id: vnidString,
-    /** Displayed label of this computed fact, e.g. "Is a type of" */
+    /** Displayed label of this simple property value, e.g. "Is a type of" */
     label: string,
-    expression: string,
+    valueExpression: string,
     importance: number,
+    note: string,
 });
-export type ComputedFactData = Type<typeof ComputedFactSchema>;
+export type SimplePropertyData = Type<typeof SimplePropertySchema>;
 
 
 export const EntryTypeSchema = Schema({
@@ -36,8 +37,8 @@ export const EntryTypeSchema = Schema({
     description: nullable(string),
     /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
     friendlyIdPrefix: nullable(string),
-    /** Computed facts always displayed on entries of this type */
-    computedFacts: Record(string, ComputedFactSchema),
+    /** Simple property values always displayed on entries of this type */
+    simplePropValues: Record(string, SimplePropertySchema),
 });
 export type EntryTypeData = Type<typeof EntryTypeSchema>;
 

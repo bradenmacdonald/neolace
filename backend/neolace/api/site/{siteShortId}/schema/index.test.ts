@@ -66,7 +66,7 @@ group(import.meta, () => {
                         description: null,
                         friendlyIdPrefix: null,
                         name: "Software",
-                        computedFacts: {},
+                        simplePropValues: {},
                     },
                 },
                 relationshipTypes: defaultData.schema.relationshipTypes,

@@ -13,6 +13,7 @@ import {
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { RelationshipFact } from "./RelationshipFact.ts";
+import { PropertyFact } from "./PropertyFact.ts";
 
 
 /**
@@ -60,6 +61,11 @@ export class Entry extends VNodeType {
         /** This Entry has a relationship to another entry, via a RelationshipFact */
         REL_FACT: {
             to: [RelationshipFact],
+            cardinality: VNodeType.Rel.ToManyUnique,
+        },
+        /** This Entry has property values */
+        PROP_FACT: {
+            to: [PropertyFact],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
         // If this Entry has an IS_A relationship to other entries (via RelationshipFact), it will also have a direct

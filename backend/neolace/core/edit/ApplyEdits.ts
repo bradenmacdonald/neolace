@@ -18,7 +18,7 @@ import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
-import { ComputedFact } from "../entry/ComputedFact.ts";
+import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 
 /**
  * Apply a set of edits (to schema and/or content)
@@ -131,26 +131,27 @@ export const ApplyEdits = defineAction({
                         SET et += ${changes}
                     `.RETURN({}));
                     // From here on we don't need to validate the Site is correct.
-                    if (edit.data.addOrUpdateComputedFacts?.length) {
+                    if (edit.data.addOrUpdateSimpleProperties?.length) {
                         await tx.query(C`
                             MATCH (et:${EntryType} {id: ${edit.data.id}})
                             WITH et
-                            UNWIND ${edit.data.addOrUpdateComputedFacts} AS newFact
-                            MERGE (et)-[:${EntryType.rel.HAS_COMPUTED_FACT}]->(cf:${ComputedFact} {id: newFact.id})
-                            SET cf.label = newFact.label
-                            SET cf.importance = newFact.importance
-                            SET cf.expression = newFact.expression
+                            UNWIND ${edit.data.addOrUpdateSimpleProperties} AS newFact
+                            MERGE (et)-[:${EntryType.rel.HAS_SIMPLE_PROP}]->(spv:${SimplePropertyValue} {id: newFact.id})
+                            SET spv.label = newFact.label
+                            SET spv.importance = newFact.importance
+                            SET spv.valueExpression = newFact.valueExpression
+                            SET spv.note = newFact.note
                         `);
-                        edit.data.addOrUpdateComputedFacts.forEach(cf => modifiedNodes.add(cf.id));
+                        edit.data.addOrUpdateSimpleProperties.forEach(spv => modifiedNodes.add(spv.id));
                     }
-                    if (edit.data.removeComputedFacts?.length) {
+                    if (edit.data.removeSimpleProperties?.length) {
                         await tx.queryOne(C`
-                            MATCH (cf:${ComputedFact})<-[:${EntryType.rel.HAS_COMPUTED_FACT}]-(et:${EntryType} {id: ${edit.data.id}})
-                            WHERE cf.id IN ${edit.data.removeComputedFacts}
-                            SET cf:DeletedVNode
-                            REMOVE cf:VNode
+                            MATCH (spv:${SimplePropertyValue})<-[:${EntryType.rel.HAS_SIMPLE_PROP}]-(et:${EntryType} {id: ${edit.data.id}})
+                            WHERE spv.id IN ${edit.data.removeSimpleProperties}
+                            SET spv:DeletedVNode
+                            REMOVE spv:VNode
                         `.RETURN({}));
-                        edit.data.removeComputedFacts.forEach(cfId => modifiedNodes.add(cfId));
+                        edit.data.removeSimpleProperties.forEach(cfId => modifiedNodes.add(cfId));
                     }
                     modifiedNodes.add(edit.data.id);
                     break;

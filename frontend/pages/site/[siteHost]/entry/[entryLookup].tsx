@@ -70,10 +70,10 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                 <h2><FormattedMessage id="site.entry.propertiesHeading" defaultMessage="Properties"/></h2>
                                 <table>
                                     <tbody>
-                                        {props.entry.computedFactsSummary?.map(cf => 
-                                            <tr key={cf.id}>
-                                                <th className="pr-2 align-top text-left font-normal text-gray-700 min-w-[120px]">{cf.label}</th>
-                                                <td className="pr-2"><LookupValue value={cf.value} refCache={props.entry.referenceCache} mdtContext={mdtContext} /></td>
+                                        {props.entry.propertiesSummary?.map(propValue => 
+                                            <tr key={propValue.id}>
+                                                <th className="pr-2 align-top text-left font-normal text-gray-700 min-w-[120px]">{propValue.label}</th>
+                                                <td className="pr-2"><LookupValue value={propValue.value} refCache={props.entry.referenceCache} mdtContext={mdtContext} /></td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -122,7 +122,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     let entry: api.EntryData;
     try {
         entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [
-            api.GetEntryFlags.IncludeComputedFactsSummary,
+            api.GetEntryFlags.IncludePropertiesSummary,
             api.GetEntryFlags.IncludeReferenceCache,
         ]});
     } catch (err) {

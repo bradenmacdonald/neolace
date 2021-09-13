@@ -35,7 +35,7 @@ group(import.meta, () => {
                         contentType,
                         description: null,
                         friendlyIdPrefix: null,
-                        computedFacts: {},
+                        simplePropValues: {},
                     },
                 },
                 relationshipTypes: defaultData.schema.relationshipTypes,

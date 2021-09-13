@@ -2,7 +2,7 @@ import {
     EditList,
     CastContentType,
     CastRelationshipCategory,
-    ComputedFactData,
+    SimplePropertyData,
     EntryTypeData,
     RelationshipTypeData,
     SiteSchemaData,
@@ -23,7 +23,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
 
     const entryTypes = await tx.pull(
         EntryType,
-        et => et.id.name.contentType.description.friendlyIdPrefix.computedFacts(cf => cf.id.label.expression.importance),
+        et => et.id.name.contentType.description.friendlyIdPrefix.simplePropValues(cf => cf.id.label.valueExpression.importance.note),
         {where: siteFilter},
     );
 
@@ -34,7 +34,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             contentType: CastContentType(et.contentType),
             description: et.description,
             friendlyIdPrefix: et.friendlyIdPrefix,
-            computedFacts: Object.fromEntries(et.computedFacts.map(cf => [cf.id, cf])),
+            simplePropValues: Object.fromEntries(et.simplePropValues.map(cf => [cf.id, cf])),
         };
     });
 
@@ -122,30 +122,30 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
                 }
             }
             // Check for changes to the computed facts:
-            const finalComputedFactIds = new Set(Object.keys(newET.computedFacts));  // The set of IDs in the new/final schema
-            const addOrUpdateComputedFacts: ComputedFactData[] = [];
-            Object.values(newET.computedFacts).forEach(newCF => {
-                const existingCF = oldET?.computedFacts[newCF.id];
+            const finalSimplePropValueIds = new Set(Object.keys(newET.simplePropValues));  // The set of IDs in the new/final schema
+            const addOrUpdateSimpleProperties: SimplePropertyData[] = [];
+            Object.values(newET.simplePropValues).forEach(newCF => {
+                const existingCF = oldET?.simplePropValues[newCF.id];
                 if (existingCF) {
                     if (existingCF.id !== newCF.id) {
-                        throw new Error("Computed fact id doesn't match key in computedFacts object.");
+                        throw new Error("Computed fact id doesn't match key in simplePropValues object.");
                     }
-                    if (newCF.label === existingCF.label && newCF.importance === existingCF.importance && newCF.expression === existingCF.expression) {
+                    if (newCF.label === existingCF.label && newCF.importance === existingCF.importance && newCF.valueExpression === existingCF.valueExpression && newCF.note === existingCF.note) {
                         // Nothing to do; this computed fact is already in the schema and unchanged.
                     } else {
                         // This computed fact has been modified:
-                        addOrUpdateComputedFacts.push(newCF);
+                        addOrUpdateSimpleProperties.push(newCF);
                     }
                 } else {
-                    addOrUpdateComputedFacts.push(newCF);
+                    addOrUpdateSimpleProperties.push(newCF);
                 }
             });
-            if (addOrUpdateComputedFacts.length > 0) {
-                changes.addOrUpdateComputedFacts = addOrUpdateComputedFacts;
+            if (addOrUpdateSimpleProperties.length > 0) {
+                changes.addOrUpdateSimpleProperties = addOrUpdateSimpleProperties;
             }
-            const removedComputedFacts = oldET?.computedFacts ? Object.keys(oldET.computedFacts).filter(id => !finalComputedFactIds.has(id)) : [];
-            if (removedComputedFacts.length > 0) {
-                changes.removeComputedFacts = removedComputedFacts;
+            const removedSimpleProperties = oldET?.simplePropValues ? Object.keys(oldET.simplePropValues).filter(id => !finalSimplePropValueIds.has(id)) : [];
+            if (removedSimpleProperties.length > 0) {
+                changes.removeSimpleProperties = removedSimpleProperties;
             }
             if (Object.keys(changes).length > 0) {
                 result.edits.push({code: "UpdateEntryType", data: {

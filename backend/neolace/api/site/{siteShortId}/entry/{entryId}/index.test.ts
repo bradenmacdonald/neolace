@@ -39,16 +39,18 @@ group(import.meta, () => {
             assertEquals(result, basicResultExpected);
         });
 
-        test("Get basic information about an entry plus a summary of computed facts", async () => {
+        test("Get basic information about an entry plus a summary of properties", async () => {
 
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
-            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludeComputedFactsSummary] as const});
+            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludePropertiesSummary] as const});
 
-            assertEquals(result, {...basicResultExpected, computedFactsSummary: [
+            assertEquals(result, {...basicResultExpected, propertiesSummary: [
                 // The species "Pinus Ponderosa" is a member of the genus "Pinus", and so on:
                 {
-                    id: defaultData.schema.entryTypes._ETSPECIES.computedFacts._CFSpeciesTaxonomy.id,
+                    type: "SimplePropertyValue",
+                    id: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesTaxonomy.id,
+                    importance: 5,
                     label: "Taxonomy",
                     value: {
                         type: "Page",
@@ -83,10 +85,14 @@ group(import.meta, () => {
                             },
                         ],
                     },
+                    note: "",
+                    source: {type: "EntryType"},
                 },
                 // Via "Pinopsida", this species has some plant parts:
                 {
+                    type: "SimplePropertyValue",
                     id: "_CFSpeciesParts",
+                    importance: 10,
                     label: "Parts",
                     value: {
                         pageSize: 5,
@@ -106,15 +112,17 @@ group(import.meta, () => {
                             },
                         ],
                     },
+                    note: "",
+                    source: {type: "EntryType"},
                 },
             ]});
         });
 
-        test("Get basic information about an entry plus a 'reference cache' with details of entries mentioned in computed facts", async () => {
+        test("Get basic information about an entry plus a 'reference cache' with details of entries mentioned in property summary", async () => {
 
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
-            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludeComputedFactsSummary, api.GetEntryFlags.IncludeReferenceCache] as const});
+            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludePropertiesSummary, api.GetEntryFlags.IncludeReferenceCache] as const});
 
             assertEquals(result.referenceCache, {
                 entryTypes: {
@@ -163,36 +171,41 @@ group(import.meta, () => {
             });
         });
 
-        test("The summary of computed facts will display an error if the computed fact is invalid", async () => {
+        test("The summary of properties will display an error if a simple property value is invalid", async () => {
 
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
-            const draft = await client.createDraft({title: "Change computed fact", description: null, edits: [
+            const draft = await client.createDraft({title: "Change simple property value", description: null, edits: [
                 {code: api.UpdateEntryType.code, data: {
                     id: defaultData.schema.entryTypes._ETSPECIES.id,
-                    addOrUpdateComputedFacts: [{
-                        id: defaultData.schema.entryTypes._ETSPECIES.computedFacts._CFSpeciesTaxonomy.id,
+                    addOrUpdateSimpleProperties: [{
+                        id: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesTaxonomy.id,
                         label: "Broken Taxonomy",
                         importance: 5,
-                        expression: "this is an invalid expression",
+                        valueExpression: "this is an invalid expression",
+                        note: "",
                     }],
-                    removeComputedFacts: [defaultData.schema.entryTypes._ETSPECIES.computedFacts._CFSpeciesParts.id],
+                    removeSimpleProperties: [defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesParts.id],
                 }}
             ]});
             await client.acceptDraft(draft.id);
 
-            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludeComputedFactsSummary] as const});
+            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludePropertiesSummary] as const});
 
-            assertEquals(result, {...basicResultExpected, computedFactsSummary: [
+            assertEquals(result, {...basicResultExpected, propertiesSummary: [
                 // This computed fact is now invalid:
                 {
-                    id: defaultData.schema.entryTypes._ETSPECIES.computedFacts._CFSpeciesTaxonomy.id,
+                    type: "SimplePropertyValue",
+                    id: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesTaxonomy.id,
                     label: "Broken Taxonomy",
+                    importance: 5,
                     value: {
                         type: "Error",
                         errorClass: "LookupParseError",
                         message: 'Simple/fake parser is unable to parse the lookup expression "this is an invalid expression"',
                     },
+                    note: "",
+                    source: {type: "EntryType"},
                 },
             ]});
         });

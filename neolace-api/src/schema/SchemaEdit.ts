@@ -2,7 +2,7 @@
 import { nullable, vnidString } from "../api-schemas.ts";
 import { Schema, SchemaValidatorFunction, string, array, Type } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
-import { ContentType, SiteSchemaData, RelationshipCategory, ComputedFactSchema } from "./SiteSchemaData.ts";
+import { ContentType, SiteSchemaData, RelationshipCategory, SimplePropertySchema } from "./SiteSchemaData.ts";
 
 interface SchemaEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Schema;
@@ -43,7 +43,7 @@ export const CreateEntryType = SchemaEditType({
                     contentType: ContentType.None,
                     description: null,
                     friendlyIdPrefix: null,
-                    computedFacts: {},
+                    simplePropValues: {},
                 },
             },
             relationshipTypes: currentSchema.relationshipTypes,
@@ -62,8 +62,8 @@ export const UpdateEntryType = SchemaEditType({
         name: string.strictOptional(),
         description: nullable(string).strictOptional(),
         friendlyIdPrefix: nullable(string).strictOptional(),
-        addOrUpdateComputedFacts: array.of(ComputedFactSchema).strictOptional(),
-        removeComputedFacts: array.of(vnidString).strictOptional(),
+        addOrUpdateSimpleProperties: array.of(SimplePropertySchema).strictOptional(),
+        removeSimpleProperties: array.of(vnidString).strictOptional(),
     }),
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
@@ -75,14 +75,14 @@ export const UpdateEntryType = SchemaEditType({
             throw new Error(`EntryType with ID ${data.id} not found.`);
         }
         const newEntryType = {...originalEntryType};
-        newEntryType.computedFacts = {...newEntryType.computedFacts};  // Shallow copy the array so we can modify it
+        newEntryType.simplePropValues = {...newEntryType.simplePropValues};  // Shallow copy the array so we can modify it
 
         for (const key of ["name", "description", "friendlyIdPrefix"] as const) {
             newEntryType[key] = (data as any)[key];
         }
 
-        data.addOrUpdateComputedFacts?.forEach(newFact => newEntryType.computedFacts[newFact.id] = newFact);
-        data.removeComputedFacts?.forEach(id => delete newEntryType.computedFacts[id]);
+        data.addOrUpdateSimpleProperties?.forEach(newProp => newEntryType.simplePropValues[newProp.id] = newProp);
+        data.removeSimpleProperties?.forEach(id => delete newEntryType.simplePropValues[id]);
 
         newSchema.entryTypes[data.id] = newEntryType;
         return Object.freeze(newSchema);
