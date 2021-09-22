@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { RelationshipCategory } from "neolace/deps/neolace-api.ts";
+import { RelationshipCategory, ContentType } from "neolace/deps/neolace-api.ts";
 
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -29,7 +29,7 @@ group(import.meta, () => {
             const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
 
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
                 {code: "CreateRelationshipType", data: {category: RelationshipCategory.IS_A, id: entryIsA, nameForward: "is a", nameReverse: "has"}},
                 // TODO: fix the need for all these "undefined" entries:
                 {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType], nameForward: undefined, nameReverse: undefined, description: undefined, removeFromTypes: undefined, removeToTypes: undefined}},
@@ -96,7 +96,7 @@ group(import.meta, () => {
             const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
 
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
                 {code: "CreateRelationshipType", data: {category: RelationshipCategory.IS_A, id: entryIsA, nameForward: "is a", nameReverse: "has"}},
                 // TODO: fix the need for all these "undefined" entries:
                 {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType], nameForward: undefined, nameReverse: undefined, description: undefined, removeFromTypes: undefined, removeToTypes: undefined}},

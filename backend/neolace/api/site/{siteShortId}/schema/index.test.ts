@@ -50,7 +50,7 @@ group(import.meta, () => {
                 edits: [
                     {
                         code: "CreateEntryType",
-                        data: { id: VNID("_ETSOFTWARE"), name: "Software"},
+                        data: { id: VNID("_ETSOFTWARE"), name: "Software", contentType: api.ContentType.None},
                     },
                 ],
             });
@@ -66,7 +66,7 @@ group(import.meta, () => {
                         description: null,
                         friendlyIdPrefix: null,
                         name: "Software",
-                        computedFacts: {},
+                        simplePropValues: {},
                     },
                 },
                 relationshipTypes: defaultData.schema.relationshipTypes,

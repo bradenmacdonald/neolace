@@ -5,9 +5,52 @@ import { AnyLookupValue } from "./lookup-value.ts";
 
 export enum GetEntryFlags {
     IncludeAncestors = "ancestors",
-    IncludeComputedFactsSummary = "computedFactsSummary",
+    IncludePropertiesSummary = "propertiesSummary",
     IncludeReferenceCache = "referenceCache",
 }
+
+
+/**
+ * Defines the information needed to display a property value in the frontend
+ */
+export const DisplayedPropertySchema = Schema.merge(
+    // common fields:
+    {
+        label: string,
+        value: object.transform(obj => obj as AnyLookupValue),
+        importance: number,
+        /** Markdown text with an explanation of this property */
+        note: string.strictOptional(),
+    },
+    Schema.either(
+        // TODO: include basic relationship facts here
+        {
+            type: "SimplePropertyValue" as const,
+            // Source: SimplePropertyValues are never inherited and can only come from the entry type. In future they may come from the Entry too.
+            source: Schema({ type: Schema.either("EntryType" as const) }),
+            /** The ID of this SimplePropertyValue */
+            id: vnidString,
+        },
+        {
+            type: "PropertyFact" as const,
+            /**
+             * The property entry that this value relates to. It will be in the reference cache.
+             * For example, the property entry could be "Birth Date", and this value could be "1990-01-15"
+             */
+            property: Schema({id: vnidString}),
+            /**
+             * Source: where this property value comes from. May be inherited from another Entry, or from the EntryType
+             * This will be absent if the property is attached "directly" to the current entry.
+             */
+            source: Schema({
+                type: Schema.either("EntryType" as const, "Entry" as const),
+                id: vnidString,
+            }).strictOptional(),
+            /** The ID of this PropertyFact */
+            id: vnidString,
+        },
+    ),
+);
 
 // The "reference cache" contains details (name, friendlyId, entry type) for every entry mentioned in the entry's
 // description, article text, computed facts, related object notes, and so on.
@@ -39,12 +82,8 @@ export const EntrySchema = Schema({
 
     // TODO: content
 
-    /** Summary of computed facts for this entry (up to 20 computed facts, with importance < 20) */
-    computedFactsSummary: array.of(Schema({
-        label: string,
-        value: object.transform(obj => obj as AnyLookupValue),
-        id: vnidString,
-    })).strictOptional(),
+    /** Summary of properties for this entry (up to 20 properties, with importance < 20) */
+    propertiesSummary: array.of(DisplayedPropertySchema).strictOptional(),
 
     /** Some details about all entries mentioned by this entry */
     referenceCache: ReferenceCacheSchema.strictOptional(),

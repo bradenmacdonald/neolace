@@ -8,7 +8,9 @@ import {
 } from "neolace/deps/vertex-framework.ts";
 import { Site } from "neolace/core/Site.ts";
 
-import { ComputedFact } from "neolace/core/entry/ComputedFact.ts";
+import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
+// Since PropertyFact references Entry, this will create circular import issues:
+//import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 
 /**
  * Schema definition for a type of entry
@@ -33,9 +35,14 @@ export class EntryType extends VNodeType {
             to: [Site],
             cardinality: VNodeType.Rel.ToOneRequired,
         },
-        /** Computed facts to display on entries of this type */
-        HAS_COMPUTED_FACT: {
-            to: [ComputedFact],
+        /** This EntryType has property values */
+        // PROP_FACT: {
+        //     to: [PropertyFact],
+        //     cardinality: VNodeType.Rel.ToManyUnique,
+        // },
+        /** This EntryType has simple property values */
+        HAS_SIMPLE_PROP: {
+            to: [SimplePropertyValue],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
     });
@@ -46,10 +53,10 @@ export class EntryType extends VNodeType {
             query: C`(@this)-[:${this.rel.FOR_SITE}]->(@target)`,
             target: Site,
         },
-        computedFacts: {
+        simplePropValues: {
             type: VirtualPropType.ManyRelationship,
-            query: C`(@this)-[:HAS_COMPUTED_FACT]->(@target)`,
-            target: ComputedFact,
+            query: C`(@this)-[:${this.rel.HAS_SIMPLE_PROP}]->(@target)`,
+            target: SimplePropertyValue,
         },
     });
 

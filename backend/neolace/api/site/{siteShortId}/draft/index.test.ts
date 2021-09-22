@@ -146,6 +146,7 @@ group(import.meta, () => {
                         data: api.CreateEntryType.dataSchema({
                             id: VNID(),
                             name: "New EntryType",
+                            contentType: api.ContentType.None,
                         }),
                     },
                     {

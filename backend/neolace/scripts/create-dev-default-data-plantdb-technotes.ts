@@ -55,18 +55,20 @@ const schema: SiteSchemaData = {
             contentType: ContentType.Article,
             description: "A TechConcept is a description of some technical thing.",
             friendlyIdPrefix: "tc-",
-            computedFacts: {
+            simplePropValues: {
                 "_CFTYPEOF": {
                     id: VNID("_CFTYPEOF"),
                     importance: 1,
                     label: "Type of",
-                    expression: `this.related(via=RT[${techConceptIsAId}], direction="from")`,
+                    valueExpression: `this.related(via=RT[${techConceptIsAId}], direction="from")`,
+                    note: "",
                 },
                 "_CFTYPES": {
                     id: VNID("_CFTYPES"),
                     importance: 2,
                     label: "Types",
-                    expression: `this.related(via=RT[${techConceptIsAId}], direction="to")`,
+                    valueExpression: `this.related(via=RT[${techConceptIsAId}], direction="to")`,
+                    note: "",
                 },
             },
         }

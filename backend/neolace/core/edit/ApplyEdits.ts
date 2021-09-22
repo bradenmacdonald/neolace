@@ -18,7 +18,7 @@ import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
-import { ComputedFact } from "../entry/ComputedFact.ts";
+import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 
 /**
  * Apply a set of edits (to schema and/or content)
@@ -111,7 +111,7 @@ export const ApplyEdits = defineAction({
                         CREATE (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site)
                         SET et += ${{
                             name: edit.data.name,
-                            contentType: ContentType.None,
+                            contentType: edit.data.contentType,
                         }}
                     `.RETURN({}));
                     modifiedNodes.add(edit.data.id);
@@ -123,7 +123,6 @@ export const ApplyEdits = defineAction({
                     // Be sure we only set allowed properties onto the EditType VNode:
                     if (edit.data.name !== undefined) changes.name = edit.data.name;
                     if (edit.data.description !== undefined) changes.description = edit.data.description;
-                    if (edit.data.contentType !== undefined) changes.contentType = edit.data.contentType;
                     if (edit.data.friendlyIdPrefix !== undefined) changes.friendlyIdPrefix = edit.data.friendlyIdPrefix;
 
                     // The following query will also validate that the entry type exists and is linked to the site.
@@ -132,26 +131,27 @@ export const ApplyEdits = defineAction({
                         SET et += ${changes}
                     `.RETURN({}));
                     // From here on we don't need to validate the Site is correct.
-                    if (edit.data.addOrUpdateComputedFacts?.length) {
+                    if (edit.data.addOrUpdateSimpleProperties?.length) {
                         await tx.query(C`
                             MATCH (et:${EntryType} {id: ${edit.data.id}})
                             WITH et
-                            UNWIND ${edit.data.addOrUpdateComputedFacts} AS newFact
-                            MERGE (et)-[:${EntryType.rel.HAS_COMPUTED_FACT}]->(cf:${ComputedFact} {id: newFact.id})
-                            SET cf.label = newFact.label
-                            SET cf.importance = newFact.importance
-                            SET cf.expression = newFact.expression
+                            UNWIND ${edit.data.addOrUpdateSimpleProperties} AS newFact
+                            MERGE (et)-[:${EntryType.rel.HAS_SIMPLE_PROP}]->(spv:${SimplePropertyValue} {id: newFact.id})
+                            SET spv.label = newFact.label
+                            SET spv.importance = newFact.importance
+                            SET spv.valueExpression = newFact.valueExpression
+                            SET spv.note = newFact.note
                         `);
-                        edit.data.addOrUpdateComputedFacts.forEach(cf => modifiedNodes.add(cf.id));
+                        edit.data.addOrUpdateSimpleProperties.forEach(spv => modifiedNodes.add(spv.id));
                     }
-                    if (edit.data.removeComputedFacts?.length) {
+                    if (edit.data.removeSimpleProperties?.length) {
                         await tx.queryOne(C`
-                            MATCH (cf:${ComputedFact})<-[:${EntryType.rel.HAS_COMPUTED_FACT}]-(et:${EntryType} {id: ${edit.data.id}})
-                            WHERE cf.id IN ${edit.data.removeComputedFacts}
-                            SET cf:DeletedVNode
-                            REMOVE cf:VNode
+                            MATCH (spv:${SimplePropertyValue})<-[:${EntryType.rel.HAS_SIMPLE_PROP}]-(et:${EntryType} {id: ${edit.data.id}})
+                            WHERE spv.id IN ${edit.data.removeSimpleProperties}
+                            SET spv:DeletedVNode
+                            REMOVE spv:VNode
                         `.RETURN({}));
-                        edit.data.removeComputedFacts.forEach(cfId => modifiedNodes.add(cfId));
+                        edit.data.removeSimpleProperties.forEach(cfId => modifiedNodes.add(cfId));
                     }
                     modifiedNodes.add(edit.data.id);
                     break;
@@ -179,12 +179,10 @@ export const ApplyEdits = defineAction({
                     // "category" is omitted because it's not allowed to change.
                     // (Would cause data issues with existing relationships of the old category.)
 
-                    if (Object.keys(changes).length > 0) {
-                        await tx.queryOne(C`
-                            MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                            SET rt += ${changes}
-                        `.RETURN({}));
-                    }
+                    const rtExistingData = await tx.queryOne(C`
+                        MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                        SET rt += ${changes}
+                    `.RETURN({"rt.category": Field.String}));
 
                     if (edit.data.removeFromTypes) {
                         await tx.query(C`
@@ -207,16 +205,24 @@ export const ApplyEdits = defineAction({
                             MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                             MATCH (et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
                             WHERE et.id IN ${edit.data.addFromTypes}
-                            CREATE (rt)-[:${RelationshipType.rel.FROM_ENTRY_TYPE}]->(et)
+                            MERGE (rt)-[:${RelationshipType.rel.FROM_ENTRY_TYPE}]->(et)
                         `);
                     }
                     if (edit.data.addToTypes) {
-                        await tx.query(C`
+                        const created = await tx.query(C`
                             MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                             MATCH (et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
                             WHERE et.id IN ${edit.data.addToTypes}
-                            CREATE (rt)-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(et)
-                        `);
+                            MERGE (rt)-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(et)
+                        `.RETURN({"et.contentType": Field.String}));
+                        if (created.length !== edit.data.addToTypes.length) {
+                            throw new Error(`UpdateRelationshipType.addToTypes failed: One or more of the "to" entry type IDs was invalid.`);
+                        }
+                        if (rtExistingData["rt.category"] === RelationshipCategory.HAS_PROPERTY) {
+                            if (!created.every(et => et["et.contentType"] === ContentType.Property)) {
+                                throw new Error(`UpdateRelationshipType.addToTypes: Cannot create a HAS_PROPERTY RelationshipType to an EntryType unless that EntryType has ContentType=Property`);
+                            }
+                        }
                     }
                     modifiedNodes.add(edit.data.id);
                     break;

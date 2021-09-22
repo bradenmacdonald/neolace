@@ -1,10 +1,12 @@
 import { Schema, Type, string, number, vnidString, nullable, array, Record, } from "../api-schemas.ts";
 
 export enum ContentType {
-    /** Just a normal entry, with name, description, properties, relationships, but no "content" */
+    /** Just an entry, with name, description, properties, relationships, but no "content" */
     None = "None",
-    /** A rich text article, consisting of "blocks" which may be rich text, images, interactives, charts, and more */
+    /** Normal entry: A rich text article, consisting of "blocks" which may be rich text, images, interactives, charts, and more */
     Article = "Article",
+    /** Property: This entry type represents "properties" which can be used to define other entries */
+    Property  = "Property",
     // Future: Image, File, DataTable
 }
 
@@ -15,14 +17,15 @@ export function CastContentType(value: string): ContentType {
     return value as ContentType;
 }
 
-export const ComputedFactSchema = Schema({
+export const SimplePropertySchema = Schema({
     id: vnidString,
-    /** Displayed label of this computed fact, e.g. "Is a type of" */
+    /** Displayed label of this simple property value, e.g. "Is a type of" */
     label: string,
-    expression: string,
+    valueExpression: string,
     importance: number,
+    note: string,
 });
-export type ComputedFactData = Type<typeof ComputedFactSchema>;
+export type SimplePropertyData = Type<typeof SimplePropertySchema>;
 
 
 export const EntryTypeSchema = Schema({
@@ -34,8 +37,8 @@ export const EntryTypeSchema = Schema({
     description: nullable(string),
     /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
     friendlyIdPrefix: nullable(string),
-    /** Computed facts always displayed on entries of this type */
-    computedFacts: Record(string, ComputedFactSchema),
+    /** Simple property values always displayed on entries of this type */
+    simplePropValues: Record(string, SimplePropertySchema),
 });
 export type EntryTypeData = Type<typeof EntryTypeSchema>;
 
@@ -61,6 +64,20 @@ export enum RelationshipCategory {
      * This is considered a symmetrical relationship.
      */
     //RELATES_TO = "RELATES_TO",
+
+
+    /**
+     * This type of relationship allows an entry type to be used as "properties"
+     *
+     * e.g. if you have "Person" EntryType and "PersonProperty" EntryType (including things like "BirthDate" Entry),
+     * then the schema will have a RelationshipType entry saying that "Person" HAS PROPERTY "PersonProperty"
+     * relationships exist.
+     *
+     * Then a given Person entry can set a "BirthDate" property value
+     *
+     * For this type of relationship, the "to" EntryType must have EntryType.ContentType = "Property"
+     */
+    HAS_PROPERTY = "HAS_PROP",
 }
 
 export function CastRelationshipCategory(value: string): RelationshipCategory {

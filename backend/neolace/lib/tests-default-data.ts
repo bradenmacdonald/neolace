@@ -53,8 +53,8 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A division (also called Phylum outside of botany) is the main taxonomic classification within the Plant Kingdom.",
                 friendlyIdPrefix: "d-",
-                computedFacts: {
-                    "_CFDivisionClasses": {id: VNID("_CFDivisionClasses"), label: "Classes", importance: 6, expression: `this.related(via=RT[_CisD])`},
+                simplePropValues: {
+                    "_CFDivisionClasses": {id: VNID("_CFDivisionClasses"), label: "Classes", importance: 6, valueExpression: `this.related(via=RT[_CisD])`, note: ""},
                 },
             },
             "_ETCLASS": {
@@ -63,10 +63,10 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A class is a level of taxonomic classification between Division/Phylum and Order.",
                 friendlyIdPrefix: "c-",
-                computedFacts: {
-                    "_CFClassTaxonomy": {id: VNID("_CFClassTaxonomy"), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
-                    "_CFClassOrders": {id: VNID("_CFClassOrders"), label: "Orders", importance: 6, expression: `this.related(via=RT[_OisC])`},
-                    "_CFClassParts": {id: VNID("_CFClassParts"), label: "Parts", importance: 10, expression: "this.andAncestors().related(via=RT[_HASA])"},
+                simplePropValues: {
+                    "_CFClassTaxonomy": {id: VNID("_CFClassTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
+                    "_CFClassOrders": {id: VNID("_CFClassOrders"), label: "Orders", importance: 6, valueExpression: `this.related(via=RT[_OisC])`, note: ""},
+                    "_CFClassParts": {id: VNID("_CFClassParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                 },
             },
             "_ETORDER": {
@@ -75,10 +75,10 @@ const data = {
                 contentType: ContentType.Article,
                 description: "An order is a level of taxonomic classification between Class and Family.",
                 friendlyIdPrefix: "o-",
-                computedFacts: {
-                    "_CFOrderTaxonomy": {id: VNID("_CFOrderTaxonomy"), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
-                    "_CFOrderFamilies": {id: VNID("_CFOrderFamilies"), label: "Families", importance: 6, expression: `this.related(via=RT[_FisO])`},
-                    "_CFOrderParts": {id: VNID("_CFOrderParts"), label: "Parts", importance: 10, expression: "this.andAncestors().related(via=RT[_HASA])"},
+                simplePropValues: {
+                    "_CFOrderTaxonomy": {id: VNID("_CFOrderTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
+                    "_CFOrderFamilies": {id: VNID("_CFOrderFamilies"), label: "Families", importance: 6, valueExpression: `this.related(via=RT[_FisO])`, note: ""},
+                    "_CFOrderParts": {id: VNID("_CFOrderParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                 },
             },
             "_ETFAMILY": {
@@ -87,10 +87,10 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A family is a level of taxonomic classification between Order and Genus.",
                 friendlyIdPrefix: "f-",
-                computedFacts: {
-                    "_CFFamilyTaxonomy": {id: VNID("_CFFamilyTaxonomy"), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
-                    "_CFFamilyGenera": {id: VNID("_CFFamilyGenera"), label: "Genera", importance: 6, expression: `this.related(via=RT[_GisF])`},
-                    "_CFFamilyParts": {id: VNID("_CFFamilyParts"), label: "Parts", importance: 10, expression: "this.andAncestors().related(via=RT[_HASA])"},
+                simplePropValues: {
+                    "_CFFamilyTaxonomy": {id: VNID("_CFFamilyTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
+                    "_CFFamilyGenera": {id: VNID("_CFFamilyGenera"), label: "Genera", importance: 6, valueExpression: `this.related(via=RT[_GisF])`, note: ""},
+                    "_CFFamilyParts": {id: VNID("_CFFamilyParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                 },
             },
             "_ETGENUS": {
@@ -99,10 +99,10 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A genus is a level of taxonomic classification between Family and Species.",
                 friendlyIdPrefix: "g-",
-                computedFacts: {
-                    "_CFGenusTaxonomy": {id: VNID("_CFGenusTaxonomy"), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
-                    "_CFGenusSpecies": {id: VNID("_CFGenusSpecies"), label: "Species", importance: 6, expression: `this.related(via=RT[_SisG])`},
-                    "_CFGenusParts": {id: VNID("_CFGenusParts"), label: "Parts", importance: 10, expression: "this.andAncestors().related(via=RT[_HASA])"},
+                simplePropValues: {
+                    "_CFGenusTaxonomy": {id: VNID("_CFGenusTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
+                    "_CFGenusSpecies": {id: VNID("_CFGenusSpecies"), label: "Species", importance: 6, valueExpression: `this.related(via=RT[_SisG])`, note: ""},
+                    "_CFGenusParts": {id: VNID("_CFGenusParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                 },
             },
             "_ETSPECIES": {
@@ -111,9 +111,9 @@ const data = {
                 contentType: ContentType.Article,
                 description: "A species is a basic unit of classifying life.",
                 friendlyIdPrefix: "s-",
-                computedFacts: {
-                    "_CFSpeciesTaxonomy": {id: VNID("_CFSpeciesTaxonomy"), label: "Taxonomy", importance: 5, expression: "this.ancestors()"},
-                    "_CFSpeciesParts": {id: VNID("_CFSpeciesParts"), label: "Parts", importance: 10, expression: "this.andAncestors().related(via=RT[_HASA])"},
+                simplePropValues: {
+                    "_CFSpeciesTaxonomy": {id: VNID("_CFSpeciesTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
+                    "_CFSpeciesParts": {id: VNID("_CFSpeciesParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                 },
             },
             "_ETPLANTPART": {
@@ -122,11 +122,19 @@ const data = {
                 contentType: ContentType.Article,
                 description: "Describes a part of a plant.",
                 friendlyIdPrefix: "pp-",
-                computedFacts: {
-                    "_CFPartTypeOf": {id: VNID("_CFPartTypeOf"), label: "Type of", importance: 1, expression: `this.related(via=RT[_PARTisPART], direction="from")`},
-                    "_CFPartTypes": {id: VNID("_CFPartTypes"), label: "Types", importance: 2, expression: `this.related(via=RT[_PARTisPART], direction="to")`},
-                    "_CFPartsFoundIn": {id: VNID("_CFPartsFoundIn"), label: "Part of", importance: 5, expression: "this.related(via=RT[_HASA])"},
+                simplePropValues: {
+                    "_CFPartTypeOf": {id: VNID("_CFPartTypeOf"), label: "Type of", importance: 1, valueExpression: `this.related(via=RT[_PARTisPART], direction="from")`, note: ""},
+                    "_CFPartTypes": {id: VNID("_CFPartTypes"), label: "Types", importance: 2, valueExpression: `this.related(via=RT[_PARTisPART], direction="to")`, note: ""},
+                    "_CFPartsFoundIn": {id: VNID("_CFPartsFoundIn"), label: "Part of", importance: 5, valueExpression: "this.related(via=RT[_HASA])", note: ""},
                 },
+            },
+            "_ETPROPERTY": {
+                id: VNID("_ETPROPERTY"),
+                name: "Property",
+                contentType: ContentType.Property,
+                description: "Properties of a PlantDB entry.",
+                friendlyIdPrefix: "p-",
+                simplePropValues: {},
             },
         },
         relationshipTypes: {
@@ -202,6 +210,25 @@ const data = {
                 description: null,
                 fromEntryTypes: [VNID("_ETPLANTPART")],
                 toEntryTypes: [VNID("_ETPLANTPART")],
+            },
+            // Any other entry type can have a property
+            "_HASPROP": {
+                id: VNID("_HASPROP"),
+                nameForward: "has property",
+                nameReverse: "applies to",
+                category: RelationshipCategory.HAS_PROPERTY,
+                description: null,
+                fromEntryTypes: [
+                    // From every level of classification. These are in alphabetical order though to match how Neolace returns a site's schema.
+                    VNID("_ETCLASS"),
+                    VNID("_ETDIVISION"),
+                    VNID("_ETFAMILY"),
+                    VNID("_ETGENUS"),
+                    VNID("_ETORDER"),
+                    VNID("_ETPLANTPART"),
+                    VNID("_ETSPECIES"),
+                ],
+                toEntryTypes: [VNID("_ETPROPERTY")],
             },
         },
     },
