@@ -1,4 +1,4 @@
-import { group, test, setTestIsolation, api, getClient, assertEquals, assertThrowsAsync } from "neolace/api/tests.ts";
+import { group, test, setTestIsolation, api, getClient, assertEquals, assertRejects } from "neolace/api/tests.ts";
 
 group(import.meta, () => {
 
@@ -12,7 +12,7 @@ group(import.meta, () => {
         test("Throws an error when an entry doesn't exist", async () => {
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
-            await assertThrowsAsync(
+            await assertRejects(
                 () => client.getEntry("non-existent-entry", {}),
                 api.NotFound,
                 `Entry with key "non-existent-entry" not found.`,

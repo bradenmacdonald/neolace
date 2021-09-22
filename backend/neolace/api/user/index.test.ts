@@ -1,22 +1,4 @@
-import { group, test, setTestIsolation, getClient, assertEquals, assertThrowsAsync, api, assertArrayIncludes } from "neolace/api/tests.ts";
-
-
-// deno-lint-ignore no-explicit-any
-interface Constructor { new (...args: any[]): any; }
-
-// A version of "assertThrowsAsync" with better typing. TODO: contribute to Deno std library.
-function assertThrowsAsync2<T = void, EC extends Constructor = typeof Error>(
-    fn: () => Promise<T>,
-    ErrorClass?: EC,
-    msgIncludes = "",
-    msg?: string,
-): Promise<InstanceType<EC>> {
-      // deno-lint-ignore no-explicit-any
-      return assertThrowsAsync(fn, ErrorClass, msgIncludes, msg) as any;
-}
-
-
-
+import { group, test, setTestIsolation, getClient, assertEquals, assertRejects, api, assertArrayIncludes, assert } from "neolace/api/tests.ts";
 
 group(import.meta, () => {
 
@@ -62,12 +44,15 @@ group(import.meta, () => {
 
             
             await client.registerHumanUser({email: "jamie456@example.com"});
-            const err = await assertThrowsAsync2(
+            await assertRejects(
                 () => client.registerHumanUser({email: "jamie456@example.com"}),
-                api.InvalidRequest,
-                "A user account is already registered with that email address."
+                (err: Error) => {
+                    assert(err instanceof api.InvalidRequest);
+                    assertEquals(err.message, "A user account is already registered with that email address.");
+                    assertEquals(err.reason, api.InvalidRequestReason.EmailAlreadyRegistered);
+                },
+                
             );
-            assertEquals(err.reason, api.InvalidRequestReason.EmailAlreadyRegistered);
         });
 
         test("cannot create two accounts with the same username", async () => {
@@ -75,27 +60,31 @@ group(import.meta, () => {
             const client = await getClient();
 
             await client.registerHumanUser({email: "jamie123@example.com", username: "jamie"});
-            const err = await assertThrowsAsync2(
+            await assertRejects(
                 () => client.registerHumanUser({email: "jamie456@example.com", username: "jamie"}),
-                api.InvalidRequest,
-                `The username "jamie" is already taken.`,
+                (err: Error) => {
+                    assert(err instanceof api.InvalidRequest);
+                    assertEquals(err.message, `The username "jamie" is already taken.`);
+                    assertEquals(err.reason, api.InvalidRequestReason.UsernameAlreadyRegistered);
+                },
             );
-            assertEquals(err.reason, api.InvalidRequestReason.UsernameAlreadyRegistered);
         });
 
         test("returns an appropriate error with invalid input (invalid data type)", async () => {
 
             const client = await getClient();
 
-            const err = await assertThrowsAsync2(
+            await assertRejects(
                 // deno-lint-ignore no-explicit-any
                 () => client.registerHumanUser({email: 1234 as any}),
-                api.InvalidFieldValue,
+                (err: Error) => {
+                    assert(err instanceof api.InvalidFieldValue);
+                    assertEquals(err.fieldErrors, [{
+                        fieldPath: "email",
+                        message: `Expect value to be "string"`,
+                    }]);
+                },
             );
-            assertEquals(err.fieldErrors, [{
-                fieldPath: "email",
-                message: `Expect value to be "string"`,
-            }]);
         });
 
         // The email type check tests a different path (Vertex field validation) than the above test (REST API input
@@ -104,35 +93,40 @@ group(import.meta, () => {
 
             const client = await getClient();
 
-            const err = await assertThrowsAsync2(
+            await assertRejects(
                 () => client.registerHumanUser({email: "foobar"}),
-                api.InvalidFieldValue,
+                (err: Error) => {
+                    assert(err instanceof api.InvalidFieldValue);
+                    assertEquals(err.fieldErrors, [{
+                        fieldPath: "email",
+                        message: `"foobar" is not a valid email address.`,
+                    }]);
+                },
             );
-            assertEquals(err.fieldErrors, [{
-                fieldPath: "email",
-                message: `"foobar" is not a valid email address.`,
-            }]);
         });
 
         test("returns an appropriate error with invalid input (multiple issues)", async () => {
 
             const client = await getClient();
 
-            const err = await assertThrowsAsync2(
+            await assertRejects(
                 () => client.registerHumanUser({email: "foo@example.com", fullName: "a".repeat(1_000), username: " @LEX "}),
-                api.InvalidFieldValue,
-            );
-            assertArrayIncludes(err.fieldErrors, [
-                /*
-                {
-                    fieldPath: "fullName",
-                    message: "todo - figure out error message here.",
-                },*/
-                {
-                    fieldPath: "username",
-                    message: "Not a valid slug (cannot contain spaces or other special characters other than '-')",
+                (err: Error) => {
+                    assert(err instanceof api.InvalidFieldValue);
+                    assertArrayIncludes(err.fieldErrors, [
+                        /*
+                        {
+                            fieldPath: "fullName",
+                            message: "todo - figure out error message here.",
+                        },*/
+                        {
+                            fieldPath: "username",
+                            message: "Not a valid slug (cannot contain spaces or other special characters other than '-')",
+                        },
+                    ]);
                 },
-            ]);
+            );
+            
         });
 
     });

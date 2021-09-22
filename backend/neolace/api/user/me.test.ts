@@ -1,4 +1,4 @@
-import { group, test, assertEquals, setTestIsolation, getClient, assertThrowsAsync, api } from "neolace/api/tests.ts";
+import { group, test, assertEquals, setTestIsolation, getClient, assertRejects, api } from "neolace/api/tests.ts";
 
 group(import.meta, () => {
 
@@ -24,7 +24,7 @@ group(import.meta, () => {
             // Get an API client, not logged in
             const client = await getClient();
 
-            await assertThrowsAsync(
+            await assertRejects(
                 () => client.whoAmI(),
                 api.NotAuthenticated,
             );

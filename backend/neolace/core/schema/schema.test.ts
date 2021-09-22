@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { group, test, assertEquals, assertThrowsAsync, setTestIsolation } from "neolace/lib/tests.ts";
+import { group, test, assertEquals, assertRejects, setTestIsolation } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
@@ -53,7 +53,7 @@ group(import.meta, () => {
             ]}));
 
             // Now try to create an entry with the same ID in the default site:
-            await assertThrowsAsync(
+            await assertRejects(
                 () => graph.runAsSystem(ApplyEdits({siteId: defaultData.site.id, edits: [
                     {code: "CreateEntryType", data: {id, name, contentType: ContentType.None }},
                 ]})),
@@ -75,7 +75,7 @@ group(import.meta, () => {
             ]}));
 
             // Now try to create an entry with the same ID in the default site:
-            await assertThrowsAsync(
+            await assertRejects(
                 () => graph.runAsSystem(ApplyEdits({siteId: site2.id, edits: [
                     {code: "UpdateRelationshipType", data: {id: relTypeId, addToTypes: [entryTypeId],
                         // FIXME: issue with computed-types - it shouldn't be necessary to specify all these:

@@ -1,4 +1,4 @@
-import { group, test, assertEquals, setTestIsolation, assertThrowsAsync, assertThrows, assertStrictEquals, assert } from "neolace/lib/tests.ts";
+import { group, test, assertEquals, setTestIsolation, assertRejects, assertThrows, assertStrictEquals, assert } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { CreateSite, Site, testExports } from "neolace/core/Site.ts";
 import { CreateUser } from "neolace/core/User.ts";
@@ -56,7 +56,7 @@ group(import.meta, () => {
         test("Cannot create two sites with the same site code", async () => {
             const result = await graph.runAsSystem(CreateSite({name: "Test Site", siteCode: "ABC10", slugId: "site-test1", domain: "test.neolace.net"}));
             assertEquals(result.siteCode, "ABC10");
-            await assertThrowsAsync(
+            await assertRejects(
                 () => graph.runAsSystem(CreateSite({name: "Test Site", siteCode: "ABC10", slugId: "site-test2", domain: "test2.neolace.net"})),
                 undefined,
                 "already exists with label `Site` and property `siteCode` = 'ABC10'",

@@ -1,4 +1,4 @@
-import { group, test, setTestIsolation, assertEquals, assertThrowsAsync } from "neolace/lib/tests.ts";
+import { group, test, setTestIsolation, assertEquals, assertRejects } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { EntryValue } from "../values.ts";
 import { This } from "./this.ts";
@@ -31,7 +31,7 @@ group(import.meta, () => {
 
             const expression = new This();
 
-            await assertThrowsAsync(
+            await assertRejects(
                 () => graph.read(tx => expression.getValue({tx, siteId, entryId: undefined})),
                 LookupEvaluationError,
                 `The keyword "this" only works in the context of a specific entry.`,

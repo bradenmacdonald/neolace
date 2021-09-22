@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { group, test, setTestIsolation, assertThrowsAsync } from "neolace/lib/tests.ts";
+import { group, test, setTestIsolation, assertRejects } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { IntegerValue } from "../values.ts";
 import { Count } from "./count.ts";
@@ -18,7 +18,7 @@ group(import.meta, () => {
         test(`It gives an error with non-countable values`, async () => {
             const expression = new Count(new LiteralExpression(new IntegerValue(-30)));
 
-            await assertThrowsAsync(
+            await assertRejects(
                 () => evalExpression(expression),
                 LookupEvaluationError,
                 `The expression "-30" cannot be counted with count().`,

@@ -1,5 +1,5 @@
 import { isVNID, VNID } from "neolace/deps/vertex-framework.ts";
-import { group, test, setTestIsolation, assert, getClient, createUserWithPermissions, api, assertThrowsAsync, assertEquals } from "neolace/api/tests.ts";
+import { group, test, setTestIsolation, assert, getClient, createUserWithPermissions, api, assertRejects, assertEquals } from "neolace/api/tests.ts";
 import { PermissionGrant } from "neolace/core/Group.ts";
 import { graph } from "neolace/core/graph.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
@@ -44,7 +44,7 @@ group(import.meta, () => {
                 {
                     const {userData} = await createUserWithPermissions(new Set());
                     const client = await getClient(userData, defaultData.site.shortId);
-                    await assertThrowsAsync(
+                    await assertRejects(
                         () => client.createDraft(createDraftArgs),
                         api.NotAuthorized,
                     );
@@ -98,39 +98,43 @@ group(import.meta, () => {
 
             test("cannot create a draft with an empty title", async () => {
                 const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
-                const err = await assertThrowsAsync(
+                await assertRejects(
                     () => client.createDraft({title: "", description: null, edits: []}),
-                    api.InvalidFieldValue,
+                    (err: Error) => {
+                        assert(err instanceof api.InvalidFieldValue);
+                        assertEquals(err.fieldErrors[0].fieldPath, "title");
+                    },
                 );
-                assertEquals((err as api.InvalidFieldValue).fieldErrors[0].fieldPath, "title")
             });
 
             test("cannot create a draft with invalid edits", async () => {
                 const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
                 // Try creating a draft with an invalid edit code:
-                await assertThrowsAsync(
+                await assertRejects(
                     () => client.createDraft({title: "Invalid edits", description: null, edits: [
                         {
                             code: "FOOBAR",
                             data: {},
                         },
                     ]}),
-                    api.InvalidFieldValue,
-                ).then(err => {
-                    assertEquals((err as api.InvalidFieldValue).fieldErrors[0].fieldPath, "edits.0.code")
-                });
+                    (err: Error) => {
+                        assert(err instanceof api.InvalidFieldValue);
+                        assertEquals(err.fieldErrors[0].fieldPath, "edits.0.code");
+                    },
+                );
                 // Try creating a draft with a valid edit code but invalid data:
-                await assertThrowsAsync(
+                await assertRejects(
                     () => client.createDraft({title: "Invalid edits", description: null, edits: [
                         {
                             code: api.CreateEntry.code,
                             data: {foo: "bar"},
                         },
                     ]}),
-                    api.InvalidFieldValue,
-                ).then(err => {
-                    assertEquals((err as api.InvalidFieldValue).fieldErrors[0].fieldPath, "edits.0.data")
-                });
+                    (err: Error) => {
+                        assert(err instanceof api.InvalidFieldValue);
+                        assertEquals(err.fieldErrors[0].fieldPath, "edits.0.data");
+                    },
+                );
             });
 
         });
@@ -171,10 +175,10 @@ group(import.meta, () => {
                 const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.shortId);
                 // Private site shouldn't work:
                 await graph.runAsSystem(UpdateSite({accessMode: AccessMode.Private, key: defaultData.site.id}));
-                await assertThrowsAsync(() => noPermsClient.createDraft(createDraftWithSchemaEdits), api.NotAuthorized);
+                await assertRejects(() => noPermsClient.createDraft(createDraftWithSchemaEdits), api.NotAuthorized);
                 // And "public read only" shouldn't work:
                 await graph.runAsSystem(UpdateSite({accessMode: AccessMode.PublicReadOnly, key: defaultData.site.id}));
-                await assertThrowsAsync(() => noPermsClient.createDraft(createDraftWithSchemaEdits), api.NotAuthorized);
+                await assertRejects(() => noPermsClient.createDraft(createDraftWithSchemaEdits), api.NotAuthorized);
                 // But "public contributions" site should accept it:
                 await graph.runAsSystem(UpdateSite({accessMode: AccessMode.PublicContributions, key: defaultData.site.id}));
                 const result = await noPermsClient.createDraft(createDraftWithSchemaEdits);
@@ -195,7 +199,7 @@ group(import.meta, () => {
                 {
                     const {userData} = await createUserWithPermissions(new Set([PermissionGrant.proposeEntryEdits]));
                     const client = await getClient(userData, defaultData.site.shortId);
-                    await assertThrowsAsync(
+                    await assertRejects(
                         () => client.createDraft(createDraftWithSchemaEdits),
                         api.NotAuthorized,
                     );
@@ -234,10 +238,10 @@ group(import.meta, () => {
                 const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.shortId);
                 // Private site shouldn't work:
                 await graph.runAsSystem(UpdateSite({accessMode: AccessMode.Private, key: defaultData.site.id}));
-                await assertThrowsAsync(() => noPermsClient.createDraft(createDraftWithContentEdits), api.NotAuthorized);
+                await assertRejects(() => noPermsClient.createDraft(createDraftWithContentEdits), api.NotAuthorized);
                 // And "public read only" shouldn't work:
                 await graph.runAsSystem(UpdateSite({accessMode: AccessMode.PublicReadOnly, key: defaultData.site.id}));
-                await assertThrowsAsync(() => noPermsClient.createDraft(createDraftWithContentEdits), api.NotAuthorized);
+                await assertRejects(() => noPermsClient.createDraft(createDraftWithContentEdits), api.NotAuthorized);
                 // But "public contributions" site should accept it:
                 await graph.runAsSystem(UpdateSite({accessMode: AccessMode.PublicContributions, key: defaultData.site.id}));
                 const result = await noPermsClient.createDraft(createDraftWithContentEdits);
@@ -252,7 +256,7 @@ group(import.meta, () => {
                 {
                     const {userData} = await createUserWithPermissions(new Set([PermissionGrant.proposeSchemaChanges]));
                     const client = await getClient(userData, defaultData.site.shortId);
-                    await assertThrowsAsync(() => client.createDraft(createDraftWithContentEdits), api.NotAuthorized);
+                    await assertRejects(() => client.createDraft(createDraftWithContentEdits), api.NotAuthorized);
                 }
                 // But a user with "propose entry edits" permission can:
                 {

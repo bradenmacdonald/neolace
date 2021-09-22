@@ -1,4 +1,4 @@
-import { group, test, assertEquals, assertStrictEquals, setTestIsolation, assertThrowsAsync } from "neolace/lib/tests.ts";
+import { group, test, assertEquals, assertStrictEquals, setTestIsolation, assertRejects } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { CreateGroup, Group, UpdateGroup, GroupMaxDepth } from "neolace/core/Group.ts";
 import { CreateSite } from "neolace/core/Site.ts";
@@ -11,7 +11,7 @@ group(import.meta, () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
         test(`Cannot create a group that doesn't belong to a site`, async () => {
-            await assertThrowsAsync(
+            await assertRejects(
                 () => graph.runAs(defaultData.users.admin.id, CreateGroup({
                     name: "Site-less group",
                     ...Group.emptyPermissions,
@@ -64,7 +64,7 @@ group(import.meta, () => {
             assertStrictEquals(level4group.parentGroup?.id, level3group.id);
 
             // Creating a level 5 group should fail though - too deep:
-            await assertThrowsAsync(
+            await assertRejects(
                 () => graph.runAs(defaultData.users.admin.id, CreateGroup({
                     name: "Level 5 Users",
                     belongsTo: level4group.id,
@@ -91,7 +91,7 @@ group(import.meta, () => {
             }));
 
             // Move the "users group" from the first/default site to the second site - this should not be allowed:
-            await assertThrowsAsync(
+            await assertRejects(
                 () => graph.runAs(defaultData.users.admin.id, UpdateGroup({
                     key: defaultData.site.usersGroupId,
                     belongsTo: site2details.id,
@@ -101,7 +101,7 @@ group(import.meta, () => {
             );
 
             // Also check that it rejects when moving to a group that's part of the second site:
-            await assertThrowsAsync(
+            await assertRejects(
                 () => graph.runAs(defaultData.users.admin.id, UpdateGroup({
                     key: defaultData.site.usersGroupId,
                     belongsTo: site2details.adminGroup,

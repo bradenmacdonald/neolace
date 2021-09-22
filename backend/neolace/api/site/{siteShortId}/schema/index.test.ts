@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { graph } from "neolace/core/graph.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
-import { group, test, setTestIsolation, api, getClient, assertEquals, assertThrowsAsync } from "neolace/api/tests.ts";
+import { group, test, setTestIsolation, api, getClient, assertEquals, assertRejects } from "neolace/api/tests.ts";
 
 group(import.meta, () => {
 
@@ -34,7 +34,7 @@ group(import.meta, () => {
             }));
             // Now the admin user should be able to get the schema, but not the anonymous client:
             assertEquals(await adminClient.getSiteSchema(), defaultData.schema);
-            await assertThrowsAsync(
+            await assertRejects(
                 () => anonClient.getSiteSchema(),
                 api.NotAuthenticated,
             );

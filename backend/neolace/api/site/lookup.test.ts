@@ -1,4 +1,4 @@
-import { group, test, setTestIsolation, api, getClient, assertEquals, assertThrowsAsync } from "neolace/api/tests.ts";
+import { group, test, setTestIsolation, api, getClient, assertEquals, assertRejects } from "neolace/api/tests.ts";
 
 group(import.meta, () => {
 
@@ -22,7 +22,7 @@ group(import.meta, () => {
         test("throws a 404 if no site exists with the given domain", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
             const client = await getClient(/* no authentication */);
-            await assertThrowsAsync(
+            await assertRejects(
                 () => client.getSite({domain: "adjfdasjfioashtiasdhfkjasdhf.asdfasdf.no"}),
                 api.NotFound,
                 `Site with domain \"adjfdasjfioashtiasdhfkjasdhf.asdfasdf.no\" not found.`,
