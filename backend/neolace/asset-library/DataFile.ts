@@ -11,7 +11,6 @@ import {
  * more metadata and license information etc.
  * This type is generally immutable and shouldn't change once created (unless the content-type was wrong?)
  */
-@VNodeType.declare
 export class DataFile extends VNodeType {
     static label = "DataFile";
     static readonly properties = {

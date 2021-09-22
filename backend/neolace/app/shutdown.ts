@@ -33,7 +33,7 @@ export function shutdown(): void {
 
 // Watch for signals:
 let watchingSignals = true;
-const sigintWatcher = Deno.signal(Deno.Signal.SIGINT);
+const sigintWatcher = Deno.signal("SIGINT");
 sigintWatcher.then(async () => {
     if (!watchingSignals) {
         return;  // The signal promise resolves on the signal OR when we call dispose() so ignore the latter
@@ -42,7 +42,7 @@ sigintWatcher.then(async () => {
     await prepareForShutdown();
     Deno.exit(0);
 });
-const sigtermWatcher = Deno.signal(Deno.Signal.SIGTERM);
+const sigtermWatcher = Deno.signal("SIGTERM");
 sigtermWatcher.then(async () => {
     if (!watchingSignals) {
         return;  // The signal promise resolves on the signal OR when we call dispose() so ignore the latter
@@ -59,7 +59,7 @@ onShutDown(async () => {
 });
 
 // Checks to run just before we actually quit.
-window.addEventListener("unload", async () => {
+globalThis.addEventListener("unload", async () => {
     try {
         await prepareForShutdown();
     } catch (err) {

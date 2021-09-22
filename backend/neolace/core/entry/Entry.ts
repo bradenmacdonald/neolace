@@ -19,7 +19,6 @@ import { PropertyFact } from "./PropertyFact.ts";
 /**
  * Abstract base class for an "entry"
  */
-@VNodeType.declare
 export class Entry extends VNodeType {
     static label = "Entry";
     static properties = {

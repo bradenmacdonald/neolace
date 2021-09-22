@@ -18,7 +18,7 @@ import {
 export const GroupMaxDepth = 4;
 
 // Forward reference
-export const GroupRef: typeof Group = VNodeTypeRef("Group");
+export const GroupRef: typeof Group = VNodeTypeRef();
 import { Site } from "neolace/core/Site.ts";
 import { User } from "neolace/core/User.ts";
 
@@ -32,8 +32,6 @@ export const enum PermissionGrant {
     proposeEntryEdits = "proposeEntryEdits",
 }
 
-
-@VNodeType.declare
 export class Group extends VNodeType {
     static readonly label = "Group";
     static readonly properties = {
@@ -102,6 +100,8 @@ export class Group extends VNodeType {
     }));
 
 }
+
+VNodeTypeRef.resolve(GroupRef, Group);
 
 
 export const UpdateGroup = defaultUpdateFor(Group, g => g

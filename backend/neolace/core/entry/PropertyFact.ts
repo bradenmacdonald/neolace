@@ -21,7 +21,6 @@ import { Entry } from "./Entry.ts";
  *
  * The value is always expressed as a lookup expression, and so can be either a literal value or a computed value.
  */
-@VNodeType.declare
 export class PropertyFact extends VNodeType {
     static label = "PropertyFact";
     static properties = {

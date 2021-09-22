@@ -15,7 +15,6 @@ import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts"
 /**
  * Schema definition for a type of entry
  */
-@VNodeType.declare
 export class EntryType extends VNodeType {
     static label = "EntryType";
     static properties = {

@@ -1,6 +1,7 @@
 import { Vertex } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
 import { onShutDown } from "neolace/app/shutdown.ts";
+import { registerVNodeTypes } from "./graph-init.ts";
 
 export const graph = new Vertex({
     neo4jUrl: config.neo4jUrl,
@@ -82,6 +83,8 @@ export const graph = new Vertex({
         },
     },
 });
+
+registerVNodeTypes(graph);
 
 onShutDown(async () => {
     // When our application shuts down, we need to shut down our connections to the graph database:

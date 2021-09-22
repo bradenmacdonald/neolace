@@ -19,7 +19,6 @@ import { EntryType } from "./EntryType.ts";
  * 
  * Simple properties are never inherited.
  */
-@VNodeType.declare
 export class SimplePropertyValue extends VNodeType {
     static label = "SimplePropertyValue";
     static properties = {

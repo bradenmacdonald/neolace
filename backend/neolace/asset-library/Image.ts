@@ -21,7 +21,6 @@ enum ImageType {
 }
 
 
-@VNodeType.declare
 export class Image extends VNodeType {
     static label = "Image";
     static readonly properties = {

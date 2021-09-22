@@ -17,7 +17,6 @@ import { Entry } from "./Entry.ts";
 /**
  * Base class for a relationship fact, which defines a relationship between two entries
  */
-@VNodeType.declare
 export class RelationshipFact extends VNodeType {
     static label = "RelFact";
     static properties = {

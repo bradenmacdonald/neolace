@@ -9,14 +9,14 @@ import {
     defineAction,
     VNID,
     VNodeTypeRef,
-DerivedProperty,
+    DerivedProperty,
 } from "neolace/deps/vertex-framework.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { graph } from "neolace/core/graph.ts";
 
 
 // Forward reference
-export const SiteRef: typeof Site = VNodeTypeRef("Site");
+export const SiteRef: typeof Site = VNodeTypeRef();
 
 import { CreateGroup, GroupMaxDepth, Group } from "./Group.ts";
 
@@ -58,7 +58,6 @@ export enum AccessMode {
  * 
  * Users are shared among all sites on a given installation.
  */
-@VNodeType.declare
 export class Site extends VNodeType {
     static readonly label = "Site";
     static readonly slugIdPrefix = "site-";
@@ -123,6 +122,8 @@ export class Site extends VNodeType {
         shortId,
     });
 }
+
+VNodeTypeRef.resolve(SiteRef, Site);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

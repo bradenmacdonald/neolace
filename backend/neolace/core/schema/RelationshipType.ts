@@ -16,7 +16,6 @@ import {EntryType} from "neolace/core/schema/EntryType.ts";
 /**
  * A RelationshipType declares a "type" of relationship between two entries
  */
-@VNodeType.declare
 export class RelationshipType extends VNodeType {
     static label = "RelationshipType";
     static properties = {

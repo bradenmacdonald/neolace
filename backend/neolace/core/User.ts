@@ -13,7 +13,6 @@ import {
 } from "neolace/deps/vertex-framework.ts";
 import { authClient } from "neolace/core/authn-client.ts";
 
-@VNodeType.declare
 export class User extends VNodeType {
     static label = "User";
     static readonly slugIdPrefix = "user-";
@@ -41,7 +40,6 @@ export class User extends VNodeType {
     });
 }
 
-@VNodeType.declare
 export class HumanUser extends User {
     static readonly label = "Human";
     static readonly properties = {
@@ -56,7 +54,6 @@ export class HumanUser extends User {
     });
 }
 
-@VNodeType.declare
 export class BotUser extends User {
     static readonly label = "Bot";
     static readonly properties = {

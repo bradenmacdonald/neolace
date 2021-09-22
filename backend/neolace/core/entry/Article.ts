@@ -3,7 +3,6 @@ import {
     VNodeType,
     defineAction,
     VirtualPropType,
-    getVNodeType,
     C,
     isVNodeType,
     DerivedProperty,
@@ -31,7 +30,6 @@ function ArticleSections<AS extends {[K: string]: ArticleSection}>(sections: AS)
  * articles of that type (e.g. "Overview", "Applications", "See Also"). So the article is split into sections, according
  * to the template. Each of those sections is an ArticleSection.
  */
-@VNodeType.declare
 export class Article extends VNodeType {
     static label = "Article";
 

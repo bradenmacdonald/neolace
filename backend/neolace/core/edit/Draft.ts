@@ -23,8 +23,7 @@ import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 /**
  * A DraftEdit is a specific change within a Draft.
  */
- @VNodeType.declare
- export class DraftEdit extends VNodeType {
+export class DraftEdit extends VNodeType {
     static readonly label = "DraftEdit";
  
     static readonly properties = {
@@ -83,7 +82,6 @@ export function dataFromJson(): DerivedProperty<any>{
  * Most changes to a site's content happen via Drafts. A user can push a set of edits as a draft, and optionally wait
  * for others to review the draft, then accept the draft.
  */
-@VNodeType.declare
 export class Draft extends VNodeType {
     static readonly label = "Draft";
 
