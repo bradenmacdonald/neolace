@@ -46,8 +46,6 @@ export const DisplayedPropertySchema = Schema.merge(
                 type: Schema.either("EntryType" as const, "Entry" as const),
                 id: vnidString,
             }).strictOptional(),
-            /** The ID of this PropertyFact */
-            id: vnidString,
         },
     ),
 );

@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { vnidString } from "../api-schemas.ts";
+import { vnidString, } from "../api-schemas.ts";
 import { Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "./Edit.ts";
 
@@ -40,12 +40,31 @@ export const CreateRelationshipFact = ContentEditType({
     describe: (data) => `Created \`RelationshipFact ${data.id}\``,
 });
 
+export const UpdatePropertyValue = ContentEditType({
+    changeType: EditChangeType.Content,
+    code: "UpdatePropertyValue",
+    dataSchema: Schema({
+        // The Entry where we are creating/updating/deleting this PropertyFact
+        entry: vnidString,
+        // The Property in question. Must be the ID of an Entry with ContentType=Property and the schema must allow
+        // HAS_PROPERTY relationships from the entry type to that property entry type.
+        property: vnidString,
+        /** Value expression: a lookup expression giving the value, or an empty string to delete this property */
+        valueExpression: string,
+        /** An optional markdown note clarifying details of the property value */
+        note: string,
+    }),
+    describe: (data) => `Updated \`Entry ${data.property}\` property on \`Entry ${data.entry}\``,
+});
+
 export const _allContentEditTypes = {
     CreateEntry,
     CreateRelationshipFact,
+    UpdatePropertyValue,
 };
 
 export type AnyContentEdit = (
     | Edit<typeof CreateEntry>
     | Edit<typeof CreateRelationshipFact>
+    | Edit<typeof UpdatePropertyValue>
 );
