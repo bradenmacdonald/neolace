@@ -58,6 +58,9 @@ export const ApplyEdits = defineAction({
                             name: edit.data.name,
                             description: edit.data.description,
                         }}
+
+                        // If this entry has content type of "property", then set its default values:
+                        SET e.propertyImportance = CASE et.contentType WHEN ${ContentType.Property} THEN 10 ELSE null END
                     `.RETURN({}));
                     modifiedNodes.add(edit.data.id);
                     break;

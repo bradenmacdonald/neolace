@@ -23,7 +23,6 @@ export const DisplayedPropertySchema = Schema.merge(
         note: string.strictOptional(),
     },
     Schema.either(
-        // TODO: include basic relationship facts here
         {
             type: "SimplePropertyValue" as const,
             // Source: SimplePropertyValues are never inherited and can only come from the entry type. In future they may come from the Entry too.
@@ -42,13 +41,15 @@ export const DisplayedPropertySchema = Schema.merge(
              * Source: where this property value comes from. May be inherited from another Entry, or from the EntryType
              * This will be absent if the property is attached "directly" to the current entry.
              */
-            source: Schema({
-                type: Schema.either("EntryType" as const, "Entry" as const),
-                id: vnidString,
-            }).strictOptional(),
+            source: Schema.either(
+                //{type: "EntryType" as const},
+                {type: "Entry" as const, id: vnidString},
+            ).strictOptional(),
         },
     ),
 );
+export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
+
 
 // The "reference cache" contains details (name, friendlyId, entry type) for every entry mentioned in the entry's
 // description, article text, computed facts, related object notes, and so on.

@@ -76,7 +76,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     }
 
     if (flags.has(api.GetEntryFlags.IncludePropertiesSummary)) {
-        // Include a summary of computed facts for this entry (up to 20 computed facts, with importance < 20)
+        // Include a summary of property values for this entry
         const simplePropValues = await getSimplePropertyValues(entryData.id, {tx, summaryOnly: true});
         const context: LookupContext = {tx, siteId, entryId: entryData.id, defaultPageSize: 5n};
 
@@ -211,6 +211,7 @@ export function extractReferences(value: api.AnyLookupValue, refs: {entryIdsUsed
             return;
         }
         case "Integer":
+        case "String":
         case "Error":
             return;
         default:
