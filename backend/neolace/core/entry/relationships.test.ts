@@ -49,10 +49,9 @@ group(import.meta, () => {
                 {code: "CreateRelationshipType", data: {category: RelationshipCategory.HAS_A, id: entryHasPart, nameForward: "has part", nameReverse: "used in"}},
                 // TODO: change the HAS_A below to RELATES_TO once RELATES_TO is implemented.
                 {code: "CreateRelationshipType", data: {category: RelationshipCategory.HAS_A, id: entryRelatesTo, nameForward: "relates to", nameReverse: "related to"}},
-                // TODO: fix the need for all these "undefined" entries:
-                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType], nameForward: undefined, nameReverse: undefined, description: undefined, removeFromTypes: undefined, removeToTypes: undefined}},
-                {code: "UpdateRelationshipType", data: {id: entryHasPart, addFromTypes: [entryType], addToTypes: [entryType], nameForward: undefined, nameReverse: undefined, description: undefined, removeFromTypes: undefined, removeToTypes: undefined}},
-                {code: "UpdateRelationshipType", data: {id: entryRelatesTo, addFromTypes: [entryType], addToTypes: [entryType], nameForward: undefined, nameReverse: undefined, description: undefined, removeFromTypes: undefined, removeToTypes: undefined}},
+                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
+                {code: "UpdateRelationshipType", data: {id: entryHasPart, addFromTypes: [entryType], addToTypes: [entryType]}},
+                {code: "UpdateRelationshipType", data: {id: entryRelatesTo, addFromTypes: [entryType], addToTypes: [entryType]}},
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                 {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
                 {code: "CreateEntry", data: {id: C, name: "Entry C", type: entryType, friendlyId: "c", description: ""}},

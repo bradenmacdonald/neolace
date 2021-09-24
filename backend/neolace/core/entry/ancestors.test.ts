@@ -31,8 +31,7 @@ group(import.meta, () => {
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
                 {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
                 {code: "CreateRelationshipType", data: {category: RelationshipCategory.IS_A, id: entryIsA, nameForward: "is a", nameReverse: "has"}},
-                // TODO: fix the need for all these "undefined" entries:
-                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType], nameForward: undefined, nameReverse: undefined, description: undefined, removeFromTypes: undefined, removeToTypes: undefined}},
+                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                 {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
                 {code: "CreateEntry", data: {id: C, name: "Entry C", type: entryType, friendlyId: "c", description: ""}},
@@ -98,8 +97,7 @@ group(import.meta, () => {
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
                 {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
                 {code: "CreateRelationshipType", data: {category: RelationshipCategory.IS_A, id: entryIsA, nameForward: "is a", nameReverse: "has"}},
-                // TODO: fix the need for all these "undefined" entries:
-                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType], nameForward: undefined, nameReverse: undefined, description: undefined, removeFromTypes: undefined, removeToTypes: undefined}},
+                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                 {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
                 {code: "CreateEntry", data: {id: C, name: "Entry C", type: entryType, friendlyId: "c", description: ""}},
