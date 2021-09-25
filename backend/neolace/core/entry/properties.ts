@@ -11,16 +11,15 @@ type EntryPropertyValue = {
     valueExpression: string,
     importance: number,
     note: string,
+    id: VNID,
 }&(
     {
         type: "SimplePropertyValue",
         source: {from: "EntryType"},
-        id: VNID,
     }
     |
     {
         type: "PropertyFact",
-        property: {id: VNID},
         source: {from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
     }
 );
@@ -110,11 +109,9 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
                 note: pf.note,
 
                 type: "PropertyValue",
-                property: {id: prop.id},
+                id: prop.id,
                 source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
             } AS propertyData
-
-            // Todo in future: also fetch properties attached to the entry type?
         }
         RETURN propertyData
         ORDER BY propertyData.importance, propertyData.label, propertyData.type DESC
@@ -128,8 +125,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
 
             type: Field.String,
             source: Field.Any,
-            property: Field.NullOr.Record({id: Field.VNID}),
-            id: Field.NullOr.VNID,
+            id: Field.VNID,
         }),
     }));
 

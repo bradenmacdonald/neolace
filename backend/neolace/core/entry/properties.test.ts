@@ -50,8 +50,7 @@ group(import.meta, () => {
                     label: "Property 1",
                     valueExpression: '"value for B prop1"',
                     importance: 10,  // Default importance
-                    id: null,  // Only SimplePropertyValues have ID; "regular" properties use the property entry's ID.
-                    property: {id: prop1},
+                    id: prop1,
                     note: "",
                     type: "PropertyValue",
                     source: {from: "ThisEntry"},
@@ -89,7 +88,6 @@ group(import.meta, () => {
                     valueExpression: '"spv2 value"',
                     importance: 1,  // Most important is lowest important value, so 1 is sorted before 50
                     id: spv2,
-                    property: null,
                     note: "Test note",
                     type: "SimplePropertyValue",
                     source: {from: "EntryType"},
@@ -99,7 +97,6 @@ group(import.meta, () => {
                     valueExpression: '"spv1 value"',
                     importance: 50,  // Less important than 1
                     id: spv1,
-                    property: null,
                     note: "Test note",
                     type: "SimplePropertyValue",
                     source: {from: "EntryType"},
@@ -151,16 +148,15 @@ group(import.meta, () => {
                 label: "Property 1",
                 valueExpression: '"A1"',
                 importance: 10,  // Default importance
-                id: null,  // Only SimplePropertyValues have ID; "regular" properties use the property entry's ID.
-                property: {id: prop1},
+                id: prop1,
                 note: "",
                 type: "PropertyValue",
                 source: {from: "ThisEntry"},
             };
-            const A2 = {...A1, label: "Property 2", valueExpression: '"A2"', property: {id: prop2}};
-            const A3 = {...A1, label: "Property 3", valueExpression: '"A3"', property: {id: prop3}};
-            const B2 = {...A1, label: "Property 2", valueExpression: '"B2"', property: {id: prop2}};
-            const C3 = {...A1, label: "Property 3", valueExpression: '"C3"', property: {id: prop3}};
+            const A2 = {...A1, label: "Property 2", valueExpression: '"A2"', id: prop2};
+            const A3 = {...A1, label: "Property 3", valueExpression: '"A3"', id: prop3};
+            const B2 = {...A1, label: "Property 2", valueExpression: '"B2"', id: prop2};
+            const C3 = {...A1, label: "Property 3", valueExpression: '"C3"', id: prop3};
 
             // Get the properties of A
             assertEquals(await graph.read(tx => getEntryProperties(A, {tx})), [
@@ -225,7 +221,6 @@ group(import.meta, () => {
                 edits.push({code: "UpdateEntryType", data: {id: entryType, addOrUpdateSimpleProperties: [args]}});
                 simplePropertyValues.push({
                     ...args,
-                    property: null,
                     type: "SimplePropertyValue",
                     source: {from: "EntryType"},
                 });
@@ -243,8 +238,7 @@ group(import.meta, () => {
                     label: `Property ${i}`,
                     valueExpression: `"A${i}"`,
                     importance: i,
-                    id: null,  // Only SimplePropertyValues have ID; "regular" properties use the property entry's ID.
-                    property: {id},
+                    id,
                     note: "",
                     type: "PropertyValue",
                     source: {from: "ThisEntry"},
@@ -252,8 +246,8 @@ group(import.meta, () => {
             }
 
             // B will inherit eight properties (0..7) from A, but will overwrite two of them:
-            edits.push({code: "UpdatePropertyValue", data: {entry: B, property: aPropertyValues[6].property.id, valueExpression: `"B6"`, note: ""}});
-            edits.push({code: "UpdatePropertyValue", data: {entry: B, property: aPropertyValues[7].property.id, valueExpression: `"B7"`, note: ""}});
+            edits.push({code: "UpdatePropertyValue", data: {entry: B, property: aPropertyValues[6].id, valueExpression: `"B6"`, note: ""}});
+            edits.push({code: "UpdatePropertyValue", data: {entry: B, property: aPropertyValues[7].id, valueExpression: `"B7"`, note: ""}});
             // In addition to those two overwritten properties, B has 28 other properties set:
             const bPropertyValues = [];
             for (let i = 0; i < 28; i++) {
@@ -265,8 +259,7 @@ group(import.meta, () => {
                     label: `B Property ${i}`,
                     valueExpression: `"B${i}"`,
                     importance: 20 + i,
-                    id: null,  // Only SimplePropertyValues have ID; "regular" properties use the property entry's ID.
-                    property: {id},
+                    id,
                     note: "",
                     type: "PropertyValue",
                     source: {from: "ThisEntry"},
