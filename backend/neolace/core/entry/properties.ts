@@ -32,7 +32,14 @@ type EntryPropertyValue = {
  *
  * This includes inherited properties and will order the results by importance.
  */
-export async function getEntryProperties(entryId: VNID, options: {tx: WrappedTransaction, maxImportance?: number, skip?: number, limit?: number}): Promise<EntryPropertyValue[]> {
+export async function getEntryProperties<TC extends true|undefined = undefined>(entryId: VNID, options: {
+    tx: WrappedTransaction,
+    maxImportance?: number,
+    skip?: number,
+    limit?: number,
+    /** Should the total count of matching properties be included in the results? */
+    totalCount?: TC,
+}): Promise<EntryPropertyValue[] & (TC extends true ? {totalCount: number} : unknown)> {
 
     // Neo4j doesn't allow normal query variables to be used for skip/limit so we have to carefully ensure these values
     // are safe (are just plain numbers) then format them for interpolation in the query string as part of the cypher
@@ -41,6 +48,26 @@ export async function getEntryProperties(entryId: VNID, options: {tx: WrappedTra
     const limitSafe = C(String(Number(Number(options.limit ?? 100))));
 
     const maxImportance = options.maxImportance ?? 100;  // Importance is in the range 0-99 so <= 100 will always match everything
+
+    // Start fetching the total count of matching properties asynchronously, if requested
+    const totalCountPromise: Promise<number|undefined> = !options.totalCount ? new Promise(resolve => resolve(undefined)) : options.tx.queryOne(C`
+        MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
+
+        // Count "Simple Property Values" attached to the entry type
+        WITH entry, entryType
+        OPTIONAL MATCH (entryType)-[:${EntryType.rel.HAS_SIMPLE_PROP}]->(spv:${SimplePropertyValue})
+        WHERE spv.importance <= ${maxImportance}
+
+        WITH entry, entryType, count(spv) AS spvCount
+
+        // Now count all "normal" property values attached to this entry or its ancestors (for properties that allow inheritance)
+        MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(prop)
+        WHERE (prop.propertyInherits = true OR length(path) = 2) AND prop.propertyImportance <= ${maxImportance}
+
+        WITH entry, entryType, spvCount, prop, min(length(path)) AS distance
+        WITH entry, entryType, spvCount, count(prop) AS propCount
+        WITH spvCount + propCount AS totalCount
+    `.RETURN({totalCount: Field.Int})).then(r => r.totalCount);
 
     const data = await options.tx.query(C`
         MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
@@ -90,7 +117,7 @@ export async function getEntryProperties(entryId: VNID, options: {tx: WrappedTra
             // Todo in future: also fetch properties attached to the entry type?
         }
         RETURN propertyData
-        ORDER BY propertyData.importance, propertyData.label
+        ORDER BY propertyData.importance, propertyData.label, propertyData.type DESC
         SKIP ${skipSafe} LIMIT ${limitSafe}
     `.givesShape({
         propertyData: Field.Record({
@@ -107,5 +134,10 @@ export async function getEntryProperties(entryId: VNID, options: {tx: WrappedTra
     }));
 
     // deno-lint-ignore no-explicit-any
-    return data.map(d => d.propertyData as any);
+    const result: any = data.map(d => d.propertyData);
+    if (options.totalCount) {
+        result.totalCount = await totalCountPromise;
+    }
+
+    return result;
 }

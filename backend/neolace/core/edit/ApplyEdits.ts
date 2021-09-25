@@ -85,6 +85,8 @@ export const ApplyEdits = defineAction({
                         MATCH (e:${Entry} {id: ${edit.data.id}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         SET e += ${changes}
                     `.RETURN({}));
+
+                    modifiedNodes.add(edit.data.id);
                     break;
                 }
 
@@ -170,6 +172,8 @@ export const ApplyEdits = defineAction({
                             modifiedNodes.add(result[0]["pf.id"]);
                         }
                     }
+                    // We are modifying the PROP_FACT relationship from the entry, so the entry is counted as modified too:
+                    modifiedNodes.add(edit.data.entry);
                     break;
                 }
 

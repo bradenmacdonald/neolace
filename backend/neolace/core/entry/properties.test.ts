@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { RelationshipCategory, ContentType } from "neolace/deps/neolace-api.ts";
+import { RelationshipCategory, ContentType, EditList } from "neolace/deps/neolace-api.ts";
 
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -108,7 +108,6 @@ group(import.meta, () => {
 
         });
 
-        
         test("Returns inherited properties from parent entries, if the property is marked as inheritable", async () => {
 
             // Create a site with:
@@ -186,7 +185,149 @@ group(import.meta, () => {
 
         });
 
-        // TODO: pagination, filtering, (total count?)
+        
+        test("Can paginated, filter, and provide total count of properties", async () => {
+
+            // Create a site with:
+            //   Entry A has 10 properties [and 5 simple property values on its type]
+            //   Entry B has 30 properties [and 5 simple property values on its type]
+            //   B inherits 8 properties from A, but overwrites 2 of them so only 6 are inherited
+            //
+            //   So: A has 15 properties total (10 + 5)
+            //       B has 41 properties total (30 + 5 + 6)
+            const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
+            await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
+                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType", contentType: ContentType.Property}},
+                {code: "CreateRelationshipType", data: {id: entryIsA, category: RelationshipCategory.IS_A, nameForward: "is a", nameReverse: "has types"}},
+                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
+                {code: "CreateRelationshipType", data: {id: entryHasProp, category: RelationshipCategory.HAS_PROPERTY, nameForward: "has prop", nameReverse: "prop of"}},
+                {code: "UpdateRelationshipType", data: {id: entryHasProp, addFromTypes: [entryType], addToTypes: [propertyType]}},
+                // Create entry A and B:
+                {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
+                {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
+                {code: "CreateRelationshipFact", data: {fromEntry: B, type: entryIsA, toEntry: A, id: VNID()}},  // B is a A
+            ]}));
+
+            const edits: EditList = [];
+
+            // Create 5 SimplePropertyValues on the entry type:
+            const simplePropertyValues = [];
+            for (let i = 0; i < 5; i++) {
+                const id = VNID();
+                const args = {
+                    id,
+                    importance: i,
+                    note: `N${i}`,
+                    valueExpression: `"SPV${i} value"`,
+                    label: `SPV${i} Label`
+                };
+                edits.push({code: "UpdateEntryType", data: {id: entryType, addOrUpdateSimpleProperties: [args]}});
+                simplePropertyValues.push({
+                    ...args,
+                    property: null,
+                    type: "SimplePropertyValue",
+                    source: {from: "EntryType"},
+                });
+            }
+
+
+            // Create 10 normal property values on entry A, the first 8 of which are inheritable
+            const aPropertyValues = [];
+            for (let i = 0; i < 10; i++) {
+                const id = VNID();
+                edits.push({code: "CreateEntry", data: {id, name: `Property ${i}`, type: propertyType, friendlyId: `p${i}`, description: ""}});
+                edits.push({code: "UpdatePropertyEntry", data: {id, importance: i, inherits: i < 8}});
+                edits.push({code: "UpdatePropertyValue", data: {entry: A, property: id, valueExpression: `"A${i}"`, note: ""}});
+                aPropertyValues.push({
+                    label: `Property ${i}`,
+                    valueExpression: `"A${i}"`,
+                    importance: i,
+                    id: null,  // Only SimplePropertyValues have ID; "regular" properties use the property entry's ID.
+                    property: {id},
+                    note: "",
+                    type: "PropertyValue",
+                    source: {from: "ThisEntry"},
+                });
+            }
+
+            // B will inherit eight properties (0..7) from A, but will overwrite two of them:
+            edits.push({code: "UpdatePropertyValue", data: {entry: B, property: aPropertyValues[6].property.id, valueExpression: `"B6"`, note: ""}});
+            edits.push({code: "UpdatePropertyValue", data: {entry: B, property: aPropertyValues[7].property.id, valueExpression: `"B7"`, note: ""}});
+            // In addition to those two overwritten properties, B has 28 other properties set:
+            const bPropertyValues = [];
+            for (let i = 0; i < 28; i++) {
+                const id = VNID();
+                edits.push({code: "CreateEntry", data: {id, name: `B Property ${i}`, type: propertyType, friendlyId: `p-b${i}`, description: ""}});
+                edits.push({code: "UpdatePropertyEntry", data: {id, importance: 20 + i}});
+                edits.push({code: "UpdatePropertyValue", data: {entry: B, property: id, valueExpression: `"B${i}"`, note: ""}});
+                bPropertyValues.push({
+                    label: `B Property ${i}`,
+                    valueExpression: `"B${i}"`,
+                    importance: 20 + i,
+                    id: null,  // Only SimplePropertyValues have ID; "regular" properties use the property entry's ID.
+                    property: {id},
+                    note: "",
+                    type: "PropertyValue",
+                    source: {from: "ThisEntry"},
+                });
+            }
+
+            await graph.runAsSystem(ApplyEdits({siteId, edits}));
+
+            // Get the properties of A with importance <= 2:
+            assertEquals(await graph.read(tx => getEntryProperties(A, {tx, maxImportance: 2})), [
+                // Results are sorted by importance, and by label.
+                aPropertyValues[0],
+                simplePropertyValues[0],
+                aPropertyValues[1],
+                simplePropertyValues[1],
+                aPropertyValues[2],
+                simplePropertyValues[2],
+            ]);
+
+            // Now get same as above but SKIP the first two and LIMIT to 3 results, and include the total count.
+            {
+                const result = await graph.read(tx => getEntryProperties(A, {tx, skip: 2, limit: 3, totalCount: true, maxImportance: 2}));
+                assertEquals(result.slice(), [  // Use slice to discard the totalCount info which otherwise counts as a difference
+                    aPropertyValues[1],
+                    simplePropertyValues[1],
+                    aPropertyValues[2],
+                ]);
+                assertEquals(result.totalCount, 6);
+            }
+
+
+            // Get the first ten properties of B, and the total count
+            {
+                const result = await graph.read(tx => getEntryProperties(B, {tx, limit: 16, totalCount: true}));
+                assertEquals(result.slice(), [  // Use slice to discard the totalCount info which otherwise counts as a difference
+                    // B inherits 8 properties from A, but overwrites 2 of them so only 6 are inherited,
+                    // but also has SimplePropertyValues interleaved
+                    {...aPropertyValues[0], source: {from: "AncestorEntry", entryId: A}},
+                    simplePropertyValues[0],
+                    {...aPropertyValues[1], source: {from: "AncestorEntry", entryId: A}},
+                    simplePropertyValues[1],
+                    {...aPropertyValues[2], source: {from: "AncestorEntry", entryId: A}},
+                    simplePropertyValues[2],
+                    {...aPropertyValues[3], source: {from: "AncestorEntry", entryId: A}},
+                    simplePropertyValues[3],
+                    {...aPropertyValues[4], source: {from: "AncestorEntry", entryId: A}},
+                    simplePropertyValues[4],
+                    {...aPropertyValues[5], source: {from: "AncestorEntry", entryId: A}},
+                    {...aPropertyValues[6], valueExpression: `"B6"`, source: {from: "ThisEntry"}},  // B overrides inherited property 6
+                    {...aPropertyValues[7], valueExpression: `"B7"`, source: {from: "ThisEntry"}},  // B overrides inherited property 7
+                    bPropertyValues[0],
+                    bPropertyValues[1],
+                    bPropertyValues[2],
+                ]);
+                // Check that the total count matches the actual results if we fetch them all
+                assertEquals((await graph.read(tx => getEntryProperties(B, {tx}))).length, result.totalCount);
+                assertEquals(result.totalCount, 41);
+            }
+        });
+
+        // TODO: test the dbHits performance of getProperties()
 
     });
 });
