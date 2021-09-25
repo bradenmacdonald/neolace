@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { vnidString, } from "../api-schemas.ts";
-import { Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
+import { boolean, number, Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "./Edit.ts";
 
 interface ContentEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
@@ -22,6 +22,21 @@ export const CreateEntry = ContentEditType({
         description: string,
     }),
     describe: (data) => `Created \`Entry ${data.id}\``,
+});
+
+export const UpdatePropertyEntry = ContentEditType({
+    changeType: EditChangeType.Content,
+    code: "UpdatePropertyEntry",
+    dataSchema: Schema({
+        id: vnidString,
+        /** Change the "importance" of this property. Lower numbers are most important. */
+        importance: number.min(0).max(99).strictOptional(),
+        // Change the allowed data type for values of this property. Won't affect existing property values.
+        valueType: string.strictOptional(),
+        /** Should property values of this type be inherited by child entries? */
+        inherits: boolean.strictOptional(),
+    }),
+    describe: (data) => `Updated Property Features of \`Entry ${data.id}\``,
 });
 
 export const CreateRelationshipFact = ContentEditType({
@@ -59,12 +74,14 @@ export const UpdatePropertyValue = ContentEditType({
 
 export const _allContentEditTypes = {
     CreateEntry,
+    UpdatePropertyEntry,
     CreateRelationshipFact,
     UpdatePropertyValue,
 };
 
 export type AnyContentEdit = (
     | Edit<typeof CreateEntry>
+    | Edit<typeof UpdatePropertyEntry>
     | Edit<typeof CreateRelationshipFact>
     | Edit<typeof UpdatePropertyValue>
 );

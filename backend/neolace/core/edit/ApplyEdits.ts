@@ -12,6 +12,7 @@ import {
     UpdateRelationshipType,
     getEditType,
     RelationshipCategory,
+    UpdatePropertyEntry,
 } from "neolace/deps/neolace-api.ts";
 import { C, defineAction, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { Site } from "../Site.ts";
@@ -61,8 +62,29 @@ export const ApplyEdits = defineAction({
 
                         // If this entry has content type of "property", then set its default values:
                         SET e.propertyImportance = CASE et.contentType WHEN ${ContentType.Property} THEN 10 ELSE null END
+                        SET e.propertyInherits = CASE et.contentType WHEN ${ContentType.Property} THEN false ELSE null END
                     `.RETURN({}));
                     modifiedNodes.add(edit.data.id);
+                    break;
+                }
+
+                case UpdatePropertyEntry.code: {
+
+                    const changes: Record<string, unknown> = {};
+                    if (edit.data.importance !== undefined) {
+                        changes.propertyImportance = edit.data.importance;
+                    }
+                    if (edit.data.valueType !== undefined) {
+                        changes.propertyValueType = edit.data.valueType;
+                    }
+                    if (edit.data.inherits !== undefined) {
+                        changes.propertyInherits = edit.data.inherits;
+                    }
+
+                    await tx.queryOne(C`
+                        MATCH (e:${Entry} {id: ${edit.data.id}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                        SET e += ${changes}
+                    `.RETURN({}));
                     break;
                 }
 

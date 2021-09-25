@@ -18,7 +18,7 @@ group(import.meta, () => {
         // Relationship Type IDs:
         const entryIsA = VNID(), entryHasProp = VNID();
         // Entry IDs:
-        const A = VNID(), B = VNID(), prop1 = VNID(), prop2 = VNID();
+        const A = VNID(), B = VNID(), C = VNID(), prop1 = VNID(), prop2 = VNID(), prop3 = VNID();
         // Simple Property Value IDs:
         const spv1 = VNID(), spv2 = VNID();
 
@@ -53,8 +53,8 @@ group(import.meta, () => {
                     id: null,  // Only SimplePropertyValues have ID; "regular" properties use the property entry's ID.
                     property: {id: prop1},
                     note: "",
-                    type: "PropertyFact",
-                    source: null,  // source is null because this is "directly" attached to the entry
+                    type: "PropertyValue",
+                    source: {from: "ThisEntry"},
                 },
             ]);
 
@@ -92,7 +92,7 @@ group(import.meta, () => {
                     property: null,
                     note: "Test note",
                     type: "SimplePropertyValue",
-                    source: "EntryType",
+                    source: {from: "EntryType"},
                 },
                 {
                     label: "SPV 1 Label",
@@ -102,17 +102,91 @@ group(import.meta, () => {
                     property: null,
                     note: "Test note",
                     type: "SimplePropertyValue",
-                    source: "EntryType",
+                    source: {from: "EntryType"},
                 },
             ]);
 
         });
 
-        // TODO: test inherited entries
+        
+        test("Returns inherited properties from parent entries, if the property is marked as inheritable", async () => {
+
+            // Create a site with:
+            //   Entry A has prop1 = A1, prop2 = A2, prop3 = A3
+            //   Entry B has             prop2 = B2
+            //   Entry C has                         prop3 = C3
+            //   C inherits from B which inherits from A
+            //   Property 3 is not inheritable, but the others are.
+            const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
+            await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
+                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType", contentType: ContentType.Property}},
+                {code: "CreateRelationshipType", data: {id: entryIsA, category: RelationshipCategory.IS_A, nameForward: "is a", nameReverse: "has types"}},
+                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
+                {code: "CreateRelationshipType", data: {id: entryHasProp, category: RelationshipCategory.HAS_PROPERTY, nameForward: "has prop", nameReverse: "prop of"}},
+                {code: "UpdateRelationshipType", data: {id: entryHasProp, addFromTypes: [entryType], addToTypes: [propertyType]}},
+                // Create properties:
+                {code: "CreateEntry", data: {id: prop1, name: "Property 1", type: propertyType, friendlyId: "p1", description: ""}},
+                {code: "UpdatePropertyEntry", data: {id: prop1, inherits: true}},
+                {code: "CreateEntry", data: {id: prop2, name: "Property 2", type: propertyType, friendlyId: "p2", description: ""}},
+                {code: "UpdatePropertyEntry", data: {id: prop2, inherits: true}},
+                {code: "CreateEntry", data: {id: prop3, name: "Property 3", type: propertyType, friendlyId: "p3", description: ""}},
+                {code: "UpdatePropertyEntry", data: {id: prop3, inherits: false}},
+                // Create entry A and its properties:
+                {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
+                {code: "UpdatePropertyValue", data: {entry: A, property: prop1, valueExpression: `"A1"`, note: ""}},
+                {code: "UpdatePropertyValue", data: {entry: A, property: prop2, valueExpression: `"A2"`, note: ""}},
+                {code: "UpdatePropertyValue", data: {entry: A, property: prop3, valueExpression: `"A3"`, note: ""}},
+                // Create entry B and its properties:
+                {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
+                {code: "CreateRelationshipFact", data: {fromEntry: B, type: entryIsA, toEntry: A, id: VNID()}},  // B is a A
+                {code: "UpdatePropertyValue", data: {entry: B, property: prop2, valueExpression: `"B2"`, note: ""}},
+                // Create entry C and its properties:
+                {code: "CreateEntry", data: {id: C, name: "Entry C", type: entryType, friendlyId: "c", description: ""}},
+                {code: "CreateRelationshipFact", data: {fromEntry: C, type: entryIsA, toEntry: B, id: VNID()}},  // C is a B
+                {code: "UpdatePropertyValue", data: {entry: C, property: prop3, valueExpression: `"C3"`, note: ""}},
+            ]}));
+
+            // Define the expected property values:
+            const A1 = {
+                label: "Property 1",
+                valueExpression: '"A1"',
+                importance: 10,  // Default importance
+                id: null,  // Only SimplePropertyValues have ID; "regular" properties use the property entry's ID.
+                property: {id: prop1},
+                note: "",
+                type: "PropertyValue",
+                source: {from: "ThisEntry"},
+            };
+            const A2 = {...A1, label: "Property 2", valueExpression: '"A2"', property: {id: prop2}};
+            const A3 = {...A1, label: "Property 3", valueExpression: '"A3"', property: {id: prop3}};
+            const B2 = {...A1, label: "Property 2", valueExpression: '"B2"', property: {id: prop2}};
+            const C3 = {...A1, label: "Property 3", valueExpression: '"C3"', property: {id: prop3}};
+
+            // Get the properties of A
+            assertEquals(await graph.read(tx => getEntryProperties(A, {tx})), [
+                A1, A2, A3
+            ]);
+
+            // Get the properties of B
+            assertEquals(await graph.read(tx => getEntryProperties(B, {tx})), [
+                // value A1 is inherited from Entry A, this entry's parent:
+                {...A1, source: {from: "AncestorEntry", entryId: A}},
+                B2, // <-- value B2 is set directly on this Entry B, and so A2 will not be inherited
+                // A3 is NOT inherited because we marked property 3 as non-inheritable.
+            ]);
+
+            // Get the properties of C
+            assertEquals(await graph.read(tx => getEntryProperties(C, {tx})), [
+                // value A1 is inherited from Entry A, this entry's grandparent:
+                {...A1, source: {from: "AncestorEntry", entryId: A}},
+                {...B2, source: {from: "AncestorEntry", entryId: B}},
+                {...C3, source: {from: "ThisEntry"}},
+            ]);
+
+        });
 
         // TODO: pagination, filtering, (total count?)
-
-        // TODO: remove references to PropertyFact, it's an implementation detail
 
     });
 });

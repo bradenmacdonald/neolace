@@ -14,14 +14,14 @@ type EntryPropertyValue = {
 }&(
     {
         type: "SimplePropertyValue",
-        source: "EntryType",
+        source: {from: "EntryType"},
         id: VNID,
     }
     |
     {
         type: "PropertyFact",
         property: {id: VNID},
-        source: null,
+        source: {from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
     }
 );
 
@@ -59,27 +59,35 @@ export async function getEntryProperties(entryId: VNID, options: {tx: WrappedTra
                 note: spv.note,
 
                 type: "SimplePropertyValue",
-                source: "EntryType",
+                source: {from: "EntryType"},
                 id: spv.id
             } AS propertyData
 
             UNION ALL
 
-            // Fetch properties directly attached to the entry
+            // Now fetch all "normal" property values attached to this entry or its ancestors (for properties that allow inheritance)
             WITH entry
-            MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(prop)
-            WHERE prop.propertyImportance <= ${maxImportance}
+            MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(prop)
+            WHERE (prop.propertyInherits = true OR length(path) = 2) AND prop.propertyImportance <= ${maxImportance}
+
+            // The way we use min(lengt(path)) below will return only DISTINCT prop entries, so that for each inherited
+            // property, we only get the value set by the closest ancestor. e.g. if grandparent->parent->child each
+            // have birthDate, child's birthDate will take priority and grandparent/parent's won't be returned
+            WITH entry, prop, min(length(path)) AS distance, collect(pf) AS pfs, collect(ancestor) as ancestors
+            WITH entry, prop, distance, head(pfs) AS pf, head(ancestors) AS ancestor
+
             RETURN {
                 label: prop.name,
                 valueExpression: pf.valueExpression,
                 importance: prop.propertyImportance,
                 note: pf.note,
 
-                type: "PropertyFact",
-                property: {id: prop.id}
+                type: "PropertyValue",
+                property: {id: prop.id},
+                source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
             } AS propertyData
 
-            // Todo in future: also fetch inherited properties, properties attached to the entry type
+            // Todo in future: also fetch properties attached to the entry type?
         }
         RETURN propertyData
         ORDER BY propertyData.importance, propertyData.label
@@ -92,7 +100,7 @@ export async function getEntryProperties(entryId: VNID, options: {tx: WrappedTra
             note: Field.String,
 
             type: Field.String,
-            source: Field.String,
+            source: Field.Any,
             property: Field.NullOr.Record({id: Field.VNID}),
             id: Field.NullOr.VNID,
         }),
