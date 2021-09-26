@@ -34,7 +34,7 @@ export class PropertyFact extends VNodeType {
         // In future, we may want to be able to override "inherits" or "importance", which come from the property entry
     };
 
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo(() => ({
+    static readonly rel = this.hasRelationshipsFromThisTo(() => ({
         // In addition to the PROP_FACT relationship from Entry/EntryType to this, there is this relationship _from_ this:
         PROP_ENTRY: {
             // This points to the Entry with Category "Property", e.g. "Birth Date" (Entry)

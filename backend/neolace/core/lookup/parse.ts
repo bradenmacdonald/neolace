@@ -6,6 +6,7 @@ import {
     AndAncestors,
     // Count,
     LiteralExpression,
+    Markdown,
     RelatedEntries,
     This,
 } from "./expressions/index.ts";
@@ -46,6 +47,8 @@ export function parseLookupString(lookup: string): LookupExpression {
         [/^this\.andAncestors\(\)\.related\(via=(.*)\)$/, m => new RelatedEntries(new AndAncestors(new This()), {via: parseLookupString(m[1])})],
         // related(andAncestors(this), via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])
         [/^related\(andAncestors\(this\), via=(.*)\)$/, m => new RelatedEntries(new AndAncestors(new This()), {via: parseLookupString(m[1])})],
+        // markdown("*string*")
+        [/^markdown\((.*)\)$/, m => new Markdown( parseLookupString(m[1]) )],
     ];
 
     for (const [re, fn] of otherTemplates) {

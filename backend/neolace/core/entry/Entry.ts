@@ -48,7 +48,9 @@ export class Entry extends VNodeType {
         propertyValueType: Field.NullOr.String,
         // Should property values of this type be inherited by child entries?
         propertyInherits: Field.NullOr.Boolean,
-
+        // Markdown formatting to use to display the value, if it's a simple string value.
+        // e.g. set this to "**{value}**" to make it bold.
+        propertyDisplayAs: Field.NullOr.String,
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo({

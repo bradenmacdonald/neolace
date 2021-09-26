@@ -16,6 +16,8 @@ export enum GetEntryFlags {
 export const DisplayedPropertySchema = Schema.merge(
     // common fields:
     {
+        /** The ID of this SimplePropertyValue or the ID of the property entry */
+        id: vnidString,
         label: string,
         value: object.transform(obj => obj as AnyLookupValue),
         importance: number,
@@ -23,34 +25,26 @@ export const DisplayedPropertySchema = Schema.merge(
         note: string.strictOptional(),
     },
     Schema.either(
-        // TODO: include basic relationship facts here
         {
             type: "SimplePropertyValue" as const,
             // Source: SimplePropertyValues are never inherited and can only come from the entry type. In future they may come from the Entry too.
-            source: Schema({ type: Schema.either("EntryType" as const) }),
-            /** The ID of this SimplePropertyValue */
-            id: vnidString,
+            source: Schema({ from: "EntryType" as const }),
         },
         {
-            type: "PropertyFact" as const,
-            /**
-             * The property entry that this value relates to. It will be in the reference cache.
-             * For example, the property entry could be "Birth Date", and this value could be "1990-01-15"
-             */
-            property: Schema({id: vnidString}),
+            type: "PropertyValue" as const,
             /**
              * Source: where this property value comes from. May be inherited from another Entry, or from the EntryType
              * This will be absent if the property is attached "directly" to the current entry.
              */
-            source: Schema({
-                type: Schema.either("EntryType" as const, "Entry" as const),
-                id: vnidString,
-            }).strictOptional(),
-            /** The ID of this PropertyFact */
-            id: vnidString,
+            source: Schema.either(
+                {from: "ThisEntry" as const},
+                {from: "AncestorEntry" as const, entryId: vnidString},
+            ),
         },
     ),
 );
+export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
+
 
 // The "reference cache" contains details (name, friendlyId, entry type) for every entry mentioned in the entry's
 // description, article text, computed facts, related object notes, and so on.

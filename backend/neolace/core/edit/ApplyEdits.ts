@@ -8,15 +8,18 @@ import {
     CreateRelationshipFact,
     CreateRelationshipType,
     UpdateEntryType,
+    UpdatePropertyValue,
     UpdateRelationshipType,
     getEditType,
     RelationshipCategory,
+    UpdatePropertyEntry,
 } from "neolace/deps/neolace-api.ts";
 import { C, defineAction, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { Site } from "../Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
+import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
 import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 
@@ -56,20 +59,51 @@ export const ApplyEdits = defineAction({
                             name: edit.data.name,
                             description: edit.data.description,
                         }}
+
+                        // If this entry has content type of "property", then set its default values:
+                        SET e.propertyImportance = CASE et.contentType WHEN ${ContentType.Property} THEN 10 ELSE null END
+                        SET e.propertyInherits = CASE et.contentType WHEN ${ContentType.Property} THEN false ELSE null END
                     `.RETURN({}));
+                    modifiedNodes.add(edit.data.id);
+                    break;
+                }
+
+                case UpdatePropertyEntry.code: {
+
+                    const changes: Record<string, unknown> = {};
+                    if (edit.data.importance !== undefined) {
+                        changes.propertyImportance = edit.data.importance;
+                    }
+                    if (edit.data.valueType !== undefined) {
+                        changes.propertyValueType = edit.data.valueType;
+                    }
+                    if (edit.data.inherits !== undefined) {
+                        changes.propertyInherits = edit.data.inherits;
+                    }
+                    if (edit.data.displayAs !== undefined) {
+                        changes.propertyDisplayAs = edit.data.displayAs;
+                    }
+
+                    await tx.queryOne(C`
+                        MATCH (e:${Entry} {id: ${edit.data.id}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                        SET e += ${changes}
+                    `.RETURN({}));
+
                     modifiedNodes.add(edit.data.id);
                     break;
                 }
 
                 case CreateRelationshipFact.code: {  // Create a new Relationship Fact (record a relationship between two Entries)
 
-                    // We are about to put the relationship type into the query unescaped. Let's be very sure we validate it first:
+                    // Validate the relationship type and get its category
                     const relType = await tx.queryOne(C`
                         MATCH (rt:${RelationshipType} {id: ${edit.data.type}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                     `.RETURN({"rt.category": Field.String}));
                     const category = relType["rt.category"] as RelationshipCategory;
                     if (!Object.values(RelationshipCategory).includes(category)) {
                         throw new Error("Internal error - unexpected value for relationship category");
+                    } else if (category === RelationshipCategory.HAS_PROPERTY) {
+                        throw new Error("Use UpdatePropertyValue to set properties, not CreateRelationshipFact.");
                     }
 
                     // Create the new relationship fact.
@@ -102,6 +136,48 @@ export const ApplyEdits = defineAction({
 
                     modifiedNodes.add(edit.data.id);
                     modifiedNodes.add(edit.data.fromEntry);
+                    break;
+                }
+
+                case UpdatePropertyValue.code: {  // Create, Update, or Delete a property value
+
+                    if (edit.data.valueExpression) {
+                        // Create or update a property fact.
+                        // This will ensure that each entry only ever has a single PropertyFact for a given property.
+                        const result = await tx.queryOne(C`
+                            MATCH (site:${Site} {id: ${siteId}})
+                            MATCH (entry:${Entry} {id: ${edit.data.entry}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+                            MATCH (property:${Entry} {id: ${edit.data.property}})-[:${Entry.rel.IS_OF_TYPE}]->(propertyType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+
+                            // Make sure that this type of entry can have this type of property:
+                            MATCH (entryType)<-[:${RelationshipType.rel.FROM_ENTRY_TYPE}]-(relType:${RelationshipType})-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(propertyType)
+                            WHERE relType.category = ${RelationshipCategory.HAS_PROPERTY}
+
+                            MERGE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(property)
+                            ON CREATE SET pf.id = ${VNID()}
+                            SET pf.valueExpression = ${edit.data.valueExpression}
+                            SET pf.note = ${edit.data.note}
+                        `.RETURN({"pf.id": Field.VNID}));
+
+                        modifiedNodes.add(result["pf.id"]);
+                    } else {
+                        // We are deleting a property fact, if it is set
+                        const result = await tx.query(C`
+                            MATCH (site:${Site} {id: ${siteId}})
+                            MATCH (entry:${Entry} {id: ${edit.data.entry}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+                            MATCH (property:${Entry} {id: ${edit.data.property}})-[:${Entry.rel.IS_OF_TYPE}]->(propertyType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+
+                            MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(property)
+                            SET pf:DeletedVNode
+                            REMOVE pf:VNode
+                        `.RETURN({"pf.id": Field.VNID}));
+
+                        if (result.length > 0) {
+                            modifiedNodes.add(result[0]["pf.id"]);
+                        }
+                    }
+                    // We are modifying the PROP_FACT relationship from the entry, so the entry is counted as modified too:
+                    modifiedNodes.add(edit.data.entry);
                     break;
                 }
 
