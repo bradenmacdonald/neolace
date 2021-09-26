@@ -86,7 +86,7 @@ group(import.meta, () => {
                         ],
                     },
                     note: "",
-                    source: {type: "EntryType"},
+                    source: {from: "EntryType"},
                 },
                 // Via "Pinopsida", this species has some plant parts:
                 {
@@ -113,7 +113,26 @@ group(import.meta, () => {
                         ],
                     },
                     note: "",
-                    source: {type: "EntryType"},
+                    source: {from: "EntryType"},
+                },
+                // This species has some regular properties:
+                {
+                    type: "PropertyValue",
+                    id: defaultData.entries.propertyScientificName.id,
+                    importance: 10,
+                    label: defaultData.entries.propertyScientificName.name,
+                    note: "",
+                    source: { from: "ThisEntry" },
+                    value: {value: "*Pinus ponderosa*", type: "InlineMarkdownString"},
+                },
+                {
+                    type: "PropertyValue",
+                    id: defaultData.entries.propertyWikidataItemId.id,
+                    importance: 15,
+                    label: defaultData.entries.propertyWikidataItemId.name,
+                    note: "",
+                    source: { from: "ThisEntry" },
+                    value: {value: "[Q460523](https://www.wikidata.org/wiki/Q460523)", type: "InlineMarkdownString"},
                 },
             ]});
         });
@@ -132,6 +151,7 @@ group(import.meta, () => {
                     [defaultData.schema.entryTypes._ETFAMILY.id]: {id: defaultData.schema.entryTypes._ETFAMILY.id, name: defaultData.schema.entryTypes._ETFAMILY.name},
                     [defaultData.schema.entryTypes._ETGENUS.id]: {id: defaultData.schema.entryTypes._ETGENUS.id, name: defaultData.schema.entryTypes._ETGENUS.name},
                     [defaultData.schema.entryTypes._ETSPECIES.id]: {id: defaultData.schema.entryTypes._ETSPECIES.id, name: defaultData.schema.entryTypes._ETSPECIES.name},
+                    [defaultData.schema.entryTypes._ETPROPERTY.id]: {id: defaultData.schema.entryTypes._ETPROPERTY.id, name: defaultData.schema.entryTypes._ETPROPERTY.name},
                     [defaultData.schema.entryTypes._ETPLANTPART.id]: {id: defaultData.schema.entryTypes._ETPLANTPART.id, name: defaultData.schema.entryTypes._ETPLANTPART.name},
                 },
                 entries: {
@@ -167,6 +187,14 @@ group(import.meta, () => {
                         ...defaultData.entries.pollenCone,
                         entryType: {id: defaultData.schema.entryTypes._ETPLANTPART.id},
                     },
+                    [defaultData.entries.propertyScientificName.id]: {
+                        ...defaultData.entries.propertyScientificName,
+                        entryType: {id: defaultData.schema.entryTypes._ETPROPERTY.id},
+                    },
+                    [defaultData.entries.propertyWikidataItemId.id]: {
+                        ...defaultData.entries.propertyWikidataItemId,
+                        entryType: {id: defaultData.schema.entryTypes._ETPROPERTY.id},
+                    },
                 },
             });
         });
@@ -186,14 +214,28 @@ group(import.meta, () => {
                         note: "",
                     }],
                     removeSimpleProperties: [defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesParts.id],
-                }}
+                }},
+                // Delete the other properties from Ponderosa Pine:
+                {code: api.UpdatePropertyValue.code, data: {
+                    entry: defaultData.entries.ponderosaPine.id,
+                    property: defaultData.entries.propertyScientificName.id,
+                    valueExpression: "",  // Delete this property value
+                    note: "",
+                }},
+                // Delete the other properties from Ponderosa Pine:
+                {code: api.UpdatePropertyValue.code, data: {
+                    entry: defaultData.entries.ponderosaPine.id,
+                    property: defaultData.entries.propertyWikidataItemId.id,
+                    valueExpression: "",  // Delete this property value
+                    note: "",
+                }},
             ]});
             await client.acceptDraft(draft.id);
 
             const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludePropertiesSummary] as const});
 
             assertEquals(result, {...basicResultExpected, propertiesSummary: [
-                // This computed fact is now invalid:
+                // This property value is now invalid:
                 {
                     type: "SimplePropertyValue",
                     id: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesTaxonomy.id,
@@ -205,7 +247,7 @@ group(import.meta, () => {
                         message: 'Simple/fake parser is unable to parse the lookup expression "this is an invalid expression"',
                     },
                     note: "",
-                    source: {type: "EntryType"},
+                    source: {from: "EntryType"},
                 },
             ]});
         });

@@ -165,7 +165,8 @@ export const ApplyEdits = defineAction({
                             MATCH (property:${Entry} {id: ${edit.data.property}})-[:${Entry.rel.IS_OF_TYPE}]->(propertyType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
 
                             MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(property)
-                            DELETE pf
+                            SET pf:DeletedVNode
+                            REMOVE pf:VNode
                         `.RETURN({"pf.id": Field.VNID}));
 
                         if (result.length > 0) {
