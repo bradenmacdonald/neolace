@@ -19,7 +19,7 @@ type EntryPropertyValue = {
     }
     |
     {
-        type: "PropertyFact",
+        type: "PropertyValue",
         source: {from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
     }
 );

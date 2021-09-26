@@ -1,14 +1,13 @@
 import { api } from "neolace/api/mod.ts";
-import { C, VNID, WrappedTransaction, isVNID, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
+import { C, VNID, WrappedTransaction, isVNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { getEntryAncestors } from "neolace/core/entry/ancestors.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
-import { EntryType } from "neolace/core/schema/EntryType.ts";
-import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 import { parseLookupString } from "neolace/core/lookup/parse.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
 import { ErrorValue } from "neolace/core/lookup/values.ts";
+import { getEntryProperties } from "neolace/core/entry/properties.ts";
 
 
 /**
@@ -76,17 +75,17 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     }
 
     if (flags.has(api.GetEntryFlags.IncludePropertiesSummary)) {
-        // Include a summary of property values for this entry
-        const simplePropValues = await getSimplePropertyValues(entryData.id, {tx, summaryOnly: true});
+        // Include a summary of property values for this entry (up to 15 importance properties - whose importance is <= 20)
+        const properties = await getEntryProperties(entryData.id, {tx, limit: 15, maxImportance: 20});
         const context: LookupContext = {tx, siteId, entryId: entryData.id, defaultPageSize: 5n};
 
         // ** In the near future, we'll need to resolve a dependency graph and compute these in parallel / async. **
 
         result.propertiesSummary = [];
-        for (const spv of simplePropValues) {
+        for (const prop of properties) {
             let value;
             try {
-                value = await parseLookupString(spv.valueExpression).getValue(context).then(v => v.makeConcrete());
+                value = await parseLookupString(prop.valueExpression).getValue(context).then(v => v.makeConcrete());
             } catch (err: unknown) {
                 if (err instanceof LookupError) {
                     value = new ErrorValue(err);
@@ -96,15 +95,28 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
             }
             const serializedValue = value.toJSON();
             extractReferences(serializedValue, {entryIdsUsed});
-            result.propertiesSummary.push({
-                type: "SimplePropertyValue",
-                source: {type: "EntryType"},
-                id: spv.id,
-                label: spv.label,
-                value: serializedValue,
-                importance: spv.importance,
-                note: spv.note,
-            });
+            if (prop.type === "SimplePropertyValue") {  // This 'if' is mostly to satisfy TypeScript
+                result.propertiesSummary.push({
+                    id: prop.id,
+                    label: prop.label,
+                    value: serializedValue,
+                    importance: prop.importance,
+                    note: prop.note,
+                    type: prop.type,
+                    source: prop.source,
+                });
+            } else {
+                result.propertiesSummary.push({
+                    id: prop.id,
+                    label: prop.label,
+                    value: serializedValue,
+                    importance: prop.importance,
+                    note: prop.note,
+                    type: prop.type,
+                    source: prop.source,
+                });
+                entryIdsUsed.add(prop.id);
+            }
         }
     }
 
@@ -142,58 +154,6 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
 
     return result;
 }
-
-
-/**
- * Get all simple properties associated with an Entry
- * 
- * Simple properties are never inherited and assumed to be fairly limited, so are not paginated.
- */
-async function getSimplePropertyValues(entryId: VNID, options: {tx: WrappedTransaction, summaryOnly: boolean}): Promise<api.SimplePropertyData[]> {
-
-    const simpleProps = await options.tx.query(C`
-        MATCH (entry:${Entry} {id: ${entryId}})
-        MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.HAS_SIMPLE_PROP}]->(spv:${SimplePropertyValue})
-        ${options.summaryOnly ? C`WHERE spv.importance <= 20` : C``}
-        RETURN spv.id AS id, spv.label AS label, spv.valueExpression AS valueExpression, spv.importance AS importance, spv.note AS note
-        ORDER BY spv.importance, spv.label  // This should match SimplePropertyValue.defaultOrderBy
-    `.givesShape({
-        id: Field.VNID,
-        label: Field.String,
-        valueExpression: Field.String,
-        importance: Field.Int,
-        note: Field.String,
-    }));
-
-    return simpleProps;
-}
-
-/*
-async function getProperties(entryId: VNID, options: {tx: WrappedTransaction, summaryOnly: boolean, skip?: number, limit?: number}): Promise<api.ComputedFactData[]> {
-
-    // Neo4j doesn't allow normal query variables to be used for skip/limit so we have to carefully ensure these values
-    // are safe (are just plain numbers) then format them for interpolation in the query string as part of the cypher
-    // expression (not as variables)
-    const skipSafe = C(String(Number(options.skip ?? 0)));
-    const limitSafe = C(String(Number(Number(options.limit ?? 100))));
-
-    // We can't use virtual props here because there's no way to limit/paginate them at the moment
-    const simpleProps = await options.tx.query(C`
-        MATCH (entry:${Entry} {id: ${entryId}})
-        MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.HAS_SIMPLE_PROP}]->(cf:${SimplePropertyValue})
-        ${options.summaryOnly ? C`WHERE cf.importance <= 20` : C``}
-        RETURN cf.id AS id, cf.label AS label, cf.expression AS expression, cf.importance AS importance
-        ORDER BY cf.importance, cf.label  // This should match ComputedFact.defaultOrderBy
-        SKIP ${skipSafe} LIMIT ${limitSafe}
-    `.givesShape({
-        id: Field.VNID,
-        label: Field.String,
-        expression: Field.String,
-        importance: Field.Int,
-    }));
-
-    return facts;
-}*/
 
 /**
  * Given a serialized "Lookup Value" that is the result of evaluating a Graph Lookup expression, find all unique entry
