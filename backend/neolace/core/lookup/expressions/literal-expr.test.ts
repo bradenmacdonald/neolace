@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
-import { IntegerValue } from "../values.ts";
+import { IntegerValue, NullValue, StringValue } from "../values.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { LookupExpression } from "../expression.ts";
 
@@ -19,6 +19,22 @@ group(import.meta, () => {
 
             assertEquals(await evalExpression(expression), value);
             assertEquals(expression.toString(), "-30");
+        });
+
+        test(`It can hold a string value and express it as a literal`, async () => {
+            const value = new StringValue("hello world");
+            const expression = new LiteralExpression(value);
+
+            assertEquals(await evalExpression(expression), value);
+            assertEquals(expression.toString(), `"hello world"`);
+        });
+
+        test(`It can hold a null value and express it as a literal`, async () => {
+            const value = new NullValue();
+            const expression = new LiteralExpression(value);
+
+            assertEquals(await evalExpression(expression), value);
+            assertEquals(expression.toString(), `null`);
         });
 
         // test(`It gives an error with non-literal values`, async () => {

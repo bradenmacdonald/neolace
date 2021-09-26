@@ -80,6 +80,9 @@ export const ApplyEdits = defineAction({
                     if (edit.data.inherits !== undefined) {
                         changes.propertyInherits = edit.data.inherits;
                     }
+                    if (edit.data.displayAs !== undefined) {
+                        changes.propertyDisplayAs = edit.data.displayAs;
+                    }
 
                     await tx.queryOne(C`
                         MATCH (e:${Entry} {id: ${edit.data.id}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})

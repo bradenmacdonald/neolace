@@ -54,6 +54,7 @@ group(import.meta, () => {
                     note: "",
                     type: "PropertyValue",
                     source: {from: "ThisEntry"},
+                    displayAs: null,
                 },
             ]);
 
@@ -152,6 +153,7 @@ group(import.meta, () => {
                 note: "",
                 type: "PropertyValue",
                 source: {from: "ThisEntry"},
+                displayAs: null,
             };
             const A2 = {...A1, label: "Property 2", valueExpression: '"A2"', id: prop2};
             const A3 = {...A1, label: "Property 3", valueExpression: '"A3"', id: prop3};
@@ -242,6 +244,7 @@ group(import.meta, () => {
                     note: "",
                     type: "PropertyValue",
                     source: {from: "ThisEntry"},
+                    displayAs: null,
                 });
             }
 
@@ -263,6 +266,7 @@ group(import.meta, () => {
                     note: "",
                     type: "PropertyValue",
                     source: {from: "ThisEntry"},
+                    displayAs: null,
                 });
             }
 

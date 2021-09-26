@@ -60,6 +60,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         }
         case "String":
             return <>{value.value}</>;
+        case "InlineMarkdownString":
+            return <InlineMDT mdt={value.value} context={props.mdtContext} />;
         case "Error":
             return <span className="neo-lookup-error text-sm text-red-900">
                 <FormattedMessage 

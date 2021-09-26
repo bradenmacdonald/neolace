@@ -254,6 +254,7 @@ const data = {
                             westernRedcedar: {id: VNID(), friendlyId: "s-thuja-plicata", name: "Western Redcedar", description: "set below"},  // https://www.catalogueoflife.org/data/taxon/56NTV
         // Properties that any entry can have:
         propertyScientificName: {id: VNID(), friendlyId: "p-scientific-name", name: "Scientific name", description: "set below"},
+        propertyWikidataItemId: {id: VNID(), friendlyId: "p-wikidata-item-id", name: "Wikidata Item ID", description: "set below"},
         // Plant parts:
         cone: {id: VNID(), friendlyId: "pp-cone", name: "Cone (strobilus)", description: "set below"},
             pollenCone: {id: VNID(), friendlyId: "pp-pollen-cone", name: "Pollen cone", description: "set below"},
@@ -349,6 +350,16 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 "The **scientific name**, sometimes called the **binomial name** or **latin name** is an unambiguous species identifier."
             ),
         }},
+        {code: "UpdatePropertyEntry", data: { id: data.entries.propertyScientificName.id, displayAs: "*{value}*" }},
+        // An entry's WikiData Entry ID
+        {code: "CreateEntry", data: {
+            ...data.entries.propertyWikidataItemId,
+            type: data.schema.entryTypes._ETPROPERTY.id,
+            description: (data.entries.propertyWikidataItemId.description =
+                "ID of this item on Wikidata, the free knowledge base that anyone can edit."
+            ),
+        }},
+        {code: "UpdatePropertyEntry", data: { id: data.entries.propertyWikidataItemId.id, importance: 15, displayAs: "[{value}](https://www.wikidata.org/wiki/{value})" }},
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Create entries for various tree species:
@@ -422,6 +433,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                             toEntry: data.entries.familyPinaceae.id,
                             type: data.schema.relationshipTypes._GisF.id,
                         }},
+                            ////////////////////////////////////////////////////////////////////////////////////////////
                             // Ponderosa Pine
                             {code: "CreateEntry", data: {
                                 ...data.entries.ponderosaPine,
@@ -436,12 +448,19 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                                 valueExpression: `"Pinus ponderosa"`,
                                 note: "",
                             }},
+                            {code: "UpdatePropertyValue", data: {
+                                entry: data.entries.ponderosaPine.id,
+                                property: data.entries.propertyWikidataItemId.id,
+                                valueExpression: `"Q460523"`,
+                                note: "",
+                            }},
                             {code: "CreateRelationshipFact", data: {
                                 id: VNID(),
                                 fromEntry: data.entries.ponderosaPine.id,
                                 toEntry: data.entries.genusPinus.id,
                                 type: data.schema.relationshipTypes._SisG.id,
                             }},
+                            ////////////////////////////////////////////////////////////////////////////////////////////
                             // Stone Pine
                             {code: "CreateEntry", data: {
                                 ...data.entries.stonePine,

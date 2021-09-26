@@ -22,7 +22,7 @@ could be edited in the UI as
 
 > Show [*] entries that [this entry and its ancestors] set as [HAS_PARTS]
 
-and defined as a "computed fact" attached to the "electric car" entry, with this lookup expression:
+and defined as a property value attached to the "electric car" entry, with this lookup expression:
 
     this.andAncestors().related(via=HAS_PARTS, direction="from")
 
@@ -36,7 +36,7 @@ could be edited in the UI as
 
 > Show [Image] entries that are [RELATED_TO] [this entry and its descendants]
 
-and defined as a "computed property" with this lookup expression:
+and defined as a simple property value with this lookup expression:
 
     this.andDescendants().related(via=RELATED_TO).filter(type="Image")
 

@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { vnidString, } from "../api-schemas.ts";
+import { nullable, vnidString, } from "../api-schemas.ts";
 import { boolean, number, Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "./Edit.ts";
 
@@ -35,6 +35,8 @@ export const UpdatePropertyEntry = ContentEditType({
         valueType: string.strictOptional(),
         /** Should property values of this type be inherited by child entries? */
         inherits: boolean.strictOptional(),
+        /** Markdown formatting instructions, e.g. use "**{value}**" to display this value in bold */
+        displayAs: nullable(string).strictOptional(),
     }),
     describe: (data) => `Updated Property Features of \`Entry ${data.id}\``,
 });

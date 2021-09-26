@@ -6,7 +6,7 @@ import { siteCodeForSite } from "neolace/core/Site.ts";
 import { parseLookupString } from "neolace/core/lookup/parse.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
-import { ErrorValue } from "neolace/core/lookup/values.ts";
+import { ConcreteValue, ErrorValue, InlineMarkdownStringValue, StringValue } from "neolace/core/lookup/values.ts";
 import { getEntryProperties } from "neolace/core/entry/properties.ts";
 
 
@@ -83,9 +83,15 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
 
         result.propertiesSummary = [];
         for (const prop of properties) {
-            let value;
+            let value: ConcreteValue;
             try {
                 value = await parseLookupString(prop.valueExpression).getValue(context).then(v => v.makeConcrete());
+                if (prop.type === "PropertyValue" && prop.displayAs !== null) {
+                    const valueAsString = value.castTo(StringValue, context);
+                    if (valueAsString) {
+                        value = new InlineMarkdownStringValue(prop.displayAs.replaceAll("{value}", valueAsString.value));
+                    }
+                }
             } catch (err: unknown) {
                 if (err instanceof LookupError) {
                     value = new ErrorValue(err);
@@ -172,6 +178,7 @@ export function extractReferences(value: api.AnyLookupValue, refs: {entryIdsUsed
         }
         case "Integer":
         case "String":
+        case "InlineMarkdownString":
         case "Error":
             return;
         default:

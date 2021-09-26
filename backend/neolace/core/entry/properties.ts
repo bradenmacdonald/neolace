@@ -21,6 +21,7 @@ type EntryPropertyValue = {
     {
         type: "PropertyValue",
         source: {from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
+        displayAs: null|string,
     }
 );
 
@@ -110,7 +111,8 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
 
                 type: "PropertyValue",
                 id: prop.id,
-                source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
+                source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END,
+                displayAs: prop.propertyDisplayAs
             } AS propertyData
         }
         RETURN propertyData
@@ -126,6 +128,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
             type: Field.String,
             source: Field.Any,
             id: Field.VNID,
+            displayAs: Field.NullOr.String,
         }),
     }));
 
@@ -133,6 +136,12 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
     const result: any = data.map(d => d.propertyData);
     if (options.totalCount) {
         result.totalCount = await totalCountPromise;
+    }
+    for (const r of result) {
+        if (r.type === "SimplePropertyValue") {
+            // SimplePropertyValues should not have the displayAs attribute at all.
+            delete r["displayAs"];
+        }
     }
 
     return result;
