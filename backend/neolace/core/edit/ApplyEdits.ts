@@ -2,17 +2,17 @@
 import * as log from "std/log/mod.ts";
 import {
     EditList,
-    ContentType,
     CreateEntry,
     CreateEntryType,
     CreateRelationshipFact,
     CreateRelationshipType,
     UpdateEntryType,
+    UpdateEntryTypeFeature,
     UpdatePropertyValue,
     UpdateRelationshipType,
     getEditType,
     RelationshipCategory,
-    UpdatePropertyEntry,
+    UpdateEntryUseAsProperty,
 } from "neolace/deps/neolace-api.ts";
 import { C, defineAction, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { Site } from "../Site.ts";
@@ -21,7 +21,11 @@ import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
+import { UseAsPropertyData } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyData.ts";
+import { UseAsPropertyEnabled } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyEnabled.ts";
 import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
+import { features } from "neolace/core/entry/features/all-features.ts";
+import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
 
 /**
  * Apply a set of edits (to schema and/or content)
@@ -60,36 +64,41 @@ export const ApplyEdits = defineAction({
                             description: edit.data.description,
                         }}
 
-                        // If this entry has content type of "property", then set its default values:
-                        SET e.propertyImportance = CASE et.contentType WHEN ${ContentType.Property} THEN 10 ELSE null END
-                        SET e.propertyInherits = CASE et.contentType WHEN ${ContentType.Property} THEN false ELSE null END
                     `.RETURN({}));
+
                     modifiedNodes.add(edit.data.id);
                     break;
                 }
 
-                case UpdatePropertyEntry.code: {
+                case UpdateEntryUseAsProperty.code: {
 
                     const changes: Record<string, unknown> = {};
                     if (edit.data.importance !== undefined) {
-                        changes.propertyImportance = edit.data.importance;
+                        changes.importance = edit.data.importance;
                     }
                     if (edit.data.valueType !== undefined) {
-                        changes.propertyValueType = edit.data.valueType;
+                        changes.valueType = edit.data.valueType;
                     }
                     if (edit.data.inherits !== undefined) {
-                        changes.propertyInherits = edit.data.inherits;
+                        changes.inherits = edit.data.inherits;
                     }
                     if (edit.data.displayAs !== undefined) {
-                        changes.propertyDisplayAs = edit.data.displayAs;
+                        changes.displayAs = edit.data.displayAs;
                     }
 
-                    await tx.queryOne(C`
-                        MATCH (e:${Entry} {id: ${edit.data.id}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                        SET e += ${changes}
-                    `.RETURN({}));
+                    const result = await tx.queryOne(C`
+                        MATCH (e:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}}),
+                            (et)-[:${EntryType.rel.HAS_FEATURE}]->(:${UseAsPropertyEnabled})  // Make sure this entry type can be used as a property
+                        MERGE (e)-[:${Entry.rel.HAS_FEATURE_DATA}]->(propData:${UseAsPropertyData}:${C(EntryFeatureData.label)})
+                        ON CREATE SET
+                            propData.id = ${VNID()},
+                            propData.importance = ${UseAsPropertyData.defaultImportance},
+                            propData.inherits = false
+                        SET propData += ${changes}
+                    `.RETURN({"propData.id": Field.VNID}));
 
-                    modifiedNodes.add(edit.data.id);
+                    modifiedNodes.add(edit.data.entryId);
+                    modifiedNodes.add(result["propData.id"]);
                     break;
                 }
 
@@ -102,8 +111,6 @@ export const ApplyEdits = defineAction({
                     const category = relType["rt.category"] as RelationshipCategory;
                     if (!Object.values(RelationshipCategory).includes(category)) {
                         throw new Error("Internal error - unexpected value for relationship category");
-                    } else if (category === RelationshipCategory.HAS_PROPERTY) {
-                        throw new Error("Use UpdatePropertyValue to set properties, not CreateRelationshipFact.");
                     }
 
                     // Create the new relationship fact.
@@ -147,11 +154,9 @@ export const ApplyEdits = defineAction({
                         const result = await tx.queryOne(C`
                             MATCH (site:${Site} {id: ${siteId}})
                             MATCH (entry:${Entry} {id: ${edit.data.entry}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-                            MATCH (property:${Entry} {id: ${edit.data.property}})-[:${Entry.rel.IS_OF_TYPE}]->(propertyType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-
-                            // Make sure that this type of entry can have this type of property:
-                            MATCH (entryType)<-[:${RelationshipType.rel.FROM_ENTRY_TYPE}]-(relType:${RelationshipType})-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(propertyType)
-                            WHERE relType.category = ${RelationshipCategory.HAS_PROPERTY}
+                            MATCH (property:${Entry} {id: ${edit.data.property}})-[:${Entry.rel.IS_OF_TYPE}]->(propertyType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site),
+                                  // Make sure the "property" entry type has the "use as property" feature enabled and that it can be applied to this entry type:
+                                  (propertyType)-[:${EntryType.rel.HAS_FEATURE}]->(useAsPropFeature:${UseAsPropertyEnabled})-[:${UseAsPropertyEnabled.rel.APPLIES_TO}]->(entryType)
 
                             MERGE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(property)
                             ON CREATE SET pf.id = ${VNID()}
@@ -159,6 +164,7 @@ export const ApplyEdits = defineAction({
                             SET pf.note = ${edit.data.note}
                         `.RETURN({"pf.id": Field.VNID}));
 
+                        modifiedNodes.add(edit.data.entry);
                         modifiedNodes.add(result["pf.id"]);
                     } else {
                         // We are deleting a property fact, if it is set
@@ -187,12 +193,12 @@ export const ApplyEdits = defineAction({
                         CREATE (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site)
                         SET et += ${{
                             name: edit.data.name,
-                            contentType: edit.data.contentType,
                         }}
                     `.RETURN({}));
                     modifiedNodes.add(edit.data.id);
                     break;
                 }
+
                 case UpdateEntryType.code: {  // Update an EntryType
 
                     const changes: any = {}
@@ -232,6 +238,31 @@ export const ApplyEdits = defineAction({
                     modifiedNodes.add(edit.data.id);
                     break;
                 }
+
+                case UpdateEntryTypeFeature.code: {  // Update a feature of a specific entry type
+                    const feature = features.find(f => f.featureType === edit.data.feature.featureType);
+                    if (feature === undefined) {
+                        throw new Error(`Unknown feature type ${edit.data.feature.featureType}`);
+                    }
+                    if (edit.data.feature.enabled) {
+                        // First verify the entry type ID is from the correct site (a security issue):
+                        await tx.queryOne(C`
+                            MATCH (et:${EntryType} {id: ${edit.data.entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                        `.RETURN({}));
+                        // Now update it:
+                        await feature.updateConfiguration(edit.data.entryTypeId, edit.data.feature.config, tx, id => modifiedNodes.add(id));
+                    } else {
+                        await tx.query(C`
+                            MATCH (et:${EntryType} {id: ${edit.data.entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            MATCH (et)-[rel:${EntryType.rel.HAS_FEATURE}]->(feature:${feature.configClass})
+                            DELETE rel
+                            DELETE feature
+                        `);
+                    }
+                    modifiedNodes.add(edit.data.entryTypeId);
+                    break;
+                }
+
                 case CreateRelationshipType.code: {  // Create a new RelationshipType
                     await tx.queryOne(C`
                         MATCH (site:${Site} {id: ${siteId}})
@@ -245,6 +276,7 @@ export const ApplyEdits = defineAction({
                     modifiedNodes.add(edit.data.id);
                     break;
                 }
+
                 case UpdateRelationshipType.code: {  // Update a RelationshipType
 
                     const changes: any = {}
@@ -255,10 +287,10 @@ export const ApplyEdits = defineAction({
                     // "category" is omitted because it's not allowed to change.
                     // (Would cause data issues with existing relationships of the old category.)
 
-                    const rtExistingData = await tx.queryOne(C`
+                    await tx.queryOne(C`
                         MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         SET rt += ${changes}
-                    `.RETURN({"rt.category": Field.String}));
+                    `.RETURN({}));
 
                     if (edit.data.removeFromTypes) {
                         await tx.query(C`
@@ -293,11 +325,6 @@ export const ApplyEdits = defineAction({
                         `.RETURN({"et.contentType": Field.String}));
                         if (created.length !== edit.data.addToTypes.length) {
                             throw new Error(`UpdateRelationshipType.addToTypes failed: One or more of the "to" entry type IDs was invalid.`);
-                        }
-                        if (rtExistingData["rt.category"] === RelationshipCategory.HAS_PROPERTY) {
-                            if (!created.every(et => et["et.contentType"] === ContentType.Property)) {
-                                throw new Error(`UpdateRelationshipType.addToTypes: Cannot create a HAS_PROPERTY RelationshipType to an EntryType unless that EntryType has ContentType=Property`);
-                            }
                         }
                     }
                     modifiedNodes.add(edit.data.id);

@@ -1,5 +1,4 @@
 import * as check from "neolace/deps/computed-types.ts";
-import { ContentType } from "neolace/deps/neolace-api.ts";
 import {
     C,
     Field,
@@ -8,6 +7,7 @@ import {
 } from "neolace/deps/vertex-framework.ts";
 import { Site } from "neolace/core/Site.ts";
 
+import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
 import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 // Since PropertyFact references Entry, this will create circular import issues:
 //import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
@@ -25,14 +25,17 @@ export class EntryType extends VNodeType {
         description: Field.NullOr.String.Check(check.string.trim().max(5_000)),
         /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
         friendlyIdPrefix: Field.NullOr.Slug.Check(check.string.regexp(/.*-$/)),  // Must end in a hyphen
-        contentType: Field.String.Check(check.Schema.enum(ContentType)),
     };
 
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo({
         /** Which Site this entry type is part of */
         FOR_SITE: {
             to: [Site],
             cardinality: VNodeType.Rel.ToOneRequired,
+        },
+        HAS_FEATURE: {
+            to: [EnabledFeature],
+            cardinality: VNodeType.Rel.ToManyUnique,
         },
         /** This EntryType has property values */
         // PROP_FACT: {
@@ -46,7 +49,7 @@ export class EntryType extends VNodeType {
         },
     });
 
-    static virtualProperties = VNodeType.hasVirtualProperties({
+    static virtualProperties = this.hasVirtualProperties({
         site: {
             type: VirtualPropType.OneRelationship,
             query: C`(@this)-[:${this.rel.FOR_SITE}]->(@target)`,
@@ -59,7 +62,7 @@ export class EntryType extends VNodeType {
         },
     });
 
-    static derivedProperties = VNodeType.hasDerivedProperties({
+    static derivedProperties = this.hasDerivedProperties({
         // numRelatedImages,
     });
 }

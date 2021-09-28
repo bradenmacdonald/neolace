@@ -27,7 +27,6 @@ group(import.meta, () => {
             entryType: {
                 id: speciesEntryType.id,
                 name: speciesEntryType.name,
-                contentType: speciesEntryType.contentType,
             },
         };
 

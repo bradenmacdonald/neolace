@@ -3,7 +3,7 @@
  */
 import * as log from "std/log/mod.ts";
 import { VNID, EmptyResultError, } from "neolace/deps/vertex-framework.ts";
-import { SiteSchemaData, ContentType, RelationshipCategory, CreateEntry, CreateRelationshipFact } from "neolace/deps/neolace-api.ts";
+import { SiteSchemaData, RelationshipCategory, CreateEntry, CreateRelationshipFact } from "neolace/deps/neolace-api.ts";
 
 import { graph } from "neolace/core/graph.ts";
 import { shutdown } from "neolace/app/shutdown.ts";
@@ -52,7 +52,6 @@ const schema: SiteSchemaData = {
         [techConceptId]: {
             id: techConceptId,
             name: "TechConcept",
-            contentType: ContentType.Article,
             description: "A TechConcept is a description of some technical thing.",
             friendlyIdPrefix: "tc-",
             simplePropValues: {
@@ -71,6 +70,7 @@ const schema: SiteSchemaData = {
                     note: "",
                 },
             },
+            enabledFeatures: {},
         }
     },
     relationshipTypes: {

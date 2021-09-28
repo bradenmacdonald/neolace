@@ -1,5 +1,4 @@
 import { Schema, Type, string, vnidString, nullable, array, number, object, Record } from "../api-schemas.ts";
-import { ContentType } from "../schema/SiteSchemaData.ts";
 import { AnyLookupValue } from "./lookup-value.ts";
 
 
@@ -71,7 +70,6 @@ export const EntrySchema = Schema({
     entryType: Schema({
         id: vnidString,
         name: string,
-        contentType: Schema.enum(ContentType),
     }),
 
     // TODO: content

@@ -24,11 +24,12 @@ export const CreateEntry = ContentEditType({
     describe: (data) => `Created \`Entry ${data.id}\``,
 });
 
-export const UpdatePropertyEntry = ContentEditType({
+/** Change details of how this entry is used as a property for other entries */
+export const UpdateEntryUseAsProperty = ContentEditType({
     changeType: EditChangeType.Content,
-    code: "UpdatePropertyEntry",
+    code: "UpdateEntryUseAsProperty",
     dataSchema: Schema({
-        id: vnidString,
+        entryId: vnidString,
         /** Change the "importance" of this property. Lower numbers are most important. */
         importance: number.min(0).max(99).strictOptional(),
         // Change the allowed data type for values of this property. Won't affect existing property values.
@@ -38,7 +39,7 @@ export const UpdatePropertyEntry = ContentEditType({
         /** Markdown formatting instructions, e.g. use "**{value}**" to display this value in bold */
         displayAs: nullable(string).strictOptional(),
     }),
-    describe: (data) => `Updated Property Features of \`Entry ${data.id}\``,
+    describe: (data) => `Updated Property Features of \`Entry ${data.entryId}\``,
 });
 
 export const CreateRelationshipFact = ContentEditType({
@@ -76,14 +77,14 @@ export const UpdatePropertyValue = ContentEditType({
 
 export const _allContentEditTypes = {
     CreateEntry,
-    UpdatePropertyEntry,
+    UpdateEntryUseAsProperty,
     CreateRelationshipFact,
     UpdatePropertyValue,
 };
 
 export type AnyContentEdit = (
     | Edit<typeof CreateEntry>
-    | Edit<typeof UpdatePropertyEntry>
+    | Edit<typeof UpdateEntryUseAsProperty>
     | Edit<typeof CreateRelationshipFact>
     | Edit<typeof UpdatePropertyValue>
 );

@@ -1,21 +1,5 @@
 import { Schema, Type, string, number, vnidString, nullable, array, Record, } from "../api-schemas.ts";
 
-export enum ContentType {
-    /** Just an entry, with name, description, properties, relationships, but no "content" */
-    None = "None",
-    /** Normal entry: A rich text article, consisting of "blocks" which may be rich text, images, interactives, charts, and more */
-    Article = "Article",
-    /** Property: This entry type represents "properties" which can be used to define other entries */
-    Property  = "Property",
-    // Future: Image, File, DataTable
-}
-
-export function CastContentType(value: string): ContentType {
-    if (!Object.values(ContentType).includes(value as ContentType)) {
-        throw new Error(`Invalid ContentType: ${value}`);
-    }
-    return value as ContentType;
-}
 
 export const SimplePropertySchema = Schema({
     id: vnidString,
@@ -28,21 +12,32 @@ export const SimplePropertySchema = Schema({
 export type SimplePropertyData = Type<typeof SimplePropertySchema>;
 
 
+export const EnabledFeature = Schema.either(
+    {
+        feature: "Property" as const,
+        appliesToEntryTypes: array.of(vnidString),
+    },
+)
+
+
+
 export const EntryTypeSchema = Schema({
     id: vnidString,
     /** Name of this entry type, e.g. "Note", "Task", "Contact", "License", etc. Doesn't need to be unique. */
     name: string,
-    /** Does this entry have a special type of content? e.g. is there an attached article or image? */
-    contentType: Schema.enum(ContentType),
     description: nullable(string),
     /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
     friendlyIdPrefix: nullable(string),
     /** Simple property values always displayed on entries of this type */
     simplePropValues: Record(string, SimplePropertySchema),
+
+    enabledFeatures: Schema({
+        UseAsProperty: Schema({
+            appliesToEntryTypes: array.of(vnidString),
+        }).strictOptional(),
+    }),
 });
 export type EntryTypeData = Type<typeof EntryTypeSchema>;
-
-
 
 export enum RelationshipCategory {
     /**
@@ -64,20 +59,6 @@ export enum RelationshipCategory {
      * This is considered a symmetrical relationship.
      */
     //RELATES_TO = "RELATES_TO",
-
-
-    /**
-     * This type of relationship allows an entry type to be used as "properties"
-     *
-     * e.g. if you have "Person" EntryType and "PersonProperty" EntryType (including things like "BirthDate" Entry),
-     * then the schema will have a RelationshipType entry saying that "Person" HAS PROPERTY "PersonProperty"
-     * relationships exist.
-     *
-     * Then a given Person entry can set a "BirthDate" property value
-     *
-     * For this type of relationship, the "to" EntryType must have EntryType.ContentType = "Property"
-     */
-    HAS_PROPERTY = "HAS_PROP",
 }
 
 export function CastRelationshipCategory(value: string): RelationshipCategory {

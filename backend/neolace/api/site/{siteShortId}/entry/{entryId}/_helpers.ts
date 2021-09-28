@@ -38,7 +38,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
         .name
         .description
         .friendlyId()
-        .type(et => et.id.name.contentType.site(s => s.id)),
+        .type(et => et.id.name.site(s => s.id)),
         {key, }
     ).catch((err) => {
         if (err instanceof EmptyResultError) {
@@ -51,7 +51,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     // Remove the "site" field from the result
     const result: api.EntryData = {
         ...entryData,
-        entryType: {id: entryData.type!.id, name: entryData.type!.name, contentType: entryData.type!.contentType as api.ContentType},
+        entryType: {id: entryData.type!.id, name: entryData.type!.name},
         ancestors: undefined,
         propertiesSummary: undefined,
         referenceCache: undefined,
