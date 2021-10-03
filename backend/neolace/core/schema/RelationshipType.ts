@@ -70,8 +70,6 @@ export class RelationshipType extends VNodeType {
     });
 
     static async validate(dbObject: RawVNode<typeof RelationshipType>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
-
         // Make sure each entry type is from the same site:
         await tx.pullOne(
             RelationshipType,

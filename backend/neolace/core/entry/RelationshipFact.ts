@@ -61,9 +61,7 @@ export class RelationshipFact extends VNodeType {
 
     static derivedProperties = this.hasDerivedProperties({});
 
-    static async validate(dbObject: RawVNode<typeof RelationshipFact>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
-
+    static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
         // Load important data about this fact's relationships:
         const selfData = await tx.pullOne(RelationshipFact, self => self
             .fromEntry(e => e.id.type(et => et.id))

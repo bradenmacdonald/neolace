@@ -61,7 +61,6 @@ export class Group extends VNodeType {
     };
 
     static async validate(dbObject: RawVNode<typeof Group>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
         // Check the depth of this group:
         await tx.pullOne(Group, g => g.site(s=>s), {key: dbObject.id}).then(g => {
             if (g.site === null) {
