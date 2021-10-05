@@ -1,8 +1,6 @@
 import * as check from "neolace/deps/computed-types.ts";
 import {
     Field,
-    RawVNode,
-    WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
 
@@ -38,8 +36,4 @@ export class UseAsPropertyData extends EntryFeatureData {
     static virtualProperties = this.hasVirtualProperties(() => ({}));
 
     static derivedProperties = this.hasDerivedProperties({});
-
-    static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
-    }
 }

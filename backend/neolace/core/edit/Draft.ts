@@ -45,8 +45,8 @@ export class DraftEdit extends VNodeType {
         data: dataFromJson,
     });
  
-    static async validate(dbObject: RawVNode<typeof DraftEdit>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
+    // deno-lint-ignore require-await
+    static async validate(dbObject: RawVNode<typeof DraftEdit>, _tx: WrappedTransaction): Promise<void> {
         // Validate that "code", "changeType", and "data" are all consistent:
         const editType = getEditType(dbObject.code);
         if (dbObject.changeType !== editType.changeType) {
@@ -146,9 +146,7 @@ export class Draft extends VNodeType {
         hasContentChanges,
     });
 
-    static async validate(dbObject: RawVNode<typeof Draft>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
-
+    static async validate(_dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
         // We don't verify if user is part of Site, because users can open a Draft then be removed from a Site but
         // their Draft should live on.
     }

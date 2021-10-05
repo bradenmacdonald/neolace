@@ -95,8 +95,7 @@ export class Entry extends VNodeType {
         friendlyId,
     });
 
-    static async validate(dbObject: RawVNode<typeof Entry>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
+    static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
         // Check that the slugId is prefixed with the site code.
         const entryData = await tx.pullOne(Entry, e => e.type(t => t.friendlyIdPrefix.site(s => s.siteCode)), {key: dbObject.id});
         const siteCode = entryData.type?.site?.siteCode;

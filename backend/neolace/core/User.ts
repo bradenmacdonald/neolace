@@ -24,8 +24,8 @@ export class User extends VNodeType {
         fullName: Field.NullOr.String.Check(check.string.max(100)),
     };
 
-    static async validate(dbObject: RawVNode<typeof User>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
+    // deno-lint-ignore require-await
+    static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
         // Mostly done automatically by Vertex Framework
         const isHuman = dbObject._labels.includes(HumanUser.label);
         const isBot = dbObject._labels.includes(BotUser.label);

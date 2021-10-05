@@ -67,9 +67,7 @@ export class PropertyFact extends VNodeType {
 
     static defaultOrderBy = "@this.id";
 
-    static async validate(dbObject: RawVNode<typeof PropertyFact>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
-
+    static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
         // Validate:
         const data = await tx.pullOne(PropertyFact, pf => pf
             .forEntry(fe => fe.id.type(et => et.id.site(s => s.id)))

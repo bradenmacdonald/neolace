@@ -54,9 +54,6 @@ export class SimplePropertyValue extends VNodeType {
     static defaultOrderBy = "@this.importance, @this.label";
 
     static async validate(dbObject: RawVNode<typeof SimplePropertyValue>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
-
-        
         // Validate:
         const data = await tx.pullOne(SimplePropertyValue, pv => pv.forEntryType(et => et.id), {key: dbObject.id});
 

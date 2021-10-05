@@ -44,8 +44,6 @@ import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
     static derivedProperties = this.hasDerivedProperties({});
 
     static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
-        await super.validate(dbObject, tx);
-
         // Validate the the applicable entry types are from the same site:
         const data = await tx.pullOne(UseAsPropertyEnabled, pe => pe.entryType(et => et.site(s => s.id)).appliesTo(et => et.site(s => s.id)), {key: dbObject.id});
 
