@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { RelationshipCategory, ContentType } from "neolace/deps/neolace-api.ts";
+import { RelationshipCategory } from "neolace/deps/neolace-api.ts";
 
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -29,7 +29,7 @@ group(import.meta, () => {
             const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
 
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
                 {code: "CreateRelationshipType", data: {category: RelationshipCategory.IS_A, id: entryIsA, nameForward: "is a", nameReverse: "has"}},
                 {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
@@ -95,7 +95,7 @@ group(import.meta, () => {
             const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
 
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
                 {code: "CreateRelationshipType", data: {category: RelationshipCategory.IS_A, id: entryIsA, nameForward: "is a", nameReverse: "has"}},
                 {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},

@@ -2,7 +2,7 @@
 import { nullable, vnidString } from "../api-schemas.ts";
 import { Schema, SchemaValidatorFunction, string, array, Type } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
-import { ContentType, SiteSchemaData, RelationshipCategory, SimplePropertySchema } from "./SiteSchemaData.ts";
+import { SiteSchemaData, RelationshipCategory, SimplePropertySchema } from "./SiteSchemaData.ts";
 
 interface SchemaEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Schema;
@@ -26,7 +26,6 @@ export const CreateEntryType = SchemaEditType({
     dataSchema: Schema({
         name: string,
         id: vnidString,
-        contentType: Schema.enum(ContentType),
     }),
     apply: (currentSchema, data) => {
 
@@ -40,10 +39,10 @@ export const CreateEntryType = SchemaEditType({
                 [data.id]: {
                     id: data.id,
                     name: data.name,
-                    contentType: ContentType.None,
                     description: null,
                     friendlyIdPrefix: null,
                     simplePropValues: {},
+                    enabledFeatures: {},
                 },
             },
             relationshipTypes: currentSchema.relationshipTypes,
@@ -88,6 +87,49 @@ export const UpdateEntryType = SchemaEditType({
         return Object.freeze(newSchema);
     },
     describe: (data) => `Updated \`EntryType ${data.id}\``,
+});
+
+/**
+ * Enable and configure an Entry Type Feature, or disable a feature
+ */
+export const UpdateEntryTypeFeature = SchemaEditType({
+    changeType: EditChangeType.Schema,
+    code: "UpdateEntryTypeFeature",
+    dataSchema: Schema({
+        entryTypeId: vnidString,
+        feature: Schema.either({
+            featureType: "UseAsProperty" as const,
+            enabled: true as const,
+            config: Schema({
+                appliesToEntryTypes: array.of(vnidString),
+            }),
+        }, {
+            featureType: "UseAsProperty" as const,
+            enabled: false as const,
+        }),
+    }),
+    apply: (currentSchema, data) => {
+        const newSchema: SiteSchemaData = {
+            entryTypes: {...currentSchema.entryTypes},
+            relationshipTypes: currentSchema.relationshipTypes,
+        };
+        const originalEntryType = newSchema.entryTypes[data.entryTypeId];
+        if (originalEntryType === undefined) {
+            throw new Error(`EntryType with ID ${data.entryTypeId} not found.`);
+        }
+        const newEntryType = {...originalEntryType};
+        newEntryType.enabledFeatures = {...newEntryType.enabledFeatures};  // Shallow copy the object so we can modify it
+
+        if (data.feature.enabled) {
+            newEntryType.enabledFeatures[data.feature.featureType] = data.feature.config;
+        } else {
+            delete newEntryType.enabledFeatures[data.feature.featureType];
+        }
+
+        newSchema.entryTypes[data.entryTypeId] = newEntryType;
+        return Object.freeze(newSchema);
+    },
+    describe: (data) => `Updated ${data.feature.featureType} feature of \`EntryType ${data.entryTypeId}\``,
 });
 
 export const CreateRelationshipType = SchemaEditType({
@@ -166,11 +208,6 @@ export const UpdateRelationshipType = SchemaEditType({
             if (currentSchema.entryTypes[entryTypeId] === undefined) {
                 throw new Error(`No entry type exists with ID ${entryTypeId}`);
             }
-            if (currentValues.category === RelationshipCategory.HAS_PROPERTY) {
-                if (currentSchema.entryTypes[entryTypeId].contentType !== ContentType.Property) {
-                    throw new Error(`A HAS_PROPERTY relationship can only be created to an EntryType with Content Type of "Property".`);
-                }
-            }
             if (!relType.toEntryTypes.includes(entryTypeId)) {
                 relType.toEntryTypes = [...relType.toEntryTypes, entryTypeId];
             }
@@ -196,6 +233,7 @@ export const UpdateRelationshipType = SchemaEditType({
 export const _allSchemaEditTypes = {
     CreateEntryType,
     UpdateEntryType,
+    UpdateEntryTypeFeature,
     CreateRelationshipType,
     UpdateRelationshipType,
 };
@@ -203,6 +241,7 @@ export const _allSchemaEditTypes = {
 export type AnySchemaEdit = (
     | Edit<typeof CreateEntryType>
     | Edit<typeof UpdateEntryType>
+    | Edit<typeof UpdateEntryTypeFeature>
     | Edit<typeof CreateRelationshipType>
     | Edit<typeof UpdateRelationshipType>
 );

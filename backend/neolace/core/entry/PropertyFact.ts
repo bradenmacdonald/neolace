@@ -7,9 +7,9 @@ import {
     VirtualPropType,
     ValidationError,
 } from "neolace/deps/vertex-framework.ts";
-import { ContentType } from "neolace/deps/neolace-api.ts";
 import { EntryType } from "../schema/EntryType.ts";
 import { Entry } from "./Entry.ts";
+import { UseAsPropertyEnabled } from "./features/UseAsProperty/UseAsPropertyEnabled.ts";
 
 
 /**
@@ -56,7 +56,7 @@ export class PropertyFact extends VNodeType {
             target: EntryType,
         },
         // Property is always set:
-        property: {
+        propertyEntry: {
             type: VirtualPropType.OneRelationship,
             query: C`(@this)-[:${this.rel.PROP_ENTRY}]->(@target:${Entry})`,
             target: Entry,
@@ -70,18 +70,16 @@ export class PropertyFact extends VNodeType {
     static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
         // Validate:
         const data = await tx.pullOne(PropertyFact, pf => pf
-            .forEntry(fe => fe.id.type(et => et.site(s => s.id)))
+            .forEntry(fe => fe.id.type(et => et.id.site(s => s.id)))
             .forEntryType(et => et.id.site(s => s.id))
-            .property(p => p.id.propertyValueType.type(et => et.contentType.site(s => s.id))),
+            .propertyEntry(p => p.id.type(et => et.id.site(s => s.id))),
             {key: dbObject.id}
         );
 
-        // Validate that "property" entry has property ContentType; only such entries can be used as properties
-        const propertyEntry = data.property;
+        // Validate that "property" entry has the property feature enabled
+        const propertyEntry = data.propertyEntry;
         if (propertyEntry === null) { throw new Error("Missing property"); /* Should be caught by Vertex by TypeScript doesn't know that */ }
-        if (propertyEntry.type?.contentType !== ContentType.Property) {
-            throw new ValidationError(`A PropertyFact can only be used for a property that is an Entry with ContentType=Property`);
-        }
+
         const siteId = propertyEntry.type?.site?.id;
         if (siteId === null) { throw new Error(`PropertyFact: siteId unexpectedly null`); }
 
@@ -95,6 +93,12 @@ export class PropertyFact extends VNodeType {
                 throw new ValidationError("PropertyFact: site mismatch - the entry's site doesn't match the property's");
             }
 
+            // Validate this this type of entry can be used with this type of property
+            await tx.queryOne(C`
+                MATCH (e:${EntryType} {id: ${propertyEntry.type!.id}})-[:${EntryType.rel.HAS_FEATURE}]->(propFeatureConfig:${UseAsPropertyEnabled})
+                MATCH (propFeatureConfig)-[:${UseAsPropertyEnabled.rel.APPLIES_TO}]->(p:${EntryType} {id: ${data.forEntry.type!.id}})
+            `.RETURN({}));
+
             // Validate that this property is unique
             const sameProperties = await tx.query(C`
                 MATCH (e:${Entry} {id: ${data.forEntry.id}})-[:${Entry.rel.PROP_FACT}]->(pf:${this})-[:${this.rel.PROP_ENTRY}]->(p:${Entry} {id: ${propertyEntry.id}})
@@ -103,6 +107,8 @@ export class PropertyFact extends VNodeType {
                 throw new ValidationError("Multiple PropertyFacts exist for the same entry and property.");
             }
         } else {
+            throw new Error("Attaching PropertyFacts to an EntryType is not yet supported.")
+            /*
             // This PropertyFact is attached to an EntryType and applies to all entries of that type
             if (data.forEntryType === null || data.forEntry !== null) {
                 throw new ValidationError("A PropertyFact must be attached to either an Entry or an EntryType, and not both.");
@@ -117,7 +123,7 @@ export class PropertyFact extends VNodeType {
             `.RETURN({}));
             if (sameProperties.length !== 1) {
                 throw new ValidationError("Multiple PropertyFacts exist for the same EntryType and property.");
-            }
+            }*/
         }
 
         // TODO? Validate that the value is of the correct type, or can be casted to it.

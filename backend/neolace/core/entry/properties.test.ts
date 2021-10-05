@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { RelationshipCategory, ContentType, EditList } from "neolace/deps/neolace-api.ts";
+import { RelationshipCategory, EditList } from "neolace/deps/neolace-api.ts";
 
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -16,7 +16,7 @@ group(import.meta, () => {
         // Entry Type IDs:
         const entryType = VNID(), propertyType = VNID();
         // Relationship Type IDs:
-        const entryIsA = VNID(), entryHasProp = VNID();
+        const entryIsA = VNID();
         // Entry IDs:
         const A = VNID(), B = VNID(), C = VNID(), prop1 = VNID(), prop2 = VNID(), prop3 = VNID();
         // Simple Property Value IDs:
@@ -29,10 +29,13 @@ group(import.meta, () => {
             //   Entry B has one property
             const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
-                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType", contentType: ContentType.Property}},
-                {code: "CreateRelationshipType", data: {id: entryHasProp, category: RelationshipCategory.HAS_PROPERTY, nameForward: "has prop", nameReverse: "prop of"}},
-                {code: "UpdateRelationshipType", data: {id: entryHasProp, addFromTypes: [entryType], addToTypes: [propertyType]}},
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType"}},
+                {code: "UpdateEntryTypeFeature", data: {entryTypeId: propertyType, feature: {
+                    featureType: "UseAsProperty",
+                    enabled: true,
+                    config: {appliesToEntryTypes: [entryType]},
+                }}},
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                 {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
                 {code: "CreateEntry", data: {id: prop1, name: "Property 1", type: propertyType, friendlyId: "p1", description: ""}},
@@ -67,8 +70,8 @@ group(import.meta, () => {
             //   Entry "Property 1" has an entry type with no simple property values
             const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
-                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType", contentType: ContentType.Property}},
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType"}},
                 {code: "UpdateEntryType", data: {id: entryType, addOrUpdateSimpleProperties: [
                     {id: spv1, importance: 50, note: "Test note", valueExpression: `"spv1 value"`, label: "SPV 1 Label"},
                     {id: spv2, importance: 1, note: "Test note", valueExpression: `"spv2 value"`, label: "SPV 2 Label"},
@@ -116,19 +119,22 @@ group(import.meta, () => {
             //   Property 3 is not inheritable, but the others are.
             const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
-                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType", contentType: ContentType.Property}},
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType"}},
+                {code: "UpdateEntryTypeFeature", data: {entryTypeId: propertyType, feature: {
+                    featureType: "UseAsProperty",
+                    enabled: true,
+                    config: {appliesToEntryTypes: [entryType]},
+                }}},
                 {code: "CreateRelationshipType", data: {id: entryIsA, category: RelationshipCategory.IS_A, nameForward: "is a", nameReverse: "has types"}},
                 {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
-                {code: "CreateRelationshipType", data: {id: entryHasProp, category: RelationshipCategory.HAS_PROPERTY, nameForward: "has prop", nameReverse: "prop of"}},
-                {code: "UpdateRelationshipType", data: {id: entryHasProp, addFromTypes: [entryType], addToTypes: [propertyType]}},
                 // Create properties:
                 {code: "CreateEntry", data: {id: prop1, name: "Property 1", type: propertyType, friendlyId: "p1", description: ""}},
-                {code: "UpdatePropertyEntry", data: {id: prop1, inherits: true}},
+                {code: "UpdateEntryUseAsProperty", data: {entryId: prop1, inherits: true}},
                 {code: "CreateEntry", data: {id: prop2, name: "Property 2", type: propertyType, friendlyId: "p2", description: ""}},
-                {code: "UpdatePropertyEntry", data: {id: prop2, inherits: true}},
+                {code: "UpdateEntryUseAsProperty", data: {entryId: prop2, inherits: true}},
                 {code: "CreateEntry", data: {id: prop3, name: "Property 3", type: propertyType, friendlyId: "p3", description: ""}},
-                {code: "UpdatePropertyEntry", data: {id: prop3, inherits: false}},
+                {code: "UpdateEntryUseAsProperty", data: {entryId: prop3, inherits: false}},
                 // Create entry A and its properties:
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                 {code: "UpdatePropertyValue", data: {entry: A, property: prop1, valueExpression: `"A1"`, note: ""}},
@@ -195,12 +201,15 @@ group(import.meta, () => {
             //       B has 41 properties total (30 + 5 + 6)
             const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                {code: "CreateEntryType", data: {id: entryType, name: "EntryType", contentType: ContentType.None}},
-                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType", contentType: ContentType.Property}},
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType"}},
+                {code: "UpdateEntryTypeFeature", data: {entryTypeId: propertyType, feature: {
+                    featureType: "UseAsProperty",
+                    enabled: true,
+                    config: {appliesToEntryTypes: [entryType]},
+                }}},
                 {code: "CreateRelationshipType", data: {id: entryIsA, category: RelationshipCategory.IS_A, nameForward: "is a", nameReverse: "has types"}},
                 {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
-                {code: "CreateRelationshipType", data: {id: entryHasProp, category: RelationshipCategory.HAS_PROPERTY, nameForward: "has prop", nameReverse: "prop of"}},
-                {code: "UpdateRelationshipType", data: {id: entryHasProp, addFromTypes: [entryType], addToTypes: [propertyType]}},
                 // Create entry A and B:
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                 {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
@@ -234,7 +243,7 @@ group(import.meta, () => {
             for (let i = 0; i < 10; i++) {
                 const id = VNID();
                 edits.push({code: "CreateEntry", data: {id, name: `Property ${i}`, type: propertyType, friendlyId: `p${i}`, description: ""}});
-                edits.push({code: "UpdatePropertyEntry", data: {id, importance: i, inherits: i < 8}});
+                edits.push({code: "UpdateEntryUseAsProperty", data: {entryId: id, importance: i, inherits: i < 8}});
                 edits.push({code: "UpdatePropertyValue", data: {entry: A, property: id, valueExpression: `"A${i}"`, note: ""}});
                 aPropertyValues.push({
                     label: `Property ${i}`,
@@ -256,7 +265,7 @@ group(import.meta, () => {
             for (let i = 0; i < 28; i++) {
                 const id = VNID();
                 edits.push({code: "CreateEntry", data: {id, name: `B Property ${i}`, type: propertyType, friendlyId: `p-b${i}`, description: ""}});
-                edits.push({code: "UpdatePropertyEntry", data: {id, importance: 20 + i}});
+                edits.push({code: "UpdateEntryUseAsProperty", data: {entryId: id, importance: 20 + i}});
                 edits.push({code: "UpdatePropertyValue", data: {entry: B, property: id, valueExpression: `"B${i}"`, note: ""}});
                 bPropertyValues.push({
                     label: `B Property ${i}`,

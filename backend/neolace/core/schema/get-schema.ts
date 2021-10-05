@@ -1,6 +1,6 @@
+import { equal } from "std/testing/asserts.ts";
 import {
     EditList,
-    CastContentType,
     CastRelationshipCategory,
     SimplePropertyData,
     EntryTypeData,
@@ -13,6 +13,7 @@ import { Type } from "neolace/deps/computed-types.ts";
 import { Site } from "neolace/core/Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
+import { features } from "neolace/core/entry/features/all-features.ts";
 
 export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Promise<SiteSchemaData> {
     const result: SiteSchemaData = {
@@ -23,7 +24,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
 
     const entryTypes = await tx.pull(
         EntryType,
-        et => et.id.name.contentType.description.friendlyIdPrefix.simplePropValues(cf => cf.id.label.valueExpression.importance.note),
+        et => et.id.name.description.friendlyIdPrefix.simplePropValues(cf => cf.id.label.valueExpression.importance.note),
         {where: siteFilter},
     );
 
@@ -31,10 +32,10 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
         result.entryTypes[et.id] = {
             id: et.id,
             name: et.name,
-            contentType: CastContentType(et.contentType),
             description: et.description,
             friendlyIdPrefix: et.friendlyIdPrefix,
             simplePropValues: Object.fromEntries(et.simplePropValues.map(cf => [cf.id, cf])),
+            enabledFeatures: {/* set below by contributeToSchema() */},
         };
     });
 
@@ -56,6 +57,11 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             category: CastRelationshipCategory(rt.category),
         };
     });
+
+    // For each feature that's enabled for a given entry type, update the schema with that feature's configuration
+    await Promise.all(
+        features.map(feature => feature.contributeToSchema(result, tx, siteId))
+    );
 
     return Object.freeze(result);
 }
@@ -104,7 +110,6 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
             result.edits.push({code: "CreateEntryType", data: {
                 id: newSchema.entryTypes[newId].id,
                 name: newSchema.entryTypes[newId].name,
-                contentType: newSchema.entryTypes[newId].contentType,
             } })
         }
         // Set properties on existing and new EntryTypes
@@ -121,19 +126,19 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
                     changes[key] = newET[key];
                 }
             }
-            // Check for changes to the computed facts:
+            // Check for changes to the simple property values:
             const finalSimplePropValueIds = new Set(Object.keys(newET.simplePropValues));  // The set of IDs in the new/final schema
             const addOrUpdateSimpleProperties: SimplePropertyData[] = [];
             Object.values(newET.simplePropValues).forEach(newCF => {
                 const existingCF = oldET?.simplePropValues[newCF.id];
                 if (existingCF) {
                     if (existingCF.id !== newCF.id) {
-                        throw new Error("Computed fact id doesn't match key in simplePropValues object.");
+                        throw new Error("Simple Property Value id doesn't match key in simplePropValues object.");
                     }
                     if (newCF.label === existingCF.label && newCF.importance === existingCF.importance && newCF.valueExpression === existingCF.valueExpression && newCF.note === existingCF.note) {
-                        // Nothing to do; this computed fact is already in the schema and unchanged.
+                        // Nothing to do; this simple property value is already in the schema and unchanged.
                     } else {
-                        // This computed fact has been modified:
+                        // This simple property value has been modified:
                         addOrUpdateSimpleProperties.push(newCF);
                     }
                 } else {
@@ -153,6 +158,24 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
                     ...changes,
                 }});
             }
+            // Check for differences to the features enabled for this entry type:
+            features.forEach(({featureType}) => {
+                const oldFeature = oldET?.enabledFeatures[featureType];
+                const newFeature = newET.enabledFeatures[featureType];
+                if (oldFeature && newFeature === undefined) {
+                    // This feature has been disabled:
+                    result.edits.push({
+                        code: "UpdateEntryTypeFeature",
+                        data: { entryTypeId: VNID(entryTypeId), feature: {featureType, enabled: false}, }
+                    });
+                } else if (newFeature && !equal(oldFeature, newFeature)) {
+                    // This feature has been enabled or modified:
+                    result.edits.push({
+                        code: "UpdateEntryTypeFeature",
+                        data: { entryTypeId: VNID(entryTypeId), feature: {featureType, enabled: true, config: newFeature}, }
+                    });
+                }
+            });
         }
     }
 

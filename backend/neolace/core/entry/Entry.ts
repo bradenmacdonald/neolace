@@ -12,12 +12,18 @@ import {
 
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { slugIdToFriendlyId } from "neolace/core/Site.ts";
+import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
+import { UseAsPropertyData } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyData.ts";
 import { RelationshipFact } from "./RelationshipFact.ts";
 import { PropertyFact } from "./PropertyFact.ts";
 
 
 /**
- * Abstract base class for an "entry"
+ * An "Entry" is the main "thing" that a Neolace knowledge base contains. Every article is an entry, every image is an
+ * entry, every property is an entry, and so on.
+ * 
+ * Every Entry is of a specific EntryType, and the EntryType controls what "features" the entry has (does it have
+ * article text attached, or an image attached, or can it be used as a property?)
  */
 export class Entry extends VNodeType {
     static label = "Entry";
@@ -31,29 +37,9 @@ export class Entry extends VNodeType {
         name: Field.String,
         // Description: Short, rich text summary of the thing
         description: Field.String.Check(check.string.trim().max(5_000)),
-
-
-        /// CONTENT
-
-        // Todo: article text.
-
-        // If this entry is a "property" entry type (e.g. a "birth date" property entry), it will have these extra
-        // fields:
-
-        // Importance: Properties with importance < 20 are shown directly on the entry page, with 0 being the most
-        // important and first shown. Properties with importance > 20 are shown in a separate "All Properties"
-        // screen.
-        propertyImportance: Field.NullOr.Int.Check(check.number.min(0).max(99)),
-        // The data type for values of this property
-        propertyValueType: Field.NullOr.String,
-        // Should property values of this type be inherited by child entries?
-        propertyInherits: Field.NullOr.Boolean,
-        // Markdown formatting to use to display the value, if it's a simple string value.
-        // e.g. set this to "**{value}**" to make it bold.
-        propertyDisplayAs: Field.NullOr.String,
     };
 
-    static readonly rel = VNodeType.hasRelationshipsFromThisTo({
+    static readonly rel = this.hasRelationshipsFromThisTo({
         /** The type of this entry */
         IS_OF_TYPE: {
             to: [EntryType],
@@ -67,6 +53,11 @@ export class Entry extends VNodeType {
         /** This Entry has property values */
         PROP_FACT: {
             to: [PropertyFact],
+            cardinality: VNodeType.Rel.ToManyUnique,
+        },
+        /** This Entry has data about special features that are enabled (for example if it has Article text) */
+        HAS_FEATURE_DATA: {
+            to: [EntryFeatureData],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
         // If this Entry has an IS_A relationship to other entries (via RelationshipFact), it will also have a direct
@@ -88,18 +79,20 @@ export class Entry extends VNodeType {
             query: C`(@this)-[:${this.rel.IS_OF_TYPE}]->(@target:${EntryType})`,
             target: EntryType,
         },
-        /*
-        relatedImages: {
+        featureData: {
             type: VirtualPropType.ManyRelationship,
-            query: C`(@target:${Image})-[:${Image.rel.RELATES_TO}]->(:${this})-[:IS_A*0..10]->(@this)`,
-            target: Image,
+            query: C`(@this)-[:${this.rel.HAS_FEATURE_DATA}]->(@target:${EntryFeatureData})`,
+            target: EntryFeatureData,
         },
-        */
+        useAsPropertyData: {
+            type: VirtualPropType.OneRelationship,
+            query: C`(@this)-[:${this.rel.HAS_FEATURE_DATA}]->(@target:${UseAsPropertyData})`,
+            target: UseAsPropertyData,
+        },
     }));
 
     static derivedProperties = this.hasDerivedProperties({
         friendlyId,
-        //numRelatedImages,
     });
 
     static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {

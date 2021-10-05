@@ -193,8 +193,10 @@ export const CreateSite = defineAction({
                 siteCode = siteCodeFromNumber(Math.floor(Math.random() * siteCodesMaxCount));
             } while (await siteCodeIsTaken());
         }
-        // deno-lint-ignore no-explicit-any
-        const resultData: any = {id, siteCode};
+        const resultData: { id: VNID; siteCode: string; adminGroup?: VNID; } = {
+            id,
+            siteCode,
+        };
         const modifiedNodes: VNID[] = [id];
 
         // Create the Site:

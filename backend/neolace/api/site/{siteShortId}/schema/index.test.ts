@@ -50,7 +50,7 @@ group(import.meta, () => {
                 edits: [
                     {
                         code: "CreateEntryType",
-                        data: { id: VNID("_ETSOFTWARE"), name: "Software", contentType: api.ContentType.None},
+                        data: { id: VNID("_ETSOFTWARE"), name: "Software"},
                     },
                 ],
             });
@@ -62,11 +62,11 @@ group(import.meta, () => {
                     ...defaultData.schema.entryTypes,
                     _ETSOFTWARE: {
                         id: VNID("_ETSOFTWARE"),
-                        contentType: api.ContentType.None,
                         description: null,
                         friendlyIdPrefix: null,
                         name: "Software",
                         simplePropValues: {},
+                        enabledFeatures: {},
                     },
                 },
                 relationshipTypes: defaultData.schema.relationshipTypes,

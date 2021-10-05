@@ -75,11 +75,6 @@ export class RelationshipFact extends VNodeType {
         // virtual props can be non-nullable)
         if (!relType) { throw new ValidationError("Internal error, RelationshipType is missing"); }
 
-        // HAS_PROPERTY relationships are not allowed using RelationshipFact - use PropertyFact instead
-        if (relType.category === RelationshipCategory.HAS_PROPERTY) {
-            throw new ValidationError("Use PropertyFact, not RelationshipFact for HAS_PROPERTY relationships.");
-        }
-
         // Make sure there are exactly two REL_FACT relationships (one from and one to):
         const relChecks = await tx.query(C`
             MATCH (n:${RelationshipFact} {id: ${dbObject.id}})

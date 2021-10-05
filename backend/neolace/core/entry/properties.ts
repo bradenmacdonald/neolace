@@ -3,6 +3,7 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
+import { UseAsPropertyData } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyData.ts";
 
 
 
@@ -61,11 +62,17 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
         WITH entry, entryType, count(spv) AS spvCount
 
         // Now count all "normal" property values attached to this entry or its ancestors (for properties that allow inheritance)
-        MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(prop)
-        WHERE (prop.propertyInherits = true OR length(path) = 2) AND prop.propertyImportance <= ${maxImportance}
+        MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(propEntry)
+        OPTIONAL MATCH (propEntry)-[:${Entry.rel.HAS_FEATURE_DATA}]->(propData:${UseAsPropertyData})
+        WITH entry, entryType, spvCount, path, propEntry, propData
+        WHERE
+            // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
+            (length(path) = 2 OR propData.inherits = true)
+        AND
+            (propData.importance <= ${maxImportance}) OR (propData IS NULL AND ${UseAsPropertyData.defaultImportance} <= ${maxImportance})
 
-        WITH entry, entryType, spvCount, prop, min(length(path)) AS distance
-        WITH entry, entryType, spvCount, count(prop) AS propCount
+        WITH entry, entryType, spvCount, propEntry, min(length(path)) AS distance
+        WITH entry, entryType, spvCount, count(propEntry) AS propCount
         WITH spvCount + propCount AS totalCount
     `.RETURN({totalCount: Field.Int})).then(r => r.totalCount);
 
@@ -94,25 +101,32 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
 
             // Now fetch all "normal" property values attached to this entry or its ancestors (for properties that allow inheritance)
             WITH entry
-            MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(prop)
-            WHERE (prop.propertyInherits = true OR length(path) = 2) AND prop.propertyImportance <= ${maxImportance}
+            MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(propEntry)
+            // Note that the UseAsPropertyData node may be missing if this is a newly created entry or the UseAsProperty feature was recently enabled for this entry type:
+            OPTIONAL MATCH (propEntry)-[:${Entry.rel.HAS_FEATURE_DATA}]->(propData:${UseAsPropertyData})
+            WITH entry, path, ancestor, pf, propEntry, propData
+            WHERE
+                // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
+                (length(path) = 2 OR propData.inherits = true)
+            AND
+                (propData.importance <= ${maxImportance}) OR (propData IS NULL AND ${UseAsPropertyData.defaultImportance} <= ${maxImportance})
 
             // The way we use min(lengt(path)) below will return only DISTINCT prop entries, so that for each inherited
             // property, we only get the value set by the closest ancestor. e.g. if grandparent->parent->child each
             // have birthDate, child's birthDate will take priority and grandparent/parent's won't be returned
-            WITH entry, prop, min(length(path)) AS distance, collect(pf) AS pfs, collect(ancestor) as ancestors
-            WITH entry, prop, distance, head(pfs) AS pf, head(ancestors) AS ancestor
+            WITH entry, propEntry, propData, min(length(path)) AS distance, collect(pf) AS pfs, collect(ancestor) as ancestors
+            WITH entry, propEntry, propData, distance, head(pfs) AS pf, head(ancestors) AS ancestor
 
             RETURN {
-                label: prop.name,
+                label: propEntry.name,
                 valueExpression: pf.valueExpression,
-                importance: prop.propertyImportance,
+                importance: CASE WHEN propData IS NULL THEN ${UseAsPropertyData.defaultImportance} ELSE propData.importance END,
                 note: pf.note,
 
                 type: "PropertyValue",
-                id: prop.id,
+                id: propEntry.id,
                 source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END,
-                displayAs: prop.propertyDisplayAs
+                displayAs: propData.displayAs
             } AS propertyData
         }
         RETURN propertyData

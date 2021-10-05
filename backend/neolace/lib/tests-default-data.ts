@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import * as log from "std/log/mod.ts";
-import { ContentType, RelationshipCategory } from "neolace/deps/neolace-api.ts";
+import { RelationshipCategory } from "neolace/deps/neolace-api.ts";
 import { VNID, VertexTestDataSnapshot } from "neolace/deps/vertex-framework.ts";
 
 import { graph } from "neolace/core/graph.ts";
@@ -50,17 +50,16 @@ const data = {
             "_ETDIVISION": {
                 id: VNID("_ETDIVISION"),
                 name: "Division",
-                contentType: ContentType.Article,
                 description: "A division (also called Phylum outside of botany) is the main taxonomic classification within the Plant Kingdom.",
                 friendlyIdPrefix: "d-",
                 simplePropValues: {
                     "_CFDivisionClasses": {id: VNID("_CFDivisionClasses"), label: "Classes", importance: 6, valueExpression: `this.related(via=RT[_CisD])`, note: ""},
                 },
+                enabledFeatures: {},
             },
             "_ETCLASS": {
                 id: VNID("_ETCLASS"),
                 name: "Class",
-                contentType: ContentType.Article,
                 description: "A class is a level of taxonomic classification between Division/Phylum and Order.",
                 friendlyIdPrefix: "c-",
                 simplePropValues: {
@@ -68,11 +67,11 @@ const data = {
                     "_CFClassOrders": {id: VNID("_CFClassOrders"), label: "Orders", importance: 6, valueExpression: `this.related(via=RT[_OisC])`, note: ""},
                     "_CFClassParts": {id: VNID("_CFClassParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                 },
+                enabledFeatures: {},
             },
             "_ETORDER": {
                 id: VNID("_ETORDER"),
                 name: "Order",
-                contentType: ContentType.Article,
                 description: "An order is a level of taxonomic classification between Class and Family.",
                 friendlyIdPrefix: "o-",
                 simplePropValues: {
@@ -80,11 +79,11 @@ const data = {
                     "_CFOrderFamilies": {id: VNID("_CFOrderFamilies"), label: "Families", importance: 6, valueExpression: `this.related(via=RT[_FisO])`, note: ""},
                     "_CFOrderParts": {id: VNID("_CFOrderParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                 },
+                enabledFeatures: {},
             },
             "_ETFAMILY": {
                 id: VNID("_ETFAMILY"),
                 name: "Family",
-                contentType: ContentType.Article,
                 description: "A family is a level of taxonomic classification between Order and Genus.",
                 friendlyIdPrefix: "f-",
                 simplePropValues: {
@@ -92,11 +91,11 @@ const data = {
                     "_CFFamilyGenera": {id: VNID("_CFFamilyGenera"), label: "Genera", importance: 6, valueExpression: `this.related(via=RT[_GisF])`, note: ""},
                     "_CFFamilyParts": {id: VNID("_CFFamilyParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                 },
+                enabledFeatures: {},
             },
             "_ETGENUS": {
                 id: VNID("_ETGENUS"),
                 name: "Genus",
-                contentType: ContentType.Article,
                 description: "A genus is a level of taxonomic classification between Family and Species.",
                 friendlyIdPrefix: "g-",
                 simplePropValues: {
@@ -104,22 +103,22 @@ const data = {
                     "_CFGenusSpecies": {id: VNID("_CFGenusSpecies"), label: "Species", importance: 6, valueExpression: `this.related(via=RT[_SisG])`, note: ""},
                     "_CFGenusParts": {id: VNID("_CFGenusParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                 },
+                enabledFeatures: {},
             },
             "_ETSPECIES": {
                 id: VNID("_ETSPECIES"),
                 name: "Species",
-                contentType: ContentType.Article,
                 description: "A species is a basic unit of classifying life.",
                 friendlyIdPrefix: "s-",
                 simplePropValues: {
                     "_CFSpeciesTaxonomy": {id: VNID("_CFSpeciesTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
                     "_CFSpeciesParts": {id: VNID("_CFSpeciesParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                 },
+                enabledFeatures: {},
             },
             "_ETPLANTPART": {
                 id: VNID("_ETPLANTPART"),
                 name: "Plant Part",
-                contentType: ContentType.Article,
                 description: "Describes a part of a plant.",
                 friendlyIdPrefix: "pp-",
                 simplePropValues: {
@@ -127,14 +126,27 @@ const data = {
                     "_CFPartTypes": {id: VNID("_CFPartTypes"), label: "Types", importance: 2, valueExpression: `this.related(via=RT[_PARTisPART], direction="to")`, note: ""},
                     "_CFPartsFoundIn": {id: VNID("_CFPartsFoundIn"), label: "Part of", importance: 5, valueExpression: "this.related(via=RT[_HASA])", note: ""},
                 },
+                enabledFeatures: {},
             },
             "_ETPROPERTY": {
                 id: VNID("_ETPROPERTY"),
                 name: "Property",
-                contentType: ContentType.Property,
                 description: "Properties of a PlantDB entry.",
                 friendlyIdPrefix: "p-",
                 simplePropValues: {},
+                enabledFeatures: {
+                    UseAsProperty: {
+                        appliesToEntryTypes: [
+                            VNID("_ETCLASS"),
+                            VNID("_ETDIVISION"),
+                            VNID("_ETFAMILY"),
+                            VNID("_ETGENUS"),
+                            VNID("_ETORDER"),
+                            VNID("_ETPLANTPART"),
+                            VNID("_ETSPECIES"),
+                        ],
+                    }
+                },
             },
         },
         relationshipTypes: {
@@ -210,25 +222,6 @@ const data = {
                 description: null,
                 fromEntryTypes: [VNID("_ETPLANTPART")],
                 toEntryTypes: [VNID("_ETPLANTPART")],
-            },
-            // Any other entry type can have a property
-            "_HASPROP": {
-                id: VNID("_HASPROP"),
-                nameForward: "has property",
-                nameReverse: "applies to",
-                category: RelationshipCategory.HAS_PROPERTY,
-                description: null,
-                fromEntryTypes: [
-                    // From every level of classification. These are in alphabetical order though to match how Neolace returns a site's schema.
-                    VNID("_ETCLASS"),
-                    VNID("_ETDIVISION"),
-                    VNID("_ETFAMILY"),
-                    VNID("_ETGENUS"),
-                    VNID("_ETORDER"),
-                    VNID("_ETPLANTPART"),
-                    VNID("_ETSPECIES"),
-                ],
-                toEntryTypes: [VNID("_ETPROPERTY")],
             },
         },
     },
@@ -316,7 +309,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         accessMode: data.site.initialAccessMode,
     })).then(result => {
         data.site.id = result.id;
-        data.site.adminsGroupId = result.adminGroup;
+        data.site.adminsGroupId = result.adminGroup!;
     });
 
     await graph.runAsSystem(CreateGroup({
@@ -350,7 +343,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 "The **scientific name**, sometimes called the **binomial name** or **latin name** is an unambiguous species identifier."
             ),
         }},
-        {code: "UpdatePropertyEntry", data: { id: data.entries.propertyScientificName.id, displayAs: "*{value}*" }},
+        {code: "UpdateEntryUseAsProperty", data: { entryId: data.entries.propertyScientificName.id, displayAs: "*{value}*" }},
         // An entry's WikiData Entry ID
         {code: "CreateEntry", data: {
             ...data.entries.propertyWikidataItemId,
@@ -359,7 +352,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 "ID of this item on Wikidata, the free knowledge base that anyone can edit."
             ),
         }},
-        {code: "UpdatePropertyEntry", data: { id: data.entries.propertyWikidataItemId.id, importance: 15, displayAs: "[{value}](https://www.wikidata.org/wiki/{value})" }},
+        {code: "UpdateEntryUseAsProperty", data: { entryId: data.entries.propertyWikidataItemId.id, importance: 15, displayAs: "[{value}](https://www.wikidata.org/wiki/{value})" }},
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Create entries for various tree species:
