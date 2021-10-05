@@ -35,16 +35,18 @@ export const UseAsProperty = EntryTypeFeature({
     },
     updateConfiguration: async (entryTypeId: VNID, config: {appliesToEntryTypes: VNID[]}, tx: WrappedTransaction, markNodeAsModified: (vnid: VNID) => void) => {
         const appliesToResult = await tx.query(C`
-            MATCH (et:${EntryType} {id: ${entryTypeId}})
+            MATCH (et:${EntryType} {id: ${entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site)
             MERGE (et)-[:${EntryType.rel.HAS_FEATURE}]->(feature:${UseAsPropertyEnabled}:${C(EnabledFeature.label)})
             ON CREATE SET feature.id = ${VNID()}
 
-            WITH feature
+            WITH feature, site
             UNWIND ${config.appliesToEntryTypes} AS appliesToId
             // Find each new EntryType that this property can be used for, and make sure it's part of the same site:
-            MATCH (appliesToET:${EntryType} {id: appliesToId})-[:${EntryType.rel.FOR_SITE}]->(site)<-[:${EntryType.rel.FOR_SITE}]-(et)
+            MATCH (appliesToET:${EntryType} {id: appliesToId})
+            WHERE (appliesToET)-[:${EntryType.rel.FOR_SITE}]->(site)
             MERGE (feature)-[:${UseAsPropertyEnabled.rel.APPLIES_TO}]->(appliesToET)
-        `.RETURN({}));
+        `.RETURN({"appliesToET.id": Field.VNID}));
+
         if (appliesToResult.length !== config.appliesToEntryTypes.length) {
             throw new InvalidFieldValue([{
                 fieldPath: "UpdateEntryTypeFeature.feature.config.appliesToEntryTypes",
