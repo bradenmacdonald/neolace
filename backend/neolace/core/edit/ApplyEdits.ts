@@ -255,8 +255,7 @@ export const ApplyEdits = defineAction({
                         await tx.query(C`
                             MATCH (et:${EntryType} {id: ${edit.data.entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                             MATCH (et)-[rel:${EntryType.rel.HAS_FEATURE}]->(feature:${feature.configClass})
-                            DELETE rel
-                            DELETE feature
+                            DETACH DELETE feature
                         `);
                     }
                     modifiedNodes.add(edit.data.entryTypeId);

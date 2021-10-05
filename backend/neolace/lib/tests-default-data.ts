@@ -309,7 +309,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         accessMode: data.site.initialAccessMode,
     })).then(result => {
         data.site.id = result.id;
-        data.site.adminsGroupId = result.adminGroup;
+        data.site.adminsGroupId = result.adminGroup!;
     });
 
     await graph.runAsSystem(CreateGroup({

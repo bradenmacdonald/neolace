@@ -1,4 +1,4 @@
-import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { InvalidFieldValue, SiteSchemaData } from "neolace/deps/neolace-api.ts";
 import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { EntryTypeFeature } from "../feature.ts";
@@ -34,7 +34,7 @@ export const UseAsProperty = EntryTypeFeature({
         });
     },
     updateConfiguration: async (entryTypeId: VNID, config: {appliesToEntryTypes: VNID[]}, tx: WrappedTransaction, markNodeAsModified: (vnid: VNID) => void) => {
-        await tx.query(C`
+        const appliesToResult = await tx.query(C`
             MATCH (et:${EntryType} {id: ${entryTypeId}})
             MERGE (et)-[:${EntryType.rel.HAS_FEATURE}]->(feature:${UseAsPropertyEnabled}:${C(EnabledFeature.label)})
             ON CREATE SET feature.id = ${VNID()}
@@ -44,7 +44,13 @@ export const UseAsProperty = EntryTypeFeature({
             // Find each new EntryType that this property can be used for, and make sure it's part of the same site:
             MATCH (appliesToET:${EntryType} {id: appliesToId})-[:${EntryType.rel.FOR_SITE}]->(site)<-[:${EntryType.rel.FOR_SITE}]-(et)
             MERGE (feature)-[:${UseAsPropertyEnabled.rel.APPLIES_TO}]->(appliesToET)
-        `);
+        `.RETURN({}));
+        if (appliesToResult.length !== config.appliesToEntryTypes.length) {
+            throw new InvalidFieldValue([{
+                fieldPath: "UpdateEntryTypeFeature.feature.config.appliesToEntryTypes",
+                message: "Invalid EntryType ID",
+            }]);
+        }
 
         // We need to mark the UseAsPropertyEnabled node as modified:
         const result = await tx.queryOne(C`
