@@ -130,11 +130,17 @@ group(import.meta, () => {
                 {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
                 // Create properties:
                 {code: "CreateEntry", data: {id: prop1, name: "Property 1", type: propertyType, friendlyId: "p1", description: ""}},
-                {code: "UpdateEntryUseAsProperty", data: {entryId: prop1, inherits: true}},
+                {code: "UpdateEntryFeature", data: {entryId: prop1, feature: { featureType: "UseAsProperty",
+                    inherits: true,
+                }}},
                 {code: "CreateEntry", data: {id: prop2, name: "Property 2", type: propertyType, friendlyId: "p2", description: ""}},
-                {code: "UpdateEntryUseAsProperty", data: {entryId: prop2, inherits: true}},
+                {code: "UpdateEntryFeature", data: {entryId: prop2, feature: { featureType: "UseAsProperty",
+                    inherits: true,
+                }}},
                 {code: "CreateEntry", data: {id: prop3, name: "Property 3", type: propertyType, friendlyId: "p3", description: ""}},
-                {code: "UpdateEntryUseAsProperty", data: {entryId: prop3, inherits: false}},
+                {code: "UpdateEntryFeature", data: {entryId: prop3, feature: { featureType: "UseAsProperty",
+                    inherits: false,
+                }}},
                 // Create entry A and its properties:
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                 {code: "UpdatePropertyValue", data: {entry: A, property: prop1, valueExpression: `"A1"`, note: ""}},
@@ -243,7 +249,10 @@ group(import.meta, () => {
             for (let i = 0; i < 10; i++) {
                 const id = VNID();
                 edits.push({code: "CreateEntry", data: {id, name: `Property ${i}`, type: propertyType, friendlyId: `p${i}`, description: ""}});
-                edits.push({code: "UpdateEntryUseAsProperty", data: {entryId: id, importance: i, inherits: i < 8}});
+                edits.push({code: "UpdateEntryFeature", data: {entryId: id, feature: { featureType: "UseAsProperty",
+                    importance: i,
+                    inherits: i < 8,
+                }}});
                 edits.push({code: "UpdatePropertyValue", data: {entry: A, property: id, valueExpression: `"A${i}"`, note: ""}});
                 aPropertyValues.push({
                     label: `Property ${i}`,
@@ -265,7 +274,9 @@ group(import.meta, () => {
             for (let i = 0; i < 28; i++) {
                 const id = VNID();
                 edits.push({code: "CreateEntry", data: {id, name: `B Property ${i}`, type: propertyType, friendlyId: `p-b${i}`, description: ""}});
-                edits.push({code: "UpdateEntryUseAsProperty", data: {entryId: id, importance: 20 + i}});
+                edits.push({code: "UpdateEntryFeature", data: {entryId: id, feature: { featureType: "UseAsProperty",
+                    importance: 20 + i,
+                }}});
                 edits.push({code: "UpdatePropertyValue", data: {entry: B, property: id, valueExpression: `"B${i}"`, note: ""}});
                 bPropertyValues.push({
                     label: `B Property ${i}`,

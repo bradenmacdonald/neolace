@@ -1,4 +1,5 @@
 import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { Type } from "neolace/deps/computed-types.ts";
 import { VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import type { EnabledFeature } from "./EnabledFeature.ts";
 
@@ -7,9 +8,10 @@ import type { EnabledFeature } from "./EnabledFeature.ts";
  * 
  * For example, if an EntryType has the "Article" feature, then entries of that type can have article content.
  */
-export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"], EF extends typeof EnabledFeature> {
+export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"], EF extends typeof EnabledFeature, UFS> {
     featureType: FT;
     configClass: EF;
+    updateFeatureSchema: UFS;
     /**
      * Scan the database and for all entry types in the given site that have this feature enabled, update the schema
      * data accordingly.
@@ -21,8 +23,8 @@ export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][
      */
     contributeToSchema(mutableSchema: SiteSchemaData, tx: WrappedTransaction, siteId: VNID): Promise<void>;
     /**
-     * Enabled and update the configuration of this feature. This is called when applying the "UpdateEntryTypeFeature"
-     * schema edit.
+     * Enabled and update the configuration of this feature, for all entries of a specific type. This is called when
+     * applying the "UpdateEntryTypeFeature" schema edit.
      */
     updateConfiguration(
         entryTypeId: VNID,
@@ -30,10 +32,21 @@ export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][
         tx: WrappedTransaction,
         markNodeAsModified: (vnid: VNID) => void,
     ): Promise<void>;
+    /**
+     * Update the details of this feature for a single entry.
+     * e.g. if the "PlantImage" entry type has the "Image" feature enabled, then you can use this action to set the
+     * image of a specific PlantImage entry.
+     */
+     editFeature(
+        entryId: VNID,
+        editData: Type<UFS>,
+        tx: WrappedTransaction,
+        markNodeAsModified: (vnid: VNID) => void,
+    ): Promise<void>;
 }
 
 // Helper function to declare objects with the above interface with proper typing.
-export function EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"], EF extends typeof EnabledFeature>(args: EntryTypeFeature<FT, EF>): EntryTypeFeature<FT, EF> {
+export function EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"], EF extends typeof EnabledFeature, UFS>(args: EntryTypeFeature<FT, EF, UFS>): EntryTypeFeature<FT, EF, UFS> {
     // Also freeze it to make sure it's immutable
     return Object.freeze(args);
 }

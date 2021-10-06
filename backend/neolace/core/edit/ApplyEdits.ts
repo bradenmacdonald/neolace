@@ -12,7 +12,7 @@ import {
     UpdateRelationshipType,
     getEditType,
     RelationshipCategory,
-    UpdateEntryUseAsProperty,
+    UpdateEntryFeature,
 } from "neolace/deps/neolace-api.ts";
 import { C, defineAction, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { Site } from "../Site.ts";
@@ -21,11 +21,9 @@ import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
-import { UseAsPropertyData } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyData.ts";
 import { UseAsPropertyEnabled } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyEnabled.ts";
 import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 import { features } from "neolace/core/entry/features/all-features.ts";
-import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
 
 /**
  * Apply a set of edits (to schema and/or content)
@@ -70,35 +68,23 @@ export const ApplyEdits = defineAction({
                     break;
                 }
 
-                case UpdateEntryUseAsProperty.code: {
-
-                    const changes: Record<string, unknown> = {};
-                    if (edit.data.importance !== undefined) {
-                        changes.importance = edit.data.importance;
-                    }
-                    if (edit.data.valueType !== undefined) {
-                        changes.valueType = edit.data.valueType;
-                    }
-                    if (edit.data.inherits !== undefined) {
-                        changes.inherits = edit.data.inherits;
-                    }
-                    if (edit.data.displayAs !== undefined) {
-                        changes.displayAs = edit.data.displayAs;
+                case UpdateEntryFeature.code: {
+                    // Load details of the feature that we're editing:
+                    const feature = features.find(f => f.featureType === edit.data.feature.featureType);
+                    if (feature === undefined) {
+                        throw new Error(`Unknown feature type ${edit.data.feature.featureType}`);
                     }
 
-                    const result = await tx.queryOne(C`
-                        MATCH (e:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}}),
-                            (et)-[:${EntryType.rel.HAS_FEATURE}]->(:${UseAsPropertyEnabled})  // Make sure this entry type can be used as a property
-                        MERGE (e)-[:${Entry.rel.HAS_FEATURE_DATA}]->(propData:${UseAsPropertyData}:${C(EntryFeatureData.label)})
-                        ON CREATE SET
-                            propData.id = ${VNID()},
-                            propData.importance = ${UseAsPropertyData.defaultImportance},
-                            propData.inherits = false
-                        SET propData += ${changes}
-                    `.RETURN({"propData.id": Field.VNID}));
+                    // Validate that the entry exists, is part of the correct site, and that its type has this feature enabled:
+                    await tx.queryOne(C`
+                        MATCH (e:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                        MATCH (et)-[rel:${EntryType.rel.HAS_FEATURE}]->(feature:${feature.configClass})
+                    `.RETURN({}));  // If this returns a single result, we're good; otherwise it will throw an error.
+
+                    // Edit the feature:
+                    await feature.editFeature(edit.data.entryId, edit.data.feature as any, tx, id => modifiedNodes.add(id));
 
                     modifiedNodes.add(edit.data.entryId);
-                    modifiedNodes.add(result["propData.id"]);
                     break;
                 }
 
@@ -250,7 +236,7 @@ export const ApplyEdits = defineAction({
                             MATCH (et:${EntryType} {id: ${edit.data.entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         `.RETURN({}));
                         // Now update it:
-                        await feature.updateConfiguration(edit.data.entryTypeId, edit.data.feature.config, tx, id => modifiedNodes.add(id));
+                        await feature.updateConfiguration(edit.data.entryTypeId, edit.data.feature.config as any, tx, id => modifiedNodes.add(id));
                     } else {
                         await tx.query(C`
                             MATCH (et:${EntryType} {id: ${edit.data.entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})

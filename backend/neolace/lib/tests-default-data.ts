@@ -343,7 +343,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 "The **scientific name**, sometimes called the **binomial name** or **latin name** is an unambiguous species identifier."
             ),
         }},
-        {code: "UpdateEntryUseAsProperty", data: { entryId: data.entries.propertyScientificName.id, displayAs: "*{value}*" }},
+        {code: "UpdateEntryFeature", data: { entryId: data.entries.propertyScientificName.id, feature: { featureType: "UseAsProperty",
+            displayAs: "*{value}*"
+        }}},
         // An entry's WikiData Entry ID
         {code: "CreateEntry", data: {
             ...data.entries.propertyWikidataItemId,
@@ -352,7 +354,10 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 "ID of this item on Wikidata, the free knowledge base that anyone can edit."
             ),
         }},
-        {code: "UpdateEntryUseAsProperty", data: { entryId: data.entries.propertyWikidataItemId.id, importance: 15, displayAs: "[{value}](https://www.wikidata.org/wiki/{value})" }},
+        {code: "UpdateEntryFeature", data: { entryId: data.entries.propertyWikidataItemId.id, feature: { featureType: "UseAsProperty",
+            importance: 15,
+            displayAs: "[{value}](https://www.wikidata.org/wiki/{value})",
+        }}},
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Create entries for various tree species:

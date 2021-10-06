@@ -49,12 +49,11 @@ export const config = (() => {
         // Password for making private API requests to the authentication microservice (Keratin AuthN)
         authnApiPassword: "neolace",
         // S3-compatible object store used for assets like images, PDFs, etc.
-        objStoreEndpoint: "objstore",
-        objStorePort: 9000,
-        objStoreUseSSL: false,
+        objStoreEndpointURL: "http://objstore:9000/",
+        objStoreRegion: "dev-region",
+        objStoreBucketName: "neolace-asset-lib-data",
         objStoreAccessKey: "AKIA_NEOLACE_DEV",
         objStoreSecretKey: "neolace123",
-        objStoreBucketName: "neolace-asset-lib-data",
         objStorePublicUrlPrefix: "http://localhost:9000/neolace-asset-lib-data",
     };
     // Allow defaults to be overriden by environment variables:

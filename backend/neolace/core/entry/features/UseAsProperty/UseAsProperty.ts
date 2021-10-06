@@ -1,16 +1,20 @@
-import { InvalidFieldValue, SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { InvalidFieldValue, SiteSchemaData, UpdateEntryUseAsPropertySchema } from "neolace/deps/neolace-api.ts";
 import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { EntryTypeFeature } from "../feature.ts";
 import { UseAsPropertyEnabled } from "./UseAsPropertyEnabled.ts";
 import { Site } from "neolace/core/Site.ts";
 import { EnabledFeature } from "../EnabledFeature.ts";
+import { Entry } from "neolace/core/entry/Entry.ts";
+import { UseAsPropertyData } from "./UseAsPropertyData.ts";
+import { EntryFeatureData } from "../EntryFeatureData.ts";
 
 const featureType = "UseAsProperty" as const;
 
 export const UseAsProperty = EntryTypeFeature({
     featureType,
     configClass: UseAsPropertyEnabled,
+    updateFeatureSchema: UpdateEntryUseAsPropertySchema,
     contributeToSchema:  async (mutableSchema: SiteSchemaData, tx: WrappedTransaction, siteId: VNID) => {
 
         const configuredOnThisSite = await tx.query(C`
@@ -67,5 +71,33 @@ export const UseAsProperty = EntryTypeFeature({
             WHERE NOT appliesToET.id IN ${config.appliesToEntryTypes}
             DELETE rel
         `);
+    },
+    async editFeature(entryId, editData, tx, markNodeAsModified) {
+        const changes: Record<string, unknown> = {};
+        if (editData.importance !== undefined) {
+            changes.importance = editData.importance;
+        }
+        if (editData.valueType !== undefined) {
+            changes.valueType = editData.valueType;
+        }
+        if (editData.inherits !== undefined) {
+            changes.inherits = editData.inherits;
+        }
+        if (editData.displayAs !== undefined) {
+            changes.displayAs = editData.displayAs;
+        }
+
+        const result = await tx.queryOne(C`
+            MATCH (e:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})
+            // Note that the code that calls this has already verified that this feature is enabled for this entry type.
+            MERGE (e)-[:${Entry.rel.HAS_FEATURE_DATA}]->(propData:${UseAsPropertyData}:${C(EntryFeatureData.label)})
+            ON CREATE SET
+                propData.id = ${VNID()},
+                propData.importance = ${UseAsPropertyData.defaultImportance},
+                propData.inherits = false
+            SET propData += ${changes}
+        `.RETURN({"propData.id": Field.VNID}));
+
+        markNodeAsModified(result["propData.id"]);
     },
 });

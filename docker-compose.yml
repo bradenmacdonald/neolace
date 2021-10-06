@@ -94,6 +94,7 @@ services:
     environment:
       MINIO_ACCESS_KEY: AKIA_NEOLACE_DEV
       MINIO_SECRET_KEY: neolace123
+      MINIO_REGION_NAME: dev-region
     ports:
       - 9000:9000
       #- 5555:5555  # For the frontend, see note in "frontend" service definition
