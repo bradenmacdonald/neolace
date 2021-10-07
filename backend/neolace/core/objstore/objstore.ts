@@ -17,13 +17,10 @@ const objStoreClient = new S3Bucket({
 export const __forScriptsOnly = { objStoreClient };
 
 
-// TODO: set up MinIO to automatically delete uploaded temp files if any are stranded
-// https://docs.minio.io/docs/minio-bucket-lifecycle-guide.html
-
-
-export async function uploadFileToObjStore(fileStream: Deno.Reader, contentType: string): Promise<{sha256Hash: string, size: number}> {
-    // First we upload to a temporary filename
-    const tempFilename = `temp/${VNID()}`;
+export async function uploadFileToObjStore(fileStream: Deno.Reader, contentType: string): Promise<{id: VNID, filename: string, sha256Hash: string, size: number}> {
+    const id = VNID();
+    // Add a second VNID to the filename so that the ID alone is not enough to download the file (security concern)
+    const filename = `${id}${VNID()}`;
     // Stream the file to object storage, calculating its SHA-256 hash as we go
     const hasher = createHash("sha256");
     let sizeCalculator = 0;
@@ -42,34 +39,19 @@ export async function uploadFileToObjStore(fileStream: Deno.Reader, contentType:
     // dependencies); if it's text, do our own test (see https://github.com/BaseMax/detect-svg/blob/master/index.js)
 
     // Upload the file to the object store, using tempFilename:
-    await objStoreClient.putObject(tempFilename, buf.bytes(), {
+    await objStoreClient.putObject(filename, buf.bytes(), {
         contentType,
-        // Since we store files at a URL based on their hash, they can and should be cached as aggressively as possible:
+        // Since files are immutable and assigned an ID on upload, they can and should be cached as aggressively as possible:
         cacheControl: "public, max-age=604800, immutable",
     });
 
     // Now we know the file's hash and size:
     const sha256Hash = hasher.toString("hex");
     const size = sizeCalculator;
-    // Check if an asset with that same hash already exists, and if not, copy this from the temp file into that place.
-    const stat = await objStoreClient.headObject(sha256Hash);
-    if (stat) {
-        // Do nothing; an identical file already exists in the asset library.
-        console.error(`File exists, metadata is ${JSON.stringify(stat.meta)}`);
-        // TODO: verify that content-type is correct.
-
-        if (stat.contentLength !== size) {
-            throw new Error(`Existing file with the same hash had size ${stat.contentLength} but this had size ${size}`);
-        }
-    } else {
-        // This is a new file; no file with the same hash value already exists.
-        // Copy from tempFilename to sha256Hash filename
-        objStoreClient.copyObject(tempFilename, sha256Hash, {});
-    }
-    // delete the temporary file
-    await objStoreClient.deleteObject(tempFilename);
 
     return {
+        id,
+        filename,
         sha256Hash,
         size,
     };

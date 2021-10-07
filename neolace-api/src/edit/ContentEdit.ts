@@ -38,7 +38,7 @@ export const UpdateEntryUseAsPropertySchema = Schema({
 
 export const UpdateEntryImageSchema = Schema({
     /** Change which actual image file this entry "holds" */
-    sha256Hash: string.strictOptional(),
+    dataFileId: vnidString.strictOptional(),
 });
 
 /** Change details of how this entry is used as a property for other entries */

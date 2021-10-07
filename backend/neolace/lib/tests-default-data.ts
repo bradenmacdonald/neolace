@@ -9,7 +9,15 @@ import { CreateSite, AccessMode } from "neolace/core/Site.ts";
 import { CreateGroup } from "neolace/core/Group.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
+import { uploadFileToObjStore } from "neolace/core/objstore/objstore.ts";
+import { CreateDataFile } from "../core/objstore/DataFile.ts";
+import { join as joinPath, dirname } from "std/path/mod.ts";
+import { __forScriptsOnly as objStoreUtils } from "neolace/core/objstore/objstore.ts";
 
+const thisFolder: string = (() => {
+    const tf = dirname(import.meta.url);
+    return tf.startsWith("file:") ? tf.substr(5) : tf;
+})();
 
 // Data that gets created by default. 
 // To access this, use the return value of setTestIsolation(setTestIsolation.levels.DEFAULT_...)
@@ -113,6 +121,7 @@ const data = {
                 simplePropValues: {
                     "_CFSpeciesTaxonomy": {id: VNID("_CFSpeciesTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
                     "_CFSpeciesParts": {id: VNID("_CFSpeciesParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
+                    "_CFSpeciesRelImg": {id: VNID("_CFSpeciesRelImg"), label: "Related Images", importance: 15, valueExpression: `this.related(via=RT[_IRelTo], direction="to")`, note: ""},
                 },
                 enabledFeatures: {},
             },
@@ -127,6 +136,18 @@ const data = {
                     "_CFPartsFoundIn": {id: VNID("_CFPartsFoundIn"), label: "Part of", importance: 5, valueExpression: "this.related(via=RT[_HASA])", note: ""},
                 },
                 enabledFeatures: {},
+            },
+            "_ETIMAGE": {
+                id: VNID("_ETIMAGE"),
+                name: "Image",
+                description: "An image, such as a photo of a plant",
+                friendlyIdPrefix: "img-",
+                simplePropValues: {
+                    "_CFImageRelatesTo": {id: VNID("_CFImageRelatesTo"), label: "Relates to", importance: 1, valueExpression: `this.related(via=RT[_IRelTo], direction="from")`, note: ""},
+                },
+                enabledFeatures: {
+                    Image: {},
+                },
             },
             "_ETPROPERTY": {
                 id: VNID("_ETPROPERTY"),
@@ -195,7 +216,7 @@ const data = {
                 fromEntryTypes: [VNID("_ETSPECIES")],
                 toEntryTypes: [VNID("_ETGENUS")],
             },
-            // At any level, a classificaiton of plants can have a specific part, e.g. conifers have cones
+            // At any level, a classification of plants can have a specific part, e.g. conifers have cones
             "_HASA": {
                 id: VNID("_HASA"),
                 nameForward: "has",
@@ -212,6 +233,27 @@ const data = {
                     VNID("_ETSPECIES"),
                 ],
                 toEntryTypes: [VNID("_ETPLANTPART")],
+            },
+            // An image can be related to anything
+            "_IRelTo": {
+                id: VNID("_IRelTo"),
+                nameForward: "relates to",
+                nameReverse: "has related images",
+                category: RelationshipCategory.RELATES_TO,
+                description: null,
+                fromEntryTypes: [
+                    VNID("_ETIMAGE"),
+                ],
+                toEntryTypes: [
+                    // An image can related to anything. These are in alphabetical order though to match how Neolace returns a site's schema.
+                    VNID("_ETCLASS"),
+                    VNID("_ETDIVISION"),
+                    VNID("_ETFAMILY"),
+                    VNID("_ETGENUS"),
+                    VNID("_ETORDER"),
+                    VNID("_ETPLANTPART"),
+                    VNID("_ETSPECIES"),
+                ],
             },
             // A plant part can be another type of plant part:
             "_PARTisPART": {
@@ -252,6 +294,8 @@ const data = {
         cone: {id: VNID(), friendlyId: "pp-cone", name: "Cone (strobilus)", description: "set below"},
             pollenCone: {id: VNID(), friendlyId: "pp-pollen-cone", name: "Pollen cone", description: "set below"},
             seedCone: {id: VNID(), friendlyId: "pp-seed-cone", name: "Seed cone", description: "set below"},
+        // Images:
+        imgPonderosaTrunk: {id: VNID(), friendlyId: "img-lassen-ponderosa", name: "Ponderosa Pine Trunk in Lassen Volcanic National Park", description: "set below"},
     },
 };
 
@@ -274,6 +318,39 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     log.info(`Creating "empty" snapshot...`);
     // We call this an "empty" snapshot but it actually includes any data created by migrations, like the system user
     const emptySnapshot = await graph.snapshotDataForTesting();
+
+    log.info(`Uploading data files to object storage...`);
+
+    try {
+        objStoreUtils.objStoreClient.empty();
+    } catch (err: unknown) {
+        console.error(err);
+        throw new Error("Unable to connect to object storage (MinIO)");
+    }
+
+    async function uploadSampleFile(path: string): Promise<VNID> {
+        const fullPath = joinPath(thisFolder, `../sample-data/${path}`);
+        let contentType: string;
+        if (path.endsWith(".webp")) {
+            contentType = "image/webp";
+        } else if (path.endsWith(".svg")) {
+            contentType = "image/svg+xml";
+        } else if (path.endsWith(".png")) {
+            contentType = "image/png";
+        } else {
+            throw new Error(`Couldn't detect content type of sample file "${path}".`)
+        }
+        const file = await Deno.open(fullPath);
+        const uploadData = await uploadFileToObjStore(file, contentType);
+        file.close();
+
+        await graph.runAsSystem(CreateDataFile({
+            ...uploadData,
+            contentType,
+        }));
+        return uploadData.id;
+    }
+    const ponderosaPineImgId = await uploadSampleFile("plantdb/img-lassen-ponderosa.webp");
 
     log.info(`Generating default data for tests...`);
 
@@ -632,7 +709,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                                 toEntry: data.entries.genusThuja.id,
                                 type: data.schema.relationshipTypes._SisG.id,
                             }},
-        
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Create entries about the cones (strobilus/strobili) that conifers have:
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -686,6 +763,30 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             fromEntry: data.entries.classPinopsida.id,
             toEntry: data.entries.seedCone.id,
             type: data.schema.relationshipTypes._HASA.id,
+        }},
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Create image entries:
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        {code: "CreateEntry", data: {
+            ...data.entries.imgPonderosaTrunk,
+            type: data.schema.entryTypes._ETIMAGE.id,
+            description: (data.entries.imgPonderosaTrunk.description = `
+                A [ponderosa pine](${data.entries.ponderosaPine.id}) at Butte Lake, Lassen Volcanic National Park, California 40°33'48"N 121°17'37"W, 1850m altitude.
+                Photo by [Vlad & Marina Butsky](https://www.flickr.com/photos/butsky/), [published on Flickr](https://www.flickr.com/photos/butsky/1183753142/) under the
+                [Creative Commons Attribution 2.0 Generic (CC BY 2.0)](https://creativecommons.org/licenses/by/2.0/) license.
+            `.trim()),
+        }},
+        {code: "UpdateEntryFeature", data: { entryId: data.entries.imgPonderosaTrunk.id, feature: { featureType: "Image",
+            dataFileId: ponderosaPineImgId,
+        }}},
+        {code: "CreateRelationshipFact", data: {
+            // This image relates to the ponderosa pine:
+            id: VNID(),
+            fromEntry: data.entries.imgPonderosaTrunk.id,
+            toEntry: data.entries.ponderosaPine.id,
+            type: data.schema.relationshipTypes._IRelTo.id,
         }},
 
     ]}));

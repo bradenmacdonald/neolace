@@ -68,19 +68,17 @@ export const graph = new Vertex({
                 await dbWrite(tx => tx.run("DROP CONSTRAINT site_sitecode_uniq IF EXISTS"));
             },
             dependsOn: [],
-        },
+        },/*
         // The SHA-256 hash works as a unique primary key for DataFile nodes:
         datafileHash: {
-            forward: async (dbWrite) => {
-                await dbWrite(tx => tx.run(
-                    "CREATE CONSTRAINT datafile_sha256Hash_uniq ON (df:DataFile) ASSERT df.sha256Hash IS UNIQUE"
-                ));
+            forward: async (_dbWrite) => {
+                //
             },
             backward: async (dbWrite) => {
                 await dbWrite(tx => tx.run("DROP CONSTRAINT datafile_sha256Hash_uniq IF EXISTS"));
             },
             dependsOn: [],
-        },
+        },*/
     },
 });
 

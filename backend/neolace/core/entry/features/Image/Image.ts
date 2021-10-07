@@ -8,6 +8,7 @@ import { EnabledFeature } from "../EnabledFeature.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { ImageData } from "./ImageData.ts";
 import { EntryFeatureData } from "../EntryFeatureData.ts";
+import { DataFile } from "neolace/core/objstore/DataFile.ts";
 
 const featureType = "Image" as const;
 
@@ -49,20 +50,28 @@ export const ImageFeature = EntryTypeFeature({
         markNodeAsModified(result["feature.id"]);
     },
     async editFeature(entryId, editData, tx, markNodeAsModified): Promise<void> {
-        const changes: Record<string, unknown> = {};
-        if (editData.sha256Hash !== undefined) {
-            changes.sha256Hash = editData.sha256Hash;
-        }
-
+        // Associate the Entry with the ImageData node
         const result = await tx.queryOne(C`
             MATCH (e:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})
             // Note that the code that calls this has already verified that this feature is enabled for this entry type.
             MERGE (e)-[:${Entry.rel.HAS_FEATURE_DATA}]->(imageData:${ImageData}:${C(EntryFeatureData.label)})
             ON CREATE SET
-                imageData.id = ${VNID()},
-            SET imageData += ${changes}
+                imageData.id = ${VNID()}
         `.RETURN({"imageData.id": Field.VNID}));
+        const imageDataId = result["imageData.id"];
+        // Associate the ImageData with the DataFile that holds the actual image contents
+        if (editData.dataFileId !== undefined) {
+            await tx.query(C`
+                MATCH (imageData:${ImageData} {id: ${imageDataId}})
+                MATCH (dataFile:${DataFile} {id: ${editData.dataFileId}})
+                MERGE (imageData)-[:${ImageData.rel.HAS_DATA}]->(dataFile)
+                WITH imageData, dataFile
+                MATCH (imageData)-[:${ImageData.rel.HAS_DATA}]->(oldFile)
+                    WHERE NOT oldFile = dataFile
+                DELETE oldFile
+            `);
+        }
 
-        markNodeAsModified(result["imageData.id"]);
+        markNodeAsModified(imageDataId);
     },
 });

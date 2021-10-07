@@ -48,10 +48,9 @@ export enum RelationshipCategory {
      */
     //DEPENDS_ON = "DEPENDS_ON",
     /**
-     * RELATES_TO: e.g. An Email RELATES_TO a SubjectMatter
-     * This is considered a symmetrical relationship.
+     * RELATES_TO: e.g. An Image RELATES_TO a Article
      */
-    //RELATES_TO = "RELATES_TO",
+    RELATES_TO = "RELATES_TO",
 }
 
 export function CastRelationshipCategory(value: string): RelationshipCategory {

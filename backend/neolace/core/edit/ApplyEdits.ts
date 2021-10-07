@@ -14,7 +14,7 @@ import {
     RelationshipCategory,
     UpdateEntryFeature,
 } from "neolace/deps/neolace-api.ts";
-import { C, defineAction, Field, VNID } from "neolace/deps/vertex-framework.ts";
+import { C, defineAction, Field, VNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { Site } from "../Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
@@ -76,10 +76,16 @@ export const ApplyEdits = defineAction({
                     }
 
                     // Validate that the entry exists, is part of the correct site, and that its type has this feature enabled:
+                    try {
                     await tx.queryOne(C`
-                        MATCH (e:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                        MATCH (et)-[rel:${EntryType.rel.HAS_FEATURE}]->(feature:${feature.configClass})
-                    `.RETURN({}));  // If this returns a single result, we're good; otherwise it will throw an error.
+                            MATCH (e:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            MATCH (et)-[rel:${EntryType.rel.HAS_FEATURE}]->(feature:${feature.configClass})
+                        `.RETURN({}));  // If this returns a single result, we're good; otherwise it will throw an error.
+                    } catch (err: unknown) {
+                        if (err instanceof EmptyResultError) {
+                            throw new Error("Cannot set feature data for that entry - either the feature is not enabled or the entry ID is invalid.");
+                        }
+                    }
 
                     // Edit the feature:
                     await feature.editFeature(edit.data.entryId, edit.data.feature as any, tx, id => modifiedNodes.add(id));

@@ -16,6 +16,8 @@ import { ImageData } from "neolace/core/entry/features/Image/ImageData.ts";
 import { ImageFeatureEnabled } from "neolace/core/entry/features/Image/ImageFeatureEnabled.ts";
 import { UseAsPropertyData } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyData.ts";
 import { UseAsPropertyEnabled } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyEnabled.ts";
+// core/objstore
+import { DataFile } from "neolace/core/objstore/DataFile.ts";
 // core/schema
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
@@ -43,6 +45,8 @@ export function registerVNodeTypes(graph: Vertex) {
         ImageFeatureEnabled,
         UseAsPropertyData,
         UseAsPropertyEnabled,
+        // core/objstore
+        DataFile,
         // core/schema
         EntryType,
         RelationshipType,

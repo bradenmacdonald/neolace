@@ -49,9 +49,10 @@ export const config = (() => {
         // Password for making private API requests to the authentication microservice (Keratin AuthN)
         authnApiPassword: "neolace",
         // S3-compatible object store used for assets like images, PDFs, etc.
-        objStoreEndpointURL: "http://objstore:9000/",
+        objStoreEndpointURL: "http://localhost:9000/",
         objStoreRegion: "dev-region",
-        objStoreBucketName: "neolace-asset-lib-data",
+        // The default bucket names below are created by the entrypoint in docker-compose.yml
+        objStoreBucketName: defaultTo("neolace-objects", {test: "neolace-test-objects"}),
         objStoreAccessKey: "AKIA_NEOLACE_DEV",
         objStoreSecretKey: "neolace123",
         objStorePublicUrlPrefix: "http://localhost:9000/neolace-asset-lib-data",
