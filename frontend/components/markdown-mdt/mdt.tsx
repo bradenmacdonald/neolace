@@ -48,13 +48,13 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode): React.Re
             if (node.href.startsWith("#")) {
                 return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child))}</a>;
             } else if (node.href.indexOf("/") === -1) {
-                // This is the shortId of some TechDB entry, presumably
+                // This is the shortId of some entry, presumably
                 const href = urlForShortId(node.href);
                 if (href !== undefined) {
                     return <Link href={href} key={key}><a>{node.children.map(child => inlineNodeToComponent(child))}</a></Link>;
                 } else {
                     // We don't know what this link is - seems invalid.
-                    return <>{node.children.map(child => inlineNodeToComponent(child))}</>;
+                    return <React.Fragment key={key}>{node.children.map(child => inlineNodeToComponent(child))}</React.Fragment>;
                 }
             } else if (node.href.startsWith("http://") || node.href.startsWith("https://")) {
                 return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child))}</a>;

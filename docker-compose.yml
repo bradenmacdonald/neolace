@@ -104,6 +104,20 @@ services:
     volumes:
       - objstore-data:/data/
 
+  createbuckets:
+    # Make sure buckets exist and allow public read ("download")
+    image: minio/mc
+    depends_on:
+      - objstore
+    entrypoint: >
+      /bin/sh -c "
+      sleep 3;
+      mc config host add objstore http://objstore:9000 AKIA_NEOLACE_DEV neolace123;
+      mc policy set download objstore/neolace-objects;
+      mc policy set download objstore/neolace-test-objects;
+      exit 0;
+      "
+
   ################################################################
   # Deno container for the backend (dev mode)
   ################################################################

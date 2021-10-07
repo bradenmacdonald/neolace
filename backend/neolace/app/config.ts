@@ -55,7 +55,7 @@ export const config = (() => {
         objStoreBucketName: defaultTo("neolace-objects", {test: "neolace-test-objects"}),
         objStoreAccessKey: "AKIA_NEOLACE_DEV",
         objStoreSecretKey: "neolace123",
-        objStorePublicUrlPrefix: "http://localhost:9000/neolace-asset-lib-data",
+        objStorePublicUrlPrefix: defaultTo("http://localhost:9000/neolace-objects", {test: "http://localhost:9000/neolace-test-objects"}),
     };
     // Allow defaults to be overriden by environment variables:
     for (const key in config) {

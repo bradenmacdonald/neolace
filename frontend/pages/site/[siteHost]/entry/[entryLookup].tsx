@@ -90,6 +90,15 @@ const EntryPage: NextPage<PageProps> = function(props) {
                             </div>
                         </div>
 
+                        {
+                            props.entry.features?.Image ?
+                                <>
+                                    <h2><FormattedMessage id="site.entry.imageHeading" defaultMessage="Image"/></h2>
+                                    <img src={props.entry.features.Image.imageUrl} />
+                                </>
+                            : null
+                        }
+
                         {/* Article content, if any */}
                         <h2>Heading 2</h2>
                         <p>Is it my imagination, or have tempers become a little frayed on the ship lately? I think you've let your personal feelings cloud your judgement. Now, how the hell do we defeat an enemy that knows us better than we know ourselves? Your head is not an artifact! Fear is the true enemy, the only enemy. Mr. Worf, you sound like a man who's asking his friend if he can start dating his sister.</p>
@@ -129,6 +138,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [
             api.GetEntryFlags.IncludePropertiesSummary,
             api.GetEntryFlags.IncludeReferenceCache,
+            api.GetEntryFlags.IncludeFeatures,
         ]});
     } catch (err) {
         if (err instanceof api.NotFound) {

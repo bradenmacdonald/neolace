@@ -773,7 +773,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             ...data.entries.imgPonderosaTrunk,
             type: data.schema.entryTypes._ETIMAGE.id,
             description: (data.entries.imgPonderosaTrunk.description = `
-                A [ponderosa pine](${data.entries.ponderosaPine.id}) at Butte Lake, Lassen Volcanic National Park, California 40°33'48"N 121°17'37"W, 1850m altitude.
+                A [ponderosa pine](/entry/${data.entries.ponderosaPine.friendlyId}) at Butte Lake, Lassen Volcanic National Park, California 40°33'48"N 121°17'37"W, 1850m altitude.
                 Photo by [Vlad & Marina Butsky](https://www.flickr.com/photos/butsky/), [published on Flickr](https://www.flickr.com/photos/butsky/1183753142/) under the
                 [Creative Commons Attribution 2.0 Generic (CC BY 2.0)](https://creativecommons.org/licenses/by/2.0/) license.
             `.trim()),
