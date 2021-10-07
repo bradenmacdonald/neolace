@@ -1,16 +1,18 @@
-import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { EntryFeaturesData, SiteSchemaData } from "neolace/deps/neolace-api.ts";
 import { Type } from "neolace/deps/computed-types.ts";
-import { VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { RawVNode, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import type { EnabledFeature } from "./EnabledFeature.ts";
+import type { EntryFeatureData } from "./EntryFeatureData.ts";
 
 /**
  * A "feature" is some functionality that can be enbabled, disabled, and configured for each EntryType.
  * 
  * For example, if an EntryType has the "Article" feature, then entries of that type can have article content.
  */
-export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"], EF extends typeof EnabledFeature, UFS> {
+export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"], EF extends typeof EnabledFeature, EFD extends EntryFeatureData, UFS> {
     featureType: FT;
     configClass: EF;
+    dataClass: EFD;
     updateFeatureSchema: UFS;
     /**
      * Scan the database and for all entry types in the given site that have this feature enabled, update the schema
@@ -32,6 +34,7 @@ export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][
         tx: WrappedTransaction,
         markNodeAsModified: (vnid: VNID) => void,
     ): Promise<void>;
+
     /**
      * Update the details of this feature for a single entry.
      * e.g. if the "PlantImage" entry type has the "Image" feature enabled, then you can use this action to set the
@@ -43,10 +46,20 @@ export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][
         tx: WrappedTransaction,
         markNodeAsModified: (vnid: VNID) => void,
     ): Promise<void>;
+
+    /**
+     * Load the details of this feature for a single entry.
+     * e.g. if the "PlantImage" entry type has the "Image" feature enabled, then you can use this action to get the
+     * URL of the actual image file that the entry holds.
+     */
+    loadData(
+        data: RawVNode<EFD>,
+        tx: WrappedTransaction,
+    ): Promise<EntryFeaturesData[FT]>;
 }
 
 // Helper function to declare objects with the above interface with proper typing.
-export function EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"], EF extends typeof EnabledFeature, UFS>(args: EntryTypeFeature<FT, EF, UFS>): EntryTypeFeature<FT, EF, UFS> {
+export function EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"], EF extends typeof EnabledFeature, EFD extends EntryFeatureData, UFS>(args: EntryTypeFeature<FT, EF, EFD, UFS>): EntryTypeFeature<FT, EF, EFD, UFS> {
     // Also freeze it to make sure it's immutable
     return Object.freeze(args);
 }

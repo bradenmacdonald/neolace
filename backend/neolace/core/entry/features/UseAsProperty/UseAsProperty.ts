@@ -14,6 +14,7 @@ const featureType = "UseAsProperty" as const;
 export const UseAsProperty = EntryTypeFeature({
     featureType,
     configClass: UseAsPropertyEnabled,
+    dataClass: UseAsPropertyData,
     updateFeatureSchema: UpdateEntryUseAsPropertySchema,
     contributeToSchema:  async (mutableSchema: SiteSchemaData, tx: WrappedTransaction, siteId: VNID) => {
 
@@ -100,4 +101,15 @@ export const UseAsProperty = EntryTypeFeature({
 
         markNodeAsModified(result["propData.id"]);
     },
+    /**
+     * Load the details of this feature for a single entry.
+     */
+    // deno-lint-ignore require-await
+    async loadData(data, _tx) {
+        return {
+            importance: data.importance,
+            inherits: data.inherits,
+            displayAs: data.displayAs,
+        };
+    }
 });

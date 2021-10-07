@@ -19,6 +19,7 @@ const featureType = "Image" as const;
 export const ImageFeature = EntryTypeFeature({
     featureType,
     configClass: ImageFeatureEnabled,
+    dataClass: ImageData,
     updateFeatureSchema: UpdateEntryImageSchema,
     async contributeToSchema(mutableSchema: SiteSchemaData, tx: WrappedTransaction, siteId: VNID) {
 
@@ -74,4 +75,23 @@ export const ImageFeature = EntryTypeFeature({
 
         markNodeAsModified(imageDataId);
     },
+
+    /**
+     * Load the details of this feature for a single entry.
+     */
+    async loadData(data, tx) {
+        const dataFile = (await tx.pullOne(
+            ImageData,
+            id => id.dataFile(df => df.publicUrl().contentType.size),
+            {key: data.id},
+        )).dataFile;
+        if (dataFile === null) {
+            return undefined;
+        }
+        return {
+            imageUrl: dataFile.publicUrl,
+            contentType: dataFile.contentType,
+            size: Number(dataFile.size),
+        };
+    }
 });

@@ -1,4 +1,4 @@
-import { Schema, Type, string, vnidString, nullable, array, number, object, Record } from "../api-schemas.ts";
+import { Schema, Type, string, vnidString, nullable, array, number, object, Record, boolean } from "../api-schemas.ts";
 import { AnyLookupValue } from "./lookup-value.ts";
 
 
@@ -6,6 +6,7 @@ export enum GetEntryFlags {
     IncludeAncestors = "ancestors",
     IncludePropertiesSummary = "propertiesSummary",
     IncludeReferenceCache = "referenceCache",
+    IncludeFeatures = "features",
 }
 
 
@@ -43,6 +44,22 @@ export const DisplayedPropertySchema = Schema.merge(
     ),
 );
 export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
+
+
+export const EntryFeaturesSchema = Schema({
+    Image: Schema({
+        imageUrl: string,
+        contentType: string,
+        size: number,
+    }).strictOptional(),
+
+    UseAsProperty: Schema({
+        importance: number,
+        inherits: boolean,
+        displayAs: nullable(string),
+    }).strictOptional(),
+});
+export type EntryFeaturesData = Type<typeof EntryFeaturesSchema>;
 
 
 // The "reference cache" contains details (name, friendlyId, entry type) for every entry mentioned in the entry's
@@ -89,5 +106,6 @@ export const EntrySchema = Schema({
         distance: number,
     })).strictOptional(),
 
+    features: EntryFeaturesSchema.strictOptional(),
 });
 export type EntryData = Type<typeof EntrySchema>;
