@@ -8,7 +8,7 @@ import { LookupContext } from "neolace/core/lookup/context.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
 import { ConcreteValue, ErrorValue, InlineMarkdownStringValue, StringValue } from "neolace/core/lookup/values.ts";
 import { getEntryProperties } from "neolace/core/entry/properties.ts";
-import { getEntryFeatureData } from "neolace/core/entry/features/get-feature-data.ts";
+import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-data.ts";
 
 
 /**
@@ -130,7 +130,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     if (flags.has(api.GetEntryFlags.IncludeFeatures)) {
         // Include "features" specific to this entry type. A common one is the "article" feature, which has prose text
         // (markdown). Another common one is the "Image" feature which means this entry is an image.
-        result.features = await getEntryFeatureData(entryData.id, {tx});
+        result.features = await getEntryFeaturesData(entryData.id, {tx});
     }
 
     if (flags.has(api.GetEntryFlags.IncludeReferenceCache)) {

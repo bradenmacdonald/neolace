@@ -6,14 +6,14 @@ import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
-import { getEntryFeaturesData } from "../get-feature-data.ts";
+import { getEntryFeatureData } from "../get-feature-data.ts";
 
 group(import.meta, () => {
 
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
-    // Entry Type ID:
-    const entryType = VNID();
+    // Entry Type IDs:
+    const entryType = VNID(), imageType = VNID();
 
     test("Can be added to schema, shows up on schema, can be removed from schema", async () => {
 
@@ -28,25 +28,25 @@ group(import.meta, () => {
         // No features should be enabled:
         assertEquals(beforeSchema.entryTypes[entryType].enabledFeatures, {});
 
-        // Now enable the "Image" Feature
+        // Now enable the "HeroImage" Feature
         await graph.runAsSystem(ApplyEdits({siteId, edits: [
             {code: "UpdateEntryTypeFeature", data: {entryTypeId: entryType, feature: {
-                featureType: "Image",
+                featureType: "HeroImage",
                 enabled: true,
                 config: {},
             }}},
         ]}));
         // Now check the updated schema:
         const afterSchema = await graph.read(tx => getCurrentSchema(tx, siteId));
-        // The "Image" feature should be enabled:
+        // The "HeroImage" feature should be enabled:
         assertEquals(afterSchema.entryTypes[entryType].enabledFeatures, {
-            Image: {},
+            HeroImage: {},
         });
 
-        // Now disable the "Image" feature:
+        // Now disable the "HeroImage" feature:
         await graph.runAsSystem(ApplyEdits({siteId, edits: [
             {code: "UpdateEntryTypeFeature", data: {entryTypeId: entryType, feature: {
-                featureType: "Image",
+                featureType: "HeroImage",
                 enabled: false,
             }}},
         ]}));
@@ -57,25 +57,8 @@ group(import.meta, () => {
         );
     });
 
-    test("Can be set on an entry and loaded using getEntryFeaturesData()", async () => {
-        const entryId = VNID();
-        // Create a site with an image entry type:
-        const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1"}));
-        await graph.runAsSystem(ApplyEdits({siteId, edits: [
-            {code: "CreateEntryType", data: {id: entryType, name: "ImageType"}},
-            {code: "UpdateEntryTypeFeature", data: {entryTypeId: entryType, feature: {
-                featureType: "Image",
-                enabled: true,
-                config: {},
-            }}},
-            // Create an entry:
-            {code: "CreateEntry", data: {id: entryId, type: entryType, name: "Test Image", friendlyId: "img-test", description: "An Image for Testing"}},
-        ]}));
-
-        // At first, even though the "Image" feature is enabled for this entry type, it has no image data:
-        const before = await graph.read(tx => getEntryFeaturesData(entryId, {tx}));
-        assertEquals(before.Image, undefined);
-
+    test("Can be set on an entry and loaded using getEntryFeatureData()", async () => {
+        const entryId = VNID(), imageId = VNID();
         ////////////////////////////////////////////////////////////////////////////
         // Create a data file, as if we uploaded a file:
         const dataFile = {
@@ -87,23 +70,55 @@ group(import.meta, () => {
         };
         await graph.runAsSystem(CreateDataFile(dataFile));
         const dataFileUrl = (await graph.pullOne(DataFile, df => df.publicUrl(), {key: dataFile.id})).publicUrl;
-
-        // Now set the data file as this entry's image data:
+        // Create a site with a regular entry type and an image entry type:
+        const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1"}));
         await graph.runAsSystem(ApplyEdits({siteId, edits: [
-            {code: "UpdateEntryFeature", data: {entryId, feature: {
+            {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+            {code: "CreateEntryType", data: {id: imageType, name: "ImageType"}},
+            {code: "UpdateEntryTypeFeature", data: {entryTypeId: entryType, feature: {
+                featureType: "HeroImage",
+                enabled: true,
+                config: {},
+            }}},
+            {code: "UpdateEntryTypeFeature", data: {entryTypeId: imageType, feature: {
+                featureType: "Image",
+                enabled: true,
+                config: {},
+            }}},
+            // Create an entry:
+            {code: "CreateEntry", data: {id: entryId, type: entryType, name: "Test WithImage", friendlyId: "test", description: "This is an entry"}},
+            // Create an image:
+            {code: "CreateEntry", data: {id: imageId, type: imageType, name: "Test Image", friendlyId: "img", description: "This is an image"}},
+            {code: "UpdateEntryFeature", data: {entryId: imageId, feature: {
                 featureType: "Image",
                 dataFileId: dataFile.id,
             }}},
         ]}));
 
+        // At first, even though the "HeroImage" feature is enabled for the entry type, it has no hero image:
+        const before = await graph.read(tx => getEntryFeatureData(entryId, {featureType: "HeroImage", tx}));
+        assertEquals(before, undefined);
+
+        // Now set the hero image:
+        const caption = "This is the **caption**.";
+        await graph.runAsSystem(ApplyEdits({siteId, edits: [
+            {code: "UpdateEntryFeature", data: {entryId, feature: {
+                featureType: "HeroImage",
+                caption,
+                heroImageEntryId: imageId,
+            }}},
+        ]}));
+
         ////////////////////////////////////////////////////////////////////////////
-        // Now we should see the image on the entry:
-        const after = await graph.read(tx => getEntryFeaturesData(entryId, {tx}));
-        assertEquals(after.Image, {
+        // Now we should see the hero image on the entry:
+        const after = await graph.read(tx => getEntryFeatureData(entryId, {featureType: "HeroImage", tx}));
+        assertEquals(after, {
             imageUrl: dataFileUrl,
-            contentType: dataFile.contentType,
-            size: dataFile.size,
+            entryId: imageId,
+            caption,
         });
     });
+
+    // TODO: test that one cannot set another site's image entry as the hero image
 
 });

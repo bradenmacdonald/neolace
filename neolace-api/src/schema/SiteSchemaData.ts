@@ -28,6 +28,8 @@ export const EntryTypeSchema = Schema({
         }).strictOptional(),
         Image: Schema({
         }).strictOptional(),
+        HeroImage: Schema({
+        }).strictOptional(),
     }),
 });
 export type EntryTypeData = Type<typeof EntryTypeSchema>;

@@ -6,6 +6,10 @@ export enum GetEntryFlags {
     IncludeAncestors = "ancestors",
     IncludePropertiesSummary = "propertiesSummary",
     IncludeReferenceCache = "referenceCache",
+    /**
+     * Include special "features" of this entry, like the article text, the contained image, or the ability to use it
+     * as a property for other entries.
+     */
     IncludeFeatures = "features",
 }
 
@@ -53,6 +57,12 @@ export const EntryFeaturesSchema = Schema({
         size: number,
     }).strictOptional(),
 
+    HeroImage: Schema({
+        entryId: vnidString,
+        imageUrl: string,
+        caption: string,
+    }).strictOptional(),
+
     UseAsProperty: Schema({
         importance: number,
         inherits: boolean,
@@ -89,8 +99,6 @@ export const EntrySchema = Schema({
         name: string,
     }),
 
-    // TODO: content
-
     /** Summary of properties for this entry (up to 20 properties, with importance < 20) */
     propertiesSummary: array.of(DisplayedPropertySchema).strictOptional(),
 
@@ -107,5 +115,11 @@ export const EntrySchema = Schema({
     })).strictOptional(),
 
     features: EntryFeaturesSchema.strictOptional(),
+
+    featuredImage: Schema({
+        entryId: vnidString,
+        /** Markdown caption for this featured image */
+        note: string.strictOptional(),
+    }).strictOptional(),
 });
 export type EntryData = Type<typeof EntrySchema>;

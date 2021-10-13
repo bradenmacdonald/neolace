@@ -12,6 +12,8 @@ import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 // core/entry/features
 import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
+import { HeroImageData } from "neolace/core/entry/features/HeroImage/HeroImageData.ts";
+import { HeroImageFeatureEnabled } from "neolace/core/entry/features/HeroImage/HeroImageFeatureEnabled.ts";
 import { ImageData } from "neolace/core/entry/features/Image/ImageData.ts";
 import { ImageFeatureEnabled } from "neolace/core/entry/features/Image/ImageFeatureEnabled.ts";
 import { UseAsPropertyData } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyData.ts";
@@ -41,6 +43,8 @@ export function registerVNodeTypes(graph: Vertex) {
         // core/entry/features
         EnabledFeature,
         EntryFeatureData,
+        HeroImageData,
+        HeroImageFeatureEnabled,
         ImageData,
         ImageFeatureEnabled,
         UseAsPropertyData,

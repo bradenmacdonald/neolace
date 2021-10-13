@@ -6,7 +6,7 @@ import { graph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
-import { getEntryFeatureData } from "../get-feature-data.ts";
+import { getEntryFeaturesData } from "../get-feature-data.ts";
 
 group(import.meta, () => {
 
@@ -105,7 +105,7 @@ group(import.meta, () => {
 
     });
 
-    test("Can be set on an entry and loaded using getEntryFeatureData()", async () => {
+    test("Can be set on an entry and loaded using getEntryFeaturesData()", async () => {
         const entryId = VNID();
         // Create a site with two types of entries, EntryType and PropertyType:
         const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1"}));
@@ -123,7 +123,7 @@ group(import.meta, () => {
         ]}));
 
         // At first, even though the "UseAsProperty" feature is enabled for this entry type, it has no UseAsProperty data:
-        const before = await graph.read(tx => getEntryFeatureData(entryId, {tx}));
+        const before = await graph.read(tx => getEntryFeaturesData(entryId, {tx}));
         assertEquals(before.UseAsProperty, undefined);
 
         ////////////////////////////////////////////////////////////////////////////
@@ -138,7 +138,7 @@ group(import.meta, () => {
 
         ////////////////////////////////////////////////////////////////////////////
         // Now we should see the image on the entry:
-        const after = await graph.read(tx => getEntryFeatureData(entryId, {tx}));
+        const after = await graph.read(tx => getEntryFeaturesData(entryId, {tx}));
         assertEquals(after.UseAsProperty, {
             importance: 40,
             inherits: true,

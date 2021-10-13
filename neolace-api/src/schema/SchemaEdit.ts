@@ -98,24 +98,28 @@ export const UpdateEntryTypeFeature = SchemaEditType({
     dataSchema: Schema({
         entryTypeId: vnidString,
         feature: Schema.either(
-        {
-            featureType: "UseAsProperty" as const,
-            enabled: true as const,
-            config: Schema({
-                appliesToEntryTypes: array.of(vnidString),
-            }),
-        }, {
-            featureType: "UseAsProperty" as const,
-            enabled: false as const,
-        },
-        {
-            featureType: "Image" as const,
-            enabled: true as const,
-            config: Schema({}),
-        }, {
-            featureType: "Image" as const,
-            enabled: false as const,
-        }),
+            {
+                featureType: Schema.either("UseAsProperty" as const, "Image" as const, "HeroImage" as const),
+                enabled: false as const,
+            },
+            {
+                featureType: "UseAsProperty" as const,
+                enabled: true as const,
+                config: Schema({
+                    appliesToEntryTypes: array.of(vnidString),
+                }),
+            },
+            {
+                featureType: "Image" as const,
+                enabled: true as const,
+                config: Schema({}),
+            },
+            {
+                featureType: "HeroImage" as const,
+                enabled: true as const,
+                config: Schema({}),
+            }
+        ),
     }),
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {

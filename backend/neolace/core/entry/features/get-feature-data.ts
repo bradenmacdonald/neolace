@@ -2,7 +2,7 @@ import { EntryFeaturesData } from "neolace/deps/neolace-api.ts";
 import { C, VNID, WrappedTransaction, Field, convertNeo4jFieldValue } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
-import { features } from "./all-features.ts";
+import { features as allFeatures } from "./all-features.ts";
 import { EnabledFeature } from "./EnabledFeature.ts";
 import { EntryFeatureData } from "./EntryFeatureData.ts";
 
@@ -10,7 +10,11 @@ import { EntryFeatureData } from "./EntryFeatureData.ts";
 /**
  * Get data from each feature that's enabled for the given entry.
  */
-export async function getEntryFeatureData(entryId: VNID, {tx}: {tx: WrappedTransaction}) {
+export async function getEntryFeaturesData(entryId: VNID, {tx, filterType}: {tx: WrappedTransaction, filterType?: keyof EntryFeaturesData}): Promise<EntryFeaturesData> {
+    let features = allFeatures;
+    if (filterType) {
+        features = features.filter(f => f.featureType === filterType);
+    }
     const rows = await tx.query(C`
         // Find the EntryType
         MATCH (e:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})
@@ -37,7 +41,7 @@ export async function getEntryFeatureData(entryId: VNID, {tx}: {tx: WrappedTrans
     for (const row of rows) {
         const feature = features.find(f => f.featureType === row["f.featureType"]);
         if (feature === undefined) {
-            throw new Error("Feature inconsistency in getEntryFeatureData()");
+            throw new Error("Feature inconsistency in getEntryFeaturesData()");
         }
 
         // deno-lint-ignore no-explicit-any
@@ -51,4 +55,13 @@ export async function getEntryFeatureData(entryId: VNID, {tx}: {tx: WrappedTrans
     }
 
     return result;
+}
+
+
+/**
+ * Get data for a specific feature for a specific entry
+ */
+ export async function getEntryFeatureData<FT extends keyof EntryFeaturesData>(entryId: VNID, {featureType, tx}: {featureType: FT, tx: WrappedTransaction}): Promise<EntryFeaturesData[FT]> {
+    const result = await getEntryFeaturesData(entryId, {tx, filterType: featureType});
+    return result[featureType];
 }
