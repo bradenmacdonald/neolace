@@ -160,3 +160,88 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
 
     return result;
 }
+
+
+/**
+ * Get a single property value associated with an Entry, including SimplePropertyValues and (regular) property values
+ * from PropertyFacts.
+ * 
+ * Can search by property ID or by label (exact match only).
+ */
+ export async function getEntryProperty(entryId: VNID, options: ({propertyId: VNID}|{labelExact: string})&{tx: WrappedTransaction}): Promise<EntryPropertyValue|undefined> {
+
+    const matchClauseSPV = "propertyId" in options ? C`{id: ${options.propertyId}}` : C`{label: ${options.labelExact}}`;
+    const matchClausePE =  "propertyId" in options ? C`{id: ${options.propertyId}}` : C`{name: ${options.labelExact}}`;
+
+    const data = await options.tx.query(C`
+        MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
+
+        WITH entry, entryType
+        CALL {
+            WITH entry, entryType
+            // Check "Simple Property Values" attached to the entry type
+
+            MATCH (entryType)-[:${EntryType.rel.HAS_SIMPLE_PROP}]->(spv:${SimplePropertyValue} ${matchClauseSPV})
+            RETURN {
+                label: spv.label,
+                valueExpression: spv.valueExpression,
+                importance: spv.importance,
+                note: spv.note,
+
+                type: "SimplePropertyValue",
+                source: {from: "EntryType"},
+                id: spv.id
+            } AS propertyData
+
+            UNION ALL
+
+            // Check "normal" property values attached to this entry or its ancestors (for properties that allow inheritance)
+            WITH entry
+            MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(propEntry ${matchClausePE})
+            // Note that the UseAsPropertyData node may be missing if this is a newly created entry or the UseAsProperty feature was recently enabled for this entry type:
+            OPTIONAL MATCH (propEntry)-[:${Entry.rel.HAS_FEATURE_DATA}]->(propData:${UseAsPropertyData})
+            WITH entry, path, ancestor, pf, propEntry, propData, length(path) AS distance
+            WHERE
+                // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
+                (length(path) = 2 OR propData.inherits = true)
+
+            RETURN {
+                label: propEntry.name,
+                valueExpression: pf.valueExpression,
+                importance: CASE WHEN propData IS NULL THEN ${UseAsPropertyData.defaultImportance} ELSE propData.importance END,
+                note: pf.note,
+
+                type: "PropertyValue",
+                id: propEntry.id,
+                source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END,
+                displayAs: propData.displayAs
+            } AS propertyData
+            LIMIT 1
+        }
+        RETURN propertyData LIMIT 1
+    `.givesShape({
+        propertyData: Field.Record({
+            label: Field.String,
+            valueExpression: Field.String,
+            importance: Field.Int,
+            note: Field.String,
+
+            type: Field.String,
+            source: Field.Any,
+            id: Field.VNID,
+            displayAs: Field.NullOr.String,
+        }),
+    }));
+
+    if (data.length === 0) {
+        return undefined;
+    }
+    // deno-lint-ignore no-explicit-any
+    const result = data[0].propertyData as any;
+    if (result.type === "SimplePropertyValue") {
+        // SimplePropertyValues should not have the displayAs attribute at all.
+        delete result["displayAs"];
+    }
+
+    return result;
+}
