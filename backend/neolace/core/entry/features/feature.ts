@@ -30,7 +30,7 @@ export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][
      */
     updateConfiguration(
         entryTypeId: VNID,
-        config: SiteSchemaData["entryTypes"][0]["enabledFeatures"][FT],
+        config: NonNullable<SiteSchemaData["entryTypes"][0]["enabledFeatures"][FT]>,
         tx: WrappedTransaction,
         markNodeAsModified: (vnid: VNID) => void,
     ): Promise<void>;
@@ -51,11 +51,17 @@ export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][
      * Load the details of this feature for a single entry.
      * e.g. if the "PlantImage" entry type has the "Image" feature enabled, then you can use this action to get the
      * URL of the actual image file that the entry holds.
+     *
+     * This funciton will only be called if the feature is enabled for the entry's type.
      */
-    loadData(
-        data: RawVNode<EFD>,
+    loadData(args: {
+        entryId: VNID,
+        /** Data (VNode of type dataClass) set on this specific entry */
+        data?: RawVNode<EFD>,
+        /** Configuration that controls how this feature is used for this entry type */
+        config: RawVNode<EF>,
         tx: WrappedTransaction,
-    ): Promise<EntryFeaturesData[FT]>;
+    }): Promise<EntryFeaturesData[FT]>;
 }
 
 // Helper function to declare objects with the above interface with proper typing.

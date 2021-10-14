@@ -15,6 +15,7 @@ export async function getEntryFeaturesData(entryId: VNID, {tx, filterType}: {tx:
     if (filterType) {
         features = features.filter(f => f.featureType === filterType);
     }
+
     const rows = await tx.query(C`
         // Find the EntryType
         MATCH (e:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})
@@ -28,11 +29,11 @@ export async function getEntryFeaturesData(entryId: VNID, {tx, filterType}: {tx:
         MATCH (et)-[:${EntryType.rel.HAS_FEATURE}]->(config:${EnabledFeature})
             WHERE f.configLabel IN labels(config)
         // Then, if the feature is currently enabled for entries of this type, load the data:
-        MATCH (e)-[:${Entry.rel.HAS_FEATURE_DATA}]->(data:${EntryFeatureData})
+        OPTIONAL MATCH (e)-[:${Entry.rel.HAS_FEATURE_DATA}]->(data:${EntryFeatureData})
             WHERE f.dataLabel IN labels(data)
     `.RETURN({
         "f.featureType": Field.String,
-        //config: Field.Node,
+        config: Field.Node,
         data: Field.Node,
     }));
 
@@ -45,10 +46,17 @@ export async function getEntryFeaturesData(entryId: VNID, {tx, filterType}: {tx:
         }
 
         // deno-lint-ignore no-explicit-any
-        const featureData: any = convertNeo4jFieldValue("data", row.data, Field.VNode(feature.dataClass));
+        const data: any = row.data ? convertNeo4jFieldValue("data", row.data, Field.VNode(feature.dataClass)) : undefined;
+        // deno-lint-ignore no-explicit-any
+        const config: any = row.config ? convertNeo4jFieldValue("config", row.config, Field.VNode(feature.configClass)) : undefined;
 
         // deno-lint-ignore no-explicit-any
-        const dataOut: any = await feature.loadData(featureData, tx);
+        const dataOut: any = await feature.loadData({
+            entryId,
+            data,
+            config,
+            tx,
+        });
         if (dataOut !== undefined) {
             result[feature.featureType] = dataOut;
         }

@@ -1,13 +1,19 @@
-import { SiteSchemaData, UpdateHeroEntryImageSchema } from "neolace/deps/neolace-api.ts";
+import * as log from "std/log/mod.ts";
+import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { Schema } from "neolace/deps/computed-types.ts";
 import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { EntryTypeFeature } from "../feature.ts";
 import { HeroImageFeatureEnabled } from "./HeroImageFeatureEnabled.ts";
 import { Site } from "neolace/core/Site.ts";
 import { EnabledFeature } from "../EnabledFeature.ts";
-import { Entry } from "neolace/core/entry/Entry.ts";
+import { siteIdForEntryId } from "neolace/core/entry/Entry.ts";
 import { HeroImageData } from "./HeroImageData.ts";
-import { EntryFeatureData } from "../EntryFeatureData.ts";
+import { LookupContext } from "neolace/core/lookup/context.ts";
+import { parseLookupString } from "neolace/core/lookup/parse.ts";
+import { LookupError } from "neolace/core/lookup/errors.ts";
+import { AnnotatedEntryValue, EntryValue, InlineMarkdownStringValue, PageValue } from "neolace/core/lookup/values.ts";
 import { getEntryFeatureData } from "../get-feature-data.ts";
 
 const featureType = "HeroImage" as const;
@@ -20,15 +26,15 @@ export const HeroImageFeature = EntryTypeFeature({
     featureType,
     configClass: HeroImageFeatureEnabled,
     dataClass: HeroImageData,
-    updateFeatureSchema: UpdateHeroEntryImageSchema,
+    updateFeatureSchema: Schema({}),
     async contributeToSchema(mutableSchema: SiteSchemaData, tx: WrappedTransaction, siteId: VNID) {
 
         const configuredOnThisSite = await tx.query(C`
             MATCH (et:${EntryType})-[:FOR_SITE]->(:${Site} {id: ${siteId}}),
                   (et)-[:${EntryType.rel.HAS_FEATURE}]->(config:${HeroImageFeatureEnabled})
             WITH et, config
-            RETURN et.id AS entryTypeId
-        `.givesShape({entryTypeId: Field.VNID}));
+            RETURN et.id AS entryTypeId, config.lookupExpression AS lookupExpression
+        `.givesShape({entryTypeId: Field.VNID, lookupExpression: Field.String}));
 
         configuredOnThisSite.forEach(config => {
             const entryTypeId: VNID = config.entryTypeId;
@@ -36,73 +42,83 @@ export const HeroImageFeature = EntryTypeFeature({
                 throw new Error("EntryType not in schema");
             }
             mutableSchema.entryTypes[entryTypeId].enabledFeatures[featureType] = {
-                /* No detailed configuration at this time */
+                lookupExpression: config.lookupExpression,
             };
         });
     },
-    async updateConfiguration(entryTypeId: VNID, _config: Record<string, never>, tx: WrappedTransaction, markNodeAsModified: (vnid: VNID) => void) {
+    async updateConfiguration(entryTypeId, config, tx, markNodeAsModified) {
         const result = await tx.queryOne(C`
             MATCH (et:${EntryType} {id: ${entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site)
             MERGE (et)-[:${EntryType.rel.HAS_FEATURE}]->(feature:${HeroImageFeatureEnabled}:${C(EnabledFeature.label)})
             ON CREATE SET feature.id = ${VNID()}
+            SET feature.lookupExpression = ${config.lookupExpression}
         `.RETURN({"feature.id": Field.VNID}));
 
         // We need to mark the HeroImageFeatureEnabled node as modified:
         markNodeAsModified(result["feature.id"]);
     },
-    async editFeature(entryId, editData, tx, markNodeAsModified): Promise<void> {
-        // Associate the Entry with the HeroImageData node
-        const updates: Record<string, unknown> = {}
-        if (editData.caption !== undefined) {
-            updates.caption = editData.caption;
-        }
-        const result = await tx.queryOne(C`
-            MATCH (e:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})
-            // Note that the code that calls this has already verified that this feature is enabled for this entry type.
-            MERGE (e)-[:${Entry.rel.HAS_FEATURE_DATA}]->(heroImageData:${HeroImageData}:${C(EntryFeatureData.label)})
-            ON CREATE SET
-                heroImageData.id = ${VNID()}
-            SET heroImageData += ${updates}
-        `.RETURN({"heroImageData.id": Field.VNID}));
-        const dataId = result["heroImageData.id"];
-        // Associate the HeroImageData with the actual image chosen to be used
-        if (editData.heroImageEntryId !== undefined) {
-            await tx.query(C`
-                MATCH (heroImageData:${HeroImageData} {id: ${dataId}})
-                MATCH (entry:${Entry} {id: ${editData.heroImageEntryId}})
-                MERGE (heroImageData)-[:${HeroImageData.rel.HAS_HERO_IMAGE}]->(entry)
-                WITH heroImageData, entry
-                MATCH (heroImageData)-[rel:${HeroImageData.rel.HAS_HERO_IMAGE}]->(oldEntry)
-                    WHERE NOT oldEntry = entry
-                DELETE rel
-            `);
-        }
 
-        markNodeAsModified(dataId);
+    async editFeature(_entryId, _editData, _tx, _markNodeAsModified): Promise<void> {
+        // There is no special edit type to change an entry's hero image.
+        // The feature image is determined by a lookup expression, which usually references some standard relationship
+        // or property. To change the hero image, then, you have to edit that relationship or property using the normal
+        // edit API.
     },
 
     /**
      * Load the details of this feature for a single entry.
      */
-    async loadData(data, tx) {
-        const imgEntry = (await tx.pullOne(
-            HeroImageData,
-            d => d.caption.heroImageEntry(e => e.id),
-            {key: data.id},
-        )).heroImageEntry;
-        if (imgEntry === null) {
+    async loadData({tx, config, entryId}) {
+
+        const siteId = await siteIdForEntryId(entryId);
+        const context: LookupContext = {tx, siteId, entryId, defaultPageSize: 1n};
+
+        let value;
+        try {
+            value = await parseLookupString(config.lookupExpression).getValue(context).then(v => v.makeConcrete());
+        } catch (err: unknown) {
+            if (err instanceof LookupError) {
+                log.error(err.message);
+                return undefined;
+            } else {
+                throw err;
+            }
+        }
+
+        let caption = "";
+        let imageEntryId: VNID;
+
+        // If we got a list of values, take the first one:
+        if (value instanceof PageValue) {
+            if (value.values.length === 0) {
+                return undefined;
+            }
+            value = value.values[0];
+        }
+
+        if (value instanceof EntryValue) {
+            imageEntryId = value.id;
+            if (value instanceof AnnotatedEntryValue && value.annotations.note) {
+                const captionValue = value.annotations.note.castTo(InlineMarkdownStringValue, context);
+                if (captionValue) {
+                    caption = captionValue.value;
+                }
+            }
+        } else {
+            log.error(`Cannot display hero image for entry ${entryId} because the lookup expression resulted in ${JSON.stringify(value.toJSON())}`);
             return undefined;
         }
 
-        const imgEntryImageData = await getEntryFeatureData(imgEntry.id, {featureType: "Image", tx});
-        if (imgEntryImageData === undefined) {
+        const imageData = await getEntryFeatureData(imageEntryId, {featureType: "Image", tx});
+        if (imageData === undefined) {
+            log.error(`Cannot display hero image for entry ${entryId} because the lookup expression resulted in entry ${imageEntryId} which is not an image.`);
             return undefined;
         }
 
         return {
-            caption: data.caption ?? "",
-            entryId: imgEntry.id,
-            imageUrl: imgEntryImageData.imageUrl,
+            caption,
+            entryId: imageEntryId,
+            imageUrl: imageData.imageUrl,
         };
     }
 });

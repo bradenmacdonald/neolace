@@ -29,6 +29,7 @@ export const EntryTypeSchema = Schema({
         Image: Schema({
         }).strictOptional(),
         HeroImage: Schema({
+            lookupExpression: string,
         }).strictOptional(),
     }),
 });

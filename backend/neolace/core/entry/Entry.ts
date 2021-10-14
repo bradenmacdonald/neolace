@@ -8,12 +8,15 @@ import {
     RawVNode,
     WrappedTransaction,
     ValidationError,
+    VNID,
 } from "neolace/deps/vertex-framework.ts";
 
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
 import { UseAsPropertyData } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyData.ts";
+import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
+import { graph } from "neolace/core/graph.ts";
 import { RelationshipFact } from "./RelationshipFact.ts";
 import { PropertyFact } from "./PropertyFact.ts";
 
@@ -137,3 +140,13 @@ export function friendlyId(): DerivedProperty<string> { return DerivedProperty.m
     e => e.slugId,
     e => slugIdToFriendlyId(e.slugId),
 );}
+
+
+/** Cached helper function to look up an entry's siteId (Site VNID) */
+export const siteIdForEntryId = makeCachedLookup(async (entryId: VNID) => {
+    const result = (await graph.pullOne(Entry, e => e.type(et => et.site(s => s.id)), {key: entryId})).type?.site?.id;
+    if (!result) {
+        throw new Error("Invalid Entry ID");
+    }
+    return result;
+}, 10_000);

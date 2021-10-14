@@ -1,5 +1,6 @@
 import {
     C,
+    Field,
     RawVNode,
     VNodeType,
     VirtualPropType,
@@ -18,7 +19,8 @@ import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
     static label = "HeroImageFeatureEnabled";
     static properties = {
         ...VNodeType.properties,
-        // Future: add a default image as well as a lookup expression for computing the hero image.
+        /** This lookup expression determines which image entry is used as the "hero image" for this entry type. */
+        lookupExpression: Field.String,
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({

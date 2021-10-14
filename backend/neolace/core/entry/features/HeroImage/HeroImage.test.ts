@@ -1,4 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
+import { RelationshipCategory } from "neolace/deps/neolace-api.ts";
 
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -14,6 +15,8 @@ group(import.meta, () => {
 
     // Entry Type IDs:
     const entryType = VNID(), imageType = VNID();
+    // Relationship Type IDs:
+    const hasFeatureImage = VNID();
 
     test("Can be added to schema, shows up on schema, can be removed from schema", async () => {
 
@@ -33,14 +36,18 @@ group(import.meta, () => {
             {code: "UpdateEntryTypeFeature", data: {entryTypeId: entryType, feature: {
                 featureType: "HeroImage",
                 enabled: true,
-                config: {},
+                config: {
+                    lookupExpression: "foobar",
+                },
             }}},
         ]}));
         // Now check the updated schema:
         const afterSchema = await graph.read(tx => getCurrentSchema(tx, siteId));
         // The "HeroImage" feature should be enabled:
         assertEquals(afterSchema.entryTypes[entryType].enabledFeatures, {
-            HeroImage: {},
+            HeroImage: {
+                lookupExpression: "foobar",
+            },
         });
 
         // Now disable the "HeroImage" feature:
@@ -78,13 +85,16 @@ group(import.meta, () => {
             {code: "UpdateEntryTypeFeature", data: {entryTypeId: entryType, feature: {
                 featureType: "HeroImage",
                 enabled: true,
-                config: {},
+                config: {lookupExpression: `this.related(via=RT[${hasFeatureImage}], direction="from")`},
             }}},
             {code: "UpdateEntryTypeFeature", data: {entryTypeId: imageType, feature: {
                 featureType: "Image",
                 enabled: true,
                 config: {},
             }}},
+            // Create a relationship that we'll use to speciify the hero image:
+            {code: "CreateRelationshipType", data: {id: hasFeatureImage, category: RelationshipCategory.HAS_A, nameForward: "has feature image", nameReverse: "feature image of"}},
+            {code: "UpdateRelationshipType", data: {id: hasFeatureImage, addFromTypes: [entryType], addToTypes: [imageType]}},
             // Create an entry:
             {code: "CreateEntry", data: {id: entryId, type: entryType, name: "Test WithImage", friendlyId: "test", description: "This is an entry"}},
             // Create an image:
@@ -102,23 +112,17 @@ group(import.meta, () => {
         // Now set the hero image:
         const caption = "This is the **caption**.";
         await graph.runAsSystem(ApplyEdits({siteId, edits: [
-            {code: "UpdateEntryFeature", data: {entryId, feature: {
-                featureType: "HeroImage",
-                caption,
-                heroImageEntryId: imageId,
-            }}},
+            {code: "CreateRelationshipFact", data: {id: VNID(), type: hasFeatureImage, fromEntry: entryId, toEntry: imageId}},
         ]}));
 
         ////////////////////////////////////////////////////////////////////////////
         // Now we should see the hero image on the entry:
         const after = await graph.read(tx => getEntryFeatureData(entryId, {featureType: "HeroImage", tx}));
         assertEquals(after, {
-            imageUrl: dataFileUrl,
             entryId: imageId,
+            imageUrl: dataFileUrl,
             caption,
         });
     });
-
-    // TODO: test that one cannot set another site's image entry as the hero image
 
 });

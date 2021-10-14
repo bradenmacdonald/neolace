@@ -7,6 +7,7 @@ import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { getEntryFeaturesData } from "../get-feature-data.ts";
+import { UseAsPropertyData } from "./UseAsPropertyData.ts";
 
 group(import.meta, () => {
 
@@ -122,9 +123,16 @@ group(import.meta, () => {
             {code: "CreateEntry", data: {id: entryId, type: propertyType, name: "Test PropertyEntry", friendlyId: "test", description: "A PropertyEntry for Testing"}},
         ]}));
 
-        // At first, even though the "UseAsProperty" feature is enabled for this entry type, it has no UseAsProperty data:
+        // At first, since the "UseAsProperty" feature is enabled for this entry type, it has the default UseAsProperty data:
         const before = await graph.read(tx => getEntryFeaturesData(entryId, {tx}));
-        assertEquals(before.UseAsProperty, undefined);
+        assertEquals(before.UseAsProperty, {
+            displayAs: null,
+            importance: 10,
+            inherits: false,
+        });
+        assertEquals(before.UseAsProperty?.displayAs, UseAsPropertyData.defaultDisplayAs);
+        assertEquals(before.UseAsProperty?.importance, UseAsPropertyData.defaultImportance);
+        assertEquals(before.UseAsProperty?.inherits, UseAsPropertyData.defaultInherits);
 
         ////////////////////////////////////////////////////////////////////////////
         // Now configure the entry's UseAsProperty feature:

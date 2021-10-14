@@ -95,7 +95,7 @@ export const UseAsProperty = EntryTypeFeature({
             ON CREATE SET
                 propData.id = ${VNID()},
                 propData.importance = ${UseAsPropertyData.defaultImportance},
-                propData.inherits = false
+                propData.inherits = ${UseAsPropertyData.defaultInherits}
             SET propData += ${changes}
         `.RETURN({"propData.id": Field.VNID}));
 
@@ -105,11 +105,11 @@ export const UseAsProperty = EntryTypeFeature({
      * Load the details of this feature for a single entry.
      */
     // deno-lint-ignore require-await
-    async loadData(data, _tx) {
+    async loadData({data}) {
         return {
-            importance: data.importance,
-            inherits: data.inherits,
-            displayAs: data.displayAs,
+            importance: data?.importance ?? UseAsPropertyData.defaultImportance,
+            inherits: data?.inherits ?? UseAsPropertyData.defaultInherits,
+            displayAs: data?.displayAs ?? UseAsPropertyData.defaultDisplayAs,
         };
     }
 });

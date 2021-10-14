@@ -40,7 +40,7 @@ export const ImageFeature = EntryTypeFeature({
             };
         });
     },
-    async updateConfiguration(entryTypeId: VNID, _config: Record<string, never>, tx: WrappedTransaction, markNodeAsModified: (vnid: VNID) => void) {
+    async updateConfiguration(entryTypeId, _config: Record<string, never>, tx, markNodeAsModified) {
         const result = await tx.queryOne(C`
             MATCH (et:${EntryType} {id: ${entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site)
             MERGE (et)-[:${EntryType.rel.HAS_FEATURE}]->(feature:${ImageFeatureEnabled}:${C(EnabledFeature.label)})
@@ -79,7 +79,10 @@ export const ImageFeature = EntryTypeFeature({
     /**
      * Load the details of this feature for a single entry.
      */
-    async loadData(data, tx) {
+    async loadData({data, tx}) {
+        if (data === undefined) {
+            return undefined;
+        }
         const dataFile = (await tx.pullOne(
             ImageData,
             id => id.dataFile(df => df.publicUrl().contentType.size),

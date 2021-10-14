@@ -117,7 +117,9 @@ export const UpdateEntryTypeFeature = SchemaEditType({
             {
                 featureType: "HeroImage" as const,
                 enabled: true as const,
-                config: Schema({}),
+                config: Schema({
+                    lookupExpression: string,
+                }),
             }
         ),
     }),

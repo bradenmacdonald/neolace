@@ -218,6 +218,8 @@ export class EntryValue extends ConcreteValue {
                 MATCH (entry:${Entry} {id: ${this.id}})
                 WITH entry, {} AS annotations
             `);
+        } else if (newType === AnnotatedEntryValue) {
+            return new AnnotatedEntryValue(this.id, {});
         }
         return undefined;
     }

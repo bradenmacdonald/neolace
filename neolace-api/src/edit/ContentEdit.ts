@@ -41,13 +41,6 @@ export const UpdateEntryImageSchema = Schema({
     dataFileId: vnidString.strictOptional(),
 });
 
-export const UpdateHeroEntryImageSchema = Schema({
-    /** Change which image entry is used as this entry's hero image */
-    heroImageEntryId: vnidString.strictOptional(),
-    /** Change the caption of the image (markdown) */
-    caption: string.strictOptional(),
-});
-
 /** Change details of how this entry is used as a property for other entries */
 export const UpdateEntryFeature = ContentEditType({
     changeType: EditChangeType.Content,
@@ -63,10 +56,8 @@ export const UpdateEntryFeature = ContentEditType({
                 {featureType: "Image" as const},
                 UpdateEntryImageSchema,
             ),
-            Schema.merge(
-                {featureType: "HeroImage" as const},
-                UpdateHeroEntryImageSchema,
-            ),
+            // "HeroImage" feature is not edited directly on individual entries; a lookup expression determines how
+            // the hero image is calculated for each entry, usually based on a relationship or property
         ),
     }),
     describe: (data) => `Updated ${data.feature.featureType} Feature of \`Entry ${data.entryId}\``,

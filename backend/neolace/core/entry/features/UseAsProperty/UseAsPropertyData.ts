@@ -30,6 +30,8 @@ export class UseAsPropertyData extends EntryFeatureData {
     };
 
     static defaultImportance = 10;
+    static defaultInherits = false;
+    static defaultDisplayAs = null;
 
     static readonly rel = this.hasRelationshipsFromThisTo({});
 
