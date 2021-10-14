@@ -8,7 +8,7 @@ import { EntryTypeFeature } from "../feature.ts";
 import { HeroImageFeatureEnabled } from "./HeroImageFeatureEnabled.ts";
 import { Site } from "neolace/core/Site.ts";
 import { EnabledFeature } from "../EnabledFeature.ts";
-import { siteIdForEntryId } from "neolace/core/entry/Entry.ts";
+import { Entry, siteIdForEntryId } from "neolace/core/entry/Entry.ts";
 import { HeroImageData } from "./HeroImageData.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { parseLookupString } from "neolace/core/lookup/parse.ts";
@@ -107,6 +107,10 @@ export const HeroImageFeature = EntryTypeFeature({
         } else {
             log.error(`Cannot display hero image for entry ${entryId} because the lookup expression resulted in ${JSON.stringify(value.toJSON())}`);
             return undefined;
+        }
+
+        if (caption === "") {
+            caption = (await tx.pullOne(Entry, e => e.name, {key: imageEntryId})).name;
         }
 
         const imageData = await getEntryFeatureData(imageEntryId, {featureType: "Image", tx});

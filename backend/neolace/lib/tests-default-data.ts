@@ -817,7 +817,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             fromEntry: data.entries.ponderosaPine.id,
             toEntry: data.entries.imgPonderosaTrunk.id,
             type: data.schema.relationshipTypes._HasHeroImage.id,
-            noteMD: "Photo: a ponderosa pine trunk in Lassen Volcanic National Park",
+            noteMD: "a ponderosa pine trunk in Lassen Volcanic National Park",
         }},
 
     ]}));

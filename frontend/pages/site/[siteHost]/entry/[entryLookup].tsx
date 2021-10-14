@@ -42,7 +42,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 </div>
 
                 {/* The main content of this entry */}
-                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 overflow-y-scroll">
+                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 overflow-y-scroll z-0">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                     {/* Hero image, if any */}
                     {
                         props.entry.features?.HeroImage ?
@@ -55,6 +55,12 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                 />
                                 {props.entry.features.HeroImage.caption ?
                                     <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
+                                        <Link href={`/entry/${props.entry.features.HeroImage.entryId}`}>
+                                            <a>
+                                                <FormattedMessage id="site.entry.heroImageCaptionPrefix" defaultMessage="Image:"/>
+                                                &nbsp;
+                                            </a>
+                                        </Link>
                                         <InlineMDT mdt={props.entry.features.HeroImage.caption} context={mdtContext} />
                                     </div>
                                 : null}
