@@ -24,22 +24,43 @@ export const CreateEntry = ContentEditType({
     describe: (data) => `Created \`Entry ${data.id}\``,
 });
 
+/** For a single, specific entry (not an EntryType), update how it can be used as a property for other entries */
+export const UpdateEntryUseAsPropertySchema = Schema({
+    /** Change the "importance" of this property. Lower numbers are most important. */
+    importance: number.min(0).max(99).strictOptional(),
+    // Change the allowed data type for values of this property. Won't affect existing property values.
+    valueType: string.strictOptional(),
+    /** Should property values of this type be inherited by child entries? */
+    inherits: boolean.strictOptional(),
+    /** Markdown formatting instructions, e.g. use "**{value}**" to display this value in bold */
+    displayAs: nullable(string).strictOptional(),
+});
+
+export const UpdateEntryImageSchema = Schema({
+    /** Change which actual image file this entry "holds" */
+    dataFileId: vnidString.strictOptional(),
+});
+
 /** Change details of how this entry is used as a property for other entries */
-export const UpdateEntryUseAsProperty = ContentEditType({
+export const UpdateEntryFeature = ContentEditType({
     changeType: EditChangeType.Content,
-    code: "UpdateEntryUseAsProperty",
+    code: "UpdateEntryFeature",
     dataSchema: Schema({
         entryId: vnidString,
-        /** Change the "importance" of this property. Lower numbers are most important. */
-        importance: number.min(0).max(99).strictOptional(),
-        // Change the allowed data type for values of this property. Won't affect existing property values.
-        valueType: string.strictOptional(),
-        /** Should property values of this type be inherited by child entries? */
-        inherits: boolean.strictOptional(),
-        /** Markdown formatting instructions, e.g. use "**{value}**" to display this value in bold */
-        displayAs: nullable(string).strictOptional(),
+        feature: Schema.either(
+            Schema.merge(
+                {featureType: "UseAsProperty" as const},
+                UpdateEntryUseAsPropertySchema,
+            ),
+            Schema.merge(
+                {featureType: "Image" as const},
+                UpdateEntryImageSchema,
+            ),
+            // "HeroImage" feature is not edited directly on individual entries; a lookup expression determines how
+            // the hero image is calculated for each entry, usually based on a relationship or property
+        ),
     }),
-    describe: (data) => `Updated Property Features of \`Entry ${data.entryId}\``,
+    describe: (data) => `Updated ${data.feature.featureType} Feature of \`Entry ${data.entryId}\``,
 });
 
 export const CreateRelationshipFact = ContentEditType({
@@ -54,6 +75,8 @@ export const CreateRelationshipFact = ContentEditType({
         fromEntry: vnidString,
         // The Entry that this relationship is "to"
         toEntry: vnidString,
+        /** A note about this relationship. Displayed as Markdown. */
+        noteMD: string.strictOptional(),
     }),
     describe: (data) => `Created \`RelationshipFact ${data.id}\``,
 });
@@ -77,14 +100,14 @@ export const UpdatePropertyValue = ContentEditType({
 
 export const _allContentEditTypes = {
     CreateEntry,
-    UpdateEntryUseAsProperty,
+    UpdateEntryFeature,
     CreateRelationshipFact,
     UpdatePropertyValue,
 };
 
 export type AnyContentEdit = (
     | Edit<typeof CreateEntry>
-    | Edit<typeof UpdateEntryUseAsProperty>
+    | Edit<typeof UpdateEntryFeature>
     | Edit<typeof CreateRelationshipFact>
     | Edit<typeof UpdatePropertyValue>
 );

@@ -31,10 +31,12 @@ group(import.meta, () => {
                 new AnnotatedEntryValue(defaultData.entries.pollenCone.id, {
                     // Should we include the ID of the relationship fact?
                     weight: new NullValue(),
+                    note: new NullValue(),
                 }),
                 new AnnotatedEntryValue(defaultData.entries.seedCone.id, {
                     // Should we include the ID of the relationship fact?
                     weight: new NullValue(),
+                    note: new NullValue(),
                 }),
             ], {
                 pageSize: 50n,
@@ -44,7 +46,7 @@ group(import.meta, () => {
 
             const value2 = await evalExpression(expression, seedCone);
             assertEquals(value2, new PageValue([
-                new AnnotatedEntryValue(cone, {weight: new NullValue()}),
+                new AnnotatedEntryValue(cone, {weight: new NullValue(), note: new NullValue()}),
             ], {pageSize: 50n, startedAt: 0n, totalCount: 1n}));
         });
 
@@ -58,7 +60,7 @@ group(import.meta, () => {
             const value2 = await evalExpression(expression, seedCone);
             // [seed cone] IS A [cone]:
             assertEquals(value2, new PageValue([
-                new AnnotatedEntryValue(cone, {weight: new NullValue()}),
+                new AnnotatedEntryValue(cone, {weight: new NullValue(), note: new NullValue()}),
             ], {pageSize: 50n, startedAt: 0n, totalCount: 1n}));
         });
 
@@ -68,8 +70,8 @@ group(import.meta, () => {
 
             // [seed cone, pollen cone] IS A [cone] so this returns nothing:
             assertEquals(value, new PageValue([
-                new AnnotatedEntryValue(defaultData.entries.pollenCone.id, {weight: new NullValue()}),
-                new AnnotatedEntryValue(defaultData.entries.seedCone.id, {weight: new NullValue()}),
+                new AnnotatedEntryValue(defaultData.entries.pollenCone.id, {weight: new NullValue(), note: new NullValue()}),
+                new AnnotatedEntryValue(defaultData.entries.seedCone.id, {weight: new NullValue(), note: new NullValue()}),
             ], {
                 pageSize: 50n,
                 startedAt: 0n,

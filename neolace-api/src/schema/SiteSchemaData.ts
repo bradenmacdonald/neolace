@@ -12,15 +12,6 @@ export const SimplePropertySchema = Schema({
 export type SimplePropertyData = Type<typeof SimplePropertySchema>;
 
 
-export const EnabledFeature = Schema.either(
-    {
-        feature: "Property" as const,
-        appliesToEntryTypes: array.of(vnidString),
-    },
-)
-
-
-
 export const EntryTypeSchema = Schema({
     id: vnidString,
     /** Name of this entry type, e.g. "Note", "Task", "Contact", "License", etc. Doesn't need to be unique. */
@@ -34,6 +25,11 @@ export const EntryTypeSchema = Schema({
     enabledFeatures: Schema({
         UseAsProperty: Schema({
             appliesToEntryTypes: array.of(vnidString),
+        }).strictOptional(),
+        Image: Schema({
+        }).strictOptional(),
+        HeroImage: Schema({
+            lookupExpression: string,
         }).strictOptional(),
     }),
 });
@@ -55,10 +51,9 @@ export enum RelationshipCategory {
      */
     //DEPENDS_ON = "DEPENDS_ON",
     /**
-     * RELATES_TO: e.g. An Email RELATES_TO a SubjectMatter
-     * This is considered a symmetrical relationship.
+     * RELATES_TO: e.g. An Image RELATES_TO a Article
      */
-    //RELATES_TO = "RELATES_TO",
+    RELATES_TO = "RELATES_TO",
 }
 
 export function CastRelationshipCategory(value: string): RelationshipCategory {

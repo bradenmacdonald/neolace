@@ -1,9 +1,18 @@
 import * as KeratinAuthN from 'keratin-authn';
 import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
-import { NeolaceApiClient, NotFound } from 'neolace-api';
+import { NeolaceApiClient, NotFound, schemas, types } from 'neolace-api';
 import { AsyncCache } from './async-cache';
 
 export * as api from 'neolace-api';
+
+export function isVNID(key: string): key is types.VNID {
+    try {
+        schemas.vnidString(key);
+        return true;
+    } catch (_err: unknown) {
+        return false;
+    }
+}
 
 /** Refresh the session token if needed */
 const getSessionPromise = () => {

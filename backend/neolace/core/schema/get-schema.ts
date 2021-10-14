@@ -172,7 +172,8 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
                     // This feature has been enabled or modified:
                     result.edits.push({
                         code: "UpdateEntryTypeFeature",
-                        data: { entryTypeId: VNID(entryTypeId), feature: {featureType, enabled: true, config: newFeature}, }
+                        // deno-lint-ignore no-explicit-any
+                        data: { entryTypeId: VNID(entryTypeId), feature: {featureType, enabled: true, config: newFeature as any}, }
                     });
                 }
             });

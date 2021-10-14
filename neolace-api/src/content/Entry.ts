@@ -1,4 +1,4 @@
-import { Schema, Type, string, vnidString, nullable, array, number, object, Record } from "../api-schemas.ts";
+import { Schema, Type, string, vnidString, nullable, array, number, object, Record, boolean } from "../api-schemas.ts";
 import { AnyLookupValue } from "./lookup-value.ts";
 
 
@@ -6,6 +6,11 @@ export enum GetEntryFlags {
     IncludeAncestors = "ancestors",
     IncludePropertiesSummary = "propertiesSummary",
     IncludeReferenceCache = "referenceCache",
+    /**
+     * Include special "features" of this entry, like the article text, the contained image, or the ability to use it
+     * as a property for other entries.
+     */
+    IncludeFeatures = "features",
 }
 
 
@@ -45,6 +50,28 @@ export const DisplayedPropertySchema = Schema.merge(
 export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
 
 
+export const EntryFeaturesSchema = Schema({
+    Image: Schema({
+        imageUrl: string,
+        contentType: string,
+        size: number,
+    }).strictOptional(),
+
+    HeroImage: Schema({
+        entryId: vnidString,
+        imageUrl: string,
+        caption: string,
+    }).strictOptional(),
+
+    UseAsProperty: Schema({
+        importance: number,
+        inherits: boolean,
+        displayAs: nullable(string),
+    }).strictOptional(),
+});
+export type EntryFeaturesData = Type<typeof EntryFeaturesSchema>;
+
+
 // The "reference cache" contains details (name, friendlyId, entry type) for every entry mentioned in the entry's
 // description, article text, computed facts, related object notes, and so on.
 export const ReferenceCacheSchema = Schema({
@@ -72,8 +99,6 @@ export const EntrySchema = Schema({
         name: string,
     }),
 
-    // TODO: content
-
     /** Summary of properties for this entry (up to 20 properties, with importance < 20) */
     propertiesSummary: array.of(DisplayedPropertySchema).strictOptional(),
 
@@ -89,5 +114,12 @@ export const EntrySchema = Schema({
         distance: number,
     })).strictOptional(),
 
+    features: EntryFeaturesSchema.strictOptional(),
+
+    featuredImage: Schema({
+        entryId: vnidString,
+        /** Markdown caption for this featured image */
+        note: string.strictOptional(),
+    }).strictOptional(),
 });
 export type EntryData = Type<typeof EntrySchema>;

@@ -4,7 +4,7 @@ import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 
 import { LookupExpression } from "../expression.ts";
-import { LazyEntrySetValue, IntegerValue, RelationshipTypeValue, NullValue, StringValue } from "../values.ts";
+import { LazyEntrySetValue, IntegerValue, RelationshipTypeValue, NullValue, StringValue, InlineMarkdownStringValue } from "../values.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupContext } from "../context.ts";
 import { LiteralExpression } from "./literal-expr.ts";
@@ -20,6 +20,19 @@ const dbWeightToValue = (dbValue: unknown): IntegerValue|NullValue => {
         return new NullValue();
     } else {
         throw new LookupEvaluationError("Unexpected data type for 'weight' while evaluating lookup.");
+    }
+}
+
+/**
+ * Helper function to read annotated note (markdown string) values from a database query result
+ */
+const dbNoteToValue = (dbValue: unknown): InlineMarkdownStringValue|NullValue => {
+    if (typeof dbValue === "string") {
+        return new InlineMarkdownStringValue(dbValue);
+    } else if (dbValue === null) {
+        return new NullValue();
+    } else {
+        throw new LookupEvaluationError("Unexpected data type for 'note' while evaluating lookup.");
     }
 }
 
@@ -78,9 +91,9 @@ const dbWeightToValue = (dbValue: unknown): IntegerValue|NullValue => {
             ${startingEntrySet.cypherQuery}
             WITH entry AS fromEntry  // Continue the existing entry query, discard annotations if present
             ${queryMatch}
-            WITH entry, {weight: relFact.weight} AS annotations
+            WITH entry, {weight: relFact.weight, note: relFact.noteMD} AS annotations
             ORDER BY annotations.weight DESC, entry.name
-        `, {annotations: {weight: dbWeightToValue}});
+        `, {annotations: {weight: dbWeightToValue, note: dbNoteToValue}});
     }
 
     public toString(): string {

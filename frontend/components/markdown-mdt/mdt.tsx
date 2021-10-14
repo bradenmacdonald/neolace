@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import * as MDT from "technotes-mdt";
-import { urlForShortId } from 'components/utils/urls';
 
 
 /**
@@ -47,15 +46,9 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode): React.Re
         case "link":
             if (node.href.startsWith("#")) {
                 return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child))}</a>;
-            } else if (node.href.indexOf("/") === -1) {
-                // This is the shortId of some TechDB entry, presumably
-                const href = urlForShortId(node.href);
-                if (href !== undefined) {
-                    return <Link href={href} key={key}><a>{node.children.map(child => inlineNodeToComponent(child))}</a></Link>;
-                } else {
-                    // We don't know what this link is - seems invalid.
-                    return <>{node.children.map(child => inlineNodeToComponent(child))}</>;
-                }
+            } else if (node.href.startsWith("/")) {
+                // This is presumably a URL like "/entry/:id" where :id is a VNID or a friendlyId
+                return <Link href={node.href} key={key}><a>{node.children.map(child => inlineNodeToComponent(child))}</a></Link>;
             } else if (node.href.startsWith("http://") || node.href.startsWith("https://")) {
                 return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child))}</a>;
             } else {

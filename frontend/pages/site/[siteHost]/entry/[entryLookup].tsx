@@ -2,12 +2,14 @@ import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ParsedUrlQuery } from 'querystring';
 import { client, api, getSiteData, SiteData } from 'lib/api-client';
 
 import { SitePage } from 'components/SitePage';
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 import { LookupValue } from 'components/LookupValue';
+import { EntryLink } from 'components/EntryLink';
 //import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageProps {
@@ -41,14 +43,28 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 </div>
 
                 {/* The main content of this entry */}
-                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 overflow-y-scroll">
+                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 overflow-y-scroll z-0">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                     {/* Hero image, if any */}
-                    <div className="-m-4 mb-4 relative">
-                        <img src={"/solar-geo-from-nasa-yZygONrUBe8-unsplash.jpg"} alt="" />
-                        <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
-                            Image caption here. Lorem ipsum dolor sit amet sinctuir lasdkjfadl skfjsdalk asdlk fjasdlk fsadfhriugher aiundfkjnv lkfd kjsh iuwehvndjkn jdsff askjdlas as.
-                        </div>
-                    </div>
+                    {
+                        props.entry.features?.HeroImage ?
+                            <div className="-m-4 mb-4 relative h-[50vh]">
+                                <Image
+                                    src={props.entry.features.HeroImage.imageUrl}
+                                    alt=""
+                                    layout="fill"
+                                    objectFit="cover"
+                                />
+                                {props.entry.features.HeroImage.caption ?
+                                    <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
+                                        <EntryLink entryKey={props.entry.features.HeroImage.entryId} mdtContext={mdtContext} refCache={props.entry.referenceCache}>
+                                            <FormattedMessage id="site.entry.heroImageCaptionPrefix" defaultMessage="Image:"/>
+                                        </EntryLink>&nbsp;
+                                        <InlineMDT mdt={props.entry.features.HeroImage.caption} context={mdtContext} />
+                                    </div>
+                                : null}
+                            </div>
+                        : null
+                    }
 
                     {/* On mobile devices, some navigation appears here since the left bar / table of contents is hidden */}
                     <nav className="md:hidden sticky -top-4 -mx-4 py-1 -mt-2 pb-2 -mb-2 bg-white bg-opacity-90 backdrop-blur-sm text-gray-600">
@@ -90,6 +106,15 @@ const EntryPage: NextPage<PageProps> = function(props) {
                             </div>
                         </div>
 
+                        {
+                            props.entry.features?.Image ?
+                                <>
+                                    <h2><FormattedMessage id="site.entry.imageHeading" defaultMessage="Image"/></h2>
+                                    <img src={props.entry.features.Image.imageUrl} />
+                                </>
+                            : null
+                        }
+
                         {/* Article content, if any */}
                         <h2>Heading 2</h2>
                         <p>Is it my imagination, or have tempers become a little frayed on the ship lately? I think you've let your personal feelings cloud your judgement. Now, how the hell do we defeat an enemy that knows us better than we know ourselves? Your head is not an artifact! Fear is the true enemy, the only enemy. Mr. Worf, you sound like a man who's asking his friend if he can start dating his sister.</p>
@@ -129,6 +154,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [
             api.GetEntryFlags.IncludePropertiesSummary,
             api.GetEntryFlags.IncludeReferenceCache,
+            api.GetEntryFlags.IncludeFeatures,
         ]});
     } catch (err) {
         if (err instanceof api.NotFound) {
@@ -154,209 +180,3 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         },
     };
 }
-
-
-/*
-
-
-
-import React from 'react';
-import { NextPage, GetStaticProps, GetStaticPaths, } from 'next'
-import Link from 'next/link';
-import { useRouter } from 'next/router'
-import { ParsedUrlQuery } from 'querystring';
-
-import { Page } from 'components/Page';
-import { MetadataTable, MetadataEntry } from 'components/techdb/MetadataTable';
-import { TRLIndicator, TRL } from 'components/techdb/TRLIndicator';
-import { client } from 'lib/api-client';
-import { Redirect } from 'components/utils/Redirect';
-import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
-import {  } from 'neolace-api';
-import { urlForShortId } from 'components/utils/urls';
-
-interface PageProps {
-    redirectTo: string;
-    pageData: {title: string, uuid: string}|null;
-}
-interface PageUrlQuery extends ParsedUrlQuery {
-    entryLookup: string;
-}
-
-const TypesSection = "tps";
-
-// This function gets called at build time
-export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
-    return await {
-      // Which pages (TechDB entries) to pre-generate at build time.
-      // This should be set to a list of popular pages.
-      paths: [],
-      // Enable statically generating any additional pages as needed
-      fallback: "blocking",  // https://github.com/vercel/next.js/pull/15672
-    }
-  }
-
-export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
-    // entryLookup: the part of the URL used to identify this page.
-    // For http://www.technotes.org/tech/t-pv-cell-c-si it would be 't-pv-cell-c-si'.
-    // It should always be in lower case.
-    const key = context.params?.entryLookup || "";
-    let pageData: {title: string, uuid: string}|null;
-    const redirectTo = '';
-
-    try {
-        //const result = await client.getTechConcept({key, flags: [TechDbEntryFlags.numRelatedImages]});
-        pageData = await {title: "Test Page", uuid: "123"};
-        // if (id !== pageData.id) {
-        //     redirectTo = `/db/${id}`;
-        // }
-    } catch (e) {
-        // TODO: only redirect if this was a 404, not 500 etc.
-        console.error(e);
-        //redirectTo = `/db/quick-search/${key}`;
-        pageData = null;
-    }
-
-    return {
-      props: {
-          redirectTo,
-          pageData,
-      },
-    }
-}  
-
-const ContentPage: NextPage<PageProps> = function({pageData, ...props}) {
-    const mdtContext = React.useMemo(() => new MDTContext(), [pageData?.uuid]);
-
-    if (props.redirectTo) {
-        return <Page title="Redirecting...">
-            <Redirect to={props.redirectTo} />
-        </Page>;
-    }
-    if (pageData === null) {
-        return <p>Data missing.</p>;
-    }
-
-    return <Page title={pageData.title}>
-
-        {/* Hero image * /}
-        <div className="row mt-n2 mt-md-n3 mb-2 mb-md-3">
-            <div className="col col-12">
-                <div className="tn-full-width-hero">
-                    <img src={/*pageData.heroImage?.imageUrl ?? * /"/solar-geo-from-nasa-yZygONrUBe8-unsplash.jpg"} alt="" />
-                </div>
-            </div>
-        </div>
-{/*
-        <div className="row">
-            <div className="col col-12">
-
-                <h1>{pageData.name}</h1>
-
-                <p><InlineMDT mdt={pageData.description} context={mdtContext} /></p>
-            </div>
-        </div>
-
-        <MetadataTable>
-            {pageData.altNames.length > 0 &&
-                <MetadataEntry label="Also known as">
-                    <ul>
-                        {pageData.altNames.map((altName) => <li key={altName}>{altName}</li>)}
-                    </ul>
-                </MetadataEntry>
-            }
-            <MetadataEntry label="Readiness Level"><TRLIndicator trl={TRL(pageData.readinessLevel ?? "")} /></MetadataEntry>
-            {pageData.isA.length > 0 &&
-                <MetadataEntry label="Type of">
-                    <ul>
-                        {pageData.isA.map(parent =>
-                            <li key={parent.shortId}><Link href={`/tech/${parent.shortId}`}><a>{parent.name}</a></Link></li>
-                        )}
-                    </ul>
-                </MetadataEntry>
-            }
-            {pageData.types.length > 0 &&
-                <MetadataEntry label="Types">
-                    <ul>
-                        {pageData.types.map(child =>
-                            <li key={child.shortId}><Link href={`/tech/${child.shortId}`}><a>{child.name}</a></Link></li>
-                        )}
-                    </ul>
-                </MetadataEntry>
-            }
-            {pageData.usedIn.length > 0 &&
-                <MetadataEntry label="Used in">
-                    <ul>
-                        {pageData.usedIn.map(child =>
-                            <li key={child.shortId}><Link href={`/tech/${child.shortId}`}><a>{child.name}</a></Link></li>
-                        )}
-                    </ul>
-                </MetadataEntry>
-            }
-            {pageData.designs.length > 0 &&
-                <MetadataEntry label="Designs">
-                    <ul>
-                        {pageData.designs.map(child =>
-                            <li key={child.shortId}><Link href={urlForShortId(child.shortId)}><a>{child.name}</a></Link></li>
-                        )}
-                    </ul>
-                </MetadataEntry>
-            }
-            {/ *
-            <MetadataEntry label="Activity">
-                📈<Link href="#"><a>120 published updates</a></Link>, 📉 <Link href="#"><a>1 patent filed</a></Link> (past year)
-            </MetadataEntry>
-            * /}
-            <MetadataEntry label="Library Resources">
-                {
-                    (pageData.numRelatedImages || 0) > 0 ?
-                        <Link href={`/library/images/related/${pageData.shortId}`}><a>{pageData.numRelatedImages} images</a></Link>
-                    :
-                        "No related images"
-                }
-            </MetadataEntry>
-        </MetadataTable>
-        * /}
-        {
-            /*pageData.articleSections.map(section => {
-                const autoContent = (
-                    section.code === TypesSection && pageData.types.length > 0 ?
-                        pageData.types.map(child =>
-                            <TechnologyTemp id={child.shortId} key={child.shortId} title={child.name} trl={TRL(child.readinessLevel ?? "")}>
-                                <InlineMDT mdt={child.description} context={mdtContext} />
-                            </TechnologyTemp>
-                        )
-                    :
-                        null
-                );
-
-                return section.content || autoContent ?
-                    <div className="row" key={section.code}>
-                        <div className="col col-12">
-                            <h2 id={section.code}>{section.title}</h2>
-                            <RenderMDT mdt={section.content} context={mdtContext} />
-
-                            {autoContent}
-                        </div>
-                    </div>
-                : null;
-            })* /
-        }
-    </Page>;
-}
-
-
-const TechnologyTemp: React.FunctionComponent<{title: string, trl: TRL, id: string}> = (props) => {
-    return <div style={{border: '1px solid #343a40', marginLeft: "0.5em", marginTop: "1em", marginBottom: "0.5em"}}>
-        <div style={{backgroundColor: '#343a40', width: "350px", color: 'white', fontSize: "20px", marginLeft: "-0.5em", marginTop: "-0.5em", height: "30px"}}>
-            <span style={{padding: "5px"}}><Link href={`/tech/${props.id}`}><a style={{color: 'white', textDecoration: 'none'}}>{props.title}</a></Link></span>
-            <div style={{display: "inline-block", float: "right"}}>
-                <TRLIndicator trl={props.trl} small />
-            </div>
-        </div>
-        <div style={{padding: "8px"}}>
-            {props.children}
-        </div>
-    </div>;
-};
-*/

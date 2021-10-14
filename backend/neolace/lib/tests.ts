@@ -112,12 +112,16 @@ type ReturnedData<T extends TestIsolationLevels> =
     T extends TestIsolationLevels.DEFAULT_NO_ISOLATION ? typeof data :
     void;
 
+export async function resetDBToBlankSnapshot() {
+    await graph.resetDBToSnapshot(emptySnapshot);
+}
+
 export function setTestIsolation<Level extends TestIsolationLevels>(level: Level): ReturnedData<Level> {
     try {
         if (level === TestIsolationLevels.BLANK_NO_ISOLATION) {
-            beforeAll(async () => { await graph.resetDBToSnapshot(emptySnapshot); });
+            beforeAll(async () => { await resetDBToBlankSnapshot(); });
         } else if (level === TestIsolationLevels.BLANK_ISOLATED) {
-            beforeEach(async () => { await graph.resetDBToSnapshot(emptySnapshot); });
+            beforeEach(async () => { await resetDBToBlankSnapshot(); });
         } else if (level === TestIsolationLevels.DEFAULT_NO_ISOLATION) {
             beforeAll(async () => { await graph.resetDBToSnapshot(defaultDataSnapshot); });
             // deno-lint-ignore no-explicit-any

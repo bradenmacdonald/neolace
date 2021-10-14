@@ -6,6 +6,8 @@ import { graph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
+import { getEntryFeaturesData } from "../get-feature-data.ts";
+import { UseAsPropertyData } from "./UseAsPropertyData.ts";
 
 group(import.meta, () => {
 
@@ -102,6 +104,54 @@ group(import.meta, () => {
             "Invalid EntryType ID",
         );
 
+    });
+
+    test("Can be set on an entry and loaded using getEntryFeaturesData()", async () => {
+        const entryId = VNID();
+        // Create a site with two types of entries, EntryType and PropertyType:
+        const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1"}));
+        await graph.runAsSystem(ApplyEdits({siteId, edits: [
+            {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+            {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType"}},
+            {code: "UpdateEntryTypeFeature", data: {entryTypeId: propertyType, feature: {
+                featureType: "UseAsProperty",
+                enabled: true,
+                config: {appliesToEntryTypes: [entryType]},
+            }}},
+            // Create an entry of each type:
+            {code: "CreateEntry", data: {id: VNID(), type: entryType, name: "Test Entry", friendlyId: "other-entry", description: "An Entry for Testing"}},
+            {code: "CreateEntry", data: {id: entryId, type: propertyType, name: "Test PropertyEntry", friendlyId: "test", description: "A PropertyEntry for Testing"}},
+        ]}));
+
+        // At first, since the "UseAsProperty" feature is enabled for this entry type, it has the default UseAsProperty data:
+        const before = await graph.read(tx => getEntryFeaturesData(entryId, {tx}));
+        assertEquals(before.UseAsProperty, {
+            displayAs: null,
+            importance: 10,
+            inherits: false,
+        });
+        assertEquals(before.UseAsProperty?.displayAs, UseAsPropertyData.defaultDisplayAs);
+        assertEquals(before.UseAsProperty?.importance, UseAsPropertyData.defaultImportance);
+        assertEquals(before.UseAsProperty?.inherits, UseAsPropertyData.defaultInherits);
+
+        ////////////////////////////////////////////////////////////////////////////
+        // Now configure the entry's UseAsProperty feature:
+        await graph.runAsSystem(ApplyEdits({siteId, edits: [
+            {code: "UpdateEntryFeature", data: {entryId, feature: {
+                featureType: "UseAsProperty",
+                importance: 40,
+                inherits: true,
+            }}},
+        ]}));
+
+        ////////////////////////////////////////////////////////////////////////////
+        // Now we should see the image on the entry:
+        const after = await graph.read(tx => getEntryFeaturesData(entryId, {tx}));
+        assertEquals(after.UseAsProperty, {
+            importance: 40,
+            inherits: true,
+            displayAs: null,
+        });
     });
 
 });

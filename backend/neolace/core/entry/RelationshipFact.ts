@@ -24,6 +24,8 @@ export class RelationshipFact extends VNodeType {
         weight: Field.NullOr.Int,
         // slot: Field.NullOr.String,
         // quantity: Field.NullOr.Int.Check(check.number.min(0)),
+        /** A note about this relationship. Displayed as Markdown. */
+        noteMD: Field.NullOr.String,
     };
 
     static readonly rel = VNodeType.hasRelationshipsFromThisTo(() => ({

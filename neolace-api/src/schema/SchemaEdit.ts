@@ -97,16 +97,31 @@ export const UpdateEntryTypeFeature = SchemaEditType({
     code: "UpdateEntryTypeFeature",
     dataSchema: Schema({
         entryTypeId: vnidString,
-        feature: Schema.either({
-            featureType: "UseAsProperty" as const,
-            enabled: true as const,
-            config: Schema({
-                appliesToEntryTypes: array.of(vnidString),
-            }),
-        }, {
-            featureType: "UseAsProperty" as const,
-            enabled: false as const,
-        }),
+        feature: Schema.either(
+            {
+                featureType: Schema.either("UseAsProperty" as const, "Image" as const, "HeroImage" as const),
+                enabled: false as const,
+            },
+            {
+                featureType: "UseAsProperty" as const,
+                enabled: true as const,
+                config: Schema({
+                    appliesToEntryTypes: array.of(vnidString),
+                }),
+            },
+            {
+                featureType: "Image" as const,
+                enabled: true as const,
+                config: Schema({}),
+            },
+            {
+                featureType: "HeroImage" as const,
+                enabled: true as const,
+                config: Schema({
+                    lookupExpression: string,
+                }),
+            }
+        ),
     }),
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
@@ -121,7 +136,8 @@ export const UpdateEntryTypeFeature = SchemaEditType({
         newEntryType.enabledFeatures = {...newEntryType.enabledFeatures};  // Shallow copy the object so we can modify it
 
         if (data.feature.enabled) {
-            newEntryType.enabledFeatures[data.feature.featureType] = data.feature.config;
+            const feature = data.feature;
+            (newEntryType.enabledFeatures as any)[feature.featureType] = feature.config;
         } else {
             delete newEntryType.enabledFeatures[data.feature.featureType];
         }
