@@ -123,7 +123,11 @@ const data = {
                     "_CFSpeciesParts": {id: VNID("_CFSpeciesParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
                     "_CFSpeciesRelImg": {id: VNID("_CFSpeciesRelImg"), label: "Related Images", importance: 15, valueExpression: `this.related(via=RT[_IRelTo], direction="to")`, note: ""},
                 },
-                enabledFeatures: {},
+                enabledFeatures: {
+                    HeroImage: {
+                        lookupExpression: `this.related(via=RT[_HasHeroImage], direction="from")`,
+                    },
+                },
             },
             "_ETPLANTPART": {
                 id: VNID("_ETPLANTPART"),
@@ -233,6 +237,25 @@ const data = {
                     VNID("_ETSPECIES"),
                 ],
                 toEntryTypes: [VNID("_ETPLANTPART")],
+            },
+            // At any level, a classification of plants can have a specific part, e.g. conifers have cones
+            "_HasHeroImage": {
+                id: VNID("_HasHeroImage"),
+                nameForward: "has hero image",
+                nameReverse: "found in",
+                category: RelationshipCategory.HAS_A,
+                description: null,
+                fromEntryTypes: [
+                    // From every non-image entry type
+                    VNID("_ETCLASS"),
+                    VNID("_ETDIVISION"),
+                    VNID("_ETFAMILY"),
+                    VNID("_ETGENUS"),
+                    VNID("_ETORDER"),
+                    VNID("_ETPLANTPART"),
+                    VNID("_ETSPECIES"),
+                ],
+                toEntryTypes: [VNID("_ETIMAGE")],
             },
             // An image can be related to anything
             "_IRelTo": {
@@ -787,6 +810,14 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             fromEntry: data.entries.imgPonderosaTrunk.id,
             toEntry: data.entries.ponderosaPine.id,
             type: data.schema.relationshipTypes._IRelTo.id,
+        }},
+        {code: "CreateRelationshipFact", data: {
+            // This image is used as the hero image for the ponderosa pine
+            id: VNID(),
+            fromEntry: data.entries.ponderosaPine.id,
+            toEntry: data.entries.imgPonderosaTrunk.id,
+            type: data.schema.relationshipTypes._HasHeroImage.id,
+            noteMD: "Photo: a ponderosa pine trunk in Lassen Volcanic National Park",
         }},
 
     ]}));
