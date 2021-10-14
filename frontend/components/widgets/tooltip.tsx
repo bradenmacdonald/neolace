@@ -42,7 +42,7 @@ export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
                 ref={setPopperElement}
                 style={styles.popper}
                 {...attributes.popper}
-                className={`max-w-[400px] border p-1 rounded border-gray-800 shadow bg-blue-50 text-sm ${isTooltipVisible ? "visible opacity-100" : "invisible opacity-0"} transition-opacity duration-500`}
+                className={`max-w-[400px] border p-1 rounded border-gray-800 shadow bg-blue-50 text-sm ${isTooltipVisible ? "visible opacity-100" : "invisible opacity-0"} transition-opacity duration-500 font-normal`}
                 aria-hidden={!isTooltipVisible}
             >
                 {isTooltipVisible ? props.tooltipContent : null}

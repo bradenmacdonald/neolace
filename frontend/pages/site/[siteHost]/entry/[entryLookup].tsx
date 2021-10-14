@@ -9,6 +9,7 @@ import { client, api, getSiteData, SiteData } from 'lib/api-client';
 import { SitePage } from 'components/SitePage';
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 import { LookupValue } from 'components/LookupValue';
+import { EntryLink } from 'components/EntryLink';
 //import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageProps {
@@ -55,12 +56,9 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                 />
                                 {props.entry.features.HeroImage.caption ?
                                     <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
-                                        <Link href={`/entry/${props.entry.features.HeroImage.entryId}`}>
-                                            <a>
-                                                <FormattedMessage id="site.entry.heroImageCaptionPrefix" defaultMessage="Image:"/>
-                                                &nbsp;
-                                            </a>
-                                        </Link>
+                                        <EntryLink entryKey={props.entry.features.HeroImage.entryId} mdtContext={mdtContext} refCache={props.entry.referenceCache}>
+                                            <FormattedMessage id="site.entry.heroImageCaptionPrefix" defaultMessage="Image:"/>
+                                        </EntryLink>&nbsp;
                                         <InlineMDT mdt={props.entry.features.HeroImage.caption} context={mdtContext} />
                                     </div>
                                 : null}
