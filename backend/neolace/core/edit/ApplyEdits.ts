@@ -105,6 +105,11 @@ export const ApplyEdits = defineAction({
                         throw new Error("Internal error - unexpected value for relationship category");
                     }
 
+                    const relFactProps: Record<string, unknown> = {};
+                    if (edit.data.noteMD !== undefined) {
+                        relFactProps.noteMD = edit.data.noteMD;
+                    }
+
                     // Create the new relationship fact.
                     // This query is written in such a way that it will also validate:
                     // 1. That the RelationshipType for this new relationship is part of the current Site.
@@ -119,6 +124,7 @@ export const ApplyEdits = defineAction({
                         MATCH (toEntry:${Entry} {id: ${edit.data.toEntry}})-[:${Entry.rel.IS_OF_TYPE}]->(toET:${EntryType}),
                               (relType)-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(toET)
                         CREATE (rf:${RelationshipFact} {id: ${edit.data.id}})
+                        SET rf += ${relFactProps}
                         CREATE (rf)-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType)
                         CREATE (rf)-[:${RelationshipFact.rel.HAS_FACT_SOURCE}]->(fromEntry)
                         CREATE (rf)-[:${RelationshipFact.rel.REL_FACT}]->(toEntry)

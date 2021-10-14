@@ -112,7 +112,9 @@ group(import.meta, () => {
         // Now set the hero image:
         const caption = "This is the **caption**.";
         await graph.runAsSystem(ApplyEdits({siteId, edits: [
-            {code: "CreateRelationshipFact", data: {id: VNID(), type: hasFeatureImage, fromEntry: entryId, toEntry: imageId}},
+            {code: "CreateRelationshipFact", data: {id: VNID(), type: hasFeatureImage, fromEntry: entryId, toEntry: imageId,
+                noteMD: caption,
+            }},
         ]}));
 
         ////////////////////////////////////////////////////////////////////////////

@@ -75,6 +75,8 @@ export const CreateRelationshipFact = ContentEditType({
         fromEntry: vnidString,
         // The Entry that this relationship is "to"
         toEntry: vnidString,
+        /** A note about this relationship. Displayed as Markdown. */
+        noteMD: string.strictOptional(),
     }),
     describe: (data) => `Created \`RelationshipFact ${data.id}\``,
 });
