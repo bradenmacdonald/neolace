@@ -2,6 +2,7 @@ import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ParsedUrlQuery } from 'querystring';
 import { client, api, getSiteData, SiteData } from 'lib/api-client';
 
@@ -45,8 +46,13 @@ const EntryPage: NextPage<PageProps> = function(props) {
                     {/* Hero image, if any */}
                     {
                         props.entry.features?.HeroImage ?
-                            <div className="-m-4 mb-4 relative">
-                                <img src={props.entry.features.HeroImage.imageUrl} className="max-h-[50vh] w-full object-cover" alt="" />
+                            <div className="-m-4 mb-4 relative h-[50vh]">
+                                <Image
+                                    src={props.entry.features.HeroImage.imageUrl}
+                                    alt=""
+                                    layout="fill"
+                                    objectFit="cover"
+                                />
                                 {props.entry.features.HeroImage.caption ?
                                     <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
                                         <InlineMDT mdt={props.entry.features.HeroImage.caption} context={mdtContext} />
