@@ -1,8 +1,8 @@
 import React, { OlHTMLAttributes } from 'react';
 import Link from 'next/link';
-import * as MDT from "technotes-mdt";
 import { api } from 'lib/api-client';
 import { EntryLink } from 'components/EntryLink';
+import { MDT } from 'neolace-api';
 
 
 /**
@@ -121,7 +121,7 @@ function nodeToComponent(node: MDT.Node, context: MDTContext) {
     const key = getReactKeyForNode(node);
     switch (node.type) {
         case "heading":
-            return React.createElement(`h${node.level}`, {key}, node.children.map(child => nodeToComponent(child, context)));
+            return React.createElement(`h${node.level}`, {key, id: `h-${node.slugId}`}, node.children.map(child => nodeToComponent(child, context)));
         case "paragraph":
             return <p key={key}>{node.children.map(child => nodeToComponent(child, context))}</p>;
         case "list_item":

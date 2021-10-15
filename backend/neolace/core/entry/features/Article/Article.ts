@@ -81,7 +81,7 @@ export const ArticleFeature = EntryTypeFeature({
         }
 
         for (const node of parsed.children) {
-            if (node.type === "heading") {
+            if (node.type === "heading" && node.level === 1) {
                 headings.push({
                     title: node.children.map(c => MDT.renderInlineToPlainText(c)).join(""),
                     id: node.slugId,
