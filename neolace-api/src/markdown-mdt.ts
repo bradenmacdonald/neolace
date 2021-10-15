@@ -4,6 +4,7 @@ import type { Token } from "./deps/markdown-it/Token.ts";
 import { Node, InlineNode, RootNode, AnyInlineNode, AnyBlockNode } from "./markdown-mdt-ast.ts";
 export type { Node, InlineNode, RootNode, AnyInlineNode, AnyBlockNode }
 import { SubPlugin } from "./markdown-mdt-sub-plugin.ts";
+import { HeadingIdPlugin } from "./markdown-mdt-heading-id-plugin.ts";
 
 const parser = markdown("commonmark", {
     breaks: false,  // Don't convert \n in paragraphs into <br>
@@ -15,6 +16,7 @@ const parser = markdown("commonmark", {
 .disable("image") // Disable inline images
 .enable("strikethrough") // Enable ~~strikethrough~~
 .enable("table") // Enable tables (GitHub-style)
+.use(HeadingIdPlugin) // Give each heading an ID
 .use(SubPlugin); // Allow use of <sub> and <sup> tags
 
 
@@ -167,6 +169,7 @@ function tokenToNode(token: Token): Node {
     } else if (type === "heading") {
         // Determine the heading level from the tag, e.g. "h2" -> 2
         node.level = parseInt(token.tag.slice(1), 10);
+        node.slugId = token.attrGet("slugId");  // From out "heading ID" plugin
     } else if (type === "ordered_list") {
         const listStart = token.attrGet("start");
         if (listStart) {

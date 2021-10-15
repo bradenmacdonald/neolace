@@ -87,18 +87,24 @@ group(import.meta, () => {
                 articleMD: dedent`
                     # Heading 1
 
-                    This is some text.
+                    # Same Heading
+
+                    # Same Heading
+
+                    This is some text. The heading above is repeated, but should get a unique ID.
                 `
             }}},
         ]}));
 
         ////////////////////////////////////////////////////////////////////////////
-        // Now we should see the image on the entry:
+        // Now we should see the article on the entry and also get its headings:
         const after = await graph.read(tx => getEntryFeatureData(entryId, {featureType: "Article", tx}));
         assertEquals(after, {
-            articleMD: "# Heading 1\n\nThis is some text.",
+            articleMD: "# Heading 1\n\n# Same Heading\n\n# Same Heading\n\nThis is some text. The heading above is repeated, but should get a unique ID.",
             headings: [
                 {title: "Heading 1", id: "heading-1"},
+                {title: "Same Heading", id: "same-heading"},
+                {title: "Same Heading", id: "same-heading-1"},
             ],
         });
     });

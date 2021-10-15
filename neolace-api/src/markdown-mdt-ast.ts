@@ -87,6 +87,8 @@ interface HeadingNode extends BlockNode {
     type: "heading";
     /** 1 for top-level heading (<h1>), 2 for <h2>, etc. */
     level: number;
+    /** A friendly, unique slug ID, e.g. if the heading is "Heading 1", this would be "heading-1" */
+    slugId: string;
     children: Node[];
 }
 interface BlockquoteNode extends BlockNode {

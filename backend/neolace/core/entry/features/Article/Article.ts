@@ -84,7 +84,7 @@ export const ArticleFeature = EntryTypeFeature({
             if (node.type === "heading") {
                 headings.push({
                     title: node.children.map(c => MDT.renderInlineToPlainText(c)).join(""),
-                    id: "todo",
+                    id: node.slugId,
                 });
             }
         }
