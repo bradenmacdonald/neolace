@@ -1,4 +1,5 @@
-import { SiteSchemaData, UpdateEntryArticleSchema } from "neolace/deps/neolace-api.ts";
+import * as log from "std/log/mod.ts";
+import { MDT, SiteSchemaData, UpdateEntryArticleSchema } from "neolace/deps/neolace-api.ts";
 import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { EntryTypeFeature } from "../feature.ts";
@@ -66,9 +67,31 @@ export const ArticleFeature = EntryTypeFeature({
      */
     // deno-lint-ignore require-await
     async loadData({data}) {
+
+        const articleMD = data?.articleMD ?? "";
+
+        const headings: {id: string, title: string}[] = [];
+        // Parse the Markdown and extract the headings
+        let parsed: MDT.RootNode;
+        try {
+            parsed = MDT.tokenizeMDT(articleMD);
+        } catch (err: unknown) {
+            log.error(`Markdown parsing error: ${err}`);
+            parsed = {type: "mdt-document", children: []};
+        }
+
+        for (const node of parsed.children) {
+            if (node.type === "heading") {
+                headings.push({
+                    title: node.children.map(c => MDT.renderInlineToPlainText(c)).join(""),
+                    id: "todo",
+                });
+            }
+        }
+
         return {
-            articleMD: data?.articleMD ?? "",
-            headings: [],
+            articleMD,
+            headings,
         };
     }
 });
