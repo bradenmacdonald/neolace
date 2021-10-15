@@ -24,6 +24,11 @@ export const CreateEntry = ContentEditType({
     describe: (data) => `Created \`Entry ${data.id}\``,
 });
 
+export const UpdateEntryArticleSchema = Schema({
+    /** Replace the entire article text with this new text */
+    articleMD: string.strictOptional(),
+});
+
 /** For a single, specific entry (not an EntryType), update how it can be used as a property for other entries */
 export const UpdateEntryUseAsPropertySchema = Schema({
     /** Change the "importance" of this property. Lower numbers are most important. */
@@ -48,6 +53,10 @@ export const UpdateEntryFeature = ContentEditType({
     dataSchema: Schema({
         entryId: vnidString,
         feature: Schema.either(
+            Schema.merge(
+                {featureType: "Article" as const},
+                UpdateEntryArticleSchema,
+            ),
             Schema.merge(
                 {featureType: "UseAsProperty" as const},
                 UpdateEntryUseAsPropertySchema,

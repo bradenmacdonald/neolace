@@ -51,6 +51,11 @@ export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
 
 
 export const EntryFeaturesSchema = Schema({
+    Article: Schema({
+        articleMD: string,
+        headings: array.of(Schema({title: string, id: string})),
+    }).strictOptional(),
+
     Image: Schema({
         imageUrl: string,
         contentType: string,

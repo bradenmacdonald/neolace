@@ -23,6 +23,8 @@ export const EntryTypeSchema = Schema({
     simplePropValues: Record(string, SimplePropertySchema),
 
     enabledFeatures: Schema({
+        Article: Schema({
+        }).strictOptional(),
         UseAsProperty: Schema({
             appliesToEntryTypes: array.of(vnidString),
         }).strictOptional(),
