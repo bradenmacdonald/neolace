@@ -30,7 +30,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             );
             if (listValues.length < value.totalCount) {
                 listValues.push(
-                    <FormattedMessage 
+                    <FormattedMessage
+                        key="more"
                         id="common.list.xmore"
                         defaultMessage="{extraCount, plural, one {# more…} other {# more…}}"
                         values={{extraCount: value.totalCount - listValues.length}}
