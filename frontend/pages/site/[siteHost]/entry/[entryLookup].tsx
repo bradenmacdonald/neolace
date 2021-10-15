@@ -23,7 +23,9 @@ interface PageUrlQuery extends ParsedUrlQuery {
 
 const EntryPage: NextPage<PageProps> = function(props) {
 
-    const mdtContext = React.useMemo(() => new MDTContext(), [props.entry.id]);
+    const mdtContext = React.useMemo(() => new MDTContext({
+        refCache: props.entry.referenceCache,
+    }), [props.entry.id]);
     //const user = React.useContext(UserContext);
 
     return (
@@ -56,7 +58,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                 />
                                 {props.entry.features.HeroImage.caption ?
                                     <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
-                                        <EntryLink entryKey={props.entry.features.HeroImage.entryId} mdtContext={mdtContext} refCache={props.entry.referenceCache}>
+                                        <EntryLink entryKey={props.entry.features.HeroImage.entryId} mdtContext={mdtContext}>
                                             <FormattedMessage id="site.entry.heroImageCaptionPrefix" defaultMessage="Image:"/>
                                         </EntryLink>&nbsp;
                                         <InlineMDT mdt={props.entry.features.HeroImage.caption} context={mdtContext} />

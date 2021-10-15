@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { OlHTMLAttributes } from 'react';
 import Link from 'next/link';
 import * as MDT from "technotes-mdt";
+import { api } from 'lib/api-client';
+import { EntryLink } from 'components/EntryLink';
 
 
 /**
@@ -11,7 +13,10 @@ import * as MDT from "technotes-mdt";
  * current page.
  */
 export class MDTContext {
-    constructor() {
+    readonly refCache: api.ReferenceCacheData;
+    constructor(args: {refCache?: api.ReferenceCacheData}) {
+        // If no reference cache is available, create an empty one for consistency.
+        this.refCache = args.refCache ?? {entries: {}, entryTypes: {}};
     }
 }
 
@@ -33,44 +38,53 @@ export const InlineMDT: React.FunctionComponent<InlineProps> = (props) => {
         typeof props.mdt === "string" ? MDT.tokenizeInlineMDT(props.mdt) : props.mdt
     ), [props.mdt]);
 
-    return inlineNodeToComponent(inlineNode);
+    return inlineNodeToComponent(inlineNode, props.context);
 };
 
-function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode): React.ReactElement {
+function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode, context: MDTContext): React.ReactElement {
     const key = getReactKeyForNode(node);
     switch (node.type) {
         case "inline":
-            return <React.Fragment key={key}>{node.children.map(child => inlineNodeToComponent(child))}</React.Fragment>;
+            return <React.Fragment key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</React.Fragment>;
         case "text":
             return <React.Fragment key={key}>{node.content}</React.Fragment>;
         case "link":
             if (node.href.startsWith("#")) {
-                return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child))}</a>;
+                return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</a>;
             } else if (node.href.startsWith("/")) {
-                // This is presumably a URL like "/entry/:id" where :id is a VNID or a friendlyId
-                return <Link href={node.href} key={key}><a>{node.children.map(child => inlineNodeToComponent(child))}</a></Link>;
+                const entryLinkMatch = node.href.match(/^\/entry\/([\w-]+)$/)
+                if (entryLinkMatch) {
+                    // This is a link to an entry
+                    const entryKey = entryLinkMatch[1];
+                    return <EntryLink key={key} entryKey={entryKey} mdtContext={context}>
+                        {node.children.map(child => inlineNodeToComponent(child, context))}
+                    </EntryLink>;
+                } else {
+                    // Not sure what this is linking to...
+                    return <Link href={node.href} key={key}><a>{node.children.map(child => inlineNodeToComponent(child, context))}</a></Link>;
+                }
             } else if (node.href.startsWith("http://") || node.href.startsWith("https://")) {
-                return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child))}</a>;
+                return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</a>;
             } else {
                 // We don't know what this link is - seems invalid.
-                return <React.Fragment key={key}>{node.children.map(child => inlineNodeToComponent(child))}</React.Fragment>;
+                return <React.Fragment key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</React.Fragment>;
             }
         case "code_inline":
             return <code key={key}>{node.content}</code>;
         case "strong":
-            return <strong key={key}>{node.children.map(child => inlineNodeToComponent(child))}</strong>;
+            return <strong key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</strong>;
         case "em":
-            return <em key={key}>{node.children.map(child => inlineNodeToComponent(child))}</em>;
+            return <em key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</em>;
         case "s":
-            return <s key={key}>{node.children.map(child => inlineNodeToComponent(child))}</s>;
+            return <s key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</s>;
         case "hardbreak":
             return <br key={key} />;
         case "softbreak":
             return <React.Fragment key={key}>{" "}</React.Fragment>;
         case "sub":
-            return <sub key={key}>{node.children.map(child => inlineNodeToComponent(child))}</sub>;
+            return <sub key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</sub>;
         case "sup":
-            return <sup key={key}>{node.children.map(child => inlineNodeToComponent(child))}</sup>;
+            return <sup key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</sup>;
         default:
             return <> [Unknown MDT Node] </>;
     }
@@ -95,29 +109,32 @@ export const RenderMDT: React.FunctionComponent<BlockProps> = (props) => {
     ), [props.mdt]);
 
     return <>
-        {document.children.map(node => nodeToComponent(node))}
+        {document.children.map(node => nodeToComponent(node, props.context))}
     </>;
 };
 
-function nodeToComponent(node: MDT.Node) {
+function nodeToComponent(node: MDT.Node, context: MDTContext) {
     if (!("block" in node)) {
         // This is an inline node:
-        return inlineNodeToComponent(node);
+        return inlineNodeToComponent(node, context);
     }
     const key = getReactKeyForNode(node);
     switch (node.type) {
         case "heading":
-            return React.createElement(`h${node.level}`, {key}, node.children.map(child => nodeToComponent(child)));
+            return React.createElement(`h${node.level}`, {key}, node.children.map(child => nodeToComponent(child, context)));
         case "paragraph":
-            return <p key={key}>{node.children.map(child => nodeToComponent(child))}</p>;
+            return <p key={key}>{node.children.map(child => nodeToComponent(child, context))}</p>;
         case "list_item":
-            return <li key={key}>{node.children.map(child => nodeToComponent(child))}</li>;
+            return <li key={key}>{node.children.map(child => nodeToComponent(child, context))}</li>;
         case "bullet_list":
-            return <ul key={key}>{node.children.map(child => nodeToComponent(child))}</ul>;
-        case "ordered_list":
-            const olProps: any = {key,};
+            return <ul key={key}>{node.children.map(child => nodeToComponent(child, context))}</ul>;
+        case "ordered_list": {
+            const olProps: React.DetailedHTMLProps<React.OlHTMLAttributes<HTMLOListElement>, HTMLOListElement> = {
+                key,
+            };
             if (node.start !== undefined) { olProps.start = node.start; }  // This list starts at some number other than 1
-            return <ol {...olProps}>{node.children.map(child => nodeToComponent(child))}</ol>;
+            return <ol {...olProps}>{node.children.map(child => nodeToComponent(child, context))}</ol>;
+        }
         case "hr":
             return <hr key={key} />;
         case "code_block":
@@ -125,14 +142,18 @@ function nodeToComponent(node: MDT.Node) {
         case "table":
         case "thead":
         case "tbody":
-        case "tr":
+        case "tr": {
             const children: MDT.Node[] = node.children;
-            return React.createElement(node.type, {key}, children.map(child => nodeToComponent(child)));
+            return React.createElement(node.type, {key}, children.map(child => nodeToComponent(child, context)));
+        }
         case "td":
-        case "th":
-            const props: any = {key,}
+        case "th": {
+            const props: React.DetailedHTMLProps<React.TdHTMLAttributes<HTMLTableCellElement>, HTMLTableCellElement> = {
+                key,
+            };
             if (node.align !== undefined) { props.style = {textAlign: node.align}; }
-            return React.createElement(node.type, props, node.children.map(child => nodeToComponent(child)));
+            return React.createElement(node.type, props, node.children.map(child => nodeToComponent(child, context)));
+        }
         default:
             return `[ Unimplemented MDT node type ${node.type} ]`;
     }

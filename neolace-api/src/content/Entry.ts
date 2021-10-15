@@ -89,6 +89,11 @@ export const ReferenceCacheSchema = Schema({
     })),
 });
 
+export type ReferenceCacheData = Type<typeof ReferenceCacheSchema>;
+export type RefCacheEntryTypeData = ReferenceCacheData["entryTypes"]["key"];
+export type RefCacheEntryData = ReferenceCacheData["entries"]["key"];
+
+
 export const EntrySchema = Schema({
     id: vnidString,
     name: string,
