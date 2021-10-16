@@ -47,7 +47,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         <li className="my-2 truncate"><a href={`#summary`}><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></li>
                         <li className="my-2 truncate"><a href={`#properties`}><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></li>
                         {
-                            props.entry.features.Article.headings.map(heading =>
+                            props.entry.features.Article?.headings.map(heading =>
                                 <li key={heading.id} className="my-2 truncate"><a href={`#h-${heading.id}`}>{heading.title}</a></li>
                             )
                         }
