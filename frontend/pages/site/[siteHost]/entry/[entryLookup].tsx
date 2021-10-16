@@ -37,11 +37,21 @@ const EntryPage: NextPage<PageProps> = function(props) {
             <div className="absolute top-0 bottom-0 left-0 right-0 bg-yellow-300 flex flex-row">
 
                 {/* Left column, which shows table of contents, but only on desktop */}
-                <div id="left-toc-col" className="hidden md:block w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4 overflow-y-scroll">
+                <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4 overflow-y-scroll flex-col">
                     <h1 className="font-bold text-base">{props.entry.name}</h1>
                     <span id="entry-type-name" className="font-light">{props.entry.entryType.name}</span>
-                    <br/><br/>
+                    <br/>
                     <code id="entry-id" data-entry-id={props.entry.id} className="font-mono font-light">{props.entry.friendlyId}</code>
+
+                    <ul id="left-toc-headings" className="text-xl font-normal min-h-[400px] flex flex-col justify-center flex-grow">
+                        <li className="my-2 truncate"><a href={`#summary`}><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></li>
+                        <li className="my-2 truncate"><a href={`#properties`}><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></li>
+                        {
+                            props.entry.features.Article.headings.map(heading =>
+                                <li key={heading.id} className="my-2 truncate"><a href={`#h-${heading.id}`}>{heading.title}</a></li>
+                            )
+                        }
+                    </ul>
                 </div>
 
                 {/* The main content of this entry */}
@@ -118,16 +128,11 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         }
 
                         {/* Article content, if any */}
-                        <h2>Heading 2</h2>
-                        <p>Is it my imagination, or have tempers become a little frayed on the ship lately? I think you've let your personal feelings cloud your judgement. Now, how the hell do we defeat an enemy that knows us better than we know ourselves? Your head is not an artifact! Fear is the true enemy, the only enemy. Mr. Worf, you sound like a man who's asking his friend if he can start dating his sister.</p>
-                        <p>Travel time to the nearest starbase? My oath is between Captain Kargan and myself. Your only concern is with how you obey my orders. Or do you prefer the rank of prisoner to that of lieutenant?</p>
-                        <p>Not if I weaken first. Computer, lights up! Wouldn't that bring about chaos? Is it my imagination, or have tempers become a little frayed on the ship lately? Fear is the true enemy, the only enemy. Yesterday I did not know how to eat gagh. For an android with no feelings, he sure managed to evoke them in others. This should be interesting. We have a saboteur aboard. Our neural pathways have become accustomed to your sensory input patterns. Sure. You'd be surprised how far a hug goes with Geordi, or Worf.</p>
-                        <h3>Heading 3</h3>
-                        <p>I can't. As much as I care about you, my first duty is to the ship.</p>
-                        <h4>Heading 4</h4>
-                        <p>Well, that's certainly good to know.</p>
-                        <h5>Heading 5</h5>
-                        <p>But the probability of making a six is no greater than that of rolling a seven. And blowing into maximum warp speed, you appeared for an instant to be in two places at once.</p>
+                        {
+                            props.entry.features.Article ?
+                                <RenderMDT mdt={props.entry.features.Article.articleMD} context={mdtContext}/>
+                            : null
+                        }
                     </div>
                 </article>
             </div>
