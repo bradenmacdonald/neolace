@@ -114,8 +114,8 @@ group(import.meta, () => {
                     note: "",
                     source: {from: "EntryType"},
                 },
-                // This species has some regular properties:
                 {
+                    // Scientific name, a regular (non "simple") property
                     type: "PropertyValue",
                     id: defaultData.entries.propertyScientificName.id,
                     importance: 10,
@@ -125,6 +125,25 @@ group(import.meta, () => {
                     value: {value: "*Pinus ponderosa*", type: "InlineMarkdownString"},
                 },
                 {
+                    // Entries of Species type have "related images":
+                    type: "SimplePropertyValue",
+                    id: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesRelImg.id,
+                    importance: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesRelImg.importance,
+                    label: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesRelImg.label,
+                    note: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesRelImg.note,
+                    source: { from: "EntryType" },
+                    value: {
+                        pageSize: 5,
+                        startedAt: 0,
+                        totalCount: 1,
+                        type: "Page",
+                        values: [
+                            {annotations: {note: {type: "Null"}, weight: {type: "Null"}}, id: defaultData.entries.imgPonderosaTrunk.id, type: "AnnotatedEntry"},
+                        ],
+                    },
+                },
+                {
+                    // Wikidata item ID, a regular (non "simple") property
                     type: "PropertyValue",
                     id: defaultData.entries.propertyWikidataItemId.id,
                     importance: 15,
@@ -152,6 +171,7 @@ group(import.meta, () => {
                     [defaultData.schema.entryTypes._ETSPECIES.id]: {id: defaultData.schema.entryTypes._ETSPECIES.id, name: defaultData.schema.entryTypes._ETSPECIES.name},
                     [defaultData.schema.entryTypes._ETPROPERTY.id]: {id: defaultData.schema.entryTypes._ETPROPERTY.id, name: defaultData.schema.entryTypes._ETPROPERTY.name},
                     [defaultData.schema.entryTypes._ETPLANTPART.id]: {id: defaultData.schema.entryTypes._ETPLANTPART.id, name: defaultData.schema.entryTypes._ETPLANTPART.name},
+                    [defaultData.schema.entryTypes._ETIMAGE.id]: {id: defaultData.schema.entryTypes._ETIMAGE.id, name: defaultData.schema.entryTypes._ETIMAGE.name},
                 },
                 entries: {
                     [defaultData.entries.divisionTracheophyta.id]: {
@@ -193,6 +213,10 @@ group(import.meta, () => {
                     [defaultData.entries.propertyWikidataItemId.id]: {
                         ...defaultData.entries.propertyWikidataItemId,
                         entryType: {id: defaultData.schema.entryTypes._ETPROPERTY.id},
+                    },
+                    [defaultData.entries.imgPonderosaTrunk.id]: {
+                        ...defaultData.entries.imgPonderosaTrunk,
+                        entryType: {id: defaultData.schema.entryTypes._ETIMAGE.id},
                     },
                 },
             });
@@ -282,6 +306,24 @@ group(import.meta, () => {
                     },
                     note: "",
                     source: {from: "EntryType"},
+                },
+                // The related images property is still present:
+                {
+                    type: "SimplePropertyValue",
+                    id: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesRelImg.id,
+                    importance: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesRelImg.importance,
+                    label: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesRelImg.label,
+                    note: defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesRelImg.note,
+                    source: { from: "EntryType" },
+                    value: {
+                        pageSize: 5,
+                        startedAt: 0,
+                        totalCount: 1,
+                        type: "Page",
+                        values: [
+                            {annotations: {note: {type: "Null"}, weight: {type: "Null"}}, id: defaultData.entries.imgPonderosaTrunk.id, type: "AnnotatedEntry"},
+                        ],
+                    },
                 },
             ]});
         });
