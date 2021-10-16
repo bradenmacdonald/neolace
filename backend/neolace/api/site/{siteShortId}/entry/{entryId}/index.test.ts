@@ -102,12 +102,12 @@ group(import.meta, () => {
                             {
                                 type: "AnnotatedEntry",
                                 id: defaultData.entries.pollenCone.id,
-                                annotations: { weight: { type: "Null" } },
+                                annotations: { weight: { type: "Null" }, note: {type: "Null"} },
                             },
                             {
                                 type: "AnnotatedEntry",
                                 id: defaultData.entries.seedCone.id,
-                                annotations: { weight: { type: "Null" } },
+                                annotations: { weight: { type: "Null" }, note: {type: "Null"} },
                             },
                         ],
                     },
