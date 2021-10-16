@@ -71,7 +71,7 @@ export const ArticleFeature = EntryTypeFeature({
         const articleMD = data?.articleMD ?? "";
 
         const headings: {id: string, title: string}[] = [];
-        // Parse the Markdown and extract the headings
+        // Parse the Markdown
         let parsed: MDT.RootNode;
         try {
             parsed = MDT.tokenizeMDT(articleMD);
@@ -80,6 +80,7 @@ export const ArticleFeature = EntryTypeFeature({
             parsed = {type: "mdt-document", children: []};
         }
 
+        // Extract the top-level headings from the document, so all API clients can display a consistent table of contents
         for (const node of parsed.children) {
             if (node.type === "heading" && node.level === 1) {
                 headings.push({

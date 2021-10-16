@@ -198,6 +198,41 @@ group(import.meta, () => {
             });
         });
 
+
+        test("Get basic information about an entry plus a 'reference cache' with details of entries mentioned in article text", async () => {
+
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludeFeatures, api.GetEntryFlags.IncludeReferenceCache] as const});
+
+            assertEquals(result.referenceCache, {
+                entryTypes: {
+                    // The text only mentions these entries:
+                    [defaultData.schema.entryTypes._ETCLASS.id]: {id: defaultData.schema.entryTypes._ETCLASS.id, name: defaultData.schema.entryTypes._ETCLASS.name},
+                    [defaultData.schema.entryTypes._ETGENUS.id]: {id: defaultData.schema.entryTypes._ETGENUS.id, name: defaultData.schema.entryTypes._ETGENUS.name},
+                    [defaultData.schema.entryTypes._ETSPECIES.id]: {id: defaultData.schema.entryTypes._ETSPECIES.id, name: defaultData.schema.entryTypes._ETSPECIES.name},
+                },
+                entries: {
+                    [defaultData.entries.classPinopsida.id]: {
+                        ...defaultData.entries.classPinopsida,
+                        entryType: {id: defaultData.schema.entryTypes._ETCLASS.id},
+                    },
+                    [defaultData.entries.genusPinus.id]: {
+                        ...defaultData.entries.genusPinus,
+                        entryType: {id: defaultData.schema.entryTypes._ETGENUS.id},
+                    },
+                    [defaultData.entries.jeffreyPine.id]: {
+                        ...defaultData.entries.jeffreyPine,
+                        entryType: {id: defaultData.schema.entryTypes._ETSPECIES.id},
+                    },
+                    [defaultData.entries.ponderosaPine.id]: {
+                        ...defaultData.entries.ponderosaPine,
+                        entryType: {id: defaultData.schema.entryTypes._ETSPECIES.id},
+                    },
+                },
+            });
+        });
+
         test("The summary of properties will display an error if a simple property value is invalid", async () => {
 
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
