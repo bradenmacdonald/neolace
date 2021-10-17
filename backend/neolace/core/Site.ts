@@ -86,7 +86,7 @@ export class Site extends VNodeType {
          *
          * It is important to verify that the user actually controls this domain before setting it here.
          * 
-         * This value msut be unique among all sites.
+         * This value must be unique among all sites.
          */
         domain: Field.String,
         /**
