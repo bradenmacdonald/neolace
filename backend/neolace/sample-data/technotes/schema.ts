@@ -53,6 +53,7 @@ export const schema: SiteSchemaData = {
             enabledFeatures: {
                 UseAsProperty: {
                     appliesToEntryTypes: [
+                        ids.property,
                         ids.techConcept,
                     ],
                 },

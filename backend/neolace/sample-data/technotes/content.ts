@@ -11,8 +11,8 @@ export const ids = {
     electricCar: VNID("_1gJxmBoyHajaFBqxzu6KZi"),
     propExternalId: VNID("_6O1e4ErQw84vaTOb335V3y"),
     propWikidataId: VNID("_FVzZG1cmLEcVJlN0py9Oa"),
+    propWikidataPropertyId: VNID("_22jn4GZRCtjNIJQC0eDQDM"),
     propWordNetSynsetId: VNID("_524rvY8aJKbRMbGz5n7HfC"),
-    spare004: VNID("_22jn4GZRCtjNIJQC0eDQDM"),
     spare005: VNID("_3wFkZlVNILDjexTL2AiZSB"),
     spare006: VNID("_aC2AVdeAK0iQyjbIbXp0r"),
     spare007: VNID("_5lqx2yOMSlbibeIT5psLCr"),
@@ -36,12 +36,29 @@ export const edits: AnyContentEdit[] = [
     // Property: Wikidata ID
     ...createEntry({
         id: ids.propWikidataId,
-        name: "Wikidata Entry ID",
+        name: "Wikidata QID",
         friendlyId: "p-wikidata-id",
         type: schemaIds.property,
-        description: "ID of this item on Wikidata, the free knowledge base that anyone can edit.",
+        description: "ID of this entry on Wikidata, the free knowledge base that anyone can edit.",
         features: [
             {featureType: "UseAsProperty", importance: 15, displayAs: "[{value}](https://www.wikidata.org/wiki/{value})",},
+        ],
+        rels: [
+            {type: schemaIds.propIsAProp, to: ids.propExternalId},  // This is a type of external identifier
+        ],
+        props: {
+            [ids.propWikidataId]: { valueExpr: `"Q43649390"` },
+        },
+    }),
+    // Property: Wikidata Property ID
+    ...createEntry({
+        id: ids.propWikidataPropertyId,
+        name: "Wikidata Property ID",
+        friendlyId: "p-wikidata-pid",
+        type: schemaIds.property,
+        description: "ID of this property entry on Wikidata, the free knowledge base that anyone can edit.",
+        features: [
+            {featureType: "UseAsProperty", importance: 15, displayAs: "[{value}](https://www.wikidata.org/wiki/Property:{value})",},
         ],
         rels: [
             {type: schemaIds.propIsAProp, to: ids.propExternalId},  // This is a type of external identifier
@@ -60,6 +77,9 @@ export const edits: AnyContentEdit[] = [
         rels: [
             {type: schemaIds.propIsAProp, to: ids.propExternalId},  // This is a type of external identifier
         ],
+        props: {
+            [ids.propWikidataPropertyId]: { valueExpr: `"P8814"` },
+        },
     }),
     // Car
     ...createEntry({
