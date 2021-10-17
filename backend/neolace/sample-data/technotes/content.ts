@@ -9,9 +9,9 @@ import { schemaIds } from "./schema.ts";
 export const ids = {
     car: VNID("_4sd6mGkfpCfrvi3em2IFA0"),
     electricCar: VNID("_1gJxmBoyHajaFBqxzu6KZi"),
-    propWikidataId: VNID("_FVzZG1cmLEcVJlN0py9Oa"),
     propExternalId: VNID("_6O1e4ErQw84vaTOb335V3y"),
-    spare003: VNID("_524rvY8aJKbRMbGz5n7HfC"),
+    propWikidataId: VNID("_FVzZG1cmLEcVJlN0py9Oa"),
+    propWordNetSynsetId: VNID("_524rvY8aJKbRMbGz5n7HfC"),
     spare004: VNID("_22jn4GZRCtjNIJQC0eDQDM"),
     spare005: VNID("_3wFkZlVNILDjexTL2AiZSB"),
     spare006: VNID("_aC2AVdeAK0iQyjbIbXp0r"),
@@ -43,6 +43,23 @@ export const edits: AnyContentEdit[] = [
         features: [
             {featureType: "UseAsProperty", importance: 15, displayAs: "[{value}](https://www.wikidata.org/wiki/{value})",},
         ],
+        rels: [
+            {type: schemaIds.propIsAProp, to: ids.propExternalId},  // This is a type of external identifier
+        ],
+    }),
+    // Property: WordNet 3.1 Synset ID
+    ...createEntry({
+        id: ids.propWordNetSynsetId,
+        name: "WordNet 3.1 Synset ID",
+        friendlyId: "p-wordnet31-synset-id",
+        type: schemaIds.property,
+        description: "Identifier for this entry in Princeton's WordNet, the lexical database for English.",
+        features: [
+            {featureType: "UseAsProperty", importance: 15, displayAs: "[{value}](http://wordnet-rdf.princeton.edu/pwn30/{value})",},
+        ],
+        rels: [
+            {type: schemaIds.propIsAProp, to: ids.propExternalId},  // This is a type of external identifier
+        ],
     }),
     // Car
     ...createEntry({
@@ -51,6 +68,10 @@ export const edits: AnyContentEdit[] = [
         friendlyId: "tc-car",
         type: schemaIds.techConcept,
         description: "A car is a motor vehicle with four wheels, used primarily to transport people.",
+        props: {
+            [ids.propWikidataId]: { valueExpr: `"Q1420"` },
+            [ids.propWordNetSynsetId]: { valueExpr: `"02958343-n"` },
+        },
     })
 ];
 
@@ -61,6 +82,8 @@ function createEntry({id, ...args}: {
     friendlyId: string,
     description?: string,
     features?: schemas.Type<typeof UpdateEntryFeature["dataSchema"]>["feature"][],
+    rels?: [{type: VNID, to: VNID, noteMD?: string}],
+    props?: Record<VNID, {valueExpr: string, note?: string}>,
 }): AnyContentEdit[] {
     const edits: AnyContentEdit[] = [
         {code: "CreateEntry", data: {
@@ -71,14 +94,29 @@ function createEntry({id, ...args}: {
             description: args.description ?? "",
         }},
     ];
-    if (args.features) {
-        for (const feature of args.features) {
-            edits.push({code: "UpdateEntryFeature", data: {
-                entryId: id,
-                feature,
-            }});
-        }
-    }
+    args.features?.forEach(feature => {
+        edits.push({code: "UpdateEntryFeature", data: {
+            entryId: id,
+            feature,
+        }});
+    });
+    args.rels?.forEach(rel => {
+        edits.push({code: "CreateRelationshipFact", data: {
+            id: VNID(),
+            fromEntry: id,
+            toEntry: rel.to,
+            type: rel.type,
+            noteMD: rel.noteMD,
+        }});
+    });
+    Object.entries(args.props ?? {}).forEach(([propId, prop]) => {
+        edits.push({code: "UpdatePropertyValue", data: {
+            entry: id,
+            property: VNID(propId),
+            valueExpression: prop.valueExpr,
+            note: prop.note ?? "",
+        }});
+    });
 
 
     return edits;
