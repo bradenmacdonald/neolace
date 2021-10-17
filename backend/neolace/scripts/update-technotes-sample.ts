@@ -3,7 +3,7 @@
  * http://technotes.local.neolace.net:5555/
  */
 import * as log from "std/log/mod.ts";
-import { C, Field, EmptyResultError, GenericCypherAction } from "neolace/deps/vertex-framework.ts";
+import { C, Field, EmptyResultError, GenericCypherAction, VNID } from "neolace/deps/vertex-framework.ts";
 
 import { graph } from "neolace/core/graph.ts";
 import { shutdown } from "neolace/app/shutdown.ts";
@@ -59,9 +59,11 @@ const {id: bradenId} = await graph.pullOne(User, u => u.id, {key: "user-braden"}
 const {id: siteId} = await graph.pullOne(Site, s => s.id, {key: "site-technotes"}).catch(err =>{
     if (!(err instanceof EmptyResultError)) { throw err; }
     return graph.runAs(jamieId, CreateSite({
+        id: VNID("_siteTECHNOTES"),
         name: "TechNotes",
         domain: "technotes.local.neolace.net",
         slugId: `site-technotes`,
+        siteCode: "TECHN",
         adminUser: jamieId,
     }));
 });
