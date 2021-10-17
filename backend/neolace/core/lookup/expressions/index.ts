@@ -2,6 +2,7 @@
 
 export { Ancestors, AndAncestors } from "./ancestors.ts";
 export { Count } from "./count.ts";
+export { List } from "./list-expr.ts";
 export { LiteralExpression } from "./literal-expr.ts";
 export { Markdown } from "./markdown.ts";
 export { RelatedEntries } from "./related.ts";

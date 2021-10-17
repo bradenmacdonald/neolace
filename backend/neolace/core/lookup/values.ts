@@ -30,6 +30,14 @@ export abstract class LookupValue {
         return newValue;
     }
 
+    /**
+     * Return this value as a string, in Neolace Lookup Expression format.
+     * This string should parse to an expression that yields the same value.
+     *
+     * If the value cannot be expressed as a literal, this should return undefined.
+     */
+    public abstract asLiteral(): string|undefined;
+
     /** Subclasses should override this method to implement type casting. */
     protected doCastTo(_newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
         return undefined;
@@ -68,7 +76,7 @@ export interface ICountableValue {
     getCount(): Promise<bigint>;
 }
 
-/** Any data type that can be expressed as a simple literal (e.g. an integer "5") should conform to this interface. */
+/** Any value that can always be expressed as a simple literal (e.g. an integer "5") should conform to this interface. */
 export interface IHasLiteralExpression {
     /**
      * Return this value as a string, in Neolace Lookup Expression format.
@@ -76,9 +84,8 @@ export interface IHasLiteralExpression {
      */
     asLiteral(): string;
 }
-export function hasLiteralExpression(value: unknown): value is LookupValue & IHasLiteralExpression {
-    // deno-lint-ignore no-explicit-any
-    return value instanceof LookupValue && typeof (value as any).asLiteral === "function";
+export function hasLiteralExpression(value: LookupValue): value is (LookupValue & IHasLiteralExpression) {
+    return value instanceof LookupValue && value.asLiteral() !== undefined;
 }
 
 
@@ -97,7 +104,7 @@ export class IntegerValue extends ConcreteValue {
      * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
-    public asLiteral(): string {
+    public override asLiteral(): string {
         // An integer literal just looks like a plain integer, e.g. 5
         return String(this.value);
     }
@@ -112,7 +119,7 @@ export class IntegerValue extends ConcreteValue {
 /**
  * A value that respresents a string
  */
-export class StringValue extends ConcreteValue {
+export class StringValue extends ConcreteValue implements IHasLiteralExpression {
     readonly value: string;
 
     constructor(value: string) {
@@ -124,7 +131,7 @@ export class StringValue extends ConcreteValue {
      * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
-    public asLiteral(): string {
+    public override asLiteral(): string {
         // JSON.stringify() will create a "quoted" and \"escaped\" string for us.
         return JSON.stringify(this.value);
     }
@@ -139,7 +146,7 @@ export class StringValue extends ConcreteValue {
  * 
  * Inline means it can only do basic formatting like links or bold/italicized text; it cannot do block elements.
  */
-export class InlineMarkdownStringValue extends ConcreteValue {
+export class InlineMarkdownStringValue extends ConcreteValue implements IHasLiteralExpression {
     readonly value: string;
 
     constructor(value: string) {
@@ -151,7 +158,7 @@ export class InlineMarkdownStringValue extends ConcreteValue {
      * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
-    public asLiteral(): string {
+    public override asLiteral(): string {
         // JSON.stringify() will create a "quoted" and \"escaped\" string for us.
         return `markdown(${JSON.stringify(this.value)})`;
     }
@@ -164,12 +171,12 @@ export class InlineMarkdownStringValue extends ConcreteValue {
 /**
  * A null value
  */
-export class NullValue extends ConcreteValue {
+export class NullValue extends ConcreteValue implements IHasLiteralExpression {
     /**
      * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
-    public asLiteral(): string {
+    public override asLiteral(): string {
         return "null";
     }
 
@@ -190,13 +197,17 @@ export class ErrorValue extends ConcreteValue {
         this.error = error;
     }
 
+    public override asLiteral() {
+        return undefined;  // There is no literal expression for errors in general
+    }
+
     protected serialize() { return {errorClass: this.error.constructor.name, message: this.error.message}; }
 }
 
 /**
  * Represents an Entry
  */
-export class EntryValue extends ConcreteValue {
+export class EntryValue extends ConcreteValue implements IHasLiteralExpression {
     readonly id: VNID;
 
     constructor(id: VNID) {
@@ -208,7 +219,7 @@ export class EntryValue extends ConcreteValue {
      * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
-    public asLiteral(): string {
+    public override asLiteral(): string {
         return `E[${this.id}]`;  // e.g. E[_6FisU5zxXggLcDz4Kb3Wmd]
     }
 
@@ -230,7 +241,7 @@ export class EntryValue extends ConcreteValue {
 /**
  * Represents an EntryType
  */
-export class EntryTypeValue extends ConcreteValue {
+export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpression {
     readonly id: VNID;
 
     constructor(id: VNID) {
@@ -242,7 +253,7 @@ export class EntryTypeValue extends ConcreteValue {
      * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
-    public asLiteral(): string {
+    public override asLiteral(): string {
         return `ET[${this.id}]`;  // e.g. ET[_6FisU5zxXggLcDz4Kb3Wmd]
     }
 
@@ -252,7 +263,7 @@ export class EntryTypeValue extends ConcreteValue {
 /**
  * Represents a RelationshipType
  */
-export class RelationshipTypeValue extends ConcreteValue {
+export class RelationshipTypeValue extends ConcreteValue implements IHasLiteralExpression {
     readonly id: VNID;
 
     constructor(id: VNID) {
@@ -264,7 +275,7 @@ export class RelationshipTypeValue extends ConcreteValue {
      * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
-    public asLiteral(): string {
+    public override asLiteral(): string {
         return `RT[${this.id}]`;  // e.g. RT[_6FisU5zxXggLcDz4Kb3Wmd]
     }
 
@@ -274,7 +285,7 @@ export class RelationshipTypeValue extends ConcreteValue {
 /**
  * Represents a RelationshipFact
  */
-export class RelationshipFactValue extends ConcreteValue {
+export class RelationshipFactValue extends ConcreteValue implements IHasLiteralExpression {
     readonly id: VNID;
 
     constructor(id: VNID) {
@@ -286,7 +297,7 @@ export class RelationshipFactValue extends ConcreteValue {
      * Return this value as a string, in Neolace Lookup Expression format.
      * This string should parse to an expression that yields the same value.
      */
-    public asLiteral(): string {
+    public override asLiteral(): string {
         return `RF[${this.id}]`;  // e.g. RF[_6FisU5zxXggLcDz4Kb3Wmd]
     }
 
@@ -318,17 +329,21 @@ export class AnnotatedEntryValue extends EntryValue {
  * A subset of values from a larger value set.
  */
 export class PageValue<T extends ConcreteValue> extends ConcreteValue {
-    readonly values: T[];
+    readonly values: ReadonlyArray<T>;
     readonly startedAt: bigint;  // Also called "skip"
     readonly pageSize: bigint;  // Also called "limit"
     readonly totalCount: bigint;
 
-    constructor(values: T[], {startedAt, pageSize, totalCount}: {startedAt: bigint, pageSize: bigint, totalCount: bigint}) {
+    constructor(values: ReadonlyArray<T>, {startedAt, pageSize, totalCount}: {startedAt: bigint, pageSize: bigint, totalCount: bigint}) {
         super();
         this.values = values;
         this.startedAt = startedAt;
         this.pageSize = pageSize;
         this.totalCount = totalCount;
+    }
+
+    public override asLiteral() {
+        return undefined;  // There is no literal expression for a page
     }
 
     protected serialize() {
@@ -341,7 +356,50 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
     }
 }
 
-type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
+/**
+ * An immutable array of values of fixed length.
+ * Values do not necessarily have to be of the same type, so this can work as a tuple.
+ */
+ export class ListValue extends ConcreteValue implements ICountableValue {
+    readonly values: ReadonlyArray<ConcreteValue>;
+    readonly hasCount = true;
+
+    constructor(values: (ConcreteValue)[]) {
+        super();
+        this.values = values;
+    }
+
+    // deno-lint-ignore require-await
+    public async getCount(): Promise<bigint> {
+        return BigInt(this.values.length);
+    }
+
+    /**
+     * Return this value as a string, in Neolace Lookup Expression format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public override asLiteral(): string|undefined {
+        const literalValues = this.values.map(v => v.asLiteral());
+        if (literalValues.includes(undefined)) {
+            return undefined;  // One of more of the values in this list cannot be expressed as a literal
+        }
+        return "[" + literalValues.join(", ") + "]";
+    }
+
+    protected serialize() {
+        return {
+            values: this.values.map(v => v.toJSON()),
+        };
+    }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === PageValue) {
+            const totalCount = BigInt(this.values.length);
+            return new PageValue(this.values, {totalCount, pageSize: totalCount, startedAt: 0n});
+        }
+        return undefined;
+    }
+}
 
 
 /**
@@ -356,6 +414,10 @@ abstract class LazyValue extends LookupValue {
     constructor(context: LookupContext) {
         super();
         this.context = context;
+    }
+
+    public override asLiteral() {
+        return undefined;  // In general, lazy values don't have literal expressions
     }
 
     /** If this is a LazyValue, convert it to a default non-lazy value. */
@@ -404,6 +466,14 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
     }
 }
 
+/**
+ * An annotation reviver is a function that converts a single raw value loaded from the Neo4j database into a
+ * concrete lookup value, e.g. bigint -> IntegerValue
+ * 
+ * It is only used with LazyEntrySetValue
+ */
+type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
+
 export class LazyEntrySetValue extends LazyCypherQueryValue {
     readonly annotations: Readonly<Record<string, AnnotationReviver>>|undefined;
 
@@ -439,5 +509,33 @@ export class LazyEntrySetValue extends LazyCypherQueryValue {
                 totalCount,
             },
         );
+    }
+}
+
+
+/**
+ * An immutable array of values of fixed length.
+ * Values can be "lazy" (not yet fully evaluated)
+ */
+ export class LazyListValue extends LazyValue implements ICountableValue {
+    readonly values: ReadonlyArray<LookupValue>;
+    readonly hasCount = true;
+
+    constructor(context: LookupContext, values: (LookupValue)[]) {
+        super(context);
+        this.values = values;
+    }
+
+    // deno-lint-ignore require-await
+    public async getCount(): Promise<bigint> {
+        return BigInt(this.values.length);
+    }
+
+    public override async toDefaultConcreteValue(): Promise<ListValue> {
+        const concreteValues: ConcreteValue[] = [];
+        for (const value of this.values) {
+            concreteValues.push(await value.makeConcrete());
+        }
+        return new ListValue(concreteValues);
     }
 }

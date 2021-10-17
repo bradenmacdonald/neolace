@@ -5,6 +5,7 @@ import { LookupExpression } from "./expression.ts";
 import {
     Ancestors,
     AndAncestors,
+    List,
     // Count,
     LiteralExpression,
     RelatedEntries,
@@ -59,6 +60,14 @@ group(import.meta, () => {
             "this.andAncestors().related(via=RT[_HASA])",
             new RelatedEntries(new AndAncestors(new This()), {via: new LiteralExpression(new V.RelationshipTypeValue(VNID("_HASA")))}),
         );
+    });
+    test("List", () => {
+        checkParse("[]", new List([]));
+        checkParse(`[null, 1, "hello"]`, new List([
+            new LiteralExpression(new V.NullValue()),
+            new LiteralExpression(new V.IntegerValue(1)),
+            new LiteralExpression(new V.StringValue("hello")),
+        ]));
     });
 
 });
