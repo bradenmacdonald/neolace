@@ -13,6 +13,10 @@ export interface PageValue extends LookupValue {
     totalCount: number;
 }
 
+export interface ListValue extends LookupValue {
+    type: "List";
+    values: AnyLookupValue[];
+}
 
 export interface EntryValue extends LookupValue {
     type: "Entry";
@@ -49,6 +53,7 @@ export interface ErrorValue extends LookupValue {
 
 export type AnyLookupValue = (
     | PageValue
+    | ListValue
     | EntryValue
     | AnnotatedEntryValue
     | IntegerValue

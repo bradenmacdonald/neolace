@@ -23,6 +23,18 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
     }
 
     switch (value.type) {
+        case "List": {
+
+            const listValues = value.values.map((v, idx) => 
+                <LookupValue key={idx} value={v} refCache={props.refCache} mdtContext={props.mdtContext} />
+            );
+
+            return <span className="neo-lookup-paged-values">
+                <FormattedListParts type="unit" value={listValues}>
+                    {parts => <>{parts.map(p => p.value)}</>}
+                </FormattedListParts>
+            </span>;
+        }
         case "Page": {
 
             const listValues = value.values.map((v, idx) => 

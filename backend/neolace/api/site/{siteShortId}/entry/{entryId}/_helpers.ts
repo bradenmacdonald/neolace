@@ -184,6 +184,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
  */
 export function extractLookupReferences(value: api.AnyLookupValue, refs: {entryIdsUsed: Set<VNID>}) {
     switch (value.type) {
+        case "List":
         case "Page": {
             value.values.forEach(v => extractLookupReferences(v, refs));
             return;

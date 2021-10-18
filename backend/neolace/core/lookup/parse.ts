@@ -5,6 +5,7 @@ import {
     Ancestors,
     AndAncestors,
     // Count,
+    List,
     LiteralExpression,
     Markdown,
     RelatedEntries,
@@ -56,6 +57,12 @@ export function parseLookupString(lookup: string): LookupExpression {
         if (matchResult) {
             return fn(matchResult);
         }
+    }
+
+    if (lookup[0] === "[" && lookup[lookup.length - 1] === "]") {
+        // It's a list:
+        const parts = lookup.substr(1, lookup.length - 2).split(",").map(part => part.trim());
+        return new List(parts.map(part => parseLookupString(part)));
     }
 
     throw new LookupParseError(`Simple/fake parser is unable to parse the lookup expression "${lookup}"`);

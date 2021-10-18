@@ -21,11 +21,11 @@ export class LiteralExpression extends LookupExpression {
     }
 
     // deno-lint-ignore require-await
-    public async getValue(_context: LookupContext) {
+    public override async getValue(_context: LookupContext) {
         return this.value;
     }
 
     public toString(): string {
-        return this.value.asLiteral();
+        return (this.value as IHasLiteralExpression).asLiteral();
     }
 }

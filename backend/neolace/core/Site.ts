@@ -86,7 +86,7 @@ export class Site extends VNodeType {
          *
          * It is important to verify that the user actually controls this domain before setting it here.
          * 
-         * This value msut be unique among all sites.
+         * This value must be unique among all sites.
          */
         domain: Field.String,
         /**
@@ -167,6 +167,7 @@ export const DeleteSite = defaultDeleteFor(Site);
 export const CreateSite = defineAction({
     type: "CreateSite",
     parameters: {} as {
+        id?: VNID;
         name: string;
         slugId: string;
         domain: string;
@@ -182,7 +183,7 @@ export const CreateSite = defineAction({
     },
     apply: async (tx, data) => {
         // Generate a VNID and "site code":
-        const id = VNID();
+        const id = data.id ?? VNID();
         let siteCode: string;
         if (data.siteCode) {
             siteCode = data.siteCode;
