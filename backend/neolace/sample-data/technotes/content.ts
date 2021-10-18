@@ -9,19 +9,30 @@ import { schemaIds } from "./schema.ts";
 export const ids = {
     car: VNID("_4sd6mGkfpCfrvi3em2IFA0"),
     electricCar: VNID("_1gJxmBoyHajaFBqxzu6KZi"),
+    motorVehicle: VNID("_5lqx2yOMSlbibeIT5psLCr"),
+    propAlsoKnownAs: VNID("_3wFkZlVNILDjexTL2AiZSB"),
     propExternalId: VNID("_6O1e4ErQw84vaTOb335V3y"),
     propWikidataId: VNID("_FVzZG1cmLEcVJlN0py9Oa"),
     propWikidataPropertyId: VNID("_22jn4GZRCtjNIJQC0eDQDM"),
-    propWordNetSynsetId: VNID("_524rvY8aJKbRMbGz5n7HfC"),
-    spare005: VNID("_3wFkZlVNILDjexTL2AiZSB"),
-    spare006: VNID("_aC2AVdeAK0iQyjbIbXp0r"),
-    spare007: VNID("_5lqx2yOMSlbibeIT5psLCr"),
+    propWordNetILI: VNID("_aC2AVdeAK0iQyjbIbXp0r"),
+    propWordNet31SynsetId: VNID("_524rvY8aJKbRMbGz5n7HfC"),
     spare008: VNID("_5hqETvE3WTHuYvhHbwWuD"),
     spare009: VNID("_3zmtupLIgSw4GUtFFah5nb"),
     spare010: VNID("_1f65YAjUSb4RLKbJ0MqEd8"),
 };
 
 export const edits: AnyContentEdit[] = [
+    // Property: Also known as
+    ...createEntry({
+        id: ids.propAlsoKnownAs,
+        name: "Also known as",
+        friendlyId: "p-aka",
+        type: schemaIds.property,
+        description: "Other names for this entry",
+        features: [
+            {featureType: "UseAsProperty", importance: 1},
+        ],
+    }),
     // Property: External Identifier
     ...createEntry({
         id: ids.propExternalId,
@@ -47,6 +58,7 @@ export const edits: AnyContentEdit[] = [
             {type: schemaIds.propIsAProp, to: ids.propExternalId},  // This is a type of external identifier
         ],
         props: {
+            [ids.propAlsoKnownAs]: { valueExpr: JSON.stringify(["Wikidata item ID", "WDQID"]) },
             [ids.propWikidataId]: { valueExpr: `"Q43649390"` },
         },
     }),
@@ -64,21 +76,52 @@ export const edits: AnyContentEdit[] = [
             {type: schemaIds.propIsAProp, to: ids.propExternalId},  // This is a type of external identifier
         ],
     }),
-    // Property: WordNet 3.1 Synset ID
+    // Property: WordNet Interlingual Index
     ...createEntry({
-        id: ids.propWordNetSynsetId,
-        name: "WordNet 3.1 Synset ID",
-        friendlyId: "p-wordnet31-synset-id",
+        id: ids.propWordNetILI,
+        name: "Interlingual Index",
+        friendlyId: "p-ili",
         type: schemaIds.property,
-        description: "Identifier for this entry in Princeton's WordNet, the lexical database for English.",
+        description: "Language-neutral identifier to look up this concept in a WordNet, like Princeton WordNet (for English)",
         features: [
-            {featureType: "UseAsProperty", importance: 15, displayAs: "[{value}](http://wordnet-rdf.princeton.edu/pwn30/{value})",},
+            {featureType: "UseAsProperty", importance: 15, displayAs: "[{value}](http://wordnet-rdf.princeton.edu/ili/{value})",},
         ],
         rels: [
             {type: schemaIds.propIsAProp, to: ids.propExternalId},  // This is a type of external identifier
         ],
         props: {
             [ids.propWikidataPropertyId]: { valueExpr: `"P8814"` },
+        },
+    }),
+    // Property: WordNet 3.1 Synset ID
+    ...createEntry({
+        id: ids.propWordNet31SynsetId,
+        name: "WordNet 3.1 Synset ID",
+        friendlyId: "p-wordnet31-synset-id",
+        type: schemaIds.property,
+        description: "Identifier for this entry in Princeton's WordNet, the lexical database for English.",
+        features: [
+            {featureType: "UseAsProperty", importance: 15, displayAs: "[{value}](http://wordnet-rdf.princeton.edu/id/{value})",},
+        ],
+        rels: [
+            {type: schemaIds.propIsAProp, to: ids.propExternalId},  // This is a type of external identifier
+        ],
+        props: {
+            [ids.propWikidataPropertyId]: { valueExpr: `"P8814"` },
+        },
+    }),
+    // Motor Vehicle
+    ...createEntry({
+        id: ids.motorVehicle,
+        name: "Motor Vehicle",
+        friendlyId: "tc-motor-vehicle",
+        type: schemaIds.techConcept,
+        description: "A motor vehicle is a wheeled vehicle that can propel itself and which does not run on rails.",
+        props: {
+            [ids.propAlsoKnownAs]: { valueExpr: JSON.stringify(["automotive vehicle", "self-propelled vehicle"]) },
+            [ids.propWikidataId]: { valueExpr: `"Q1420"` },
+            [ids.propWordNet31SynsetId]: { valueExpr: `"03796768-n"` },
+            [ids.propWordNetILI]: { valueExpr: `"i56401"` },
         },
     }),
     // Car
@@ -88,11 +131,16 @@ export const edits: AnyContentEdit[] = [
         friendlyId: "tc-car",
         type: schemaIds.techConcept,
         description: "A car is a motor vehicle with four wheels, used primarily to transport people.",
+        rels: [
+            {type: schemaIds.techConceptIsA, to: ids.motorVehicle},
+        ],
         props: {
+            [ids.propAlsoKnownAs]: { valueExpr: JSON.stringify(["motorcar", "automobile", "auto", "car"]) },
             [ids.propWikidataId]: { valueExpr: `"Q1420"` },
-            [ids.propWordNetSynsetId]: { valueExpr: `"02958343-n"` },
+            [ids.propWordNet31SynsetId]: { valueExpr: `"02961779-n"` },
+            [ids.propWordNetILI]: { valueExpr: `"i51496"` },
         },
-    })
+    }),
 ];
 
 function createEntry({id, ...args}: {
