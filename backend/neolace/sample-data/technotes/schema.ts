@@ -55,6 +55,7 @@ export const schema: SiteSchemaData = {
                     appliesToEntryTypes: [
                         ids.property,
                         ids.techConcept,
+                        ids.image,
                     ],
                 },
             },

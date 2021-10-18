@@ -17,8 +17,8 @@ const objStoreClient = new S3Bucket({
 export const __forScriptsOnly = { objStoreClient };
 
 
-export async function uploadFileToObjStore(fileStream: Deno.Reader, contentType: string): Promise<{id: VNID, filename: string, sha256Hash: string, size: number}> {
-    const id = VNID();
+export async function uploadFileToObjStore(fileStream: Deno.Reader, options: {contentType: string, id?: VNID}): Promise<{id: VNID, filename: string, sha256Hash: string, size: number}> {
+    const id = options.id ?? VNID();
     // Add a second VNID to the filename so that the ID alone is not enough to download the file (security concern)
     const filename = `${id}${VNID()}`;
     // Stream the file to object storage, calculating its SHA-256 hash as we go
@@ -40,7 +40,7 @@ export async function uploadFileToObjStore(fileStream: Deno.Reader, contentType:
 
     // Upload the file to the object store, using tempFilename:
     await objStoreClient.putObject(filename, buf.bytes(), {
-        contentType,
+        contentType: options.contentType,
         // Since files are immutable and assigned an ID on upload, they can and should be cached as aggressively as possible:
         cacheControl: "public, max-age=604800, immutable",
     });

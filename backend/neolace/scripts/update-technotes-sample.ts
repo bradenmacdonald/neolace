@@ -13,6 +13,7 @@ import { CreateSite, Site } from "neolace/core/Site.ts";
 import { CreateDraft, AcceptDraft } from "neolace/core/edit/Draft.ts";
 import { schema } from "neolace/sample-data/technotes/schema.ts";
 import { edits } from "neolace/sample-data/technotes/content.ts";
+import { ensureFilesExist } from "neolace/sample-data/technotes/datafiles.ts";
   
 
 
@@ -72,6 +73,10 @@ log.info("Importing schema...");
  
 await graph.runAs(bradenId, ImportSchema({ siteId, schema }));
  
+log.info("Uploading data files...");
+
+await ensureFilesExist();
+
 log.info("Updating content...");
  
 const lastEdit: number = (await graph.read(tx => tx.queryOne(C`

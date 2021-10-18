@@ -366,7 +366,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             throw new Error(`Couldn't detect content type of sample file "${path}".`)
         }
         const file = await Deno.open(fullPath);
-        const uploadData = await uploadFileToObjStore(file, contentType);
+        const uploadData = await uploadFileToObjStore(file, {contentType});
         file.close();
 
         await graph.runAsSystem(CreateDataFile({
