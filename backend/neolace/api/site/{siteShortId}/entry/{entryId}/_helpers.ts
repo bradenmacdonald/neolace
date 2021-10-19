@@ -1,5 +1,5 @@
 import { api } from "neolace/api/mod.ts";
-import { C, VNID, WrappedTransaction, isVNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
+import { VNID, WrappedTransaction, isVNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { getEntryAncestors } from "neolace/core/entry/ancestors.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
@@ -9,6 +9,7 @@ import { LookupError } from "neolace/core/lookup/errors.ts";
 import { ConcreteValue, ErrorValue, InlineMarkdownStringValue, StringValue } from "neolace/core/lookup/values.ts";
 import { getEntryProperties } from "neolace/core/entry/properties.ts";
 import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-data.ts";
+import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 
 
 /**
@@ -64,10 +65,10 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
         throw new Error("The entry ID specified is from a different site.");
     }
 
-    // As we extract the data about this entry, build a list of all the other entry IDs that we've seen, to populate the
-    // "reference cache". The entry itself is also included.
-    const entryIdsUsed = new Set<VNID>([entryData.id]);
-    const friendlyIdsUsed = new Set<string>();
+    const refCache = flags.has(api.GetEntryFlags.IncludeReferenceCache) ? new ReferenceCache({siteId}) : undefined;
+    // We always include the current entry in the reference cache in case it references itself, to make it easy for API
+    // consumers to show the right data (e.g. link tooltips) in that case.
+    refCache?.addReferenceToEntryId(entryData.id);
 
     // We'll need the ancestors of this entry in a couple different cases:
     const getAncestors = computeOnceIfNeeded(() => getEntryAncestors(entryData.id, tx));
@@ -103,7 +104,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                 }
             }
             const serializedValue = value.toJSON();
-            extractLookupReferences(serializedValue, {entryIdsUsed});
+            refCache?.extractLookupReferences(serializedValue);
             if (prop.type === "SimplePropertyValue") {  // This 'if' is mostly to satisfy TypeScript
                 result.propertiesSummary.push({
                     id: prop.id,
@@ -124,7 +125,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                     type: prop.type,
                     source: prop.source,
                 });
-                entryIdsUsed.add(prop.id);
+                refCache?.addReferenceToEntryId(prop.id);
             }
         }
     }
@@ -133,102 +134,18 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
         // Include "features" specific to this entry type. A common one is the "article" feature, which has prose text
         // (markdown). Another common one is the "Image" feature which means this entry is an image.
         result.features = await getEntryFeaturesData(entryData.id, {tx});
+
+        if (result.features.Article?.articleMD) {
+            // Extract refernces from the description of this entry
+            refCache?.extractMarkdownReferences(entryData.description);
+            // Extract references from the article text:
+            refCache?.extractMarkdownReferences(result.features.Article.articleMD);
+        }
     }
 
     if (flags.has(api.GetEntryFlags.IncludeReferenceCache)) {
-
-        if (result.features?.Article?.articleMD) {
-            // Extract refernces from the description of this entry
-            extractMarkdownReferences(entryData.description, {entryIdsUsed, friendlyIdsUsed});
-            // Extract references from the article text:
-            extractMarkdownReferences(result.features.Article.articleMD, {entryIdsUsed, friendlyIdsUsed});
-        }
-
-        result.referenceCache = {
-            entryTypes: {},
-            entries: {},
-        };
-        const entryReferences = await tx.pull(Entry,
-            e => e.id.name.description.friendlyId().type(et => et.id.name.site(s => s.id)),
-            {where: C`@this.id IN ${Array.from(entryIdsUsed)} OR @this.slugId IN ${Array.from(friendlyIdsUsed).map(friendlyId => siteCode + friendlyId)}`},
-        );
-        for (const reference of entryReferences) {
-            // Let's just do a double-check that we're not leaking information from another site - shouldn't happen in any case:
-            if (reference.type?.site?.id !== siteId) {
-                throw new Error(`Error, found an Entry ID from another site altogether (${reference.id}). Security issue?`);
-            }
-            // Now add this reference and its entry type information to the cache
-            result.referenceCache.entries[reference.id] = {
-                id: reference.id,
-                name: reference.name,
-                friendlyId: reference.friendlyId,
-                description: reference.description,
-                entryType: {id: reference.type.id},
-            };
-
-            if (result.referenceCache.entryTypes[reference.type.id] === undefined) {
-                result.referenceCache.entryTypes[reference.type.id] = {
-                    id: reference.type.id,
-                    name: reference.type.name,
-                };
-            }
-        }
+        result.referenceCache = await refCache!.getData(tx);
     }
 
     return result;
-}
-
-/**
- * Given a serialized "Lookup Value" that is the result of evaluating a Graph Lookup expression, find all unique entry
- * IDs that are present in the value (recursively). Adds to the set(s) passed as a parameter
- */
-export function extractLookupReferences(value: api.AnyLookupValue, refs: {entryIdsUsed: Set<VNID>}) {
-    switch (value.type) {
-        case "List":
-        case "Page": {
-            value.values.forEach(v => extractLookupReferences(v, refs));
-            return;
-        }
-        case "AnnotatedEntry":
-        case "Entry": {
-            refs.entryIdsUsed.add(value.id);
-            return;
-        }
-        case "Integer":
-        case "String":
-        case "InlineMarkdownString":
-        case "Error":
-            return;
-        default:
-            // deno-lint-ignore no-explicit-any
-            throw new Error(`Fix this: extractLookupReferences() doesn't yet support ${(value as any).type} values.`);
-    }
-}
-
-/**
- * Given a markdown string (or optionally an abstract syntax tree [AST] if it's already parsed), find all unique entry
- * IDs that are mentioned.
- */
- export function extractMarkdownReferences(markdown: string|api.MDT.RootNode|api.MDT.Node, refs: {entryIdsUsed: Set<VNID>, friendlyIdsUsed: Set<string>}) {
-    if (typeof markdown === "string") {
-        markdown = api.MDT.tokenizeMDT(markdown);
-    }
-
-    const node = markdown;
-    if (node.type === "link") {
-        if (node.href.startsWith("/entry/")) {
-            const entryKey = node.href.substr(7);
-            // May be a friendlyId or VNID
-            if (isVNID(entryKey)) {
-                refs.entryIdsUsed.add(entryKey);
-            } else {
-                refs.friendlyIdsUsed.add(entryKey);
-            }
-        }
-    }
-    if ("children" in node) {
-        for (const child of node.children) {
-            extractMarkdownReferences(child, refs);
-        }
-    }
 }

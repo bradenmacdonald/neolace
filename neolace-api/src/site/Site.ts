@@ -1,4 +1,5 @@
 import { Schema, Type, string, nullable, } from "../api-schemas.ts";
+import { ReferenceCacheSchema } from "../content/Entry.ts";
 
 
 /**
@@ -21,3 +22,16 @@ export const SiteDetailsSchema = Schema({
     shortId: string,
 });
 export type SiteDetailsData = Type<typeof SiteDetailsSchema>;
+
+/**
+ * Data type that gives information about a Site's home page
+ */
+ export const SiteHomePageSchema = Schema({
+    /**
+     * Markdown text for the home page. This defines the content of the home page.
+     */
+    homePageMD: string,
+    /** Some details about any entries mentioned in the home page. */
+    referenceCache: ReferenceCacheSchema,
+});
+export type SiteHomePageData = Type<typeof SiteHomePageSchema>;

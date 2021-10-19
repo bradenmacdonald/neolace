@@ -141,6 +141,8 @@ export const CanViewEntries: Check = OneOf(
     CheckSiteIsPublic,  // If the site is public, anyone can view entries, even if they're not logged in
     CheckUserBelongsToAnyGroup,  // If the site is private, the user can _view_ entries by belonging to any Group
 );
+// Home page of the site:
+export const CanViewHomePage: Check = CanViewEntries;
 // Schema
 export const CanViewSchema: Check = OneOf(
     CheckSiteIsPublic,  // If the site is public, anyone can view its schema, even if they're not logged in
@@ -166,6 +168,7 @@ export const CanEditSiteGroups: Check = CheckUserHasGrants(PermissionGrant.admin
 
 export const permissions = {
     CanViewEntries,
+    CanViewHomePage,
     CanProposeEntryEdits,
     CanApproveEntryEdits,
     CanViewSchema,

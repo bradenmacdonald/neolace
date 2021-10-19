@@ -1,14 +1,19 @@
 import React from 'react';
+import { FormattedMessage } from 'react-intl';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import Link from 'next/link';
 import { ParsedUrlQuery } from 'querystring';
-import { getSiteData, SiteData } from 'lib/api-client';
+import { getSiteData, SiteData, api, client } from 'lib/api-client';
 
 import { SitePage } from 'components/SitePage';
 import { UserContext, UserStatus } from 'components/user/UserContext';
+import { MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 
 interface PageProps {
     site: SiteData;
+    /** Markdown content for the homepage */
+    homepageMD: string;
+    refCache: api.ReferenceCacheData;
 }
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -17,6 +22,9 @@ interface PageUrlQuery extends ParsedUrlQuery {
 const HomePage: NextPage<PageProps> = function(props) {
 
     
+    const mdtContext = React.useMemo(() => new MDTContext({
+        refCache: props.refCache,
+    }), [props.site.shortId]);
     const user = React.useContext(UserContext);
 
     return (
@@ -24,14 +32,24 @@ const HomePage: NextPage<PageProps> = function(props) {
             title={props.site.name}
             site={props.site}
         >
-            <h1>
-                {`Welcome to ${props.site.name}${user.status == UserStatus.LoggedIn ? `, ${user.username}`: ''}!`}
-            </h1>
-            <p className="text-purple-600">This is a purple text.</p>
-            <p className="text-primary text-opacity-50">This is a primary text.</p>
-            <p className="text-link text-opacity-50">This is a "link" colored text.</p>
-
-            <p><Link href="/entry/s-pinus-ponderosa"><a>Go to "Ponderosa Pine"</a></Link></p>
+            <div className="max-w-6xl mx-auto neo-typography">
+                {props.homepageMD ?
+                    <RenderMDT mdt={props.homepageMD} context={mdtContext} />
+                :
+                    <>
+                        <h1>
+                            <FormattedMessage id="site.home.defaultTitle" defaultMessage="Welcome to {siteName}" values={{siteName: props.site.name}}/>
+                        </h1>
+                        <p>
+                            <FormattedMessage
+                                id="site.home"
+                                defaultMessage="This site is powered by Neolace. If this is your site, you should customize this home page to say what you'd like."
+                                description="A default homepage description, if no home page text has been set."
+                            />
+                        </p>
+                    </>
+                }
+            </div>
         </SitePage>
     );
 }
@@ -53,9 +71,13 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     const site = await getSiteData(context.params.siteHost);
     if (site === null) { return {notFound: true}; }
 
+    const homePage = await client.getSiteHomePage({siteId: site.shortId});
+
     return {
         props: {
             site,
+            homepageMD: homePage.homePageMD,
+            refCache: homePage.referenceCache,
         },
     };
 }

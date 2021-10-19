@@ -4,7 +4,7 @@ import * as errors from "./errors.ts";
 import { SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema } from "./edit/index.ts";
 import { EntryData, GetEntryFlags } from "./content/index.ts";
-import { SiteDetailsData } from "./site/Site.ts";
+import { SiteDetailsData, SiteHomePageData } from "./site/Site.ts";
 import * as schemas from "./api-schemas.ts";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
@@ -151,6 +151,11 @@ export class NeolaceApiClient {
 
     public async getSite(criteria: {domain: string}): Promise<SiteDetailsData> {
         return await this.call(`/site/lookup?domain=${encodeURIComponent(criteria.domain)}`, {method: "GET"});
+    }
+
+    public async getSiteHomePage(options?: {siteId?: string}): Promise<SiteHomePageData> {
+        const siteId = this.getSiteId(options);
+        return await this.call(`/site/${siteId}/home`, {method: "GET"});
     }
 
     public async getSiteSchema(options?: {siteId?: string}): Promise<SiteSchemaData> {
