@@ -1,34 +1,20 @@
-################################################################
-# Stage 1: Transpile the typescript
-################################################################
-FROM node:16 as transpile
-WORKDIR /build
-ENV NODE_ENV production
-ENV PATH /build/node_modules/.bin:$PATH
+FROM denoland/deno:alpine
+WORKDIR /neolace/backend
+ENV DENO_DIR /neolace/deno_dir
+ENV ENV_TYPE production
+RUN mkdir /neolace/deno_dir
 
-COPY . /build/
+# This Dockerfile needs to be run from the root folder of "neolace-app", which contains the folders like "backend", "neolace-api", etc.
+COPY backend /neolace/backend
+COPY neolace-api /neolace/neolace-api
 
-# OK, now install dependencies and transpile the TypeScript:
-RUN npm ci --also=dev
-RUN npm run transpile
-
-################################################################
-# Stage 2: Install only minimal dependencies to run the app
-################################################################
-FROM node:16-alpine
-WORKDIR /app
-ENV NODE_ENV production
-ENV PATH /app/node_modules/.bin:$PATH
-
-COPY --from=transpile /build/dist/ .
-COPY package.json /app/package.json
-COPY package-lock.json /app/package-lock.json
-
-RUN apk add --no-cache git
-RUN npm ci --only=production
+# Cache dependencies and check types
+RUN apk add git
+RUN cd / && git clone https://github.com/neolace-dev/vertex-framework.git
+RUN deno cache --import-map=import_map.json --lock=lock.json --lock-write --unstable neolace/api/server.ts
 
 # The backend runs on port 5554
 EXPOSE 5554
 
 # Start the server
-CMD ["node", "server.js"]
+CMD ["deno", "run", "--lock=lock.json", "--cached-only", "--no-check", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "neolace/api/server.ts"]

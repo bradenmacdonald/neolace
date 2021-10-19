@@ -73,5 +73,22 @@
             "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-env", "--unstable", "neolace/scripts/migrate.ts"],
             "problemMatcher": [],
         },
+        {
+            "label": "Build backend container image (prod)",
+            "type": "shell",
+            "command": "docker",
+            "args": ["build", "--pull", "-t", "neolace/neolace-app/backend:latest", "-f", "backend/Dockerfile", "."],
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/..",
+            },
+        },
+        {
+            "label": "Run backend container image (prod) with local dev databases",
+            "type": "shell",
+            "command": "docker",
+            "args": ["run", "-e", "ENV_TYPE=development", "-e", "neo4jUrl=bolt://host.docker.internal:7687", "-p", "5554:5554", "neolace/neolace-app/backend:latest"],
+            "problemMatcher": [],
+        },
     ]
 }
