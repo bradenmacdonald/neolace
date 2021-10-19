@@ -35,7 +35,17 @@ type JsonCompatibleValue = string | boolean | Record<string, unknown> | null | u
 export abstract class NeolaceHttpResource extends Drash.Http.Resource {
     // Override the type of this.request; Since we assigned NeolaceHttpRequest to the Drash.Http.Request global, this
     // will have the correct type.
-    declare protected request: NeolaceHttpRequest;
+    protected request: NeolaceHttpRequest;
+    constructor(
+        request: Drash.Http.Request,
+        response: Drash.Http.Response,
+        server: Drash.Http.Server,
+        paths: string[],
+        middleware: { after_request?: []; before_request?: [] },
+      ) {
+          super(request, response, server, paths, middleware);
+          this.request = request;  // We have to re-initialize request, because the declaration above will otherwise reset it to undefined
+      }
 
     method<Response extends JsonCompatibleValue, RequestBody extends JsonCompatibleValue = undefined>(
         metadata: {
