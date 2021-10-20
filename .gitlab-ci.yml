@@ -111,7 +111,7 @@ deploy backend to proto:
             spec:
               containers:
               - name: technotes-backend
-                image: $CI_REGISTRY/technotes.org/technotes-app/backend:$BACKEND_IMAGE_TAG
+                image: $CI_REGISTRY/neolace/neolace-app/backend:$BACKEND_IMAGE_TAG
                 imagePullPolicy: Always
                 envFrom:
                 - configMapRef:
@@ -203,7 +203,7 @@ deploy frontend to proto:
             spec:
               containers:
               - name: technotes-frontend
-                image: $CI_REGISTRY/technotes.org/technotes-app/frontend:$FRONTEND_IMAGE_TAG
+                image: $CI_REGISTRY/neolace/neolace-app/frontend:$FRONTEND_IMAGE_TAG
                 imagePullPolicy: Always
                 env:
                 - name: NEXT_PUBLIC_API_SERVER_URL
