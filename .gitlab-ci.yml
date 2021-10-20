@@ -1,5 +1,5 @@
 stages:
-  #- test
+  - test
   - build
   - deploy
 
@@ -9,6 +9,42 @@ variables:
   DOCKER_DRIVER: overlay2
   # See https://github.com/docker-library/docker/pull/166
   DOCKER_TLS_CERTDIR: ""
+
+################################################################
+# Tests
+################################################################
+
+image: denoland/deno:alpine
+
+# Get the tests working later - need to configure minio
+# test backend:
+#   stage: test
+#   services:
+#     - neo4j:4.2
+#   variables:
+#     # Set default neo4j password to "neolace"
+#     NEO4J_AUTH: neo4j/neolace
+#     # We need APOC functionality like triggers:
+#     NEO4JLABS_PLUGINS: '["apoc"]'
+#     NEO4J_apoc_trigger_enabled: "true"
+#     NEO4J_apoc_export_file_enabled: "true"
+#     ENV_TYPE: test
+#     neo4jUrl: bolt://neo4j:7687
+#   script:
+#     - apk add git
+#     - cd ..
+#     - git clone https://github.com/neolace-dev/vertex-framework.git
+#     - cd neolace-app/backend
+#     - deno run --import-map=import_map.json --allow-net --allow-read --allow-env --allow-write --unstable neolace/scripts/test-setup.ts
+#     - deno test --import-map=import_map.json --allow-net --allow-env --allow-read --unstable
+
+lint:
+  stage: test
+  script:
+    - deno lint backend
+    # TODO: support this in future; currently failing on usage of "any" in external code.
+    # - deno lint neolace-api
+    - deno lint frontend
 
 ################################################################
 # Backend
