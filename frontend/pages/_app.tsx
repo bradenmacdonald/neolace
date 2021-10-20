@@ -7,6 +7,7 @@ import { UserProvider } from 'components/user/UserContext';
 // Import global CSS (Tailwind-based)
 import '../global-styles.css';
 
+type ProviderProps = {children: React.ReactNode};
 // DynamicIntlProviders: Helper to dynamically load i18n messages for react-intl
 // For English:
 // -> We're not using a babelTransform to remove 'defaultMessage' values from our JSX files, so we don't actually need
@@ -19,9 +20,9 @@ import '../global-styles.css';
 //    it is loaded (otherwise if you render while it's still loading, react-intl throws errors about missing
 //    translations).
 const DynamicIntlProviders = {
-    en: (props) => <IntlProvider locale="en" messages={{}}>{props.children}</IntlProvider>,
+    en: (props: ProviderProps) => <IntlProvider locale="en" messages={{}}>{props.children}</IntlProvider>,
     fr: dynamic(() => import("../content/compiled-locales/fr.json").then(data =>
-        (props) => <IntlProvider locale="fr" messages={data.default}>{props.children}</IntlProvider>
+        (props: ProviderProps) => <IntlProvider locale="fr" messages={data.default}>{props.children}</IntlProvider>
     )),
 };
 

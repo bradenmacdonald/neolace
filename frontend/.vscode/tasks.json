@@ -10,5 +10,29 @@
             "args": ["run", "dev"],
             "problemMatcher": []
         },
+        {
+            "label": "Build frontend container image (prod)",
+            "type": "shell",
+            "command": "docker",
+            "args": ["build", "--pull", "-t", "neolace/neolace-app/frontend:latest", "-f", "frontend/Dockerfile", "."],
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}/..",
+            },
+        },
+        {
+            "label": "Run frontend container image (prod) for local dev",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "run",
+                "-e", "NEXT_PUBLIC_API_SERVER_INTERNAL_URL=http://host.docker.internal:5554",
+                "-e", "NEXT_PUBLIC_API_SERVER_URL=http://localhost:5554",
+                "-e", "NEXT_PUBLIC_AUTHN_URL=http://localhost:5552",
+                "-p", "5555:5555",
+                "neolace/neolace-app/frontend:latest"
+            ],
+            "problemMatcher": [],
+        },
     ]
 }
