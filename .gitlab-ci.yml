@@ -216,12 +216,18 @@ deploy frontend to proto:
                 - containerPort: 5555
                 livenessProbe:
                   httpGet:
+                    httpHeaders:
+                      - name: Host
+                        value: proto.technotes.org
                     path: /
                     port: 5555
                   failureThreshold: 1
                   periodSeconds: 20
                 startupProbe:
                   httpGet:
+                    httpHeaders:
+                      - name: Host
+                        value: proto.technotes.org
                     path: /
                     port: 5555
                   failureThreshold: 30
@@ -233,3 +239,6 @@ deploy frontend to proto:
     # Terraform (in technotes-infra / app) also deploys the "Service" and "IngressRoute" required to route traffic from
     # the Traefik load balancer pod to this deployment's port 5555.
     - kubectl rollout restart deployment/technotes-frontend --namespace tn-${CI_ENVIRONMENT_NAME}
+
+# TODO: change the readiness and liveness probes to use a path like
+# /health_check, that won't depend on the Host value, which is currently hard-coded.
