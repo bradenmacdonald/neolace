@@ -1,17 +1,22 @@
-import { S3Bucket } from "neolace/deps/s3.ts";
+import * as log from "std/log/mod.ts";
+import { S3Client, PutObjectCommand } from "neolace/deps/s3.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { createHash } from "std/hash/mod.ts";
 import { Buffer, iter } from "std/io/mod.ts";
 
 import { config } from "neolace/app/config.ts";
 
-const objStoreClient = new S3Bucket({
-    bucket: config.objStoreBucketName,
-    endpointURL: config.objStoreEndpointURL,
-    accessKeyID: config.objStoreAccessKey,
-    secretKey: config.objStoreSecretKey,
+
+const objStoreClient = new S3Client({
+    endpoint: config.objStoreEndpointURL,
     region: config.objStoreRegion,
+    credentials: {
+        accessKeyId: config.objStoreAccessKey,
+        secretAccessKey: config.objStoreSecretKey,
+    },
+    bucketEndpoint: false,
 });
+
 
 // These exports shouldn't be used elsewhere in the app, other than admin scripts like dev-data
 export const __forScriptsOnly = { objStoreClient };
@@ -39,11 +44,19 @@ export async function uploadFileToObjStore(fileStream: Deno.Reader, options: {co
     // dependencies); if it's text, do our own test (see https://github.com/BaseMax/detect-svg/blob/master/index.js)
 
     // Upload the file to the object store, using tempFilename:
-    await objStoreClient.putObject(filename, buf.bytes(), {
-        contentType: options.contentType,
-        // Since files are immutable and assigned an ID on upload, they can and should be cached as aggressively as possible:
-        cacheControl: "public, max-age=604800, immutable",
-    });
+    try {
+        const command = new PutObjectCommand({
+            Bucket: config.objStoreBucketName,
+            Key: filename,
+            Body: buf.bytes(),
+            ContentType: options.contentType,
+            CacheControl: "public, max-age=604800, immutable",
+        });
+        await objStoreClient.send(command);
+    } catch (err) {
+        // may need some code here to log the detailed error from the XML response?
+        throw err;
+    }
 
     // Now we know the file's hash and size:
     const sha256Hash = hasher.toString("hex");
