@@ -10,18 +10,29 @@ const bin2hex = (binary: Uint8Array) => Array.from(binary).map(b => b.toString(1
 
 
 const objStoreClient = new S3Client({
-    endpoint: config.objStoreEndpointURL,
+    // We can't just specify a URL at the moment due to https://github.com/christophgysin/aws-sdk-js-v3/issues/24
+    //endpoint: config.objStoreEndpointURL,
+    endpoint: (() => {
+        const endpointParsed = new URL(config.objStoreEndpointURL);
+        return {
+            protocol: endpointParsed.protocol.slice(0,-1),
+            // Ensure that if we're connecting to a local endpoint with a port number, the port number is included in the header.
+            hostname: endpointParsed.hostname + (endpointParsed.port ? `:${endpointParsed.port}` : ''),
+            path: '/',
+        };
+    })(),
     region: config.objStoreRegion,
     credentials: {
         accessKeyId: config.objStoreAccessKey,
         secretAccessKey: config.objStoreSecretKey,
     },
     bucketEndpoint: false,
+    forcePathStyle: true,  // Fix: "TypeError: error sending request for url (http://neolace-test-objects.localhost:9000/"
 });
 
 
 // These exports shouldn't be used elsewhere in the app, other than admin scripts like dev-data
-export const __forScriptsOnly = { objStoreClient };
+export const __forScriptsOnly = { objStoreClient, bucket: config.objStoreBucketName };
 
 
 export async function uploadFileToObjStore(fileStream: Deno.Reader, options: {contentType: string, id?: VNID}): Promise<{
