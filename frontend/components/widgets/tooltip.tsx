@@ -36,7 +36,7 @@ export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
                 "aria-describedby": tooltipId,
             }) : null}
 
-            <div
+            <span
                 role="tooltip"
                 id={tooltipId}
                 ref={setPopperElement}
@@ -46,7 +46,7 @@ export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
                 aria-hidden={!isTooltipVisible}
             >
                 {isTooltipVisible ? props.tooltipContent : null}
-            </div>
+            </span>
         </>
     );
 };

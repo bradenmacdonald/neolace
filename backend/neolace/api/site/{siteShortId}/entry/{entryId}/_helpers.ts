@@ -136,14 +136,14 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
         result.features = await getEntryFeaturesData(entryData.id, {tx});
 
         if (result.features.Article?.articleMD) {
-            // Extract refernces from the description of this entry
-            refCache?.extractMarkdownReferences(entryData.description);
             // Extract references from the article text:
             refCache?.extractMarkdownReferences(result.features.Article.articleMD);
         }
     }
 
     if (flags.has(api.GetEntryFlags.IncludeReferenceCache)) {
+        // Extract references from the description of this entry
+        refCache?.extractMarkdownReferences(entryData.description);
         result.referenceCache = await refCache!.getData(tx);
     }
 
