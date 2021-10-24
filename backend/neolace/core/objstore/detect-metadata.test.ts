@@ -17,15 +17,15 @@ group(import.meta, () => {
 
     test("it can detect an image's size", async () => {
         const imageDataWebp = await readFileData(getFullPath(files.miniCooperSe.path));
-        const metadata = detectImageMetadata(imageDataWebp);
+        const metadata = await detectImageMetadata(imageDataWebp);
         assertEquals(metadata.type, "image");
         assertEquals(metadata.width, 4054);
         assertEquals(metadata.height, 2216);
     });
     test("it can generate a blurHash for an image", async () => {
         const imageDataWebp = await readFileData(getFullPath(files.miniCooperSe.path));
-        const metadata = detectImageMetadata(imageDataWebp);
+        const metadata = await detectImageMetadata(imageDataWebp);
         assertEquals(metadata.type, "image");
-        assertEquals(metadata.blurHash, "LKF={%xuoft7~qxuofRjIUWBxuIU");
+        assertEquals(metadata.blurHash, "LRFFss%Mt7xu~qxuofj[ofj[t7M{");
     });
 });

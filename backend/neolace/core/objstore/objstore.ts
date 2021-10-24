@@ -45,7 +45,7 @@ export async function uploadFileToObjStore(fileStream: Deno.Reader, options: {co
     const bufferData = buf.bytes();
 
     if (options.contentType.startsWith("image/") && options.contentType !== "image/svg+xml") {
-        metadata = detectImageMetadata(bufferData)
+        metadata = await detectImageMetadata(bufferData)
     }
 
     // TODO: verify content type is correct - if it's binary, use magic numbers (see 'file-type' on NPM though it has
