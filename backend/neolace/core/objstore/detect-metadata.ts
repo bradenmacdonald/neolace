@@ -1,14 +1,19 @@
 import { decodeImage } from "neolace/deps/wasm-image-decoder.ts";
 import { encode as encodeBlurHash } from "neolace/deps/blurhash.ts";
 import { resizeImagePixels } from "neolace/deps/resize-image.ts";
+import { number, Schema, Type, string } from "neolace/deps/computed-types.ts";
 
-export interface ImageMetadata {
+
+export const ImageMetadataSchema = Schema({
     type: "image",
     width: number,
     height: number,
-    blurHash: string;
-}
-export type FileMetadata = Record<string, never>|ImageMetadata;
+    blurHash: string,
+});
+export type ImageMetadata = Type<typeof ImageMetadataSchema>;
+
+export const FileMetadataSchema = Schema.either(ImageMetadataSchema, Schema({}));
+export type FileMetadata = Type<typeof FileMetadataSchema>;
 
 
 /**

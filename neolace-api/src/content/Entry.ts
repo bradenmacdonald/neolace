@@ -60,12 +60,18 @@ export const EntryFeaturesSchema = Schema({
         imageUrl: string,
         contentType: string,
         size: number,
+        width: number.strictOptional(),
+        height: number.strictOptional(),
+        blurHash: string.strictOptional(),
     }).strictOptional(),
 
     HeroImage: Schema({
         entryId: vnidString,
         imageUrl: string,
         caption: string,
+        width: number.strictOptional(),
+        height: number.strictOptional(),
+        blurHash: string.strictOptional(),
     }).strictOptional(),
 
     UseAsProperty: Schema({
