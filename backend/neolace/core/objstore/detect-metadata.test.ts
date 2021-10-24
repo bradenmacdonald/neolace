@@ -26,6 +26,6 @@ group(import.meta, () => {
         const imageDataWebp = await readFileData(getFullPath(files.miniCooperSe.path));
         const metadata = await detectImageMetadata(imageDataWebp);
         assertEquals(metadata.type, "image");
-        assertEquals(metadata.blurHash, "LRFFss%Mt7xu~qxuofj[ofj[t7M{");
+        assertEquals(metadata.blurHash, "LWF=:f%2xaxu~qxts:floLj?xbM{");
     });
 });
