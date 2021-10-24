@@ -1,5 +1,6 @@
 import {
     C,
+    Field,
     VirtualPropType,
     VNodeType,
 } from "neolace/deps/vertex-framework.ts";
@@ -15,6 +16,10 @@ export class ImageData extends EntryFeatureData {
     static label = "ImageData";
     static properties = {
         ...EntryFeatureData.properties,
+        // The width of the image file
+        imageWidth: Field.Int,
+        // The height of the image file
+        imageHeight: Field.Int,
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({
