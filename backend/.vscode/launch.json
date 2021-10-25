@@ -20,6 +20,7 @@
                 "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-env",
+                "--allow-read",
                 "neolace/api/server.ts"
             ],
             "attachSimplePort": 9229,

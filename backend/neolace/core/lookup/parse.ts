@@ -25,6 +25,7 @@ export function parseLookupString(lookup: string): LookupExpression {
     // To save time and make development faster, we are cheating with a working but very fake parser.
     // In the future this function should be replaced with a proper parser built using https://chevrotain.io/
 
+    if (lookup === "null") { return new LiteralExpression(new V.NullValue()); }
     if (lookup === "this") { return new This(); }
     if (lookup === "this.ancestors()") { return new Ancestors(new This()); }
     if (lookup === "ancestors(this)") { return new Ancestors(new This()); }
@@ -34,6 +35,8 @@ export function parseLookupString(lookup: string): LookupExpression {
     const otherTemplates: [RegExp, (match: RegExpMatchArray) => LookupExpression ][] = [
         // "foo" (String literal)
         [/^"(.*)"$/, _m => new LiteralExpression(new V.StringValue(JSON.parse(lookup)))],
+        // 123 (Integer literal, supports bigints)
+        [/^\d+$/, _m => new LiteralExpression(new V.IntegerValue(BigInt(lookup)))],
         // RT[_6FisU5zxXg5LcDz4Kb3Wmd] (Relationship Type literal)
         [/^RT\[(_[0-9A-Za-z]{1,22})\]$/, m => new LiteralExpression(new V.RelationshipTypeValue(VNID(m[1])))],
         // this.related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd], direction="from")
@@ -61,6 +64,9 @@ export function parseLookupString(lookup: string): LookupExpression {
 
     if (lookup[0] === "[" && lookup[lookup.length - 1] === "]") {
         // It's a list:
+        if (lookup.length === 2) {
+            return new List([]);
+        }
         const parts = lookup.substr(1, lookup.length - 2).split(",").map(part => part.trim());
         return new List(parts.map(part => parseLookupString(part)));
     }

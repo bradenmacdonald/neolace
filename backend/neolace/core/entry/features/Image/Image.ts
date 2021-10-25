@@ -85,7 +85,7 @@ export const ImageFeature = EntryTypeFeature({
         }
         const dataFile = (await tx.pullOne(
             ImageData,
-            id => id.dataFile(df => df.publicUrl().contentType.size),
+            id => id.dataFile(df => df.publicUrl().contentType.size.metadata()),
             {key: data.id},
         )).dataFile;
         if (dataFile === null) {
@@ -95,6 +95,9 @@ export const ImageFeature = EntryTypeFeature({
             imageUrl: dataFile.publicUrl,
             contentType: dataFile.contentType,
             size: Number(dataFile.size),
+            width: "width" in dataFile.metadata ? dataFile.metadata.width : undefined,
+            height: "height" in dataFile.metadata ? dataFile.metadata.height : undefined,
+            blurHash: "blurHash" in dataFile.metadata ? dataFile.metadata.blurHash : undefined,
         };
     }
 });

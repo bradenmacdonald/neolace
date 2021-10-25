@@ -123,6 +123,9 @@ export const HeroImageFeature = EntryTypeFeature({
             caption,
             entryId: imageEntryId,
             imageUrl: imageData.imageUrl,
+            width: imageData.width,
+            height: imageData.height,
+            blurHash: imageData.blurHash,
         };
     }
 });

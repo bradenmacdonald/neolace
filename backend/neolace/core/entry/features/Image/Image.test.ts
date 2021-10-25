@@ -84,6 +84,7 @@ group(import.meta, () => {
             filename: "image.webp",
             contentType: "image/webp",
             size: 10_000,
+            metadata: {type: "image", width: 100, height: 50, blurHash: "LEHV6nWB2yk8pyo0adR*.7kCMdnj"},
         };
         await graph.runAsSystem(CreateDataFile(dataFile));
         const dataFileUrl = (await graph.pullOne(DataFile, df => df.publicUrl(), {key: dataFile.id})).publicUrl;
@@ -103,6 +104,9 @@ group(import.meta, () => {
             imageUrl: dataFileUrl,
             contentType: dataFile.contentType,
             size: dataFile.size,
+            width: 100,
+            height: 50,
+            blurHash: "LEHV6nWB2yk8pyo0adR*.7kCMdnj",
         });
     });
 

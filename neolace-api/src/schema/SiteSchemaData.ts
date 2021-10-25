@@ -1,4 +1,4 @@
-import { Schema, Type, string, number, vnidString, nullable, array, Record, } from "../api-schemas.ts";
+import { Schema, Type, string, number, vnidString, nullable, array, } from "../api-schemas.ts";
 
 
 export const SimplePropertySchema = Schema({
@@ -20,7 +20,7 @@ export const EntryTypeSchema = Schema({
     /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
     friendlyIdPrefix: nullable(string),
     /** Simple property values always displayed on entries of this type */
-    simplePropValues: Record(string, SimplePropertySchema),
+    simplePropValues: Schema.record(string, SimplePropertySchema),
 
     enabledFeatures: Schema({
         Article: Schema({
@@ -92,8 +92,8 @@ export type RelationshipTypeData = Type<typeof RelationshipTypeSchema>;
 
 
 export const SiteSchemaSchema = Schema({
-    entryTypes: Record(string, EntryTypeSchema),
-    relationshipTypes: Record(string, RelationshipTypeSchema),
+    entryTypes: Schema.record(string, EntryTypeSchema),
+    relationshipTypes: Schema.record(string, RelationshipTypeSchema),
 });
 
 /**
