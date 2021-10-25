@@ -4,6 +4,7 @@ import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ParsedUrlQuery } from 'querystring';
+import { Blurhash } from "react-blurhash";
 import { client, api, getSiteData, SiteData } from 'lib/api-client';
 
 import { SitePage } from 'components/SitePage';
@@ -60,12 +61,19 @@ const EntryPage: NextPage<PageProps> = function(props) {
                     {
                         props.entry.features?.HeroImage ?
                             <div className="-m-4 mb-4 relative h-[50vh]">
+                                {/* A blurry representation of the image, shown while it is loading: */}
+                                <Blurhash
+                                    hash={props.entry.features.HeroImage.blurHash}
+                                    width="100%"
+                                    height="100%"
+                                />
                                 <Image
                                     src={props.entry.features.HeroImage.imageUrl}
                                     alt=""
                                     layout="fill"
                                     objectFit="cover"
                                 />
+                                
                                 {props.entry.features.HeroImage.caption ?
                                     <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
                                         <EntryLink entryKey={props.entry.features.HeroImage.entryId} mdtContext={mdtContext}>

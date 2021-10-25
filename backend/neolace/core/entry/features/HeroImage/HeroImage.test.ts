@@ -74,6 +74,7 @@ group(import.meta, () => {
             filename: "image.webp",
             contentType: "image/webp",
             size: 10_000,
+            metadata: {type: "image", width: 100, height: 50, blurHash: ""},
         };
         await graph.runAsSystem(CreateDataFile(dataFile));
         const dataFileUrl = (await graph.pullOne(DataFile, df => df.publicUrl(), {key: dataFile.id})).publicUrl;

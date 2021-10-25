@@ -6,15 +6,20 @@ import {
     DerivedProperty,
     defineAction,
     VNID,
+RawVNode,
+WrappedTransaction,
+ValidationError,
 } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
+import { FileMetadata, FileMetadataSchema } from "./detect-metadata.ts";
 
 /**
  * A data file uploaded to Neolace, such as an image, PDF, CSV file, etc.
- * This is a very low-level node type; it should always be linked to (owned by) one or more other types like ImageData,
- * Site, etc. that contain more metadata about what it is.
+ * This is a very low-level node type; it should be linked to (owned by) one or more other types like ImageData,
+ * Site, etc. that contain more information about who owns it and how it is being used.
  *
- * This type is generally immutable and shouldn't change once created (unless the content-type was wrong?)
+ * This type is generally immutable and shouldn't change once created (unless the metadata or contentType needs to be
+ * updated?)
  * 
  * Files may be de-duplicated at the storage level using their sha256hash, but it's always necessary to know the
  * DataFile ID to read an object - we don't allow retrieving a DataFile by its hash, which could be a security risk. So
@@ -32,11 +37,30 @@ export class DataFile extends VNodeType {
         size: Field.Int.Check(check.number.integer().min(1)),
         /** IANA media type for this file */
         contentType: Field.String.Check(check.string.toLowerCase()),
+        /**
+         * Metadata, which depends on the file type.
+         * Any data in this field must be something that can be derived purely from the file contents; in other words,
+         * this is data about what the file is, not about how it is being used.
+         */
+        metadataJSON: Field.NullOr.String,
     };
 
     static derivedProperties = this.hasDerivedProperties({
         publicUrl,
+        metadata,
     });
+
+    // deno-lint-ignore require-await
+    static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
+        if (dbObject.metadataJSON !== null) {
+            try {
+                const data = JSON.parse(dbObject.metadataJSON);
+                FileMetadataSchema(data);  // Validate the metadata against the schema
+            } catch (_err) {
+                throw new ValidationError(`Invalid DataFile metadata: ${dbObject.metadataJSON}`);
+            }
+        }
+    }
 }
 
 //export const CreateDataFile = defaultCreateFor(DataFile, d => d.sha256Hash.size.contentType);
@@ -49,6 +73,7 @@ export const CreateDataFile = defineAction({
         sha256Hash: string,
         size: number,
         contentType: string,
+        metadata: FileMetadata,
     },
     resultData: {},
     apply: async function applyCreateAction(tx, data) {
@@ -59,6 +84,7 @@ export const CreateDataFile = defineAction({
                 sha256Hash: data.sha256Hash,
                 contentType: data.contentType,
                 size: BigInt(data.size),
+                metadataJSON: JSON.stringify(data.metadata),
             }}
         `.RETURN({}));
         const description = `Created ${DataFile.withId(data.id)}`;
@@ -79,5 +105,16 @@ export const CreateDataFile = defineAction({
     df => df.filename,
     data => {
         return `${config.objStorePublicUrlPrefix}/${data.filename}`;
+    },
+);}
+
+/**
+ * Get the metadata, which depends on the file type
+ */
+ export function metadata(): DerivedProperty<FileMetadata> { return DerivedProperty.make(
+    DataFile,
+    df => df.metadataJSON,
+    data => {
+        return JSON.parse(data.metadataJSON ?? "{}");
     },
 );}

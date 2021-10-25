@@ -23,6 +23,10 @@ export const files = Object.freeze({
     // spare: {id: VNID("_lCylFGMj67elCMvvmsRVJ"), path: ""},
 });
 
+export function getFullPath(path: string) {
+    return joinPath(thisFolder, path);
+}
+
 export async function ensureFilesExist() {
 
     for (const f of Object.values(files)) {
@@ -36,7 +40,7 @@ export async function ensureFilesExist() {
         }
 
         // We need to upload this file:
-        const fullPath = joinPath(thisFolder, f.path);
+        const fullPath = getFullPath(f.path);
         let contentType: string;
         if (f.path.endsWith(".webp")) {
             contentType = "image/webp";
