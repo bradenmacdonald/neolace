@@ -13,4 +13,3 @@ const data: TestSetupData = await generateTestFixtures();
 await Deno.writeTextFile(testDataFile, JSON.stringify(data));
 log.info("Test setup complete");
 shutdown();
-log.info("Shutdown complete.");

@@ -3,6 +3,7 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 import { Buffer } from "std/io/buffer.ts";
 import { iterateReader } from "std/streams/conversion.ts";
 
+import { onShutDown } from "neolace/app/shutdown.ts";
 import { config } from "neolace/app/config.ts";
 import { FileMetadata, detectImageMetadata } from "neolace/core/objstore/detect-metadata.ts";
 
@@ -29,6 +30,8 @@ const objStoreClient = new S3Client({
     bucketEndpoint: false,
     forcePathStyle: true,  // Fix: "TypeError: error sending request for url (http://neolace-test-objects.localhost:9000/"
 });
+// deno-lint-ignore require-await
+onShutDown(async () => objStoreClient.destroy());
 
 
 // These exports shouldn't be used elsewhere in the app, other than admin scripts like dev-data
