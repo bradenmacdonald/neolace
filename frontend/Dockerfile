@@ -1,20 +1,32 @@
+################################################################
+# Stage 1: Transpile the API client
+################################################################
+FROM denoland/deno:alpine AS transpile
+WORKDIR /build/neolace-api/
+COPY ./neolace-api/ /build/neolace-api/
+RUN deno run --allow-read --allow-write --unstable _compile.ts
+################################################################
+# Stage 2: Intall our Next.js frontend
+################################################################
 FROM node:14-alpine
-WORKDIR /app
+WORKDIR /neolace/frontend
 ENV NODE_ENV production
-ENV PATH /app/node_modules/.bin:$PATH
+ENV PATH /neolace/frontend/node_modules/.bin:$PATH
 
-COPY . /app/
+COPY ./frontend /neolace/frontend
 # Because this dependency is referenced as a path, not as an npm package, we have to do some hacky stuff to get it
 # to work.
-COPY .build-temp/neolace-api/ /neolace-api/
-RUN cd /neolace-api/ && npm install --also=dev && npm run build
+COPY --from=transpile /build/neolace-api/ /neolace/neolace-api/
 
 # Dependencies
 RUN apk add --no-cache git
 RUN npm ci --also=dev
+RUN npm run compile:i18n
 
 # The frontend runs on port 5555
 EXPOSE 5555
+
+# Compile locales
 
 # Build Next.js app (transpile Typescript, save out some static pages, etc.),
 # then start the server. We don't build in advance (unfortunately) because

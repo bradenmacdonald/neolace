@@ -1,4 +1,4 @@
-import { Schema, Type, string, vnidString, nullable, array, number, object, boolean } from "../api-schemas.ts";
+import { Schema, Type, string, vnidString, nullable, array, number, object, Record, boolean } from "../api-schemas.ts";
 import { AnyLookupValue } from "./lookup-value.ts";
 
 
@@ -87,11 +87,11 @@ export type EntryFeaturesData = Type<typeof EntryFeaturesSchema>;
 // description, article text, computed facts, related object notes, and so on.
 export const ReferenceCacheSchema = Schema({
     // We can't use the VNID type as Record keys unfortunately, but the keys here are VNIDs
-    entryTypes: Schema.record(string, Schema({
+    entryTypes: Record(string, Schema({
         id: vnidString,
         name: string,
     })),
-    entries: Schema.record(string, Schema({
+    entries: Record(string, Schema({
         id: vnidString,
         name: string,
         friendlyId: string,

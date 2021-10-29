@@ -28,7 +28,15 @@ async function prepareForShutdown(): Promise<void> {
 
 /** Do a clean, controlled shutdown. */
 export function shutdown(): void {
-    prepareForShutdown();
+    prepareForShutdown().then(() => {
+        const openResources = Object.values(Deno.resources).filter(name => !name.startsWith("std"));
+        if (openResources.length) {
+            log.error("some resources were not released; not a clean shutdown. Found: " + openResources.join(", "));
+            Deno.exit(1);
+        }
+        // TODO: why does this seem necessary lately?
+        Deno.exit(0);
+    });
 }
 
 // Watch for signals:

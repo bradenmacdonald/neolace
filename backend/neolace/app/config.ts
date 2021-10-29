@@ -89,7 +89,7 @@ export const config = (() => {
             throw new Error("In production, apiUrl must be https://");
         }
         if (!config.realmAdminUrl.startsWith("https://")) {
-            throw new Error("In production, frontendUrl must be https://");
+            throw new Error("In production, realmAdminUrl must be https://");
         }
     }
     return Object.freeze(config);

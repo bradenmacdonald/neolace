@@ -347,7 +347,11 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     log.info(`Uploading data files to object storage...`);
 
     try {
-        objStoreUtils.objStoreClient.empty();
+        const promises: Promise<void>[] = [];
+        for await (const file of objStoreUtils.objStoreClient.listObjects()) {
+            promises.push(objStoreUtils.objStoreClient.deleteObject(file.key));
+        }
+        await Promise.all(promises);
     } catch (err: unknown) {
         console.error(err);
         throw new Error("Unable to connect to object storage (MinIO)");

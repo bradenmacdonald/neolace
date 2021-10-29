@@ -116,6 +116,8 @@ export const CreateUser = defineAction({
         // Username. Optional. If not specified, one will be auto-generated.
         username?: string;
         fullName?: string;
+        // Temp: allow working around the lack of authn service in prod for now
+        fakeAuthn?: boolean;
     },
     resultData: {} as {
         id: VNID;
@@ -142,7 +144,7 @@ export const CreateUser = defineAction({
         }
 
         // Create a user in the auth service
-        const authnData = await authClient.createUser({username: vnid});
+        const authnData = data.fakeAuthn ? {accountId: 123} : await authClient.createUser({username: vnid});
 
         await tx.queryOne(C`
             CREATE (u:Human:User:VNode {

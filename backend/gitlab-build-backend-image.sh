@@ -1,8 +1,3 @@
-apk add --no-cache rsync
-cd backend
-mkdir -p .build-temp
-# Copy the neolace-api folder into the build context:
-rsync -avr --exclude='node_modules' ../neolace-api .build-temp/
 docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
 if [ "$CI_COMMIT_REF_NAME" == "main" ]; then
@@ -18,5 +13,5 @@ fi
 echo BACKEND_IMAGE_TAG="$BACKEND_IMAGE_TAG" >> $CI_PROJECT_DIR/variables.env
 
 
-docker build --pull -t $CI_REGISTRY/technotes.org/technotes-app/backend:$BACKEND_IMAGE_TAG .
-docker push $CI_REGISTRY/technotes.org/technotes-app/backend:$BACKEND_IMAGE_TAG
+docker build --pull -t $CI_REGISTRY/neolace/neolace-app/backend:$BACKEND_IMAGE_TAG -f backend/Dockerfile .
+docker push $CI_REGISTRY/neolace/neolace-app/backend:$BACKEND_IMAGE_TAG

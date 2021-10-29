@@ -11,12 +11,22 @@
 		},
 		{
 			"path": "arch-decisions"
+		},
+		{
+			"path": ".",
+			"name": "neolace-app root"
 		}
 	],
 	"settings": {
 		"editor.rulers": [
 			120,
 		],
+		"files.exclude": {
+			"backend/": true,
+			"frontend/": true,
+			"arch-decisions/": true,
+			"neolace-api/": true,
+		},
 		"deno.lint": true,
 		"deno.suggest.imports.hosts": {
 			"https://deno.land": false,

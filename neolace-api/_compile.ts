@@ -5,6 +5,7 @@ const distDir = "dist/";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Clear out the "dist" folder
+await ensureDir(distDir);  // Make sure it exists
 for await (const existingFile of Deno.readDir(distDir)) {
     await Deno.remove(`${distDir}${existingFile.name}`, {recursive: true});
 }
