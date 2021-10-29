@@ -7,7 +7,7 @@
             "label": "Compile bundle for Node.js",
             "type": "shell",
             "command": "deno",
-            "args": ["run", "--allow-read", "--allow-write", "--allow-net", "--unstable", "_compile.ts"],
+            "args": ["run", "--allow-read", "--allow-write", "--unstable", "_compile.ts"],
             "problemMatcher": []
         },
     ]
