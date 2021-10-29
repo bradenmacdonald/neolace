@@ -14,7 +14,6 @@ import { uploadFileToObjStore } from "neolace/core/objstore/objstore.ts";
 import { CreateDataFile } from "../core/objstore/DataFile.ts";
 import { join as joinPath, dirname } from "std/path/mod.ts";
 import { __forScriptsOnly as objStoreUtils } from "neolace/core/objstore/objstore.ts";
-import { DeleteObjectsCommand, ListObjectsV2Command } from "neolace/deps/s3.ts";
 
 const thisFolder: string = (() => {
     const tf = dirname(import.meta.url);
@@ -348,11 +347,11 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     log.info(`Uploading data files to object storage...`);
 
     try {
-        const objects = await objStoreUtils.objStoreClient.send(new ListObjectsV2Command({Bucket: objStoreUtils.bucket}));
-        await objStoreUtils.objStoreClient.send(new DeleteObjectsCommand({
-            Bucket: objStoreUtils.bucket,
-            Delete: {Objects: objects.Contents?.map(obj => ({Key: obj.Key })) ?? []},
-        }));
+        const promises: Promise<void>[] = [];
+        for await (const file of objStoreUtils.objStoreClient.listObjects()) {
+            promises.push(objStoreUtils.objStoreClient.deleteObject(file.key));
+        }
+        await Promise.all(promises);
     } catch (err: unknown) {
         console.error(err);
         throw new Error("Unable to connect to object storage (MinIO)");

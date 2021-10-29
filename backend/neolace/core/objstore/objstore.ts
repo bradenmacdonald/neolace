@@ -1,37 +1,27 @@
-import { S3Client, PutObjectCommand } from "neolace/deps/s3.ts";
+import { S3Client } from "neolace/deps/s3.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { Buffer } from "std/io/buffer.ts";
 import { iterateReader } from "std/streams/conversion.ts";
 
-import { onShutDown } from "neolace/app/shutdown.ts";
 import { config } from "neolace/app/config.ts";
 import { FileMetadata, detectImageMetadata } from "neolace/core/objstore/detect-metadata.ts";
 
 const bin2hex = (binary: Uint8Array) => Array.from(binary).map(b => b.toString(16).padStart(2, '0')).join('');
 
 
+const endpointParsed = new URL(config.objStoreEndpointURL);
 const objStoreClient = new S3Client({
     // We can't just specify a URL at the moment due to https://github.com/christophgysin/aws-sdk-js-v3/issues/24
     //endpoint: config.objStoreEndpointURL,
-    endpoint: (() => {
-        const endpointParsed = new URL(config.objStoreEndpointURL);
-        return {
-            protocol: endpointParsed.protocol.slice(0,-1),
-            // Ensure that if we're connecting to a local endpoint with a port number, the port number is included in the header.
-            hostname: endpointParsed.hostname + (endpointParsed.port ? `:${endpointParsed.port}` : ''),
-            path: '/',
-        };
-    })(),
+    endPoint: endpointParsed.hostname,
+    port: endpointParsed.port ? Number(endpointParsed.port) : undefined,
+    bucket: config.objStoreBucketName,
     region: config.objStoreRegion,
-    credentials: {
-        accessKeyId: config.objStoreAccessKey,
-        secretAccessKey: config.objStoreSecretKey,
-    },
-    bucketEndpoint: false,
-    forcePathStyle: true,  // Fix: "TypeError: error sending request for url (http://neolace-test-objects.localhost:9000/"
+    accessKey: config.objStoreAccessKey,
+    secretKey: config.objStoreSecretKey,
+    useSSL: endpointParsed.protocol === "https:",
+    pathStyle: true,
 });
-// deno-lint-ignore require-await
-onShutDown(async () => objStoreClient.destroy());
 
 
 // These exports shouldn't be used elsewhere in the app, other than admin scripts like dev-data
@@ -70,20 +60,13 @@ export async function uploadFileToObjStore(fileStream: Deno.Reader, options: {co
     // TODO: verify content type is correct - if it's binary, use magic numbers (see 'file-type' on NPM though it has
     // dependencies); if it's text, do our own test (see https://github.com/BaseMax/detect-svg/blob/master/index.js)
 
-    // Upload the file to the object store, using tempFilename:
-    try {
-        const command = new PutObjectCommand({
-            Bucket: config.objStoreBucketName,
-            Key: filename,
-            Body: bufferData,
-            ContentType: options.contentType,
-            CacheControl: "public, max-age=604800, immutable",
-        });
-        await objStoreClient.send(command);
-    } catch (err) {
-        // may need some code here to log the detailed error from the XML response?
-        throw err;
-    }
+    // Upload the file to the object store:
+    await objStoreClient.putObject(filename, bufferData, {
+        metadata: {
+            "Cache-Control": "public, max-age=604800, immutable",
+            "Content-Type": options.contentType,
+        },
+    });
 
     // Now we know the file's hash and size:
     const sha256Hash = bin2hex(new Uint8Array(await crypto.subtle.digest("SHA-256", bufferData)));
