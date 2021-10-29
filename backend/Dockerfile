@@ -17,4 +17,4 @@ RUN deno cache --import-map=import_map.json --lock=lock.json --lock-write --unst
 EXPOSE 5554
 
 # Start the server
-CMD ["deno", "run", "--lock=lock.json", "--cached-only", "--no-check", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "neolace/api/server.ts"]
+CMD ["deno", "run", "--lock=lock.json", "--cached-only", "--no-check", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "neolace/api/server.ts"]
