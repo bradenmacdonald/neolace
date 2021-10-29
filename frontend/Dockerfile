@@ -4,7 +4,7 @@
 FROM denoland/deno:alpine AS transpile
 WORKDIR /build/neolace-api/
 COPY ./neolace-api/ /build/neolace-api/
-RUN deno run --allow-read --allow-write --unstable _compile.ts
+RUN deno run --allow-read --allow-write --allow-net --unstable _compile.ts
 ################################################################
 # Stage 2: Intall our Next.js frontend
 ################################################################
