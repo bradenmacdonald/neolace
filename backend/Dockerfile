@@ -11,10 +11,10 @@ COPY neolace-api /neolace/neolace-api
 # Cache dependencies and check types
 RUN apk add git
 RUN cd / && git clone https://github.com/neolace-dev/vertex-framework.git
-RUN deno cache --import-map=import_map.json --lock=lock.json --lock-write --unstable neolace/api/server.ts
+RUN deno cache --import-map=import_map.json --unstable neolace/api/server.ts
 
 # The backend runs on port 5554
 EXPOSE 5554
 
 # Start the server
-CMD ["deno", "run", "--lock=lock.json", "--cached-only", "--no-check", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "neolace/api/server.ts"]
+CMD ["deno", "run", "--no-check", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "neolace/api/server.ts"]
