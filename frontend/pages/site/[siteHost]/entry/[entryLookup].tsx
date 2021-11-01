@@ -71,7 +71,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                     src={props.entry.features.HeroImage.imageUrl}
                                     alt=""
                                     layout="fill"
-                                    objectFit="cover"
+                                    objectFit="contain"
                                 />
                                 
                                 {props.entry.features.HeroImage.caption ?

@@ -12,8 +12,8 @@ const thisFolder: string = (() => {
 
 export const files = Object.freeze({
     miniCooperSe: {id: VNID("_2dWW6omMxcycUL9pgKpNzY"), path: "images/martin-katler-a_Fy7a4KO6g-unsplash.webp"},
-    // spare: {id: VNID("_L0CTn3l4wywprxeu8JwO9"), path: ""},
-    // spare: {id: VNID("_Ti9O7i7a3KibJWbQSiW6P"), path: ""},
+    liIonBatteryJellyRoll: {id: VNID("_L0CTn3l4wywprxeu8JwO9"), path: "images/li-ion-cell-jelly-roll.webp"},
+    cell18650sparkfun: {id: VNID("_Ti9O7i7a3KibJWbQSiW6P"), path: "images/sparkfun-18650.webp"},
     // spare: {id: VNID("_buzaxyrAoq6yEFvu0zX2J"), path: ""},
     // spare: {id: VNID("_6tT4Jw1MVwN2kBEA5lVKz0"), path: ""},
     // spare: {id: VNID("_54kqEz80XKazlagzNU3kgd"), path: ""},
