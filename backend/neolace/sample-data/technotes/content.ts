@@ -12,6 +12,7 @@ export const ids = {
     battery: VNID("_5HYZND6114KVUtCGjFC8mT"),
     car: VNID("_4sd6mGkfpCfrvi3em2IFA0"),
     cell18650: VNID("_7RHY0mKlOEp2xsahAaNcbc"),
+    cell2170: VNID("_725MCg9IOqXqKUUA2cEoSc"),
     cylindricalLithiumIonCell: VNID("_75HaEKOi2Ir5UV84KH3CGk"),
     electricCar: VNID("_1gJxmBoyHajaFBqxzu6KZi"),
     electrochemicalCell: VNID("_3VVHFqLRvQtI1YzMP7OxVV"),
@@ -26,16 +27,15 @@ export const ids = {
     propAlsoKnownAs: VNID("_3wFkZlVNILDjexTL2AiZSB"),
     propContentSource: VNID("_2QK8KQVZfHogH5ofrksCba"),
     propCreator: VNID("_3zmtupLIgSw4GUtFFah5nb"),
+    propDiameter: VNID("_3JjzqBJ9YLtRGuesdK0lWb"),
     propExternalId: VNID("_6O1e4ErQw84vaTOb335V3y"),
+    propLength: VNID("_1PPhmzTVqhSwjbyZtAsIBm"),
     propLicense: VNID("_1f65YAjUSb4RLKbJ0MqEd8"),
+    propPhysicalDimension: VNID("_1shoq3dCEZa9oZVbusxdLq"),
     propWikidataId: VNID("_FVzZG1cmLEcVJlN0py9Oa"),
     propWikidataPropertyId: VNID("_22jn4GZRCtjNIJQC0eDQDM"),
     propWordNetILI: VNID("_aC2AVdeAK0iQyjbIbXp0r"),
     secondaryCell: VNID("_4HwJfgRjCzfOI7z2XTzY0r"),
-    //spare: VNID("_1shoq3dCEZa9oZVbusxdLq"),
-    //spare: VNID("_1PPhmzTVqhSwjbyZtAsIBm"),
-    //spare: VNID("_3JjzqBJ9YLtRGuesdK0lWb"),
-    //spare: VNID("_725MCg9IOqXqKUUA2cEoSc"),
     //spare: VNID("_51YyfHlwYxW1X5QfjRBai6"),
     //spare: VNID("_1bWGkkQDaPxHwmcMkO5cbu"),
     //spare: VNID("_1nmqoMNKS0MYZRjjzUiQd3"),
@@ -188,6 +188,56 @@ export const edits: AnyContentEdit[] = [
             {featureType: "UseAsProperty", importance: 10},
         ],
         props: {},
+    }),
+    // Property: Physical dimension
+    ...createEntry({
+        id: ids.propPhysicalDimension,
+        name: "Physical dimension",
+        friendlyId: "p-phys-dim",
+        type: schemaIds.property,
+        description: `A physical dimension is a measurement or specification of some length or size, such as the width, height, length, diameter, or radius of an object.`,
+        features: [
+            {featureType: "UseAsProperty", importance: 30},
+        ],
+        props: {
+            [ids.propWordNetILI]: { valueExpr: `"i63761"` },
+        },
+    }),
+    // Property: Length
+    ...createEntry({
+        id: ids.propLength,
+        name: "Length",
+        friendlyId: "p-length",
+        type: schemaIds.property,
+        description: `The length is a measurement or specification of the size of an object, usually as measured along its longest major axis.`,
+        features: [
+            {featureType: "UseAsProperty", importance: 15},
+        ],
+        rels: [
+            {type: schemaIds.propIsAProp, to: ids.propPhysicalDimension},  // This is a type of physical dimension
+        ],
+        props: {
+            [ids.propWikidataPropertyId]: {valueExpr: `"P2043"`},
+            [ids.propWordNetILI]: { valueExpr: `"i63940"` },
+        },
+    }),
+    // Property: Diameter
+    ...createEntry({
+        id: ids.propDiameter,
+        name: "Diameter",
+        friendlyId: "p-diameter",
+        type: schemaIds.property,
+        description: `The diameter is a measurement or specification of the distance across a circular or spherical shape (specifically, the length of a straight line passing through the center and connecting two points on the circumference).`,
+        features: [
+            {featureType: "UseAsProperty", importance: 15},
+        ],
+        rels: [
+            {type: schemaIds.propIsAProp, to: ids.propPhysicalDimension},  // This is a type of physical dimension
+        ],
+        props: {
+            [ids.propWikidataPropertyId]: {valueExpr: `"P2386"`},
+            [ids.propWordNetILI]: { valueExpr: `"i63810"` },
+        },
     }),
     // Motor Vehicle
     ...createEntry({
@@ -344,8 +394,26 @@ export const edits: AnyContentEdit[] = [
             {type: schemaIds.techConceptIsA, to: ids.cylindricalLithiumIonCell},
         ],
         props: {
+            [ids.propDiameter]: { valueExpr: `"18 mm"` },
+            [ids.propLength]: { valueExpr: `"65 mm"` },
             [ids.propAlsoKnownAs]: { valueExpr: JSON.stringify(["18650 battery"]) },
             [ids.propWikidataId]: { valueExpr: `"Q62024169"` },
+        },
+    }),
+    // 2170 cell
+    ...createEntry({
+        id: ids.cell2170,
+        name: "2170 cell",
+        friendlyId: "tc-ec-cell-2170",
+        type: schemaIds.techConcept,
+        description: `The 2170 cell is a [cylindrical lithium-ion cell](/entry/${ids.cylindricalLithiumIonCell}) introduced in 2017 by Panasonic. With a diameter of 21mm and a length of 70mm, it is slightly larger than the standard [18650 cell](/entry/${ids.cell18650}). Due to its larger area and a smaller separation between the anode and cathode, the 2170 boasts a larger capacity than the [18650 cell](/entry/${ids.cell18650}). The 2170 cell is used in the Tesla Model 3 and Y vehicles, and the Tesla Powerwall 2 and Powerpack 2.`,
+        rels: [
+            {type: schemaIds.techConceptIsA, to: ids.cylindricalLithiumIonCell},
+        ],
+        props: {
+            [ids.propDiameter]: { valueExpr: `"21 mm"` },
+            [ids.propLength]: { valueExpr: `"70 mm"` },
+            [ids.propAlsoKnownAs]: { valueExpr: JSON.stringify(["2170 battery"]) },
         },
     }),
     // Template
