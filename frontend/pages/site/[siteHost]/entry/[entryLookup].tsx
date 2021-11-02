@@ -120,10 +120,12 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                     </tbody>
                                 </table>
                             </div>
+                            {/*
                             <div id="graph-thumbnail" className="hidden md:block flex-initial min-w-[400px]">
                                 <h2><FormattedMessage id="site.entry.graphHeading" defaultMessage="Explore Graph"/></h2>
                                 <div className="bg-gray-200 pb-[50%] text-center">(graph)</div>
                             </div>
+                            */}
                         </div>
 
                         {
