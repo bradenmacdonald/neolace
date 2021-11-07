@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 // imports rewritten with <3 from denoporter - https://github.com/SirJosh3917/denoporter
 
 export type FunctionParameters = unknown[];

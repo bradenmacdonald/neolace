@@ -1,3 +1,4 @@
+// deno-lint-ignore-file
 // imports rewritten with <3 from denoporter - https://github.com/SirJosh3917/denoporter
 
 import { MergeSchemaParameters, SchemaParameters, SchemaResolveType, SchemaReturnType, } from "./io.ts";
