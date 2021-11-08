@@ -86,7 +86,7 @@ await graph.runAsSystem(UpdateSite({
 
         We will be posting some detailed example content soon!
 
-        You can see some of the features of our platform on the entry for ["car"](/entry/tc-car).
+        You can see some of the features of our platform on the entry for [**"car"**](/entry/tc-car) or [**"cylindrical lithium-ion cell"**](/entry/tc-ec-cell-li-cyl).
 
 
 
