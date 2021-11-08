@@ -104,6 +104,10 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                 }
             }
             const serializedValue = value.toJSON();
+            if (serializedValue.type === "Page" && serializedValue.values.length === 0) {
+                // This property value is just an empty result set. Hide it from the result.
+                continue;
+            }
             refCache?.extractLookupReferences(serializedValue);
             if (prop.type === "SimplePropertyValue") {  // This 'if' is mostly to satisfy TypeScript
                 result.propertiesSummary.push({
