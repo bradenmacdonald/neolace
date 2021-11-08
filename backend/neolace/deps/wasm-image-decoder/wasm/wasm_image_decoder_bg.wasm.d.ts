@@ -1,3 +1,4 @@
+// deno-lint-ignore-file
 /* tslint:disable */
 /* eslint-disable */
 export function __wasm_init_memory(): void;

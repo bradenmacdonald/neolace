@@ -42,9 +42,8 @@ lint:
   stage: test
   script:
     - deno lint backend
-    # TODO: support this in future; currently failing on usage of "any" in external code.
-    # - deno lint neolace-api
-    - deno lint frontend
+    - deno lint neolace-api/src
+    - deno lint frontend/pages frontend/components frontend/lib
 
 ################################################################
 # Backend
