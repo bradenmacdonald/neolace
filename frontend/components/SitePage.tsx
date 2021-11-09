@@ -51,21 +51,21 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             <div className="col-span-4 md:col-span-6">
             </div>
             <div className="col-span-2 md:col-span-1 flex justify-end items-center p-1 md:p-3 text-header-color-light">
-                {
+                {/*
                     // Show the user's avatar if they're logged in, otherwise a placeholder link to the login page.
                     user.status === UserStatus.LoggedIn ? (
                         <img className="rounded max-h-100" alt="User Avatar" src="/avatar-unsplash-theyshane.jpg" />
                     ): user.status === UserStatus.Anonymous ? (
-                        <Link href="/login"><a className="h-full">
+                        <Link href="/login"><a className="inline-block w-auto h-full">
                             <svg className="rounded h-full" role="img" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
-                                {/* Thanks https://icons.getbootstrap.com/icons/person-fill/ (MIT) */}
+                                {/ * Thanks https://icons.getbootstrap.com/icons/person-fill/ (MIT) * /}
                             </svg>
                         </a></Link>
-                    ): /* default case, user status is unknown: */ (
+                    ): / * default case, user status is unknown: * / (
                         <svg className="rounded h-full" role="img" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect width="16" height="16" /></svg>
                     )
-                }
+                */}
             </div>
         </header>
 
