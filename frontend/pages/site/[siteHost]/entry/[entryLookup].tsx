@@ -102,7 +102,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         <p id="description"><InlineMDT mdt={props.entry.description} context={mdtContext} /></p>
 
                         <div className="flex flex-wrap xl:flex-nowrap">
-                            <div id="properties" className="flex-auto min-w-[400px]">
+                            <div id="properties" className="flex-auto">
                                 <h2><FormattedMessage id="site.entry.propertiesHeading" defaultMessage="Properties"/></h2>
                                 <table>
                                     <tbody>
@@ -121,7 +121,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                 </table>
                             </div>
                             {/*
-                            <div id="graph-thumbnail" className="hidden md:block flex-initial min-w-[400px]">
+                            <div id="graph-thumbnail" className="hidden md:block flex-initial">
                                 <h2><FormattedMessage id="site.entry.graphHeading" defaultMessage="Explore Graph"/></h2>
                                 <div className="bg-gray-200 pb-[50%] text-center">(graph)</div>
                             </div>
