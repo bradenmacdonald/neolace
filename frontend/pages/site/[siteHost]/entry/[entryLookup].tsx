@@ -60,7 +60,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                     {/* Hero image, if any */}
                     {
                         props.entry.features?.HeroImage ?
-                            <div className="-m-4 mb-4 relative h-[50vh]">
+                            <div className="-m-4 mb-4 relative h-[30vh] md:h-[50vh]">
                                 {/* A blurry representation of the image, shown while it is loading: */}
                                 <Blurhash
                                     hash={props.entry.features.HeroImage.blurHash}
