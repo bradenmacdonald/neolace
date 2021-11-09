@@ -35,10 +35,12 @@ const EntryPage: NextPage<PageProps> = function(props) {
             site={props.site}
         >
 
-            <div className="absolute top-0 bottom-0 left-0 right-0 bg-yellow-300 flex flex-row">
+            {/* Container that wraps the left nav column (on desktop) and the article text/content */}
+            {/* items-start is necessary on mobile to keep the top nav panel at the top when scrolling on long articles */}
+            <div className="absolute top-0 bottom-0 left-0 right-0 flex flex-row overflow-y-auto items-start scroll-padding-45 md:scroll-padding-none">
 
                 {/* Left column, which shows table of contents, but only on desktop */}
-                <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4 overflow-y-scroll flex-col">
+                <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4 overflow-y-scroll flex-col sticky top-0 self-stretch">
                     <h1 className="font-bold text-base">{props.entry.name}</h1>
                     <span id="entry-type-name" className="font-light">{props.entry.entryType.name}</span>
                     <br/>
@@ -56,11 +58,11 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 </div>
 
                 {/* The main content of this entry */}
-                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 overflow-y-scroll z-0">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
+                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 z-0">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                     {/* Hero image, if any */}
                     {
                         props.entry.features?.HeroImage ?
-                            <div className="-m-4 mb-4 relative h-[50vh]">
+                            <div className="-m-4 mb-4 relative h-[30vh] md:h-[50vh]">
                                 {/* A blurry representation of the image, shown while it is loading: */}
                                 <Blurhash
                                     hash={props.entry.features.HeroImage.blurHash}
@@ -87,7 +89,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                     }
 
                     {/* On mobile devices, some navigation appears here since the left bar / table of contents is hidden */}
-                    <nav className="md:hidden sticky -top-4 -mx-4 py-1 -mt-2 pb-2 -mb-2 bg-white bg-opacity-90 backdrop-blur-sm text-gray-600">
+                    <nav className="md:hidden sticky top-0 -mx-4 py-1 -mt-2 pb-2 -mb-2 bg-white bg-opacity-90 backdrop-blur-sm text-gray-600">
                         <ul className="mx-auto text-center">
                             <li className="inline-block p-1 mx-2 text-sm"><a href="#summary">Summary</a></li>
                             <li className="inline-block p-1 mx-2 text-sm"><a href="#properties">Properties</a></li>
@@ -102,47 +104,67 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         <p id="description"><InlineMDT mdt={props.entry.description} context={mdtContext} /></p>
 
                         <div className="flex flex-wrap xl:flex-nowrap">
-                            <div id="properties" className="flex-auto min-w-[400px]">
+                            <div id="properties" className="flex-auto">
                                 <h2><FormattedMessage id="site.entry.propertiesHeading" defaultMessage="Properties"/></h2>
                                 <table>
                                     <tbody>
                                         {props.entry.propertiesSummary?.map(propValue => 
                                             <tr key={propValue.id}>
-                                                <th className="pr-2 align-top text-left font-normal text-gray-700 min-w-[120px]">{
+                                                <th className="block md:table-cell text-xs md:text-base -mb-1 md:mb-0 pr-2 align-top text-left font-normal text-gray-500 md:text-gray-700 min-w-[120px]">{
                                                     propValue.type === "PropertyValue" ?
                                                         <LookupValue value={{type: "Entry", id: propValue.id}} refCache={props.entry.referenceCache} mdtContext={mdtContext} />
                                                     :
                                                         propValue.label
                                                 }</th>
-                                                <td className="pr-2"><LookupValue value={propValue.value} refCache={props.entry.referenceCache} mdtContext={mdtContext} /></td>
+                                                <td className="block md:table-cell pr-2 pb-1 md:pb-0 text-sm md:text-base"><LookupValue value={propValue.value} refCache={props.entry.referenceCache} mdtContext={mdtContext} /></td>
                                             </tr>
                                         )}
                                     </tbody>
                                 </table>
                             </div>
                             {/*
-                            <div id="graph-thumbnail" className="hidden md:block flex-initial min-w-[400px]">
+                            <div id="graph-thumbnail" className="hidden md:block flex-initial">
                                 <h2><FormattedMessage id="site.entry.graphHeading" defaultMessage="Explore Graph"/></h2>
                                 <div className="bg-gray-200 pb-[50%] text-center">(graph)</div>
                             </div>
                             */}
                         </div>
 
-                        {
-                            props.entry.features?.Image ?
-                                <>
-                                    <h2><FormattedMessage id="site.entry.imageHeading" defaultMessage="Image"/></h2>
-                                    <img src={props.entry.features.Image.imageUrl} />
-                                </>
-                            : null
-                        }
+                        <div id="contents">
 
-                        {/* Article content, if any */}
-                        {
-                            props.entry.features.Article ?
-                                <RenderMDT mdt={props.entry.features.Article.articleMD} context={mdtContext}/>
-                            : null
-                        }
+                            {
+                                props.entry.features.Article ?
+                                    /* Table of contents appears here, but only on mobile */
+                                    <>
+                                        <h2><FormattedMessage id="site.entry.tableOfContentsHeading" defaultMessage="Contents"/></h2>
+
+                                        <ol id="mobile-toc-headings" className="list-decimal list-inside">
+                                            {
+                                                props.entry.features.Article?.headings.map(heading =>
+                                                    <li key={heading.id} className="my-1 truncate"><a href={`#h-${heading.id}`}>{heading.title}</a></li>
+                                                )
+                                            }
+                                        </ol>
+                                    </>
+                                : null
+                            }
+
+                            {
+                                props.entry.features?.Image ?
+                                    <>
+                                        <h2><FormattedMessage id="site.entry.imageHeading" defaultMessage="Image"/></h2>
+                                        <img src={props.entry.features.Image.imageUrl} />
+                                    </>
+                                : null
+                            }
+
+                            {/* Article content, if any */}
+                            {
+                                props.entry.features.Article ?
+                                    <RenderMDT mdt={props.entry.features.Article.articleMD} context={mdtContext}/>
+                                : null
+                            }
+                        </div>
                     </div>
                 </article>
             </div>
