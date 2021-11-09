@@ -43,7 +43,8 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             {/* Site name/logo */}
             <div className="col-span-6 md:col-span-5 max-h-8 md:max-h-24 p-1 md:p-3">
                 <Link href="/">
-                    <a><img alt={props.site.name} src={`/${props.site.shortId}.svg`} id="neo-site-logo" className="max-w-full max-h-full" /></a>
+                    {/* a: block w-full h-full fix the image sizing on safari */}
+                    <a className="block w-full h-full"><img alt={props.site.name} src={`/${props.site.shortId}.svg`} id="neo-site-logo" className="max-w-full max-h-full" /></a>
                 </Link>
             </div>
             {/* Search (TODO) */}
