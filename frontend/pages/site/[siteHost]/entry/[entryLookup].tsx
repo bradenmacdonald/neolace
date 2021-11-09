@@ -35,10 +35,10 @@ const EntryPage: NextPage<PageProps> = function(props) {
             site={props.site}
         >
 
-            <div className="absolute top-0 bottom-0 left-0 right-0 bg-yellow-300 flex flex-row">
+            <div className="absolute top-0 bottom-0 left-0 right-0 flex flex-row overflow-y-auto">
 
                 {/* Left column, which shows table of contents, but only on desktop */}
-                <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4 overflow-y-scroll flex-col">
+                <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4 overflow-y-scroll flex-col sticky top-0">
                     <h1 className="font-bold text-base">{props.entry.name}</h1>
                     <span id="entry-type-name" className="font-light">{props.entry.entryType.name}</span>
                     <br/>
@@ -56,7 +56,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 </div>
 
                 {/* The main content of this entry */}
-                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 overflow-y-scroll z-0">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
+                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 z-0">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                     {/* Hero image, if any */}
                     {
                         props.entry.features?.HeroImage ?

@@ -21,7 +21,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // const router = useRouter();
     // router.query.siteHost gives the site's domain
 
-    return <div className="container">
+    return <div>
         <Head>
             <title>{props.title}</title>
             <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
@@ -39,7 +39,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         </Head>
 
         {/* Main header: */}
-        <header id="neo-main-header" className="fixed bg-header-color w-screen h-8 md:h-24 grid grid-cols-12">
+        <header id="neo-main-header" className="bg-header-color w-screen h-8 md:h-24 grid grid-cols-12">
             {/* Site name/logo */}
             <div className="col-span-6 md:col-span-5 max-h-8 md:max-h-24 p-1 md:p-3">
                 <Link href="/">
@@ -68,7 +68,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             </div>
         </header>
 
-        <main role="main" className="absolute top-8 md:top-24 p-2 w-full bottom-0">
+        <main role="main" className="absolute top-8 md:top-24 p-2 w-full bottom-0 overflow-y-auto">
             {props.children}
         </main>
   </div>

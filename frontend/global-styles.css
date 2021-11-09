@@ -5,6 +5,11 @@
 
 /* TechNotes color: 5ecbf5 */
 
+html, body {
+    /* Disable overscroll because the sudden appearance of white around the page doesn't look good */
+    @apply overscroll-none;
+}
+
 /* Typography: apply this class to a section that contains prose, to ensure headings have reasonable size/weight, paragraphs are spaced, etc. */
 .neo-typography h1,
 .neo-typography h2,
