@@ -1,3 +1,6 @@
+
+// TODO: in the future this could be replaced with https://github.com/denoland/dnt
+
 import { ensureDir } from "https://deno.land/std@0.99.0/fs/mod.ts";
 import { dirname } from "https://deno.land/std@0.99.0/path/mod.ts";
 
