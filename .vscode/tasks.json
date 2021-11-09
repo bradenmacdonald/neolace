@@ -3,5 +3,11 @@
     // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
+        {
+            "label": "Lint",
+            "type": "shell",
+            "command": "deno lint backend neolace-api/src lint frontend/pages frontend/components frontend/lib",
+            "problemMatcher": []
+        }
     ]
 }

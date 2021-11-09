@@ -41,9 +41,7 @@ image: denoland/deno:alpine
 lint:
   stage: test
   script:
-    - deno lint backend
-    - deno lint neolace-api/src
-    - deno lint frontend/pages frontend/components frontend/lib
+    - deno lint backend neolace-api/src lint frontend/pages frontend/components frontend/lib
 
 ################################################################
 # Backend

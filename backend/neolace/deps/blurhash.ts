@@ -99,7 +99,7 @@ const digitCharacters = [
   ];
 
 const encode83 = (n: number, length: number): string => {
-    var result = "";
+    let result = "";
     for (let i = 1; i <= length; i++) {
         const digit = (Math.floor(n) / Math.pow(83, length - i)) % 83;
         result += digitCharacters[Math.floor(digit)];

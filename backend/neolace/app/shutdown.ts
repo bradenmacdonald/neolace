@@ -40,30 +40,22 @@ export function shutdown(): void {
 }
 
 // Watch for signals:
-let watchingSignals = true;
-const sigintWatcher = Deno.signal("SIGINT");
-sigintWatcher.then(async () => {
-    if (!watchingSignals) {
-        return;  // The signal promise resolves on the signal OR when we call dispose() so ignore the latter
-    }
+const sigintWatcher = async () => {
     log.info("Shutting down (SIGINT)...");
     await prepareForShutdown();
     Deno.exit(0);
-});
-const sigtermWatcher = Deno.signal("SIGTERM");
-sigtermWatcher.then(async () => {
-    if (!watchingSignals) {
-        return;  // The signal promise resolves on the signal OR when we call dispose() so ignore the latter
-    }
+};
+Deno.addSignalListener("SIGINT", sigintWatcher);
+const sigtermWatcher = async () => {
     log.info("Shutting down (SIGTERM)...")
     await prepareForShutdown();
     Deno.exit(0);
-});
+}
+Deno.addSignalListener("SIGTERM", sigtermWatcher);
 // deno-lint-ignore require-await
 onShutDown(async () => {
-    sigintWatcher.dispose();
-    sigtermWatcher.dispose();
-    watchingSignals = false;
+    Deno.removeSignalListener("SIGINT", sigintWatcher);
+    Deno.removeSignalListener("SIGTERM", sigtermWatcher);
 });
 
 // Checks to run just before we actually quit.
