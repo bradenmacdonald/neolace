@@ -35,10 +35,12 @@ const EntryPage: NextPage<PageProps> = function(props) {
             site={props.site}
         >
 
-            <div className="absolute top-0 bottom-0 left-0 right-0 flex flex-row overflow-y-auto">
+            {/* Container that wraps the left nav column (on desktop) and the article text/content */}
+            {/* items-start is necessary on mobile to keep the top nav panel at the top when scrolling on long articles */}
+            <div className="absolute top-0 bottom-0 left-0 right-0 flex flex-row overflow-y-auto items-start">
 
                 {/* Left column, which shows table of contents, but only on desktop */}
-                <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4 overflow-y-scroll flex-col sticky top-0">
+                <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4 overflow-y-scroll flex-col sticky top-0 self-stretch">
                     <h1 className="font-bold text-base">{props.entry.name}</h1>
                     <span id="entry-type-name" className="font-light">{props.entry.entryType.name}</span>
                     <br/>
@@ -87,7 +89,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                     }
 
                     {/* On mobile devices, some navigation appears here since the left bar / table of contents is hidden */}
-                    <nav className="md:hidden sticky -top-4 -mx-4 py-1 -mt-2 pb-2 -mb-2 bg-white bg-opacity-90 backdrop-blur-sm text-gray-600">
+                    <nav className="md:hidden sticky top-0 -mx-4 py-1 -mt-2 pb-2 -mb-2 bg-white bg-opacity-90 backdrop-blur-sm text-gray-600">
                         <ul className="mx-auto text-center">
                             <li className="inline-block p-1 mx-2 text-sm"><a href="#summary">Summary</a></li>
                             <li className="inline-block p-1 mx-2 text-sm"><a href="#properties">Properties</a></li>
