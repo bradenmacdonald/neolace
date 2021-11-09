@@ -135,7 +135,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                             {
                                 props.entry.features.Article ?
                                     /* Table of contents appears here, but only on mobile */
-                                    <>
+                                    <div className="md:hidden">
                                         <h2><FormattedMessage id="site.entry.tableOfContentsHeading" defaultMessage="Contents"/></h2>
 
                                         <ol id="mobile-toc-headings" className="list-decimal list-inside">
@@ -145,7 +145,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                                 )
                                             }
                                         </ol>
-                                    </>
+                                    </div>
                                 : null
                             }
 
