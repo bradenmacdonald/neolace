@@ -110,13 +110,13 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                     <tbody>
                                         {props.entry.propertiesSummary?.map(propValue => 
                                             <tr key={propValue.id}>
-                                                <th className="pr-2 align-top text-left font-normal text-gray-700 min-w-[120px]">{
+                                                <th className="block md:table-cell text-xs md:text-base -mb-1 md:mb-0 pr-2 align-top text-left font-normal text-gray-500 md:text-gray-700 min-w-[120px]">{
                                                     propValue.type === "PropertyValue" ?
                                                         <LookupValue value={{type: "Entry", id: propValue.id}} refCache={props.entry.referenceCache} mdtContext={mdtContext} />
                                                     :
                                                         propValue.label
                                                 }</th>
-                                                <td className="pr-2"><LookupValue value={propValue.value} refCache={props.entry.referenceCache} mdtContext={mdtContext} /></td>
+                                                <td className="block md:table-cell pr-2 pb-1 md:pb-0 text-sm md:text-base"><LookupValue value={propValue.value} refCache={props.entry.referenceCache} mdtContext={mdtContext} /></td>
                                             </tr>
                                         )}
                                     </tbody>
