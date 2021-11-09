@@ -130,21 +130,41 @@ const EntryPage: NextPage<PageProps> = function(props) {
                             */}
                         </div>
 
-                        {
-                            props.entry.features?.Image ?
-                                <>
-                                    <h2><FormattedMessage id="site.entry.imageHeading" defaultMessage="Image"/></h2>
-                                    <img src={props.entry.features.Image.imageUrl} />
-                                </>
-                            : null
-                        }
+                        <div id="contents">
 
-                        {/* Article content, if any */}
-                        {
-                            props.entry.features.Article ?
-                                <RenderMDT mdt={props.entry.features.Article.articleMD} context={mdtContext}/>
-                            : null
-                        }
+                            {
+                                props.entry.features.Article ?
+                                    /* Table of contents appears here, but only on mobile */
+                                    <>
+                                        <h2><FormattedMessage id="site.entry.tableOfContentsHeading" defaultMessage="Contents"/></h2>
+
+                                        <ol id="mobile-toc-headings" className="list-decimal list-inside">
+                                            {
+                                                props.entry.features.Article?.headings.map(heading =>
+                                                    <li key={heading.id} className="my-1 truncate"><a href={`#h-${heading.id}`}>{heading.title}</a></li>
+                                                )
+                                            }
+                                        </ol>
+                                    </>
+                                : null
+                            }
+
+                            {
+                                props.entry.features?.Image ?
+                                    <>
+                                        <h2><FormattedMessage id="site.entry.imageHeading" defaultMessage="Image"/></h2>
+                                        <img src={props.entry.features.Image.imageUrl} />
+                                    </>
+                                : null
+                            }
+
+                            {/* Article content, if any */}
+                            {
+                                props.entry.features.Article ?
+                                    <RenderMDT mdt={props.entry.features.Article.articleMD} context={mdtContext}/>
+                                : null
+                            }
+                        </div>
                     </div>
                 </article>
             </div>
