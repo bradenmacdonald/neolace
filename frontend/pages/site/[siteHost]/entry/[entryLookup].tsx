@@ -37,7 +37,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
 
             {/* Container that wraps the left nav column (on desktop) and the article text/content */}
             {/* items-start is necessary on mobile to keep the top nav panel at the top when scrolling on long articles */}
-            <div className="absolute top-0 bottom-0 left-0 right-0 flex flex-row overflow-y-auto items-start">
+            <div className="absolute top-0 bottom-0 left-0 right-0 flex flex-row overflow-y-auto items-start scroll-padding-45 md:scroll-padding-none">
 
                 {/* Left column, which shows table of contents, but only on desktop */}
                 <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4 overflow-y-scroll flex-col sticky top-0 self-stretch">
