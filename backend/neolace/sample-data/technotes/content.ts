@@ -10,6 +10,7 @@ export const ids = {
     // we're working at the moment by erasing the database and re-creating all entries, it's important to ensure the
     // internal IDs used are consistent each time.
     battery: VNID("_5HYZND6114KVUtCGjFC8mT"),
+    batteryAA: VNID("_1bWGkkQDaPxHwmcMkO5cbu"),
     car: VNID("_4sd6mGkfpCfrvi3em2IFA0"),
     cell18650: VNID("_7RHY0mKlOEp2xsahAaNcbc"),
     cell2170: VNID("_725MCg9IOqXqKUUA2cEoSc"),
@@ -21,13 +22,12 @@ export const ids = {
     lithiumIonCell: VNID("_5GDsp3jxMTJ1liBePo9sgT"),
     motorVehicle: VNID("_5lqx2yOMSlbibeIT5psLCr"),
     img18650cell: VNID("_5Dk4j3EUjThp91B1SeGwUF"),
+    imgAABattery: VNID("_1nmqoMNKS0MYZRjjzUiQd3"),
     imgLiIonBatteryJellyRoll: VNID("_52FWviI73eaW6sIO8sZx0F"),
     imgMiniCooperSe: VNID("_5hqETvE3WTHuYvhHbwWuD"),
     primaryCell: VNID("_7OCTF7b5Z4wM7KvEE16OtK"),
     secondaryCell: VNID("_4HwJfgRjCzfOI7z2XTzY0r"),
-    //spare: VNID("_51YyfHlwYxW1X5QfjRBai6"),
-    //spare: VNID("_1bWGkkQDaPxHwmcMkO5cbu"),
-    //spare: VNID("_1nmqoMNKS0MYZRjjzUiQd3"),
+    standarizedBattery: VNID("_51YyfHlwYxW1X5QfjRBai6"),
     //spare: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
     //spare: VNID("_6dF6GUIrPx8ToREmsFAZ5R"),
     //spare: VNID("_5Z7bPDS8qOWy1DUHwpehjS"),
@@ -231,6 +231,44 @@ export const edits: AnyContentEdit[] = [
             [schemaIds.propWordNetILI]: { valueExpr: `"i50578"` },
         },
     }),
+    // Standardized battery
+    ...createEntry({
+        id: ids.standarizedBattery,
+        name: "Standardized battery",
+        friendlyId: "tc-battery-std",
+        type: schemaIds.techConcept,
+        description: `
+            A **standardized battery** is a [battery](/entry/${ids.battery}) that is designed and manufactured according
+            to an international standard. The standard will usually specify the battery's size and shape. Often the
+            standard will also specify the nominal voltage and the exact battery chemistry as well.
+        `,
+        props: {
+            [schemaIds.propTypeOf]: { valueExpr: `[[/entry/${ids.battery}]]` },
+            [schemaIds.propWikidataId]: { valueExpr: `"Q4374872"` },
+        },
+    }),
+    // AA Battery
+    ...createEntry({
+        id: ids.batteryAA,
+        name: "AA Battery",
+        friendlyId: "tc-batt-aa",
+        type: schemaIds.techConcept,
+        description: `
+            An **AA battery** is a standard cylindrical single-[cell](/entry/${ids.galvanicCell}) [battery](/entry/${ids.battery})
+            with diameter 14.5 mm and length 50.5 mm. Commonly used in consumer electronic devices, the AA battery may
+            be [primary](/entry/${ids.primaryCell}) (single-use) or [secondary](/entry/${ids.secondaryCell})
+            (multi-use). AA batteries are manufactured with many different chemical compositions, some of which include
+            zinc-carbon, zinc-chloride, nickel-cadmium, and lithium-ion. The voltage of the battery depends on the
+            chemistry but is usually either 1.5 V or 1.2 V.
+        `,
+        props: {
+            [schemaIds.propTypeOf]: { valueExpr: `[[/entry/${ids.standarizedBattery}]]` },
+            [schemaIds.propAlsoKnownAs]: { valueExpr: JSON.stringify(["double-A battery", "R6 battery", "size 15 battery", "UM-3 battery"]) },
+            [schemaIds.propWikidataId]: { valueExpr: `"Q1195592"` },
+            [schemaIds.propDiameter]: { valueExpr: `"14.5 mm"` },
+            [schemaIds.propLength]: { valueExpr: `"50.5 mm"` },
+        },
+    }),
     // Photo of a car (Mini Cooper SE)
     ...createEntry({
         id: ids.imgMiniCooperSe,
@@ -279,6 +317,24 @@ export const edits: AnyContentEdit[] = [
         },
     }),
     setHeroImage(ids.cell18650, ids.img18650cell),
+    // Photo of an AA battery
+    ...createEntry({
+        id: ids.imgAABattery,
+        name: "AA Battery",
+        friendlyId: "img-aa",
+        type: schemaIds.image,
+        description: `An [AA battery](/entry/${ids.batteryAA}).`,
+        features: [{featureType: "Image", dataFileId: files.aaBattery.id}],
+        props: {
+            [schemaIds.propImgRelatesTo]: { valueExpr: `[[/entry/${ids.batteryAA}]]` },
+            [schemaIds.propCreator]: { valueExpr: `markdown("[Asim Saleem](https://commons.wikimedia.org/wiki/User:Asim18)")` },
+            [schemaIds.propLicense]: { valueExpr: `markdown("[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)")` },
+            [schemaIds.propContentSource]: { valueExpr: `markdown("[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:02_-_Single_Energizer_Battery.jpg)")` },
+        },
+    }),
+    setHeroImage(ids.batteryAA, ids.imgAABattery),
+    setHeroImage(ids.standarizedBattery, ids.imgAABattery),
+    setHeroImage(ids.battery, ids.imgAABattery),
 ];
 
 function createEntry({id, ...args}: {
