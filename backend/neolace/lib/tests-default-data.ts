@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import * as log from "std/log/mod.ts";
-import { RelationshipCategory } from "neolace/deps/neolace-api.ts";
+import { PropertyMode, PropertyType, RelationshipCategory } from "neolace/deps/neolace-api.ts";
 import { VNID, VertexTestDataSnapshot } from "neolace/deps/vertex-framework.ts";
 
 import { dedent } from "neolace/lib/dedent.ts";
@@ -289,6 +289,205 @@ const data = {
                 description: null,
                 fromEntryTypes: [VNID("_ETPLANTPART")],
                 toEntryTypes: [VNID("_ETPLANTPART")],
+            },
+        },
+        properties: {
+            "_parentTaxon": {
+                id: VNID("_parentTaxon"),
+                name: "Parent taxon",
+                type: PropertyType.RelIsA,
+                appliesTo: [
+                    {
+                        entryType: VNID("_ETCLASS"),
+                        targetEntryTypes: [VNID("_ETDIVISION")],
+                        mode: PropertyMode.Required,
+                    },
+                    {
+                        entryType: VNID("_ETORDER"),
+                        targetEntryTypes: [VNID("_ETCLASS")],
+                        mode: PropertyMode.Required,
+                    },
+                    {
+                        entryType: VNID("_ETFAMILY"),
+                        targetEntryTypes: [VNID("_ETORDER")],
+                        mode: PropertyMode.Required,
+                    },
+                    {
+                        entryType: VNID("_ETGENUS"),
+                        targetEntryTypes: [VNID("_ETFAMILY")],
+                        mode: PropertyMode.Required,
+                    },
+                    {
+                        entryType: VNID("_ETSPECIES"),
+                        targetEntryTypes: [VNID("_ETGENUS")],
+                        mode: PropertyMode.Required,
+                    },
+                ],
+                descriptionMD: `The parent taxon of this entry.`,
+                importance: 0,
+            },
+            "_divClasses": {
+                id: VNID("_divClasses"),
+                name: "Classes",
+                type: PropertyType.RelOther,
+                appliesTo: [{
+                    entryType: VNID("_ETDIVISION"),
+                    mode: PropertyMode.Auto,
+                    default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
+                }],
+                descriptionMD: `Classes that are part of this division.`,
+                importance: 3,
+            },
+            "_classOrders": {
+                id: VNID("_classOrders"),
+                name: "Orders",
+                type: PropertyType.RelOther,
+                appliesTo: [{
+                    entryType: VNID("_ETCLASS"),
+                    mode: PropertyMode.Auto,
+                    default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
+                }],
+                descriptionMD: `Orders that are part of this class.`,
+                importance: 3,
+            },
+            "_orderFamilies": {
+                id: VNID("_orderFamilies"),
+                name: "Families",
+                type: PropertyType.RelOther,
+                appliesTo: [{
+                    entryType: VNID("_ETORDER"),
+                    mode: PropertyMode.Auto,
+                    default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
+                }],
+                descriptionMD: `Families that are part of this order.`,
+                importance: 3,
+            },
+            "_familyGenera": {
+                id: VNID("_familyGenera"),
+                name: "Genera",
+                type: PropertyType.RelOther,
+                appliesTo: [{
+                    entryType: VNID("_ETFAMILY"),
+                    mode: PropertyMode.Auto,
+                    default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
+                }],
+                descriptionMD: `Genera (genuses) that are part of this family.`,
+                importance: 3,
+            },
+            "_genusSpecies": {
+                id: VNID("_genusSpecies"),
+                name: "Species",
+                type: PropertyType.RelOther,
+                appliesTo: [{
+                    entryType: VNID("_ETSPECIES"),
+                    mode: PropertyMode.Auto,
+                    default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
+                }],
+                descriptionMD: `Species that are part of this genus.`,
+                importance: 3,
+            },
+            "_taxonomy": {
+                id: VNID("_taxonomy"),
+                name: "Taxonomy",
+                type: PropertyType.RelOther,
+                appliesTo: [{
+                    entryType: VNID("_ETSPECIES"),
+                    mode: PropertyMode.Auto,
+                    default: `this.ancestors()`,
+                }],
+                descriptionMD: `The full taxonomy of this PlantDB entry.`,
+                importance: 5,
+            },
+            // An image RELATES TO [a Tech Concept]
+            "_imgRelTo": {
+                id: VNID("_imgRelTo"),
+                name: "Relates to",
+                type: PropertyType.RelRelatesTo,
+                appliesTo: [{
+                    entryType: VNID("_ETIMAGE"),
+                    targetEntryTypes: [
+                        // An image can related to anything. These are in alphabetical order though to match how Neolace returns a site's schema.
+                        VNID("_ETCLASS"),
+                        VNID("_ETDIVISION"),
+                        VNID("_ETFAMILY"),
+                        VNID("_ETGENUS"),
+                        VNID("_ETORDER"),
+                        VNID("_ETPLANTPART"),
+                        VNID("_ETSPECIES"),
+                    ],
+                    mode: PropertyMode.Recommended,
+                }],
+                descriptionMD: `Lists PlantDB entries that this images relates to.`,
+                importance: 8,
+            },
+            // Related images
+            "_relImages": {
+                id: VNID("_relImages"),
+                name: "Related images",
+                type: PropertyType.RelOther,
+                appliesTo: [
+                    {entryType: VNID("_ETCLASS"), mode: PropertyMode.Auto, default: `this.andDescendants().reverseProp(prop=[/prop/_imgRelTo])`},
+                    {entryType: VNID("_ETDIVISION"), mode: PropertyMode.Auto, default: `this.andDescendants().reverseProp(prop=[/prop/_imgRelTo])`},
+                    {entryType: VNID("_ETFAMILY"), mode: PropertyMode.Auto, default: `this.andDescendants().reverseProp(prop=[/prop/_imgRelTo])`},
+                    {entryType: VNID("_ETGENUS"), mode: PropertyMode.Auto, default: `this.andDescendants().reverseProp(prop=[/prop/_imgRelTo])`},
+                    {entryType: VNID("_ETORDER"), mode: PropertyMode.Auto, default: `this.andDescendants().reverseProp(prop=[/prop/_imgRelTo])`},
+                    {entryType: VNID("_ETPLANTPART"), mode: PropertyMode.Auto, default: `this.andDescendants().reverseProp(prop=[/prop/_imgRelTo])`},
+                    {entryType: VNID("_ETSPECIES"), mode: PropertyMode.Auto, default: `this.andDescendants().reverseProp(prop=[/prop/_imgRelTo])`},
+                ],
+                descriptionMD: `Images related to this entry.`,
+                importance: 10,
+            },
+            // Has part
+            "_hasPart": {
+                id: VNID("_hasPart"),
+                name: "Has part",
+                type: PropertyType.RelHasA,
+                appliesTo: [
+                    {entryType: VNID("_ETCLASS"), mode: PropertyMode.Optional},
+                    {entryType: VNID("_ETDIVISION"), mode: PropertyMode.Optional},
+                    {entryType: VNID("_ETFAMILY"), mode: PropertyMode.Optional},
+                    {entryType: VNID("_ETGENUS"), mode: PropertyMode.Optional},
+                    {entryType: VNID("_ETORDER"), mode: PropertyMode.Optional},
+                    {entryType: VNID("_ETSPECIES"), mode: PropertyMode.Optional},
+                ],
+                descriptionMD: `This [species/genus/etc.] has this part(s).`,
+                importance: 10,
+            },
+            // Plant part is found in
+            "_partFoundIn": {
+                id: VNID("_partFoundIn"),
+                name: "Found in",
+                type: PropertyType.RelOther,
+                appliesTo: [{
+                    entryType: VNID("_ETPLANTPART"),
+                    mode: PropertyMode.Auto,
+                    default: `this.andDescendants().reverseProp(prop=[/prop/_hasPart])`
+                }],
+                descriptionMD: `This plant is found in these species/genera/etc.`,
+                importance: 10,
+            },
+            // Plant part is a type of plant part
+            "_partIsAPart": {
+                id: VNID("_partIsAPart"),
+                name: "Is a",
+                type: PropertyType.RelIsA,
+                appliesTo: [
+                    {entryType: VNID("_ETPLANTPART"), mode: PropertyMode.Recommended},
+                ],
+                descriptionMD: `The more general class of this plant part.`,
+                importance: 0,
+            },
+            "_partHasTypes": {
+                id: VNID("_partHasTypes"),
+                name: "Has types",
+                type: PropertyType.RelOther,
+                appliesTo: [{
+                    entryType: VNID("_ETPLANTPART"),
+                    mode: PropertyMode.Auto,
+                    default: `this.reverseProp(prop=[/prop/_partIsAPart])`,
+                }],
+                descriptionMD: `Sub-types of this plant part`,
+                importance: 3,
             },
         },
     },
