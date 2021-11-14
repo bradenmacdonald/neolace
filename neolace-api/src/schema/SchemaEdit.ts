@@ -1,18 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
-import { nullable, vnidString } from "../api-schemas.ts";
-import { Schema, SchemaValidatorFunction, string, array, Type } from "../deps/computed-types.ts";
+import { nullable, vnidString, Schema, string, array, Type, number } from "../api-schemas.ts";
+import type { SchemaValidatorFunction } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
-import { SiteSchemaData, RelationshipCategory, SimplePropertySchema } from "./SiteSchemaData.ts";
+import { SiteSchemaData, RelationshipCategory, SimplePropertySchema, PropertyType, PropertyMode } from "./SiteSchemaData.ts";
 
 interface SchemaEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Schema;
-    /**
-     * If this edit "expands" the schema, it does something like adding a new Entry Type or a new Property, which are
-     * guaranteed to be compatible with the data that came before.
-     * If this is false (this edit "contracts" the schema), then it is doing something like deleting an entry type which
-     * may break backwards compatibility.
-     */
-    // expands: boolean;
     apply: (currentSchema: Readonly<SiteSchemaData>, data: Type<DataSchema>) => SiteSchemaData;
 }
 
@@ -34,6 +27,7 @@ export const CreateEntryType = SchemaEditType({
         }
 
         const newSchema: SiteSchemaData = {
+            ...currentSchema,
             entryTypes: {
                 ...currentSchema.entryTypes,
                 [data.id]: {
@@ -45,7 +39,6 @@ export const CreateEntryType = SchemaEditType({
                     enabledFeatures: {},
                 },
             },
-            relationshipTypes: currentSchema.relationshipTypes,
         };
 
         return Object.freeze(newSchema);
@@ -66,8 +59,8 @@ export const UpdateEntryType = SchemaEditType({
     }),
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
+            ...currentSchema,
             entryTypes: {...currentSchema.entryTypes},
-            relationshipTypes: currentSchema.relationshipTypes,
         };
         const originalEntryType = newSchema.entryTypes[data.id];
         if (originalEntryType === undefined) {
@@ -130,8 +123,8 @@ export const UpdateEntryTypeFeature = SchemaEditType({
     }),
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
+            ...currentSchema,
             entryTypes: {...currentSchema.entryTypes},
-            relationshipTypes: currentSchema.relationshipTypes,
         };
         const originalEntryType = newSchema.entryTypes[data.entryTypeId];
         if (originalEntryType === undefined) {
@@ -169,7 +162,7 @@ export const CreateRelationshipType = SchemaEditType({
         }
 
         const newSchema: SiteSchemaData = {
-            entryTypes: currentSchema.entryTypes,
+            ...currentSchema,
             relationshipTypes: {
                 ...currentSchema.relationshipTypes,
                 [data.id]: {
@@ -242,12 +235,98 @@ export const UpdateRelationshipType = SchemaEditType({
         }
 
         const newSchema: SiteSchemaData = {
-            entryTypes: currentSchema.entryTypes,
+            ...currentSchema,
             relationshipTypes: {...currentSchema.relationshipTypes, [data.id]: relType},
         };
         return Object.freeze(newSchema);
     },
     describe: (data) => `Updated \`RelationshipType ${data.id}\``,
+});
+
+export const UpdateProperty = SchemaEditType({
+    changeType: EditChangeType.Schema,
+    code: "UpdateProperty",
+    dataSchema: Schema({
+        id: vnidString,
+        // For these properties, use 'undefined' to mean 'no change':
+        name: string.strictOptional(),
+        descriptionMD: string.strictOptional(),
+        type: Schema.enum(PropertyType).strictOptional(),
+        appliesTo: array.of(Schema({ entryType: vnidString })).strictOptional(),
+        mode: Schema.enum(PropertyMode).strictOptional(),
+        isA: array.of(vnidString).strictOptional(),
+        importance: number.strictOptional(),
+        // For these properties, use 'undefined' to mean 'no change', and an empty string to mean "set to no value"
+        valueConstraint: string.strictOptional(),
+        default: string.strictOptional(),
+        standardURL: string.strictOptional(),
+        editNoteMD: string.strictOptional(),
+    }),
+    apply: (currentSchema, data) => {
+
+        const currentValues = currentSchema.properties[data.id];
+        if (currentValues === undefined) {
+            throw new Error(`Property with ID ${data.id} not found.`);
+        }
+
+        const newProp = {...currentValues};
+
+        if (data.appliesTo !== undefined) {
+            data.appliesTo.forEach(({entryType}) => {
+                if (currentSchema.entryTypes[entryType] === undefined) {
+                    throw new Error(`No such entry type with ID ${entryType}`);
+                }
+            })
+            newProp.appliesTo = data.appliesTo;
+        }
+
+        for (const field of ["name", "descriptionMD", "type", "mode", "isA", "importance"] as const) {
+            if (data[field] !== undefined) {
+                (newProp as any)[field] = data[field];
+            }
+        }
+
+        for (const field of ["valueConstraint", "default", "standardURL", "editNoteMD"] as const) {
+            if (data[field] !== undefined) {
+                if (data[field] === "") {
+                    newProp[field] = undefined;
+                } else {
+                    newProp[field] = data[field];
+                }
+            }
+        }
+
+        const newSchema: SiteSchemaData = {
+            ...currentSchema,
+            properties: {...currentSchema.properties, [data.id]: newProp},
+        };
+        return Object.freeze(newSchema);
+    },
+    describe: (data) => `Updated \`Property ${data.id}\``,
+});
+
+
+
+export const CreateProperty = SchemaEditType({
+    changeType: EditChangeType.Schema,
+    code: "CreateProperty",
+    dataSchema: UpdateProperty.dataSchema,
+    apply: (currentSchema, data) => {
+        const newSchema: SiteSchemaData = {
+            ...currentSchema,
+            properties: {...currentSchema.properties, [data.id]: {
+                id: data.id,
+                appliesTo: [],
+                descriptionMD: "",
+                name: "New Property",
+                type: PropertyType.Value,
+                // Default importance is 15
+                importance: 15,
+            }},
+        };
+        return UpdateProperty.apply(newSchema, data);
+    },
+    describe: (data) => `Updated \`Property ${data.id}\``,
 });
 
 
@@ -257,6 +336,8 @@ export const _allSchemaEditTypes = {
     UpdateEntryTypeFeature,
     CreateRelationshipType,
     UpdateRelationshipType,
+    UpdateProperty,
+    CreateProperty,
 };
 
 export type AnySchemaEdit = (
@@ -265,4 +346,6 @@ export type AnySchemaEdit = (
     | Edit<typeof UpdateEntryTypeFeature>
     | Edit<typeof CreateRelationshipType>
     | Edit<typeof UpdateRelationshipType>
+    | Edit<typeof UpdateProperty>
+    | Edit<typeof CreateProperty>
 );

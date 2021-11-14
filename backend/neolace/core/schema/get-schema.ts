@@ -85,11 +85,13 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
     for (const [id, val] of [
         ...Object.entries(oldSchema.entryTypes),
         ...Object.entries(oldSchema.relationshipTypes),
+        ...Object.entries(oldSchema.properties),
         ...Object.entries(newSchema.entryTypes),
         ...Object.entries(newSchema.relationshipTypes),
+        ...Object.entries(newSchema.properties),
     ]) {
         if (val.id !== id) {
-            throw new Error(`Invalid schema: the key of an entry/relationship type doesn't match its ID.`);
+            throw new Error(`Invalid schema: the key of an entry type / property doesn't match its ID.`);
         }
     }
 

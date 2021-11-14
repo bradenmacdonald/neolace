@@ -135,21 +135,21 @@ export enum PropertyType {
 
 export enum PropertyMode {
     /** This property is required. Leaving it blank will be highlighted as an error. */
-    Required = 1,
+    Required = "REQ",
     /**
      * This property is recommended. The "edit" form for this property type will always show a field to add this
      * property.
      */
-    Recommended = 2,
+    Recommended = "REC",
     /**
      * This property is optional. It may be set on the specified entry type, but doesn't necessarily have to be.
      */
-    Optional = 3,
+    Optional = "OPT",
     /**
      * This property is defined by a lookup expression and its value is derived from other data. It cannot be edited.
      * This can also be used to set a fixed value for all entries of a given type.
      */
-    Auto = 3,
+    Auto = "AUTO",
 }
 
 export const PropertySchema = Schema({
@@ -163,22 +163,22 @@ export const PropertySchema = Schema({
     /** What EntryTypes can have this property? */
     appliesTo: array.of(Schema({
         entryType: vnidString,
-        /** What Entry Types this relationship can point to (if this is a relationship) */
-        targetEntryTypes: array.of(vnidString).strictOptional(),
-        mode: Schema.enum(PropertyMode),
-        /**
-         * The default value for all entries of this type, if none is set on the specific entry or its parents.
-         * This can be a lookup expression.
-         * If mode is Auto, this is required, because this defines the lookup expression.
-         */
-        default: string.strictOptional(),
     })),
-    /** TODO: What types of values this can hold */
-    //valueTypes: array.of(string).strictOptional(),
-    /** TODO: a short list of allowed values or constraints */
-    //valuesAllowed: array.of(string).strictOptional(),
+    /** Is this a property that can be set manually? Or MUST be set? Or is it computed automatically? */
+    mode: Schema.enum(PropertyMode).strictOptional(),
+    /**
+     * A lookup expression (usually an "x expression") that defines what values are allowed.
+     * This property is ignored if mode is "Auto".
+     */
+    valueConstraint: string.strictOptional(),
     /** This property is a sub-type of some other property (e.g. "average voltage" is a type of "voltage") */
     isA: array.of(vnidString).strictOptional(),
+    /**
+     * The default value for this property, if none is set on the specific entry or its parents.
+     * This can be a lookup expression.
+     * If mode is Auto, this is required, because this defines the lookup expression.
+     */
+    default: string.strictOptional(),
     /** The standard URL for this property, e.g. "https://schema.org/birthDate" for "date of birth" */
     standardURL: string.strictOptional(),
     /** The Wikidata P ID for this property, if applicable, e.g. P569 for "date of birth" */
@@ -187,7 +187,7 @@ export const PropertySchema = Schema({
      * Default importance of this property, 0 being most important, 99 being least.
      * Properties with importance < 20 are not shown on entry pages by default.
      */
-    importance: number.strictOptional(),
+    importance: number,
     /** Text shown to users when they go to edit this property value. */
     editNoteMD: string.strictOptional(),
     // TODO: hasSlot, hasWeight, hasSource
