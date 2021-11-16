@@ -19,6 +19,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
     const result: SiteSchemaData = {
         entryTypes: {},
         relationshipTypes: {},
+        properties: {},
     };
     const siteFilter = C`(@this)-[:FOR_SITE]->(:${Site} {id: ${siteId}})`;
 
