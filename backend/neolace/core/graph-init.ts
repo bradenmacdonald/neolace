@@ -17,6 +17,7 @@ import { features as allFeatures } from "neolace/core/entry/features/all-feature
 import { DataFile } from "neolace/core/objstore/DataFile.ts";
 // core/schema
 import { EntryType } from "neolace/core/schema/EntryType.ts";
+import { Property } from "neolace/core/schema/Property.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 
@@ -43,6 +44,7 @@ export function registerVNodeTypes(graph: Vertex) {
         DataFile,
         // core/schema
         EntryType,
+        Property,
         RelationshipType,
         SimplePropertyValue,
     ]);

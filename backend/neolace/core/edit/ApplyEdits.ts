@@ -13,6 +13,10 @@ import {
     getEditType,
     RelationshipCategory,
     UpdateEntryFeature,
+    CreateProperty,
+    PropertyType,
+    PropertyMode,
+    UpdateProperty,
 } from "neolace/deps/neolace-api.ts";
 import { C, defineAction, Field, VNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { Site } from "../Site.ts";
@@ -24,6 +28,7 @@ import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
 import { UseAsPropertyEnabled } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyEnabled.ts";
 import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 import { features } from "neolace/core/entry/features/all-features.ts";
+import { Property } from "neolace/core/schema/Property.ts";
 
 /**
  * Apply a set of edits (to schema and/or content)
@@ -328,8 +333,90 @@ export const ApplyEdits = defineAction({
                     break;
                 }
 
+                case CreateProperty.code:  // Create a new property (in the schema)
+                    await tx.queryOne(C`
+                        MATCH (site:${Site} {id: ${siteId}})
+                        CREATE (p:${Property} {id: ${edit.data.id}})
+                        MERGE (p)-[:${Property.rel.FOR_SITE}]->(site)
+                        SET p += ${{
+                            name: "New Property",
+                            descriptionMD: "",
+                            importance: 15,
+                            type: PropertyType.Value,
+                            mode: PropertyMode.Optional,
+                            standardURL: "",
+                            editNoteMD: "",
+                            default: "",
+                        }}
+                    `.RETURN({}));
+                    /* falls through */
+                case UpdateProperty.code: {
+                    // update the "appliesTo" of this property:
+                    if (edit.data.appliesTo !== undefined) {
+                        const newAppliesToIds = edit.data.appliesTo.map(at => at.entryType);
+                        // Create new "applies to" links:
+                        await tx.query(C`
+                            MATCH (p:${Property} {id: ${edit.data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            UNWIND ${newAppliesToIds} as entryTypeId
+                            MATCH (et:${EntryType} {id: entryTypeId})-[:${EntryType.rel.FOR_SITE}]->(site)
+                            MERGE (p)-[:${Property.rel.APPLIES_TO_TYPE}]->(et)
+                        `.RETURN({}));
+                        // Delete old "applies to" links:
+                        await tx.query(C`
+                            MATCH (p:${Property} {id: ${edit.data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            MATCH (p)-[rel:${Property.rel.APPLIES_TO_TYPE}]->(et:${EntryType})
+                            WHERE NOT et.id IN ${newAppliesToIds}
+                            DELETE rel
+                        `.RETURN({}));
+                    }
+                    // update the "isA" of this property:
+                    if (edit.data.isA !== undefined) {
+                        const newParentIds = edit.data.isA;
+                        // Create new "is a" / parent property links:
+                        await tx.query(C`
+                            MATCH (p:${Property} {id: ${edit.data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            UNWIND ${newParentIds} as parentId
+                            MATCH (pp:${Property} {id: parentId})-[:${EntryType.rel.FOR_SITE}]->(site)
+                            MERGE (p)-[:${Property.rel.HAS_PARENT_PROP}]->(pp)
+                        `.RETURN({}));
+                        // Delete old "is a" / parent property links:
+                        await tx.query(C`
+                            MATCH (p:${Property} {id: ${edit.data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            MATCH (p)-[rel:${Property.rel.HAS_PARENT_PROP}]->(pp)
+                            WHERE NOT pp.id IN ${newParentIds}
+                            DELETE rel
+                        `.RETURN({}));
+                    }
+
+                    // Other fields:
+                    const changes: Record<string, unknown> = {};
+                    for (const field of [
+                        "name",
+                        "descriptionMD",
+                        "type",
+                        "mode",
+                        "valueConstraint",
+                        "default",
+                        "standardURL",
+                        "importance",
+                        "editNoteMD",
+                    ] as const) {
+                        if (edit.data[field] !== undefined) {
+                            changes[field] = edit.data[field];
+                        }
+                    }
+                    // The following will also throw an exception if the property is not part of the current site, so
+                    // we always run this query even if changes is empty.
+                    await tx.queryOne(C`
+                        MATCH (p:${Property} {id: ${edit.data.id}})-[:${Property.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
+                        SET p += ${changes}
+                    `.RETURN({}));
+                    modifiedNodes.add(edit.data.id);
+                    break;
+                }
+
                 default:
-                    throw new Error(`Unknown/unsupported edit type: ${(edit as any).code}`);
+                    throw new Error(`Cannot apply unknown/unsupported edit type: ${(edit as any).code}`);
             }
         }
 

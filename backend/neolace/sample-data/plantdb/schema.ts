@@ -248,6 +248,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_parentTaxon"),
             name: "Parent taxon",
             type: PropertyType.RelIsA,
+            mode: PropertyMode.Optional,
             appliesTo: [],
             descriptionMD: `The parent taxon of this entry.`,
             importance: 0,

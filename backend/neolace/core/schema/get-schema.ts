@@ -7,12 +7,17 @@ import {
     RelationshipTypeData,
     SiteSchemaData,
     UpdateRelationshipType,
+    UpdateProperty,
+    PropertyData,
+    PropertyType,
+    PropertyMode,
 } from "neolace/deps/neolace-api.ts";
 import { C, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Type } from "neolace/deps/computed-types.ts";
 import { Site } from "neolace/core/Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
+import { Property } from "neolace/core/schema/Property.ts";
 import { features } from "neolace/core/entry/features/all-features.ts";
 
 export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Promise<SiteSchemaData> {
@@ -63,6 +68,43 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
     await Promise.all(
         features.map(feature => feature.contributeToSchema(result, tx, siteId))
     );
+
+    // Load properties:
+    const properties = await tx.pull(
+        Property,
+        p => p
+        .id
+        .name
+        .descriptionMD
+        .type
+        .mode
+        .valueConstraint
+        .default
+        .standardURL
+        .importance
+        .editNoteMD
+        .appliesTo(et => et.id)
+        .parentProperties(pp => pp.id),
+        {where: siteFilter},
+    );
+    properties.forEach(p => {
+        // Sort the "applies to [entry types]" array to make test comparisons easier/stable.
+        const appliesToSorted = p.appliesTo.slice().sort((a, b) => a.id.localeCompare(b.id));
+        result.properties[p.id] = {
+            id: p.id,
+            name: p.name,
+            descriptionMD: p.descriptionMD,
+            type: p.type as PropertyType,
+            mode: p.mode as PropertyMode,
+            importance: p.importance,
+            appliesTo: appliesToSorted.map(at => ({ entryType: at.id })),
+            ...(p.parentProperties.length > 0 && {isA: p.parentProperties.map(pp => pp.id).sort()}),
+            ...(p.default && {default: p.default}),
+            ...(p.valueConstraint && {valueConstraint: p.valueConstraint}),
+            ...(p.editNoteMD && {editNoteMD: p.editNoteMD}),
+            ...(p.standardURL && {standardURL: p.standardURL}),
+        };
+    });
 
     return Object.freeze(result);
 }
@@ -189,8 +231,8 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
         const newRelTypeIds = new Set(Object.keys(newSchema.relationshipTypes));
 
         // Delete any removed RelationshipTypes:
-        const deletedEntryTypeIds = difference(oldRelTypeIds, newRelTypeIds);
-        if (deletedEntryTypeIds.size > 0) {
+        const deletedRelTypeIds = difference(oldRelTypeIds, newRelTypeIds);
+        if (deletedRelTypeIds.size > 0) {
             throw new Error("Deleting RelationshipTypes from the schema is not implemented.");
         }
 
@@ -237,6 +279,66 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
                     id: VNID(relTypeId),
                     // deno-lint-ignore no-explicit-any
                     ...changes as any,
+                }});
+            }
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    {// Properties:
+        const oldPropertyIds = new Set(Object.keys(oldSchema.properties));
+        const newPropertyIds = new Set(Object.keys(newSchema.properties));
+
+        // Delete any removed Properties:
+        const deletedPropertyIds = difference(oldPropertyIds, newPropertyIds);
+        if (deletedPropertyIds.size > 0) {
+            throw new Error("Deleting Properties from the schema is not implemented.");
+        }
+
+        // Create any newly added Properties:
+        const addedPropIds = difference(newPropertyIds, oldPropertyIds);
+        for (const newId of addedPropIds) {
+            result.edits.push({code: "CreateProperty", data: newSchema.properties[newId]});
+        }
+        // Update any already-existing properties that may have changed.
+        for (const propId of oldPropertyIds) {
+            if (!newPropertyIds.has(propId)) {
+                continue;  // This property was deleted
+            }
+            const oldProp: PropertyData = oldSchema.properties[propId];
+            const newProp: PropertyData = newSchema.properties[propId];
+            const changes: Partial<Type<typeof UpdateProperty["dataSchema"]>> = {};
+
+            // Handle appliesTo
+            // deno-lint-ignore no-explicit-any
+            const newAppliesToSorted = newProp.appliesTo.sort((a, b) => (a.entryType as any) - (b.entryType as any));
+            // deno-lint-ignore no-explicit-any
+            const oldAppliesToSorted = oldProp.appliesTo.sort((a, b) => (a.entryType as any) - (b.entryType as any));
+            if (!equal(newAppliesToSorted, oldAppliesToSorted)) {
+                changes.appliesTo = newProp.appliesTo;
+            }
+
+            for (const key of [
+                "name",
+                "descriptionMD",
+                "type",
+                "mode",
+                "valueConstraint",
+                "isA",
+                "default",
+                "standardURL",
+                "importance",
+                "editNoteMD",
+            ] as const) {
+                if (newProp[key] !== oldProp[key]) {
+                    // deno-lint-ignore no-explicit-any
+                    (changes as any)[key] = newProp[key];
+                }
+            }
+            if (Object.keys(changes).length > 0) {
+                result.edits.push({code: "UpdateProperty", data: {
+                    id: VNID(propId),
+                    ...changes,
                 }});
             }
         }

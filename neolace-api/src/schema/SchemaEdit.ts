@@ -320,13 +320,14 @@ export const CreateProperty = SchemaEditType({
                 descriptionMD: "",
                 name: "New Property",
                 type: PropertyType.Value,
+                mode: PropertyMode.Optional,
                 // Default importance is 15
                 importance: 15,
             }},
         };
         return UpdateProperty.apply(newSchema, data);
     },
-    describe: (data) => `Updated \`Property ${data.id}\``,
+    describe: (data) => `Created \`Property ${data.id}\``,
 });
 
 
