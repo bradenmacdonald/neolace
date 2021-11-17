@@ -10,6 +10,7 @@ import {
     UpdateProperty,
     PropertyData,
     PropertyType,
+    PropertyCardinality,
     PropertyMode,
 } from "neolace/deps/neolace-api.ts";
 import { C, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
@@ -77,6 +78,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
         .name
         .descriptionMD
         .type
+        .cardinality
         .mode
         .valueConstraint
         .default
@@ -95,6 +97,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             name: p.name,
             descriptionMD: p.descriptionMD,
             type: p.type as PropertyType,
+            cardinality: p.cardinality as PropertyCardinality,
             mode: p.mode as PropertyMode,
             importance: p.importance,
             appliesTo: appliesToSorted.map(at => ({ entryType: at.id })),

@@ -14,7 +14,6 @@ import {
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
-import { UseAsPropertyData } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyData.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { graph } from "neolace/core/graph.ts";
 import { RelationshipFact } from "./RelationshipFact.ts";
@@ -98,11 +97,6 @@ export class Entry extends VNodeType {
             type: VirtualPropType.ManyRelationship,
             query: C`(@this)-[:${this.rel.HAS_FEATURE_DATA}]->(@target:${EntryFeatureData})`,
             target: EntryFeatureData,
-        },
-        useAsPropertyData: {
-            type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${this.rel.HAS_FEATURE_DATA}]->(@target:${UseAsPropertyData})`,
-            target: UseAsPropertyData,
         },
     }));
 

@@ -1,14 +1,63 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
-import { RelationshipCategory, EditList } from "neolace/deps/neolace-api.ts";
+import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
+// import { EditList } from "neolace/deps/neolace-api.ts";
 
 import { group, test, resetDBToBlankSnapshot, assertEquals, beforeAll } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
-import { getEntryProperties, getEntryProperty } from "neolace/core/entry/properties.ts";
+import { Entry } from "neolace/core/entry/Entry.ts";
+import { Property } from "neolace/core/schema/Property.ts";
+import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
+// import { getEntryProperties, getEntryProperty } from "neolace/core/entry/pro perties.ts";
 
 group(import.meta, () => {
 
+    group("set property values", () => {
+        const entryType = VNID();
+        const siteId = VNID();
+        beforeAll(async () => {
+            await resetDBToBlankSnapshot();
+            // Create a site and an entry type:
+            await graph.runAsSystem(CreateSite({
+                id: siteId,
+                name: "Test Site",
+                domain: "test-site.neolace.net",
+                slugId: "site-test",
+            }));
+            await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+            ]}));
+        });
+
+        test("Define a new property and set it on an entry", async () => {
+            const entryId = VNID();
+            const propertyId = VNID();
+            await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                {code: "CreateEntry", data: {id: entryId, name: "Entry", type: entryType, description: "Testing", friendlyId: "te1"}},
+                {code: "CreateProperty", data: {id: propertyId, name: "Property", appliesTo: [{entryType}]}},
+            ]}));
+            await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                {code: "UpdatePropertyValue", data: {
+                    entry: entryId,
+                    property: propertyId,
+                    valueExpression: `"the value"`,
+                    note: "",
+                }},
+            ]}));
+            // Now just read the value from the graph, so we're only testing the write functions, not the read ones:
+            const result = await graph.read(tx => tx.query(C`
+                MATCH (entry:${Entry} {id: ${entryId}})
+                MATCH (prop:${Property} {id: ${propertyId}})
+                MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(fact:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
+            `.RETURN({fact: Field.VNode(PropertyFact)})));
+            assertEquals(result.length, 1);
+            assertEquals(result[0].fact.valueExpression, `"the value"`);
+            assertEquals(result[0].fact.note, "");
+            assertEquals(result[0].fact.directRelNeo4jId, null);  // Only set for relationship properties
+        });
+    });
+
+    /*
     group("getProperties", () => {
         // Entry Type IDs:
         const entryType = VNID(), propertyType = VNID();
@@ -420,4 +469,5 @@ group(import.meta, () => {
         // TODO: test the dbHits performance of getProperties()
 
     });
+    */
 });

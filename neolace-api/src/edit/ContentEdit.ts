@@ -16,7 +16,7 @@ export const CreateEntry = ContentEditType({
     code: "CreateEntry",
     dataSchema: Schema({
         id: vnidString,
-        friendlyId: string.strictOptional(),
+        friendlyId: string,
         name: string,
         type: vnidString,
         description: string,

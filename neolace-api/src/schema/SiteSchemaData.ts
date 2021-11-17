@@ -180,9 +180,9 @@ export const PropertySchema = Schema({
     name: string,
     /** Description of this property (markdown) */
     descriptionMD: string,
-    /** What type of property is this - a relationship, or some other simple property? (Cannot be changed) */
+    /** What type of property is this - a relationship, or some other simple property? (Cannot be changed due to complex edge cases that we'd have to cover) */
     type: Schema.enum(PropertyType),
-    /** Does this property allow multiple values? (Cannot be changed) */
+    /** Does this property allow multiple values? (Cannot be changed due to complex edge cases that we'd have to cover) */
     cardinality: Schema.enum(PropertyCardinality),
     /** What EntryTypes can have this property? */
     appliesTo: array.of(Schema({
@@ -212,6 +212,11 @@ export const PropertySchema = Schema({
      * Properties with importance < 20 are not shown on entry pages by default.
      */
     importance: number,
+    /**
+     * Markdown template for formatting this value in a particular way.
+     * e.g. use `[{value}](https://www.wikidata.org/wiki/{value})` to format a Wikidata Q ID as a link.
+     */
+    displayAs: string.strictOptional(),
     /** Text shown to users when they go to edit this property value. */
     editNoteMD: string.strictOptional(),
     // TODO: hasSlot, hasWeight, hasSource

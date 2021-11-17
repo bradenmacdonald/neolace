@@ -1,9 +1,8 @@
+// deno-lint-ignore-file require-await no-unused-vars
 import { C, VNID, WrappedTransaction, Field } from "neolace/deps/vertex-framework.ts";
-import { Entry } from "neolace/core/entry/Entry.ts";
-import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
-import { EntryType } from "neolace/core/schema/EntryType.ts";
-import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
-import { UseAsPropertyData } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyData.ts";
+// import { Entry } from "neolace/core/entry/Entry.ts";
+// import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
+// import { EntryType } from "neolace/core/schema/EntryType.ts";
 
 
 
@@ -42,6 +41,8 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
     totalCount?: TC,
 }): Promise<EntryPropertyValue[] & (TC extends true ? {totalCount: number} : unknown)> {
 
+    throw new Error("Needs to be re-implemented.");
+    /*
     // Neo4j doesn't allow normal query variables to be used for skip/limit so we have to carefully ensure these values
     // are safe (are just plain numbers) then format them for interpolation in the query string as part of the cypher
     // expression (not as variables)
@@ -159,6 +160,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
     }
 
     return result;
+    */
 }
 
 
@@ -170,6 +172,8 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
  */
  export async function getEntryProperty(entryId: VNID, options: ({propertyId: VNID}|{labelExact: string})&{tx: WrappedTransaction}): Promise<EntryPropertyValue|undefined> {
 
+    throw new Error("Needs to be re-implemented.");
+    /*
     const matchClauseSPV = "propertyId" in options ? C`{id: ${options.propertyId}}` : C`{label: ${options.labelExact}}`;
     const matchClausePE =  "propertyId" in options ? C`{id: ${options.propertyId}}` : C`{name: ${options.labelExact}}`;
 
@@ -244,4 +248,5 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
     }
 
     return result;
+    */
 }

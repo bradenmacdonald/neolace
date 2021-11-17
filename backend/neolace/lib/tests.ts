@@ -81,8 +81,7 @@ if (environment !== "test") {
 }
 
 afterAll(async () => {
-    // Leave the default data in the database in case developers want to make queries and play with it:
-    await graph.resetDBToSnapshot(defaultDataSnapshot);
+    // Leave the data in the database from whatever test ran last, which is helpful for debugging.
     await shutdown();
 })
 

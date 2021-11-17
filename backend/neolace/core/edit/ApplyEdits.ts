@@ -423,9 +423,12 @@ export const ApplyEdits = defineAction({
                             importance: 15,
                             // Property type - note that this cannot be changed once the property is created.
                             type: edit.data.type ?? PropertyType.Value,
+                            // Property cardinality - this also cannot be changed once the property is created.
+                            cardinality: edit.data.cardinality ?? PropertyCardinality.Single,
                             mode: PropertyMode.Optional,
                             standardURL: "",
                             editNoteMD: "",
+                            displayAs: "",
                             default: "",
                         }}
                     `.RETURN({}));
@@ -478,6 +481,7 @@ export const ApplyEdits = defineAction({
                         "default",
                         "standardURL",
                         "importance",
+                        "displayAs",
                         "editNoteMD",
                     ] as const) {
                         if (edit.data[field] !== undefined) {

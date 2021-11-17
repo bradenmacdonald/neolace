@@ -1,5 +1,5 @@
 import { VNID, } from "neolace/deps/vertex-framework.ts";
-import { SiteSchemaData, RelationshipCategory, PropertyType, PropertyMode } from "neolace/deps/neolace-api.ts";
+import { SiteSchemaData, RelationshipCategory, PropertyType, PropertyMode, PropertyCardinality } from "neolace/deps/neolace-api.ts";
 
 // Type helper to ensure that the schema is a valid SiteSchemaData without
 // collapsing the type down to just "SiteSchemaData"
@@ -248,6 +248,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_parentTaxon"),
             name: "Parent taxon",
             type: PropertyType.RelIsA,
+            cardinality: PropertyCardinality.Single,
             mode: PropertyMode.Optional,
             appliesTo: [],
             descriptionMD: `The parent taxon of this entry.`,
@@ -258,6 +259,7 @@ export const schema = ValidateSiteSchema({
             isA: [VNID("_parentTaxon")],  // This is a more specific "parent taxon" property
             name: "Division",
             type: PropertyType.RelIsA,
+            cardinality: PropertyCardinality.Single,
             appliesTo: [{entryType: VNID("_ETCLASS")}],
             valueConstraint: `x.type() = entryType("_ETDIVISION")`,
             mode: PropertyMode.Required,
@@ -269,6 +271,7 @@ export const schema = ValidateSiteSchema({
             isA: [VNID("_parentTaxon")],  // This is a more specific "parent taxon" property
             name: "Class",
             type: PropertyType.RelIsA,
+            cardinality: PropertyCardinality.Single,
             appliesTo: [{entryType: VNID("_ETORDER")}],
             valueConstraint: `x.type() = entryType("_ETCLASS")`,
             mode: PropertyMode.Required,
@@ -280,6 +283,7 @@ export const schema = ValidateSiteSchema({
             isA: [VNID("_parentTaxon")],  // This is a more specific "parent taxon" property
             name: "Order",
             type: PropertyType.RelIsA,
+            cardinality: PropertyCardinality.Single,
             appliesTo: [{entryType: VNID("_ETFAMILY")}],
             valueConstraint: `x.type() = entryType("_ETORDER")`,
             mode: PropertyMode.Required,
@@ -291,6 +295,7 @@ export const schema = ValidateSiteSchema({
             isA: [VNID("_parentTaxon")],  // This is a more specific "parent taxon" property
             name: "Family",
             type: PropertyType.RelIsA,
+            cardinality: PropertyCardinality.Single,
             appliesTo: [{entryType: VNID("_ETGENUS")}],
             valueConstraint: `x.type() = entryType("_ETFAMILY")`,
             mode: PropertyMode.Required,
@@ -302,6 +307,7 @@ export const schema = ValidateSiteSchema({
             isA: [VNID("_parentTaxon")],  // This is a more specific "parent taxon" property
             name: "Genus",
             type: PropertyType.RelIsA,
+            cardinality: PropertyCardinality.Single,
             appliesTo: [{entryType: VNID("_ETSPECIES")}],
             valueConstraint: `x.type() = entryType("_ETGENUS")`,
             mode: PropertyMode.Required,
@@ -312,6 +318,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_divClasses"),
             name: "Classes",
             type: PropertyType.RelOther,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [{entryType: VNID("_ETDIVISION")}],
             mode: PropertyMode.Auto,
             default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
@@ -322,6 +329,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_classOrders"),
             name: "Orders",
             type: PropertyType.RelOther,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [{entryType: VNID("_ETCLASS")}],
             mode: PropertyMode.Auto,
             default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
@@ -332,6 +340,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_orderFamilies"),
             name: "Families",
             type: PropertyType.RelOther,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [{entryType: VNID("_ETORDER")}],
             mode: PropertyMode.Auto,
             default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
@@ -342,6 +351,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_familyGenera"),
             name: "Genera",
             type: PropertyType.RelOther,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [{entryType: VNID("_ETFAMILY")}],
             mode: PropertyMode.Auto,
             default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
@@ -352,6 +362,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_genusSpecies"),
             name: "Species",
             type: PropertyType.RelOther,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [{entryType: VNID("_ETSPECIES"),}],
             mode: PropertyMode.Auto,
             default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
@@ -362,6 +373,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_taxonomy"),
             name: "Taxonomy",
             type: PropertyType.RelOther,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [
                 {entryType: VNID("_ETCLASS")},
                 {entryType: VNID("_ETDIVISION")},
@@ -380,6 +392,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_imgRelTo"),
             name: "Relates to",
             type: PropertyType.RelRelatesTo,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [{entryType: VNID("_ETIMAGE")}],
             valueConstraint: `x.type() in [entryType("_ETCLASS"), entryType("_ETDIVISION"), entryType("_ETFAMILY"), entryType("_ETGENUS"), entryType("_ETORDER"), entryType("_ETPLANTPART"), entryType("_ETSPECIES")]`,
             mode: PropertyMode.Recommended,
@@ -391,6 +404,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_relImages"),
             name: "Related images",
             type: PropertyType.RelOther,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [
                 {entryType: VNID("_ETCLASS"),},
                 {entryType: VNID("_ETDIVISION")},
@@ -410,6 +424,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_hasPart"),
             name: "Has part",
             type: PropertyType.RelHasA,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [
                 {entryType: VNID("_ETCLASS")},
                 {entryType: VNID("_ETDIVISION")},
@@ -428,6 +443,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_partFoundIn"),
             name: "Found in",
             type: PropertyType.RelOther,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [{entryType: VNID("_ETPLANTPART")}],
             mode: PropertyMode.Auto,
             default: `this.andDescendants().reverseProp(prop=[/prop/_hasPart])`,
@@ -439,6 +455,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_partIsAPart"),
             name: "Is a",
             type: PropertyType.RelIsA,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [{entryType: VNID("_ETPLANTPART")}],
             mode: PropertyMode.Recommended,
             descriptionMD: `The more general class of this plant part.`,
@@ -448,6 +465,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_partHasTypes"),
             name: "Has types",
             type: PropertyType.RelOther,
+            cardinality: PropertyCardinality.Multiple,
             appliesTo: [{entryType: VNID("_ETPLANTPART")}],
             mode: PropertyMode.Auto,
             default: `this.reverseProp(prop=[/prop/_partIsAPart])`,

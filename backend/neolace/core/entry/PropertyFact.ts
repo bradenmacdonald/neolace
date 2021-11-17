@@ -64,7 +64,7 @@ export class PropertyFact extends VNodeType {
          *    re-using IDs in different places - each relationship ID can only be referenced by at most one
          *    PropertyFact.
          */
-        directRelNeo4jId: Field.BigInt,
+        directRelNeo4jId: Field.NullOr.BigInt,
         // In future, we may want to be able to override "inherits" or "importance", which come from the property entry
     };
 

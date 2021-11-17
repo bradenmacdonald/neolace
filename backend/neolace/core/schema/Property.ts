@@ -51,6 +51,11 @@ export class Property extends VNodeType {
          * Properties with importance < 20 are not shown on entry pages by default.
          */
         importance: Field.Int.Check(check.number.min(0).max(99)),
+        /**
+         * Markdown template for formatting this value in a particular way.
+         * e.g. use `[{value}](https://www.wikidata.org/wiki/{value})` to format a Wikidata Q ID as a link.
+         */
+        displayAs: Field.String,
         /** Text shown to users when they go to edit this property value. */
         editNoteMD: Field.String,
     };
