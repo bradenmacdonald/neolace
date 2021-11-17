@@ -68,22 +68,18 @@ export class Entry extends VNodeType {
         IS_A: {
             to: [this],
             cardinality: VNodeType.Rel.ToMany,
-            properties: { relFactId: Field.VNID, },
         },
         HAS_A: {
             to: [this],
             cardinality: VNodeType.Rel.ToMany,
-            properties: { relFactId: Field.VNID, },
         },
         RELATES_TO: {
             to: [this],
             cardinality: VNodeType.Rel.ToMany,
-            properties: { relFactId: Field.VNID, },
         },
         OTHER_REL: {
             to: [this],
             cardinality: VNodeType.Rel.ToMany,
-            properties: { relFactId: Field.VNID, },
         },
     });
 
@@ -121,16 +117,15 @@ export class Entry extends VNodeType {
             throw new ValidationError(`Invalid friendlyId; expected it to start with ${friendlyIdPrefix}`);
         }
 
-        // Validate that all IS_A relationships have corresponding RelationshipFacts
-        // RelationshipFact validates the opposite, that all IS_A RelationshipFacts have corresponding IS_A relationships
+        // Validate that all IS_A/HAS_A/RELATES_TO/OTHER_REL relationships have corresponding PropertyFacts
         const isACheck = await tx.query(C`
-            MATCH (entry:${this})-[rel:${this.rel.IS_A}]->(otherEntry:VNode)
-            WITH rel.relFactId AS expectedId
-            OPTIONAL MATCH (entry:${this})-[:${this.rel.REL_FACT}]->(relFact:VNode {id: expectedId})
-            RETURN expectedId, relFact.id AS actualId
+            MATCH (entry:${this})-[rel:${this.rel.IS_A}|${this.rel.HAS_A}|${this.rel.RELATES_TO}|${this.rel.OTHER_REL}]->(otherEntry:VNode)
+            WITH id(rel) AS expectedId
+            OPTIONAL MATCH (entry:${this})-[:${this.rel.PROP_FACT}]->(relFact:${PropertyFact} {directRelNeo4jId: expectedId})
+            RETURN expectedId, relFact.directRelNeo4jId AS actualId
         `.givesShape({expectedId: Field.VNID, actualId: Field.VNID}));
         if (!isACheck.every(row => row.actualId === row.expectedId)) {
-            throw new ValidationError(`Entry has a stranded IS_A relationship without a corresponding RelationshipFact`);
+            throw new ValidationError(`Entry has a stranded direct relationship without a corresponding PropertyFact`);
         }
     }
 

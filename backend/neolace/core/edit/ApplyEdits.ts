@@ -174,7 +174,7 @@ export const ApplyEdits = defineAction({
                             throw new Error(`Relationship property values must be of the format [[/entry/entry-id]]`);
                         }
                         // There is a relationship FROM the current entry TO the entry with this id:
-                        const toEntryKey = valueExpression.slice(9, -3);
+                        const toEntryKey = valueExpression.slice(9, -2);
                         const toEntryData = await tx.queryOne(C`
                             MATCH (site:${Site} {id: ${siteId}})
                             MATCH (entry:${Entry} {id: ${toEntryKey}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
@@ -255,7 +255,7 @@ export const ApplyEdits = defineAction({
                             MATCH (entry:${Entry} {id: ${edit.data.entry}})
                             MATCH (toEntry:${Entry} {id: ${toEntryId}})
                             MATCH (pf:${PropertyFact} {id: ${propFactId}})
-                            OPTIONAL MATCH (entry)-[rel]->(:${Entry}) WHERE id(rel) = pf.directRelNeo4jId AND end(rel) <> toEntry
+                            OPTIONAL MATCH (entry)-[rel]->(:${Entry}) WHERE id(rel) = pf.directRelNeo4jId AND endNode(rel) <> toEntry
                             DELETE rel
                             WITH entry, pf, toEntry
                             MERGE (entry)-[rel:${directRelType}]->(toEntry)

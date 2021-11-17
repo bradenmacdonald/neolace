@@ -155,7 +155,7 @@ export class PropertyFact extends VNodeType {
                 throw new ValidationError(`Relationship property values must be of the format [[/entry/entry-id]]`);
             }
             // There is a relationship FROM the current entry TO the entry with this id:
-            const toEntryKey = valueExpression.slice(9, -3);
+            const toEntryKey = valueExpression.slice(9, -2);
             // First, validate that this value is pointing to a real entry on the same site.
             const toEntry = await tx.queryOne(C`
                 MATCH (e:${Entry}), e HAS KEY ${toEntryKey}

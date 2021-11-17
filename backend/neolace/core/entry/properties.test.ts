@@ -1,5 +1,5 @@
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
-// import { EditList } from "neolace/deps/neolace-api.ts";
+import { PropertyCardinality, PropertyType } from "neolace/deps/neolace-api.ts";
 
 import { group, test, resetDBToBlankSnapshot, assertEquals, beforeAll } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -29,7 +29,7 @@ group(import.meta, () => {
             ]}));
         });
 
-        test("Define a new property and set it on an entry", async () => {
+        test("Define a new value property and set it on an entry", async () => {
             const entryId = VNID();
             const propertyId = VNID();
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
@@ -54,6 +54,50 @@ group(import.meta, () => {
             assertEquals(result[0].fact.valueExpression, `"the value"`);
             assertEquals(result[0].fact.note, "");
             assertEquals(result[0].fact.directRelNeo4jId, null);  // Only set for relationship properties
+        });
+
+        test("Define a new relationship property and set it on an entry", async () => {
+            const entryA = VNID(), entryB = VNID();
+            const propertyId = VNID();
+            await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                {code: "CreateEntry", data: {id: entryA, name: "Entry A", type: entryType, description: "Testing", friendlyId: "te2a"}},
+                {code: "CreateEntry", data: {id: entryB, name: "Entry B", type: entryType, description: "Testing", friendlyId: "te2b"}},
+                {code: "CreateProperty", data: {
+                    id: propertyId,
+                    name: "Is A",
+                    type: PropertyType.RelIsA,
+                    cardinality: PropertyCardinality.Unique,
+                    appliesTo: [{entryType}],
+                }},
+            ]}));
+            // Say that (entry B) IS A (entry a)
+            const valueExpression = `[[/entry/${entryA}]]`;
+            const note = "B is an A";
+            await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                {code: "UpdatePropertyValue", data: {
+                    entry: entryB,
+                    property: propertyId,
+                    valueExpression,
+                    note,
+                }},
+            ]}));
+            // Now just read the value from the graph, so we're only testing the write functions, not the read ones:
+            const result = await graph.read(tx => tx.query(C`
+                MATCH (entry:${Entry} {id: ${entryB}})
+                MATCH (prop:${Property} {id: ${propertyId}})
+                MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(fact:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
+            `.RETURN({fact: Field.VNode(PropertyFact)})));
+            assertEquals(result.length, 1);
+            assertEquals(result[0].fact.valueExpression, valueExpression);
+            assertEquals(result[0].fact.note, note);
+            // Now check the direct relationship:
+            const result2 = await graph.read(tx => tx.query(C`
+                MATCH (a:${Entry} {id: ${entryA}})
+                MATCH (b:${Entry} {id: ${entryB}})
+                MATCH (b)-[rel:${Entry.rel.IS_A}]->(a)
+            `.RETURN({rel: Field.Relationship})));
+            assertEquals(result2.length, 1);
+            assertEquals(result2[0].rel.identity, result[0].fact.directRelNeo4jId);
         });
     });
 
