@@ -63,16 +63,28 @@ export class Entry extends VNodeType {
             to: [EntryFeatureData],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
-        // If this Entry has an IS_A relationship to other entries (via RelationshipFact), it will also have a direct
-        // IS_A relationship to the Entry, which makes computing ancestors of an Entry much simpler.
-        // i.e. If there is (this:Entry)-[:REL_FACT]->(:RelationshipFact {category: "IS_A"})-[:REL_FACT]->(parent:Entry)
-        //      then there will also be a (this)-[:IS_A]->(parent) relationship
+        // If this Entry has an explicit relationship to other entries (via PropertyFact), it will also have a direct
+        // IS_A/HAS_A/etc. relationship to the Entry on the Neo4j graph, which makes computing ancestors of an Entry
+        // much simpler, and makes working with the graph easier.
         IS_A: {
             to: [this],
             cardinality: VNodeType.Rel.ToMany,
-            properties: {
-                relFactId: Field.VNID,
-            },
+            properties: { relFactId: Field.VNID, },
+        },
+        HAS_A: {
+            to: [this],
+            cardinality: VNodeType.Rel.ToMany,
+            properties: { relFactId: Field.VNID, },
+        },
+        RELATES_TO: {
+            to: [this],
+            cardinality: VNodeType.Rel.ToMany,
+            properties: { relFactId: Field.VNID, },
+        },
+        OTHER_REL: {
+            to: [this],
+            cardinality: VNodeType.Rel.ToMany,
+            properties: { relFactId: Field.VNID, },
         },
     });
 

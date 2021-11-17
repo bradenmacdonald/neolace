@@ -152,14 +152,38 @@ export enum PropertyMode {
     Auto = "AUTO",
 }
 
+export enum PropertyCardinality {
+    /**
+     * This property holds a single value (or none, if not required).
+     * If it's a relationship, it can only point to one entry.
+     */
+    Single = "1",
+    /**
+     * This property can have different values, but they each must be unique.
+     *
+     * This can be used for relationships, or also to express disagreement or uncertainty about other values like
+     * empirical measurements (e.g. bob says the mass is 5.128 but alice says it's 5.208)
+     */
+    Unique = "U",
+    /**
+     * This property can have multiple values, and they don't have to be unique.
+     *
+     * This can be used for example to express that a widget has different parts, each of which is the same but is
+     * used for a different purpose.
+     */
+    Multiple = "*",
+}
+
 export const PropertySchema = Schema({
     id: vnidString,
     /** Name of this property, displayed as the label when viewing an entry with this property value */
     name: string,
     /** Description of this property (markdown) */
     descriptionMD: string,
-    /** What type of property is this - a relationship, or some other simple property? */
+    /** What type of property is this - a relationship, or some other simple property? (Cannot be changed) */
     type: Schema.enum(PropertyType),
+    /** Does this property allow multiple values? (Cannot be changed) */
+    cardinality: Schema.enum(PropertyCardinality),
     /** What EntryTypes can have this property? */
     appliesTo: array.of(Schema({
         entryType: vnidString,

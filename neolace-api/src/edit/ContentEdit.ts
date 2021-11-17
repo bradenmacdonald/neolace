@@ -96,16 +96,26 @@ export const UpdatePropertyValue = ContentEditType({
     dataSchema: Schema({
         // The Entry where we are creating/updating/deleting this PropertyFact
         entry: vnidString,
-        // The Property in question. Must be the ID of an Entry with ContentType=Property and the schema must allow
-        // HAS_PROPERTY relationships from the entry type to that property entry type.
+        // The Property in question.
         property: vnidString,
-        /** Value expression: a lookup expression giving the value, or an empty string to delete this property */
+        /**
+         * A property fact ID must be omitted for properties that only allow a single value or only unique values.
+         * A property fact ID is required for properties that allow multiple values (including multiple identical
+         * values).
+         *
+         * In the case of single-cardinality or unique-cardinality properties, we generally don't want to specify the
+         * property fact ID here, to reduce the chance of conflicts in different Drafts that are editing the same entry.
+         */
+        propertyFactId: vnidString.strictOptional(),
+        /** Value expression: a lookup expression giving the value */
         valueExpression: string,
         /** An optional markdown note clarifying details of the property value */
         note: string,
     }),
     describe: (data) => `Updated \`Entry ${data.property}\` property on \`Entry ${data.entry}\``,
 });
+
+// TODO: Delete property value
 
 export const _allContentEditTypes = {
     CreateEntry,

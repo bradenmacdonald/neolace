@@ -251,7 +251,6 @@ export const UpdateProperty = SchemaEditType({
         // For these properties, use 'undefined' to mean 'no change':
         name: string.strictOptional(),
         descriptionMD: string.strictOptional(),
-        type: Schema.enum(PropertyType).strictOptional(),
         appliesTo: array.of(Schema({ entryType: vnidString })).strictOptional(),
         mode: Schema.enum(PropertyMode).strictOptional(),
         isA: array.of(vnidString).strictOptional(),
@@ -280,7 +279,7 @@ export const UpdateProperty = SchemaEditType({
             newProp.appliesTo = data.appliesTo;
         }
 
-        for (const field of ["name", "descriptionMD", "type", "mode", "isA", "importance"] as const) {
+        for (const field of ["name", "descriptionMD", "mode", "isA", "importance"] as const) {
             if (data[field] !== undefined) {
                 (newProp as any)[field] = data[field];
             }
@@ -305,12 +304,26 @@ export const UpdateProperty = SchemaEditType({
     describe: (data) => `Updated \`Property ${data.id}\``,
 });
 
-
-
 export const CreateProperty = SchemaEditType({
     changeType: EditChangeType.Schema,
     code: "CreateProperty",
-    dataSchema: UpdateProperty.dataSchema,
+    // Schema.merge() isn't working so this is largely duplicated from UpdateProperty :/
+    dataSchema: Schema({
+        id: vnidString,
+        type: Schema.enum(PropertyType).strictOptional(),
+        // For these properties, use 'undefined' to mean 'no change':
+        name: string.strictOptional(),
+        descriptionMD: string.strictOptional(),
+        appliesTo: array.of(Schema({ entryType: vnidString })).strictOptional(),
+        mode: Schema.enum(PropertyMode).strictOptional(),
+        isA: array.of(vnidString).strictOptional(),
+        importance: number.strictOptional(),
+        // For these properties, use 'undefined' to mean 'no change', and an empty string to mean "set to no value"
+        valueConstraint: string.strictOptional(),
+        default: string.strictOptional(),
+        standardURL: string.strictOptional(),
+        editNoteMD: string.strictOptional(),
+    }),
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
             ...currentSchema,
@@ -319,7 +332,7 @@ export const CreateProperty = SchemaEditType({
                 appliesTo: [],
                 descriptionMD: "",
                 name: "New Property",
-                type: PropertyType.Value,
+                type: data.type ?? PropertyType.Value,
                 mode: PropertyMode.Optional,
                 // Default importance is 15
                 importance: 15,

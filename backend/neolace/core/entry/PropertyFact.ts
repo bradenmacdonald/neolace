@@ -6,60 +6,93 @@ import {
     WrappedTransaction,
     VirtualPropType,
     ValidationError,
+    EmptyResultError,
+    getRelationshipType,
 } from "neolace/deps/vertex-framework.ts";
+import { PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
+import { Site } from "neolace/core/Site.ts";
 import { EntryType } from "../schema/EntryType.ts";
+import { Property } from "../schema/Property.ts";
 import { Entry } from "./Entry.ts";
-import { UseAsPropertyEnabled } from "./features/UseAsProperty/UseAsPropertyEnabled.ts";
 
+
+export function directRelTypeForPropertyType(propType: PropertyType) {
+    return (
+        propType === PropertyType.RelIsA ? Entry.rel.IS_A :
+        propType === PropertyType.RelHasA ? Entry.rel.HAS_A :
+        propType === PropertyType.RelRelatesTo ? Entry.rel.RELATES_TO :
+        propType === PropertyType.RelOther ? Entry.rel.OTHER_REL :
+        null
+    );
+}
 
 /**
- * A property fact records a value for a property of an Entry (or all Entries of a particular EntryType)
+ * A property fact records a value for a property of an Entry.
  * 
- * e.g. if Bob (Entry of EntryType "Person") has a Birth Date (Entry of EntryType "PersonProperty", Category Property)
- *      of "1990-02-03" (property value), then a Property Fact is what ties those three things (Entry, Property, Value)
- *      together.
+ * e.g. if Bob (Entry of EntryType "Person") has a Birth Date (Property) of "1990-02-03" (property value), then a
+ *      Property Fact is what ties those three things (Entry, Property, Value) together.
  *
- * The value is always expressed as a lookup expression, and so can be either a literal value or a computed value.
+ * The value is usually expressed as a lookup expression, and so can be either a literal value or a computed value.
+ * The exception is when the property is defining a relationship - in that case, the value is a relationship in the
+ * graph database, not a lookup expression.
  */
 export class PropertyFact extends VNodeType {
     static label = "PropertyFact";
     static properties = {
         ...VNodeType.properties,
-        /** A Lookup expression (usually a literal expression) defining the value of this property value, e.g. "5" */
+        /**
+         * A Lookup expression (usually a literal expression) defining the value of this property value, e.g. "5"
+         * 
+         */
         valueExpression: Field.String,
 
         /** An optional MDT (Markdown) string explaining something about this property value */
         note: Field.String,
-        
+
+        /**
+         * If this is a relationship (from an Entry, to another Entry), then we actually create a direct relationship
+         * between the entries (as well as this PropertyFact), and we store the Neo4j ID of that relationship here.
+         * 
+         * It is generally recommended to
+         * [avoid using Neo4j IDs](https://neo4j.com/docs/cypher-manual/current/clauses/match/#match-node-by-id),
+         * but it is reasonable to do it in this case because:
+         * 1. We cannot guarantee any other identifier for relationships is unique (there are no unique constraints) on
+         *    relationships in Neo4j.
+         * 2. Looking up relationships by ID is presumably much more performant than looking up by a user-defined ID
+         *    that's neither indexed nor unique.
+         * 3. We place a unique index on this "directRelNeo4jId" column, so we are somewhat protected against bugs from
+         *    re-using IDs in different places - each relationship ID can only be referenced by at most one
+         *    PropertyFact.
+         */
+        directRelNeo4jId: Field.BigInt,
         // In future, we may want to be able to override "inherits" or "importance", which come from the property entry
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo(() => ({
         // In addition to the PROP_FACT relationship from Entry/EntryType to this, there is this relationship _from_ this:
-        PROP_ENTRY: {
-            // This points to the Entry with Category "Property", e.g. "Birth Date" (Entry)
-            to: [Entry],
+        FOR_PROP: {
+            to: [Property],
             cardinality: VNodeType.Rel.ToOneRequired,
         },
+        // /**
+        //  * Where this fact comes from / what entry "owns" this fact.
+        //  * e.g. a DataTable Entry may be the source of hundreds of facts about other entries.
+        //  * Or in the future, a source might be natural language processing of article text.
+        //  */
+        // HAS_FACT_SOURCE: { to: [Entry], cardinality: VNodeType.Rel.ToOneRequired, },
     }));
 
     static virtualProperties = this.hasVirtualProperties(() => ({
-        // Either forEntry or forEntryType is set, but not both.
-        forEntry: {
+        entry: {
             type: VirtualPropType.OneRelationship,
             query: C`(@this)<-[:PROP_FACT]-(@target:${Entry})`,
             target: Entry,
         },
-        forEntryType: {
-            type: VirtualPropType.OneRelationship,
-            query: C`(@this)<-[:PROP_FACT]-(@target:${EntryType})`,
-            target: EntryType,
-        },
         // Property is always set:
-        propertyEntry: {
+        property: {
             type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${this.rel.PROP_ENTRY}]->(@target:${Entry})`,
-            target: Entry,
+            query: C`(@this)-[:${this.rel.FOR_PROP}]->(@target:${Property})`,
+            target: Property,
         },
     }));
 
@@ -70,62 +103,85 @@ export class PropertyFact extends VNodeType {
     static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
         // Validate:
         const data = await tx.pullOne(PropertyFact, pf => pf
-            .forEntry(fe => fe.id.type(et => et.id.site(s => s.id)))
-            .forEntryType(et => et.id.site(s => s.id))
-            .propertyEntry(p => p.id.type(et => et.id.site(s => s.id))),
-            {key: dbObject.id}
+            .entry(e => e.id.type(et => et.id.site(s => s.id)))
+            .property(p => p.id.name.type.mode.site(s => s.id)),
+            { key: dbObject.id, }
         );
+        const property = data.property;
+        if (property === null) { throw new Error("Internal error - property unexpectedly null."); }
 
-        // Validate that "property" entry has the property feature enabled
-        const propertyEntry = data.propertyEntry;
-        if (propertyEntry === null) { throw new Error("Missing property"); /* Should be caught by Vertex by TypeScript doesn't know that */ }
-
-        const siteId = propertyEntry.type?.site?.id;
+        const siteId = data.entry?.type?.site?.id;
         if (siteId === null) { throw new Error(`PropertyFact: siteId unexpectedly null`); }
 
-        // A PropertyFact is attached to either an Entry or an EntryType, but never both:
-        if (data.forEntry !== null) {
-            // This PropertyFact is attached to an Entry
-            if (data.forEntryType !== null) {
-                throw new ValidationError("A PropertyFact must be attached to either an Entry or an EntryType");
-            }
-            if (data.forEntry.type?.site?.id !== siteId) {
-                throw new ValidationError("PropertyFact: site mismatch - the entry's site doesn't match the property's");
-            }
-
-            // Validate this this type of entry can be used with this type of property
-            await tx.queryOne(C`
-                MATCH (e:${EntryType} {id: ${propertyEntry.type!.id}})-[:${EntryType.rel.HAS_FEATURE}]->(propFeatureConfig:${UseAsPropertyEnabled})
-                MATCH (propFeatureConfig)-[:${UseAsPropertyEnabled.rel.APPLIES_TO}]->(p:${EntryType} {id: ${data.forEntry.type!.id}})
-            `.RETURN({}));
-
-            // Validate that this property is unique
-            const sameProperties = await tx.query(C`
-                MATCH (e:${Entry} {id: ${data.forEntry.id}})-[:${Entry.rel.PROP_FACT}]->(pf:${this})-[:${this.rel.PROP_ENTRY}]->(p:${Entry} {id: ${propertyEntry.id}})
-            `.RETURN({}));
-            if (sameProperties.length !== 1) {
-                throw new ValidationError("Multiple PropertyFacts exist for the same entry and property.");
-            }
-        } else {
-            throw new Error("Attaching PropertyFacts to an EntryType is not yet supported.")
-            /*
-            // This PropertyFact is attached to an EntryType and applies to all entries of that type
-            if (data.forEntryType === null || data.forEntry !== null) {
-                throw new ValidationError("A PropertyFact must be attached to either an Entry or an EntryType, and not both.");
-            }
-            if (data.forEntryType.site?.id !== siteId) {
-                throw new ValidationError("PropertyFact: site mismatch - the entry's site doesn't match the property's");
-            }
-
-            // Validate that this property is unique
-            const sameProperties = await tx.query(C`
-                MATCH (e:${EntryType} {id: ${data.forEntryType.id}})-[:${Entry.rel.PROP_FACT}]->(pf:${this})-[:${this.rel.PROP_ENTRY}]->(p:${Entry} {id: ${propertyEntry.id}})
-            `.RETURN({}));
-            if (sameProperties.length !== 1) {
-                throw new ValidationError("Multiple PropertyFacts exist for the same EntryType and property.");
-            }*/
+        if (property.site?.id !== siteId) {
+            throw new Error(`PropertyFact: property and entry are from different sites.`);
         }
 
-        // TODO? Validate that the value is of the correct type, or can be casted to it.
+        // Validate that this type of property can be used with this type of entry
+        try {
+            await tx.queryOne(C`
+                MATCH (prop:${Property} {id: ${property.id}})
+                MATCH (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(et:${EntryType} {id: ${data.entry?.type?.id}})
+            `.RETURN({}));
+        } catch (err) {
+            if (err instanceof EmptyResultError) {
+                throw new ValidationError("That Property cannot be applied to an Entry of that Entry Type.");
+            } else {
+                throw err;
+            }
+        }
+
+        // If property mode is auto, PropertyFacts are not allowed - the property is instead computed automatically.
+        if (property.mode === PropertyMode.Auto) {
+            throw new ValidationError(
+                `The ${property.name} property is an Automatic property so a value cannot be set explicitly.`
+            );
+        }
+
+        // TODO: validate uniqueness? (if required/enabled for the entrytype/property)
+
+        
+        // Additional validation based on the property type.
+        const valueExpression = dbObject.valueExpression;
+        if (property.type === PropertyType.Value) {
+            // This property fact can have any value type.
+            // TODO: Support constraints - validate that the value is of the correct type, or can be casted to it.
+        } else {
+            // This is an explicit IS_A, HAS_A, or RELATES_TO, or OTHER relationship
+            // (and at this point we know it's not an "Auto" mode property)
+
+            // We require the value (lookup expression) to be an entry literal, e.g. [[/entry/...]]
+            if (!valueExpression.startsWith(`[[/entry/`) || !valueExpression.endsWith(`]]`)) {
+                throw new ValidationError(`Relationship property values must be of the format [[/entry/entry-id]]`);
+            }
+            // There is a relationship FROM the current entry TO the entry with this id:
+            const toEntryKey = valueExpression.slice(9, -3);
+            // First, validate that this value is pointing to a real entry on the same site.
+            const toEntry = await tx.queryOne(C`
+                MATCH (e:${Entry}), e HAS KEY ${toEntryKey}
+                MATCH (e)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+            `.RETURN({"e.id": Field.VNID}));
+            const toEntryId = toEntry["e.id"];
+
+            // For relationship properties, we also need a direct Entry-[:REL_TYPE]->Entry relationship created on the
+            // graph, which makes ancestor lookups much more efficient, and also makes generally working with the graph
+            // directly much nicer.
+            const explicitRelType = directRelTypeForPropertyType(property.type as PropertyType);
+            if (explicitRelType === null) {
+                throw new Error("Internal error - unexpected property type");
+            }
+            const directRelCheck = await tx.query(C`
+                MATCH (entry:${Entry} {id: ${data.entry?.id}})
+                MATCH (entry)-[directRel:${explicitRelType}]->(toEntry:${Entry})
+                WHERE id(directRel) = ${dbObject.directRelNeo4jId}
+            `.RETURN({"toEntry.id": Field.VNID}));
+            if (directRelCheck.length === 0) {
+                throw new ValidationError(
+                    `PropertyFact ${dbObject.id} is missing the direct (Entry)-[${getRelationshipType(explicitRelType)}]->(Entry) relationship.`
+                );
+            } else if (directRelCheck[0]["toEntry.id"] !== toEntryId) {
+                throw new ValidationError(`PropertyFact ${dbObject.id} has a direct relationship pointing to the wrong entry.`);
+            }
+        }
     }
 }

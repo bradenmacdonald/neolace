@@ -17,15 +17,15 @@ import {
     PropertyType,
     PropertyMode,
     UpdateProperty,
+    PropertyCardinality,
 } from "neolace/deps/neolace-api.ts";
 import { C, defineAction, Field, VNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { Site } from "../Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
-import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
+import { directRelTypeForPropertyType, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
-import { UseAsPropertyEnabled } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyEnabled.ts";
 import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 import { features } from "neolace/core/entry/features/all-features.ts";
 import { Property } from "neolace/core/schema/Property.ts";
@@ -149,44 +149,123 @@ export const ApplyEdits = defineAction({
                     break;
                 }
 
-                case UpdatePropertyValue.code: {  // Create, Update, or Delete a property value
-
-                    if (edit.data.valueExpression) {
-                        // Create or update a property fact.
-                        // This will ensure that each entry only ever has a single PropertyFact for a given property.
-                        const result = await tx.queryOne(C`
-                            MATCH (site:${Site} {id: ${siteId}})
-                            MATCH (entry:${Entry} {id: ${edit.data.entry}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-                            MATCH (property:${Entry} {id: ${edit.data.property}})-[:${Entry.rel.IS_OF_TYPE}]->(propertyType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site),
-                                  // Make sure the "property" entry type has the "use as property" feature enabled and that it can be applied to this entry type:
-                                  (propertyType)-[:${EntryType.rel.HAS_FEATURE}]->(useAsPropFeature:${UseAsPropertyEnabled})-[:${UseAsPropertyEnabled.rel.APPLIES_TO}]->(entryType)
-
-                            MERGE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(property)
-                            ON CREATE SET pf.id = ${VNID()}
-                            SET pf.valueExpression = ${edit.data.valueExpression}
-                            SET pf.note = ${edit.data.note}
-                        `.RETURN({"pf.id": Field.VNID}));
-
-                        modifiedNodes.add(edit.data.entry);
-                        modifiedNodes.add(result["pf.id"]);
-                    } else {
-                        // We are deleting a property fact, if it is set
-                        const result = await tx.query(C`
-                            MATCH (site:${Site} {id: ${siteId}})
-                            MATCH (entry:${Entry} {id: ${edit.data.entry}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-                            MATCH (property:${Entry} {id: ${edit.data.property}})-[:${Entry.rel.IS_OF_TYPE}]->(propertyType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-
-                            MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(property)
-                            SET pf:DeletedVNode
-                            REMOVE pf:VNode
-                        `.RETURN({"pf.id": Field.VNID}));
-
-                        if (result.length > 0) {
-                            modifiedNodes.add(result[0]["pf.id"]);
+                case UpdatePropertyValue.code: {  // Create or Update a property value
+                    const valueExpression = edit.data.valueExpression;
+                    // Validate the entry ID, property ID, and ensure they're part of the current site.
+                    const baseData = await tx.queryOne(C`
+                        MATCH (site:${Site} {id: ${siteId}})
+                        MATCH (entry:${Entry} {id: ${edit.data.entry}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+                        MATCH (property:${Property} {id: ${edit.data.property}})-[:${Property.rel.FOR_SITE}]->(site)
+                        // Ensure that the property (still) applies to this entry type:
+                        MATCH (property)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+                    `.RETURN({
+                        "entryType.id": Field.VNID,
+                        "property.type": Field.String,
+                        "property.cardinality": Field.String,
+                    }));
+                    const propType = baseData["property.type"] as PropertyType;
+                    const propCardinality = baseData["property.cardinality"] as PropertyCardinality;
+                    const directRelType = directRelTypeForPropertyType(propType);  // If this is a relationship property, there is a relationship of this type directly between two entries
+                    let toEntryId: VNID|undefined = undefined;
+                    if (directRelType !== null) {
+                        // This is a relationship property, verify that the Entry it will be pointing to exists and is
+                        // part of the same site.
+                        if (!valueExpression.startsWith(`[[/entry/`) || !valueExpression.endsWith(`]]`)) {
+                            throw new Error(`Relationship property values must be of the format [[/entry/entry-id]]`);
                         }
+                        // There is a relationship FROM the current entry TO the entry with this id:
+                        const toEntryKey = valueExpression.slice(9, -3);
+                        const toEntryData = await tx.queryOne(C`
+                            MATCH (site:${Site} {id: ${siteId}})
+                            MATCH (entry:${Entry} {id: ${toEntryKey}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+                        `.RETURN({"entry.id": Field.VNID}));
+                        toEntryId = toEntryData["entry.id"];
                     }
-                    // We are modifying the PROP_FACT relationship from the entry, so the entry is counted as modified too:
+
+                    const updatedPropertyFactFields = {
+                        valueExpression: edit.data.valueExpression,
+                        note: edit.data.note,
+                    };
+
+                    let propFactId: VNID;
+                    if (propCardinality === PropertyCardinality.Single) {
+                        // This property type only allows a single value.
+                        if (edit.data.propertyFactId !== undefined) {
+                            throw new Error("It is not allowed to specify a propertyFactId when updating a single-cardinality property.");
+                            // It's not allowed because it increases the chance of conflicts; if two different drafts
+                            // update the same property, we just want the last one to "win", not an error to occur.
+                        }
+
+                        // Create or update the property fact.
+                        const result = await tx.queryOne(C`
+                            MATCH (entry:${Entry} {id: ${edit.data.entry}})
+                            MATCH (property:${Property} {id: ${edit.data.property}})
+
+                            MERGE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
+                            ON CREATE SET pf.id = ${VNID()}
+                            SET pf += ${updatedPropertyFactFields}
+                        `.RETURN({"pf.id": Field.VNID}));
+                        propFactId = result["pf.id"];
+                    } else if (propCardinality === PropertyCardinality.Unique) {
+                        // This property type only allows unique values
+                        if (edit.data.propertyFactId !== undefined) {
+                            throw new Error("It is not allowed to specify a propertyFactId when updating a property that requires unique values.");
+                            // It's not allowed because it increases the chance of conflicts; if two different drafts
+                            // update the same value, we just want the last one to "win", not an error to occur.
+                        }
+
+                        // Create or update the property fact.
+                        const result = await tx.queryOne(C`
+                            MATCH (entry:${Entry} {id: ${edit.data.entry}})
+                            MATCH (property:${Property} {id: ${edit.data.property}})
+
+                            MERGE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {
+                                valueExpression: ${edit.data.valueExpression}
+                            })-[:${PropertyFact.rel.FOR_PROP}]->(property)
+                            ON CREATE SET pf.id = ${VNID()}
+                            SET pf += ${updatedPropertyFactFields}
+                        `.RETURN({"pf.id": Field.VNID}));
+                        propFactId = result["pf.id"];
+                    } else if (propCardinality === PropertyCardinality.Multiple) {
+                        // This property type only allows a single value.
+                        if (edit.data.propertyFactId === undefined) {
+                            throw new Error("It is required to specify a propertyFactId when updating a property value for a property that allows multiple values.");
+                        }
+
+                        // Create or update the property fact.
+                        const result = await tx.queryOne(C`
+                            MATCH (entry:${Entry} {id: ${edit.data.entry}})
+                            MATCH (property:${Property} {id: ${edit.data.property}})
+
+                            MERGE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {
+                                id: ${edit.data.propertyFactId}
+                            })-[:${PropertyFact.rel.FOR_PROP}]->(property)
+                            SET pf += ${updatedPropertyFactFields}
+                        `.RETURN({"pf.id": Field.VNID}));
+                        propFactId = result["pf.id"];
+                    } else {
+                        throw new Error(`Unexpected property cardinality value.`);
+                    }
+
+
+                    if (directRelType !== null) {
+                        // If this is a relationship property, we also need to create/update a direct
+                        // (Entry)-[rel]->(Entry) relationship on the graph.
+                        await tx.query(C`
+                            MATCH (entry:${Entry} {id: ${edit.data.entry}})
+                            MATCH (toEntry:${Entry} {id: ${toEntryId}})
+                            MATCH (pf:${PropertyFact} {id: ${propFactId}})
+                            OPTIONAL MATCH (entry)-[rel]->(:${Entry}) WHERE id(rel) = pf.directRelNeo4jId AND end(rel) <> toEntry
+                            DELETE rel
+                            WITH entry, pf, toEntry
+                            MERGE (entry)-[rel:${directRelType}]->(toEntry)
+                            SET pf.directRelNeo4jId = id(rel)
+
+                        `.RETURN({"pf.directRelNeo4jId": Field.BigInt}));
+                    }
+                    // Changing a property value always counts as modifying the entry:
                     modifiedNodes.add(edit.data.entry);
+                    modifiedNodes.add(propFactId);
                     break;
                 }
 
@@ -342,7 +421,8 @@ export const ApplyEdits = defineAction({
                             name: "New Property",
                             descriptionMD: "",
                             importance: 15,
-                            type: PropertyType.Value,
+                            // Property type - note that this cannot be changed once the property is created.
+                            type: edit.data.type ?? PropertyType.Value,
                             mode: PropertyMode.Optional,
                             standardURL: "",
                             editNoteMD: "",
@@ -393,7 +473,6 @@ export const ApplyEdits = defineAction({
                     for (const field of [
                         "name",
                         "descriptionMD",
-                        "type",
                         "mode",
                         "valueConstraint",
                         "default",
