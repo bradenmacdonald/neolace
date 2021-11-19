@@ -309,16 +309,18 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                                     ***Pinus ponderosa*** (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.
                                 `.trim()),
                             }},
-                            {code: "UpdatePropertyValue", data: {
+                            {code: "AddPropertyValue", data: {
                                 entry: data.entries.ponderosaPine.id,
                                 property: data.entries.propertyScientificName.id,
                                 valueExpression: `"Pinus ponderosa"`,
+                                propertyFactId: VNID(),
                                 note: "",
                             }},
-                            {code: "UpdatePropertyValue", data: {
+                            {code: "AddPropertyValue", data: {
                                 entry: data.entries.ponderosaPine.id,
                                 property: data.entries.propertyWikidataItemId.id,
                                 valueExpression: `"Q460523"`,
+                                propertyFactId: VNID(),
                                 note: "",
                             }},
                             {code: "CreateRelationshipFact", data: {

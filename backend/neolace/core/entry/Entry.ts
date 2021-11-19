@@ -63,21 +63,13 @@ export class Entry extends VNodeType {
             cardinality: VNodeType.Rel.ToManyUnique,
         },
         // If this Entry has an explicit relationship to other entries (via PropertyFact), it will also have a direct
-        // IS_A/HAS_A/etc. relationship to the Entry on the Neo4j graph, which makes computing ancestors of an Entry
+        // IS_A/RELATES_TO relationship to the Entry on the Neo4j graph, which makes computing ancestors of an Entry
         // much simpler, and makes working with the graph easier.
         IS_A: {
             to: [this],
             cardinality: VNodeType.Rel.ToMany,
         },
-        HAS_A: {
-            to: [this],
-            cardinality: VNodeType.Rel.ToMany,
-        },
         RELATES_TO: {
-            to: [this],
-            cardinality: VNodeType.Rel.ToMany,
-        },
-        OTHER_REL: {
             to: [this],
             cardinality: VNodeType.Rel.ToMany,
         },
@@ -117,9 +109,9 @@ export class Entry extends VNodeType {
             throw new ValidationError(`Invalid friendlyId; expected it to start with ${friendlyIdPrefix}`);
         }
 
-        // Validate that all IS_A/HAS_A/RELATES_TO/OTHER_REL relationships have corresponding PropertyFacts
+        // Validate that all IS_A/RELATES_TO relationships have corresponding PropertyFacts
         const isACheck = await tx.query(C`
-            MATCH (entry:${this})-[rel:${this.rel.IS_A}|${this.rel.HAS_A}|${this.rel.RELATES_TO}|${this.rel.OTHER_REL}]->(otherEntry:VNode)
+            MATCH (entry:${this})-[rel:${this.rel.IS_A}|${this.rel.RELATES_TO}]->(otherEntry:VNode)
             WITH id(rel) AS expectedId
             OPTIONAL MATCH (entry:${this})-[:${this.rel.PROP_FACT}]->(relFact:${PropertyFact} {directRelNeo4jId: expectedId})
             RETURN expectedId, relFact.directRelNeo4jId AS actualId

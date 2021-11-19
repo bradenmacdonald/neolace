@@ -1,5 +1,5 @@
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
-import { PropertyCardinality, PropertyType } from "neolace/deps/neolace-api.ts";
+import { PropertyType } from "neolace/deps/neolace-api.ts";
 
 import { group, test, resetDBToBlankSnapshot, assertEquals, beforeAll } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -37,9 +37,10 @@ group(import.meta, () => {
                 {code: "CreateProperty", data: {id: propertyId, name: "Property", appliesTo: [{entryType}]}},
             ]}));
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                {code: "UpdatePropertyValue", data: {
+                {code: "AddPropertyValue", data: {
                     entry: entryId,
                     property: propertyId,
+                    propertyFactId: VNID(),
                     valueExpression: `"the value"`,
                     note: "",
                 }},
@@ -66,7 +67,6 @@ group(import.meta, () => {
                     id: propertyId,
                     name: "Is A",
                     type: PropertyType.RelIsA,
-                    cardinality: PropertyCardinality.Unique,
                     appliesTo: [{entryType}],
                 }},
             ]}));
@@ -74,9 +74,10 @@ group(import.meta, () => {
             const valueExpression = `[[/entry/${entryA}]]`;
             const note = "B is an A";
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                {code: "UpdatePropertyValue", data: {
+                {code: "AddPropertyValue", data: {
                     entry: entryB,
                     property: propertyId,
+                    propertyFactId: VNID(),
                     valueExpression,
                     note,
                 }},

@@ -1,4 +1,4 @@
-import { Schema, Type, string, number, vnidString, nullable, array, Record, } from "../api-schemas.ts";
+import { Schema, Type, string, number, vnidString, nullable, array, boolean, Record, } from "../api-schemas.ts";
 
 
 export const SimplePropertySchema = Schema({
@@ -97,40 +97,19 @@ export enum PropertyType {
      */
     Value = "VALUE",
     /**
-     * This property represents an IS A relationship.
+     * This property represents an IS A relationship (is subclass of, is instance of, is child of, is variant of,
+     * is version of).
      *
-     * e.g. An Apple IS_A Fruit
-     *
-     * This category of relationship includes things like IS_VERSION_OF, IS_VARIANT_OF, IS_SUBCLASS_OF, IS_INSTANCE_OF,
-     * etc.
+     * e.g. An Apple IS_A Fruit, Barack Obama IS A President
      */
     RelIsA = "IS_A",
     /**
-     * This property represents a HAS A relationship.
-     *
-     * e.g. A Person HAS_A Name
-     *
-     * This category of relationship includes things like HAS_PART, HAS_EMAIL_ADDRESS, HAS_LICENSE, HAS_MANUFACTURER,
-     * etc.
+     * This property represents any other explicitly defined relationship.
      *
      * This excludes the inverse of IS A relationships, like "has subtypes" or "has instances", which should be
-     * REL_OTHER.
+     * automatically generated using a lookup function and defined as Value properties (not relationships).
      */
-    RelHasA = "HAS_A",
-    /**
-     * This property represents a RELATES TO relationship.
-     *
-     * e.g. An Image RELATES_TO a Article
-     */
-    RelRelatesTo = "RELATES_TO",
-    /**
-     * Any other type of relationship.
-     * This is usually used for automatically-generated inverse relationships,
-     * e.g. the "has subtypes" relationship which is the inverse of an IS A relationship.
-     *
-     * Other relationships do not appear on the graph visualizations.
-     */
-    RelOther = "OTHER",
+    RelOther = "RELATES_TO",
 }
 
 export enum PropertyMode {
@@ -152,27 +131,27 @@ export enum PropertyMode {
     Auto = "AUTO",
 }
 
-export enum PropertyCardinality {
-    /**
-     * This property holds a single value (or none, if not required).
-     * If it's a relationship, it can only point to one entry.
-     */
-    Single = "1",
-    /**
-     * This property can have different values, but they each must be unique.
-     *
-     * This can be used for relationships, or also to express disagreement or uncertainty about other values like
-     * empirical measurements (e.g. bob says the mass is 5.128 but alice says it's 5.208)
-     */
-    Unique = "U",
-    /**
-     * This property can have multiple values, and they don't have to be unique.
-     *
-     * This can be used for example to express that a widget has different parts, each of which is the same but is
-     * used for a different purpose.
-     */
-    Multiple = "*",
-}
+// export enum PropertyCardinality {
+//     /**
+//      * This property holds a single value (or none, if not required).
+//      * If it's a relationship, it can only point to one entry.
+//      */
+//     Single = "1",
+//     /**
+//      * This property can have different values, but they each must be unique.
+//      *
+//      * This can be used for relationships, or also to express disagreement or uncertainty about other values like
+//      * empirical measurements (e.g. bob says the mass is 5.128 but alice says it's 5.208)
+//      */
+//     Unique = "U",
+//     /**
+//      * This property can have multiple values, and they don't have to be unique.
+//      *
+//      * This can be used for example to express that a widget has different parts, each of which is the same but is
+//      * used for a different purpose.
+//      */
+//     Multiple = "*",
+// }
 
 export const PropertySchema = Schema({
     id: vnidString,
@@ -180,10 +159,8 @@ export const PropertySchema = Schema({
     name: string,
     /** Description of this property (markdown) */
     descriptionMD: string,
-    /** What type of property is this - a relationship, or some other simple property? (Cannot be changed due to complex edge cases that we'd have to cover) */
+    /** What type of property is this - a relationship, or some other simple property? (Cannot be changed) */
     type: Schema.enum(PropertyType),
-    /** Does this property allow multiple values? (Cannot be changed due to complex edge cases that we'd have to cover) */
-    cardinality: Schema.enum(PropertyCardinality),
     /** What EntryTypes can have this property? */
     appliesTo: array.of(Schema({
         entryType: vnidString,
@@ -198,11 +175,16 @@ export const PropertySchema = Schema({
     /** This property is a sub-type of some other property (e.g. "average voltage" is a type of "voltage") */
     isA: array.of(vnidString).strictOptional(),
     /**
-     * The default value for this property, if none is set on the specific entry or its parents.
+     * The default value for this property. If a default is set, all entries of the given type will show this property
+     * with the default value, unless it is overridden.
+     *
+     * If mode is Auto, this is required, because there is nowhere else to set the value.
+     *
      * This can be a lookup expression.
-     * If mode is Auto, this is required, because this defines the lookup expression.
      */
     default: string.strictOptional(),
+    /** Should this property value inherit to child entries? */
+    inheritable: boolean.strictOptional(),
     /** The standard URL for this property, e.g. "https://schema.org/birthDate" for "date of birth" */
     standardURL: string.strictOptional(),
     /** The Wikidata P ID for this property, if applicable, e.g. P569 for "date of birth" */
@@ -222,8 +204,6 @@ export const PropertySchema = Schema({
     // TODO: hasSlot, hasWeight, hasSource
 });
 export type PropertyData = Type<typeof PropertySchema>;
-
-
 
 export const SiteSchemaSchema = Schema({
     entryTypes: Record(string, EntryTypeSchema),

@@ -1,8 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
 import { nullable, vnidString, Schema, string, array, Type, number } from "../api-schemas.ts";
-import type { SchemaValidatorFunction } from "../deps/computed-types.ts";
+import { boolean, SchemaValidatorFunction } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
-import { SiteSchemaData, RelationshipCategory, SimplePropertySchema, PropertyType, PropertyMode, PropertyCardinality } from "./SiteSchemaData.ts";
+import { SiteSchemaData, RelationshipCategory, SimplePropertySchema, PropertyType, PropertyMode } from "./SiteSchemaData.ts";
 
 interface SchemaEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Schema;
@@ -258,6 +258,7 @@ export const UpdateProperty = SchemaEditType({
         // For these properties, use 'undefined' to mean 'no change', and an empty string to mean "set to no value"
         valueConstraint: string.strictOptional(),
         default: string.strictOptional(),
+        inheritable: boolean.strictOptional(),
         standardURL: string.strictOptional(),
         displayAs: string.strictOptional(),
         editNoteMD: string.strictOptional(),
@@ -295,6 +296,9 @@ export const UpdateProperty = SchemaEditType({
                 }
             }
         }
+        if (data.inheritable !== undefined) {
+            newProp.inheritable = data.inheritable;
+        }
 
         const newSchema: SiteSchemaData = {
             ...currentSchema,
@@ -312,7 +316,6 @@ export const CreateProperty = SchemaEditType({
     dataSchema: Schema({
         id: vnidString,
         type: Schema.enum(PropertyType).strictOptional(),
-        cardinality: Schema.enum(PropertyCardinality).strictOptional(),
         // For these properties, use 'undefined' to mean 'no change':
         name: string.strictOptional(),
         descriptionMD: string.strictOptional(),
@@ -323,6 +326,7 @@ export const CreateProperty = SchemaEditType({
         // For these properties, use 'undefined' to mean 'no change', and an empty string to mean "set to no value"
         valueConstraint: string.strictOptional(),
         default: string.strictOptional(),
+        inheritable: boolean.strictOptional(),
         standardURL: string.strictOptional(),
         displayAs: string.strictOptional(),
         editNoteMD: string.strictOptional(),
@@ -336,10 +340,10 @@ export const CreateProperty = SchemaEditType({
                 descriptionMD: "",
                 name: "New Property",
                 type: data.type ?? PropertyType.Value,
-                cardinality: data.cardinality ?? PropertyCardinality.Single,
                 mode: PropertyMode.Optional,
                 // Default importance is 15
                 importance: 15,
+                inheritable: data.inheritable ?? false,
             }},
         };
         return UpdateProperty.apply(newSchema, data);

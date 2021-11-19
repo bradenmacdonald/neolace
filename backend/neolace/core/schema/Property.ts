@@ -1,5 +1,5 @@
 import * as check from "neolace/deps/computed-types.ts";
-import { PropertyMode, PropertyType, PropertyCardinality } from "neolace/deps/neolace-api.ts";
+import { PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
 import {
     C,
     Field,
@@ -29,8 +29,6 @@ export class Property extends VNodeType {
         descriptionMD: Field.String.Check(check.string.trim().max(5_000)),
         /** What type of property is this - a relationship, or some other simple property? */
         type: Field.String.Check(check.Schema.enum(PropertyType)),
-        /** Does this property allow multiple values? */
-        cardinality: Field.String.Check(check.Schema.enum(PropertyCardinality)),
         /** Is this a property that can be set manually? Or MUST be set? Or is it computed automatically? */
         mode: Field.String.Check(check.Schema.enum(PropertyMode)),
         /**
@@ -44,6 +42,8 @@ export class Property extends VNodeType {
          * If mode is Auto, this is required, because this defines the lookup expression.
          */
         default: Field.String,
+        /** Do values from this property inherit automatically to child entries? */
+        inheritable: Field.Boolean,
         /** The standard URL for this property, e.g. "https://schema.org/birthDate" for "date of birth" */
         standardURL: Field.String,
         /**

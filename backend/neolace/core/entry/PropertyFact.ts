@@ -19,9 +19,7 @@ import { Entry } from "./Entry.ts";
 export function directRelTypeForPropertyType(propType: PropertyType) {
     return (
         propType === PropertyType.RelIsA ? Entry.rel.IS_A :
-        propType === PropertyType.RelHasA ? Entry.rel.HAS_A :
-        propType === PropertyType.RelRelatesTo ? Entry.rel.RELATES_TO :
-        propType === PropertyType.RelOther ? Entry.rel.OTHER_REL :
+        propType === PropertyType.RelOther ? Entry.rel.RELATES_TO :
         null
     );
 }

@@ -6,29 +6,29 @@ import { C, VNID, WrappedTransaction, Field } from "neolace/deps/vertex-framewor
 
 
 
-type EntryPropertyValue = {
-    label: string,
-    valueExpression: string,
-    importance: number,
-    note: string,
-    id: VNID,
-}&(
-    {
-        type: "SimplePropertyValue",
-        source: {from: "EntryType"},
-    }
-    |
-    {
-        type: "PropertyValue",
-        source: {from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
-        displayAs: null|string,
-    }
-);
+/**
+ * Data structure used when querying for property values on an entry, including those explicitly
+ * set and inherited from other entries. This is not the format returned by the API, which
+ * consolidates the values together into a single value per property and returns a serialized
+ * lookup value, not a lookup expression.
+ */
+type EntryPropertyValueSet = {
+    property: {
+        id: VNID,
+        name: string,
+        importance: number,
+    },
+    values: Array<{
+        factId: VNID,
+        valueExpression: string,
+        note: string,
+        source: {from: "EntryType"}|{from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
+    }>,
+};
 
 
 /**
- * Get all property values associated with an Entry, including SimplePropertyValues and (regular) property values
- * from PropertyFacts.
+ * Get all property values associated with an Entry.
  *
  * This includes inherited properties and will order the results by importance.
  */
@@ -39,7 +39,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
     limit?: number,
     /** Should the total count of matching properties be included in the results? */
     totalCount?: TC,
-}): Promise<EntryPropertyValue[] & (TC extends true ? {totalCount: number} : unknown)> {
+}): Promise<EntryPropertyValueSet[] & (TC extends true ? {totalCount: number} : unknown)> {
 
     throw new Error("Needs to be re-implemented.");
     /*
@@ -170,7 +170,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
  * 
  * Can search by property ID or by label (exact match only).
  */
- export async function getEntryProperty(entryId: VNID, options: ({propertyId: VNID}|{labelExact: string})&{tx: WrappedTransaction}): Promise<EntryPropertyValue|undefined> {
+ export async function getEntryProperty(entryId: VNID, options: ({propertyId: VNID}|{labelExact: string})&{tx: WrappedTransaction}): Promise<EntryPropertyValueSet|undefined> {
 
     throw new Error("Needs to be re-implemented.");
     /*

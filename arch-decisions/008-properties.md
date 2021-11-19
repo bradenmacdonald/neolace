@@ -38,3 +38,70 @@ More examples:
 
 Internally in Neolace, whenever a property value is set, a `PropertyFact` is
 created.
+
+## Property Type
+
+Every property has a **type**: it either represents a **value** or a
+**relationship**.
+
+A value can be anything defined by a lookup expression, such as a number, a
+string, a list of strings, or even a list of entries.
+
+If it is a relationship type, it can be further specified as an **IS A**
+(subclass of or instance of or child of) relationship or a **RELATES TO**
+relationship.
+* IS A relationships define "inheritance", where some properties set on the
+  ancestor entries can be inherited by their descendant entries. For example,
+  if a Tesla Model 3 IS An electric car, and an electric car IS a car, and a car
+  HAS A steering wheel, then the Tesla Model 3 HAS A steering wheel too, because
+  it inherits that relationship from its ancestor entry "car".
+* Any other relationship is a **RELATES TO** relationship.
+
+Note: Automatic inverse relationships are a special type of **value property**.
+They are not considered relationships themselves and won't appear on graphs.
+
+## Property Mode
+
+A property can be required, recommended, optional, or auto. If it is Auto, it
+cannot be edited manually, and is instead automatically computed using a lookup
+expression. Relationship properties cannot be "Auto".
+
+## Property Inheritance
+
+Properties can be marked as "inheritable." If they are marked as such, any entry
+which does not have a value(s) for a particular property will be shown to have
+the value(s) set on the nearest parent entry.
+
+* IS A relationships are always implicitly inherited, and also define what
+  entries are considered parents/ancestors.
+* Other relationships and values may or may not be inherited depending on
+  the property configuration.
+
+When inheritance is enabled for a property it works like this: if one or more
+values are set on an entry, only that value(s) is used as the property value for
+that entry. If no value is set, the nearest ancestor which has a value set is
+found, and then that ancestor's value is used.
+
+Slots: Some properties may enable "slots" (generally "HAS PART" relationships).
+In this case, for each "slot", the nearest ancestor with a value(s) set for that
+slot is used.
+
+For example, consider a schema with only two relationships, "IS CHILD OF" and
+"HAS GENE", where the "HAS GENE" relationship is using slots:
+- Grandfather
+  -> has gene "blue eye" in slot "eye color"
+  -> has gene "left handded" in slot "handedness"
+- Father
+  -> has gene "brown eye" in slot "eye color"
+  -> (inherits gene "left handded" in slot "handedness")
+- Son
+  -> (inherits gene "brown eye") in slot "eye color"
+  -> (inherits gene "left handded" in slot "handedness")
+
+## Open Questions
+
+Do we want a way to define or enforce property cardinality (e.g. only allow a
+single value, or require that all values are unique or not)?
+
+How do we design the "update property value" actions to work well and reduce
+conflicts?

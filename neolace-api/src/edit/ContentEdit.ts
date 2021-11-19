@@ -90,29 +90,36 @@ export const CreateRelationshipFact = ContentEditType({
     describe: (data) => `Created \`RelationshipFact ${data.id}\``,
 });
 
-export const UpdatePropertyValue = ContentEditType({
+export const AddPropertyValue = ContentEditType({
     changeType: EditChangeType.Content,
-    code: "UpdatePropertyValue",
+    code: "AddPropertyValue",
     dataSchema: Schema({
-        // The Entry where we are creating/updating/deleting this PropertyFact
+        /** The Entry where we are adding a new property value */
         entry: vnidString,
-        // The Property in question.
+        /** The Property in question. */
         property: vnidString,
-        /**
-         * A property fact ID must be omitted for properties that only allow a single value or only unique values.
-         * A property fact ID is required for properties that allow multiple values (including multiple identical
-         * values).
-         *
-         * In the case of single-cardinality or unique-cardinality properties, we generally don't want to specify the
-         * property fact ID here, to reduce the chance of conflicts in different Drafts that are editing the same entry.
-         */
-        propertyFactId: vnidString.strictOptional(),
+        /** The ID of this new property fact */
+        propertyFactId: vnidString,
         /** Value expression: a lookup expression giving the value */
         valueExpression: string,
         /** An optional markdown note clarifying details of the property value */
         note: string,
     }),
-    describe: (data) => `Updated \`Entry ${data.property}\` property on \`Entry ${data.entry}\``,
+    describe: (data) => `Added value for \`Property ${data.property}\` property on \`Entry ${data.entry}\``,
+});
+
+export const UpdatePropertyValue = ContentEditType({
+    changeType: EditChangeType.Content,
+    code: "UpdatePropertyValue",
+    dataSchema: Schema({
+        /** The ID of the property fact to change */
+        propertyFactId: vnidString,
+        /** Value expression: a lookup expression giving the new value */
+        valueExpression: string,
+        /** An optional markdown note clarifying details of the property value */
+        note: string,
+    }),
+    describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value`,
 });
 
 // TODO: Delete property value
@@ -121,6 +128,7 @@ export const _allContentEditTypes = {
     CreateEntry,
     UpdateEntryFeature,
     CreateRelationshipFact,
+    AddPropertyValue,
     UpdatePropertyValue,
 };
 
@@ -128,5 +136,6 @@ export type AnyContentEdit = (
     | Edit<typeof CreateEntry>
     | Edit<typeof UpdateEntryFeature>
     | Edit<typeof CreateRelationshipFact>
+    | Edit<typeof AddPropertyValue>
     | Edit<typeof UpdatePropertyValue>
 );
