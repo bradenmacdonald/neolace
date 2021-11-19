@@ -216,7 +216,7 @@ export const schema: SiteSchemaData = {
         [ids.propHasPart]: {
             id: ids.propHasPart,
             name: "Has part",
-            type: PropertyType.RelHasA,
+            type: PropertyType.RelOther,
             appliesTo: [{entryType: ids.techConcept}],
             valueConstraint: `x.type() = entryType("${ids.techConcept}")`,
             mode: PropertyMode.Recommended,
@@ -238,7 +238,7 @@ export const schema: SiteSchemaData = {
         [ids.propImgRelatesTo]: {
             id: ids.propImgRelatesTo,
             name: "Relates to",
-            type: PropertyType.RelRelatesTo,
+            type: PropertyType.RelOther,
             appliesTo: [{entryType: ids.image}],
             valueConstraint: `x.type() = entryType("${ids.techConcept}")`,
             mode: PropertyMode.Recommended,

@@ -157,22 +157,31 @@ export const ApplyEdits = defineAction({
                     };
 
                     // Validate the entry ID, property ID, and ensure they're part of the current site.
-                    // Then create the new proeprty fact.
-                    const baseData = await tx.queryOne(C`
-                        MATCH (site:${Site} {id: ${siteId}})
-                        MATCH (entry:${Entry} {id: ${edit.data.entry}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-                        MATCH (property:${Property} {id: ${edit.data.property}})-[:${Property.rel.FOR_SITE}]->(site)
-                        // Ensure that the property (still) applies to this entry type:
-                        MATCH (property)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
-                        // Create the new property fact:
-                        CREATE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {
-                            id: ${edit.data.propertyFactId}
-                        })-[:${PropertyFact.rel.FOR_PROP}]->(property)
-                        SET pf += ${updatedPropertyFactFields}
-                    `.RETURN({
-                        "entryType.id": Field.VNID,
-                        "property.type": Field.String,
-                    }));
+                    // Then create the new property fact.
+                    let baseData;
+                    try {
+                        baseData = await tx.queryOne(C`
+                            MATCH (site:${Site} {id: ${siteId}})
+                            MATCH (entry:${Entry} {id: ${edit.data.entry}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+                            MATCH (property:${Property} {id: ${edit.data.property}})-[:${Property.rel.FOR_SITE}]->(site)
+                            // Ensure that the property (still) applies to this entry type:
+                            MATCH (property)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+                            // Create the new property fact:
+                            CREATE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {
+                                id: ${edit.data.propertyFactId}
+                            })-[:${PropertyFact.rel.FOR_PROP}]->(property)
+                            SET pf += ${updatedPropertyFactFields}
+                        `.RETURN({
+                            "entryType.id": Field.VNID,
+                            "property.type": Field.String,
+                        }));
+                    } catch (err) {
+                        if (err instanceof EmptyResultError) {
+                            throw new Error("Property not found on the site or doesn't apply to that entry type.");
+                        } else {
+                            throw err;
+                        }
+                    }
                     const propType = baseData["property.type"] as PropertyType;
                     const directRelType = directRelTypeForPropertyType(propType);  // If this is a relationship property, there is a relationship of this type directly between two entries
                     let toEntryId: VNID|undefined = undefined;
@@ -212,7 +221,6 @@ export const ApplyEdits = defineAction({
 
                 case UpdatePropertyValue.code: {
                     throw new Error("UpdatePropertyValue is not yet implemented.");
-                    break;
                 }
 
                 case CreateEntryType.code: {  // Create a new EntryType

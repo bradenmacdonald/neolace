@@ -113,19 +113,7 @@ export const schema = ValidateSiteSchema({
             description: "Properties of a PlantDB entry.",
             friendlyIdPrefix: "p-",
             simplePropValues: {},
-            enabledFeatures: {
-                UseAsProperty: {
-                    appliesToEntryTypes: [
-                        VNID("_ETCLASS"),
-                        VNID("_ETDIVISION"),
-                        VNID("_ETFAMILY"),
-                        VNID("_ETGENUS"),
-                        VNID("_ETORDER"),
-                        VNID("_ETPLANTPART"),
-                        VNID("_ETSPECIES"),
-                    ],
-                }
-            },
+            enabledFeatures: {},
         },
     },
     relationshipTypes: {

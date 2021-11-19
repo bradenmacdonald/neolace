@@ -8,7 +8,7 @@ import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
-// import { getEntryProperties, getEntryProperty } from "neolace/core/entry/pro perties.ts";
+import { getEntryProperties, getEntryProperty } from "neolace/core/entry/properties.ts";
 
 group(import.meta, () => {
 
@@ -102,16 +102,16 @@ group(import.meta, () => {
         });
     });
 
-    /*
-    group("getProperties", () => {
+    
+    group("getEntryProperty() / getEntryProperties()", () => {
         // Entry Type IDs:
-        const entryType = VNID(), propertyType = VNID();
-        // Relationship Type IDs:
-        const entryIsA = VNID();
+        const entryType = VNID();
         // Entry IDs:
-        const A = VNID(), B = VNID(), C = VNID(), prop1 = VNID(), prop2 = VNID(), prop3 = VNID();
-        // Simple Property Value IDs:
-        const spv1 = VNID(), spv2 = VNID();
+        const A = VNID(), B = VNID(), C = VNID();
+        // Property IDs:
+        const entryIsA = VNID(), prop1 = VNID(), prop2 = VNID(), prop3 = VNID();
+        // Property Fact IDs:
+        const factIdB1 = VNID();
 
         group("blank entry and single property entry", () => {
             beforeAll(async () => {
@@ -122,16 +122,10 @@ group(import.meta, () => {
                 const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
                 await graph.runAsSystem(ApplyEdits({siteId, edits: [
                     {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
-                    {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType"}},
-                    {code: "UpdateEntryTypeFeature", data: {entryTypeId: propertyType, feature: {
-                        featureType: "UseAsProperty",
-                        enabled: true,
-                        config: {appliesToEntryTypes: [entryType]},
-                    }}},
                     {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                     {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
-                    {code: "CreateEntry", data: {id: prop1, name: "Property 1", type: propertyType, friendlyId: "p1", description: ""}},
-                    {code: "UpdatePropertyValue", data: {entry: B, property: prop1, valueExpression: `"value for B prop1"`, note: ""}},
+                    {code: "CreateProperty", data: {id: prop1, name: "Property 1", type: PropertyType.Value, appliesTo: [{entryType}], descriptionMD: ""}},
+                    {code: "AddPropertyValue", data: {entry: B, property: prop1, propertyFactId: factIdB1, valueExpression: `"value for B prop1"`, note: ""}},
                 ]}));
             });
 
@@ -141,54 +135,49 @@ group(import.meta, () => {
                     // No properties
                 ]);
             });
+            test("Returns no properties for a blank entry (getting specific property)", async () => {
+                // Get the properties of A
+                assertEquals(await graph.read(tx => getEntryProperty({entryId: A, propertyId: prop1, tx})), undefined);
+            });
 
             test("returns a basic property for an entry with a property", async () => {
                 // Get the properties of B
                 assertEquals(await graph.read(tx => getEntryProperties(B, {tx})), [
                     {
-                        label: "Property 1",
-                        valueExpression: '"value for B prop1"',
-                        importance: 10,  // Default importance
-                        id: prop1,
-                        note: "",
-                        type: "PropertyValue",
-                        source: {from: "ThisEntry"},
-                        displayAs: null,
+                        property: {
+                            id: prop1,
+                            importance: 15,
+                            name: "Property 1",
+                        },
+                        facts: [
+                            {
+                                factId: factIdB1,
+                                note: "",
+                                source: {from: "ThisEntry"},
+                                valueExpression: '"value for B prop1"',
+                            },
+                        ],
                     },
                 ]);
             });
 
-            test("getPropery() by ID", async () => {
+            test("getEntryProperty() by ID", async () => {
                 const allProps = await graph.read(tx => getEntryProperties(B, {tx}));
                 assertEquals(allProps.length, 1);
                 const expected = allProps[0];
                 assertEquals(
-                    await graph.read(tx => getEntryProperty(B, {propertyId: expected.id, tx})),
+                    await graph.read(tx => getEntryProperty({entryId: B, propertyId: expected.property.id, tx})),
                     expected,
                 );
                 // And if we give a random property ID, we should get no result:
                 assertEquals(
-                    await graph.read(tx => getEntryProperty(B, {propertyId: prop3, tx})),
-                    undefined,
-                );
-            });
-
-            test("getPropery() by label", async () => {
-                const allProps = await graph.read(tx => getEntryProperties(B, {tx}));
-                assertEquals(allProps.length, 1);
-                const expected = allProps[0];
-                assertEquals(
-                    await graph.read(tx => getEntryProperty(B, {labelExact: expected.label, tx})),
-                    expected,
-                );
-                // And if we give a random label string, we should get no result:
-                assertEquals(
-                    await graph.read(tx => getEntryProperty(B, {labelExact: "foobar", tx})),
+                    await graph.read(tx => getEntryProperty({entryId: B, propertyId: prop3, tx})),
                     undefined,
                 );
             });
         });
-
+    });
+    /*
         group("two entry types, one with simple prop values", () => {
             beforeAll(async () => {
                 await resetDBToBlankSnapshot();
