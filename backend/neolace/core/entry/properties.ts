@@ -94,10 +94,15 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
         AND
             (prop.importance <= ${maxImportance})
 
-        // The way we use min(length(path)) below will ensure that for each inherited property, we only get the
-        // value set by the closest ancestor. e.g. if grandparent->parent->child each
+        // We use minDistance below so that for each inherited property, we only get the
+        // values set by the closest ancestor. e.g. if grandparent->parent->child each
         // have birthDate, child's birthDate will take priority and grandparent/parent's won't be returned
-        WITH entry, prop, min(length(path)) AS distance, pf, ancestor
+        WITH entry, prop, min(length(path)) AS minDistance, collect({pf: pf, ancestor: ancestor, distance: length(path)}) AS facts
+        // Now filter to only have values from the closest ancestor:
+        WITH entry, prop, minDistance, facts
+        UNWIND facts as f
+        WITH entry, prop, minDistance, f WHERE f.distance = minDistance
+        WITH entry, prop, minDistance, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
 
         RETURN {
             property: prop {.id, .name, .importance},
@@ -109,7 +114,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
             })
         } AS propertyData
 
-        ORDER BY propertyData.property.importance, propertyData.property.name DESC
+        ORDER BY propertyData.property.importance, propertyData.property.name
         SKIP ${skipSafe} LIMIT ${limitSafe}
     `.givesShape({
         propertyData: Field.Record({

@@ -135,6 +135,7 @@ group(import.meta, () => {
                     // No properties
                 ]);
             });
+
             test("Returns no properties for a blank entry (getting specific property)", async () => {
                 // Get the properties of A
                 assertEquals(await graph.read(tx => getEntryProperty({entryId: A, propertyId: prop1, tx})), undefined);
@@ -176,82 +177,15 @@ group(import.meta, () => {
                 );
             });
         });
-    });
-    /*
-        group("two entry types, one with simple prop values", () => {
-            beforeAll(async () => {
-                await resetDBToBlankSnapshot();
-                // Create a site with:
-                //   Entry A has an entry type with two simple property values
-                //   Entry "Property 1" has an entry type with no simple property values
-                const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
-                await graph.runAsSystem(ApplyEdits({siteId, edits: [
-                    {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
-                    {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType"}},
-                    {code: "UpdateEntryType", data: {id: entryType, addOrUpdateSimpleProperties: [
-                        {id: spv1, importance: 50, note: "Test note", valueExpression: `"spv1 value"`, label: "SPV 1 Label"},
-                        {id: spv2, importance: 1, note: "Test note", valueExpression: `"spv2 value"`, label: "SPV 2 Label"},
-                    ]}},
-                    {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
-                    {code: "CreateEntry", data: {id: prop1, name: "Property 1", type: propertyType, friendlyId: "p1", description: ""}},
-                ]}));
-            });
 
-            test("Returns SimplePropertyValues set on the entry type", async () => {
-                // Get the properties of Property 1, which is an entry whose type has no SimplePropertyValues
-                assertEquals(await graph.read(tx => getEntryProperties(prop1, {tx})), [
-                    // No properties
-                ]);
-    
-                // Get the properties of A, which has two simple property values and they should be returned in order of importance
-                assertEquals(await graph.read(tx => getEntryProperties(A, {tx})), [
-                    {
-                        label: "SPV 2 Label",
-                        valueExpression: '"spv2 value"',
-                        importance: 1,  // Most important is lowest important value, so 1 is sorted before 50
-                        id: spv2,
-                        note: "Test note",
-                        type: "SimplePropertyValue",
-                        source: {from: "EntryType"},
-                    },
-                    {
-                        label: "SPV 1 Label",
-                        valueExpression: '"spv1 value"',
-                        importance: 50,  // Less important than 1
-                        id: spv1,
-                        note: "Test note",
-                        type: "SimplePropertyValue",
-                        source: {from: "EntryType"},
-                    },
-                ]);
-            });
+        // TODO: test slots
 
-            test("getPropery()", async () => {
-                const allProps = await graph.read(tx => getEntryProperties(A, {tx}));
-                assertEquals(allProps.length, 2);
-                for (const propData of allProps) {
-                    // get the property by ID:
-                    assertEquals(
-                        await graph.read(tx => getEntryProperty(A, {propertyId: propData.id, tx})),
-                        propData,
-                    );
-                    // or by label:
-                    assertEquals(
-                        await graph.read(tx => getEntryProperty(A, {labelExact: propData.label, tx})),
-                        propData,
-                    );
-                    // Trying to load the property from another entry gives no result:
-                    assertEquals(
-                        await graph.read(tx => getEntryProperty(prop1, {propertyId: propData.id, tx})),
-                        undefined,
-                    );
-                }
-            });
-        });
+        // TODO: test default values / computed values
 
+        // TODO: test multiple property values
 
-        group("regular properties and inheritance", () => {
-            beforeAll(async () => {
+        group("inheritance", () => {
+            test("Returns inherited properties from parent entries, if the property is marked as inheritable", async () => {
                 await resetDBToBlankSnapshot();
                 // Create a site with:
                 //   Entry A has prop1 = A1, prop2 = A2, prop3 = A3
@@ -259,85 +193,101 @@ group(import.meta, () => {
                 //   Entry C has                         prop3 = C3
                 //   C inherits from B which inherits from A
                 //   Property 3 is not inheritable, but the others are.
+                const pfA1 = VNID(), pfA2 = VNID(), pfA3 = VNID();
+                const pfBisA = VNID(), pfB2 = VNID();
+                const pfCisB = VNID(), pfC3 = VNID();
                 const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
                 await graph.runAsSystem(ApplyEdits({siteId, edits: [
                     {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
-                    {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType"}},
-                    {code: "UpdateEntryTypeFeature", data: {entryTypeId: propertyType, feature: {
-                        featureType: "UseAsProperty",
-                        enabled: true,
-                        config: {appliesToEntryTypes: [entryType]},
-                    }}},
-                    {code: "CreateRelationshipType", data: {id: entryIsA, category: RelationshipCategory.IS_A, nameForward: "is a", nameReverse: "has types"}},
-                    {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
-                    // Create properties:
-                    {code: "CreateEntry", data: {id: prop1, name: "Property 1", type: propertyType, friendlyId: "p1", description: ""}},
-                    {code: "UpdateEntryFeature", data: {entryId: prop1, feature: { featureType: "UseAsProperty",
-                        inherits: true,
-                    }}},
-                    {code: "CreateEntry", data: {id: prop2, name: "Property 2", type: propertyType, friendlyId: "p2", description: ""}},
-                    {code: "UpdateEntryFeature", data: {entryId: prop2, feature: { featureType: "UseAsProperty",
-                        inherits: true,
-                    }}},
-                    {code: "CreateEntry", data: {id: prop3, name: "Property 3", type: propertyType, friendlyId: "p3", description: ""}},
-                    {code: "UpdateEntryFeature", data: {entryId: prop3, feature: { featureType: "UseAsProperty",
-                        inherits: false,
-                    }}},
+                    {code: "CreateProperty", data: {
+                        id: entryIsA, name: "Type of", type: PropertyType.RelIsA, appliesTo: [{entryType}], descriptionMD: "", importance: 1,
+                    }},
+                    {code: "CreateProperty", data: {
+                        id: prop1, name: "Property 1", type: PropertyType.Value, appliesTo: [{entryType}], descriptionMD: "",
+                        inheritable: true,
+                    }},
+                    {code: "CreateProperty", data: {
+                        id: prop2, name: "Property 2", type: PropertyType.Value, appliesTo: [{entryType}], descriptionMD: "",
+                        inheritable: true,
+                    }},
+                    {code: "CreateProperty", data: {
+                        id: prop3, name: "Property 3", type: PropertyType.Value, appliesTo: [{entryType}], descriptionMD: "",
+                        inheritable: false,
+                    }},
                     // Create entry A and its properties:
                     {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
-                    {code: "UpdatePropertyValue", data: {entry: A, property: prop1, valueExpression: `"A1"`, note: ""}},
-                    {code: "UpdatePropertyValue", data: {entry: A, property: prop2, valueExpression: `"A2"`, note: ""}},
-                    {code: "UpdatePropertyValue", data: {entry: A, property: prop3, valueExpression: `"A3"`, note: ""}},
+                    {code: "AddPropertyValue", data: {entry: A, property: prop1, valueExpression: `"A1"`, note: "", propertyFactId: pfA1}},
+                    {code: "AddPropertyValue", data: {entry: A, property: prop2, valueExpression: `"A2"`, note: "", propertyFactId: pfA2}},
+                    {code: "AddPropertyValue", data: {entry: A, property: prop3, valueExpression: `"A3"`, note: "", propertyFactId: pfA3}},
                     // Create entry B and its properties:
                     {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
-                    {code: "CreateRelationshipFact", data: {fromEntry: B, type: entryIsA, toEntry: A, id: VNID()}},  // B is a A
-                    {code: "UpdatePropertyValue", data: {entry: B, property: prop2, valueExpression: `"B2"`, note: ""}},
+                    {code: "AddPropertyValue", data: {entry: B, property: entryIsA, valueExpression: `[[/entry/${A}]]`, note: "B is an A", propertyFactId: pfBisA}},
+                    {code: "AddPropertyValue", data: {entry: B, property: prop2, valueExpression: `"B2"`, note: "", propertyFactId: pfB2}},
                     // Create entry C and its properties:
                     {code: "CreateEntry", data: {id: C, name: "Entry C", type: entryType, friendlyId: "c", description: ""}},
-                    {code: "CreateRelationshipFact", data: {fromEntry: C, type: entryIsA, toEntry: B, id: VNID()}},  // C is a B
-                    {code: "UpdatePropertyValue", data: {entry: C, property: prop3, valueExpression: `"C3"`, note: ""}},
+                    {code: "AddPropertyValue", data: {entry: C, property: entryIsA, valueExpression: `[[/entry/${B}]]`, note: "C is a B", propertyFactId: pfCisB}},
+                    {code: "AddPropertyValue", data: {entry: C, property: prop3, valueExpression: `"C3"`, note: "", propertyFactId: pfC3}},
                 ]}));
-            });
 
-            test("Returns inherited properties from parent entries, if the property is marked as inheritable", async () => {
                 // Define the expected property values:
-                const A1 = {
-                    label: "Property 1",
-                    valueExpression: '"A1"',
-                    importance: 10,  // Default importance
-                    id: prop1,
-                    note: "",
-                    type: "PropertyValue",
-                    source: {from: "ThisEntry"},
-                    displayAs: null,
+                const expectedPropValue = (propId: VNID, factId: VNID, value: string, source: unknown = {from: "ThisEntry"}) => {
+                    return {
+                        property: {
+                            id: propId,
+                            importance: 15,
+                            name: `Property ${
+                                propId === prop1 ? "1" :
+                                propId === prop2 ? "2" :
+                                propId === prop3 ? "3" :
+                                "X"
+                            }`,
+                        },
+                        facts: [{
+                            factId,
+                            note: "",
+                            source,
+                            valueExpression: `"${value}"`,
+                        }],
+                    };
                 };
-                const A2 = {...A1, label: "Property 2", valueExpression: '"A2"', id: prop2};
-                const A3 = {...A1, label: "Property 3", valueExpression: '"A3"', id: prop3};
-                const B2 = {...A1, label: "Property 2", valueExpression: '"B2"', id: prop2};
-                const C3 = {...A1, label: "Property 3", valueExpression: '"C3"', id: prop3};
     
                 // Get the properties of A
                 assertEquals(await graph.read(tx => getEntryProperties(A, {tx})), [
-                    A1, A2, A3
+                    expectedPropValue(prop1, pfA1, "A1"),
+                    expectedPropValue(prop2, pfA2, "A2"),
+                    expectedPropValue(prop3, pfA3, "A3"),
                 ]);
     
                 // Get the properties of B
                 assertEquals(await graph.read(tx => getEntryProperties(B, {tx})), [
+                    // B is an A
+                    {
+                        property: {id: entryIsA, importance: 1, name: "Type of"},
+                        facts: [{factId: pfBisA, note: "B is an A", valueExpression: `[[/entry/${A}]]`, source: {from: "ThisEntry"}}],
+                    },
                     // value A1 is inherited from Entry A, this entry's parent:
-                    {...A1, source: {from: "AncestorEntry", entryId: A}},
-                    B2, // <-- value B2 is set directly on this Entry B, and so A2 will not be inherited
+                    expectedPropValue(prop1, pfA1, "A1", {from: "AncestorEntry", entryId: A}),
+                    // value B2 is set directly on this Entry B, and so A2 will not be inherited
+                    expectedPropValue(prop2, pfB2, "B2"),
                     // A3 is NOT inherited because we marked property 3 as non-inheritable.
                 ]);
     
                 // Get the properties of C
                 assertEquals(await graph.read(tx => getEntryProperties(C, {tx})), [
+                    // C is a B
+                    {
+                        property: {id: entryIsA, importance: 1, name: "Type of"},
+                        facts: [{factId: pfCisB, note: "C is a B", valueExpression: `[[/entry/${B}]]`, source: {from: "ThisEntry"}}],
+                    },
                     // value A1 is inherited from Entry A, this entry's grandparent:
-                    {...A1, source: {from: "AncestorEntry", entryId: A}},
-                    {...B2, source: {from: "AncestorEntry", entryId: B}},
-                    {...C3, source: {from: "ThisEntry"}},
+                    expectedPropValue(prop1, pfA1, "A1", {from: "AncestorEntry", entryId: A}),
+                    expectedPropValue(prop2, pfB2, "B2", {from: "AncestorEntry", entryId: B}),
+                    expectedPropValue(prop3, pfC3, "C3"),
                 ]);
-    
             });
+        });
+
+        /*
             test("getPropery() gives the same result for each property as getEntryProperties()", async () => {
                 for (const entryId of [A, B, C]) {
                     const allProps = await graph.read(tx => getEntryProperties(entryId, {tx}));
@@ -502,6 +452,6 @@ group(import.meta, () => {
 
         // TODO: test the dbHits performance of getProperties()
 
-    });
     */
+    });
 });

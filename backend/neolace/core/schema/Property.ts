@@ -101,6 +101,12 @@ export class Property extends VNodeType {
     });
 
     static async validate(dbObject: RawVNode<typeof Property>, tx: WrappedTransaction): Promise<void> {
+
+        // IS A relationships cannot be marked as inheritable. They define inheritance.
+        if (dbObject.type === PropertyType.RelIsA && dbObject.inheritable) {
+            throw new ValidationError(`"IS A" relationship properties cannot be marked as inheritable.`);
+        }
+
         // Make sure each related entry type or property is from the same site:
         await tx.pullOne(
             Property,
