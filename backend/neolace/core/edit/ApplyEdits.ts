@@ -194,7 +194,6 @@ export const ApplyEdits = defineAction({
                     }
                     const propType = baseData["property.type"] as PropertyType;
                     const directRelType = directRelTypeForPropertyType(propType);  // If this is a relationship property, there is a relationship of this type directly between two entries
-                    let toEntryId: VNID|undefined = undefined;
                     if (directRelType !== null) {
                         // This is a relationship property, verify that the Entry it will be pointing to exists and is
                         // part of the same site.
@@ -202,17 +201,12 @@ export const ApplyEdits = defineAction({
                             throw new Error(`Relationship property values must be of the format [[/entry/entry-id]]`);
                         }
                         // There is a relationship FROM the current entry TO the entry with this id:
-                        const toEntryKey = valueExpression.slice(9, -2);
-                        const toEntryData = await tx.queryOne(C`
-                            MATCH (site:${Site} {id: ${siteId}})
-                            MATCH (entry:${Entry} {id: ${toEntryKey}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-                        `.RETURN({"entry.id": Field.VNID}));
-                        toEntryId = toEntryData["entry.id"];
+                        const toEntryId = valueExpression.slice(9, -2);
 
                         // We also need to create/update a direct (Entry)-[rel]->(Entry) relationship on the graph.
                         await tx.query(C`
                             MATCH (entry:${Entry} {id: ${edit.data.entry}})
-                            MATCH (toEntry:${Entry} {id: ${toEntryId}})
+                            MATCH (toEntry:${Entry} {id: ${toEntryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                             MATCH (pf:${PropertyFact} {id: ${edit.data.propertyFactId}})
                             OPTIONAL MATCH (entry)-[rel]->(:${Entry}) WHERE id(rel) = pf.directRelNeo4jId AND endNode(rel) <> toEntry
                             DELETE rel

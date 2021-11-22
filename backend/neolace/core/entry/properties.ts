@@ -104,10 +104,10 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
             // have birthDate, child's birthDate will take priority and grandparent/parent's won't be returned
             WITH entry, prop, CASE WHEN prop.enableSlots THEN pf.slot ELSE null END AS slot, min(length(path)) AS minDistance, collect({pf: pf, ancestor: ancestor, distance: length(path)}) AS facts
             // Now filter to only have values from the closest ancestor:
-            WITH entry, prop, slot, minDistance, facts
+            WITH entry, prop, minDistance, facts
             UNWIND facts as f
-            WITH entry, prop, slot, minDistance, f WHERE f.distance = minDistance
-            WITH entry, prop, slot, minDistance, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
+            WITH entry, prop, f WHERE f.distance = minDistance
+            WITH entry, prop, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
 
             RETURN {
                 property: prop {.id, .name, .importance, default: null},
