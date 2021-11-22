@@ -17,12 +17,14 @@ type EntryPropertyValueSet = {
         id: VNID,
         name: string,
         importance: number,
+        /** Default value. Only loaded from the database if no explicit value is set. */
+        default: string|null,
     },
     facts: Array<{
         factId: VNID,
         valueExpression: string,
         note: string,
-        source: {from: "EntryType"}|{from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
+        source: {from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
     }>,
 };
 
@@ -82,38 +84,58 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
     const data = await options.tx.query(C`
         MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
 
-        // Fetch all property values attached to this entry or its ancestors (for properties that allow inheritance)
-        WITH entry, entryType
-        MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop),
-            (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
-            ${options.specificPropertyId ? C`WHERE prop.id = ${options.specificPropertyId}` : C``}
-        WITH entry, path, ancestor, pf, prop
-        WHERE
-            // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
-            (length(path) = 2 OR prop.inheritable = true)
-        AND
-            (prop.importance <= ${maxImportance})
+        CALL {
+            // Fetch all property values attached to this entry or its ancestors (for properties that allow inheritance)
+            WITH entry, entryType
+            MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop),
+                (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+                ${options.specificPropertyId ? C`WHERE prop.id = ${options.specificPropertyId}` : C``}
+            WITH entry, path, ancestor, pf, prop
+            WHERE
+                // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
+                (length(path) = 2 OR prop.inheritable = true)
+            AND
+                (prop.importance <= ${maxImportance})
 
-        // We use minDistance below so that for each inherited property, we only get the
-        // values set by the closest ancestor. e.g. if grandparent->parent->child each
-        // have birthDate, child's birthDate will take priority and grandparent/parent's won't be returned
-        WITH entry, prop, min(length(path)) AS minDistance, collect({pf: pf, ancestor: ancestor, distance: length(path)}) AS facts
-        // Now filter to only have values from the closest ancestor:
-        WITH entry, prop, minDistance, facts
-        UNWIND facts as f
-        WITH entry, prop, minDistance, f WHERE f.distance = minDistance
-        WITH entry, prop, minDistance, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
+            // We use minDistance below so that for each inherited property, we only get the
+            // values set by the closest ancestor. e.g. if grandparent->parent->child each
+            // have birthDate, child's birthDate will take priority and grandparent/parent's won't be returned
+            WITH entry, prop, min(length(path)) AS minDistance, collect({pf: pf, ancestor: ancestor, distance: length(path)}) AS facts
+            // Now filter to only have values from the closest ancestor:
+            WITH entry, prop, minDistance, facts
+            UNWIND facts as f
+            WITH entry, prop, minDistance, f WHERE f.distance = minDistance
+            WITH entry, prop, minDistance, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
 
-        RETURN {
-            property: prop {.id, .name, .importance},
-            facts: collect({
-                factId: pf.id,
-                valueExpression: pf.valueExpression,
-                note: pf.note,
-                source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
-            })
-        } AS propertyData
+            RETURN {
+                property: prop {.id, .name, .importance, default: null},
+                facts: collect({
+                    factId: pf.id,
+                    valueExpression: pf.valueExpression,
+                    note: pf.note,
+                    source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
+                })
+            } AS propertyData
 
+            UNION ALL // ALL because it's presumably faster than DISTINCT and we have no overlap here
+
+            // Also find any properties which aren't explicitly set on the entry but which have default values.
+            WITH entry, entryType
+
+            MATCH (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+                WHERE
+                    ${options.specificPropertyId ? C`prop.id = ${options.specificPropertyId} AND` : C``}
+                    // TODO: use NULL or "" but not both
+                    prop.default <> ""
+                    AND NOT exists((entry)-[:${Entry.rel.IS_A}*0..50]->(:${Entry})-[:PROP_FACT]->(:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop))
+
+            RETURN {
+                property: prop {.id, .name, .importance, .default},
+                facts: []
+            } AS propertyData
+        }
+
+        RETURN propertyData
         ORDER BY propertyData.property.importance, propertyData.property.name
         SKIP ${skipSafe} LIMIT ${limitSafe}
     `.givesShape({
@@ -122,6 +144,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
                 id: Field.VNID,
                 name: Field.String,
                 importance: Field.Int,
+                default: Field.NullOr.String,
             }),
             facts: Field.List(Field.Record({
                 factId: Field.VNID,

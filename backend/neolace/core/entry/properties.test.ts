@@ -1,5 +1,5 @@
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
-import { PropertyType } from "neolace/deps/neolace-api.ts";
+import { PropertyType, PropertyMode } from "neolace/deps/neolace-api.ts";
 
 import { group, test, resetDBToBlankSnapshot, assertEquals, beforeAll } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -149,6 +149,7 @@ group(import.meta, () => {
                             id: prop1,
                             importance: 15,
                             name: "Property 1",
+                            default: null,
                         },
                         facts: [
                             {
@@ -180,7 +181,43 @@ group(import.meta, () => {
 
         // TODO: test slots
 
-        // TODO: test default values / computed values
+        group("default values", () => {
+            test("Automatic reverse properties can be implemented using default values", async () => {
+                // Create a site where B is an A, but A has an automatic reverse property
+                await resetDBToBlankSnapshot();
+                const pfBisA = VNID();
+                const propHasTypes = VNID();
+                const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
+                await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                    {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+                    {code: "CreateProperty", data: {
+                        id: entryIsA, name: "Type of", type: PropertyType.RelIsA, appliesTo: [{entryType}], descriptionMD: "", importance: 1,
+                    }},
+                    // Create the automatic reverse property of "is a / type of":
+                    {code: "CreateProperty", data: {
+                        id: propHasTypes, name: "Has types", type: PropertyType.RelOther, mode: PropertyMode.Auto, appliesTo: [{entryType}], descriptionMD: "", importance: 1,
+                        default: `this.reverseProp(prop=[[/prop/${entryIsA}]])`,
+                    }},
+                    // Create entry A:
+                    {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
+                    // Create entry B and its properties:
+                    {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
+                    {code: "AddPropertyValue", data: {entry: B, property: entryIsA, valueExpression: `[[/entry/${A}]]`, note: "B is an A", propertyFactId: pfBisA}},
+                ]}));
+
+                assertEquals(await graph.read(tx => getEntryProperties(A, {tx})), [
+                    {
+                        property: {
+                            id: propHasTypes,
+                            importance: 1,
+                            name: "Has types",
+                            default: `this.reverseProp(prop=[[/prop/${entryIsA}]])`,
+                        },
+                        facts: [],
+                    }
+                ]);
+            });
+        });
 
         // TODO: test multiple property values
 
@@ -241,6 +278,7 @@ group(import.meta, () => {
                                 propId === prop3 ? "3" :
                                 "X"
                             }`,
+                            default: null,
                         },
                         facts: [{
                             factId,
@@ -262,7 +300,7 @@ group(import.meta, () => {
                 assertEquals(await graph.read(tx => getEntryProperties(B, {tx})), [
                     // B is an A
                     {
-                        property: {id: entryIsA, importance: 1, name: "Type of"},
+                        property: {id: entryIsA, importance: 1, name: "Type of", default: null},
                         facts: [{factId: pfBisA, note: "B is an A", valueExpression: `[[/entry/${A}]]`, source: {from: "ThisEntry"}}],
                     },
                     // value A1 is inherited from Entry A, this entry's parent:
@@ -276,7 +314,7 @@ group(import.meta, () => {
                 assertEquals(await graph.read(tx => getEntryProperties(C, {tx})), [
                     // C is a B
                     {
-                        property: {id: entryIsA, importance: 1, name: "Type of"},
+                        property: {id: entryIsA, importance: 1, name: "Type of", default: null},
                         facts: [{factId: pfCisB, note: "C is a B", valueExpression: `[[/entry/${B}]]`, source: {from: "ThisEntry"}}],
                     },
                     // value A1 is inherited from Entry A, this entry's grandparent:
