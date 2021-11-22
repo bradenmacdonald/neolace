@@ -24,6 +24,7 @@ type EntryPropertyValueSet = {
         factId: VNID,
         valueExpression: string,
         note: string,
+        rank: number,
         source: {from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
     }>,
 };
@@ -113,6 +114,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
                     factId: pf.id,
                     valueExpression: pf.valueExpression,
                     note: pf.note,
+                    rank: pf.rank,
                     source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
                 })
             } AS propertyData
@@ -150,6 +152,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
                 factId: Field.VNID,
                 valueExpression: Field.String,
                 note: Field.String,
+                rank: Field.Int,
                 source: Field.Any,
             })),
         }),
@@ -159,6 +162,14 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
     const result: any = data.map(d => d.propertyData);
     if (options.totalCount) {
         result.totalCount = 1; // TODO: await totalCountPromise;
+    }
+
+    // Sort property values by rank.
+    // We do this at the end because it's more efficient to do once most irrelevant/inherited facts are stripped out,
+    // and because it's a little tricky to do in the Cypher query due to its structure and use of collect()
+    for (const prop of result) {
+        // deno-lint-ignore no-explicit-any
+        prop.facts.sort((pfA: any, pfB: any) => pfA.rank - pfB.rank);
     }
 
     return result;

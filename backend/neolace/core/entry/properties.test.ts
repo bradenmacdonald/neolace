@@ -111,7 +111,8 @@ group(import.meta, () => {
         // Property IDs:
         const entryIsA = VNID(), prop1 = VNID(), prop2 = VNID(), prop3 = VNID();
         // Property Fact IDs:
-        const factIdB1 = VNID();
+        const factIdA1 = VNID(), factIdB1 = VNID();
+        const pfBisA = VNID(), pfCisB = VNID();
 
         group("blank entry and single property entry", () => {
             beforeAll(async () => {
@@ -156,6 +157,7 @@ group(import.meta, () => {
                                 factId: factIdB1,
                                 note: "",
                                 source: {from: "ThisEntry"},
+                                rank: 1,
                                 valueExpression: '"value for B prop1"',
                             },
                         ],
@@ -219,8 +221,6 @@ group(import.meta, () => {
             });
         });
 
-        // TODO: test multiple property values
-
         group("inheritance", () => {
             test("Returns inherited properties from parent entries, if the property is marked as inheritable", async () => {
                 await resetDBToBlankSnapshot();
@@ -230,9 +230,7 @@ group(import.meta, () => {
                 //   Entry C has                         prop3 = C3
                 //   C inherits from B which inherits from A
                 //   Property 3 is not inheritable, but the others are.
-                const pfA1 = VNID(), pfA2 = VNID(), pfA3 = VNID();
-                const pfBisA = VNID(), pfB2 = VNID();
-                const pfCisB = VNID(), pfC3 = VNID();
+                const pfA1 = VNID(), pfA2 = VNID(), pfA3 = VNID(), pfB2 = VNID(), pfC3 = VNID();
                 const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
                 await graph.runAsSystem(ApplyEdits({siteId, edits: [
                     {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
@@ -284,6 +282,7 @@ group(import.meta, () => {
                             factId,
                             note: "",
                             source,
+                            rank: 1,
                             valueExpression: `"${value}"`,
                         }],
                     };
@@ -301,7 +300,7 @@ group(import.meta, () => {
                     // B is an A
                     {
                         property: {id: entryIsA, importance: 1, name: "Type of", default: null},
-                        facts: [{factId: pfBisA, note: "B is an A", valueExpression: `[[/entry/${A}]]`, source: {from: "ThisEntry"}}],
+                        facts: [{factId: pfBisA, note: "B is an A", valueExpression: `[[/entry/${A}]]`, source: {from: "ThisEntry"}, rank: 1}],
                     },
                     // value A1 is inherited from Entry A, this entry's parent:
                     expectedPropValue(prop1, pfA1, "A1", {from: "AncestorEntry", entryId: A}),
@@ -315,13 +314,116 @@ group(import.meta, () => {
                     // C is a B
                     {
                         property: {id: entryIsA, importance: 1, name: "Type of", default: null},
-                        facts: [{factId: pfCisB, note: "C is a B", valueExpression: `[[/entry/${B}]]`, source: {from: "ThisEntry"}}],
+                        facts: [{factId: pfCisB, note: "C is a B", valueExpression: `[[/entry/${B}]]`, source: {from: "ThisEntry"}, rank: 1}],
                     },
                     // value A1 is inherited from Entry A, this entry's grandparent:
                     expectedPropValue(prop1, pfA1, "A1", {from: "AncestorEntry", entryId: A}),
                     expectedPropValue(prop2, pfB2, "B2", {from: "AncestorEntry", entryId: B}),
                     expectedPropValue(prop3, pfC3, "C3"),
                 ]);
+            });
+        });
+
+        group("multiple property values", () => {
+            test("test multiple values for a single property", async () => {
+                await resetDBToBlankSnapshot();
+                // Create a site with:
+                //   Entry A has one property with one value
+                //   Entry B inherits from A and has the same property with *TWO VALUES*
+                //   Entry C inherits from B and has no direct properties.
+                const factIdB1v1 = VNID(), factIdB1v2 = VNID();
+                const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
+                await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                    {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+                    {code: "CreateProperty", data: {
+                        id: entryIsA, name: "Type of", type: PropertyType.RelIsA, appliesTo: [{entryType}], descriptionMD: "", importance: 1,
+                    }},
+                    {code: "CreateProperty", data: {id: prop1, name: "Property 1", type: PropertyType.Value, appliesTo: [{entryType}], descriptionMD: "", inheritable: true}},
+                    // Create A
+                    {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
+                    {code: "AddPropertyValue", data: {entry: A, property: prop1, propertyFactId: factIdA1, valueExpression: `"value for A prop1"`, note: ""}},
+                    // Create B
+                    {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
+                    // B inherits from A
+                    {code: "AddPropertyValue", data: {entry: B, property: entryIsA, propertyFactId: pfBisA, valueExpression: `[[/entry/${A}]]`, note: ""}},
+                    {code: "AddPropertyValue", data: {entry: B, property: prop1, propertyFactId: factIdB1v1, valueExpression: `"value 1 for B prop1"`, note: "first"}},
+                    {code: "AddPropertyValue", data: {entry: B, property: prop1, propertyFactId: factIdB1v2, valueExpression: `"value 2 for B prop1"`, note: "second"}},
+                    // Create C
+                    {code: "CreateEntry", data: {id: C, name: "Entry C", type: entryType, friendlyId: "c", description: ""}},
+                    // C inherits from B
+                    {code: "AddPropertyValue", data: {entry: C, property: entryIsA, propertyFactId: pfCisB, valueExpression: `[[/entry/${B}]]`, note: ""}},
+                ]}));
+                // Check properties of B:
+                assertEquals(
+                    await graph.read(tx => getEntryProperty({entryId: B, propertyId: prop1, tx})),
+                    {
+                        property: {
+                            id: prop1,
+                            name: "Property 1",
+                            importance: 15,
+                            default: null,
+                        },
+                        facts: [
+                            {factId: factIdB1v1, valueExpression: `"value 1 for B prop1"`, note: "first", source: {from: "ThisEntry"}, rank: 1},
+                            {factId: factIdB1v2, valueExpression: `"value 2 for B prop1"`, note: "second", source: {from: "ThisEntry"}, rank: 2},
+                        ],
+                    },
+                );
+                // Check properties of C (inherited):
+                assertEquals(
+                    await graph.read(tx => getEntryProperty({entryId: C, propertyId: prop1, tx})),
+                    {
+                        property: {
+                            id: prop1,
+                            name: "Property 1",
+                            importance: 15,
+                            default: null,
+                        },
+                        facts: [
+                            // Note that "rank" will be set automatically:
+                            {rank: 1, factId: factIdB1v1, valueExpression: `"value 1 for B prop1"`, note: "first", source: {from: "AncestorEntry", entryId: B}},
+                            {rank: 2, factId: factIdB1v2, valueExpression: `"value 2 for B prop1"`, note: "second", source: {from: "AncestorEntry", entryId: B}},
+                        ],
+                    },
+                );
+            });
+
+            test("property rank can be used to explicitly order properties", async () => {
+                await resetDBToBlankSnapshot();
+                // Create a site with:
+                //   Entry A has one property with three values in a specific order
+                const factIdA1v1 = VNID(), factIdA1v2 = VNID(), factIdA1v3 = VNID();
+                const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
+                await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                    {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
+                    {code: "CreateProperty", data: {id: prop1, name: "Property 1", type: PropertyType.Value, appliesTo: [{entryType}], descriptionMD: "", inheritable: true}},
+                    // Create A
+                    {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
+                    {code: "AddPropertyValue", data: {
+                        entry: A, property: prop1, propertyFactId: factIdA1v2,
+                        valueExpression: `"value 2 for A prop1"`, note: "second but added first", rank: 2,
+                    }},
+                    {code: "AddPropertyValue", data: {
+                        entry: A, property: prop1, propertyFactId: factIdA1v3,
+                        valueExpression: `"value 3 for A prop1"`, note: "third but added second", rank: 3,
+                    }},
+                    {code: "AddPropertyValue", data: {
+                        entry: A, property: prop1, propertyFactId: factIdA1v1,
+                        valueExpression: `"value 1 for A prop1"`, note: "first but added third", rank: 1,
+                    }},
+                ]}));
+                // Check properties of A:
+                assertEquals(
+                    await graph.read(tx => getEntryProperty({entryId: A, propertyId: prop1, tx})),
+                    {
+                        property: {id: prop1, name: "Property 1", importance: 15, default: null},
+                        facts: [
+                            {factId: factIdA1v1, valueExpression: `"value 1 for A prop1"`, note: "first but added third", rank: 1, source: {from: "ThisEntry"}},
+                            {factId: factIdA1v2, valueExpression: `"value 2 for A prop1"`, note: "second but added first", rank: 2, source: {from: "ThisEntry"}},
+                            {factId: factIdA1v3, valueExpression: `"value 3 for A prop1"`, note: "third but added second", rank: 3, source: {from: "ThisEntry"}},
+                        ],
+                    },
+                );
             });
         });
 

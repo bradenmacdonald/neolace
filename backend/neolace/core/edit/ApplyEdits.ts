@@ -151,10 +151,13 @@ export const ApplyEdits = defineAction({
 
                 case AddPropertyValue.code: {
                     const valueExpression = edit.data.valueExpression;
-                    const updatedPropertyFactFields = {
+                    const updatedPropertyFactFields: Record<string, unknown> = {
                         valueExpression: edit.data.valueExpression,
                         note: edit.data.note,
                     };
+                    if (edit.data.rank !== undefined) {
+                        updatedPropertyFactFields.rank = edit.data.rank;
+                    }
 
                     // Validate the entry ID, property ID, and ensure they're part of the current site.
                     // Then create the new property fact.
@@ -166,13 +169,16 @@ export const ApplyEdits = defineAction({
                             MATCH (property:${Property} {id: ${edit.data.property}})-[:${Property.rel.FOR_SITE}]->(site)
                             // Ensure that the property (still) applies to this entry type:
                             MATCH (property)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+                            // Set the rank automatically by default:
+                            OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(existingPf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
+                            WITH entry, property, max(existingPf.rank) AS maxCurrentRank
                             // Create the new property fact:
                             CREATE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {
                                 id: ${edit.data.propertyFactId}
                             })-[:${PropertyFact.rel.FOR_PROP}]->(property)
+                            SET pf.rank = CASE WHEN maxCurrentRank IS NULL THEN 1 ELSE maxCurrentRank + 1 END
                             SET pf += ${updatedPropertyFactFields}
                         `.RETURN({
-                            "entryType.id": Field.VNID,
                             "property.type": Field.String,
                         }));
                     } catch (err) {

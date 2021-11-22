@@ -1,3 +1,4 @@
+import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
     VNodeType,
@@ -46,6 +47,9 @@ export class PropertyFact extends VNodeType {
 
         /** An optional MDT (Markdown) string explaining something about this property value */
         note: Field.String,
+
+        /** If this property has multiple values (facts), this field determines their order. Rank 0 comes first, then 1... */
+        rank: Field.Int.Check(check.number.integer().min(0).max(999_999_999)),
 
         /**
          * If this is a relationship (from an Entry, to another Entry), then we actually create a direct relationship

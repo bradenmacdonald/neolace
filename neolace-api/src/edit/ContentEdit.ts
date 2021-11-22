@@ -104,6 +104,8 @@ export const AddPropertyValue = ContentEditType({
         valueExpression: string,
         /** An optional markdown note clarifying details of the property value */
         note: string,
+        /** Rank determines the order in which values are listed if there are multiple values for one property */
+        rank: number.strictOptional(),
     }),
     describe: (data) => `Added value for \`Property ${data.property}\` property on \`Entry ${data.entry}\``,
 });
@@ -118,6 +120,8 @@ export const UpdatePropertyValue = ContentEditType({
         valueExpression: string,
         /** An optional markdown note clarifying details of the property value */
         note: string,
+        /** Change the rank of this property */
+        rank: number.strictOptional(),
     }),
     describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value`,
 });
