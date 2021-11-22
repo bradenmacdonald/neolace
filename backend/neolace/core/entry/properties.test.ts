@@ -426,17 +426,18 @@ group(import.meta, () => {
         });
 
         group("slots", () => {
-            test("'slots' allow partial inheritance where _some_ inherited values get overwritten, others don't.", async () => {
+            const siteId = VNID();
+            const componentType = VNID();
+            const entryHasPart = VNID();
+            const steeringWheel = VNID(), combustionEngine = VNID(), electricMotor = VNID(), car = VNID(), electricCar = VNID();
+            const pfCarHasWheel = VNID(), pfCarhasEngine = VNID(), pfElectricCarIsCar = VNID(), pfElectricCarHasMotor = VNID();
+            beforeAll(async () => {
                 await resetDBToBlankSnapshot();
                 // Create a site with:
                 //   Entries "Steering Wheel", "Combustion Engine", "Electric Motor"
                 //   Entry "Car" has part "Steering Wheel" in slot "sw", "Combustion Engine" in slot "motor"
                 //   Entry "Electric Car" inherits from "Car" and has part "Electic Motor" in slot "motor"
-                const componentType = VNID();
-                const entryHasPart = VNID();
-                const steeringWheel = VNID(), combustionEngine = VNID(), electricMotor = VNID(), car = VNID(), electricCar = VNID();
-                const pfCarHasWheel = VNID(), pfCarhasEngine = VNID(), pfElectricCarIsCar = VNID(), pfElectricCarHasMotor = VNID();
-                const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
+                await graph.runAsSystem(CreateSite({id: siteId, name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
                 await graph.runAsSystem(ApplyEdits({siteId, edits: [
                     {code: "CreateEntryType", data: {id: entryType, name: "Vehicle"}},
                     {code: "CreateEntryType", data: {id: componentType, name: "Component"}},
@@ -462,7 +463,8 @@ group(import.meta, () => {
                     {code: "AddPropertyValue", data: {entry: electricCar, property: entryIsA, valueExpression: `[[/entry/${car}]]`, note: "wheel", propertyFactId: pfElectricCarIsCar}},
                     {code: "AddPropertyValue", data: {entry: electricCar, property: entryHasPart, slot: "motor", valueExpression: `[[/entry/${electricMotor}]]`, note: "motor", propertyFactId: pfElectricCarHasMotor}},
                 ]}));
-
+            });
+            test("'slots' allow partial inheritance where _some_ inherited values get overwritten, others don't.", async () => {
                 // Car is normal, has two parts:
                 assertEquals(
                     await graph.read(tx => getEntryProperty({entryId: car, propertyId: entryHasPart, tx})),
@@ -485,6 +487,26 @@ group(import.meta, () => {
                         facts: [
                             {factId: pfElectricCarHasMotor, valueExpression: `[[/entry/${electricMotor}]]`, note: "motor", slot: "motor", rank: 1, source: {from: "ThisEntry"}},
                             {factId: pfCarHasWheel, valueExpression: `[[/entry/${steeringWheel}]]`, note: "wheel", slot: "sw", rank: 1, source: {from: "AncestorEntry", entryId: car}},
+                        ],
+                    },
+                );
+            });
+            test("slots can be disabled, even after slot values were set", async () => {
+                await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                    {code: "UpdateProperty", data: {
+                        id: entryHasPart,
+                        enableSlots: false,
+                    }},
+                ]}));
+                // Now with slots disabled, electric car won't inherit steering wheel, because having any value for
+                // "has parts" will override ALL inherited values.
+                assertEquals(
+                    await graph.read(tx => getEntryProperty({entryId: electricCar, propertyId: entryHasPart, tx})),
+                    {
+                        property: {id: entryHasPart, name: "Has Part", importance: 2, default: null},
+                        facts: [
+                            // However, slot values are still returned, since they are set:
+                            {factId: pfElectricCarHasMotor, valueExpression: `[[/entry/${electricMotor}]]`, note: "motor", slot: "motor", rank: 1, source: {from: "ThisEntry"}},
                         ],
                     },
                 );
