@@ -1,5 +1,5 @@
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
-import { PropertyType, PropertyMode } from "neolace/deps/neolace-api.ts";
+import { PropertyType, PropertyMode, EditList } from "neolace/deps/neolace-api.ts";
 
 import { group, test, resetDBToBlankSnapshot, assertEquals, beforeAll } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -8,7 +8,7 @@ import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
-import { getEntryProperties, getEntryProperty } from "neolace/core/entry/properties.ts";
+import { getEntryProperties, getEntryProperty, EntryPropertyValueSet } from "neolace/core/entry/properties.ts";
 
 group(import.meta, () => {
 
@@ -513,112 +513,107 @@ group(import.meta, () => {
             });
         });
 
-        /*
-            test("getPropery() gives the same result for each property as getEntryProperties()", async () => {
-                for (const entryId of [A, B, C]) {
-                    const allProps = await graph.read(tx => getEntryProperties(entryId, {tx}));
-                    for (const propData of allProps) {
-                        // get the property by ID:
-                        assertEquals(
-                            await graph.read(tx => getEntryProperty(entryId, {propertyId: propData.id, tx})),
-                            propData,
-                        );
-                    }
-                }
-            });
-        });
-
         test("Can paginate, filter, and provide total count of properties", async () => {
             await resetDBToBlankSnapshot();
             // Create a site with:
-            //   Entry A has 10 properties [and 5 simple property values on its type]
-            //   Entry B has 30 properties [and 5 simple property values on its type]
+            //   Entry A has 10 properties [and 5 non-editable Auto values that all entries of that type have]
+            //   Entry B has 30 properties [and 5 non-editable Auto values that all entries of that type have]
             //   B inherits 8 properties from A, but overwrites 2 of them so only 6 are inherited
+            //   B also has 1 "is a" property to define its relationship to A
             //
             //   So: A has 15 properties total (10 + 5)
-            //       B has 41 properties total (30 + 5 + 6)
+            //       B has 42 properties total (30 + 5 + 6 + 1)
             const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
                 {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
-                {code: "CreateEntryType", data: {id: propertyType, name: "PropertyType"}},
-                {code: "UpdateEntryTypeFeature", data: {entryTypeId: propertyType, feature: {
-                    featureType: "UseAsProperty",
-                    enabled: true,
-                    config: {appliesToEntryTypes: [entryType]},
-                }}},
-                {code: "CreateRelationshipType", data: {id: entryIsA, category: RelationshipCategory.IS_A, nameForward: "is a", nameReverse: "has types"}},
-                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
+                {code: "CreateProperty", data: {
+                    id: entryIsA, name: "Is a", type: PropertyType.RelIsA, appliesTo: [{entryType}], descriptionMD: "", importance: 99,
+                }},
                 // Create entry A and B:
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                 {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
-                {code: "CreateRelationshipFact", data: {fromEntry: B, type: entryIsA, toEntry: A, id: VNID()}},  // B is a A
+                // B inherits from A:
+                {code: "AddPropertyValue", data: {entry: B, property: entryIsA, propertyFactId: pfBisA, valueExpression: `[[/entry/${A}]]`, note: ""}},
             ]}));
 
             const edits: EditList = [];
 
-            // Create 5 SimplePropertyValues on the entry type:
-            const simplePropertyValues = [];
+            // Create 5 non-editable Auto values that all entries of that type have:
+            const autoPropertyValues: EntryPropertyValueSet[] = [];
             for (let i = 0; i < 5; i++) {
                 const id = VNID();
                 const args = {
                     id,
+                    name: `Auto Property ${i}`,
                     importance: i,
-                    note: `N${i}`,
-                    valueExpression: `"SPV${i} value"`,
-                    label: `SPV${i} Label`
+                    default: `"AutoProp${i} value"`,
                 };
-                edits.push({code: "UpdateEntryType", data: {id: entryType, addOrUpdateSimpleProperties: [args]}});
-                simplePropertyValues.push({
+                edits.push({
+                    code: "CreateProperty", data: {appliesTo: [{entryType}], descriptionMD: "",
+                    mode: PropertyMode.Auto,
                     ...args,
-                    type: "SimplePropertyValue",
-                    source: {from: "EntryType"},
+                }});
+                autoPropertyValues.push({
+                    property: {...args},
+                    facts: [],
                 });
             }
 
-
-            // Create 10 normal property values on entry A, the first 8 of which are inheritable
-            const aPropertyValues = [];
+            // Create 10 property values on entry A, the first 8 of which are inheritable
+            const aPropertyValues: EntryPropertyValueSet[] = [];
             for (let i = 0; i < 10; i++) {
                 const id = VNID();
-                edits.push({code: "CreateEntry", data: {id, name: `Property ${i}`, type: propertyType, friendlyId: `p${i}`, description: ""}});
-                edits.push({code: "UpdateEntryFeature", data: {entryId: id, feature: { featureType: "UseAsProperty",
-                    importance: i,
-                    inherits: i < 8,
-                }}});
-                edits.push({code: "UpdatePropertyValue", data: {entry: A, property: id, valueExpression: `"A${i}"`, note: ""}});
-                aPropertyValues.push({
-                    label: `Property ${i}`,
-                    valueExpression: `"A${i}"`,
-                    importance: i,
+                const propArgs = {
                     id,
-                    note: "",
-                    type: "PropertyValue",
-                    source: {from: "ThisEntry"},
-                    displayAs: null,
+                    name: `Property ${i}`,
+                    importance: i,
+                };
+                edits.push({
+                    code: "CreateProperty", data: {...propArgs, appliesTo: [{entryType}], descriptionMD: "",
+                    inheritable: i < 8,
+                }});
+                const factId = VNID();
+                edits.push({code: "AddPropertyValue", data: {entry: A, property: id, propertyFactId: factId, valueExpression: `"A${i}"`, note: ""}});
+                aPropertyValues.push({
+                    property: {...propArgs, default: null},
+                    facts: [{
+                        factId,
+                        valueExpression: `"A${i}"`,
+                        note: "",
+                        rank: 1,
+                        source: {from: "ThisEntry"},
+                    }],
                 });
             }
 
             // B will inherit eight properties (0..7) from A, but will overwrite two of them:
-            edits.push({code: "UpdatePropertyValue", data: {entry: B, property: aPropertyValues[6].id, valueExpression: `"B6"`, note: ""}});
-            edits.push({code: "UpdatePropertyValue", data: {entry: B, property: aPropertyValues[7].id, valueExpression: `"B7"`, note: ""}});
+            const factIdB6 = VNID();
+            edits.push({code: "AddPropertyValue", data: {entry: B, property: aPropertyValues[6].property.id, propertyFactId: factIdB6, valueExpression: `"B6"`, note: ""}});
+            const factIdB7 = VNID();
+            edits.push({code: "AddPropertyValue", data: {entry: B, property: aPropertyValues[7].property.id, propertyFactId: factIdB7, valueExpression: `"B7"`, note: ""}});
             // In addition to those two overwritten properties, B has 28 other properties set:
             const bPropertyValues = [];
             for (let i = 0; i < 28; i++) {
                 const id = VNID();
-                edits.push({code: "CreateEntry", data: {id, name: `B Property ${i}`, type: propertyType, friendlyId: `p-b${i}`, description: ""}});
-                edits.push({code: "UpdateEntryFeature", data: {entryId: id, feature: { featureType: "UseAsProperty",
-                    importance: 20 + i,
-                }}});
-                edits.push({code: "UpdatePropertyValue", data: {entry: B, property: id, valueExpression: `"B${i}"`, note: ""}});
-                bPropertyValues.push({
-                    label: `B Property ${i}`,
-                    valueExpression: `"B${i}"`,
-                    importance: 20 + i,
+                const propArgs = {
                     id,
-                    note: "",
-                    type: "PropertyValue",
-                    source: {from: "ThisEntry"},
-                    displayAs: null,
+                    name: `B Property ${i}`,
+                    importance: 20 + i,
+                };
+                edits.push({
+                    code: "CreateProperty", data: {...propArgs, appliesTo: [{entryType}], descriptionMD: "",
+                }});
+                const factId = VNID();
+                edits.push({code: "AddPropertyValue", data: {entry: B, property: id, propertyFactId: factId, valueExpression: `"B${i}"`, note: ""}});
+                bPropertyValues.push({
+                    property: {...propArgs, default: null},
+                    facts: [{
+                        factId,
+                        valueExpression: `"B${i}"`,
+                        note: "",
+                        rank: 1,
+                        source: {from: "ThisEntry"},
+                    }],
                 });
             }
 
@@ -627,57 +622,61 @@ group(import.meta, () => {
             // Get the properties of A with importance <= 2:
             assertEquals(await graph.read(tx => getEntryProperties(A, {tx, maxImportance: 2})), [
                 // Results are sorted by importance, and by label.
+                autoPropertyValues[0],
                 aPropertyValues[0],
-                simplePropertyValues[0],
+                autoPropertyValues[1],
                 aPropertyValues[1],
-                simplePropertyValues[1],
+                autoPropertyValues[2],
                 aPropertyValues[2],
-                simplePropertyValues[2],
             ]);
 
             // Now get same as above but SKIP the first two and LIMIT to 3 results, and include the total count.
             {
                 const result = await graph.read(tx => getEntryProperties(A, {tx, skip: 2, limit: 3, totalCount: true, maxImportance: 2}));
                 assertEquals(result.slice(), [  // Use slice to discard the totalCount info which otherwise counts as a difference
+                    autoPropertyValues[1],
                     aPropertyValues[1],
-                    simplePropertyValues[1],
-                    aPropertyValues[2],
+                    autoPropertyValues[2],
                 ]);
                 assertEquals(result.totalCount, 6);
             }
 
+            // Helper to generate the expected results for B based on the ones from A:
+            const updateExpectedFact = (input: {facts: {source: unknown}[]}, updates: Record<string, unknown>) => {
+                const newData = {...input};
+                newData.facts[0] = {...input.facts[0], ...updates};
+                return input;
+            }
 
             // Get the first ten properties of B, and the total count
             {
                 const result = await graph.read(tx => getEntryProperties(B, {tx, limit: 16, totalCount: true}));
                 assertEquals(result.slice(), [  // Use slice to discard the totalCount info which otherwise counts as a difference
                     // B inherits 8 properties from A, but overwrites 2 of them so only 6 are inherited,
-                    // but also has SimplePropertyValues interleaved
-                    {...aPropertyValues[0], source: {from: "AncestorEntry", entryId: A}},
-                    simplePropertyValues[0],
-                    {...aPropertyValues[1], source: {from: "AncestorEntry", entryId: A}},
-                    simplePropertyValues[1],
-                    {...aPropertyValues[2], source: {from: "AncestorEntry", entryId: A}},
-                    simplePropertyValues[2],
-                    {...aPropertyValues[3], source: {from: "AncestorEntry", entryId: A}},
-                    simplePropertyValues[3],
-                    {...aPropertyValues[4], source: {from: "AncestorEntry", entryId: A}},
-                    simplePropertyValues[4],
-                    {...aPropertyValues[5], source: {from: "AncestorEntry", entryId: A}},
-                    {...aPropertyValues[6], valueExpression: `"B6"`, source: {from: "ThisEntry"}},  // B overrides inherited property 6
-                    {...aPropertyValues[7], valueExpression: `"B7"`, source: {from: "ThisEntry"}},  // B overrides inherited property 7
+                    // but also has autoPropertyValues interleaved
+                    autoPropertyValues[0],
+                    updateExpectedFact(aPropertyValues[0], {source: {from: "AncestorEntry", entryId: A}}),
+                    autoPropertyValues[1],
+                    updateExpectedFact(aPropertyValues[1], {source: {from: "AncestorEntry", entryId: A}}),
+                    autoPropertyValues[2],
+                    updateExpectedFact(aPropertyValues[2], {source: {from: "AncestorEntry", entryId: A}}),
+                    autoPropertyValues[3],
+                    updateExpectedFact(aPropertyValues[3], {source: {from: "AncestorEntry", entryId: A}}),
+                    autoPropertyValues[4],
+                    updateExpectedFact(aPropertyValues[4], {source: {from: "AncestorEntry", entryId: A}}),
+                    updateExpectedFact(aPropertyValues[5], {source: {from: "AncestorEntry", entryId: A}}),
+                    updateExpectedFact(aPropertyValues[6], {factId: factIdB6, valueExpression: `"B6"`, source: {from: "ThisEntry"}}),  // B overrides inherited property 6
+                    updateExpectedFact(aPropertyValues[7], {factId: factIdB7, valueExpression: `"B7"`, source: {from: "ThisEntry"}}),  // B overrides inherited property 7
                     bPropertyValues[0],
                     bPropertyValues[1],
                     bPropertyValues[2],
                 ]);
                 // Check that the total count matches the actual results if we fetch them all
                 assertEquals((await graph.read(tx => getEntryProperties(B, {tx}))).length, result.totalCount);
-                assertEquals(result.totalCount, 41);
+                assertEquals(result.totalCount, 42);
             }
         });
 
         // TODO: test the dbHits performance of getProperties()
-
-    */
     });
 });

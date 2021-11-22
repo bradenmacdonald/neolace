@@ -12,7 +12,7 @@ import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
  * consolidates the values together into a single value per property and returns a serialized
  * lookup value, not a lookup expression.
  */
-type EntryPropertyValueSet = {
+export type EntryPropertyValueSet = {
     property: {
         id: VNID,
         name: string,
@@ -55,33 +55,30 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
 
     const maxImportance = options.maxImportance ?? 100;  // Importance is in the range 0-99 so <= 100 will always match everything
 
-    /*
+    if (options.specificPropertyId && options.totalCount) {
+        throw new Error(`Cannot request totalCount along with specific property ID - no need for wasting extra calculation when count is either 0 or 1.`);
+    }
+
     // Start fetching the total count of matching properties asynchronously, if requested
+    // TBD: is this really asynchronous, if it's part of the same transaction? Probably not.
     const totalCountPromise: Promise<number|undefined> = !options.totalCount ? new Promise(resolve => resolve(undefined)) : options.tx.queryOne(C`
         MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
 
-        // Count "Simple Property Values" attached to the entry type
-        WITH entry, entryType
-        OPTIONAL MATCH (entryType)-[:${EntryType.rel.HAS_SIMPLE_PROP}]->(spv:${SimplePropertyValue})
-        WHERE spv.importance <= ${maxImportance}
+        MATCH (prop:${Property})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+            WHERE
+                prop.importance <= ${maxImportance}
+                AND (
+                    prop.default <> ""
+                    OR exists(
+                        (entry)-[:${Entry.rel.PROP_FACT}]->(:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
+                    )
+                    OR (prop.inheritable AND exists(
+                        (entry)-[:${Entry.rel.IS_A}*1..50]->(:${Entry})-[:${Entry.rel.PROP_FACT}]->(:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
+                    ))
+                )
 
-        WITH entry, entryType, count(spv) AS spvCount
-
-        // Now count all "normal" property values attached to this entry or its ancestors (for properties that allow inheritance)
-        MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.PROP_ENTRY}]->(propEntry)
-        OPTIONAL MATCH (propEntry)-[:${Entry.rel.HAS_FEATURE_DATA}]->(propData:${UseAsPropertyData})
-        WITH entry, entryType, spvCount, path, propEntry, propData
-        WHERE
-            // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
-            (length(path) = 2 OR propData.inherits = true)
-        AND
-            (propData.importance <= ${maxImportance}) OR (propData IS NULL AND ${UseAsPropertyData.defaultImportance} <= ${maxImportance})
-
-        WITH entry, entryType, spvCount, propEntry, min(length(path)) AS distance
-        WITH entry, entryType, spvCount, count(propEntry) AS propCount
-        WITH spvCount + propCount AS totalCount
-    `.RETURN({totalCount: Field.Int})).then(r => r.totalCount);
-    */
+        RETURN count(prop) AS totalCount
+    `.givesShape({totalCount: Field.Int})).then(r => r.totalCount);
 
     const data = await options.tx.query(C`
         MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
@@ -131,6 +128,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
                     ${options.specificPropertyId ? C`prop.id = ${options.specificPropertyId} AND` : C``}
                     // TODO: use NULL or "" but not both
                     prop.default <> ""
+                    AND prop.importance <= ${maxImportance}
                     AND NOT exists((entry)-[:${Entry.rel.IS_A}*0..50]->(:${Entry})-[:PROP_FACT]->(:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop))
 
             RETURN {
@@ -163,8 +161,10 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
 
     // deno-lint-ignore no-explicit-any
     const result: any = data.map(d => d.propertyData);
+
+    // Add the total count onto the array, if requested.
     if (options.totalCount) {
-        result.totalCount = 1; // TODO: await totalCountPromise;
+        result.totalCount = await totalCountPromise;
     }
 
     // Post processing
@@ -182,7 +182,6 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
             }
         });
     }
-
 
     return result;
 }
