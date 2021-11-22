@@ -154,9 +154,13 @@ export const ApplyEdits = defineAction({
                     const updatedPropertyFactFields: Record<string, unknown> = {
                         valueExpression: edit.data.valueExpression,
                         note: edit.data.note,
+                        slot: "",
                     };
                     if (edit.data.rank !== undefined) {
                         updatedPropertyFactFields.rank = edit.data.rank;
+                    }
+                    if (edit.data.slot !== undefined) {
+                        updatedPropertyFactFields.slot = edit.data.slot;
                     }
 
                     // Validate the entry ID, property ID, and ensure they're part of the current site.
@@ -389,6 +393,7 @@ export const ApplyEdits = defineAction({
                             editNoteMD: "",
                             displayAs: "",
                             default: "",
+                            enableSlots: false,
                         }}
                     `.RETURN({}));
                     /* falls through */
@@ -443,6 +448,7 @@ export const ApplyEdits = defineAction({
                         "importance",
                         "displayAs",
                         "editNoteMD",
+                        "enableSlots"
                     ] as const) {
                         if (edit.data[field] !== undefined) {
                             changes[field] = edit.data[field];

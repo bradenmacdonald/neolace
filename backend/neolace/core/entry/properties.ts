@@ -25,6 +25,7 @@ type EntryPropertyValueSet = {
         valueExpression: string,
         note: string,
         rank: number,
+        slot?: string,
         source: {from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
     }>,
 };
@@ -101,12 +102,12 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
             // We use minDistance below so that for each inherited property, we only get the
             // values set by the closest ancestor. e.g. if grandparent->parent->child each
             // have birthDate, child's birthDate will take priority and grandparent/parent's won't be returned
-            WITH entry, prop, min(length(path)) AS minDistance, collect({pf: pf, ancestor: ancestor, distance: length(path)}) AS facts
+            WITH entry, prop, CASE WHEN prop.enableSlots THEN pf.slot ELSE null END AS slot, min(length(path)) AS minDistance, collect({pf: pf, ancestor: ancestor, distance: length(path)}) AS facts
             // Now filter to only have values from the closest ancestor:
-            WITH entry, prop, minDistance, facts
+            WITH entry, prop, slot, minDistance, facts
             UNWIND facts as f
-            WITH entry, prop, minDistance, f WHERE f.distance = minDistance
-            WITH entry, prop, minDistance, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
+            WITH entry, prop, slot, minDistance, f WHERE f.distance = minDistance
+            WITH entry, prop, slot, minDistance, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
 
             RETURN {
                 property: prop {.id, .name, .importance, default: null},
@@ -115,6 +116,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
                     valueExpression: pf.valueExpression,
                     note: pf.note,
                     rank: pf.rank,
+                    slot: pf.slot,
                     source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
                 })
             } AS propertyData
@@ -153,6 +155,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
                 valueExpression: Field.String,
                 note: Field.String,
                 rank: Field.Int,
+                slot: Field.String,
                 source: Field.Any,
             })),
         }),
@@ -164,13 +167,22 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
         result.totalCount = 1; // TODO: await totalCountPromise;
     }
 
-    // Sort property values by rank.
-    // We do this at the end because it's more efficient to do once most irrelevant/inherited facts are stripped out,
-    // and because it's a little tricky to do in the Cypher query due to its structure and use of collect()
+    // Post processing
     for (const prop of result) {
+        // Sort property values by slot, then by rank.
+        // We do this at the end because it's more efficient to do once most irrelevant/inherited facts are stripped out,
+        // and because it's a little tricky to do in the Cypher query due to its structure and use of collect()
         // deno-lint-ignore no-explicit-any
-        prop.facts.sort((pfA: any, pfB: any) => pfA.rank - pfB.rank);
+        prop.facts.sort((pfA: any, pfB: any) => (pfA.slot.localeCompare(pfB.slot))*100_000_000 + (pfA.rank - pfB.rank));
+        // Remove "slot" property if it's empty
+        // deno-lint-ignore no-explicit-any
+        prop.facts.forEach((pf: any) => {
+            if (pf.slot === "") {
+                delete pf.slot;
+            }
+        });
     }
+
 
     return result;
 }

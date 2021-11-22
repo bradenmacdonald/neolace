@@ -58,6 +58,8 @@ export class Property extends VNodeType {
         displayAs: Field.String,
         /** Text shown to users when they go to edit this property value. */
         editNoteMD: Field.String,
+        /** Enabling "slots" allows partial overriding of inherited properties, useful for "HAS PART" relationships */
+        enableSlots: Field.Boolean,
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({

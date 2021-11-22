@@ -185,6 +185,8 @@ export const PropertySchema = Schema({
     default: string.strictOptional(),
     /** Should this property value inherit to child entries? */
     inheritable: boolean.strictOptional(),
+    /** Enable the "slots" feature, which allows partial overriding of inherited values, useful for "Has Type" relationships */
+    enableSlots: boolean.strictOptional(),
     /** The standard URL for this property, e.g. "https://schema.org/birthDate" for "date of birth" */
     standardURL: string.strictOptional(),
     /** The Wikidata P ID for this property, if applicable, e.g. P569 for "date of birth" */

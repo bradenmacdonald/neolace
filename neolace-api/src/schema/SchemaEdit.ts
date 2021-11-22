@@ -255,6 +255,7 @@ export const UpdateProperty = SchemaEditType({
         mode: Schema.enum(PropertyMode).strictOptional(),
         isA: array.of(vnidString).strictOptional(),
         importance: number.strictOptional(),
+        enableSlots: boolean.strictOptional(),
         // For these properties, use 'undefined' to mean 'no change', and an empty string to mean "set to no value"
         valueConstraint: string.strictOptional(),
         default: string.strictOptional(),
@@ -287,6 +288,13 @@ export const UpdateProperty = SchemaEditType({
             }
         }
 
+        // Booleans
+        for (const field of ["inheritable", "enableSlots"] as const) {
+            if (data[field] !== undefined) {
+                (newProp as any)[field] = data[field];
+            }
+        }
+
         for (const field of ["valueConstraint", "default", "standardURL", "editNoteMD", "displayAs"] as const) {
             if (data[field] !== undefined) {
                 if (data[field] === "") {
@@ -295,9 +303,6 @@ export const UpdateProperty = SchemaEditType({
                     newProp[field] = data[field];
                 }
             }
-        }
-        if (data.inheritable !== undefined) {
-            newProp.inheritable = data.inheritable;
         }
 
         const newSchema: SiteSchemaData = {
@@ -315,15 +320,15 @@ export const CreateProperty = SchemaEditType({
     // Schema.merge() isn't working so this is largely duplicated from UpdateProperty :/
     dataSchema: Schema({
         id: vnidString,
+        name: string,
         type: Schema.enum(PropertyType).strictOptional(),
-        // For these properties, use 'undefined' to mean 'no change':
-        name: string.strictOptional(),
         descriptionMD: string.strictOptional(),
         appliesTo: array.of(Schema({ entryType: vnidString })).strictOptional(),
         mode: Schema.enum(PropertyMode).strictOptional(),
         isA: array.of(vnidString).strictOptional(),
         importance: number.strictOptional(),
-        // For these properties, use 'undefined' to mean 'no change', and an empty string to mean "set to no value"
+        enableSlots: boolean.strictOptional(),
+        // For these properties, use 'undefined' to mean 'use default', and an empty string to mean "set to no value"
         valueConstraint: string.strictOptional(),
         default: string.strictOptional(),
         inheritable: boolean.strictOptional(),
@@ -344,6 +349,7 @@ export const CreateProperty = SchemaEditType({
                 // Default importance is 15
                 importance: 15,
                 inheritable: data.inheritable ?? false,
+                enableSlots: data.enableSlots ?? false,
             }},
         };
         return UpdateProperty.apply(newSchema, data);

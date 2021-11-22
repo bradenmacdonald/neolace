@@ -81,6 +81,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
         .valueConstraint
         .default
         .inheritable
+        .enableSlots
         .standardURL
         .importance
         .editNoteMD
@@ -102,6 +103,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             ...(p.parentProperties.length > 0 && {isA: p.parentProperties.map(pp => pp.id).sort()}),
             ...(p.default && {default: p.default}),
             ...(p.inheritable && {inheritable: p.inheritable}),
+            ...(p.enableSlots && {enableSlots: p.enableSlots}),
             ...(p.valueConstraint && {valueConstraint: p.valueConstraint}),
             ...(p.editNoteMD && {editNoteMD: p.editNoteMD}),
             ...(p.standardURL && {standardURL: p.standardURL}),

@@ -106,6 +106,11 @@ export const AddPropertyValue = ContentEditType({
         note: string,
         /** Rank determines the order in which values are listed if there are multiple values for one property */
         rank: number.strictOptional(),
+        /**
+         * If the property enables "slots", this can be used to selectively override inherited values (only values with
+         * the same slot get overridden).
+         */
+        slot: string.strictOptional(),
     }),
     describe: (data) => `Added value for \`Property ${data.property}\` property on \`Entry ${data.entry}\``,
 });
@@ -122,6 +127,11 @@ export const UpdatePropertyValue = ContentEditType({
         note: string,
         /** Change the rank of this property */
         rank: number.strictOptional(),
+        /**
+         * If the property enables "slots", this can be used to selectively override inherited values (only values with
+         * the same slot get overridden).
+         */
+        slot: string.strictOptional(),
     }),
     describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value`,
 });

@@ -51,6 +51,9 @@ export class PropertyFact extends VNodeType {
         /** If this property has multiple values (facts), this field determines their order. Rank 0 comes first, then 1... */
         rank: Field.Int.Check(check.number.integer().min(0).max(999_999_999)),
 
+        /** Slot allows selectively overwriting inherited entries, useful for HAS PART relationships */
+        slot: Field.String,
+
         /**
          * If this is a relationship (from an Entry, to another Entry), then we actually create a direct relationship
          * between the entries (as well as this PropertyFact), and we store the Neo4j ID of that relationship here.
@@ -106,7 +109,7 @@ export class PropertyFact extends VNodeType {
         // Validate:
         const data = await tx.pullOne(PropertyFact, pf => pf
             .entry(e => e.id.type(et => et.id.site(s => s.id)))
-            .property(p => p.id.name.type.mode.site(s => s.id)),
+            .property(p => p.id.name.type.mode.enableSlots.site(s => s.id)),
             { key: dbObject.id, }
         );
         const property = data.property;

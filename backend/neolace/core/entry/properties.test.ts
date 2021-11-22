@@ -181,8 +181,6 @@ group(import.meta, () => {
             });
         });
 
-        // TODO: test slots
-
         group("default values", () => {
             test("Automatic reverse properties can be implemented using default values", async () => {
                 // Create a site where B is an A, but A has an automatic reverse property
@@ -421,6 +419,72 @@ group(import.meta, () => {
                             {factId: factIdA1v1, valueExpression: `"value 1 for A prop1"`, note: "first but added third", rank: 1, source: {from: "ThisEntry"}},
                             {factId: factIdA1v2, valueExpression: `"value 2 for A prop1"`, note: "second but added first", rank: 2, source: {from: "ThisEntry"}},
                             {factId: factIdA1v3, valueExpression: `"value 3 for A prop1"`, note: "third but added second", rank: 3, source: {from: "ThisEntry"}},
+                        ],
+                    },
+                );
+            });
+        });
+
+        group("slots", () => {
+            test("'slots' allow partial inheritance where _some_ inherited values get overwritten, others don't.", async () => {
+                await resetDBToBlankSnapshot();
+                // Create a site with:
+                //   Entries "Steering Wheel", "Combustion Engine", "Electric Motor"
+                //   Entry "Car" has part "Steering Wheel" in slot "sw", "Combustion Engine" in slot "motor"
+                //   Entry "Electric Car" inherits from "Car" and has part "Electic Motor" in slot "motor"
+                const componentType = VNID();
+                const entryHasPart = VNID();
+                const steeringWheel = VNID(), combustionEngine = VNID(), electricMotor = VNID(), car = VNID(), electricCar = VNID();
+                const pfCarHasWheel = VNID(), pfCarhasEngine = VNID(), pfElectricCarIsCar = VNID(), pfElectricCarHasMotor = VNID();
+                const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
+                await graph.runAsSystem(ApplyEdits({siteId, edits: [
+                    {code: "CreateEntryType", data: {id: entryType, name: "Vehicle"}},
+                    {code: "CreateEntryType", data: {id: componentType, name: "Component"}},
+                    // Create relationship properties:
+                    {code: "CreateProperty", data: {
+                        id: entryIsA, name: "Type of", type: PropertyType.RelIsA, appliesTo: [{entryType}], descriptionMD: "", importance: 1,
+                    }},
+                    {code: "CreateProperty", data: {
+                        id: entryHasPart, name: "Has Part", type: PropertyType.RelOther, appliesTo: [{entryType}], descriptionMD: "", importance: 2,
+                        inheritable: true,
+                        enableSlots: true,
+                    }},
+                    // Create "component" entries:
+                    {code: "CreateEntry", data: {id: steeringWheel, name: "Steering Wheel", type: componentType, friendlyId: "c-sw", description: ""}},
+                    {code: "CreateEntry", data: {id: combustionEngine, name: "Combustion Engine", type: componentType, friendlyId: "c-ce", description: ""}},
+                    {code: "CreateEntry", data: {id: electricMotor, name: "Electric Motor", type: componentType, friendlyId: "c-em", description: ""}},
+                    // Create entry "Car": has part "Steering Wheel" in slot "sw", "Combustion Engine" in slot "motor"
+                    {code: "CreateEntry", data: {id: car, name: "Car", type: entryType, friendlyId: "v-car", description: ""}},
+                    {code: "AddPropertyValue", data: {entry: car, property: entryHasPart, slot: "sw", valueExpression: `[[/entry/${steeringWheel}]]`, note: "wheel", propertyFactId: pfCarHasWheel}},
+                    {code: "AddPropertyValue", data: {entry: car, property: entryHasPart, slot: "motor", valueExpression: `[[/entry/${combustionEngine}]]`, note: "engine", propertyFactId: pfCarhasEngine}},
+                    // Create entry "Electric Car": has part "Electric Motor" in slot "motor"
+                    {code: "CreateEntry", data: {id: electricCar, name: "Electric Car", type: entryType, friendlyId: "v-e-car", description: ""}},
+                    {code: "AddPropertyValue", data: {entry: electricCar, property: entryIsA, valueExpression: `[[/entry/${car}]]`, note: "wheel", propertyFactId: pfElectricCarIsCar}},
+                    {code: "AddPropertyValue", data: {entry: electricCar, property: entryHasPart, slot: "motor", valueExpression: `[[/entry/${electricMotor}]]`, note: "motor", propertyFactId: pfElectricCarHasMotor}},
+                ]}));
+
+                // Car is normal, has two parts:
+                assertEquals(
+                    await graph.read(tx => getEntryProperty({entryId: car, propertyId: entryHasPart, tx})),
+                    {
+                        property: {id: entryHasPart, name: "Has Part", importance: 2, default: null},
+                        facts: [
+                            // These are sorted in alphabetical order by slot so "motor" comes before "sw" (steering wheel)
+                            {factId: pfCarhasEngine, valueExpression: `[[/entry/${combustionEngine}]]`, note: "engine", slot: "motor", rank: 2, source: {from: "ThisEntry"}},
+                            {factId: pfCarHasWheel, valueExpression: `[[/entry/${steeringWheel}]]`, note: "wheel", slot: "sw", rank: 1, source: {from: "ThisEntry"}},
+                        ],
+                    },
+                );
+
+                // Now with slots enabled, electric car should have "steering wheel" (inherited), and "Electric Motor" but not "Combustion Engine"
+                // Slots allow partial inheritance of "steering wheel", while "combustion engine" gets overwritten
+                assertEquals(
+                    await graph.read(tx => getEntryProperty({entryId: electricCar, propertyId: entryHasPart, tx})),
+                    {
+                        property: {id: entryHasPart, name: "Has Part", importance: 2, default: null},
+                        facts: [
+                            {factId: pfElectricCarHasMotor, valueExpression: `[[/entry/${electricMotor}]]`, note: "motor", slot: "motor", rank: 1, source: {from: "ThisEntry"}},
+                            {factId: pfCarHasWheel, valueExpression: `[[/entry/${steeringWheel}]]`, note: "wheel", slot: "sw", rank: 1, source: {from: "AncestorEntry", entryId: car}},
                         ],
                     },
                 );
