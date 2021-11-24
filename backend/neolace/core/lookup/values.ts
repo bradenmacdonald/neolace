@@ -220,7 +220,7 @@ export class EntryValue extends ConcreteValue implements IHasLiteralExpression {
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `E[${this.id}]`;  // e.g. E[_6FisU5zxXggLcDz4Kb3Wmd]
+        return `[[/entry/${this.id}]]`;  // e.g. [[/entry/_6FisU5zxXggLcDz4Kb3Wmd]]
     }
 
     protected override doCastTo(newType: ClassOf<LookupValue>, context: LookupContext): LookupValue|undefined {
@@ -254,16 +254,16 @@ export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpressi
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `ET[${this.id}]`;  // e.g. ET[_6FisU5zxXggLcDz4Kb3Wmd]
+        return `[[/etype/${this.id}]]`;  // e.g. [[/etype/_6FisU5zxXggLcDz4Kb3Wmd]]
     }
 
     protected serialize() { return {id: this.id}; }
 }
 
 /**
- * Represents a RelationshipType
+ * Represents a Property (like "Date of birth", NOT a property value like "1990-05-15")
  */
-export class RelationshipTypeValue extends ConcreteValue implements IHasLiteralExpression {
+export class PropertyValue extends ConcreteValue implements IHasLiteralExpression {
     readonly id: VNID;
 
     constructor(id: VNID) {
@@ -276,29 +276,7 @@ export class RelationshipTypeValue extends ConcreteValue implements IHasLiteralE
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `RT[${this.id}]`;  // e.g. RT[_6FisU5zxXggLcDz4Kb3Wmd]
-    }
-
-    protected serialize() { return {id: this.id}; }
-}
-
-/**
- * Represents a RelationshipFact
- */
-export class RelationshipFactValue extends ConcreteValue implements IHasLiteralExpression {
-    readonly id: VNID;
-
-    constructor(id: VNID) {
-        super();
-        this.id = id;
-    }
-
-    /**
-     * Return this value as a string, in Neolace Lookup Expression format.
-     * This string should parse to an expression that yields the same value.
-     */
-    public override asLiteral(): string {
-        return `RF[${this.id}]`;  // e.g. RF[_6FisU5zxXggLcDz4Kb3Wmd]
+        return `[[/prop/${this.id}]]`;  // e.g. [[/prop/_6FisU5zxXggLcDz4Kb3Wmd]]
     }
 
     protected serialize() { return {id: this.id}; }

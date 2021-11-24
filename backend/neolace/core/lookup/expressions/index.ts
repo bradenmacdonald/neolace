@@ -5,5 +5,5 @@ export { Count } from "./count.ts";
 export { List } from "./list-expr.ts";
 export { LiteralExpression } from "./literal-expr.ts";
 export { Markdown } from "./markdown.ts";
-export { RelatedEntries } from "./related.ts";
+export { GetProperty } from "./get.ts";
 export { This } from "./this.ts";

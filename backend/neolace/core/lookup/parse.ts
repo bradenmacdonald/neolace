@@ -8,7 +8,7 @@ import {
     List,
     LiteralExpression,
     Markdown,
-    RelatedEntries,
+    GetProperty,
     This,
 } from "./expressions/index.ts";
 import * as V from "./values.ts";
@@ -37,20 +37,18 @@ export function parseLookupString(lookup: string): LookupExpression {
         [/^"(.*)"$/, _m => new LiteralExpression(new V.StringValue(JSON.parse(lookup)))],
         // 123 (Integer literal, supports bigints)
         [/^\d+$/, _m => new LiteralExpression(new V.IntegerValue(BigInt(lookup)))],
-        // RT[_6FisU5zxXg5LcDz4Kb3Wmd] (Relationship Type literal)
-        [/^RT\[(_[0-9A-Za-z]{1,22})\]$/, m => new LiteralExpression(new V.RelationshipTypeValue(VNID(m[1])))],
-        // this.related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd], direction="from")
-        [/^this\.related\(via=(.*), direction=(.*)\)$/, m => new RelatedEntries(new This(), {via: parseLookupString(m[1]), direction: parseLookupString(m[2])})],
-        // related(this, via=RT[_6FisU5zxXg5LcDz4Kb3Wmd], direction="to")
-        [/^related\(this, via=(.*), direction=(.*)\)$/, m => new RelatedEntries(new This(), {via: parseLookupString(m[1]), direction: parseLookupString(m[2])})],
-        // this.related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])
-        [/^this\.related\(via=(.*)\)$/, m => new RelatedEntries(new This(), {via: parseLookupString(m[1])})],
-        // related(this, via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])
-        [/^related\(this, via=(.*)\)$/, m => new RelatedEntries(new This(), {via: parseLookupString(m[1])})],
-        // this.andAncestors().related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])
-        [/^this\.andAncestors\(\)\.related\(via=(.*)\)$/, m => new RelatedEntries(new AndAncestors(new This()), {via: parseLookupString(m[1])})],
-        // related(andAncestors(this), via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])
-        [/^related\(andAncestors\(this\), via=(.*)\)$/, m => new RelatedEntries(new AndAncestors(new This()), {via: parseLookupString(m[1])})],
+        // [[/entry/_6FisU5zxXg5LcDz4Kb3Wmd]] (Entry literal)
+        [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]$/, m => new LiteralExpression(new V.EntryValue(VNID(m[1])))],
+        // [[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]] (Property literal)
+        [/^\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]$/, m => new LiteralExpression(new V.PropertyValue(VNID(m[1])))],
+        // this.get(prop=...)
+        [/^this\.get\(prop=(.*)\)$/, m => new GetProperty(new This(), {propertyExpr: parseLookupString(m[1])})],
+        // get(this, prop=...)
+        [/^get\(this, prop=(.*)\)$/, m => new GetProperty(new This(), {propertyExpr: parseLookupString(m[1])})],
+        // this.andAncestors().get(prop=...)
+        [/^this\.andAncestors\(\)\.get\(prop=(.*)\)$/, m => new GetProperty(new AndAncestors(new This()), {propertyExpr: parseLookupString(m[1])})],
+        // related(andAncestors(this), prop=...)
+        [/^get\(andAncestors\(this\), prop=(.*)\)$/, m => new GetProperty(new AndAncestors(new This()), {propertyExpr: parseLookupString(m[1])})],
         // markdown("*string*")
         [/^markdown\((.*)\)$/, m => new Markdown( parseLookupString(m[1]) )],
     ];
