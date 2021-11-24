@@ -185,11 +185,22 @@ group(import.meta, () => {
                             totalCount: 1,
                             type: "Page",
                             values: [
-                                {annotations: {note: {type: "Null"}, weight: {type: "Null"}}, id: defaultData.entries.imgPonderosaTrunk.id, type: "AnnotatedEntry"},
+                                {
+                                    type: "Annotated",
+                                    value: {
+                                        type: "Entry",
+                                        id: defaultData.entries.imgPonderosaTrunk.id,
+                                    },
+                                    annotations: {
+                                        note: defaultAnnotations.note,
+                                        rank: defaultAnnotations.rank,
+                                        slot: defaultAnnotations.slot,
+                                    },
+                                },
                             ],
                         },
                         annotations: {
-                            ...defaultAnnotations,
+                            source: {type: "String", value: "Default"},
                         }
                     },
                 },
@@ -222,6 +233,7 @@ group(import.meta, () => {
                     [defaultData.schema.entryTypes._ETGENUS.id]: {id: defaultData.schema.entryTypes._ETGENUS.id, name: defaultData.schema.entryTypes._ETGENUS.name},
                     [defaultData.schema.entryTypes._ETSPECIES.id]: {id: defaultData.schema.entryTypes._ETSPECIES.id, name: defaultData.schema.entryTypes._ETSPECIES.name},
                     [defaultData.schema.entryTypes._ETPLANTPART.id]: {id: defaultData.schema.entryTypes._ETPLANTPART.id, name: defaultData.schema.entryTypes._ETPLANTPART.name},
+                    [defaultData.schema.entryTypes._ETIMAGE.id]: {id: defaultData.schema.entryTypes._ETIMAGE.id, name: defaultData.schema.entryTypes._ETIMAGE.name},
                 },
                 entries: {
                     [defaultData.entries.divisionTracheophyta.id]: {
@@ -255,6 +267,11 @@ group(import.meta, () => {
                     [defaultData.entries.pollenCone.id]: {
                         ...defaultData.entries.pollenCone,
                         entryType: {id: defaultData.schema.entryTypes._ETPLANTPART.id},
+                    },
+                    // Image referenced by "related images":
+                    [defaultData.entries.imgPonderosaTrunk.id]: {
+                        ...defaultData.entries.imgPonderosaTrunk,
+                        entryType: {id: defaultData.schema.entryTypes._ETIMAGE.id},
                     },
                 },
                 properties: {

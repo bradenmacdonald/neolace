@@ -83,8 +83,8 @@ group(import.meta, () => {
             const value = await evalExpression(expression, defaultData.entries.classPinopsida.id);
             // All conifers (Class Pinopsida) have both male and female cones:
             assertEquals(value, new PageValue([
-                MakeAnnotatedEntryValue(pollenCone, {...defaultAnnotations}),
-                MakeAnnotatedEntryValue(seedCone, {...defaultAnnotations, rank: new IntegerValue(2n)}),
+                MakeAnnotatedEntryValue(pollenCone, {...defaultAnnotations, slot: new StringValue("pollen-cone")}),
+                MakeAnnotatedEntryValue(seedCone, {...defaultAnnotations, slot: new StringValue("seed-cone"), rank: new IntegerValue(2n)}),
             ], {pageSize: 50n, startedAt: 0n, totalCount: 2n}));
         });
     });

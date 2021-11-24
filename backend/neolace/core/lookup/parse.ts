@@ -4,11 +4,14 @@ import { LookupExpression } from "./expression.ts";
 import {
     Ancestors,
     AndAncestors,
+    AndDescendants,
     // Count,
+    Descendants,
+    GetProperty,
     List,
     LiteralExpression,
     Markdown,
-    GetProperty,
+    ReverseProperty,
     This,
 } from "./expressions/index.ts";
 import * as V from "./values.ts";
@@ -27,10 +30,16 @@ export function parseLookupString(lookup: string): LookupExpression {
 
     if (lookup === "null") { return new LiteralExpression(new V.NullValue()); }
     if (lookup === "this") { return new This(); }
+
     if (lookup === "this.ancestors()") { return new Ancestors(new This()); }
     if (lookup === "ancestors(this)") { return new Ancestors(new This()); }
     if (lookup === "this.andAncestors()") { return new AndAncestors(new This()); }
     if (lookup === "andAncestors(this)") { return new AndAncestors(new This()); }
+
+    if (lookup === "this.descendants()") { return new Descendants(new This()); }
+    if (lookup === "descendants(this)") { return new Descendants(new This()); }
+    if (lookup === "this.andDescendants()") { return new AndDescendants(new This()); }
+    if (lookup === "andDescendants(this)") { return new AndDescendants(new This()); }
 
     const otherTemplates: [RegExp, (match: RegExpMatchArray) => LookupExpression ][] = [
         // "foo" (String literal)
@@ -41,14 +50,21 @@ export function parseLookupString(lookup: string): LookupExpression {
         [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]$/, m => new LiteralExpression(new V.EntryValue(VNID(m[1])))],
         // [[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]] (Property literal)
         [/^\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]$/, m => new LiteralExpression(new V.PropertyValue(VNID(m[1])))],
+
         // this.get(prop=...)
         [/^this\.get\(prop=(.*)\)$/, m => new GetProperty(new This(), {propertyExpr: parseLookupString(m[1])})],
         // get(this, prop=...)
         [/^get\(this, prop=(.*)\)$/, m => new GetProperty(new This(), {propertyExpr: parseLookupString(m[1])})],
         // this.andAncestors().get(prop=...)
         [/^this\.andAncestors\(\)\.get\(prop=(.*)\)$/, m => new GetProperty(new AndAncestors(new This()), {propertyExpr: parseLookupString(m[1])})],
-        // related(andAncestors(this), prop=...)
+        // get(andAncestors(this), prop=...)
         [/^get\(andAncestors\(this\), prop=(.*)\)$/, m => new GetProperty(new AndAncestors(new This()), {propertyExpr: parseLookupString(m[1])})],
+
+        // this.andDescendants().reverse(prop=...)
+        [/^this\.andDescendants\(\)\.reverse\(prop=(.*)\)$/, m => new ReverseProperty(new AndDescendants(new This()), {propertyExpr: parseLookupString(m[1])})],
+        // reverse(andDescendants(this), prop=...)
+        [/^reverse\(andDescendants\(this\), prop=(.*)\)$/, m => new ReverseProperty(new AndDescendants(new This()), {propertyExpr: parseLookupString(m[1])})],
+
         // markdown("*string*")
         [/^markdown\((.*)\)$/, m => new Markdown( parseLookupString(m[1]) )],
     ];
