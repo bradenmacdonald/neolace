@@ -2,7 +2,7 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import {
-    AnnotatedEntryValue,
+    MakeAnnotatedEntryValue,
     InlineMarkdownStringValue,
     IntegerValue,
     NullValue,
@@ -74,7 +74,7 @@ group(import.meta, () => {
             const value = await evalExpression(expression, defaultData.entries.seedCone.id);
             // A "seed cone" is a "cone":
             assertEquals(value, new PageValue([
-                new AnnotatedEntryValue(cone, {...defaultAnnotations}),
+                MakeAnnotatedEntryValue(cone, {...defaultAnnotations}),
             ], {pageSize: 50n, startedAt: 0n, totalCount: 1n}));
         });
 
@@ -83,8 +83,8 @@ group(import.meta, () => {
             const value = await evalExpression(expression, defaultData.entries.classPinopsida.id);
             // All conifers (Class Pinopsida) have both male and female cones:
             assertEquals(value, new PageValue([
-                new AnnotatedEntryValue(pollenCone, {...defaultAnnotations}),
-                new AnnotatedEntryValue(seedCone, {...defaultAnnotations, rank: new IntegerValue(2n)}),
+                MakeAnnotatedEntryValue(pollenCone, {...defaultAnnotations}),
+                MakeAnnotatedEntryValue(seedCone, {...defaultAnnotations, rank: new IntegerValue(2n)}),
             ], {pageSize: 50n, startedAt: 0n, totalCount: 2n}));
         });
     });

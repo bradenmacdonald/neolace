@@ -2,7 +2,7 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import {
-    AnnotatedEntryValue,
+    MakeAnnotatedEntryValue,
     InlineMarkdownStringValue,
     IntegerValue,
     NullValue,
@@ -41,8 +41,8 @@ group(import.meta, () => {
             // A "seed cone" and a "pollen cone" are both a "cone", so we should get them
             // by reversing the "IS A" relationship on "cone"
             assertEquals(value, new PageValue([
-                new AnnotatedEntryValue(pollenCone, {...defaultAnnotations}),
-                new AnnotatedEntryValue(seedCone, {...defaultAnnotations}),
+                MakeAnnotatedEntryValue(pollenCone, {...defaultAnnotations}),
+                MakeAnnotatedEntryValue(seedCone, {...defaultAnnotations}),
             ], {pageSize: 50n, startedAt: 0n, totalCount: 2n}));
         });
 

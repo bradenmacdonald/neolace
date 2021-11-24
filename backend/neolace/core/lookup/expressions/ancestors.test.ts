@@ -5,7 +5,7 @@ import { graph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { Ancestors, AndAncestors } from "./ancestors.ts";
-import { AnnotatedEntryValue, IntegerValue, PageValue } from "../values.ts";
+import { MakeAnnotatedEntryValue, IntegerValue, PageValue, AnnotatedValue } from "../values.ts";
 import { This } from "./this.ts";
 import { Count } from "./count.ts";
 import { LookupExpression } from "../expression.ts";
@@ -32,11 +32,11 @@ group(import.meta, () => {
                 value,
                 new PageValue(
                     [
-                        new AnnotatedEntryValue(defaultData.entries.genusPinus.id,           {distance: new IntegerValue(1)}),
-                        new AnnotatedEntryValue(defaultData.entries.familyPinaceae.id,       {distance: new IntegerValue(2)}),
-                        new AnnotatedEntryValue(defaultData.entries.orderPinales.id,         {distance: new IntegerValue(3)}),
-                        new AnnotatedEntryValue(defaultData.entries.classPinopsida.id,       {distance: new IntegerValue(4)}),
-                        new AnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {distance: new IntegerValue(5)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.genusPinus.id,           {distance: new IntegerValue(1)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.familyPinaceae.id,       {distance: new IntegerValue(2)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.orderPinales.id,         {distance: new IntegerValue(3)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.classPinopsida.id,       {distance: new IntegerValue(4)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {distance: new IntegerValue(5)}),
                     ],
                     {
                         pageSize: 50n,
@@ -78,12 +78,12 @@ group(import.meta, () => {
                 value,
                 new PageValue(
                     [
-                        new AnnotatedEntryValue(defaultData.entries.ponderosaPine.id,        {distance: new IntegerValue(0)}),
-                        new AnnotatedEntryValue(defaultData.entries.genusPinus.id,           {distance: new IntegerValue(1)}),
-                        new AnnotatedEntryValue(defaultData.entries.familyPinaceae.id,       {distance: new IntegerValue(2)}),
-                        new AnnotatedEntryValue(defaultData.entries.orderPinales.id,         {distance: new IntegerValue(3)}),
-                        new AnnotatedEntryValue(defaultData.entries.classPinopsida.id,       {distance: new IntegerValue(4)}),
-                        new AnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {distance: new IntegerValue(5)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.ponderosaPine.id,        {distance: new IntegerValue(0)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.genusPinus.id,           {distance: new IntegerValue(1)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.familyPinaceae.id,       {distance: new IntegerValue(2)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.orderPinales.id,         {distance: new IntegerValue(3)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.classPinopsida.id,       {distance: new IntegerValue(4)}),
+                        MakeAnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {distance: new IntegerValue(5)}),
                     ],
                     {
                         pageSize: 50n,
@@ -130,7 +130,7 @@ group(import.meta, () => {
             expr.getValue({tx, siteId, entryId}).then(v => v.makeConcrete())
         );
 
-        const checkAncestors = async (entryId: VNID, expected: AnnotatedEntryValue[]) => {
+        const checkAncestors = async (entryId: VNID, expected: AnnotatedValue[]) => {
             // with ancestors():
             assertEquals(await evalExpr( new Ancestors(new This()), entryId), new PageValue([
                 ...expected,
@@ -138,7 +138,7 @@ group(import.meta, () => {
 
             // And with andAncestors():
             assertEquals(await evalExpr( new AndAncestors(new This()), entryId), new PageValue([
-                new AnnotatedEntryValue(entryId, {distance: new IntegerValue(0n)}),
+                MakeAnnotatedEntryValue(entryId, {distance: new IntegerValue(0n)}),
                 ...expected,
             ], {pageSize: 50n, startedAt: 0n, totalCount: BigInt(expected.length + 1)}));
         };
@@ -191,26 +191,26 @@ group(import.meta, () => {
             // Check the ancestor of C
             await checkAncestors(C, [
                 // Expect one ancestor, A:
-                new AnnotatedEntryValue(A, {distance: new IntegerValue(1n)}),
+                MakeAnnotatedEntryValue(A, {distance: new IntegerValue(1n)}),
             ]);
 
             // Check the ancestor of I
             await checkAncestors(I, [
                 // Expect 2 immediate ancestors (E & G), plus one ancestor B at distance of 2.
-                new AnnotatedEntryValue(E, {distance: new IntegerValue(1n)}),
-                new AnnotatedEntryValue(G, {distance: new IntegerValue(1n)}),
-                new AnnotatedEntryValue(B, {distance: new IntegerValue(2n)}),
+                MakeAnnotatedEntryValue(E, {distance: new IntegerValue(1n)}),
+                MakeAnnotatedEntryValue(G, {distance: new IntegerValue(1n)}),
+                MakeAnnotatedEntryValue(B, {distance: new IntegerValue(2n)}),
             ]);
 
             // Check the ancestor of H
             await checkAncestors(H, [
                 // We should find that H has 6 ancestors, and the distance from H to B is 2, from H to A is 3, and from H to E is 1
-                new AnnotatedEntryValue(E, {distance: new IntegerValue(1n)}),
-                new AnnotatedEntryValue(F, {distance: new IntegerValue(1n)}),
-                new AnnotatedEntryValue(B, {distance: new IntegerValue(2n)}),
-                new AnnotatedEntryValue(C, {distance: new IntegerValue(2n)}),
-                new AnnotatedEntryValue(D, {distance: new IntegerValue(2n)}),
-                new AnnotatedEntryValue(A, {distance: new IntegerValue(3n)}),
+                MakeAnnotatedEntryValue(E, {distance: new IntegerValue(1n)}),
+                MakeAnnotatedEntryValue(F, {distance: new IntegerValue(1n)}),
+                MakeAnnotatedEntryValue(B, {distance: new IntegerValue(2n)}),
+                MakeAnnotatedEntryValue(C, {distance: new IntegerValue(2n)}),
+                MakeAnnotatedEntryValue(D, {distance: new IntegerValue(2n)}),
+                MakeAnnotatedEntryValue(A, {distance: new IntegerValue(3n)}),
             ]);
         });
 
@@ -247,17 +247,17 @@ group(import.meta, () => {
             // Check the ancestor of D
             await checkAncestors(D, [
                 // B and C at a distance of 1, A at a distance of 2
-                new AnnotatedEntryValue(B, {distance: new IntegerValue(1n)}),
-                new AnnotatedEntryValue(C, {distance: new IntegerValue(1n)}),
-                new AnnotatedEntryValue(A, {distance: new IntegerValue(2n)}),
+                MakeAnnotatedEntryValue(B, {distance: new IntegerValue(1n)}),
+                MakeAnnotatedEntryValue(C, {distance: new IntegerValue(1n)}),
+                MakeAnnotatedEntryValue(A, {distance: new IntegerValue(2n)}),
             ]);
 
             // Check the ancestor of A
             await checkAncestors(A, [
                 // D at a distance of 1, B and C at a distance of 2
-                new AnnotatedEntryValue(D, {distance: new IntegerValue(1n)}),
-                new AnnotatedEntryValue(B, {distance: new IntegerValue(2n)}),
-                new AnnotatedEntryValue(C, {distance: new IntegerValue(2n)}),
+                MakeAnnotatedEntryValue(D, {distance: new IntegerValue(1n)}),
+                MakeAnnotatedEntryValue(B, {distance: new IntegerValue(2n)}),
+                MakeAnnotatedEntryValue(C, {distance: new IntegerValue(2n)}),
             ]);
         });
     });
