@@ -83,7 +83,7 @@ const dbSlotToValue = (dbValue: unknown): StringValue|NullValue => {
  *  e.g. this.andAncestors().get(prop=[[/prop/_dateOfBirth]])
  * Then this will always return a MultipleValues
  */
- export class GetProperty extends LookupExpression {
+export class GetProperty extends LookupExpression {
 
     // An expression that specifies what entry(ies)' property we want to retrieve
     readonly fromEntriesExpr: LookupExpression;
