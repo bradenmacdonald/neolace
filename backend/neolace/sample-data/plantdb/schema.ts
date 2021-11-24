@@ -13,9 +13,6 @@ export const schema = ValidateSiteSchema({
             name: "Division",
             description: "A division (also called Phylum outside of botany) is the main taxonomic classification within the Plant Kingdom.",
             friendlyIdPrefix: "d-",
-            simplePropValues: {
-                "_CFDivisionClasses": {id: VNID("_CFDivisionClasses"), label: "Classes", importance: 6, valueExpression: `this.related(via=RT[_CisD])`, note: ""},
-            },
             enabledFeatures: {},
         },
         "_ETCLASS": {
@@ -23,11 +20,6 @@ export const schema = ValidateSiteSchema({
             name: "Class",
             description: "A class is a level of taxonomic classification between Division/Phylum and Order.",
             friendlyIdPrefix: "c-",
-            simplePropValues: {
-                "_CFClassTaxonomy": {id: VNID("_CFClassTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
-                "_CFClassOrders": {id: VNID("_CFClassOrders"), label: "Orders", importance: 6, valueExpression: `this.related(via=RT[_OisC])`, note: ""},
-                "_CFClassParts": {id: VNID("_CFClassParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
-            },
             enabledFeatures: {},
         },
         "_ETORDER": {
@@ -35,11 +27,6 @@ export const schema = ValidateSiteSchema({
             name: "Order",
             description: "An order is a level of taxonomic classification between Class and Family.",
             friendlyIdPrefix: "o-",
-            simplePropValues: {
-                "_CFOrderTaxonomy": {id: VNID("_CFOrderTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
-                "_CFOrderFamilies": {id: VNID("_CFOrderFamilies"), label: "Families", importance: 6, valueExpression: `this.related(via=RT[_FisO])`, note: ""},
-                "_CFOrderParts": {id: VNID("_CFOrderParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
-            },
             enabledFeatures: {},
         },
         "_ETFAMILY": {
@@ -47,11 +34,6 @@ export const schema = ValidateSiteSchema({
             name: "Family",
             description: "A family is a level of taxonomic classification between Order and Genus.",
             friendlyIdPrefix: "f-",
-            simplePropValues: {
-                "_CFFamilyTaxonomy": {id: VNID("_CFFamilyTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
-                "_CFFamilyGenera": {id: VNID("_CFFamilyGenera"), label: "Genera", importance: 6, valueExpression: `this.related(via=RT[_GisF])`, note: ""},
-                "_CFFamilyParts": {id: VNID("_CFFamilyParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
-            },
             enabledFeatures: {},
         },
         "_ETGENUS": {
@@ -59,11 +41,6 @@ export const schema = ValidateSiteSchema({
             name: "Genus",
             description: "A genus is a level of taxonomic classification between Family and Species.",
             friendlyIdPrefix: "g-",
-            simplePropValues: {
-                "_CFGenusTaxonomy": {id: VNID("_CFGenusTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
-                "_CFGenusSpecies": {id: VNID("_CFGenusSpecies"), label: "Species", importance: 6, valueExpression: `this.related(via=RT[_SisG])`, note: ""},
-                "_CFGenusParts": {id: VNID("_CFGenusParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
-            },
             enabledFeatures: {},
         },
         "_ETSPECIES": {
@@ -71,15 +48,10 @@ export const schema = ValidateSiteSchema({
             name: "Species",
             description: "A species is a basic unit of classifying life.",
             friendlyIdPrefix: "s-",
-            simplePropValues: {
-                "_CFSpeciesTaxonomy": {id: VNID("_CFSpeciesTaxonomy"), label: "Taxonomy", importance: 5, valueExpression: "this.ancestors()", note: ""},
-                "_CFSpeciesParts": {id: VNID("_CFSpeciesParts"), label: "Parts", importance: 10, valueExpression: "this.andAncestors().related(via=RT[_HASA])", note: ""},
-                "_CFSpeciesRelImg": {id: VNID("_CFSpeciesRelImg"), label: "Related Images", importance: 15, valueExpression: `this.related(via=RT[_IRelTo], direction="to")`, note: ""},
-            },
             enabledFeatures: {
                 Article: {},
                 HeroImage: {
-                    lookupExpression: `this.related(via=RT[_HasHeroImage], direction="from")`,
+                    lookupExpression: `this.get(prop=[[/prop/_HasHeroImage]])`,
                 },
             },
         },
@@ -88,11 +60,6 @@ export const schema = ValidateSiteSchema({
             name: "Plant Part",
             description: "Describes a part of a plant.",
             friendlyIdPrefix: "pp-",
-            simplePropValues: {
-                "_CFPartTypeOf": {id: VNID("_CFPartTypeOf"), label: "Type of", importance: 1, valueExpression: `this.related(via=RT[_PARTisPART], direction="from")`, note: ""},
-                "_CFPartTypes": {id: VNID("_CFPartTypes"), label: "Types", importance: 2, valueExpression: `this.related(via=RT[_PARTisPART], direction="to")`, note: ""},
-                "_CFPartsFoundIn": {id: VNID("_CFPartsFoundIn"), label: "Part of", importance: 5, valueExpression: "this.related(via=RT[_HASA])", note: ""},
-            },
             enabledFeatures: {},
         },
         "_ETIMAGE": {
@@ -100,9 +67,6 @@ export const schema = ValidateSiteSchema({
             name: "Image",
             description: "An image, such as a photo of a plant",
             friendlyIdPrefix: "img-",
-            simplePropValues: {
-                "_CFImageRelatesTo": {id: VNID("_CFImageRelatesTo"), label: "Relates to", importance: 1, valueExpression: `this.related(via=RT[_IRelTo], direction="from")`, note: ""},
-            },
             enabledFeatures: {
                 Image: {},
             },
@@ -112,7 +76,6 @@ export const schema = ValidateSiteSchema({
             name: "Property",
             description: "Properties of a PlantDB entry.",
             friendlyIdPrefix: "p-",
-            simplePropValues: {},
             enabledFeatures: {},
         },
     },

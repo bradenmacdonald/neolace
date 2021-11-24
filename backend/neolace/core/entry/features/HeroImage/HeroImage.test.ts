@@ -86,7 +86,7 @@ group(import.meta, () => {
             {code: "UpdateEntryTypeFeature", data: {entryTypeId: entryType, feature: {
                 featureType: "HeroImage",
                 enabled: true,
-                config: {lookupExpression: `this.reverse(prop=[[/prop/${hasFeatureImage}]], direction="from")`},
+                config: {lookupExpression: `this.get(prop=[[/prop/${hasFeatureImage}]])`},
             }}},
             {code: "UpdateEntryTypeFeature", data: {entryTypeId: imageType, feature: {
                 featureType: "Image",

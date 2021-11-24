@@ -33,11 +33,10 @@ group(import.meta, () => {
                         name,
                         description: null,
                         friendlyIdPrefix: null,
-                        simplePropValues: {},
                         enabledFeatures: {},
                     },
                 },
-                relationshipTypes: defaultData.schema.relationshipTypes,
+                properties: defaultData.schema.properties,
             });
         });
 

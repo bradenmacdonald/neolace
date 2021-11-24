@@ -59,6 +59,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
         .standardURL
         .importance
         .editNoteMD
+        .displayAs
         .appliesTo(et => et.id)
         .parentProperties(pp => pp.id),
         {where: siteFilter},
@@ -81,6 +82,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             ...(p.valueConstraint && {valueConstraint: p.valueConstraint}),
             ...(p.editNoteMD && {editNoteMD: p.editNoteMD}),
             ...(p.standardURL && {standardURL: p.standardURL}),
+            ...(p.displayAs && {displayAs: p.displayAs}),
         };
     });
 

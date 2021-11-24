@@ -27,7 +27,6 @@ group(import.meta, () => {
             // First make sure the schema is empty
             assertEquals(await getSchema(), {
                 entryTypes: {},
-                relationshipTypes: {},
                 properties: {},
             });
 
