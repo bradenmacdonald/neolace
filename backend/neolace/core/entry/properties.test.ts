@@ -196,7 +196,7 @@ group(import.meta, () => {
                     // Create the automatic reverse property of "is a / type of":
                     {code: "CreateProperty", data: {
                         id: propHasTypes, name: "Has types", type: PropertyType.RelOther, mode: PropertyMode.Auto, appliesTo: [{entryType}], descriptionMD: "", importance: 1,
-                        default: `this.reverseProp(prop=[[/prop/${entryIsA}]])`,
+                        default: `this.reverse(prop=[[/prop/${entryIsA}]])`,
                     }},
                     // Create entry A:
                     {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
@@ -211,7 +211,7 @@ group(import.meta, () => {
                             id: propHasTypes,
                             importance: 1,
                             name: "Has types",
-                            default: `this.reverseProp(prop=[[/prop/${entryIsA}]])`,
+                            default: `this.reverse(prop=[[/prop/${entryIsA}]])`,
                         },
                         facts: [],
                     }

@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { nullable, vnidString, } from "../api-schemas.ts";
-import { boolean, number, Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
+import { vnidString, } from "../api-schemas.ts";
+import { number, Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "./Edit.ts";
 
 interface ContentEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
@@ -29,18 +29,6 @@ export const UpdateEntryArticleSchema = Schema({
     articleMD: string.strictOptional(),
 });
 
-/** For a single, specific entry (not an EntryType), update how it can be used as a property for other entries */
-export const UpdateEntryUseAsPropertySchema = Schema({
-    /** Change the "importance" of this property. Lower numbers are most important. */
-    importance: number.min(0).max(99).strictOptional(),
-    // Change the allowed data type for values of this property. Won't affect existing property values.
-    valueType: string.strictOptional(),
-    /** Should property values of this type be inherited by child entries? */
-    inherits: boolean.strictOptional(),
-    /** Markdown formatting instructions, e.g. use "**{value}**" to display this value in bold */
-    displayAs: nullable(string).strictOptional(),
-});
-
 export const UpdateEntryImageSchema = Schema({
     /** Change which actual image file this entry "holds" */
     dataFileId: vnidString.strictOptional(),
@@ -58,10 +46,6 @@ export const UpdateEntryFeature = ContentEditType({
                 UpdateEntryArticleSchema,
             ),
             Schema.merge(
-                {featureType: "UseAsProperty" as const},
-                UpdateEntryUseAsPropertySchema,
-            ),
-            Schema.merge(
                 {featureType: "Image" as const},
                 UpdateEntryImageSchema,
             ),
@@ -70,24 +54,6 @@ export const UpdateEntryFeature = ContentEditType({
         ),
     }),
     describe: (data) => `Updated ${data.feature.featureType} Feature of \`Entry ${data.entryId}\``,
-});
-
-export const CreateRelationshipFact = ContentEditType({
-    changeType: EditChangeType.Content,
-    code: "CreateRelationshipFact",
-    dataSchema: Schema({
-        // The new ID for this Relationship Fact
-        id: vnidString,
-        // The RelationshipType for this new relationship
-        type: vnidString,
-        // The Entry that this relationship is "from", also the entry that will be the "source" of this Relationship Fact
-        fromEntry: vnidString,
-        // The Entry that this relationship is "to"
-        toEntry: vnidString,
-        /** A note about this relationship. Displayed as Markdown. */
-        noteMD: string.strictOptional(),
-    }),
-    describe: (data) => `Created \`RelationshipFact ${data.id}\``,
 });
 
 export const AddPropertyValue = ContentEditType({
@@ -141,7 +107,6 @@ export const UpdatePropertyValue = ContentEditType({
 export const _allContentEditTypes = {
     CreateEntry,
     UpdateEntryFeature,
-    CreateRelationshipFact,
     AddPropertyValue,
     UpdatePropertyValue,
 };
@@ -149,7 +114,6 @@ export const _allContentEditTypes = {
 export type AnyContentEdit = (
     | Edit<typeof CreateEntry>
     | Edit<typeof UpdateEntryFeature>
-    | Edit<typeof CreateRelationshipFact>
     | Edit<typeof AddPropertyValue>
     | Edit<typeof UpdatePropertyValue>
 );

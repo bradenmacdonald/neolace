@@ -6,7 +6,6 @@ import { BotUser, HumanUser, User } from "neolace/core/User.ts";
 // core/edit
 import { Draft, DraftEdit } from "neolace/core/edit/Draft.ts";
 // core/entry
-import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 // core/entry/features
@@ -18,8 +17,6 @@ import { DataFile } from "neolace/core/objstore/DataFile.ts";
 // core/schema
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Property } from "neolace/core/schema/Property.ts";
-import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
-import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 
 export function registerVNodeTypes(graph: Vertex) {
     graph.registerVNodeTypes([
@@ -35,7 +32,6 @@ export function registerVNodeTypes(graph: Vertex) {
         // core/entry
         Entry,
         PropertyFact,
-        RelationshipFact,
         // core/entry/features
         EnabledFeature,
         EntryFeatureData,
@@ -45,8 +41,6 @@ export function registerVNodeTypes(graph: Vertex) {
         // core/schema
         EntryType,
         Property,
-        RelationshipType,
-        SimplePropertyValue,
     ]);
 
     for (const feature of allFeatures) {

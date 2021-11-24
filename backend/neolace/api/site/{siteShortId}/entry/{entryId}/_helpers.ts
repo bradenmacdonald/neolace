@@ -55,7 +55,6 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     const result: api.EntryData = {
         ...entryData,
         entryType: {id: entryData.type!.id, name: entryData.type!.name},
-        ancestors: undefined,
         propertiesSummary: undefined,
         referenceCache: undefined,
     };
@@ -69,14 +68,6 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     // We always include the current entry in the reference cache in case it references itself, to make it easy for API
     // consumers to show the right data (e.g. link tooltips) in that case.
     refCache?.addReferenceToEntryId(entryData.id);
-
-    // We'll need the ancestors of this entry in a couple different cases:
-    const getAncestors = computeOnceIfNeeded(() => getEntryAncestors(entryData.id, tx));
-
-    if (flags.has(api.GetEntryFlags.IncludeAncestors)) {
-        // Include all ancestors. Not paginated but limited to 100 max.
-        result.ancestors = await getAncestors();
-    }
 
     if (flags.has(api.GetEntryFlags.IncludePropertiesSummary)) {
         // Include a summary of property values for this entry (up to 15 importance properties - whose importance is <= 20)
@@ -109,28 +100,16 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                 continue;
             }
             refCache?.extractLookupReferences(serializedValue);
-            if (prop.type === "SimplePropertyValue") {  // This 'if' is mostly to satisfy TypeScript
-                result.propertiesSummary.push({
-                    id: prop.id,
-                    label: prop.label,
-                    value: serializedValue,
-                    importance: prop.importance,
-                    note: prop.note,
-                    type: prop.type,
-                    source: prop.source,
-                });
-            } else {
-                result.propertiesSummary.push({
-                    id: prop.id,
-                    label: prop.label,
-                    value: serializedValue,
-                    importance: prop.importance,
-                    note: prop.note,
-                    type: prop.type,
-                    source: prop.source,
-                });
-                refCache?.addReferenceToEntryId(prop.id);
-            }
+            result.propertiesSummary.push({
+                id: prop.id,
+                label: prop.label,
+                value: serializedValue,
+                importance: prop.importance,
+                note: prop.note,
+                type: prop.type,
+                source: prop.source,
+            });
+            refCache?.addReferenceToEntryId(prop.id);
         }
     }
 

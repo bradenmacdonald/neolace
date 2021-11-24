@@ -4,15 +4,11 @@ import {
     EditList,
     CreateEntry,
     CreateEntryType,
-    CreateRelationshipFact,
-    CreateRelationshipType,
     UpdateEntryType,
     UpdateEntryTypeFeature,
     AddPropertyValue,
     UpdatePropertyValue,
-    UpdateRelationshipType,
     getEditType,
-    RelationshipCategory,
     UpdateEntryFeature,
     CreateProperty,
     PropertyType,
@@ -22,11 +18,8 @@ import {
 import { C, defineAction, Field, VNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { Site } from "../Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
-import { RelationshipType } from "neolace/core/schema/RelationshipType.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { directRelTypeForPropertyType, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
-import { RelationshipFact } from "neolace/core/entry/RelationshipFact.ts";
-import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
 import { features } from "neolace/core/entry/features/all-features.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 
@@ -96,56 +89,6 @@ export const ApplyEdits = defineAction({
                     await feature.editFeature(edit.data.entryId, edit.data.feature as any, tx, id => modifiedNodes.add(id));
 
                     modifiedNodes.add(edit.data.entryId);
-                    break;
-                }
-
-                case CreateRelationshipFact.code: {  // Create a new Relationship Fact (record a relationship between two Entries)
-
-                    // Validate the relationship type and get its category
-                    const relType = await tx.queryOne(C`
-                        MATCH (rt:${RelationshipType} {id: ${edit.data.type}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                    `.RETURN({"rt.category": Field.String}));
-                    const category = relType["rt.category"] as RelationshipCategory;
-                    if (!Object.values(RelationshipCategory).includes(category)) {
-                        throw new Error("Internal error - unexpected value for relationship category");
-                    }
-
-                    const relFactProps: Record<string, unknown> = {};
-                    if (edit.data.noteMD !== undefined) {
-                        relFactProps.noteMD = edit.data.noteMD;
-                    }
-
-                    // Create the new relationship fact.
-                    // This query is written in such a way that it will also validate:
-                    // 1. That the RelationshipType for this new relationship is part of the current Site.
-                    // 2. That the "from entry" is of an EntryType allowed as a "from" EntryType for this RelationshipType
-                    // 3. That the "to entry" is of an EntryType allowed as a "to" EntryType for this RelationshipType
-                    // 4. 2 and 3 together with the validation code on RelationshipType also ensures that all referenced
-                    //    entries are part of the same Site.
-                    await tx.queryOne(C`
-                        MATCH (relType:${RelationshipType} {id: ${edit.data.type}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                        MATCH (fromEntry:${Entry} {id: ${edit.data.fromEntry}})-[:${Entry.rel.IS_OF_TYPE}]->(fromET:${EntryType}),
-                              (relType)-[:${RelationshipType.rel.FROM_ENTRY_TYPE}]->(fromET)
-                        MATCH (toEntry:${Entry} {id: ${edit.data.toEntry}})-[:${Entry.rel.IS_OF_TYPE}]->(toET:${EntryType}),
-                              (relType)-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(toET)
-                        CREATE (rf:${RelationshipFact} {id: ${edit.data.id}})
-                        SET rf += ${relFactProps}
-                        CREATE (rf)-[:${RelationshipFact.rel.IS_OF_REL_TYPE}]->(relType)
-                        CREATE (rf)-[:${RelationshipFact.rel.HAS_FACT_SOURCE}]->(fromEntry)
-                        CREATE (rf)-[:${RelationshipFact.rel.REL_FACT}]->(toEntry)
-                        CREATE (fromEntry)-[:${Entry.rel.REL_FACT}]->(rf)
-
-                        ${category === RelationshipCategory.IS_A ?
-                            // If this is an IS_A relationship, also create a direct Entry-[IS_A]->Entry relationship,
-                            // which makes computing ancestors much easier. We don't do this in general because there's
-                            // no "proper" way to link a relationship between two entries to a RelationshipType without
-                            // using an intermediate node like RelationshipFact, which is what we use.
-                            C`CREATE (fromEntry)-[:${Entry.rel.IS_A} {relFactId: rf.id}]->(toEntry)`
-                        : C('')}
-                    `.RETURN({}));
-
-                    modifiedNodes.add(edit.data.id);
-                    modifiedNodes.add(edit.data.fromEntry);
                     break;
                 }
 
@@ -252,29 +195,6 @@ export const ApplyEdits = defineAction({
                         MATCH (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         SET et += ${changes}
                     `.RETURN({}));
-                    // From here on we don't need to validate the Site is correct.
-                    if (edit.data.addOrUpdateSimpleProperties?.length) {
-                        await tx.query(C`
-                            MATCH (et:${EntryType} {id: ${edit.data.id}})
-                            WITH et
-                            UNWIND ${edit.data.addOrUpdateSimpleProperties} AS newFact
-                            MERGE (et)-[:${EntryType.rel.HAS_SIMPLE_PROP}]->(spv:${SimplePropertyValue} {id: newFact.id})
-                            SET spv.label = newFact.label
-                            SET spv.importance = newFact.importance
-                            SET spv.valueExpression = newFact.valueExpression
-                            SET spv.note = newFact.note
-                        `);
-                        edit.data.addOrUpdateSimpleProperties.forEach(spv => modifiedNodes.add(spv.id));
-                    }
-                    if (edit.data.removeSimpleProperties?.length) {
-                        await tx.queryOne(C`
-                            MATCH (spv:${SimplePropertyValue})<-[:${EntryType.rel.HAS_SIMPLE_PROP}]-(et:${EntryType} {id: ${edit.data.id}})
-                            WHERE spv.id IN ${edit.data.removeSimpleProperties}
-                            SET spv:DeletedVNode
-                            REMOVE spv:VNode
-                        `.RETURN({}));
-                        edit.data.removeSimpleProperties.forEach(cfId => modifiedNodes.add(cfId));
-                    }
                     modifiedNodes.add(edit.data.id);
                     break;
                 }
@@ -299,74 +219,6 @@ export const ApplyEdits = defineAction({
                         `);
                     }
                     modifiedNodes.add(edit.data.entryTypeId);
-                    break;
-                }
-
-                case CreateRelationshipType.code: {  // Create a new RelationshipType
-                    await tx.queryOne(C`
-                        MATCH (site:${Site} {id: ${siteId}})
-                        CREATE (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site)
-                        SET rt += ${{
-                            nameForward: edit.data.nameForward,
-                            nameReverse: edit.data.nameReverse,
-                            category: edit.data.category,
-                        }}
-                    `.RETURN({}));
-                    modifiedNodes.add(edit.data.id);
-                    break;
-                }
-
-                case UpdateRelationshipType.code: {  // Update a RelationshipType
-
-                    const changes: any = {}
-                    // Be sure we only set allowed properties onto the EditType VNode:
-                    if (edit.data.nameForward !== undefined) changes.nameForward = edit.data.nameForward;
-                    if (edit.data.nameReverse !== undefined) changes.nameReverse = edit.data.nameReverse;
-                    if (edit.data.description !== undefined) changes.description = edit.data.description;
-                    // "category" is omitted because it's not allowed to change.
-                    // (Would cause data issues with existing relationships of the old category.)
-
-                    await tx.queryOne(C`
-                        MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                        SET rt += ${changes}
-                    `.RETURN({}));
-
-                    if (edit.data.removeFromTypes) {
-                        await tx.query(C`
-                            MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                            MATCH (rt)-[rel:${RelationshipType.rel.FROM_ENTRY_TYPE}]->(et:${EntryType})
-                            WHERE et.id IN ${edit.data.removeFromTypes}
-                            DELETE rel
-                        `);
-                    }
-                    if (edit.data.removeToTypes) {
-                        await tx.query(C`
-                            MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                            MATCH (rt)-[rel:${RelationshipType.rel.TO_ENTRY_TYPE}]->(et:${EntryType})
-                            WHERE et.id IN ${edit.data.removeToTypes}
-                            DELETE rel
-                        `);
-                    }
-                    if (edit.data.addFromTypes) {
-                        await tx.query(C`
-                            MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                            MATCH (et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-                            WHERE et.id IN ${edit.data.addFromTypes}
-                            MERGE (rt)-[:${RelationshipType.rel.FROM_ENTRY_TYPE}]->(et)
-                        `);
-                    }
-                    if (edit.data.addToTypes) {
-                        const created = await tx.query(C`
-                            MATCH (rt:${RelationshipType} {id: ${edit.data.id}})-[:${RelationshipType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                            MATCH (et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-                            WHERE et.id IN ${edit.data.addToTypes}
-                            MERGE (rt)-[:${RelationshipType.rel.TO_ENTRY_TYPE}]->(et)
-                        `.RETURN({"et.contentType": Field.String}));
-                        if (created.length !== edit.data.addToTypes.length) {
-                            throw new Error(`UpdateRelationshipType.addToTypes failed: One or more of the "to" entry type IDs was invalid.`);
-                        }
-                    }
-                    modifiedNodes.add(edit.data.id);
                     break;
                 }
 

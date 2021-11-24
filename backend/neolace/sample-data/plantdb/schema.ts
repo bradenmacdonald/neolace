@@ -1,5 +1,5 @@
 import { VNID, } from "neolace/deps/vertex-framework.ts";
-import { SiteSchemaData, RelationshipCategory, PropertyType, PropertyMode } from "neolace/deps/neolace-api.ts";
+import { SiteSchemaData, PropertyType, PropertyMode } from "neolace/deps/neolace-api.ts";
 
 // Type helper to ensure that the schema is a valid SiteSchemaData without
 // collapsing the type down to just "SiteSchemaData"
@@ -116,121 +116,6 @@ export const schema = ValidateSiteSchema({
             enabledFeatures: {},
         },
     },
-    relationshipTypes: {
-        "_CisD": {
-            id: VNID("_CisD"),
-            nameForward: "is a",
-            nameReverse: "has class",
-            category: RelationshipCategory.IS_A,
-            description: null,
-            fromEntryTypes: [VNID("_ETCLASS")],
-            toEntryTypes: [VNID("_ETDIVISION")],
-        },
-        "_OisC": {
-            id: VNID("_OisC"),
-            nameForward: "is a",
-            nameReverse: "has order",
-            category: RelationshipCategory.IS_A,
-            description: null,
-            fromEntryTypes: [VNID("_ETORDER")],
-            toEntryTypes: [VNID("_ETCLASS")],
-        },
-        "_FisO": {
-            id: VNID("_FisO"),
-            nameForward: "is a",
-            nameReverse: "has family",
-            category: RelationshipCategory.IS_A,
-            description: null,
-            fromEntryTypes: [VNID("_ETFAMILY")],
-            toEntryTypes: [VNID("_ETORDER")],
-        },
-        "_GisF": {
-            id: VNID("_GisF"),
-            nameForward: "is a",
-            nameReverse: "has genus",
-            category: RelationshipCategory.IS_A,
-            description: null,
-            fromEntryTypes: [VNID("_ETGENUS")],
-            toEntryTypes: [VNID("_ETFAMILY")],
-        },
-        "_SisG": {
-            id: VNID("_SisG"),
-            nameForward: "is a",
-            nameReverse: "has species",
-            category: RelationshipCategory.IS_A,
-            description: null,
-            fromEntryTypes: [VNID("_ETSPECIES")],
-            toEntryTypes: [VNID("_ETGENUS")],
-        },
-        // At any level, a classification of plants can have a specific part, e.g. conifers have cones
-        "_HASA": {
-            id: VNID("_HASA"),
-            nameForward: "has",
-            nameReverse: "found in",
-            category: RelationshipCategory.HAS_A,
-            description: null,
-            fromEntryTypes: [
-                // From every level of classification. These are in alphabetical order though to match how Neolace returns a site's schema.
-                VNID("_ETCLASS"),
-                VNID("_ETDIVISION"),
-                VNID("_ETFAMILY"),
-                VNID("_ETGENUS"),
-                VNID("_ETORDER"),
-                VNID("_ETSPECIES"),
-            ],
-            toEntryTypes: [VNID("_ETPLANTPART")],
-        },
-        // At any level, a classification of plants can have a specific part, e.g. conifers have cones
-        "_HasHeroImage": {
-            id: VNID("_HasHeroImage"),
-            nameForward: "has hero image",
-            nameReverse: "found in",
-            category: RelationshipCategory.HAS_A,
-            description: null,
-            fromEntryTypes: [
-                // From every non-image entry type
-                VNID("_ETCLASS"),
-                VNID("_ETDIVISION"),
-                VNID("_ETFAMILY"),
-                VNID("_ETGENUS"),
-                VNID("_ETORDER"),
-                VNID("_ETPLANTPART"),
-                VNID("_ETSPECIES"),
-            ],
-            toEntryTypes: [VNID("_ETIMAGE")],
-        },
-        // An image can be related to anything
-        "_IRelTo": {
-            id: VNID("_IRelTo"),
-            nameForward: "relates to",
-            nameReverse: "has related images",
-            category: RelationshipCategory.RELATES_TO,
-            description: null,
-            fromEntryTypes: [
-                VNID("_ETIMAGE"),
-            ],
-            toEntryTypes: [
-                // An image can related to anything. These are in alphabetical order though to match how Neolace returns a site's schema.
-                VNID("_ETCLASS"),
-                VNID("_ETDIVISION"),
-                VNID("_ETFAMILY"),
-                VNID("_ETGENUS"),
-                VNID("_ETORDER"),
-                VNID("_ETPLANTPART"),
-                VNID("_ETSPECIES"),
-            ],
-        },
-        // A plant part can be another type of plant part:
-        "_PARTisPART": {
-            id: VNID("_PARTisPART"),
-            nameForward: "is a",
-            nameReverse: "has type",
-            category: RelationshipCategory.IS_A,
-            description: null,
-            fromEntryTypes: [VNID("_ETPLANTPART")],
-            toEntryTypes: [VNID("_ETPLANTPART")],
-        },
-    },
     properties: {
         "_parentTaxon": {
             id: VNID("_parentTaxon"),
@@ -302,7 +187,7 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETDIVISION")}],
             mode: PropertyMode.Auto,
-            default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
+            default: `this.reverse(prop=[[/prop/_parentTaxon]])`,
             descriptionMD: `Classes that are part of this division.`,
             importance: 3,
         },
@@ -312,7 +197,7 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETCLASS")}],
             mode: PropertyMode.Auto,
-            default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
+            default: `this.reverse(prop=[[/prop/_parentTaxon]])`,
             descriptionMD: `Orders that are part of this class.`,
             importance: 3,
         },
@@ -322,7 +207,7 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETORDER")}],
             mode: PropertyMode.Auto,
-            default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
+            default: `this.reverse(prop=[[/prop/_parentTaxon]])`,
             descriptionMD: `Families that are part of this order.`,
             importance: 3,
         },
@@ -332,7 +217,7 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETFAMILY")}],
             mode: PropertyMode.Auto,
-            default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
+            default: `this.reverse(prop=[[/prop/_parentTaxon]])`,
             descriptionMD: `Genera (genuses) that are part of this family.`,
             importance: 3,
         },
@@ -342,7 +227,7 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETSPECIES"),}],
             mode: PropertyMode.Auto,
-            default: `this.reverseProp(prop=[/prop/_parentTaxon])`,
+            default: `this.reverse(prop=[[/prop/_parentTaxon]])`,
             descriptionMD: `Species that are part of this genus.`,
             importance: 3,
         },
@@ -389,9 +274,27 @@ export const schema = ValidateSiteSchema({
                 {entryType: VNID("_ETSPECIES")},
             ],
             mode: PropertyMode.Auto,
-            default: `this.andDescendants().reverseProp(prop=[/prop/_imgRelTo])`,
+            default: `this.andDescendants().reverse(prop=[[/prop/_imgRelTo]])`,
             descriptionMD: `Images related to this entry.`,
             importance: 10,
+        },
+        // Has hero image
+        "_hasHeroImage": {
+            id: VNID("_hasHeroImage"),
+            name: "Has hero image",
+            type: PropertyType.RelOther,
+            appliesTo: [
+                {entryType: VNID("_ETCLASS"),},
+                {entryType: VNID("_ETDIVISION")},
+                {entryType: VNID("_ETFAMILY")},
+                {entryType: VNID("_ETGENUS")},
+                {entryType: VNID("_ETORDER")},
+                {entryType: VNID("_ETPLANTPART")},
+                {entryType: VNID("_ETSPECIES")},
+            ],
+            mode: PropertyMode.Recommended,
+            descriptionMD: `Hero image used for this entry`,
+            importance: 20,
         },
         // Has part
         "_hasPart": {
@@ -418,7 +321,7 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETPLANTPART")}],
             mode: PropertyMode.Auto,
-            default: `this.andDescendants().reverseProp(prop=[/prop/_hasPart])`,
+            default: `this.andDescendants().reverse(prop=[[/prop/_hasPart]])`,
             descriptionMD: `This plant is found in these species/genera/etc.`,
             importance: 10,
         },
@@ -438,9 +341,41 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETPLANTPART")}],
             mode: PropertyMode.Auto,
-            default: `this.reverseProp(prop=[/prop/_partIsAPart])`,
+            default: `this.reverse(prop=[[/prop/_partIsAPart]])`,
             descriptionMD: `Sub-types of this plant part`,
             importance: 3,
+        },
+        ////////////////////////////////////////////////////////////////////////////////////////
+        ///////// Value properties:
+
+        // A plant's scientific name
+        "_propScientificName": {
+            id: VNID("_propScientificName"),
+            name: "Scientific name",
+            type: PropertyType.Value,
+            appliesTo: [{entryType: VNID("_ETSPECIES")}],
+            mode: PropertyMode.Required,
+            descriptionMD: "The **scientific name**, sometimes called the **binomial name** or **latin name** is an unambiguous species identifier.",
+            importance: 3,
+            displayAs: "*{value}*",
+        },
+        // An entry's Wikidata Entry ID
+        "_propWikidataQID": {
+            id: VNID("_propWikidataQID"),
+            name: "Wikidata Item ID",
+            type: PropertyType.Value,
+            appliesTo: [
+                {entryType: VNID("_ETCLASS")},
+                {entryType: VNID("_ETDIVISION")},
+                {entryType: VNID("_ETFAMILY")},
+                {entryType: VNID("_ETGENUS")},
+                {entryType: VNID("_ETORDER")},
+                {entryType: VNID("_ETSPECIES")},
+            ],
+            mode: PropertyMode.Optional,
+            descriptionMD: "ID of this item on Wikidata, the free knowledge base that anyone can edit.",
+            importance: 15,
+            displayAs: "*{value}*",
         },
     },
 });

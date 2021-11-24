@@ -16,7 +16,6 @@ import { slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { graph } from "neolace/core/graph.ts";
-import { RelationshipFact } from "./RelationshipFact.ts";
 import { PropertyFact } from "./PropertyFact.ts";
 
 
@@ -46,11 +45,6 @@ export class Entry extends VNodeType {
         IS_OF_TYPE: {
             to: [EntryType],
             cardinality: VNodeType.Rel.ToOneRequired,
-        },
-        /** This Entry has a relationship to another entry, via a RelationshipFact */
-        REL_FACT: {
-            to: [RelationshipFact],
-            cardinality: VNodeType.Rel.ToManyUnique,
         },
         /** This Entry has property values */
         PROP_FACT: {

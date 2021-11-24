@@ -8,9 +8,6 @@ import {
 import { Site } from "neolace/core/Site.ts";
 
 import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
-import { SimplePropertyValue } from "neolace/core/schema/SimplePropertyValue.ts";
-// Since PropertyFact references Entry, this will create circular import issues:
-//import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 
 /**
  * Schema definition for a type of entry
@@ -37,16 +34,6 @@ export class EntryType extends VNodeType {
             to: [EnabledFeature],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
-        /** This EntryType has property values */
-        // PROP_FACT: {
-        //     to: [PropertyFact],
-        //     cardinality: VNodeType.Rel.ToManyUnique,
-        // },
-        /** This EntryType has simple property values */
-        HAS_SIMPLE_PROP: {
-            to: [SimplePropertyValue],
-            cardinality: VNodeType.Rel.ToManyUnique,
-        },
     });
 
     static virtualProperties = this.hasVirtualProperties({
@@ -54,11 +41,6 @@ export class EntryType extends VNodeType {
             type: VirtualPropType.OneRelationship,
             query: C`(@this)-[:${this.rel.FOR_SITE}]->(@target)`,
             target: Site,
-        },
-        simplePropValues: {
-            type: VirtualPropType.ManyRelationship,
-            query: C`(@this)-[:${this.rel.HAS_SIMPLE_PROP}]->(@target)`,
-            target: SimplePropertyValue,
         },
     });
 

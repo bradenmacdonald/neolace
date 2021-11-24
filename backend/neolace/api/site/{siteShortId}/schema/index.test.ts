@@ -69,7 +69,7 @@ group(import.meta, () => {
                         enabledFeatures: {},
                     },
                 },
-                relationshipTypes: defaultData.schema.relationshipTypes,
+                properties: defaultData.schema.properties,
             });
         });
 
