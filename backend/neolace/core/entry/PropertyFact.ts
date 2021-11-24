@@ -9,6 +9,7 @@ import {
     ValidationError,
     EmptyResultError,
     getRelationshipType,
+    VNID,
 } from "neolace/deps/vertex-framework.ts";
 import { PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
 import { Site } from "neolace/core/Site.ts";
@@ -155,18 +156,13 @@ export class PropertyFact extends VNodeType {
             // This is an explicit IS_A, HAS_A, or RELATES_TO, or OTHER relationship
             // (and at this point we know it's not an "Auto" mode property)
 
-            // We require the value (lookup expression) to be an entry literal, e.g. [[/entry/...]]
-            if (!valueExpression.startsWith(`[[/entry/`) || !valueExpression.endsWith(`]]`)) {
-                throw new ValidationError(`Relationship property values must be of the format [[/entry/entry-id]]`);
-            }
             // There is a relationship FROM the current entry TO the entry with this id:
-            const toEntryKey = valueExpression.slice(9, -2);
+            const toEntryId = parseLookupExpressionToEntryId(valueExpression);
             // First, validate that this value is pointing to a real entry on the same site.
-            const toEntry = await tx.queryOne(C`
-                MATCH (e:${Entry}), e HAS KEY ${toEntryKey}
+            await tx.queryOne(C`
+                MATCH (e:${Entry} {id: ${toEntryId}})
                 MATCH (e)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
             `.RETURN({"e.id": Field.VNID}));
-            const toEntryId = toEntry["e.id"];
 
             // For relationship properties, we also need a direct Entry-[:REL_TYPE]->Entry relationship created on the
             // graph, which makes ancestor lookups much more efficient, and also makes generally working with the graph
@@ -189,4 +185,16 @@ export class PropertyFact extends VNodeType {
             }
         }
     }
+}
+
+/**
+ * Given a lookup expression that represents an Entry ID literal, get the entry ID.
+ */
+export function parseLookupExpressionToEntryId(valueExpression: string) {
+    // We require the value (lookup expression) to be an entry literal, e.g. [[/entry/...]]
+    if (!valueExpression.startsWith(`[[/entry/`) || !valueExpression.endsWith(`]]`)) {
+        throw new ValidationError(`Relationship property values must be of the format [[/entry/entry-id]]`);
+    }
+    // There is a relationship FROM the current entry TO the entry with this id:
+    return VNID(valueExpression.slice(9, -2));
 }
