@@ -44,8 +44,6 @@ const dbRankToValue = (dbValue: unknown): IntegerValue|NullValue => {
 const dbNoteToValue = (dbValue: unknown): InlineMarkdownStringValue|NullValue => {
     if (typeof dbValue === "string") {
         return new InlineMarkdownStringValue(dbValue);
-    } else if (dbValue === null) {
-        return new NullValue();
     } else {
         throw new LookupEvaluationError("Unexpected data type for 'note' while evaluating lookup.");
     }
@@ -55,9 +53,11 @@ const dbNoteToValue = (dbValue: unknown): InlineMarkdownStringValue|NullValue =>
  * Helper function to read annotated slot values from a database query result
  */
 const dbSlotToValue = (dbValue: unknown): StringValue|NullValue => {
-    if (dbValue === null || dbValue === "") {
+    if (dbValue === null) {
+        // Slots are disabled for this property - return NULL
         return new NullValue();
     } else if (typeof dbValue === "string") {
+        // Slots are enabled for this property - return a string, which may be empty
         return new StringValue(dbValue);
     } else {
         throw new LookupEvaluationError("Unexpected data type for 'slot' while evaluating lookup.");
@@ -125,29 +125,29 @@ const dbSlotToValue = (dbValue: unknown): StringValue|NullValue => {
                 WITH entry AS fromEntry  // Continue the existing entry query, discard annotations if present
 
                 // Get the property that we're looking for, and double-check it applies to this specific entry...
-                MATCH (prop:${Property} {id: ${propValue.id}})-[:${Property.rel.APPLIES_TO_TYPE}]->(:${EntryType})<-[:${Entry.rel.IS_OF_TYPE}]-(entry)
+                MATCH (prop:${Property} {id: ${propValue.id}})-[:${Property.rel.APPLIES_TO_TYPE}]->(:${EntryType})<-[:${Entry.rel.IS_OF_TYPE}]-(fromEntry)
 
                 // Fetch all propertyfacts associated with this specific property, on this entry or its ancestors
-                MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
+                MATCH path = (fromEntry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
 
-                WITH entry, prop, path, ancestor, pf
+                WITH fromEntry, prop, path, ancestor, pf
                     WHERE (length(path) = 2 OR prop.inheritable = true)
                     // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
 
                 // We use minDistance below so that for each inherited property, we only get the
                 // values set by the closest ancestor. e.g. if grandparent->parent->child each
                 // have birthDate, child's birthDate will take priority and grandparent/parent's won't be returned
-                WITH entry, prop, CASE WHEN prop.enableSlots THEN pf.slot ELSE null END AS slot, min(length(path)) AS minDistance, collect({pf: pf, ancestor: ancestor, distance: length(path)}) AS facts
+                WITH fromEntry, prop, CASE WHEN prop.enableSlots THEN pf.slot ELSE null END AS slot, min(length(path)) AS minDistance, collect({pf: pf, ancestor: ancestor, distance: length(path)}) AS facts
                 // Now filter to only have values from the closest ancestor:
-                WITH entry, prop, minDistance, facts
+                WITH fromEntry, prop, slot, minDistance, facts
                 UNWIND facts as f
-                WITH entry, prop, f WHERE f.distance = minDistance
-                WITH entry as fromEntry, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
+                WITH fromEntry, prop, slot, f WHERE f.distance = minDistance
+                WITH fromEntry, slot, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
 
                 MATCH (fromEntry)-[directRel:${directRelTypeForPropertyType(propType)}]->(toEntry:${Entry})
                     WHERE id(directRel) = pf.directRelNeo4jId
 
-                WITH toEntry AS entry, {note: pf.note, rank: pf.rank, slot: pf.slot} AS annotations
+                WITH toEntry AS entry, {note: pf.note, rank: pf.rank, slot: slot} AS annotations
 
                 WITH entry, annotations
                 ORDER BY annotations.rank, entry.name

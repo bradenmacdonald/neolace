@@ -1,8 +1,16 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
-import { AnnotatedEntryValue, NullValue, PageValue, StringValue } from "../values.ts";
-import { RelatedEntries } from "./related.ts";
+import {
+    AnnotatedEntryValue,
+    InlineMarkdownStringValue,
+    IntegerValue,
+    NullValue,
+    PageValue,
+    PropertyValue,
+    StringValue,
+} from "../values.ts";
+import { GetProperty } from "./get.ts";
 import { LookupExpression } from "../expression.ts";
 import { This } from "./this.ts";
 import { LiteralExpression } from "./literal-expr.ts";
@@ -13,87 +21,78 @@ group(import.meta, () => {
     const siteId = defaultData.site.id;
     const cone = defaultData.entries.cone.id;
     const seedCone = defaultData.entries.seedCone.id;
+    const pollenCone = defaultData.entries.pollenCone.id;
     const evalExpression = (expr: LookupExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId}).then(v => v.makeConcrete()));
 
-    // A literal expression referencing the "[Plant part] IS A [Plant part]" relationship:
-    const partIsAPart = new LiteralExpression(new RelationshipTypeValue(defaultData.schema.relationshipTypes._PARTisPART.id));
-    const from = new LiteralExpression(new StringValue("from"));
-    const to = new LiteralExpression(new StringValue("to"));
+    // Literal expressions referencing some properties in the default PlantDB data set:
+    const scientificName = new LiteralExpression(new PropertyValue(defaultData.schema.properties._propScientificName.id));
+    const partIsAPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._partIsAPart.id));
+    const hasPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._hasPart.id));
 
-    group("related()", () => {
+    // When retrieving the entry values from a relationship property, they are "annotated" with data like this:
+    const defaultAnnotations = {
+        rank: new IntegerValue(1n),
+        note: new InlineMarkdownStringValue(""),
+        slot: new NullValue(),
+    };
 
-        test(`By default it returns relationships in any direction`, async () => {
-            const expression = new RelatedEntries(new This(), {via: partIsAPart});
-            const value = await evalExpression(expression, cone);
+    group("get() - value property, single entry", () => {
 
-            // [seed cone] IS A [cone], and [pollen cone] IS A [cone]:
-            assertEquals(value, new PageValue([
-                new AnnotatedEntryValue(defaultData.entries.pollenCone.id, {
-                    // Should we include the ID of the relationship fact?
-                    weight: new NullValue(),
-                    note: new NullValue(),
-                }),
-                new AnnotatedEntryValue(defaultData.entries.seedCone.id, {
-                    // Should we include the ID of the relationship fact?
-                    weight: new NullValue(),
-                    note: new NullValue(),
-                }),
-            ], {
-                pageSize: 50n,
-                startedAt: 0n,
-                totalCount: 2n,
-            }));
+        test(`get() can retrieve a property value for a single entry`, async () => {
+            const expression = new GetProperty(new This(), {propertyExpr: scientificName});
+            const value = await evalExpression(expression, defaultData.entries.ponderosaPine.id);
 
-            const value2 = await evalExpression(expression, seedCone);
-            assertEquals(value2, new PageValue([
-                new AnnotatedEntryValue(cone, {weight: new NullValue(), note: new NullValue()}),
-            ], {pageSize: 50n, startedAt: 0n, totalCount: 1n}));
+            assertEquals(value, new StringValue("Pinus ponderosa"));
         });
 
-        test(`But it can return only "from" relationships when asked to`, async () => {
-            const expression = new RelatedEntries(new This(), {via: partIsAPart, direction: from});
-            const value = await evalExpression(expression, cone);
+        test(`get() returns null if a property is not set`, async () => {
+            const expression = new GetProperty(new This(), {propertyExpr: scientificName});
+            // The entry "cone" doesn't have a scientific name set:
+            const value = await evalExpression(expression, defaultData.entries.cone.id);
 
-            // [cone] IS A _____ (nothing) so this returns nothing:
-            assertEquals(value, new PageValue([], {pageSize: 50n, startedAt: 0n, totalCount: 0n}));
-
-            const value2 = await evalExpression(expression, seedCone);
-            // [seed cone] IS A [cone]:
-            assertEquals(value2, new PageValue([
-                new AnnotatedEntryValue(cone, {weight: new NullValue(), note: new NullValue()}),
-            ], {pageSize: 50n, startedAt: 0n, totalCount: 1n}));
-        });
-
-        test(`And it can return only "to" relationships when asked to`, async () => {
-            const expression = new RelatedEntries(new This(), {via: partIsAPart, direction: to});
-            const value = await evalExpression(expression, cone);
-
-            // [seed cone, pollen cone] IS A [cone] so this returns nothing:
-            assertEquals(value, new PageValue([
-                new AnnotatedEntryValue(defaultData.entries.pollenCone.id, {weight: new NullValue(), note: new NullValue()}),
-                new AnnotatedEntryValue(defaultData.entries.seedCone.id, {weight: new NullValue(), note: new NullValue()}),
-            ], {
-                pageSize: 50n,
-                startedAt: 0n,
-                totalCount: 2n,
-            }));
-
-            const value2 = await evalExpression(expression, seedCone);
-            assertEquals(value2, new PageValue([], {pageSize: 50n, startedAt: 0n, totalCount: 0n}));
+            assertEquals(value, new NullValue());
         });
 
     });
+
+    group("get() - value property, multiple entries", () => {
+
+        // TODO
+
+    });
+
+    group("get() - relationship property", () => {
+
+        test(`Can retrieve a simple IS A relationship property value`, async () => {
+            const expression = new GetProperty(new This(), {propertyExpr: partIsAPart});
+            const value = await evalExpression(expression, defaultData.entries.seedCone.id);
+            // A "seed cone" is a "cone":
+            assertEquals(value, new PageValue([
+                new AnnotatedEntryValue(cone, {...defaultAnnotations}),
+            ], {pageSize: 50n, startedAt: 0n, totalCount: 1n}));
+        });
+
+        test(`Can retrieve a simple HAS PART relationship property value`, async () => {
+            const expression = new GetProperty(new This(), {propertyExpr: hasPart});
+            const value = await evalExpression(expression, defaultData.entries.classPinopsida.id);
+            // All conifers (Class Pinopsida) have both male and female cones:
+            assertEquals(value, new PageValue([
+                new AnnotatedEntryValue(pollenCone, {...defaultAnnotations}),
+                new AnnotatedEntryValue(seedCone, {...defaultAnnotations, rank: new IntegerValue(2n)}),
+            ], {pageSize: 50n, startedAt: 0n, totalCount: 2n}));
+        });
+    });
 });
+/*
+// // deno-lint-ignore-file camelcase
+// import { VNID } from "neolace/deps/vertex-framework.ts";
+// import { RelationshipCategory } from "neolace/deps/neolace-api.ts";
 
-// deno-lint-ignore-file camelcase
-import { VNID } from "neolace/deps/vertex-framework.ts";
-import { RelationshipCategory } from "neolace/deps/neolace-api.ts";
-
-import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
-import { getEntryDirectRelationshipFacts } from "neolace/core/entry/relationships.ts";
-import { CreateSite } from "neolace/core/Site.ts";
+// import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
+// import { graph } from "neolace/core/graph.ts";
+// import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+// import { getEntryDirectRelationshipFacts } from "neolace/core/entry/relationships.ts";
+// import { CreateSite } from "neolace/core/Site.ts";
 
 group(import.meta, () => {
 
@@ -235,3 +234,4 @@ group(import.meta, () => {
 
     });
 });
+*/

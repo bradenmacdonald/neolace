@@ -1,9 +1,14 @@
+import { VNID } from "neolace/deps/vertex-framework.ts";
+import { PropertyType } from "neolace/deps/neolace-api.ts";
 import { group, test, setTestIsolation, assertEquals, assert } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
+import { CreateSite } from "neolace/core/Site.ts";
+import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { Ancestors, AndAncestors } from "./ancestors.ts";
 import { AnnotatedEntryValue, IntegerValue, PageValue } from "../values.ts";
 import { This } from "./this.ts";
 import { Count } from "./count.ts";
+
 
 group(import.meta, () => {
 
@@ -109,14 +114,6 @@ group(import.meta, () => {
     });
 });
 
-import { VNID } from "neolace/deps/vertex-framework.ts";
-import { PropertyType } from "neolace/deps/neolace-api.ts";
-
-import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
-import { getEntryAncestors } from "neolace/core/entry/ancestors.ts";
-import { CreateSite } from "neolace/core/Site.ts";
 
 group(import.meta, () => {
 
