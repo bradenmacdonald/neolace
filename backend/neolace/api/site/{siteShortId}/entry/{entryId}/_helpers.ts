@@ -1,13 +1,12 @@
 import { api } from "neolace/api/mod.ts";
 import { VNID, WrappedTransaction, isVNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
-import { getEntryAncestors } from "neolace/core/entry/ancestors.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
 import { parseLookupString } from "neolace/core/lookup/parse.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
-import { ConcreteValue, ErrorValue, InlineMarkdownStringValue, StringValue } from "neolace/core/lookup/values.ts";
-import { getEntryProperties } from "neolace/core/entry/properties.ts";
+import { AnnotatedValue, ConcreteValue, ErrorValue, InlineMarkdownStringValue, IntegerValue, NullValue, PageValue, StringValue } from "neolace/core/lookup/values.ts";
+import { EntryPropertyValueSet, getEntryProperties } from "neolace/core/entry/properties.ts";
 import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-data.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 
@@ -16,15 +15,15 @@ import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
  * Helper function to wrap an async function so that it only runs at most once. If you don't need/call it, it won't run
  * at all.
  */
-function computeOnceIfNeeded<ResultType>(doCompute: () => Promise<ResultType>): () => Promise<ResultType> {
-    let resultPromise: Promise<ResultType>|undefined = undefined;
-    return (): Promise<ResultType> => {
-        if (resultPromise === undefined) {
-            resultPromise = doCompute();
-        }
-        return resultPromise;
-    };
-}
+// function computeOnceIfNeeded<ResultType>(doCompute: () => Promise<ResultType>): () => Promise<ResultType> {
+//     let resultPromise: Promise<ResultType>|undefined = undefined;
+//     return (): Promise<ResultType> => {
+//         if (resultPromise === undefined) {
+//             resultPromise = doCompute();
+//         }
+//         return resultPromise;
+//     };
+// }
 
 
 /**
@@ -72,20 +71,50 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     if (flags.has(api.GetEntryFlags.IncludePropertiesSummary)) {
         // Include a summary of property values for this entry (up to 15 importance properties - whose importance is <= 20)
         const properties = await getEntryProperties(entryData.id, {tx, limit: 15, maxImportance: 20});
-        const context: LookupContext = {tx, siteId, entryId: entryData.id, defaultPageSize: 5n};
+        const maxValuesPerProp = 5;
+        const context: LookupContext = {tx, siteId, entryId: entryData.id, defaultPageSize: BigInt(maxValuesPerProp)};
 
         // ** In the near future, we'll need to resolve a dependency graph and compute these in parallel / async. **
 
+        /** Helper function to return a single property value as an annotated lookup value */
+        const factToValue = async (fact: EntryPropertyValueSet["facts"][0]) => {
+            let innerValue;
+            try {
+                innerValue = await parseLookupString(fact.valueExpression).getValue(context).then(v => v.makeConcrete());
+            } catch (err: unknown) {
+                if (err instanceof LookupError) {
+                    innerValue = new ErrorValue(err);
+                } else {
+                    throw err;
+                }
+            }
+            return new AnnotatedValue(innerValue, {
+                source: new StringValue(fact.source.from === "ThisEntry" ? "ThisEntry" : "AncestorEntry"),
+                note: new InlineMarkdownStringValue(fact.note),
+                rank: new IntegerValue(fact.rank),
+                slot: fact.slot ? new StringValue(fact.slot) : new NullValue(),
+            });
+        };
+
         result.propertiesSummary = [];
-        for (const prop of properties) {
+        for (const {property, facts} of properties) {
             let value: ConcreteValue;
             try {
-                value = await parseLookupString(prop.valueExpression).getValue(context).then(v => v.makeConcrete());
-                if (prop.type === "PropertyValue" && prop.displayAs !== null) {
-                    const valueAsString = value.castTo(StringValue, context);
-                    if (valueAsString) {
-                        value = new InlineMarkdownStringValue(prop.displayAs.replaceAll("{value}", valueAsString.value));
+                if (facts.length === 0) {
+                    if (property.default) {
+                        const innerValue = await parseLookupString(property.default).getValue(context).then(v => v.makeConcrete());
+                        value = new AnnotatedValue(innerValue, {source: new StringValue("Default")});
+                    } else {
+                        throw new Error("Unexpected property with no values and no deafult");
                     }
+                } else if (facts.length === 1) {
+                    value = await factToValue(facts[0]);
+                } else {
+                    // There are two or more values. Show up to five.
+                    value = new PageValue<AnnotatedValue>(
+                        await Promise.all(facts.slice(0, maxValuesPerProp).map(f => factToValue(f))),
+                        {startedAt: 0n, pageSize: BigInt(maxValuesPerProp), totalCount: BigInt(facts.length)},
+                    );
                 }
             } catch (err: unknown) {
                 if (err instanceof LookupError) {
@@ -99,17 +128,12 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                 // This property value is just an empty result set. Hide it from the result.
                 continue;
             }
-            refCache?.extractLookupReferences(serializedValue);
             result.propertiesSummary.push({
-                id: prop.id,
-                label: prop.label,
+                propertyId: property.id,
                 value: serializedValue,
-                importance: prop.importance,
-                note: prop.note,
-                type: prop.type,
-                source: prop.source,
             });
-            refCache?.addReferenceToEntryId(prop.id);
+            refCache?.addReferenceToPropertyId(property.id);
+            refCache?.extractLookupReferences(serializedValue);
         }
     }
 

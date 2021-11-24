@@ -1,4 +1,5 @@
 import { Schema, Type, string, vnidString, nullable, array, number, object, Record } from "../api-schemas.ts";
+import { PropertyType } from "../schema/SiteSchemaData.ts";
 import { AnyLookupValue } from "./lookup-value.ts";
 
 
@@ -17,16 +18,7 @@ export enum GetEntryFlags {
  */
 export const DisplayedPropertySchema = Schema({
     propertyId: vnidString,
-    label: string,
     value: object.transform(obj => obj as AnyLookupValue),
-    importance: number,
-    /** Markdown text with an explanation of this property */
-    note: string.strictOptional(),
-    source: Schema.either(
-        {from: "Default" as const},
-        {from: "ThisEntry" as const},
-        {from: "AncestorEntry" as const, entryId: vnidString},
-    ),
 });
 export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
 
@@ -73,11 +65,21 @@ export const ReferenceCacheSchema = Schema({
         description: string,
         entryType: Schema({id: vnidString}),
     })),
+    properties: Record(string, Schema({
+        id: vnidString,
+        name: string,
+        description: string,
+        type: Schema.enum(PropertyType),
+        standardURL: string,
+        importance: number,
+        displayAs: string,
+    })),
 });
 
 export type ReferenceCacheData = Type<typeof ReferenceCacheSchema>;
 export type RefCacheEntryTypeData = ReferenceCacheData["entryTypes"]["key"];
 export type RefCacheEntryData = ReferenceCacheData["entries"]["key"];
+export type RefCachePropertyData = ReferenceCacheData["properties"]["key"];
 
 
 export const EntrySchema = Schema({

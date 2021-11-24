@@ -414,6 +414,7 @@ export const makePlantDbContent: EditList = [
         valueExpression: `[[/entry/${entryData.pollenCone.id}]]`,
         propertyFactId: VNID(),
         note: "",
+        slot: "pollen-cone",
     }},
     {code: "AddPropertyValue", data: {
         entry: entryData.classPinopsida.id,
@@ -421,6 +422,7 @@ export const makePlantDbContent: EditList = [
         valueExpression: `[[/entry/${entryData.seedCone.id}]]`,
         propertyFactId: VNID(),
         note: "",
+        slot: "seed-cone",
     }},
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

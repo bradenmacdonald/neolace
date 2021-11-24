@@ -71,13 +71,6 @@ export const schema = ValidateSiteSchema({
                 Image: {},
             },
         },
-        "_ETPROPERTY": {
-            id: VNID("_ETPROPERTY"),
-            name: "Property",
-            description: "Properties of a PlantDB entry.",
-            friendlyIdPrefix: "p-",
-            enabledFeatures: {},
-        },
     },
     properties: {
         "_parentTaxon": {
@@ -150,7 +143,7 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETDIVISION")}],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=[[/prop/_parentTaxon]])`,
+            default: `this.reverse(prop=[[/prop/_parentDivision]])`,
             descriptionMD: `Classes that are part of this division.`,
             importance: 3,
         },
@@ -160,7 +153,7 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETCLASS")}],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=[[/prop/_parentTaxon]])`,
+            default: `this.reverse(prop=[[/prop/_parentClass]])`,
             descriptionMD: `Orders that are part of this class.`,
             importance: 3,
         },
@@ -170,7 +163,7 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETORDER")}],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=[[/prop/_parentTaxon]])`,
+            default: `this.reverse(prop=[[/prop/_parentOrder]])`,
             descriptionMD: `Families that are part of this order.`,
             importance: 3,
         },
@@ -180,7 +173,7 @@ export const schema = ValidateSiteSchema({
             type: PropertyType.RelOther,
             appliesTo: [{entryType: VNID("_ETFAMILY")}],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=[[/prop/_parentTaxon]])`,
+            default: `this.reverse(prop=[[/prop/_parentFamily]])`,
             descriptionMD: `Genera (genuses) that are part of this family.`,
             importance: 3,
         },
@@ -188,9 +181,9 @@ export const schema = ValidateSiteSchema({
             id: VNID("_genusSpecies"),
             name: "Species",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: VNID("_ETSPECIES"),}],
+            appliesTo: [{entryType: VNID("_ETGENUS"),}],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=[[/prop/_parentTaxon]])`,
+            default: `this.reverse(prop=[[/prop/_parentGenus]])`,
             descriptionMD: `Species that are part of this genus.`,
             importance: 3,
         },
@@ -257,7 +250,7 @@ export const schema = ValidateSiteSchema({
             ],
             mode: PropertyMode.Recommended,
             descriptionMD: `Hero image used for this entry`,
-            importance: 20,
+            importance: 21,
         },
         // Has part
         "_hasPart": {
@@ -276,6 +269,8 @@ export const schema = ValidateSiteSchema({
             valueConstraint: `x.type() = entryType("_ETPLANTPART")`,
             descriptionMD: `This [species/genus/etc.] has this part(s).`,
             importance: 10,
+            inheritable: true,
+            enableSlots: true,
         },
         // Plant part is found in
         "_partFoundIn": {
@@ -338,7 +333,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Optional,
             descriptionMD: "ID of this item on Wikidata, the free knowledge base that anyone can edit.",
             importance: 15,
-            displayAs: "*{value}*",
+            displayAs: "[{value}](https://www.wikidata.org/wiki/{value})",
         },
     },
 });

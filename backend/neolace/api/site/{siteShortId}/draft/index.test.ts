@@ -218,6 +218,7 @@ group(import.meta, () => {
                         data: api.CreateEntry.dataSchema({
                             id: VNID(),
                             name: "A New Entry",
+                            friendlyId: "test-entry",
                             description: "",
                             type: defaultData.schema.entryTypes._ETSPECIES.id,
                         }),
