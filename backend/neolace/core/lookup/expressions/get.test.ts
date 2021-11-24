@@ -36,7 +36,7 @@ group(import.meta, () => {
         slot: new NullValue(),
     };
 
-    group("get() - value property, single entry", () => {
+    group("get() - value property, single entry, single value", () => {
 
         test(`get() can retrieve a property value for a single entry`, async () => {
             const expression = new GetProperty(new This(), {propertyExpr: scientificName});
@@ -52,6 +52,12 @@ group(import.meta, () => {
 
             assertEquals(value, new NullValue());
         });
+
+    });
+
+    group("get() - value property, single entry, multiple values", () => {
+
+        // TODO
 
     });
 

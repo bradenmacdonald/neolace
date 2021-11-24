@@ -8,16 +8,17 @@ import { Ancestors, AndAncestors } from "./ancestors.ts";
 import { AnnotatedEntryValue, IntegerValue, PageValue } from "../values.ts";
 import { This } from "./this.ts";
 import { Count } from "./count.ts";
+import { LookupExpression } from "../expression.ts";
 
 
 group(import.meta, () => {
 
-    // These tests are read-only so don't need isolation, but do use the default plantDB example data:
-    const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
-    const siteId = defaultData.site.id;
-    const ponderosaPine = defaultData.entries.ponderosaPine;
-
     group("ancestors()", () => {
+
+        // These tests are read-only so don't need isolation, but do use the default plantDB example data:
+        const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
+        const siteId = defaultData.site.id;
+        const ponderosaPine = defaultData.entries.ponderosaPine;
 
         test("It can give all the ancestors of the ponderosa pine", async () => {
 
@@ -60,6 +61,11 @@ group(import.meta, () => {
     });
 
     group("andAncestors()", () => {
+
+        // These tests are read-only so don't need isolation, but do use the default plantDB example data:
+        const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
+        const siteId = defaultData.site.id;
+        const ponderosaPine = defaultData.entries.ponderosaPine;
 
         test("It can give all the ancestors of the ponderosa pine", async () => {
 
@@ -112,14 +118,30 @@ group(import.meta, () => {
         });
 
     });
-});
 
-
-group(import.meta, () => {
-
-    group("getEntryAncestors", () => {
-
+    group("ancestors()/getAncestors() - additional tests", () => {
         setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
+
+        const siteId = VNID();
+        const entryType = VNID(), entryIsA = VNID();
+        const A = VNID(), B = VNID(), C = VNID(), D = VNID(), E = VNID(), F = VNID(), G = VNID(), H = VNID(), I = VNID();
+
+        const evalExpr = async (expr: LookupExpression, entryId: VNID) => await graph.read(tx => 
+            expr.getValue({tx, siteId, entryId}).then(v => v.makeConcrete())
+        );
+
+        const checkAncestors = async (entryId: VNID, expected: AnnotatedEntryValue[]) => {
+            // with ancestors():
+            assertEquals(await evalExpr( new Ancestors(new This()), entryId), new PageValue([
+                ...expected,
+            ], {pageSize: 50n, startedAt: 0n, totalCount: BigInt(expected.length)}));
+
+            // And with andAncestors():
+            assertEquals(await evalExpr( new AndAncestors(new This()), entryId), new PageValue([
+                new AnnotatedEntryValue(entryId, {distance: new IntegerValue(0n)}),
+                ...expected,
+            ], {pageSize: 50n, startedAt: 0n, totalCount: BigInt(expected.length + 1)}));
+        };
 
         test("Returns only the shortest distance to duplicate ancestors", async () => {
             // Create this entry tree:
@@ -131,15 +153,10 @@ group(import.meta, () => {
             //      \ /    | /
             //       H     I
 
-            const entryType = VNID(), entryIsA = VNID();
-            const A = VNID(), B = VNID(), C = VNID(), D = VNID(), E = VNID(), F = VNID(), G = VNID(), H = VNID(), I = VNID();
-
-            const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
-
+            await graph.runAsSystem(CreateSite({id: siteId, name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
                 {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
-                {code: "CreateRelationshipType", data: {category: RelationshipCategory.IS_A, id: entryIsA, nameForward: "is a", nameReverse: "has"}},
-                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
+                {code: "CreateProperty", data: {id: entryIsA, type: PropertyType.RelIsA, name: "is a", appliesTo: [{entryType}]}},
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                 {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
                 {code: "CreateEntry", data: {id: C, name: "Entry C", type: entryType, friendlyId: "c", description: ""}},
@@ -149,42 +166,52 @@ group(import.meta, () => {
                 {code: "CreateEntry", data: {id: G, name: "Entry G", type: entryType, friendlyId: "g", description: ""}},
                 {code: "CreateEntry", data: {id: H, name: "Entry H", type: entryType, friendlyId: "h", description: ""}},
                 {code: "CreateEntry", data: {id: I, name: "Entry I", type: entryType, friendlyId: "i", description: ""}},
-                {code: "CreateRelationshipFact", data: {fromEntry: C, toEntry: A, id: VNID(), type: entryIsA}},  // C is a A
-                {code: "CreateRelationshipFact", data: {fromEntry: D, toEntry: A, id: VNID(), type: entryIsA}},  // D is a A
-                {code: "CreateRelationshipFact", data: {fromEntry: D, toEntry: B, id: VNID(), type: entryIsA}},  // D is a B
-                {code: "CreateRelationshipFact", data: {fromEntry: E, toEntry: B, id: VNID(), type: entryIsA}},  // E is a B
-                {code: "CreateRelationshipFact", data: {fromEntry: F, toEntry: C, id: VNID(), type: entryIsA}},  // F is a C
-                {code: "CreateRelationshipFact", data: {fromEntry: F, toEntry: D, id: VNID(), type: entryIsA}},  // F is a D
-                {code: "CreateRelationshipFact", data: {fromEntry: H, toEntry: F, id: VNID(), type: entryIsA}},  // H is a F
-                {code: "CreateRelationshipFact", data: {fromEntry: H, toEntry: E, id: VNID(), type: entryIsA}},  // H is a E
-                {code: "CreateRelationshipFact", data: {fromEntry: I, toEntry: E, id: VNID(), type: entryIsA}},  // I is a E
-                {code: "CreateRelationshipFact", data: {fromEntry: I, toEntry: G, id: VNID(), type: entryIsA}},  // I is a G
+                // C is a A
+                {code: "AddPropertyValue", data: {entry: C, valueExpression: `[[/entry/${A}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // D is a A
+                {code: "AddPropertyValue", data: {entry: D, valueExpression: `[[/entry/${A}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // D is a B
+                {code: "AddPropertyValue", data: {entry: D, valueExpression: `[[/entry/${B}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // E is a B
+                {code: "AddPropertyValue", data: {entry: E, valueExpression: `[[/entry/${B}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // F is a C
+                {code: "AddPropertyValue", data: {entry: F, valueExpression: `[[/entry/${C}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // F is a D
+                {code: "AddPropertyValue", data: {entry: F, valueExpression: `[[/entry/${D}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // H is a F
+                {code: "AddPropertyValue", data: {entry: H, valueExpression: `[[/entry/${F}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // H is a E
+                {code: "AddPropertyValue", data: {entry: H, valueExpression: `[[/entry/${E}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // I is a E
+                {code: "AddPropertyValue", data: {entry: I, valueExpression: `[[/entry/${E}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // I is a G
+                {code: "AddPropertyValue", data: {entry: I, valueExpression: `[[/entry/${G}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
             ]}));
 
-            // Check the ancestor of C.
-            assertEquals(await graph.read(tx => getEntryAncestors(C, tx)), [
-                {distance: 1, id: A, name: "Entry A", friendlyId: "a", entryType: {id: entryType}},
+            // Check the ancestor of C
+            await checkAncestors(C, [
+                // Expect one ancestor, A:
+                new AnnotatedEntryValue(A, {distance: new IntegerValue(1n)}),
             ]);
 
-            // Check the ancestor of I. Expect 2 immediate ancestors (E & G), plus one ancestor B at distance of 2.
-            assertEquals(await graph.read(tx => getEntryAncestors(I, tx)), [
-                {distance: 1, id: E, name: "Entry E", friendlyId: "e", entryType: {id: entryType}},
-                {distance: 1, id: G, name: "Entry G", friendlyId: "g", entryType: {id: entryType}},
-                {distance: 2, id: B, name: "Entry B", friendlyId: "b", entryType: {id: entryType}},
+            // Check the ancestor of I
+            await checkAncestors(I, [
+                // Expect 2 immediate ancestors (E & G), plus one ancestor B at distance of 2.
+                new AnnotatedEntryValue(E, {distance: new IntegerValue(1n)}),
+                new AnnotatedEntryValue(G, {distance: new IntegerValue(1n)}),
+                new AnnotatedEntryValue(B, {distance: new IntegerValue(2n)}),
             ]);
 
-            // Check the ancestors of H.
-            // We should find that H has 6 ancestors, and the distance from H to B is 2, from H to A is 3, and from H to E is 1
-            assertEquals(await graph.read(tx => getEntryAncestors(H, tx)), [
-                // Sorted first by distance then alphabetically, so E is before F:
-                {distance: 1, id: E, name: "Entry E", friendlyId: "e", entryType: {id: entryType}},
-                {distance: 1, id: F, name: "Entry F", friendlyId: "f", entryType: {id: entryType}},
-                {distance: 2, id: B, name: "Entry B", friendlyId: "b", entryType: {id: entryType}},
-                {distance: 2, id: C, name: "Entry C", friendlyId: "c", entryType: {id: entryType}},
-                {distance: 2, id: D, name: "Entry D", friendlyId: "d", entryType: {id: entryType}},
-                {distance: 3, id: A, name: "Entry A", friendlyId: "a", entryType: {id: entryType}},
+            // Check the ancestor of H
+            await checkAncestors(H, [
+                // We should find that H has 6 ancestors, and the distance from H to B is 2, from H to A is 3, and from H to E is 1
+                new AnnotatedEntryValue(E, {distance: new IntegerValue(1n)}),
+                new AnnotatedEntryValue(F, {distance: new IntegerValue(1n)}),
+                new AnnotatedEntryValue(B, {distance: new IntegerValue(2n)}),
+                new AnnotatedEntryValue(C, {distance: new IntegerValue(2n)}),
+                new AnnotatedEntryValue(D, {distance: new IntegerValue(2n)}),
+                new AnnotatedEntryValue(A, {distance: new IntegerValue(3n)}),
             ]);
-
         });
 
         test("Works despite cyclic relationships", async () => {
@@ -197,40 +224,41 @@ group(import.meta, () => {
             //      \
             //       A (same A as above)
 
-            const entryType = VNID(), entryIsA = VNID();
-            const A = VNID(), B = VNID(), C = VNID(), D = VNID();
-
-            const {id: siteId} = await graph.runAsSystem(CreateSite({name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
-
+            await graph.runAsSystem(CreateSite({id: siteId, name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test"}));
             await graph.runAsSystem(ApplyEdits({siteId, edits: [
                 {code: "CreateEntryType", data: {id: entryType, name: "EntryType"}},
-                {code: "CreateRelationshipType", data: {category: RelationshipCategory.IS_A, id: entryIsA, nameForward: "is a", nameReverse: "has"}},
-                {code: "UpdateRelationshipType", data: {id: entryIsA, addFromTypes: [entryType], addToTypes: [entryType]}},
+                {code: "CreateProperty", data: {id: entryIsA, type: PropertyType.RelIsA, name: "is a", appliesTo: [{entryType}]}},
                 {code: "CreateEntry", data: {id: A, name: "Entry A", type: entryType, friendlyId: "a", description: ""}},
                 {code: "CreateEntry", data: {id: B, name: "Entry B", type: entryType, friendlyId: "b", description: ""}},
                 {code: "CreateEntry", data: {id: C, name: "Entry C", type: entryType, friendlyId: "c", description: ""}},
                 {code: "CreateEntry", data: {id: D, name: "Entry D", type: entryType, friendlyId: "d", description: ""}},
-                {code: "CreateRelationshipFact", data: {fromEntry: B, toEntry: A, id: VNID(), type: entryIsA}},  // B is a A
-                {code: "CreateRelationshipFact", data: {fromEntry: C, toEntry: A, id: VNID(), type: entryIsA}},  // C is a A
-                {code: "CreateRelationshipFact", data: {fromEntry: D, toEntry: B, id: VNID(), type: entryIsA}},  // D is a B
-                {code: "CreateRelationshipFact", data: {fromEntry: D, toEntry: C, id: VNID(), type: entryIsA}},  // D is a C
-                {code: "CreateRelationshipFact", data: {fromEntry: A, toEntry: D, id: VNID(), type: entryIsA}},  // A is a D
+                // B is a A
+                {code: "AddPropertyValue", data: {entry: B, valueExpression: `[[/entry/${A}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // C is a A
+                {code: "AddPropertyValue", data: {entry: C, valueExpression: `[[/entry/${A}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // D is a B
+                {code: "AddPropertyValue", data: {entry: D, valueExpression: `[[/entry/${B}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // D is a C
+                {code: "AddPropertyValue", data: {entry: D, valueExpression: `[[/entry/${C}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
+                // A is a D
+                {code: "AddPropertyValue", data: {entry: A, valueExpression: `[[/entry/${D}]]`, property: entryIsA, propertyFactId: VNID(), note: ""}},
             ]}));
 
-            // Check the ancestor of D.
-            assertEquals(await graph.read(tx => getEntryAncestors(D, tx)), [
-                {distance: 1, id: B, name: "Entry B", friendlyId: "b", entryType: {id: entryType}},
-                {distance: 1, id: C, name: "Entry C", friendlyId: "c", entryType: {id: entryType}},
-                {distance: 2, id: A, name: "Entry A", friendlyId: "a", entryType: {id: entryType}},
+            // Check the ancestor of D
+            await checkAncestors(D, [
+                // B and C at a distance of 1, A at a distance of 2
+                new AnnotatedEntryValue(B, {distance: new IntegerValue(1n)}),
+                new AnnotatedEntryValue(C, {distance: new IntegerValue(1n)}),
+                new AnnotatedEntryValue(A, {distance: new IntegerValue(2n)}),
             ]);
 
-            // Check the ancestor of A.
-            assertEquals(await graph.read(tx => getEntryAncestors(A, tx)), [
-                {distance: 1, id: D, name: "Entry D", friendlyId: "d", entryType: {id: entryType}},
-                {distance: 2, id: B, name: "Entry B", friendlyId: "b", entryType: {id: entryType}},
-                {distance: 2, id: C, name: "Entry C", friendlyId: "c", entryType: {id: entryType}},
+            // Check the ancestor of A
+            await checkAncestors(A, [
+                // D at a distance of 1, B and C at a distance of 2
+                new AnnotatedEntryValue(D, {distance: new IntegerValue(1n)}),
+                new AnnotatedEntryValue(B, {distance: new IntegerValue(2n)}),
+                new AnnotatedEntryValue(C, {distance: new IntegerValue(2n)}),
             ]);
         });
-
-    })
+    });
 });
