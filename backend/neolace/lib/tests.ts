@@ -1,18 +1,14 @@
 import * as log from "std/log/mod.ts";
-import { VNID, C, Field } from "neolace/deps/vertex-framework.ts";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 
 import { environment } from "neolace/app/config.ts";
 import { shutdown } from "neolace/app/shutdown.ts";
 import { graph } from "neolace/core/graph.ts";
 import { CreateGroup, PermissionGrant } from "neolace/core/Group.ts";
 import { CreateBot, CreateUser } from "neolace/core/User.ts";
-import { Entry } from "neolace/core/entry/Entry.ts";
-import { parseLookupExpressionToEntryId, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
-import { Property } from "neolace/core/schema/Property.ts";
-import { testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
+import { fixRelationshipIdsAfterRestoringSnapshot, testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
 
 import {test as baseTest, group as baseGroup, afterAll, afterEach, beforeAll, beforeEach} from "neolace/deps/hooked.ts";
-import { PropertyType } from "../deps/neolace-api.ts";
 
 // Exports:
 export * from "std/testing/asserts.ts";
@@ -124,53 +120,7 @@ export async function resetDBToPlantDBSnapshot() {
     // Unfortunately restoring the snapshot does not restore relationship IDs, which
     // we rely on as the only way to uniquely identify relationships.
     // Fix those now using this hack:
-    await graph._restrictedAllowWritesWithoutAction(async () => {
-        await graph._restrictedWrite(async tx => {
-            await tx.query(C`
-                MATCH (:${Entry})-[rel:${Entry.rel.IS_A}|${Entry.rel.RELATES_TO}]->(:${Entry})
-                DELETE rel
-            `);
-            const toProcess = await tx.query(C`
-                MATCH (pf:${PropertyFact}) WHERE NOT pf.directRelNeo4jId IS NULL
-                MATCH (pf)-[:${PropertyFact.rel.FOR_PROP}]->(prop:${Property})
-                MATCH (entry:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf)
-            `.RETURN({"entry.id": Field.VNID, "prop.type": Field.String, "pf.id": Field.VNID, "pf.valueExpression": Field.String}));
-            // Set directRelNeo4jId NULL for each PropertyFact because Neo4j re-uses IDs and we may otherwise
-            // get conflicts as we start to update these with the current IDs.
-            await tx.query(C`
-                MATCH (pf:${PropertyFact}) WHERE NOT pf.directRelNeo4jId IS NULL
-                SET pf.directRelNeo4jId = NULL
-            `);
-            // Re-create all direct IS_A relationships:
-            const toCreateIsA = toProcess.filter(r => r["prop.type"] === PropertyType.RelIsA).map(row => ({
-                "fromEntryId": row["entry.id"],
-                "toEntryId": parseLookupExpressionToEntryId(row["pf.valueExpression"]),
-                "pfId": row["pf.id"],
-            }));
-            await tx.query(C`
-                UNWIND ${toCreateIsA} AS row
-                MATCH (fromEntry:${Entry} {id: row.fromEntryId})
-                MATCH (toEntry:${Entry} {id: row.toEntryId})
-                MATCH (fromEntry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {id: row.pfId})
-                CREATE (fromEntry)-[rel:${Entry.rel.IS_A}]->(toEntry)
-                SET pf.directRelNeo4jId = id(rel)
-            `);
-            // Re-create all direct RELATES_TO/Other relationships:
-            const toCreateOther = toProcess.filter(r => r["prop.type"] === PropertyType.RelOther).map(row => ({
-                "fromEntryId": row["entry.id"],
-                "toEntryId": parseLookupExpressionToEntryId(row["pf.valueExpression"]),
-                "pfId": row["pf.id"],
-            }));
-            await tx.query(C`
-                UNWIND ${toCreateOther} AS row
-                MATCH (fromEntry:${Entry} {id: row.fromEntryId})
-                MATCH (toEntry:${Entry} {id: row.toEntryId})
-                MATCH (fromEntry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {id: row.pfId})
-                CREATE (fromEntry)-[rel:${Entry.rel.RELATES_TO}]->(toEntry)
-                SET pf.directRelNeo4jId = id(rel)
-            `);
-        });
-    });
+    await fixRelationshipIdsAfterRestoringSnapshot();
 }
 
 export function setTestIsolation<Level extends TestIsolationLevels>(level: Level): ReturnedData<Level> {

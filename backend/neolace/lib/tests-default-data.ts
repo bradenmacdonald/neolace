@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import * as log from "std/log/mod.ts";
-import { VNID, VertexTestDataSnapshot } from "neolace/deps/vertex-framework.ts";
+import { VNID, VertexTestDataSnapshot, C, Field } from "neolace/deps/vertex-framework.ts";
+import { PropertyType } from "neolace/deps/neolace-api.ts";
 
 import { graph } from "neolace/core/graph.ts";
 import { CreateBot, CreateUser } from "../core/User.ts";
@@ -12,7 +13,10 @@ import { __forScriptsOnly as objStoreUtils } from "neolace/core/objstore/objstor
 import { schema } from "../sample-data/plantdb/schema.ts";
 import { entryData, makePlantDbContent } from "../sample-data/plantdb/content.ts";
 import { ensureFilesExist } from "../sample-data/plantdb/datafiles.ts";
-import { dedent } from "./dedent.ts";
+import { dedent } from "neolace/lib/dedent.ts";
+import { Entry } from "neolace/core/entry/Entry.ts";
+import { parseLookupExpressionToEntryId, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
+import { Property } from "neolace/core/schema/Property.ts";
 
 // Data that gets created by default. 
 // To access this, use the return value of setTestIsolation(setTestIsolation.levels.DEFAULT_...)
@@ -155,4 +159,61 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     const defaultDataSnapshot = await graph.snapshotDataForTesting();
 
     return Object.freeze({emptySnapshot, defaultDataSnapshot, data});
+}
+
+/**
+ * Unfortunately restoring the snapshot does not restore relationship IDs, which
+ * we rely on as the only way to uniquely identify relationships.
+ * 
+ * This hacky function will re-create update the PropertyFacts to have the
+ * new relationship IDs.
+ */
+export async function fixRelationshipIdsAfterRestoringSnapshot() {
+    await graph._restrictedAllowWritesWithoutAction(async () => {
+        await graph._restrictedWrite(async tx => {
+            await tx.query(C`
+                MATCH (:${Entry})-[rel:${Entry.rel.IS_A}|${Entry.rel.RELATES_TO}]->(:${Entry})
+                DELETE rel
+            `);
+            const toProcess = await tx.query(C`
+                MATCH (pf:${PropertyFact}) WHERE NOT pf.directRelNeo4jId IS NULL
+                MATCH (pf)-[:${PropertyFact.rel.FOR_PROP}]->(prop:${Property})
+                MATCH (entry:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf)
+            `.RETURN({"entry.id": Field.VNID, "prop.type": Field.String, "pf.id": Field.VNID, "pf.valueExpression": Field.String}));
+            // Set directRelNeo4jId NULL for each PropertyFact because Neo4j re-uses IDs and we may otherwise
+            // get conflicts as we start to update these with the current IDs.
+            await tx.query(C`
+                MATCH (pf:${PropertyFact}) WHERE NOT pf.directRelNeo4jId IS NULL
+                SET pf.directRelNeo4jId = NULL
+            `);
+            // Re-create all direct IS_A relationships:
+            const toCreateIsA = toProcess.filter(r => r["prop.type"] === PropertyType.RelIsA).map(row => ({
+                "fromEntryId": row["entry.id"],
+                "toEntryId": parseLookupExpressionToEntryId(row["pf.valueExpression"]),
+                "pfId": row["pf.id"],
+            }));
+            await tx.query(C`
+                UNWIND ${toCreateIsA} AS row
+                MATCH (fromEntry:${Entry} {id: row.fromEntryId})
+                MATCH (toEntry:${Entry} {id: row.toEntryId})
+                MATCH (fromEntry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {id: row.pfId})
+                CREATE (fromEntry)-[rel:${Entry.rel.IS_A}]->(toEntry)
+                SET pf.directRelNeo4jId = id(rel)
+            `);
+            // Re-create all direct RELATES_TO/Other relationships:
+            const toCreateOther = toProcess.filter(r => r["prop.type"] === PropertyType.RelOther).map(row => ({
+                "fromEntryId": row["entry.id"],
+                "toEntryId": parseLookupExpressionToEntryId(row["pf.valueExpression"]),
+                "pfId": row["pf.id"],
+            }));
+            await tx.query(C`
+                UNWIND ${toCreateOther} AS row
+                MATCH (fromEntry:${Entry} {id: row.fromEntryId})
+                MATCH (toEntry:${Entry} {id: row.toEntryId})
+                MATCH (fromEntry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {id: row.pfId})
+                CREATE (fromEntry)-[rel:${Entry.rel.RELATES_TO}]->(toEntry)
+                SET pf.directRelNeo4jId = id(rel)
+            `);
+        });
+    });
 }

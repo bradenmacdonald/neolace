@@ -15,6 +15,7 @@ import { CreateDraft, AcceptDraft } from "neolace/core/edit/Draft.ts";
 import { schema } from "neolace/sample-data/technotes/schema.ts";
 import { edits } from "neolace/sample-data/technotes/content.ts";
 import { ensureFilesExist } from "neolace/sample-data/technotes/datafiles.ts";
+import { generateTestFixtures } from "neolace/lib/tests-default-data.ts";
   
 
 
@@ -22,10 +23,9 @@ import { ensureFilesExist } from "neolace/sample-data/technotes/datafiles.ts";
 /////////// TEMP /////////////
 /////////// TEMP /////////////
 /////////// TEMP /////////////
-import { testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
-const dataStr = await Deno.readTextFile(testDataFile);
-const {defaultDataSnapshot} = JSON.parse(dataStr) as TestSetupData;
-await graph.resetDBToSnapshot(defaultDataSnapshot);
+log.info("Resetting to PlantDB only.");
+await generateTestFixtures();
+log.info("Done PlantDB reset");
 /////////// TEMP /////////////
 /////////// TEMP /////////////
 /////////// TEMP /////////////
@@ -138,4 +138,3 @@ if (lastEdit < edits.length) {
 }
  
 shutdown();
- 

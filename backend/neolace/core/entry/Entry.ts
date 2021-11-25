@@ -105,13 +105,14 @@ export class Entry extends VNodeType {
 
         // Validate that all IS_A/RELATES_TO relationships have corresponding PropertyFacts
         const isACheck = await tx.query(C`
-            MATCH (entry:${this})-[rel:${this.rel.IS_A}|${this.rel.RELATES_TO}]->(otherEntry:VNode)
-            WITH id(rel) AS expectedId
-            OPTIONAL MATCH (entry:${this})-[:${this.rel.PROP_FACT}]->(relFact:${PropertyFact} {directRelNeo4jId: expectedId})
+            MATCH (entry:${this} {id: ${dbObject.id}})
+            MATCH (entry)-[rel:${this.rel.IS_A}|${this.rel.RELATES_TO}]->(otherEntry:VNode)
+            WITH entry, id(rel) AS expectedId
+            OPTIONAL MATCH (entry)-[:${this.rel.PROP_FACT}]->(relFact:${PropertyFact} {directRelNeo4jId: expectedId})
             RETURN expectedId, relFact.directRelNeo4jId AS actualId
         `.givesShape({expectedId: Field.VNID, actualId: Field.VNID}));
         if (!isACheck.every(row => row.actualId === row.expectedId)) {
-            throw new ValidationError(`Entry has a stranded direct relationship without a corresponding PropertyFact`);
+            throw new ValidationError(`Entry ${dbObject.id} (${dbObject.slugId}) has a stranded direct relationship without a corresponding PropertyFact`);
         }
     }
 
