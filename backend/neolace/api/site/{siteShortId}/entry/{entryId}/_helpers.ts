@@ -105,7 +105,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                         const innerValue = await parseLookupString(property.default).getValue(context).then(v => v.makeConcrete());
                         value = new AnnotatedValue(innerValue, {source: new StringValue("Default")});
                     } else {
-                        throw new Error("Unexpected property with no values and no deafult");
+                        throw new Error("Unexpected property with no values and no default");
                     }
                 } else if (facts.length === 1) {
                     value = await factToValue(facts[0]);

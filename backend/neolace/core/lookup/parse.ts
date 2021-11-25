@@ -55,6 +55,11 @@ export function parseLookupString(lookup: string): LookupExpression {
         [/^this\.get\(prop=(.*)\)$/, m => new GetProperty(new This(), {propertyExpr: parseLookupString(m[1])})],
         // get(this, prop=...)
         [/^get\(this, prop=(.*)\)$/, m => new GetProperty(new This(), {propertyExpr: parseLookupString(m[1])})],
+        // this.reverse(prop=...)
+        [/^this\.reverse\(prop=(.*)\)$/, m => new ReverseProperty(new This(), {propertyExpr: parseLookupString(m[1])})],
+        // reverse(this, prop=...)
+        [/^reverse\(this, prop=(.*)\)$/, m => new ReverseProperty(new This(), {propertyExpr: parseLookupString(m[1])})],
+
         // this.andAncestors().get(prop=...)
         [/^this\.andAncestors\(\)\.get\(prop=(.*)\)$/, m => new GetProperty(new AndAncestors(new This()), {propertyExpr: parseLookupString(m[1])})],
         // get(andAncestors(this), prop=...)

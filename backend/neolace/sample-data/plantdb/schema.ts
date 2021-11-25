@@ -51,7 +51,7 @@ export const schema = ValidateSiteSchema({
             enabledFeatures: {
                 Article: {},
                 HeroImage: {
-                    lookupExpression: `this.get(prop=[[/prop/_HasHeroImage]])`,
+                    lookupExpression: `this.get(prop=[[/prop/_hasHeroImage]])`,
                 },
             },
         },

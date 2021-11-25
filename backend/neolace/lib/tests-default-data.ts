@@ -12,6 +12,7 @@ import { __forScriptsOnly as objStoreUtils } from "neolace/core/objstore/objstor
 import { schema } from "../sample-data/plantdb/schema.ts";
 import { entryData, makePlantDbContent } from "../sample-data/plantdb/content.ts";
 import { ensureFilesExist } from "../sample-data/plantdb/datafiles.ts";
+import { dedent } from "./dedent.ts";
 
 // Data that gets created by default. 
 // To access this, use the return value of setTestIsolation(setTestIsolation.levels.DEFAULT_...)
@@ -116,6 +117,15 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         slugId: `site-${data.site.shortId}`,
         adminUser: data.users.admin.id,
         accessMode: data.site.initialAccessMode,
+        homePageMD: dedent`
+            # Welcome to PlantDB
+
+            This is a demo site that contains a small amount of content useful for developing Neolace.
+
+            ## Sample Article
+
+            Check out [**ponderosa pine**](/entry/s-ponderosa-pine), the featured article.
+        `,
     })).then(result => {
         data.site.id = result.id;
         data.site.adminsGroupId = result.adminGroup!;

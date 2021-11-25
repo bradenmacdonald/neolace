@@ -23,6 +23,12 @@ export interface EntryValue extends LookupValue {
     id: VNID;
 }
 
+/** Represents a property like "Date of Birth", not a specific property value. */
+export interface PropertyValue extends LookupValue {
+    type: "Property";
+    id: VNID;
+}
+
 export interface AnnotatedValue extends LookupValue {
     type: "Annotated";
     value: AnyLookupValue;
@@ -55,6 +61,7 @@ export type AnyLookupValue = (
     | PageValue
     | ListValue
     | EntryValue
+    | PropertyValue
     | AnnotatedValue
     | IntegerValue
     | StringValue
