@@ -72,10 +72,11 @@ group(import.meta, () => {
                     propertyId: defaultData.schema.properties._propScientificName.id,
                     value: {
                         type: "Annotated",
-                        value: {value: "Pinus ponderosa", type: "String"},
+                        value: {value: "*Pinus ponderosa*", type: "InlineMarkdownString"},
                         annotations: {
                             ...defaultAnnotations,
-                        },
+                            plainValue: {value: "Pinus ponderosa", type: "String"},
+                    },
                     },
                 },
                 // The species "Pinus Ponderosa" is a member of the genus "Pinus", and so on:
@@ -209,9 +210,13 @@ group(import.meta, () => {
                     propertyId: defaultData.schema.properties._propWikidataQID.id,
                     value: {
                         type: "Annotated",
-                        value: {type: "String", value: "Q460523"},
+                        value: {
+                            type: "InlineMarkdownString",
+                            value: "[Q460523](https://www.wikidata.org/wiki/Q460523)",
+                        },
                         annotations: {
                             ...defaultAnnotations,
+                            plainValue: {type: "String", value: "Q460523"},
                         },
                     },
                 },

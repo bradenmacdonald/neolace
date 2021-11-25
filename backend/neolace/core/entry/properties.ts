@@ -19,6 +19,8 @@ export type EntryPropertyValueSet = {
         importance: number,
         /** Default value. Only loaded from the database if no explicit value is set. */
         default: string|null,
+        /** A markdown string with "{value}" placeholders, used to format the value, e.g. make it a link or italic. */
+        displayAs?: string,
     },
     facts: Array<{
         factId: VNID,
@@ -107,7 +109,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
             WITH entry, prop, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
 
             RETURN {
-                property: prop {.id, .name, .importance, default: null},
+                property: prop {.id, .name, .importance, default: null, .displayAs},
                 facts: collect({
                     factId: pf.id,
                     valueExpression: pf.valueExpression,
@@ -132,7 +134,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
                     AND NOT exists((entry)-[:${Entry.rel.IS_A}*0..50]->(:${Entry})-[:PROP_FACT]->(:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop))
 
             RETURN {
-                property: prop {.id, .name, .importance, .default},
+                property: prop {.id, .name, .importance, .default, .displayAs},
                 facts: []
             } AS propertyData
         }
@@ -147,6 +149,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
                 name: Field.String,
                 importance: Field.Int,
                 default: Field.NullOr.String,
+                displayAs: Field.String,
             }),
             facts: Field.List(Field.Record({
                 factId: Field.VNID,
@@ -169,6 +172,9 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
 
     // Post processing
     for (const prop of result) {
+        if (prop.property.displayAs === "") {
+            delete prop.property.displayAs;
+        }
         // Sort property values by slot, then by rank.
         // We do this at the end because it's more efficient to do once most irrelevant/inherited facts are stripped out,
         // and because it's a little tricky to do in the Cypher query due to its structure and use of collect()

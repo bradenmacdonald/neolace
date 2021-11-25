@@ -77,10 +77,18 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
         // ** In the near future, we'll need to resolve a dependency graph and compute these in parallel / async. **
 
         /** Helper function to return a single property value as an annotated lookup value */
-        const factToValue = async (fact: EntryPropertyValueSet["facts"][0]) => {
+        const factToValue = async (fact: EntryPropertyValueSet["facts"][0], prop: EntryPropertyValueSet["property"]) => {
             let innerValue;
+            const extraAnnotations: Record<string, unknown> = {};
             try {
                 innerValue = await parseLookupString(fact.valueExpression).getValue(context).then(v => v.makeConcrete());
+                if (prop.displayAs) {
+                    // displayAs is used to format the value using Markdown, e.g. to convert it into a link
+                    // or display it in italics. But we still make the original value avaiable as an annotation.
+                    const innerValueAsString = innerValue.castTo(StringValue, context)?.value || "(error - cannot convert value to string)";
+                    extraAnnotations.plainValue = innerValue;
+                    innerValue = new InlineMarkdownStringValue(prop.displayAs.replaceAll("{value}", innerValueAsString));
+                }
             } catch (err: unknown) {
                 if (err instanceof LookupError) {
                     innerValue = new ErrorValue(err);
@@ -93,6 +101,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                 note: new InlineMarkdownStringValue(fact.note),
                 rank: new IntegerValue(fact.rank),
                 slot: fact.slot ? new StringValue(fact.slot) : new NullValue(),
+                ...extraAnnotations,
             });
         };
 
@@ -108,11 +117,11 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                         throw new Error("Unexpected property with no values and no default");
                     }
                 } else if (facts.length === 1) {
-                    value = await factToValue(facts[0]);
+                    value = await factToValue(facts[0], property);
                 } else {
                     // There are two or more values. Show up to five.
                     value = new PageValue<AnnotatedValue>(
-                        await Promise.all(facts.slice(0, maxValuesPerProp).map(f => factToValue(f))),
+                        await Promise.all(facts.slice(0, maxValuesPerProp).map(f => factToValue(f, property))),
                         {startedAt: 0n, pageSize: BigInt(maxValuesPerProp), totalCount: BigInt(facts.length)},
                     );
                 }
