@@ -25,6 +25,7 @@ export const ids = {
     imgAABattery: VNID("_1nmqoMNKS0MYZRjjzUiQd3"),
     imgLiIonBatteryJellyRoll: VNID("_52FWviI73eaW6sIO8sZx0F"),
     imgMiniCooperSe: VNID("_5hqETvE3WTHuYvhHbwWuD"),
+    imgTeamBraden: VNID("_2jhlA8cESf5nD9dlURERw5"),
     primaryCell: VNID("_7OCTF7b5Z4wM7KvEE16OtK"),
     productPanasonicNCR18650B: VNID("_3KPUsKAzTQZ6ZJT05VvagC"),
     productTesla18650cell: VNID("_5QZEkrIjvgA7y3iP9qSEVi"),
@@ -34,7 +35,6 @@ export const ids = {
     secondaryCell: VNID("_4HwJfgRjCzfOI7z2XTzY0r"),
     standarizedBattery: VNID("_51YyfHlwYxW1X5QfjRBai6"),
     technotesTeam: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
-    //spare: VNID("_1vRUxDKM7tGDscdt4oDyzo"),
     //spare: VNID("_5IgIEXFV54PUucrhcKN26E"),
     //spare: VNID("_1HKE5qN2QazUiSYdvuEfjz"),
     // To generate more IDs:
@@ -59,6 +59,8 @@ export const edits: AnyContentEdit[] = [
                 
                 *CEO*
 
+                { [[/entry/${ids.imgTeamBraden}]].asImage(align="right") }
+
                 <img alt="[Photo of Braden]" src="/team-braden.jpg" class="border-gray-700 border-4 rounded-lg mb-3 w-max md:w-64 md:float-right md:ml-6">
                 
                 Braden is a software developer and technology enthusiast. He is the co-founder and CEO of [TechNotes](https://www.technotes.org) and the CTO of [OpenCraft](https://opencraft.com/). Prior to TechNotes, Braden's most recent major project was [LabXchange](https://www.labxchange.org/), an online platform from Harvard University which provides world-class life sciences education materials to the world on-demand and for free. Braden led the software development for the project, which went on to have over two million users in its first year and won the 2020 Open edX Prize for creating the most impactful technical project built with Open edX.
@@ -71,6 +73,8 @@ export const edits: AnyContentEdit[] = [
                 
                 *COO*
 
+                <img alt="[Photo of Joel]" src="/team-joel.jpg" class="border-gray-700 border-4 rounded-lg mb-3 w-max md:w-64 md:float-right md:ml-6">
+
                 Joel started his career as an intern in the office of former California Governor Arnold Schwarzenegger. He went on to hold senior roles in both private sector and public sector clean energy and technology organizations. In parallel with this work, he has maintained an academic career that included teaching numerous undergraduate classes, publishing 10 energy-related academic papers, and writing over 50 book reviews on a range of technical and popular topics.
 
                 Joel completed a postdoctoral fellowship at Harvard Engineering after earning a B.A. at the University of British Columbia, a B.Sc. at the London School of Economics, an M.Sc. at the University of Oxford, and a Ph.D. at the University of Toronto. He has undertaken visiting research appointments at research centres affiliated with Imperial College London and the University of Oxford.
@@ -78,6 +82,8 @@ export const edits: AnyContentEdit[] = [
                 # Jeff Krupa
                 
                 *VP Content & Partnerships*
+
+                <img alt="[Photo of Jeff]" src="/team-jeff.jpg" class="border-gray-700 border-4 rounded-lg mb-3 w-max md:w-64 md:float-right md:ml-6">
 
                 Jeff Krupa is a PhD candidate in high energy physics at MIT. His research focuses on AI and the analysis of large datasets. He's interested in existential risks including climate change and excited about delivering technological solutions via accelerated innovation.
             `},
@@ -218,8 +224,10 @@ export const edits: AnyContentEdit[] = [
         friendlyId: "tc-ec-cell-18650",
         type: schemaIds.techConcept,
         description: dedent`
-            An 18650 cell is a standard format [cylindrical lithium-ion](/entry/${ids.cylindricalLithiumIonCell}) [cell](/entry/${ids.secondaryCell}),
-            with a diameter of 18mm and a length of 65mm (slightly larger than a [AA battery](/entry/${ids.batteryAA})).
+            An 18650 cell is a standard format [cylindrical lithium-ion](/entry/${ids.cylindricalLithiumIonCell})
+            [cell](/entry/${ids.secondaryCell}), with a diameter of {this.get(prop=[[/prop/${schemaIds.propDiameter}]])}
+            and a length of {this.get(prop=[[/prop/${schemaIds.propLength}]])} (slightly larger than a
+            [AA battery](/entry/${ids.batteryAA})).
             The 18650 cell has been used since the late 1990s and has been popular for a wide range of applications that
             require a rechargeable battery - such as flashlights, laptops, power tools, and even electric vehicles. Due
             to the popularity of the 18650 cell, they are usually an easily available, well-understood, and affordable
@@ -537,6 +545,19 @@ export const edits: AnyContentEdit[] = [
     setHeroImage(ids.batteryAA, ids.imgAABattery),
     setHeroImage(ids.standarizedBattery, ids.imgAABattery),
     setHeroImage(ids.battery, ids.imgAABattery),
+
+    // Photo of Braden
+    ...createEntry({
+        id: ids.imgTeamBraden,
+        name: "photo of Braden MacDonald",
+        friendlyId: "img-technotes-braden",
+        type: schemaIds.image,
+        description: `TechNotes co-founder, Braden MacDonald`,
+        features: [{featureType: "Image", dataFileId: files.teamBraden.id}],
+        props: {
+            [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Please contact TechNotes if you wish to use this image anywhere other than within TechNotes itself."` },
+        },
+    }),
 ];
 
 function createEntry({id, ...args}: {
