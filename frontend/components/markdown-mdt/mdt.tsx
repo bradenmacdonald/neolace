@@ -14,9 +14,20 @@ import { MDT } from 'neolace-api';
  */
 export class MDTContext {
     readonly refCache: api.ReferenceCacheData;
-    constructor(args: {refCache?: api.ReferenceCacheData}) {
+    /** Decrease the size of the headings by this number (1 means <h1> becomes <h2>, etc.) */
+    readonly headingShift: number;
+
+    constructor(args: {refCache?: api.ReferenceCacheData, headingShift?: number}) {
         // If no reference cache is available, create an empty one for consistency.
-        this.refCache = args.refCache ?? {entries: {}, entryTypes: {}};
+        this.refCache = args.refCache ?? {entries: {}, entryTypes: {}, properties: {}};
+        this.headingShift = args.headingShift ?? 0;
+    }
+
+    public childContextWith(args: {headingShift?: number}) {
+        return new MDTContext({
+            refCache: this.refCache,
+            headingShift: this.headingShift + (args.headingShift ?? 0),
+        });
     }
 }
 
@@ -120,8 +131,10 @@ function nodeToComponent(node: MDT.Node, context: MDTContext) {
     }
     const key = getReactKeyForNode(node);
     switch (node.type) {
-        case "heading":
-            return React.createElement(`h${node.level}`, {key, id: `h-${node.slugId}`}, node.children.map(child => nodeToComponent(child, context)));
+        case "heading": {
+            const level = node.level + context.headingShift;
+            return React.createElement(`h${level}`, {key, id: `h-${node.slugId}`}, node.children.map(child => nodeToComponent(child, context)));
+        }
         case "paragraph":
             return <p key={key}>{node.children.map(child => nodeToComponent(child, context))}</p>;
         case "list_item":

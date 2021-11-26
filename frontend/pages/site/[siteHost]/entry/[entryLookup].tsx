@@ -79,7 +79,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                         layout="fill"
                                         objectFit="contain"
                                     />
-                                    
+
                                     {props.entry.features.HeroImage.caption ?
                                         <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
                                             <EntryLink entryKey={props.entry.features.HeroImage.entryId} mdtContext={mdtContext}>
@@ -164,7 +164,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                 {/* Article content, if any */}
                                 {
                                     props.entry.features.Article ?
-                                        <RenderMDT mdt={props.entry.features.Article.articleMD} context={mdtContext}/>
+                                        <RenderMDT mdt={props.entry.features.Article.articleMD} context={mdtContext.childContextWith({headingShift: 1})}/>
                                     : null
                                 }
                             </div>

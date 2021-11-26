@@ -2,7 +2,7 @@ import { VNID, } from "neolace/deps/vertex-framework.ts";
 import { AnyContentEdit, UpdateEntryFeature, schemas } from "neolace/deps/neolace-api.ts";
 import { schemaIds } from "./schema.ts";
 import { files } from "./datafiles.ts";
-// import { dedent } from "neolace/lib/dedent.ts";
+import { dedent } from "neolace/lib/dedent.ts";
 
 export const ids = {
     // Internal IDs used for each entry, in alphabetical order
@@ -28,7 +28,7 @@ export const ids = {
     primaryCell: VNID("_7OCTF7b5Z4wM7KvEE16OtK"),
     secondaryCell: VNID("_4HwJfgRjCzfOI7z2XTzY0r"),
     standarizedBattery: VNID("_51YyfHlwYxW1X5QfjRBai6"),
-    //spare: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
+    technotesTeam: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
     //spare: VNID("_6dF6GUIrPx8ToREmsFAZ5R"),
     //spare: VNID("_5Z7bPDS8qOWy1DUHwpehjS"),
     //spare: VNID("_5QZEkrIjvgA7y3iP9qSEVi"),
@@ -45,6 +45,44 @@ export const ids = {
 };
 
 export const edits: AnyContentEdit[] = [
+    // TechNotes Team
+    ...createEntry({
+        id: ids.technotesTeam,
+        name: "TechNotes Team",
+        friendlyId: "team",
+        type: schemaIds.technotesMetaPage,
+        description: "The team behind TechNotes.",
+        props: {},
+        features: [
+            {featureType: "Article", articleMD: dedent`
+                # Braden MacDonald
+                
+                *CEO*
+
+                <img alt="[Photo of Braden]" src="/team-braden.jpg" class="border-gray-700 border-4 rounded-lg mb-3 w-max md:w-64 md:float-right md:ml-6">
+                
+                Braden is a software developer and technology enthusiast. He is the co-founder and CEO of [TechNotes](https://www.technotes.org) and the CTO of [OpenCraft](https://opencraft.com/). Prior to TechNotes, Braden's most recent major project was [LabXchange](https://www.labxchange.org/), an online platform from Harvard University which provides world-class life sciences education materials to the world on-demand and for free. Braden led the software development for the project, which went on to have over two million users in its first year and won the 2020 Open edX Prize for creating the most impactful technical project built with Open edX.
+                
+                An avid programmer since childhood, Braden has worked with a wide variety of projects, platforms, and programming languages over the years. Braden is known for his deep technical knowledge, his wide-ranging experience, his approach to understanding problems from many perspectives, his ability to communicate clearly, and his relentless optimism.
+                
+                Outside of work, Braden has enjoyed serving on several non-profit boards, notably the OGO Car Share Co-op which brought car sharing to BC's Okanagan Valley and was acquired by [Modo](https://modo.coop/). Braden holds an Honours B.Sc. in Physics from the University of British Columbia.
+
+                # Joel Krupa
+                
+                *COO*
+
+                Joel started his career as an intern in the office of former California Governor Arnold Schwarzenegger. He went on to hold senior roles in both private sector and public sector clean energy and technology organizations. In parallel with this work, he has maintained an academic career that included teaching numerous undergraduate classes, publishing 10 energy-related academic papers, and writing over 50 book reviews on a range of technical and popular topics.
+
+                Joel completed a postdoctoral fellowship at Harvard Engineering after earning a B.A. at the University of British Columbia, a B.Sc. at the London School of Economics, an M.Sc. at the University of Oxford, and a Ph.D. at the University of Toronto. He has undertaken visiting research appointments at research centres affiliated with Imperial College London and the University of Oxford.
+
+                # Jeff Krupa
+                
+                *VP Content & Partnerships*
+
+                Jeff Krupa is a PhD candidate in high energy physics at MIT. His research focuses on AI and the analysis of large datasets. He's interested in existential risks including climate change and excited about delivering technological solutions via accelerated innovation.
+            `},
+        ],
+    }),
     // Motor Vehicle
     ...createEntry({
         id: ids.motorVehicle,

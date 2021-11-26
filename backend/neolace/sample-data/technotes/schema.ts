@@ -4,8 +4,9 @@ import { SiteSchemaData, PropertyType, PropertyMode } from "neolace/deps/neolace
  // IDs used in the TechNotes schema:
 const ids = {
     // Entry types:
-    techConcept: VNID("_TECHCONCEPT"),
     image: VNID("_TNIMAGE"),
+    technotesMetaPage: VNID("_TNMETA"),
+    techConcept: VNID("_TECHCONCEPT"),
     // Relationship Properties:
     propTypeOf: VNID("_TNTYPEOF"),  // An entry is a sub-type of another entry
     propHasTypes: VNID("_TNHASTYPES"),  // Inverse of "is a"
@@ -40,6 +41,17 @@ export const schema: SiteSchemaData = {
             friendlyIdPrefix: "img-",
             enabledFeatures: {
                 Image: {},
+            },
+        },
+        // TechNotes meta page (e.g. About TechNotes, TechNotes Team, TechNotes Terms of Use, etc.):
+        [ids.technotesMetaPage]: {
+            id: ids.technotesMetaPage,
+            name: "Meta Page",
+            description: "A page with information about TechNotes.",
+            friendlyIdPrefix: null,
+            enabledFeatures: {
+                Article: {},
+                HeroImage: {lookupExpression: `this.get(prop=[[/prop/${ids.propHasHeroImage}]])`},
             },
         },
         // Tech Concept:
@@ -108,7 +120,7 @@ export const schema: SiteSchemaData = {
             id: ids.propHasHeroImage,
             name: "Hero Image",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: ids.techConcept}],
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.technotesMetaPage}],
             valueConstraint: `x.type() = entryType("${ids.techConcept}")`,
             mode: PropertyMode.Recommended,
             descriptionMD: `Main image displayed on this entry`,

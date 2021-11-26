@@ -31,7 +31,7 @@ export class DraftEdit extends VNodeType {
         code: Field.String,
         // changeType: is this a content edit or a schema edit?
         changeType: Field.String.Check(check.Schema.enum(EditChangeType)),
-        dataJSON: Field.String,
+        dataJSON: Field.String.Check(check.string.max(100_000)),
         timestamp: Field.DateTime,
     };
  
