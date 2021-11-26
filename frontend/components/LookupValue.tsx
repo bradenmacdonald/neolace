@@ -1,9 +1,9 @@
 import React from 'react';
-import Link from 'next/link';
 import { api } from 'lib/api-client';
 import { FormattedListParts, FormattedMessage } from 'react-intl';
 import { Tooltip } from 'components/widgets/tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
+import { EntryLink } from './EntryLink';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -58,17 +58,10 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 </FormattedListParts>
             </span>;
         }
-        case "Entry":{
+        case "Entry": {
             const entry = props.refCache.entries[value.id];
-            if (entry === undefined) {
-                return <Link href={`/entry/${value.id}`}><a className="text-red-700 font-bold">{value.id}</a></Link>
-            }
-            return <Tooltip tooltipContent={<>
-                <strong>{entry.name}</strong> ({props.refCache.entryTypes[entry.entryType.id].name})<br/>
-                <p className="text-sm"><InlineMDT mdt={entry.description} context={props.mdtContext} /></p>
-            </>}>
-                {attribs => <Link href={`/entry/${entry.friendlyId}`}><a {...attribs}>{entry.name}</a></Link>}
-            </Tooltip>
+            const linkText = entry ? entry.name : value.id;
+            return <EntryLink entryKey={value.id} mdtContext={props.mdtContext}>{linkText}</EntryLink>
         }
         case "Property": {
             const prop = props.refCache.properties[value.id];
