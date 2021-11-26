@@ -76,9 +76,9 @@ await graph.runAsSystem(UpdateSite({
         # Welcome to TechNotes
 
         TechNotes is an open engineering library focused on clean tech - specifically electric vehicle (EV) battery
-        technology. Our goal is to combine combine data, reference articles, design examples, datasets, patents,
-        technical drawings, and discussion forums together in one integrated resource that's exceptionally easy to use
-        and well-organized.
+        technology. Our goal is to combine data, reference articles, design examples, datasets, patents, technical
+        drawings, and discussion forums together in one integrated resource that's exceptionally easy to use and
+        well-organized.
 
         ## About This Prototype
 
