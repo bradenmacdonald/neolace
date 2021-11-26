@@ -41,4 +41,12 @@
     .neo-typography p { font-weight: 400; @apply my-1; }
     .neo-typography a { @apply underline; }
 
+    .neo-typography ul li {
+        @apply ml-3 pl-2 mb-1;
+        /*list-style-type: "▸"; done with ::before instead so we can control color */
+    }
+    .neo-typography ul li::before {
+        content: "▸";
+        @apply -ml-4 inline-block w-4 text-gray-500;
+    }
 }

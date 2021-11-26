@@ -217,14 +217,70 @@ export const edits: AnyContentEdit[] = [
         name: "18650 cell",
         friendlyId: "tc-ec-cell-18650",
         type: schemaIds.techConcept,
-        description: `An 18650 cell is a standard format [cylindrical lithium-ion cell](/entry/${ids.cylindricalLithiumIonCell}), with a diameter of 18mm and a length of 65mm (slightly larger than a AA battery). The 18650 cell features a high storage capacity and can be scaled to form batteries for devices with high power requirements, including Tesla Model X and S vehicles.`,
+        description: dedent`
+            An 18650 cell is a standard format [cylindrical lithium-ion cell](/entry/${ids.cylindricalLithiumIonCell}),
+            with a diameter of 18mm and a length of 65mm (slightly larger than a [AA battery](/entry/${ids.batteryAA})).
+            The 18650 cell has been used since the late 1990s and has been popular for a wide range of applications that
+            require a rechargeable battery - such as flashlights, laptops, power tools, and even electric vehicles. Due
+            to the popularity of the 18650 cell, they are usually an easily available, well-understood, and affordable
+            option.
+        `,
         props: {
             [schemaIds.propTypeOf]: { valueExpr: `[[/entry/${ids.cylindricalLithiumIonCell}]]` },
             [schemaIds.propDiameter]: { valueExpr: `"18 mm"` },
-            [schemaIds.propLength]: { valueExpr: `"65 mm"` },
+            [schemaIds.propLength]: { valueExpr: `"65 mm"`, note: "Though cells with built-in protection circuit may be longer." },
             [schemaIds.propAlsoKnownAs]: { valueExpr: JSON.stringify(["18650 battery"]) },
             [schemaIds.propWikidataId]: { valueExpr: `"Q62024169"` },
+            [schemaIds.propVoltageNominal]: { valueExpr: `"3.7 V"` },
+            [schemaIds.propVoltageRange]: { valueExpr: `"2.5 - 4.2 V"` },
         },
+        features: [
+            {featureType: "Article", articleMD: dedent`
+                # Applications
+
+                A single 18650 cell is often used as the rechargeable battery for flashlights and e-cigarettes.
+
+                When combined together to create a multi-cell [battery](/entry/${ids.battery}), 18650 cells are used for:
+                * power tools
+                * e-bikes
+                * electric vehicles
+                * notebook computers (though today many notebooks use lithium polymer cells instead, which allow for a
+                  thinner form factor)
+
+
+                # In depth
+
+                ## Protection circuits
+
+                18650 cells are available as either "unprotected" or "protected" cells. The protected cells have a
+                built-in circuit within the cell package that protects against potentially dangerous situations like
+                over charges, over discharges, and short circuits - any of which can potentially lead the cell to
+                burst, overheat, or catch fire.
+
+                # Known issues
+
+                ## Length variations
+
+                Although the 18650 cell is a standard size (the dimensions in millimeters are in the name itself), cells
+                with integrated [protection circuits](#h-protection-circuits) are often longer than the standard 65mm.
+                Such protected cells usually fit in holders that use spring-loaded or flexible metal contacts, but other
+                holder designs or battery pack formats may not fit them if they are designed for the standard 65mm
+                length.
+
+                ${/*# Manufacturing
+
+                Lorem ipsum...
+
+                # Lifecycle
+
+                Lorem ipsum...
+
+                # Impact
+
+                Lorem ipsum...*/""}
+
+            `},
+        ],
     }),
     // 2170 cell
     ...createEntry({
