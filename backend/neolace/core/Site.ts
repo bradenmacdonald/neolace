@@ -98,6 +98,10 @@ export class Site extends VNodeType {
          * Markdown text for the home page. This defines the content of the home page.
          */
         homePageMD: Field.NullOr.String.Check(check.string.max(100_000)),
+        /**
+         * Markdown text for the footer, shown on all pages.
+         */
+        footerMD: Field.String.Check(check.string.max(10_000)),
 
         // Access Mode: Determines what parts of the site are usable without logging in
         accessMode: Field.String.Check(check.Schema.enum(AccessMode)),
@@ -163,7 +167,7 @@ export function slugIdToFriendlyId(slugId: string): string {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Action to make changes to an existing Site:
-export const UpdateSite = defaultUpdateFor(Site, s => s.slugId.description.homePageMD.domain.accessMode, {});
+export const UpdateSite = defaultUpdateFor(Site, s => s.slugId.description.homePageMD.footerMD.domain.accessMode, {});
 
 export const DeleteSite = defaultDeleteFor(Site);
 
@@ -177,6 +181,7 @@ export const CreateSite = defineAction({
         domain: string;
         description?: string;
         homePageMD?: string;
+        footerMD?: string;
         siteCode?: string;
         adminUser?: VNID;
         accessMode?: AccessMode;
@@ -214,6 +219,7 @@ export const CreateSite = defineAction({
                 siteCode: ${siteCode},
                 description: ${data.description || null},
                 homePageMD: ${data.homePageMD || null},
+                footerMD: ${data.footerMD || ""},
                 domain: ${data.domain},
                 accessMode: ${data.accessMode ?? AccessMode.PublicContributions}
             })

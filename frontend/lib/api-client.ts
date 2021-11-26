@@ -64,6 +64,7 @@ export interface SiteData {
     name: string;
     domain: string;
     shortId: string;
+    footerMD: string;
 }
 
 const siteDataCache = new AsyncCache<string, SiteData>(
@@ -73,6 +74,7 @@ const siteDataCache = new AsyncCache<string, SiteData>(
             name: siteData.name,
             domain: siteData.domain,
             shortId: siteData.shortId,
+            footerMD: siteData.footerMD,
         };
     },
     5 * 60_000,  // timeout is 5 minutes

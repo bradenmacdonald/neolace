@@ -130,6 +130,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
 
             Check out [**ponderosa pine**](/entry/s-pinus-ponderosa), the featured article.
         `,
+        footerMD: `Powered by [Neolace](https://www.neolace.com/).`,
     })).then(result => {
         data.site.id = result.id;
         data.site.adminsGroupId = result.adminGroup!;

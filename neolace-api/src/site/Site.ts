@@ -20,6 +20,10 @@ export const SiteDetailsSchema = Schema({
      * site in any site-specific API requests.
      */
     shortId: string,
+    /**
+     * The footer text (as Markdown) to display on every page of this site.
+     */
+    footerMD: string,
 });
 export type SiteDetailsData = Type<typeof SiteDetailsSchema>;
 

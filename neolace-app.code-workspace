@@ -11,10 +11,6 @@
 		},
 		{
 			"path": "arch-decisions"
-		},
-		{
-			"path": ".",
-			"name": "neolace-app root"
 		}
 	],
 	"settings": {

@@ -32,7 +32,8 @@ const HomePage: NextPage<PageProps> = function(props) {
             title={props.site.name}
             site={props.site}
         >
-            <div className="max-w-6xl mx-auto neo-typography">
+            {/* Below, 100vh-11.6rem pushes the footer down to the bottom of the screen but prevents scrolling if there's only a single line in the footer */}
+            <div className="max-w-6xl mx-auto neo-typography md:min-h-[calc(100vh-11.6rem)]">
                 {props.homepageMD ?
                     <RenderMDT mdt={props.homepageMD} context={mdtContext} />
                 :
