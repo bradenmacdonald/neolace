@@ -3,6 +3,7 @@ import { Type } from "neolace/deps/computed-types.ts";
 import { RawVNode, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import type { EnabledFeature } from "./EnabledFeature.ts";
 import type { EntryFeatureData } from "./EntryFeatureData.ts";
+import { ReferenceCache } from "../reference-cache.ts";
 
 /**
  * A "feature" is some functionality that can be enbabled, disabled, and configured for each EntryType.
@@ -61,6 +62,7 @@ export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][
         /** Configuration that controls how this feature is used for this entry type */
         config: RawVNode<EF>,
         tx: WrappedTransaction,
+        refCache?: ReferenceCache,
     }): Promise<EntryFeaturesData[FT]>;
 }
 

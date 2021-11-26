@@ -66,7 +66,7 @@ export const ArticleFeature = EntryTypeFeature({
      * Load the details of this feature for a single entry.
      */
     // deno-lint-ignore require-await
-    async loadData({data}) {
+    async loadData({data, refCache}) {
 
         const articleMD = data?.articleMD ?? "";
 
@@ -88,6 +88,12 @@ export const ArticleFeature = EntryTypeFeature({
                     id: node.slugId,
                 });
             }
+        }
+
+        if (articleMD) {
+            // If this article contains links to other entries, we need to cache them in the reference cache
+            // so that the tooltip shown on hover will render instantly, etc.
+            refCache?.extractMarkdownReferences(parsed);
         }
 
         return {
