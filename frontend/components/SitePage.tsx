@@ -4,10 +4,12 @@ import Link from 'next/link';
 
 import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData } from 'lib/api-client';
+import { SiteFooter } from './SiteFooter';
 
 interface Props {
     title: string;
     site: SiteData;
+    hideFooter?: boolean;
 }
 
 /**
@@ -71,6 +73,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
 
         <main role="main" className="absolute top-8 md:top-24 p-2 w-full bottom-0 overflow-y-auto">
             {props.children}
+            {!props.hideFooter ? <SiteFooter site={props.site} /> : null}
         </main>
   </div>
 };

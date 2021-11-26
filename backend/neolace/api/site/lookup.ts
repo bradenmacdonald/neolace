@@ -19,7 +19,7 @@ export class SiteLookupResource extends NeolaceHttpResource {
         // (knows its domain).
 
         // Load the site or throw a 404 error:
-        const site = await graph.pullOne(Site, s => s.name.description.domain.shortId(), {where: C`@this.domain = ${domain}`}).catch((err) => {
+        const site = await graph.pullOne(Site, s => s.name.description.domain.footerMD.shortId(), {where: C`@this.domain = ${domain}`}).catch((err) => {
             if (err instanceof EmptyResultError) {
                 throw new api.NotFound(`Site with domain "${domain}" not found.`);
             } else {

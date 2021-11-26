@@ -5,12 +5,13 @@ import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { features as allFeatures } from "./all-features.ts";
 import { EnabledFeature } from "./EnabledFeature.ts";
 import { EntryFeatureData } from "./EntryFeatureData.ts";
+import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 
 
 /**
  * Get data from each feature that's enabled for the given entry.
  */
-export async function getEntryFeaturesData(entryId: VNID, {tx, filterType}: {tx: WrappedTransaction, filterType?: keyof EntryFeaturesData}): Promise<EntryFeaturesData> {
+export async function getEntryFeaturesData(entryId: VNID, {tx, filterType, refCache}: {tx: WrappedTransaction, filterType?: keyof EntryFeaturesData, refCache?: ReferenceCache}): Promise<EntryFeaturesData> {
     let features = allFeatures;
     if (filterType) {
         features = features.filter(f => f.featureType === filterType);
@@ -56,6 +57,7 @@ export async function getEntryFeaturesData(entryId: VNID, {tx, filterType}: {tx:
             data,
             config,
             tx,
+            refCache,
         });
         if (dataOut !== undefined) {
             result[feature.featureType] = dataOut;

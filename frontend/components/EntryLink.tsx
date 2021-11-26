@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { api, isVNID } from 'lib/api-client';
+import { DEVELOPMENT_MODE } from 'lib/config';
 import { FormattedListParts, FormattedMessage } from 'react-intl';
 import { Tooltip } from 'components/widgets/tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
@@ -27,7 +28,9 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
     if (entry === undefined) {
         // This entry is not in the reference cache! It should have been though...
         // So we don't know its name and may not know its friendlyId either.
-        return <Link href={`/entry/${props.entryKey}`}><a className="text-red-700 font-bold">{props.children}</a></Link>
+        // In development, we want to highlight links that should be in the reference cache, but are not.
+        const textColorClass = DEVELOPMENT_MODE ? "text-red-600 font-bold" : "";
+        return <Link href={`/entry/${props.entryKey}`}><a className={textColorClass}>{props.children}</a></Link>
     }
     return <Tooltip tooltipContent={<>
         <strong>{entry.name}</strong> ({refCache.entryTypes[entry.entryType.id]?.name})<br/>

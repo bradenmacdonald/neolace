@@ -68,7 +68,7 @@ export const HeroImageFeature = EntryTypeFeature({
     /**
      * Load the details of this feature for a single entry.
      */
-    async loadData({tx, config, entryId}) {
+    async loadData({tx, config, entryId, refCache}) {
 
         const siteId = await siteIdForEntryId(entryId);
         const context: LookupContext = {tx, siteId, entryId, defaultPageSize: 1n};
@@ -119,6 +119,11 @@ export const HeroImageFeature = EntryTypeFeature({
         if (imageData === undefined) {
             log.error(`Cannot display hero image for entry ${entryId} because the lookup expression resulted in entry ${imageEntryId} which is not an image.`);
             return undefined;
+        }
+
+        refCache?.addReferenceToEntryId(imageEntryId);
+        if (caption) {
+            refCache?.extractMarkdownReferences(caption);
         }
 
         return {

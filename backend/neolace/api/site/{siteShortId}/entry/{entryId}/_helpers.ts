@@ -155,12 +155,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     if (flags.has(api.GetEntryFlags.IncludeFeatures)) {
         // Include "features" specific to this entry type. A common one is the "article" feature, which has prose text
         // (markdown). Another common one is the "Image" feature which means this entry is an image.
-        result.features = await getEntryFeaturesData(entryData.id, {tx});
-
-        if (result.features.Article?.articleMD) {
-            // Extract references from the article text:
-            refCache?.extractMarkdownReferences(result.features.Article.articleMD);
-        }
+        result.features = await getEntryFeaturesData(entryData.id, {tx, refCache});
     }
 
     if (flags.has(api.GetEntryFlags.IncludeReferenceCache)) {

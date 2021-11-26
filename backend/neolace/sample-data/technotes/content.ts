@@ -2,7 +2,7 @@ import { VNID, } from "neolace/deps/vertex-framework.ts";
 import { AnyContentEdit, UpdateEntryFeature, schemas } from "neolace/deps/neolace-api.ts";
 import { schemaIds } from "./schema.ts";
 import { files } from "./datafiles.ts";
-// import { dedent } from "neolace/lib/dedent.ts";
+import { dedent } from "neolace/lib/dedent.ts";
 
 export const ids = {
     // Internal IDs used for each entry, in alphabetical order
@@ -10,6 +10,7 @@ export const ids = {
     // we're working at the moment by erasing the database and re-creating all entries, it's important to ensure the
     // internal IDs used are consistent each time.
     battery: VNID("_5HYZND6114KVUtCGjFC8mT"),
+    batteryAA: VNID("_1bWGkkQDaPxHwmcMkO5cbu"),
     car: VNID("_4sd6mGkfpCfrvi3em2IFA0"),
     cell18650: VNID("_7RHY0mKlOEp2xsahAaNcbc"),
     cell2170: VNID("_725MCg9IOqXqKUUA2cEoSc"),
@@ -21,14 +22,13 @@ export const ids = {
     lithiumIonCell: VNID("_5GDsp3jxMTJ1liBePo9sgT"),
     motorVehicle: VNID("_5lqx2yOMSlbibeIT5psLCr"),
     img18650cell: VNID("_5Dk4j3EUjThp91B1SeGwUF"),
+    imgAABattery: VNID("_1nmqoMNKS0MYZRjjzUiQd3"),
     imgLiIonBatteryJellyRoll: VNID("_52FWviI73eaW6sIO8sZx0F"),
     imgMiniCooperSe: VNID("_5hqETvE3WTHuYvhHbwWuD"),
     primaryCell: VNID("_7OCTF7b5Z4wM7KvEE16OtK"),
     secondaryCell: VNID("_4HwJfgRjCzfOI7z2XTzY0r"),
-    //spare: VNID("_51YyfHlwYxW1X5QfjRBai6"),
-    //spare: VNID("_1bWGkkQDaPxHwmcMkO5cbu"),
-    //spare: VNID("_1nmqoMNKS0MYZRjjzUiQd3"),
-    //spare: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
+    standarizedBattery: VNID("_51YyfHlwYxW1X5QfjRBai6"),
+    technotesTeam: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
     //spare: VNID("_6dF6GUIrPx8ToREmsFAZ5R"),
     //spare: VNID("_5Z7bPDS8qOWy1DUHwpehjS"),
     //spare: VNID("_5QZEkrIjvgA7y3iP9qSEVi"),
@@ -45,6 +45,44 @@ export const ids = {
 };
 
 export const edits: AnyContentEdit[] = [
+    // TechNotes Team
+    ...createEntry({
+        id: ids.technotesTeam,
+        name: "TechNotes Team",
+        friendlyId: "team",
+        type: schemaIds.technotesMetaPage,
+        description: "The team behind TechNotes.",
+        props: {},
+        features: [
+            {featureType: "Article", articleMD: dedent`
+                # Braden MacDonald
+                
+                *CEO*
+
+                <img alt="[Photo of Braden]" src="/team-braden.jpg" class="border-gray-700 border-4 rounded-lg mb-3 w-max md:w-64 md:float-right md:ml-6">
+                
+                Braden is a software developer and technology enthusiast. He is the co-founder and CEO of [TechNotes](https://www.technotes.org) and the CTO of [OpenCraft](https://opencraft.com/). Prior to TechNotes, Braden's most recent major project was [LabXchange](https://www.labxchange.org/), an online platform from Harvard University which provides world-class life sciences education materials to the world on-demand and for free. Braden led the software development for the project, which went on to have over two million users in its first year and won the 2020 Open edX Prize for creating the most impactful technical project built with Open edX.
+                
+                An avid programmer since childhood, Braden has worked with a wide variety of projects, platforms, and programming languages over the years. Braden is known for his deep technical knowledge, his wide-ranging experience, his approach to understanding problems from many perspectives, his ability to communicate clearly, and his relentless optimism.
+                
+                Outside of work, Braden has enjoyed serving on several non-profit boards, notably the OGO Car Share Co-op which brought car sharing to BC's Okanagan Valley and was acquired by [Modo](https://modo.coop/). Braden holds an Honours B.Sc. in Physics from the University of British Columbia.
+
+                # Joel Krupa
+                
+                *COO*
+
+                Joel started his career as an intern in the office of former California Governor Arnold Schwarzenegger. He went on to hold senior roles in both private sector and public sector clean energy and technology organizations. In parallel with this work, he has maintained an academic career that included teaching numerous undergraduate classes, publishing 10 energy-related academic papers, and writing over 50 book reviews on a range of technical and popular topics.
+
+                Joel completed a postdoctoral fellowship at Harvard Engineering after earning a B.A. at the University of British Columbia, a B.Sc. at the London School of Economics, an M.Sc. at the University of Oxford, and a Ph.D. at the University of Toronto. He has undertaken visiting research appointments at research centres affiliated with Imperial College London and the University of Oxford.
+
+                # Jeff Krupa
+                
+                *VP Content & Partnerships*
+
+                Jeff Krupa is a PhD candidate in high energy physics at MIT. His research focuses on AI and the analysis of large datasets. He's interested in existential risks including climate change and excited about delivering technological solutions via accelerated innovation.
+            `},
+        ],
+    }),
     // Motor Vehicle
     ...createEntry({
         id: ids.motorVehicle,
@@ -231,6 +269,44 @@ export const edits: AnyContentEdit[] = [
             [schemaIds.propWordNetILI]: { valueExpr: `"i50578"` },
         },
     }),
+    // Standardized battery
+    ...createEntry({
+        id: ids.standarizedBattery,
+        name: "Standardized battery",
+        friendlyId: "tc-battery-std",
+        type: schemaIds.techConcept,
+        description: `
+            A **standardized battery** is a [battery](/entry/${ids.battery}) that is designed and manufactured according
+            to an international standard. The standard will usually specify the battery's size and shape. Often the
+            standard will also specify the nominal voltage and the exact battery chemistry as well.
+        `,
+        props: {
+            [schemaIds.propTypeOf]: { valueExpr: `[[/entry/${ids.battery}]]` },
+            [schemaIds.propWikidataId]: { valueExpr: `"Q4374872"` },
+        },
+    }),
+    // AA Battery
+    ...createEntry({
+        id: ids.batteryAA,
+        name: "AA Battery",
+        friendlyId: "tc-batt-aa",
+        type: schemaIds.techConcept,
+        description: `
+            An **AA battery** is a standard cylindrical single-[cell](/entry/${ids.galvanicCell}) [battery](/entry/${ids.battery})
+            with diameter 14.5 mm and length 50.5 mm. Commonly used in consumer electronic devices, the AA battery may
+            be [primary](/entry/${ids.primaryCell}) (single-use) or [secondary](/entry/${ids.secondaryCell})
+            (multi-use). AA batteries are manufactured with many different chemical compositions, some of which include
+            zinc-carbon, zinc-chloride, nickel-cadmium, and lithium-ion. The voltage of the battery depends on the
+            chemistry but is usually either 1.5 V or 1.2 V.
+        `,
+        props: {
+            [schemaIds.propTypeOf]: { valueExpr: `[[/entry/${ids.standarizedBattery}]]` },
+            [schemaIds.propAlsoKnownAs]: { valueExpr: JSON.stringify(["double-A battery", "R6 battery", "size 15 battery", "UM-3 battery"]) },
+            [schemaIds.propWikidataId]: { valueExpr: `"Q1195592"` },
+            [schemaIds.propDiameter]: { valueExpr: `"14.5 mm"` },
+            [schemaIds.propLength]: { valueExpr: `"50.5 mm"` },
+        },
+    }),
     // Photo of a car (Mini Cooper SE)
     ...createEntry({
         id: ids.imgMiniCooperSe,
@@ -279,6 +355,24 @@ export const edits: AnyContentEdit[] = [
         },
     }),
     setHeroImage(ids.cell18650, ids.img18650cell),
+    // Photo of an AA battery
+    ...createEntry({
+        id: ids.imgAABattery,
+        name: "AA Battery",
+        friendlyId: "img-aa",
+        type: schemaIds.image,
+        description: `An [AA battery](/entry/${ids.batteryAA}).`,
+        features: [{featureType: "Image", dataFileId: files.aaBattery.id}],
+        props: {
+            [schemaIds.propImgRelatesTo]: { valueExpr: `[[/entry/${ids.batteryAA}]]` },
+            [schemaIds.propCreator]: { valueExpr: `markdown("[Asim Saleem](https://commons.wikimedia.org/wiki/User:Asim18)")` },
+            [schemaIds.propLicense]: { valueExpr: `markdown("[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)")` },
+            [schemaIds.propContentSource]: { valueExpr: `markdown("[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:02_-_Single_Energizer_Battery.jpg)")` },
+        },
+    }),
+    setHeroImage(ids.batteryAA, ids.imgAABattery),
+    setHeroImage(ids.standarizedBattery, ids.imgAABattery),
+    setHeroImage(ids.battery, ids.imgAABattery),
 ];
 
 function createEntry({id, ...args}: {
