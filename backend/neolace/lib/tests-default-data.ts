@@ -128,7 +128,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
 
             ## Sample Article
 
-            Check out [**ponderosa pine**](/entry/s-ponderosa-pine), the featured article.
+            Check out [**ponderosa pine**](/entry/s-pinus-ponderosa), the featured article.
         `,
     })).then(result => {
         data.site.id = result.id;
