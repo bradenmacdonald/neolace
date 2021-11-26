@@ -5,7 +5,6 @@
 import * as log from "std/log/mod.ts";
 import { C, Field, EmptyResultError, GenericCypherAction, VNID } from "neolace/deps/vertex-framework.ts";
 
-import { dedent } from "neolace/lib/dedent.ts";
 import { graph } from "neolace/core/graph.ts";
 import { shutdown } from "neolace/app/shutdown.ts";
 import { CreateUser, User } from "neolace/core/User.ts";
@@ -14,6 +13,7 @@ import { CreateSite, Site, UpdateSite } from "neolace/core/Site.ts";
 import { CreateDraft, AcceptDraft } from "neolace/core/edit/Draft.ts";
 import { schema } from "neolace/sample-data/technotes/schema.ts";
 import { edits } from "neolace/sample-data/technotes/content.ts";
+import { siteData } from "neolace/sample-data/technotes/site.ts";
 import { ensureFilesExist } from "neolace/sample-data/technotes/datafiles.ts";
 import { generateTestFixtures } from "neolace/lib/tests-default-data.ts";
   
@@ -70,35 +70,7 @@ const {id: siteId} = await graph.pullOne(Site, s => s.id, {key: "site-technotes"
     }));
 });
 
-await graph.runAsSystem(UpdateSite({
-    key: siteId,
-    homePageMD: dedent`
-        # Welcome to TechNotes
-
-        TechNotes is an open engineering library focused on clean tech - specifically electric vehicle (EV) battery
-        technology. Our goal is to combine data, reference articles, design examples, datasets, patents, technical
-        drawings, and discussion forums together in one integrated resource that's exceptionally easy to use and
-        well-organized.
-
-        ## About This Prototype
-
-        This is our new prototype, built using Neolace, our new platform for building a collaborative knowledge base.
-
-        We will be posting some detailed example content soon!
-
-        You can see some of the features of our platform on the entry for [**"car"**](/entry/tc-car) or [**"cylindrical lithium-ion cell"**](/entry/tc-ec-cell-li-cyl).
-
-
-
-
-
-        ## Legal
-
-        License: Text content (articles and descriptions) is available under the terms of the [CC BY-SA 4.0 license](https://creativecommons.org/licenses/by-sa/4.0/). Properties and their values are public domain. Images and other media files are available under various licenses - refer to each item's page for details.
-
-        Terms of use: The content on this site is provided with no warranty, express or implied. Do not rely on this content for any important purpose without verifying it independently.
-    `,
-}));
+await graph.runAsSystem(UpdateSite({key: siteId, ...siteData}));
  
 log.info("Importing schema...");
  
