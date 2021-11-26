@@ -65,11 +65,10 @@ group(import.meta, () => {
                         description: null,
                         friendlyIdPrefix: null,
                         name: "Software",
-                        simplePropValues: {},
                         enabledFeatures: {},
                     },
                 },
-                relationshipTypes: defaultData.schema.relationshipTypes,
+                properties: defaultData.schema.properties,
             });
         });
 

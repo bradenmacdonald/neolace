@@ -68,17 +68,19 @@ export const graph = new Vertex({
                 await dbWrite(tx => tx.run("DROP CONSTRAINT site_sitecode_uniq IF EXISTS"));
             },
             dependsOn: [],
-        },/*
-        // The SHA-256 hash works as a unique primary key for DataFile nodes:
-        datafileHash: {
-            forward: async (_dbWrite) => {
-                //
+        },
+        // The "directRelNeo4jId" field of PropertyFact nodes must be unique:
+        propFactUniqueRelId: {
+            forward: async (dbWrite) => {
+                await dbWrite(async tx => {
+                    await tx.run("CREATE CONSTRAINT propertyfact_directrelneo4jid_uniq ON (pf:PropertyFact) ASSERT pf.directRelNeo4jId IS UNIQUE");
+                });
             },
             backward: async (dbWrite) => {
-                await dbWrite(tx => tx.run("DROP CONSTRAINT datafile_sha256Hash_uniq IF EXISTS"));
+                await dbWrite(tx => tx.run("DROP CONSTRAINT propertyfact_directrelneo4jid_uniq IF EXISTS"));
             },
             dependsOn: [],
-        },*/
+        },
     },
 });
 

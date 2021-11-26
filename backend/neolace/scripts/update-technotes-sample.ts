@@ -15,6 +15,7 @@ import { CreateDraft, AcceptDraft } from "neolace/core/edit/Draft.ts";
 import { schema } from "neolace/sample-data/technotes/schema.ts";
 import { edits } from "neolace/sample-data/technotes/content.ts";
 import { ensureFilesExist } from "neolace/sample-data/technotes/datafiles.ts";
+import { generateTestFixtures } from "neolace/lib/tests-default-data.ts";
   
 
 
@@ -22,10 +23,9 @@ import { ensureFilesExist } from "neolace/sample-data/technotes/datafiles.ts";
 /////////// TEMP /////////////
 /////////// TEMP /////////////
 /////////// TEMP /////////////
-import { testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
-const dataStr = await Deno.readTextFile(testDataFile);
-const {defaultDataSnapshot} = JSON.parse(dataStr) as TestSetupData;
-await graph.resetDBToSnapshot(defaultDataSnapshot);
+log.info("Resetting to PlantDB only.");
+await generateTestFixtures();
+log.info("Done PlantDB reset");
 /////////// TEMP /////////////
 /////////// TEMP /////////////
 /////////// TEMP /////////////
@@ -76,9 +76,9 @@ await graph.runAsSystem(UpdateSite({
         # Welcome to TechNotes
 
         TechNotes is an open engineering library focused on clean tech - specifically electric vehicle (EV) battery
-        technology. Our goal is to combine combine data, reference articles, design examples, datasets, patents,
-        technical drawings, and discussion forums together in one integrated resource that's exceptionally easy to use
-        and well-organized.
+        technology. Our goal is to combine data, reference articles, design examples, datasets, patents, technical
+        drawings, and discussion forums together in one integrated resource that's exceptionally easy to use and
+        well-organized.
 
         ## About This Prototype
 
@@ -138,4 +138,3 @@ if (lastEdit < edits.length) {
 }
  
 shutdown();
- 

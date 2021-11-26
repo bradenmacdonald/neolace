@@ -13,7 +13,7 @@ import { HeroImageData } from "./HeroImageData.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { parseLookupString } from "neolace/core/lookup/parse.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
-import { AnnotatedEntryValue, EntryValue, InlineMarkdownStringValue, PageValue } from "neolace/core/lookup/values.ts";
+import { AnnotatedValue, EntryValue, InlineMarkdownStringValue, PageValue } from "neolace/core/lookup/values.ts";
 import { getEntryFeatureData } from "../get-feature-data.ts";
 
 const featureType = "HeroImage" as const;
@@ -96,14 +96,16 @@ export const HeroImageFeature = EntryTypeFeature({
             value = value.values[0];
         }
 
-        if (value instanceof EntryValue) {
-            imageEntryId = value.id;
-            if (value instanceof AnnotatedEntryValue && value.annotations.note) {
+        if (value instanceof AnnotatedValue && value.value instanceof EntryValue) {
+            imageEntryId = value.value.id;
+            if (value.annotations.note) {
                 const captionValue = value.annotations.note.castTo(InlineMarkdownStringValue, context);
                 if (captionValue) {
                     caption = captionValue.value;
                 }
             }
+        } else if (value instanceof EntryValue) {
+            imageEntryId = value.id;
         } else {
             log.error(`Cannot display hero image for entry ${entryId} because the lookup expression resulted in ${JSON.stringify(value.toJSON())}`);
             return undefined;

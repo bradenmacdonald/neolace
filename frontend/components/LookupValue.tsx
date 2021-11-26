@@ -58,8 +58,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 </FormattedListParts>
             </span>;
         }
-        case "Entry":
-        case "AnnotatedEntry": {
+        case "Entry":{
             const entry = props.refCache.entries[value.id];
             if (entry === undefined) {
                 return <Link href={`/entry/${value.id}`}><a className="text-red-700 font-bold">{value.id}</a></Link>
@@ -69,6 +68,20 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 <p className="text-sm"><InlineMDT mdt={entry.description} context={props.mdtContext} /></p>
             </>}>
                 {attribs => <Link href={`/entry/${entry.friendlyId}`}><a {...attribs}>{entry.name}</a></Link>}
+            </Tooltip>
+        }
+        case "Property": {
+            const prop = props.refCache.properties[value.id];
+            if (prop === undefined) {
+                // return <Link href={`/prop/${value.id}`}><a className="text-red-700 font-bold">{value.id}</a></Link>
+                return <span className="text-red-700 font-bold">{value.id}</span>
+            }
+            return <Tooltip tooltipContent={<>
+                <strong>{prop.name}</strong><br/>
+                <p className="text-sm"><InlineMDT mdt={prop.description} context={props.mdtContext} /></p>
+            </>}>
+                {/* attribs => <Link href={`/prop/${prop.id}`}><a {...attribs}>{prop.name}</a></Link> */}
+                {attribs => <span {...attribs}>{prop.name}</span>}
             </Tooltip>
         }
         case "String":
@@ -83,6 +96,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                     values={{errorType: value.errorClass, errorMessage: value.message}}
                 />
             </span>
+        case "Annotated":
+            return <LookupValue value={value.value} refCache={props.refCache} mdtContext={props.mdtContext} />
         default: {
             return <code>{JSON.stringify(value)}</code>;
         }

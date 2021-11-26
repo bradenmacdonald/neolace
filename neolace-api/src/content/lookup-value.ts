@@ -23,9 +23,15 @@ export interface EntryValue extends LookupValue {
     id: VNID;
 }
 
-export interface AnnotatedEntryValue extends LookupValue {
-    type: "AnnotatedEntry";
+/** Represents a property like "Date of Birth", not a specific property value. */
+export interface PropertyValue extends LookupValue {
+    type: "Property";
     id: VNID;
+}
+
+export interface AnnotatedValue extends LookupValue {
+    type: "Annotated";
+    value: AnyLookupValue;
     annotations: Record<string, AnyLookupValue>;
 }
 
@@ -55,7 +61,8 @@ export type AnyLookupValue = (
     | PageValue
     | ListValue
     | EntryValue
-    | AnnotatedEntryValue
+    | PropertyValue
+    | AnnotatedValue
     | IntegerValue
     | StringValue
     | InlineMarkdownString

@@ -1,15 +1,4 @@
-import { Schema, Type, string, number, vnidString, nullable, array, Record, } from "../api-schemas.ts";
-
-
-export const SimplePropertySchema = Schema({
-    id: vnidString,
-    /** Displayed label of this simple property value, e.g. "Is a type of" */
-    label: string,
-    valueExpression: string,
-    importance: number,
-    note: string,
-});
-export type SimplePropertyData = Type<typeof SimplePropertySchema>;
+import { Schema, Type, string, number, vnidString, nullable, array, boolean, Record, } from "../api-schemas.ts";
 
 
 export const EntryTypeSchema = Schema({
@@ -19,14 +8,9 @@ export const EntryTypeSchema = Schema({
     description: nullable(string),
     /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
     friendlyIdPrefix: nullable(string),
-    /** Simple property values always displayed on entries of this type */
-    simplePropValues: Record(string, SimplePropertySchema),
 
     enabledFeatures: Schema({
         Article: Schema({
-        }).strictOptional(),
-        UseAsProperty: Schema({
-            appliesToEntryTypes: array.of(vnidString),
         }).strictOptional(),
         Image: Schema({
         }).strictOptional(),
@@ -37,63 +21,126 @@ export const EntryTypeSchema = Schema({
 });
 export type EntryTypeData = Type<typeof EntryTypeSchema>;
 
-export enum RelationshipCategory {
+
+export enum PropertyType {
     /**
-     * IS_A: e.g. An Apple IS_A Fruit
-     * This category of relationship includes things like IS_VERSION_OF, IS_VARIANT_OF, etc.
+     * A regular value (e.g. a date, a string, a boolean); the value is anything other than another entry.
      */
-    IS_A = "IS_A",
+    Value = "VALUE",
     /**
-     * HAS_A: e.g. A Person HAS_A Name
-     * This category of relationship includes things like HAS_PART, HAS_EMAIL_ADDRESS, HAS_LICENSE, HAS_MANUFACTURER, or so on
+     * This property represents an IS A relationship (is subclass of, is instance of, is child of, is variant of,
+     * is version of).
+     *
+     * e.g. An Apple IS_A Fruit, Barack Obama IS A President
      */
-    HAS_A = "HAS_A",
+    RelIsA = "IS_A",
     /**
-     * DEPENDS_ON: e.g. An Task DEPENDS_ON another Task
+     * This property represents any other explicitly defined relationship.
+     *
+     * This excludes the inverse of IS A relationships, like "has subtypes" or "has instances", which should be
+     * automatically generated using a lookup function and defined as Value properties (not relationships).
      */
-    //DEPENDS_ON = "DEPENDS_ON",
-    /**
-     * RELATES_TO: e.g. An Image RELATES_TO a Article
-     */
-    RELATES_TO = "RELATES_TO",
+    RelOther = "RELATES_TO",
 }
 
-export function CastRelationshipCategory(value: string): RelationshipCategory {
-    if (!Object.values(RelationshipCategory).includes(value as RelationshipCategory)) {
-        throw new Error(`Invalid RelationshipCategory: ${value}`);
-    }
-    return value as RelationshipCategory;
+export enum PropertyMode {
+    /** This property is required. Leaving it blank will be highlighted as an error. */
+    Required = "REQ",
+    /**
+     * This property is recommended. The "edit" form for this property type will always show a field to add this
+     * property.
+     */
+    Recommended = "REC",
+    /**
+     * This property is optional. It may be set on the specified entry type, but doesn't necessarily have to be.
+     */
+    Optional = "OPT",
+    /**
+     * This property is defined by a lookup expression and its value is derived from other data. It cannot be edited.
+     * This can also be used to set a fixed value for all entries of a given type.
+     */
+    Auto = "AUTO",
 }
 
-export const RelationshipTypeSchema = Schema({
+// export enum PropertyCardinality {
+//     /**
+//      * This property holds a single value (or none, if not required).
+//      * If it's a relationship, it can only point to one entry.
+//      */
+//     Single = "1",
+//     /**
+//      * This property can have different values, but they each must be unique.
+//      *
+//      * This can be used for relationships, or also to express disagreement or uncertainty about other values like
+//      * empirical measurements (e.g. bob says the mass is 5.128 but alice says it's 5.208)
+//      */
+//     Unique = "U",
+//     /**
+//      * This property can have multiple values, and they don't have to be unique.
+//      *
+//      * This can be used for example to express that a widget has different parts, each of which is the same but is
+//      * used for a different purpose.
+//      */
+//     Multiple = "*",
+// }
+
+export const PropertySchema = Schema({
     id: vnidString,
-    /** The name of this RelationshipType (e.g. FROM_ENTRY_TYPE "is derived from" TO_ENTRY_TYPE) */
-    nameForward: string,
-    /** The name of the reverse of this RelationshipType (e.g. TO_ENTRY_TYPE "has derivatives" FROM_ENTRY_TYPE) */
-    nameReverse: string,
-    /** Relationship category - cannot be changed. */
-    category: Schema.enum(RelationshipCategory),
-    /** Description: Short, rich text summary of the relationship  */
-    description: nullable(string),
-
+    /** Name of this property, displayed as the label when viewing an entry with this property value */
+    name: string,
+    /** Description of this property (markdown) */
+    descriptionMD: string,
+    /** What type of property is this - a relationship, or some other simple property? (Cannot be changed) */
+    type: Schema.enum(PropertyType),
+    /** What EntryTypes can have this property? */
+    appliesTo: array.of(Schema({
+        entryType: vnidString,
+    })),
+    /** Is this a property that can be set manually? Or MUST be set? Or is it computed automatically? */
+    mode: Schema.enum(PropertyMode).strictOptional(),
     /**
-     * What entry types this relationship can be from.
-     * When a relationship is changed, the "From" entry counts as being modified.
-     * So if you create a new relationship that "Fork -> is a -> Utensil", it counts as a change to Fork (the from
-     * entry), not to Utensil. The change that made that relationship will only appear in the "Fork" change history.
+     * A lookup expression (usually an "x expression") that defines what values are allowed.
+     * This property is ignored if mode is "Auto".
      */
-    fromEntryTypes: array.of(vnidString),
+    valueConstraint: string.strictOptional(),
+    /** This property is a sub-type of some other property (e.g. "average voltage" is a type of "voltage") */
+    isA: array.of(vnidString).strictOptional(),
     /**
-     * What entry types this relationship can be to.
+     * The default value for this property. If a default is set, all entries of the given type will show this property
+     * with the default value, unless it is overridden.
+     *
+     * If mode is Auto, this is required, because there is nowhere else to set the value.
+     *
+     * This can be a lookup expression.
      */
-    toEntryTypes: array.of(vnidString),
+    default: string.strictOptional(),
+    /** Should this property value inherit to child entries? */
+    inheritable: boolean.strictOptional(),
+    /** Enable the "slots" feature, which allows partial overriding of inherited values, useful for "Has Type" relationships */
+    enableSlots: boolean.strictOptional(),
+    /** The standard URL for this property, e.g. "https://schema.org/birthDate" for "date of birth" */
+    standardURL: string.strictOptional(),
+    /** The Wikidata P ID for this property, if applicable, e.g. P569 for "date of birth" */
+    //wikidataPID: string.strictOptional(),
+    /**
+     * Default importance of this property, 0 being most important, 99 being least.
+     * Properties with importance < 20 are not shown on entry pages by default.
+     */
+    importance: number,
+    /**
+     * Markdown template for formatting this value in a particular way.
+     * e.g. use `[{value}](https://www.wikidata.org/wiki/{value})` to format a Wikidata Q ID as a link.
+     */
+    displayAs: string.strictOptional(),
+    /** Text shown to users when they go to edit this property value. */
+    editNoteMD: string.strictOptional(),
+    // TODO: hasSlot, hasWeight, hasSource
 });
-export type RelationshipTypeData = Type<typeof RelationshipTypeSchema>;
-
+export type PropertyData = Type<typeof PropertySchema>;
 
 export const SiteSchemaSchema = Schema({
     entryTypes: Record(string, EntryTypeSchema),
-    relationshipTypes: Record(string, RelationshipTypeSchema),
+    properties: Record(string, PropertySchema),
 });
 
 /**
@@ -101,8 +148,7 @@ export const SiteSchemaSchema = Schema({
  */
 export interface SiteSchemaData {
     entryTypes: {[id: string]: EntryTypeData};
-    // TODO: properties
-    relationshipTypes: {[id: string]: RelationshipTypeData};
+    properties: {[id: string]: PropertyData};
 }
 // This also works but is a bit verbose because it doesn't use our named interfaces:
 //export type SiteSchemaData = Type<typeof SiteSchemaSchema>;

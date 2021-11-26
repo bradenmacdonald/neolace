@@ -9,17 +9,8 @@ const thisFolder: string = (() => {
     return tf.startsWith("file:") ? tf.substr(5) : tf;
 })();
 
-
 export const files = Object.freeze({
-    miniCooperSe: {id: VNID("_2dWW6omMxcycUL9pgKpNzY"), path: "images/martin-katler-a_Fy7a4KO6g-unsplash.webp"},
-    liIonBatteryJellyRoll: {id: VNID("_L0CTn3l4wywprxeu8JwO9"), path: "images/li-ion-cell-jelly-roll.webp"},
-    cell18650sparkfun: {id: VNID("_Ti9O7i7a3KibJWbQSiW6P"), path: "images/sparkfun-18650.webp"},
-    // spare: {id: VNID("_6tT4Jw1MVwN2kBEA5lVKz0"), path: ""},
-    // spare: {id: VNID("_54kqEz80XKazlagzNU3kgd"), path: ""},
-    // spare: {id: VNID("_1MFuZbHV6rFD9OcfzCwzdG"), path: ""},
-    // spare: {id: VNID("_2DGa0G8dw8KZye6AHDtQmT"), path: ""},
-    // spare: {id: VNID("_2BLaIEv3OIpNqnaY2Bgup9"), path: ""},
-    // spare: {id: VNID("_lCylFGMj67elCMvvmsRVJ"), path: ""},
+    ponderosaPineImg: {id: VNID("_buzaxyrAoq6yEFvu0zX2J"), path: "images/img-lassen-ponderosa.webp"},
 });
 
 export function getFullPath(path: string) {

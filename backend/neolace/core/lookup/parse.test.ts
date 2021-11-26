@@ -8,7 +8,7 @@ import {
     List,
     // Count,
     LiteralExpression,
-    RelatedEntries,
+    GetProperty,
     This,
 } from "./expressions/index.ts";
 import * as V from "./values.ts";
@@ -44,21 +44,18 @@ group(import.meta, () => {
         checkParse("this.andAncestors()", new AndAncestors(new This()));
         checkParse("andAncestors(this)", new AndAncestors(new This()));
     });
-    test("Related", () => {
+    test("GetProperty - get(...)", () => {
         checkParse(
-            "this.related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd])",
-            new RelatedEntries(new This(), {via: new LiteralExpression(new V.RelationshipTypeValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd")))}),
+            "this.get(prop=[[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]])",
+            new GetProperty(new This(), {propertyExpr: new LiteralExpression(new V.PropertyValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd")))}),
         );
         checkParse(
-            `this.related(via=RT[_6FisU5zxXg5LcDz4Kb3Wmd], direction="from")`,
-            new RelatedEntries(new This(), {
-                via: new LiteralExpression(new V.RelationshipTypeValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd"))),
-                direction: new LiteralExpression(new V.StringValue("from")),
-            }),
+            `get(this, prop=[[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]])`,
+            new GetProperty(new This(), {propertyExpr: new LiteralExpression(new V.PropertyValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd")))}),
         );
         checkParse(
-            "this.andAncestors().related(via=RT[_HASA])",
-            new RelatedEntries(new AndAncestors(new This()), {via: new LiteralExpression(new V.RelationshipTypeValue(VNID("_HASA")))}),
+            "this.andAncestors().get(prop=[[/prop/_HASA]])",
+            new GetProperty(new AndAncestors(new This()), {propertyExpr: new LiteralExpression(new V.PropertyValue(VNID("_HASA")))}),
         );
     });
     test("List", () => {

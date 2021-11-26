@@ -38,7 +38,7 @@ could be edited in the UI as
 
 and defined as a simple property value with this lookup expression:
 
-    this.andDescendants().related(via=RELATED_TO).filter(type="Image")
+    this.andDescendants().reverse(prop=prop("related-to")).filter(only=(x.type() = "Image"))
 
 Rules of Lookup Expressions:
 
@@ -69,6 +69,35 @@ expressions) are of the following types:
 4. Null
 5. String
 6. Date, DateTime, FuzzyDate ([YYYY-MM-DD or YYYY-MM or YYYY] -> [YYYY-MM-DD or YYYY-MM or YYYY])
-7. Entry, EntryType, RelationshipType, Property, RelationshipFact, PropertyValue
+7. Entry, EntryType, Property, PropertyValue
 8. List and Page
 9. Range (Holds two Integer, Quantity, Date/DateTime/FuzzyDate of the same type, the second being larger or equal to the first)
+10. X Expression
+11. Type
+
+## Literals
+
+Some types can be referenced as literals:
+
+In each example, `_2uDtUtOWJCL33X7zTAK8dK` is the ID of the boject in question.
+
+* Entries: `[[/entry/_2uDtUtOWJCL33X7zTAK8dK]]`
+* Properties: `[[/property/_2uDtUtOWJCL33X7zTAK8dK]]`
+* Entry Type: `[[/type/_2uDtUtOWJCL33X7zTAK8dK]]`
+
+## X Expressions and Conditionals
+
+An "x expression" is an expression that accepts a value and returns another
+value, i.e. is an anonymous function.
+
+A simple x expression would be `x.type()` which means "given any value x, return
+its type".
+
+Simple x expressions - examples:
+ * `x.type()` (given any value x, return its type)
+ * `x = 1` (is x exactly equal to 1?)
+ * `x ≈ 1` (is x approximately equal to 1?)
+ * `x > 1` (is x more than 1?)
+ * `x ≥ 0 && x < 10` (is x greater than or equal to zero but less than 10?)
+ * `x = "yes" || x = "no"` (is x equal to "yes" or "no" ?)
+ * `x in ["a1", "b2", "c3"]` (is x one of the specified strings?)

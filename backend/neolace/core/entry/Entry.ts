@@ -14,10 +14,8 @@ import {
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
-import { UseAsPropertyData } from "neolace/core/entry/features/UseAsProperty/UseAsPropertyData.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { graph } from "neolace/core/graph.ts";
-import { RelationshipFact } from "./RelationshipFact.ts";
 import { PropertyFact } from "./PropertyFact.ts";
 
 
@@ -48,11 +46,6 @@ export class Entry extends VNodeType {
             to: [EntryType],
             cardinality: VNodeType.Rel.ToOneRequired,
         },
-        /** This Entry has a relationship to another entry, via a RelationshipFact */
-        REL_FACT: {
-            to: [RelationshipFact],
-            cardinality: VNodeType.Rel.ToManyUnique,
-        },
         /** This Entry has property values */
         PROP_FACT: {
             to: [PropertyFact],
@@ -63,16 +56,16 @@ export class Entry extends VNodeType {
             to: [EntryFeatureData],
             cardinality: VNodeType.Rel.ToManyUnique,
         },
-        // If this Entry has an IS_A relationship to other entries (via RelationshipFact), it will also have a direct
-        // IS_A relationship to the Entry, which makes computing ancestors of an Entry much simpler.
-        // i.e. If there is (this:Entry)-[:REL_FACT]->(:RelationshipFact {category: "IS_A"})-[:REL_FACT]->(parent:Entry)
-        //      then there will also be a (this)-[:IS_A]->(parent) relationship
+        // If this Entry has an explicit relationship to other entries (via PropertyFact), it will also have a direct
+        // IS_A/RELATES_TO relationship to the Entry on the Neo4j graph, which makes computing ancestors of an Entry
+        // much simpler, and makes working with the graph easier.
         IS_A: {
             to: [this],
             cardinality: VNodeType.Rel.ToMany,
-            properties: {
-                relFactId: Field.VNID,
-            },
+        },
+        RELATES_TO: {
+            to: [this],
+            cardinality: VNodeType.Rel.ToMany,
         },
     });
 
@@ -86,11 +79,6 @@ export class Entry extends VNodeType {
             type: VirtualPropType.ManyRelationship,
             query: C`(@this)-[:${this.rel.HAS_FEATURE_DATA}]->(@target:${EntryFeatureData})`,
             target: EntryFeatureData,
-        },
-        useAsPropertyData: {
-            type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${this.rel.HAS_FEATURE_DATA}]->(@target:${UseAsPropertyData})`,
-            target: UseAsPropertyData,
         },
     }));
 
@@ -115,16 +103,16 @@ export class Entry extends VNodeType {
             throw new ValidationError(`Invalid friendlyId; expected it to start with ${friendlyIdPrefix}`);
         }
 
-        // Validate that all IS_A relationships have corresponding RelationshipFacts
-        // RelationshipFact validates the opposite, that all IS_A RelationshipFacts have corresponding IS_A relationships
+        // Validate that all IS_A/RELATES_TO relationships have corresponding PropertyFacts
         const isACheck = await tx.query(C`
-            MATCH (entry:${this})-[rel:${this.rel.IS_A}]->(otherEntry:VNode)
-            WITH rel.relFactId AS expectedId
-            OPTIONAL MATCH (entry:${this})-[:${this.rel.REL_FACT}]->(relFact:VNode {id: expectedId})
-            RETURN expectedId, relFact.id AS actualId
+            MATCH (entry:${this} {id: ${dbObject.id}})
+            MATCH (entry)-[rel:${this.rel.IS_A}|${this.rel.RELATES_TO}]->(otherEntry:VNode)
+            WITH entry, id(rel) AS expectedId
+            OPTIONAL MATCH (entry)-[:${this.rel.PROP_FACT}]->(relFact:${PropertyFact} {directRelNeo4jId: expectedId})
+            RETURN expectedId, relFact.directRelNeo4jId AS actualId
         `.givesShape({expectedId: Field.VNID, actualId: Field.VNID}));
         if (!isACheck.every(row => row.actualId === row.expectedId)) {
-            throw new ValidationError(`Entry has a stranded IS_A relationship without a corresponding RelationshipFact`);
+            throw new ValidationError(`Entry ${dbObject.id} (${dbObject.slugId}) has a stranded direct relationship without a corresponding PropertyFact`);
         }
     }
 

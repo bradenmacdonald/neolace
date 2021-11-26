@@ -5,7 +5,9 @@ import {
     VNID,
 } from "neolace/deps/vertex-framework.ts";
 import * as api from "neolace/deps/neolace-api.ts";
+import { Site } from "neolace/core/Site.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
+import { EntryType } from "neolace/core/schema/EntryType.ts";
 
 import type { LookupContext } from "./context.ts";
 import { LookupError, LookupEvaluationError } from "./errors.ts";
@@ -220,17 +222,15 @@ export class EntryValue extends ConcreteValue implements IHasLiteralExpression {
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `E[${this.id}]`;  // e.g. E[_6FisU5zxXggLcDz4Kb3Wmd]
+        return `[[/entry/${this.id}]]`;  // e.g. [[/entry/_6FisU5zxXggLcDz4Kb3Wmd]]
     }
 
     protected override doCastTo(newType: ClassOf<LookupValue>, context: LookupContext): LookupValue|undefined {
         if (newType === LazyEntrySetValue) {
             return new LazyEntrySetValue(context, C`
-                MATCH (entry:${Entry} {id: ${this.id}})
+                MATCH (entry:${Entry} {id: ${this.id}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
                 WITH entry, {} AS annotations
             `);
-        } else if (newType === AnnotatedEntryValue) {
-            return new AnnotatedEntryValue(this.id, {});
         }
         return undefined;
     }
@@ -254,16 +254,16 @@ export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpressi
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `ET[${this.id}]`;  // e.g. ET[_6FisU5zxXggLcDz4Kb3Wmd]
+        return `[[/etype/${this.id}]]`;  // e.g. [[/etype/_6FisU5zxXggLcDz4Kb3Wmd]]
     }
 
     protected serialize() { return {id: this.id}; }
 }
 
 /**
- * Represents a RelationshipType
+ * Represents a Property (like "Date of birth", NOT a property value like "1990-05-15")
  */
-export class RelationshipTypeValue extends ConcreteValue implements IHasLiteralExpression {
+export class PropertyValue extends ConcreteValue implements IHasLiteralExpression {
     readonly id: VNID;
 
     constructor(id: VNID) {
@@ -276,44 +276,37 @@ export class RelationshipTypeValue extends ConcreteValue implements IHasLiteralE
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `RT[${this.id}]`;  // e.g. RT[_6FisU5zxXggLcDz4Kb3Wmd]
+        return `[[/prop/${this.id}]]`;  // e.g. [[/prop/_6FisU5zxXggLcDz4Kb3Wmd]]
     }
 
     protected serialize() { return {id: this.id}; }
 }
 
 /**
- * Represents a RelationshipFact
+ * Represents a value that has been "annotated" with some extra information
+ * (like property values get annotated with "note" and "rank", or ancestor
+ * entries get annotated with "distance" from the current entry)
  */
-export class RelationshipFactValue extends ConcreteValue implements IHasLiteralExpression {
-    readonly id: VNID;
-
-    constructor(id: VNID) {
-        super();
-        this.id = id;
-    }
-
-    /**
-     * Return this value as a string, in Neolace Lookup Expression format.
-     * This string should parse to an expression that yields the same value.
-     */
-    public override asLiteral(): string {
-        return `RF[${this.id}]`;  // e.g. RF[_6FisU5zxXggLcDz4Kb3Wmd]
-    }
-
-    protected serialize() { return {id: this.id}; }
-}
-
-/**
- * Represents an Entry, annotated with some extra information (like "distance" from another entry)
- */
-export class AnnotatedEntryValue extends EntryValue {
+export class AnnotatedValue extends ConcreteValue {
+    readonly value: ConcreteValue;
     readonly annotations: Readonly<Record<string, ConcreteValue>>;
 
-    constructor(id: VNID, annotations: Record<string, ConcreteValue>) {
-        super(id);
-        this.annotations = annotations;
-        if (Object.keys(annotations).length === 0) {throw new Error(`Missing annotations`);}
+    constructor(value: ConcreteValue, annotations: Record<string, ConcreteValue>) {
+        super();
+        if (value instanceof AnnotatedValue) {
+            // Special case: we just add annotations to the existing wrapper, don't wrap the value twice.
+            this.value = value.value;
+            this.annotations = {...value.annotations, ...annotations};
+        } else {
+            this.value = value;
+            this.annotations = annotations;
+        }
+        if (Object.keys(annotations).length === 0) {
+            throw new Error(`Missing annotations`);
+        }
+        if (annotations.value !== undefined || annotations.id !== undefined) {
+            throw new Error("Invalid annotation key.");
+        }
     }
 
     protected serialize() {
@@ -321,7 +314,15 @@ export class AnnotatedEntryValue extends EntryValue {
         for (const key in this.annotations) {
             annotations[key] = this.annotations[key].toJSON();
         }
-        return {id: this.id, annotations}; 
+        return {value: this.value.toJSON(), annotations}; 
+    }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, context: LookupContext): LookupValue|undefined {
+        return this.value.castTo(newType, context);
+    }
+
+    public override asLiteral() {
+        return undefined;  // Annotated values do not have literal expressions.
     }
 }
 
@@ -482,7 +483,7 @@ export class LazyEntrySetValue extends LazyCypherQueryValue {
         this.annotations = options.annotations;
     }
 
-    public override async toDefaultConcreteValue(): Promise<PageValue<EntryValue>> {
+    public override async toDefaultConcreteValue(): Promise<PageValue<EntryValue|AnnotatedValue>> {
         const query = C`
             ${this.cypherQuery}
             RETURN entry.id, annotations
@@ -491,14 +492,14 @@ export class LazyEntrySetValue extends LazyCypherQueryValue {
         const result = await this.context.tx.query(query);
         const totalCount = this.skip === 0n && result.length < this.limit ? BigInt(result.length) : await this.getCount();
 
-        return new PageValue<EntryValue>(
+        return new PageValue<EntryValue|AnnotatedValue>(
             result.map(r => {
                 if (this.annotations) {
                     const annotatedValues: Record<string, ConcreteValue> = {};
                     for (const key in this.annotations) {
                         annotatedValues[key] = this.annotations[key](r.annotations[key]);
                     }
-                    return new AnnotatedEntryValue(r["entry.id"], annotatedValues);
+                    return new AnnotatedValue(new EntryValue(r["entry.id"]), annotatedValues);
                 } else {
                     return new EntryValue(r["entry.id"])
                 }
@@ -538,4 +539,9 @@ export class LazyEntrySetValue extends LazyCypherQueryValue {
         }
         return new ListValue(concreteValues);
     }
+}
+
+/** A helper function to create an annotated entry value */
+export function MakeAnnotatedEntryValue(entryId: VNID, annotations: Record<string, ConcreteValue>) {
+    return new AnnotatedValue(new EntryValue(entryId), annotations);
 }

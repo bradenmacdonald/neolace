@@ -6,7 +6,7 @@ import { shutdown } from "neolace/app/shutdown.ts";
 import { graph } from "neolace/core/graph.ts";
 import { CreateGroup, PermissionGrant } from "neolace/core/Group.ts";
 import { CreateBot, CreateUser } from "neolace/core/User.ts";
-import { testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
+import { fixRelationshipIdsAfterRestoringSnapshot, testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
 
 import {test as baseTest, group as baseGroup, afterAll, afterEach, beforeAll, beforeEach} from "neolace/deps/hooked.ts";
 
@@ -81,8 +81,7 @@ if (environment !== "test") {
 }
 
 afterAll(async () => {
-    // Leave the default data in the database in case developers want to make queries and play with it:
-    await graph.resetDBToSnapshot(defaultDataSnapshot);
+    // Leave the data in the database from whatever test ran last, which is helpful for debugging.
     await shutdown();
 })
 
@@ -116,6 +115,14 @@ export async function resetDBToBlankSnapshot() {
     await graph.resetDBToSnapshot(emptySnapshot);
 }
 
+export async function resetDBToPlantDBSnapshot() {
+    await graph.resetDBToSnapshot(defaultDataSnapshot);
+    // Unfortunately restoring the snapshot does not restore relationship IDs, which
+    // we rely on as the only way to uniquely identify relationships.
+    // Fix those now using this hack:
+    await fixRelationshipIdsAfterRestoringSnapshot();
+}
+
 export function setTestIsolation<Level extends TestIsolationLevels>(level: Level): ReturnedData<Level> {
     try {
         if (level === TestIsolationLevels.BLANK_NO_ISOLATION) {
@@ -123,11 +130,11 @@ export function setTestIsolation<Level extends TestIsolationLevels>(level: Level
         } else if (level === TestIsolationLevels.BLANK_ISOLATED) {
             beforeEach(async () => { await resetDBToBlankSnapshot(); });
         } else if (level === TestIsolationLevels.DEFAULT_NO_ISOLATION) {
-            beforeAll(async () => { await graph.resetDBToSnapshot(defaultDataSnapshot); });
+            beforeAll(async () => { await resetDBToPlantDBSnapshot(); });
             // deno-lint-ignore no-explicit-any
             return data as any;
         } else if (level === TestIsolationLevels.DEFAULT_ISOLATED) {
-            beforeEach(async () => { await graph.resetDBToSnapshot(defaultDataSnapshot); });
+            beforeEach(async () => { await resetDBToPlantDBSnapshot(); });
             // deno-lint-ignore no-explicit-any
             return data as any;
         }

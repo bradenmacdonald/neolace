@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { RelationshipCategory } from "neolace/deps/neolace-api.ts";
+import { PropertyType } from "neolace/deps/neolace-api.ts";
 
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -86,7 +86,7 @@ group(import.meta, () => {
             {code: "UpdateEntryTypeFeature", data: {entryTypeId: entryType, feature: {
                 featureType: "HeroImage",
                 enabled: true,
-                config: {lookupExpression: `this.related(via=RT[${hasFeatureImage}], direction="from")`},
+                config: {lookupExpression: `this.get(prop=[[/prop/${hasFeatureImage}]])`},
             }}},
             {code: "UpdateEntryTypeFeature", data: {entryTypeId: imageType, feature: {
                 featureType: "Image",
@@ -94,8 +94,7 @@ group(import.meta, () => {
                 config: {},
             }}},
             // Create a relationship that we'll use to speciify the hero image:
-            {code: "CreateRelationshipType", data: {id: hasFeatureImage, category: RelationshipCategory.HAS_A, nameForward: "has feature image", nameReverse: "feature image of"}},
-            {code: "UpdateRelationshipType", data: {id: hasFeatureImage, addFromTypes: [entryType], addToTypes: [imageType]}},
+            {code: "CreateProperty", data: {id: hasFeatureImage, type: PropertyType.RelOther, name: "has feature image", appliesTo: [{entryType}]}},
             // Create an entry:
             {code: "CreateEntry", data: {id: entryId, type: entryType, name: "Test WithImage", friendlyId: "test", description: "This is an entry"}},
             // Create an image:
@@ -113,8 +112,9 @@ group(import.meta, () => {
         // Now set the hero image:
         const caption = "This is the **caption**.";
         await graph.runAsSystem(ApplyEdits({siteId, edits: [
-            {code: "CreateRelationshipFact", data: {id: VNID(), type: hasFeatureImage, fromEntry: entryId, toEntry: imageId,
-                noteMD: caption,
+            {code: "AddPropertyValue", data: {entry: entryId, property: hasFeatureImage, propertyFactId: VNID(),
+                valueExpression: `[[/entry/${imageId}]]`,
+                note: caption,
             }},
         ]}));
 

@@ -6,9 +6,9 @@ import {
     DerivedProperty,
     defineAction,
     VNID,
-RawVNode,
-WrappedTransaction,
-ValidationError,
+    RawVNode,
+    WrappedTransaction,
+    ValidationError,
 } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
 import { FileMetadata, FileMetadataSchema } from "./detect-metadata.ts";

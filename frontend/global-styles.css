@@ -38,7 +38,7 @@
     .neo-typography h3 { @apply text-2xl; }
     .neo-typography h4 { @apply text-xl; }
     .neo-typography h5 { @apply text-lg; }
-    .neo-typography p { font-weight: 450; @apply my-1; }
+    .neo-typography p { font-weight: 400; @apply my-1; }
     .neo-typography a { @apply underline; }
 
 }

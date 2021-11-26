@@ -21,12 +21,12 @@ import { getCurrentSchema, diffSchema } from "neolace/core/schema/get-schema.ts"
         const result = await ApplyEdits.apply(tx, {siteId: data.siteId, edits: editSet.edits});
 
         const numEntryTypes = Object.keys(data.schema.entryTypes).length;
-        const numRelationshipTypes = Object.keys(data.schema.relationshipTypes).length;
+        const numProperties = Object.keys(data.schema.properties).length;
 
         return {
             resultData: {},
             modifiedNodes: result.modifiedNodes,
-            description: `Imported schema (${numEntryTypes} entry types, ${numRelationshipTypes} relationship types)`,
+            description: `Imported schema (${numEntryTypes} entry types, ${numProperties} properties)`,
         };
     },
 });
