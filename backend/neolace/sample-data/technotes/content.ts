@@ -26,6 +26,7 @@ export const ids = {
     imgLiIonBatteryJellyRoll: VNID("_52FWviI73eaW6sIO8sZx0F"),
     imgMiniCooperSe: VNID("_5hqETvE3WTHuYvhHbwWuD"),
     primaryCell: VNID("_7OCTF7b5Z4wM7KvEE16OtK"),
+    productPanasonicNCR18650B: VNID("_3KPUsKAzTQZ6ZJT05VvagC"),
     productTesla18650cell: VNID("_5QZEkrIjvgA7y3iP9qSEVi"),
     productTesla60BatteryModule: VNID("_1bquO1r9lmemPkQixL2eXT"),
     productTesla85Battery: VNID("_5Z7bPDS8qOWy1DUHwpehjS"),
@@ -33,7 +34,6 @@ export const ids = {
     secondaryCell: VNID("_4HwJfgRjCzfOI7z2XTzY0r"),
     standarizedBattery: VNID("_51YyfHlwYxW1X5QfjRBai6"),
     technotesTeam: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
-    //spare: VNID("_3KPUsKAzTQZ6ZJT05VvagC"),
     //spare: VNID("_1vRUxDKM7tGDscdt4oDyzo"),
     //spare: VNID("_5IgIEXFV54PUucrhcKN26E"),
     //spare: VNID("_1HKE5qN2QazUiSYdvuEfjz"),
@@ -218,7 +218,7 @@ export const edits: AnyContentEdit[] = [
         friendlyId: "tc-ec-cell-18650",
         type: schemaIds.techConcept,
         description: dedent`
-            An 18650 cell is a standard format [cylindrical lithium-ion cell](/entry/${ids.cylindricalLithiumIonCell}),
+            An 18650 cell is a standard format [cylindrical lithium-ion](/entry/${ids.cylindricalLithiumIonCell}) [cell](/entry/${ids.secondaryCell}),
             with a diameter of 18mm and a length of 65mm (slightly larger than a [AA battery](/entry/${ids.batteryAA})).
             The 18650 cell has been used since the late 1990s and has been popular for a wide range of applications that
             require a rechargeable battery - such as flashlights, laptops, power tools, and even electric vehicles. Due
@@ -288,7 +288,7 @@ export const edits: AnyContentEdit[] = [
         name: "2170 cell",
         friendlyId: "tc-ec-cell-2170",
         type: schemaIds.techConcept,
-        description: `The 2170 cell is a [cylindrical lithium-ion cell](/entry/${ids.cylindricalLithiumIonCell}) introduced in 2017 by Panasonic. With a diameter of 21mm and a length of 70mm, it is slightly larger than the standard [18650 cell](/entry/${ids.cell18650}). Due to its larger area and a smaller separation between the anode and cathode, the 2170 boasts a larger capacity than the [18650 cell](/entry/${ids.cell18650}). The 2170 cell is used in the Tesla Model 3 and Y vehicles, and the Tesla Powerwall 2 and Powerpack 2.`,
+        description: `The 2170 cell is a [cylindrical lithium-ion](/entry/${ids.cylindricalLithiumIonCell}) [cell](/entry/${ids.secondaryCell}) introduced in 2017 by Panasonic. With a diameter of 21mm and a length of 70mm, it is slightly larger than the standard [18650 cell](/entry/${ids.cell18650}). Due to its larger area and a smaller separation between the anode and cathode, the 2170 boasts a larger capacity than the [18650 cell](/entry/${ids.cell18650}). The 2170 cell is used in the Tesla Model 3 and Y vehicles, and the Tesla Powerwall 2 and Powerpack 2.`,
         props: {
             [schemaIds.propTypeOf]: { valueExpr: `[[/entry/${ids.cylindricalLithiumIonCell}]]` },
             [schemaIds.propDiameter]: { valueExpr: `"21 mm"` },
@@ -365,6 +365,22 @@ export const edits: AnyContentEdit[] = [
     }),
 
 
+    // Panasonic cell
+    ...createEntry({
+        id: ids.productPanasonicNCR18650B,
+        name: "Panasonic NCR18650B",
+        friendlyId: "p-pnsnc-ncr18650b",
+        type: schemaIds.product,
+        description: `The **Panasonic NCR18650B** is a [18650 cylindrical lithium-ion](/entry/${ids.cell18650}) [cell](/entry/${ids.secondaryCell}) sold by Panasonic.`,
+        props: {
+            [schemaIds.propProductTypeOf]: {valueExpr: `[[/entry/${ids.cell18650}]]`},
+            [schemaIds.propVoltageNominal]: {valueExpr: `"3.6 V"`},
+            [schemaIds.propVoltageRange]: { valueExpr: `"2.5 - 4.2 V"` },
+            [schemaIds.propBatteryCapacity]: {valueExpr: `"3350 mAh"`, note: "at 25°C"},
+            [schemaIds.propDiameter]: {valueExpr: `"18.63 mm"`},
+            [schemaIds.propLength]: {valueExpr: `"65.08 mm"`},
+        },
+    }),
 
 
     // Tesla products
@@ -373,7 +389,7 @@ export const edits: AnyContentEdit[] = [
         name: "Tesla 18650 cell",
         friendlyId: "p-tesla-18650",
         type: schemaIds.product,
-        description: `The **Tesla 18650 cell** is a proprietary [18650 cylindrical lithium-ion](/entry/${ids.cell18650}) [cell](/entry/${ids.secondaryCell}) developed by Tesla and Panasonic. It is thought to be similar to the Panasonic NCR18650B cell (but testing [has shown it differs](https://teslamotorsclub.com/tmc/threads/teslas-85-kwh-rating-needs-an-asterisk-up-to-81-kwh-with-up-to-77-kwh-usable.61896/) from that cell).`,
+        description: `The **Tesla 18650 cell** is a proprietary [18650 cylindrical lithium-ion](/entry/${ids.cell18650}) [cell](/entry/${ids.secondaryCell}) developed by Tesla and Panasonic. It is thought to be similar to the [Panasonic NCR18650B cell](/entry/${ids.productPanasonicNCR18650B}) (but testing [has shown it differs](https://teslamotorsclub.com/tmc/threads/teslas-85-kwh-rating-needs-an-asterisk-up-to-81-kwh-with-up-to-77-kwh-usable.61896/) from that cell).`,
         props: {
             [schemaIds.propProductTypeOf]: {valueExpr: `[[/entry/${ids.cell18650}]]`},
             // Per https://teslamotorsclub.com/tmc/threads/teslas-85-kwh-rating-needs-an-asterisk-up-to-81-kwh-with-up-to-77-kwh-usable.61896/ :
