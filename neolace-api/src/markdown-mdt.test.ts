@@ -36,6 +36,10 @@ function text(content: string): AnyInlineNode {
 function inlineText(content: string): InlineNode {
     return inline(text(content));
 }
+/** Helper method to generate a lookup node, in the parsed Markdown tree */
+function lookup(content: string): AnyInlineNode {
+    return {type: "lookup_inline", content};
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// Tests
@@ -98,4 +102,49 @@ Deno.test("Subscript/superscript", () => {
         ),
     );
 
+    // Mismatched tags don't get parsed
+    assertEquals(
+        tokenizeInlineMDT(`These are <sub>mismatched</sup>`),
+        inline(
+            text("These are <sub>mismatched</sup>"),
+        ),
+    );
+
+});
+
+Deno.test("MDT - parsing inline lookup expressions", () => {
+
+    assertEquals(
+        tokenizeInlineMDT(`This is {an inline lookup}.`),
+        inline(
+            text("This is "),
+            lookup("an inline lookup"),
+            text("."),
+        ),
+    );
+
+    assertEquals(
+        tokenizeInlineMDT(`This is { an inline lookup with "some quoted {braces} that are ignored" }.`),
+        inline(
+            text("This is "),
+            lookup(`an inline lookup with "some quoted {braces} that are ignored"`),
+            text("."),
+        ),
+    );
+
+    assertEquals(
+        tokenizeInlineMDT(`This is { an inline lookup with "some \\"escaped braces { \\" and quotes that are ignored." }.`),
+        inline(
+            text("This is "),
+            lookup(`an inline lookup with "some \\"escaped braces { \\" and quotes that are ignored."`),
+            text("."),
+        ),
+    );
+
+    assertEquals(
+        tokenizeInlineMDT(`This is { an unclosed lookup`),
+        inline(
+            text("This is { an unclosed lookup"),
+        ),
+    );
 });

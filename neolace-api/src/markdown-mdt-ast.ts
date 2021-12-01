@@ -20,6 +20,11 @@ interface InlineCodeNode {
     /** UNESCAPED text content - may contain HTML. You must escape this before rendering. */
     content: string;
 }
+interface InlineLookupNode {
+    type: "lookup_inline";
+    /** The lookup expression. If rendering "raw" to HTML, you must escape this first. */
+    content: string;
+}
 interface LinkNode {
     type: "link";
     href: string;
@@ -63,6 +68,7 @@ interface HardBreakNode {
 export type AnyInlineNode = (
     | TextNode
     | InlineCodeNode
+    | InlineLookupNode
     | StrongNode
     | EmphasisNode
     | LinkNode
