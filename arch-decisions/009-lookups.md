@@ -7,7 +7,7 @@ some property values.
 
 Lookups are created by writing a **lookup expression**, such as
 
-    this.property(BIRTH_DATE)
+    this.get(prop=BIRTH_DATE)
 
 which when evaluated results in a value (in this example, the birth date of the
 current Person entry.)
@@ -24,7 +24,7 @@ could be edited in the UI as
 
 and defined as a property value attached to the "electric car" entry, with this lookup expression:
 
-    this.andAncestors().related(via=HAS_PARTS, direction="from")
+    this.andAncestors().get(prop=HAS_PARTS)
 
 **Example 2**:
 
