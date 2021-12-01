@@ -26,8 +26,9 @@ export function HeadingIdPlugin(md: MarkdownIt): void {
                 idCache.add(id);
                 return id;
             }
-            let i = 1;
+            let i = 2;
             while (idCache.has(`${id}-${i}`)) { i++; }
+            idCache.add(`${id}-${i}`);
             return `${id}-${i}`;
         }
     }
