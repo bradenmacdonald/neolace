@@ -7,26 +7,49 @@ const ids = {
     image: VNID("_TNIMAGE"),
     technotesMetaPage: VNID("_TNMETA"),
     techConcept: VNID("_TECHCONCEPT"),
+    product: VNID("_TNPRODUCT"),
     // Relationship Properties:
     propTypeOf: VNID("_TNTYPEOF"),  // An entry is a sub-type of another entry
+    propProductTypeOf: VNID("_TNPRODTYPEOF"),  // A product is an instance of a tech concept
     propHasTypes: VNID("_TNHASTYPES"),  // Inverse of "is a"
     propHasPart: VNID("_TNHASPART"),  // A TechConcept has a specific part
     propUsedIn: VNID("_TNUSEDIN"),  // A TechConcept is used in (as a part of) another TechConcept
+    propProducts: VNID("_TNTCPRODS"),  // A TechConcept is sold as these products
     propHasHeroImage: VNID("_TNHEROIMG"),  // An entry has a hero image
     propImgRelatesTo: VNID("_TNIMGRELTO"),  // An image relates to another entry
     propRelatedImages: VNID("_TNRELIMG"),  // Images that relate to this entry
     // Value properties:
     propAlsoKnownAs: VNID("_3wFkZlVNILDjexTL2AiZSB"),
+    propBatteryCapacity: VNID("_3YBzKxiYFNL4fKmPmwkR02"),
     propContentSource: VNID("_2QK8KQVZfHogH5ofrksCba"),
     propCreator: VNID("_3zmtupLIgSw4GUtFFah5nb"),
     propDiameter: VNID("_3JjzqBJ9YLtRGuesdK0lWb"),
+    propEnergyCapacity: VNID("_2rjuZG10x7wkyK9qTmyLpb"),
     propExternalId: VNID("_6O1e4ErQw84vaTOb335V3y"),
     propLength: VNID("_1PPhmzTVqhSwjbyZtAsIBm"),
     propLicense: VNID("_1f65YAjUSb4RLKbJ0MqEd8"),
+    propPartDesc: VNID("_5mRCXHh5B0ind07yacFjrG"),
+    propPartName: VNID("_11maZ7ydq2yYrVZP0mWjiM"),
+    propPartNumber: VNID("_4bvR1zLMZiaRJSEHafjjY2"),
     propPhysicalDimension: VNID("_1shoq3dCEZa9oZVbusxdLq"),
+    propProductId: VNID("_24ENtvOAo3S3qJLng6zK9W"),
+    propVoltage: VNID("_3wbyWEuX0jvbLp50LfkWqq"),
+    propVoltageNominal: VNID("_5Ig4uud6awMR9r6fv2D6ct"),
+    propVoltageRange: VNID("_6p5hONbWITtDUuRgBoP8w7"),
     propWikidataId: VNID("_FVzZG1cmLEcVJlN0py9Oa"),
     // propWikidataPropertyId: VNID("_22jn4GZRCtjNIJQC0eDQDM"),
     propWordNetILI: VNID("_aC2AVdeAK0iQyjbIbXp0r"),
+    // spare: VNID("_5NDv1p9XePVw78O1J4O6CU"),
+    // spare: VNID("_1gmfN52WbkhND3ddafEzTN"),
+    // spare: VNID("_2wxta2uUjoKShB6lCLY8c5"),
+    // spare: VNID("_35JmgPECXhyWiKNHrQas3M"),
+    // spare: VNID("_7jO8Fx7LRlDUKaEXBSCYjI"),
+    // spare: VNID("_1W0cnhDMIMvI3P8qEAf4Qo"),
+    // spare: VNID("_6RgOBzvD18iZXyDJnaU853"),
+    // spare: VNID("_6cn1VYJA81y06Hy9LbU3aU"),
+    // spare: VNID("_7TYgaEdsNoK3ORMPO6Wjjy"),
+    // spare: VNID("_10SZOU3H8C2mkfz3L6xpo5"),
+    // spare: VNID("_6P11n0Z19GzwRlBFu5IvqP"),
 };
 export const schemaIds = ids;
  
@@ -65,6 +88,17 @@ export const schema: SiteSchemaData = {
                 HeroImage: {lookupExpression: `this.get(prop=[[/prop/${ids.propHasHeroImage}]])`},
             },
         },
+        // Product:
+        [ids.product]: {
+            id: ids.product,
+            name: "Product",
+            description: "A product is a device or system developed to be manufactured and sold/used.",
+            friendlyIdPrefix: "p-",
+            enabledFeatures: {
+                Article: {},
+                HeroImage: {lookupExpression: `this.get(prop=[[/prop/${ids.propHasHeroImage}]])`},
+            },
+        },
     },
     properties: {
         // A TechConcept IS A [other Tech Concept]
@@ -91,36 +125,60 @@ export const schema: SiteSchemaData = {
             // standardURL: "?",
             // wikidataPID: "?",
         },
-        // A TechConcept HAS PART [other Tech Concept]
+        // A product IS A Tech Concept
+        [ids.propProductTypeOf]: {
+            id: ids.propProductTypeOf,
+            name: "Is a",
+            type: PropertyType.RelIsA,
+            appliesTo: [{entryType: ids.product}],
+            valueConstraint: `x.type() = entryType("${ids.techConcept}")`,
+            mode: PropertyMode.Recommended,
+            descriptionMD: `This product is an instance of this more general tech concept.`,
+            importance: 0,
+            standardURL: "",
+        },
+        [ids.propProducts]: {
+            id: ids.propProducts,
+            name: "Products",
+            type: PropertyType.RelOther,
+            appliesTo: [{entryType: ids.techConcept}],
+            mode: PropertyMode.Auto,
+            default: `this.reverse(prop=[[/prop/${ids.propProductTypeOf}]])`,
+            descriptionMD: `Products that are instances of this tech concept.`,
+            importance: 8,
+            // standardURL: "?",
+            // wikidataPID: "?",
+        },
+        // A TechConcept/product HAS PART [other Tech Concept]
         [ids.propHasPart]: {
             id: ids.propHasPart,
             name: "Has part",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: ids.techConcept}],
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
             valueConstraint: `x.type() = entryType("${ids.techConcept}")`,
             mode: PropertyMode.Recommended,
-            descriptionMD: `Lists known parts of this tech concept.`,
+            descriptionMD: `Lists known parts of this tech concept or product.`,
             importance: 4,
             // The HAS PART relationship uses the "slots" feature
             enableSlots: true,
         },
-        // A TechConcept IS USED IN [other Tech Concept]
+        // A TechConcept/product IS USED IN [other Tech Concept]
         [ids.propUsedIn]: {
             id: ids.propUsedIn,
             name: "Used in",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: ids.techConcept}],
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/${ids.propHasPart}]])`,
-            descriptionMD: `Lists TechConcepts that use this one as a part.`,
-            importance: 10,
+            descriptionMD: `Lists TechConcepts and products that use this as a part.`,
+            importance: 8,
         },
         // An entry HAS HERO IMAGE [image]
         [ids.propHasHeroImage]: {
             id: ids.propHasHeroImage,
             name: "Hero Image",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.technotesMetaPage}],
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.technotesMetaPage}, {entryType: ids.product}],
             valueConstraint: `x.type() = entryType("${ids.techConcept}")`,
             mode: PropertyMode.Recommended,
             descriptionMD: `Main image displayed on this entry`,
@@ -131,7 +189,7 @@ export const schema: SiteSchemaData = {
             id: ids.propImgRelatesTo,
             name: "Relates to",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: ids.image}],
+            appliesTo: [{entryType: ids.image}, {entryType: ids.product}],
             valueConstraint: `x.type() = entryType("${ids.techConcept}")`,
             mode: PropertyMode.Recommended,
             descriptionMD: `Lists TechNotes entries that this images relates to.`,
@@ -142,11 +200,11 @@ export const schema: SiteSchemaData = {
             id: ids.propRelatedImages,
             name: "Related images",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: ids.techConcept}],
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
             mode: PropertyMode.Auto,
-            default: `this.andDescendants().reverse(prop=[[/prop/${ids.propHasPart}]])`,
-            descriptionMD: `Images related to this tech concept.`,
-            importance: 10,
+            default: `this.andDescendants().reverse(prop=[[/prop/${ids.propImgRelatesTo}]])`,
+            descriptionMD: `Images related to this entry.`,
+            importance: 15,
         },
 
         // Property: Also known as
@@ -154,7 +212,7 @@ export const schema: SiteSchemaData = {
             id: ids.propAlsoKnownAs,
             name: "Also known as",
             type: PropertyType.Value,
-            appliesTo: [{entryType: ids.techConcept}],
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
             descriptionMD: `Other names for this entry`,
             importance: 1,
         },
@@ -228,7 +286,7 @@ export const schema: SiteSchemaData = {
             id: ids.propPhysicalDimension,
             name: "Physical dimension",
             type: PropertyType.Value,
-            appliesTo: [{entryType: ids.techConcept}],
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
             descriptionMD: `A physical dimension is a measurement or specification of some length or size, such as the width, height, length, diameter, or radius of an object.`,
             importance: 30,
             // propWordNetILI "i63761"
@@ -238,7 +296,7 @@ export const schema: SiteSchemaData = {
             id: ids.propLength,
             name: "Length",
             type: PropertyType.Value,
-            appliesTo: [{entryType: ids.techConcept}],
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
             descriptionMD: `The length is a measurement or specification of the size of an object, usually as measured along its longest major axis.`,
             importance: 15,
             isA: [ids.propPhysicalDimension],
@@ -250,11 +308,96 @@ export const schema: SiteSchemaData = {
             id: ids.propDiameter,
             name: "Diameter",
             type: PropertyType.Value,
-            appliesTo: [{entryType: ids.techConcept}],
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
             descriptionMD: `The diameter is a measurement or specification of the distance across a circular or spherical shape (specifically, the length of a straight line passing through the center and connecting two points on the circumference).`,
             importance: 15,
             // [ids.propWikidataPropertyId]: {valueExpr: `"P2386"`},
             // [ids.propWordNetILI]: { valueExpr: `"i63810"` },
+        },
+        // Property: Voltage
+        [ids.propVoltage]: {
+            id: ids.propVoltage,
+            name: "Voltage",
+            type: PropertyType.Value,
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
+            descriptionMD: `Voltage is the difference in [electric potential](https://en.wikipedia.org/wiki/Electric_potential) between two points, such as the two terminals of a battery or two points in an electric circuit.`,
+            importance: 10,
+        },
+        // Property: Nominal Voltage
+        [ids.propVoltageNominal]: {
+            id: ids.propVoltageNominal,
+            name: "Nominal Voltage",
+            type: PropertyType.Value,
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
+            descriptionMD: `Nominal voltage is the value assigned to an electrical component or system to indicate its typical voltage. The actual voltage that the component or system operates at may vary significantly from the nominal voltage.`,
+            importance: 10,
+            isA: [ids.propVoltage],
+        },
+        // Property: Voltage Range
+        [ids.propVoltageRange]: {
+            id: ids.propVoltageRange,
+            name: "Voltage Range",
+            type: PropertyType.Value,
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
+            descriptionMD: `The minimum and maximum voltage.`,
+            importance: 10,
+            isA: [ids.propVoltage],
+        },
+        // Property: Battery Capacity
+        [ids.propBatteryCapacity]: {
+            id: ids.propBatteryCapacity,
+            name: "Battery Capacity",
+            type: PropertyType.Value,
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
+            descriptionMD: `A battery's capacity is the amount of electric charge it can deliver at the rated voltage.`,
+            importance: 10,
+        },
+        // Property: Energy Capacity
+        [ids.propEnergyCapacity]: {
+            id: ids.propEnergyCapacity,
+            name: "Energy Capacity",
+            type: PropertyType.Value,
+            appliesTo: [{entryType: ids.techConcept}, {entryType: ids.product}],
+            descriptionMD: `The amount of energy that this device can store.`,
+            importance: 10,
+        },
+        // Property: Product identifier
+        [ids.propProductId]: {
+            id: ids.propProductId,
+            name: "Product Identifier",
+            type: PropertyType.Value,
+            appliesTo: [{entryType: ids.product}],
+            descriptionMD: `An identifier that uniquely identifies a product.`,
+            importance: 5,
+        },
+        // Manufacturer's part number
+        [ids.propPartNumber]: {
+            id: ids.propPartNumber,
+            name: "Part Number",
+            type: PropertyType.Value,
+            appliesTo: [{entryType: ids.product}],
+            descriptionMD: `The part number of this product/part, according to the manufacturer.`,
+            importance: 5,
+            isA: [ids.propProductId],
+            displayAs: `\`{value}\``,  // Display in monospace font.
+        },
+        // Manufacturer's part name
+        [ids.propPartName]: {
+            id: ids.propPartName,
+            name: "Mfg. Part Name",
+            type: PropertyType.Value,
+            appliesTo: [{entryType: ids.product}],
+            descriptionMD: `The name of this product/part according to the manufacturer.`,
+            importance: 15,
+        },
+        // Manufacturer's part description
+        [ids.propPartDesc]: {
+            id: ids.propPartDesc,
+            name: "Mfg. Part Description",
+            type: PropertyType.Value,
+            appliesTo: [{entryType: ids.product}],
+            descriptionMD: `The description of this product/part provided by the manufacturer.`,
+            importance: 16,
         },
     },
 };

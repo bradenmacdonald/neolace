@@ -90,6 +90,16 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 />
             </span>
         case "Annotated":
+            if (value.annotations.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
+                return <>
+                    <LookupValue value={value.value} refCache={props.refCache} mdtContext={props.mdtContext} />
+                    <Tooltip tooltipContent={<>
+                        <p className="text-sm"><InlineMDT mdt={value.annotations.note.value} context={props.mdtContext} /></p>
+                    </>}>
+                        {attribs => <>{' '}<span {...attribs}>(*)</span></>}
+                    </Tooltip>
+                </>;
+            }
             return <LookupValue value={value.value} refCache={props.refCache} mdtContext={props.mdtContext} />
         default: {
             return <code>{JSON.stringify(value)}</code>;

@@ -56,7 +56,7 @@
             "label": "Update TechNotes sample content",
             "type": "shell",
             "command": "deno",
-            "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-read", "--allow-env", "--unstable", "neolace/scripts/update-technotes-sample.ts"],
+            "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-read", "--allow-env", "--unstable", "--no-check", "neolace/scripts/update-technotes-sample.ts"],
             "problemMatcher": [],
         },
         {

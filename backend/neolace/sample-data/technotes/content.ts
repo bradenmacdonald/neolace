@@ -26,14 +26,14 @@ export const ids = {
     imgLiIonBatteryJellyRoll: VNID("_52FWviI73eaW6sIO8sZx0F"),
     imgMiniCooperSe: VNID("_5hqETvE3WTHuYvhHbwWuD"),
     primaryCell: VNID("_7OCTF7b5Z4wM7KvEE16OtK"),
+    productPanasonicNCR18650B: VNID("_3KPUsKAzTQZ6ZJT05VvagC"),
+    productTesla18650cell: VNID("_5QZEkrIjvgA7y3iP9qSEVi"),
+    productTesla60BatteryModule: VNID("_1bquO1r9lmemPkQixL2eXT"),
+    productTesla85Battery: VNID("_5Z7bPDS8qOWy1DUHwpehjS"),
+    productTesla85BatteryModule: VNID("_6dF6GUIrPx8ToREmsFAZ5R"),
     secondaryCell: VNID("_4HwJfgRjCzfOI7z2XTzY0r"),
     standarizedBattery: VNID("_51YyfHlwYxW1X5QfjRBai6"),
     technotesTeam: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
-    //spare: VNID("_6dF6GUIrPx8ToREmsFAZ5R"),
-    //spare: VNID("_5Z7bPDS8qOWy1DUHwpehjS"),
-    //spare: VNID("_5QZEkrIjvgA7y3iP9qSEVi"),
-    //spare: VNID("_1bquO1r9lmemPkQixL2eXT"),
-    //spare: VNID("_3KPUsKAzTQZ6ZJT05VvagC"),
     //spare: VNID("_1vRUxDKM7tGDscdt4oDyzo"),
     //spare: VNID("_5IgIEXFV54PUucrhcKN26E"),
     //spare: VNID("_1HKE5qN2QazUiSYdvuEfjz"),
@@ -217,14 +217,70 @@ export const edits: AnyContentEdit[] = [
         name: "18650 cell",
         friendlyId: "tc-ec-cell-18650",
         type: schemaIds.techConcept,
-        description: `An 18650 cell is a standard format [cylindrical lithium-ion cell](/entry/${ids.cylindricalLithiumIonCell}), with a diameter of 18mm and a length of 65mm (slightly larger than a AA battery). The 18650 cell features a high storage capacity and can be scaled to form batteries for devices with high power requirements, including Tesla Model X and S vehicles.`,
+        description: dedent`
+            An 18650 cell is a standard format [cylindrical lithium-ion](/entry/${ids.cylindricalLithiumIonCell}) [cell](/entry/${ids.secondaryCell}),
+            with a diameter of 18mm and a length of 65mm (slightly larger than a [AA battery](/entry/${ids.batteryAA})).
+            The 18650 cell has been used since the late 1990s and has been popular for a wide range of applications that
+            require a rechargeable battery - such as flashlights, laptops, power tools, and even electric vehicles. Due
+            to the popularity of the 18650 cell, they are usually an easily available, well-understood, and affordable
+            option.
+        `,
         props: {
             [schemaIds.propTypeOf]: { valueExpr: `[[/entry/${ids.cylindricalLithiumIonCell}]]` },
             [schemaIds.propDiameter]: { valueExpr: `"18 mm"` },
-            [schemaIds.propLength]: { valueExpr: `"65 mm"` },
+            [schemaIds.propLength]: { valueExpr: `"65 mm"`, note: "Though cells with built-in protection circuit may be longer." },
             [schemaIds.propAlsoKnownAs]: { valueExpr: JSON.stringify(["18650 battery"]) },
             [schemaIds.propWikidataId]: { valueExpr: `"Q62024169"` },
+            [schemaIds.propVoltageNominal]: { valueExpr: `"3.7 V"` },
+            [schemaIds.propVoltageRange]: { valueExpr: `"2.5 - 4.2 V"` },
         },
+        features: [
+            {featureType: "Article", articleMD: dedent`
+                # Applications
+
+                A single 18650 cell is often used as the rechargeable battery for flashlights and e-cigarettes.
+
+                When combined together to create a multi-cell [battery](/entry/${ids.battery}), 18650 cells are used for:
+                * power tools
+                * e-bikes
+                * electric vehicles
+                * notebook computers (though today many notebooks use lithium polymer cells instead, which allow for a
+                  thinner form factor)
+
+
+                # In depth
+
+                ## Protection circuits
+
+                18650 cells are available as either "unprotected" or "protected" cells. The protected cells have a
+                built-in circuit within the cell package that protects against potentially dangerous situations like
+                over charges, over discharges, and short circuits - any of which can potentially lead the cell to
+                burst, overheat, or catch fire.
+
+                # Known issues
+
+                ## Length variations
+
+                Although the 18650 cell is a standard size (the dimensions in millimeters are in the name itself), cells
+                with integrated [protection circuits](#h-protection-circuits) are often longer than the standard 65mm.
+                Such protected cells usually fit in holders that use spring-loaded or flexible metal contacts, but other
+                holder designs or battery pack formats may not fit them if they are designed for the standard 65mm
+                length.
+
+                ${/*# Manufacturing
+
+                Lorem ipsum...
+
+                # Lifecycle
+
+                Lorem ipsum...
+
+                # Impact
+
+                Lorem ipsum...*/""}
+
+            `},
+        ],
     }),
     // 2170 cell
     ...createEntry({
@@ -232,7 +288,7 @@ export const edits: AnyContentEdit[] = [
         name: "2170 cell",
         friendlyId: "tc-ec-cell-2170",
         type: schemaIds.techConcept,
-        description: `The 2170 cell is a [cylindrical lithium-ion cell](/entry/${ids.cylindricalLithiumIonCell}) introduced in 2017 by Panasonic. With a diameter of 21mm and a length of 70mm, it is slightly larger than the standard [18650 cell](/entry/${ids.cell18650}). Due to its larger area and a smaller separation between the anode and cathode, the 2170 boasts a larger capacity than the [18650 cell](/entry/${ids.cell18650}). The 2170 cell is used in the Tesla Model 3 and Y vehicles, and the Tesla Powerwall 2 and Powerpack 2.`,
+        description: `The 2170 cell is a [cylindrical lithium-ion](/entry/${ids.cylindricalLithiumIonCell}) [cell](/entry/${ids.secondaryCell}) introduced in 2017 by Panasonic. With a diameter of 21mm and a length of 70mm, it is slightly larger than the standard [18650 cell](/entry/${ids.cell18650}). Due to its larger area and a smaller separation between the anode and cathode, the 2170 boasts a larger capacity than the [18650 cell](/entry/${ids.cell18650}). The 2170 cell is used in the Tesla Model 3 and Y vehicles, and the Tesla Powerwall 2 and Powerpack 2.`,
         props: {
             [schemaIds.propTypeOf]: { valueExpr: `[[/entry/${ids.cylindricalLithiumIonCell}]]` },
             [schemaIds.propDiameter]: { valueExpr: `"21 mm"` },
@@ -307,6 +363,114 @@ export const edits: AnyContentEdit[] = [
             [schemaIds.propLength]: { valueExpr: `"50.5 mm"` },
         },
     }),
+
+
+    // Panasonic cell
+    ...createEntry({
+        id: ids.productPanasonicNCR18650B,
+        name: "Panasonic NCR18650B",
+        friendlyId: "p-pnsnc-ncr18650b",
+        type: schemaIds.product,
+        description: `The **Panasonic NCR18650B** is a [18650 cylindrical lithium-ion](/entry/${ids.cell18650}) [cell](/entry/${ids.secondaryCell}) sold by Panasonic.`,
+        props: {
+            [schemaIds.propProductTypeOf]: {valueExpr: `[[/entry/${ids.cell18650}]]`},
+            [schemaIds.propVoltageNominal]: {valueExpr: `"3.6 V"`},
+            [schemaIds.propVoltageRange]: { valueExpr: `"2.5 - 4.2 V"` },
+            [schemaIds.propBatteryCapacity]: {valueExpr: `"3350 mAh"`, note: "at 25°C"},
+            [schemaIds.propDiameter]: {valueExpr: `"18.63 mm"`},
+            [schemaIds.propLength]: {valueExpr: `"65.08 mm"`},
+        },
+    }),
+
+
+    // Tesla products
+    ...createEntry({
+        id: ids.productTesla18650cell,
+        name: "Tesla 18650 cell",
+        friendlyId: "p-tesla-18650",
+        type: schemaIds.product,
+        description: `The **Tesla 18650 cell** is a proprietary [18650 cylindrical lithium-ion](/entry/${ids.cell18650}) [cell](/entry/${ids.secondaryCell}) developed by Tesla and Panasonic. It is thought to be similar to the [Panasonic NCR18650B cell](/entry/${ids.productPanasonicNCR18650B}) (but testing [has shown it differs](https://teslamotorsclub.com/tmc/threads/teslas-85-kwh-rating-needs-an-asterisk-up-to-81-kwh-with-up-to-77-kwh-usable.61896/) from that cell).`,
+        props: {
+            [schemaIds.propProductTypeOf]: {valueExpr: `[[/entry/${ids.cell18650}]]`},
+            // Per https://teslamotorsclub.com/tmc/threads/teslas-85-kwh-rating-needs-an-asterisk-up-to-81-kwh-with-up-to-77-kwh-usable.61896/ :
+            [schemaIds.propEnergyCapacity]: {valueExpr: `"11.36 Wh"`},
+            [schemaIds.propVoltageNominal]: {valueExpr: `"3.6 V"`, note: "Assumed"},
+            [schemaIds.propBatteryCapacity]: {valueExpr: `"3155 mAh"`, note: "Calculated based on measured energy capacity and assumed voltage."},
+        },
+    }),
+    ...createEntry({
+        id: ids.productTesla85BatteryModule,
+        name: "Tesla 18650 battery module (5kWh)",
+        friendlyId: "p-tesla-b85-mod",
+        type: schemaIds.product,
+        description: `This battery module contains 444 [18650 cells](/entry/${ids.cell18650}) arranged in a 74p6s configuration (74 cells in parallel, 6 cells in series).`,
+        props: {
+            [schemaIds.propHasPart]: {valueExpr: `[[/entry/${ids.productTesla18650cell}]]`},
+            // Information from http://evbimmer325i.blogspot.com/2016/12/tesla-battery-modules-overview.html
+            // Seems more accurate than other info at http://media3.ev-tv.me/TeslaModuleController.pdf
+            [schemaIds.propVoltageNominal]: {valueExpr: `"21.6V"`},
+            [schemaIds.propPartNumber]: [{valueExpr: `"1009312-00-E"`}],
+            [schemaIds.propBatteryCapacity]: {valueExpr: `"233 Ah"`, note: "Exact capacity is unknown as it is not published by the manufacturer, but it should be 74x the capacity of the cells used (e.g. 3155 mAh)."},
+            [schemaIds.propEnergyCapacity]: {valueExpr: `"5.0 kWh"`},
+            // Apparently 1009312-00-E is associated with 1014114-00-D
+            // Note: 1009312-20-A and 1009312-20-B are associated with a 60kWh battery pack module, not this one.
+        },
+    }),
+    ...createEntry({
+        id: ids.productTesla60BatteryModule,
+        name: "Tesla 18650 battery module (4kWh)",
+        friendlyId: "p-tesla-b60-mod",
+        type: schemaIds.product,
+        description: `This battery module contains 384 [18650 cells](/entry/${ids.cell18650}) arranged in a 64p6s configuration (64 cells in parallel, 6 cells in series).`,
+        props: {
+            [schemaIds.propHasPart]: {valueExpr: `[[/entry/${ids.productTesla18650cell}]]`},
+            [schemaIds.propVoltageNominal]: {valueExpr: `"21.6V"`},
+            [schemaIds.propVoltageRange]: { valueExpr: `"18 - 25.2 V"`},
+            [schemaIds.propPartNumber]: [{valueExpr: `"1009312-20-A"`}, {valueExpr: `"1009312-20-B"`}],
+            [schemaIds.propBatteryCapacity]: {valueExpr: `"202 Ah"`, note: "Exact capacity is unknown as it is not published by the manufacturer, but it should be 64x the capacity of the cells used (e.g. 3155 mAh)."},
+            [schemaIds.propEnergyCapacity]: {valueExpr: `"4.36 kWh"`},
+        },
+    }),
+    ...createEntry({
+        id: ids.productTesla85Battery,
+        name: "Tesla 85kWh Battery (v1, Model S, RWD)",
+        friendlyId: "p-tesla-batt-85-1",
+        type: schemaIds.product,
+        description: `The Tesla 85kWh High Voltage Battery Assembly is an 85kWh battery used in Tesla Model S vehicles from 2012 until about 2015.`,
+        props: {
+            [schemaIds.propHasPart]: {valueExpr: `[[/entry/${ids.productTesla85BatteryModule}]]`, note: `Each battery assembly contains 16 of these modules.`},
+            [schemaIds.propPartNumber]: [
+                // P/N 1014114 is described as "ASY,HV BATTERY,S3,MDLS" and is a new 85 kWh pack
+                {valueExpr: `"1014114-00-A"`, note: "Limited to 90 kW Supercharging"},
+                {valueExpr: `"1014114-00-B"`, note: "Supports 120 kW Supercharging"},
+                //{valueExpr: `"1014114-00-D"`}, - unclear if this is v1 or v1.5
+                //{valueExpr: `"1014114-00-E"`}, - unclear if this is v1 or v1.5
+                {valueExpr: `"1014114-00-F"`, note: "Supports 120 kW Supercharging"},
+                // Remanufactured 1038596 versions:
+                {valueExpr: `"1038596-##-A"`, note: "Remanufactured, limited to 90 kW Supercharging. The style code (##) varies and is used to indicate the battery capacity at the time of remanufacturing."},
+                {valueExpr: `"1038596-##-B"`, note: "Remanufactured, supports 120 kW Supercharging. The style code (##) varies and is used to indicate the battery capacity at the time of remanufacturing."},
+                {valueExpr: `"1038596-##-D"`, note: "Remanufactured, supports 120 kW Supercharging. The style code (##) varies and is used to indicate the battery capacity at the time of remanufacturing."},
+                {valueExpr: `"1038596-##-E"`, note: "Remanufactured, supports 120 kW Supercharging. The style code (##) varies and is used to indicate the battery capacity at the time of remanufacturing."},
+                // Remanufactured 1025273 versions:
+                {valueExpr: `"1025273-##-A"`, note: "Remanufactured, limited to 90 kW Supercharging. The style code (##) varies and is used to indicate the battery capacity at the time of remanufacturing."},
+                // {valueExpr: `"1025273-##-B"`, note: "Remanufactured"},
+                // {valueExpr: `"1025273-##-D"`, note: "Remanufactured"},
+                // {valueExpr: `"1025273-##-E"`, note: "Remanufactured"},
+            ],
+            [schemaIds.propVoltageNominal]: {valueExpr: `"400V"`},
+            [schemaIds.propPartName]: {valueExpr: `"ASY,HV BATTERY,S3,MDLS"`},
+            [schemaIds.propPartDesc]: {valueExpr: `"HIGH VOLTAGE BATTERY ASSEMBLY - 1.0 - MODEL S, 85KWH, RWD"`},
+            // Actual energy capacity - see https://teslamotorsclub.com/tmc/threads/teslas-85-kwh-rating-needs-an-asterisk-up-to-81-kwh-with-up-to-77-kwh-usable.61896/
+            [schemaIds.propEnergyCapacity]: {valueExpr: `"80.7 kWh"`, note: "Despite the 85kWh name, actual measured capacity seems to be slightly lower."},
+        },
+    }),
+    /*
+    P/N 1031043 is described as "ASY,HV BATTERY,S3BB,DUAL MTR,MDLS" and is a new 85 kWh pack for dual-motor operation
+    P/N 1055519 is described as "ASY,HV BATTERY,S3,DUAL MTR,MDLS" and is a new 85 kWh pack for dual-motor operation
+    */
+
+
+
     // Photo of a car (Mini Cooper SE)
     ...createEntry({
         id: ids.imgMiniCooperSe,
@@ -382,7 +546,7 @@ function createEntry({id, ...args}: {
     friendlyId: string,
     description?: string,
     features?: schemas.Type<typeof UpdateEntryFeature["dataSchema"]>["feature"][],
-    props?: Record<VNID, {valueExpr: string, note?: string}>,
+    props?: Record<VNID, {valueExpr: string, note?: string}|{valueExpr: string, note?: string}[]>,
 }): AnyContentEdit[] {
     const edits: AnyContentEdit[] = [
         {code: "CreateEntry", data: {
@@ -400,13 +564,16 @@ function createEntry({id, ...args}: {
         }});
     });
     Object.entries(args.props ?? {}).forEach(([propId, prop]) => {
-        edits.push({code: "AddPropertyValue", data: {
-            entry: id,
-            property: VNID(propId),
-            propertyFactId: VNID(),
-            valueExpression: prop.valueExpr,
-            note: prop.note ?? "",
-        }});
+        const propValues = Array.isArray(prop) ? prop : [prop];
+        propValues.forEach(pv => {
+            edits.push({code: "AddPropertyValue", data: {
+                entry: id,
+                property: VNID(propId),
+                propertyFactId: VNID(),
+                valueExpression: pv.valueExpr,
+                note: pv.note ?? "",
+            }});
+        });
     });
 
 

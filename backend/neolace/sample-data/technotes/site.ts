@@ -3,6 +3,7 @@
  */
 import { dedent } from "neolace/lib/dedent.ts";
 import { UpdateSite } from "neolace/core/Site.ts";
+import { ids } from "./content.ts";
 
 export const siteData: Partial<Parameters<typeof UpdateSite>[0]> = {
     homePageMD: dedent`
@@ -13,13 +14,10 @@ export const siteData: Partial<Parameters<typeof UpdateSite>[0]> = {
         drawings, and discussion forums together in one integrated resource that's exceptionally easy to use and
         well-organized.
 
-        ## About This Prototype
+        ## Featured Content
 
-        This is our new prototype, built using Neolace, our new platform for building a collaborative knowledge base.
-
-        We will be posting some detailed example content soon!
-
-        You can see some of the features of our platform on the entry for [**"AA battery"**](/entry/tc-batt-aa) or [**"cylindrical lithium-ion cell"**](/entry/tc-ec-cell-li-cyl).
+        We are currently working to develop our platform and populate example content. For now, you can check out
+        [**"18650 cell"**](/entry/${ids.cell18650}) or [**"AA battery"**](/entry/${ids.batteryAA}).
     `,
     footerMD: dedent`
         **Legal notice**: The content on this site is provided with no warranty, express or implied. **Do not rely on this content for any important purpose without verifying it independently**.
