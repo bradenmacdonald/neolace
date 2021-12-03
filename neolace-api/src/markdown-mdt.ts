@@ -145,7 +145,7 @@ function tokenToNode(token: Token): Node {
     }
 
     // Content/children attributes:
-    if (type === "text" || type === "code_inline" || type === "code_block" || type === "lookup_inline") {
+    if (type === "text" || type === "code_inline" || type === "code_block" || type === "lookup_inline" || type === "lookup_block") {
         // This node contains text content:
         node.content = token.content;
     } else {

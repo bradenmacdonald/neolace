@@ -52,4 +52,3 @@ function slugify(string: string): string {
     string = string.replace(/-+$/g, ""); // trim any trailing hyphens
     return string;
 }
-

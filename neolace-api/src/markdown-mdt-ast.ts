@@ -106,6 +106,11 @@ interface CodeBlockNode extends BlockNode {
     /** UNESCAPED text content - may contain HTML. You must escape this before rendering. */
     content: string;
 }
+interface LookupBlockNode extends BlockNode {
+    type: "lookup_block";
+    /** The lookup expression. If rendering "raw" to HTML, you must escape this first. */
+    content: string;
+}
 interface BulletListNode extends BlockNode {
     type: "bullet_list";
     children: ListItemNode[];
@@ -138,6 +143,7 @@ export type AnyBlockNode = (
     | HeadingNode
     | BlockquoteNode
     | CodeBlockNode
+    | LookupBlockNode
     | BulletListNode
     | OrderedListNode
     | ListItemNode
@@ -162,6 +168,7 @@ export type TopLevelNode = (
     | HeadingNode
     | BlockquoteNode
     | CodeBlockNode
+    | LookupBlockNode
     | BulletListNode
     | OrderedListNode
     | HorizontalRuleNode

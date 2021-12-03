@@ -36,9 +36,17 @@ function text(content: string): AnyInlineNode {
 function inlineText(content: string): InlineNode {
     return inline(text(content));
 }
+/** Helper method to generate a paraph node */
+function paragraph(...children: InlineNode[]): TopLevelNode {
+    return {type: "paragraph", children, block: true};
+}
 /** Helper method to generate a lookup node, in the parsed Markdown tree */
 function lookup(content: string): AnyInlineNode {
     return {type: "lookup_inline", content};
+}
+/** Helper method to generate a lookup block node, in the parsed Markdown tree */
+function lookupBlock(content: string): TopLevelNode {
+    return {type: "lookup_block", content, block: true};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -145,6 +153,68 @@ Deno.test("MDT - parsing inline lookup expressions", () => {
         tokenizeInlineMDT(`This is { an unclosed lookup`),
         inline(
             text("This is { an unclosed lookup"),
+        ),
+    );
+});
+
+Deno.test("MDT - parsing lookup block expressions", () => {
+
+    // Simplest case - a lookup on its own line should not be part of a paragraph/inline but rather should be a block
+    assertEquals(
+        tokenizeMDT(`# Heading\n\n{lookup block}\n\ntext`),
+        doc(
+            heading({text: "Heading", slugId: "heading"}),
+            lookupBlock("lookup block"),
+            paragraph(inlineText("text")),
+        ),
+    );
+
+    // simple multi-line lookup with indent
+    assertEquals(
+        tokenizeMDT(`# Heading\n\n{\n    lookup\n    block\n}\n\ntext`),
+        doc(
+            heading({text: "Heading", slugId: "heading"}),
+            lookupBlock("    lookup\n    block\n"),
+            paragraph(inlineText("text")),
+        ),
+    );
+
+    // It can be indented and used e.g. as a child of a list item
+    assertEquals(
+        tokenizeMDT(
+`
+* List Item 1
+* List Item 2
+  {
+    lookup in list
+    second lookup line
+  }
+`
+        ),
+        doc(
+            {
+                type: "bullet_list",
+                block: true,
+                children: [
+                    {type: "list_item", block: true, children: [inlineText("List Item 1")]},
+                    {type: "list_item", block: true, children: [
+                        inlineText("List Item 2"),
+                        lookupBlock("  lookup in list\n  second lookup line\n"),
+                    ]},
+                ],
+            },
+        ),
+    );
+
+    // A lookup with text after it on the same line becomes an inline lookup
+    assertEquals(
+        tokenizeMDT(`# Heading\n\n{lookup expr} text on same line`),
+        doc(
+            heading({text: "Heading", slugId: "heading"}),
+            paragraph(inline(
+                lookup("lookup expr"),
+                text(" text on same line"),
+            )),
         ),
     );
 });
