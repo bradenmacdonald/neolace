@@ -22,7 +22,7 @@ export const SiteFooter: React.FunctionComponent<Props> = (props) => {
     return <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 neo-typography">
         <RenderMDT
             mdt={props.site.footerMD}
-            context={new MDTContext({})}
+            context={new MDTContext({entryId: undefined})}
         />
     </footer>;
 };

@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { api } from 'lib/api-client';
 import { EntryLink } from 'components/EntryLink';
 import { MDT } from 'neolace-api';
+import { VNID } from 'neolace-api/types.ts';
+import { LookupValue } from 'components/LookupValue';
 
 
 /**
@@ -13,18 +15,21 @@ import { MDT } from 'neolace-api';
  * current page.
  */
 export class MDTContext {
+    readonly entryId: VNID|undefined;
     readonly refCache: api.ReferenceCacheData;
     /** Decrease the size of the headings by this number (1 means <h1> becomes <h2>, etc.) */
     readonly headingShift: number;
 
-    constructor(args: {refCache?: api.ReferenceCacheData, headingShift?: number}) {
+    constructor(args: {entryId: VNID|undefined, refCache?: api.ReferenceCacheData, headingShift?: number}) {
+        this.entryId = args.entryId;
         // If no reference cache is available, create an empty one for consistency.
-        this.refCache = args.refCache ?? {entries: {}, entryTypes: {}, properties: {}};
+        this.refCache = args.refCache ?? {entries: {}, entryTypes: {}, properties: {}, lookups: []};
         this.headingShift = args.headingShift ?? 0;
     }
 
-    public childContextWith(args: {headingShift?: number}) {
+    public childContextWith(args: {entryId?: VNID|undefined, headingShift?: number}) {
         return new MDTContext({
+            entryId: 'entryId' in args ? args.entryId : this.entryId,
             refCache: this.refCache,
             headingShift: this.headingShift + (args.headingShift ?? 0),
         });
@@ -82,6 +87,13 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode, context: 
             }
         case "code_inline":
             return <code key={key}>{node.content}</code>;
+        case "lookup_inline": {
+            const lookupData = context.refCache.lookups.find(x => x.entryContext === context.entryId && x.lookupExpression === node.content);
+            if (lookupData) {
+                return <LookupValue mdtContext={context} value={lookupData.value} />
+            }
+            return <code key={key} className="text-red-500">{'{'}{node.content}{'}'}</code>;
+        }
         case "strong":
             return <strong key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</strong>;
         case "em":
@@ -150,6 +162,13 @@ function nodeToComponent(node: MDT.Node, context: MDTContext) {
         }
         case "hr":
             return <hr key={key} />;
+        case "lookup_block": {
+            const lookupData = context.refCache.lookups.find(x => x.entryContext === context.entryId && x.lookupExpression === node.content);
+            if (lookupData) {
+                return <LookupValue mdtContext={context} value={lookupData.value} />
+            }
+            return <code key={key} className="text-red-500"><pre>{'{'}{node.content}{'}'}</pre></code>;
+        }
         case "code_block":
             return <code key={key}><pre>{node.content}</pre></code>;
         case "table":

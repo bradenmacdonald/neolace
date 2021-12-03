@@ -4,19 +4,24 @@ import { PropertyType, ReferenceCacheData } from "neolace/deps/neolace-api.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
+import type { CachedLookupContext } from "neolace/core/lookup/context.ts";
 
 
 /**
- * A reference cache is a list of all the entry IDs mentioned in a given entry (description, markdown article text,
- * etc.) or mentioned in something like the homepage. The reference cache contains basic details about every mentioned
- * entry, like its friendlyId, its proper name, and its type name, so that we can display a friendly URL to it and a
- * tooltip with more information.
+ * A reference cache contains:
+ * - The values of any lookup expressions used in the Markdown content of an entry (or the descriptions of related
+ *   entries.
+ * - Basic details about any properties, entryies, and entry types referenced by the entry.
+ * 
+ * It also works for contexts like the home page, which isn't an entry but can still contain lookup expressions and
+ * links to entries.
  */
 export class ReferenceCache {
 
     private _entryIdsUsed = new Set<VNID>();
     private _friendlyIdsUsed = new Set<string>();
     private _propertyIdsUsed = new Set<VNID>();
+    private _lookupExpressions: Array<{entryContext?: VNID; lookupExpression: string}> = [];
     readonly siteId: VNID;
 
     constructor(args: {siteId: VNID}) {
@@ -30,12 +35,13 @@ export class ReferenceCache {
     public get friendlyIdsUsed(): ReadonlySet<string> { return this._friendlyIdsUsed; }
     public get propertyIdsUsed(): ReadonlySet<VNID> { return this._propertyIdsUsed; }
 
-    async getData(tx: WrappedTransaction): Promise<ReferenceCacheData> {
+    async getData(tx: WrappedTransaction, lookupContext: CachedLookupContext): Promise<ReferenceCacheData> {
         const siteCode = await siteCodeForSite(this.siteId);
         const data: ReferenceCacheData = {
             entryTypes: {},
             entries: {},
             properties: {},
+            lookups: [],
         };
         const entryReferences = await tx.pull(Entry,
             e => e.id.name.description.friendlyId().type(et => et.id.name.site(s => s.id)),
@@ -83,6 +89,18 @@ export class ReferenceCache {
                 displayAs: prop.displayAs,
             };
         }
+
+        // Lookup expressions:
+        for (const lookup of this._lookupExpressions) {
+            const context = lookupContext.getContextFor(lookup.entryContext);
+            const value = await context.evaluateExpr(lookup.lookupExpression).then(v => v.makeConcrete());
+            data.lookups.push({
+                entryContext: lookup.entryContext,
+                lookupExpression: lookup.lookupExpression,
+                value: value.toJSON(),
+            });
+        }
+
         return data;
     }
 
@@ -94,19 +112,31 @@ export class ReferenceCache {
         this._propertyIdsUsed.add(propertyId);
     }
 
+    public addLookupExpression(data: {entryContext?: VNID, lookupExpression: string}) {
+        const alreadyThere = this._lookupExpressions.find(entry =>
+            entry.entryContext === data.entryContext &&
+            entry.lookupExpression === data.lookupExpression
+        );
+        if (alreadyThere) {
+            return; // Already in the reference cache
+        } else {
+            this._lookupExpressions.push(data);
+        }
+    }
+
     /**
      * Given a serialized "Lookup Value" that is the result of evaluating a Graph Lookup expression, find all unique entry
      * IDs that are present in the value (recursively). Adds to the set(s) passed as a parameter
      */
-    public extractLookupReferences(value: api.AnyLookupValue) {
+    public extractLookupReferences(value: api.AnyLookupValue, args: {currentEntryId?: VNID}) {
         switch (value.type) {
             case "List":
             case "Page": {
-                value.values.forEach(v => this.extractLookupReferences(v));
+                value.values.forEach(v => this.extractLookupReferences(v, args));
                 return;
             }
             case "Annotated": {
-                this.extractLookupReferences(value.value);
+                this.extractLookupReferences(value.value, args);
                 return;
             }
             case "Entry": {
@@ -115,7 +145,7 @@ export class ReferenceCache {
             }
             case "InlineMarkdownString": {
                 // Extract any references to entries linked from this inline string.
-                this.extractMarkdownReferences(api.MDT.tokenizeMDT(value.value, {inline: true}));
+                this.extractMarkdownReferences(api.MDT.tokenizeMDT(value.value, {inline: true}), args);
                 return;
             }
             case "Integer":
@@ -132,7 +162,7 @@ export class ReferenceCache {
     * Given a markdown string (or optionally an abstract syntax tree [AST] if it's already parsed), find all unique entry
     * IDs that are mentioned.
     */
-    public extractMarkdownReferences(markdown: string|api.MDT.RootNode|api.MDT.Node) {
+    public extractMarkdownReferences(markdown: string|api.MDT.RootNode|api.MDT.Node, args: {currentEntryId?: VNID}) {
        if (typeof markdown === "string") {
            markdown = api.MDT.tokenizeMDT(markdown);
        }
@@ -148,10 +178,12 @@ export class ReferenceCache {
                    this._friendlyIdsUsed.add(entryKey);
                }
            }
+       } else if (node.type === "lookup_inline" || node.type === "lookup_block") {
+            this.addLookupExpression({entryContext: args.currentEntryId, lookupExpression: node.content});
        }
        if ("children" in node) {
            for (const child of node.children) {
-               this.extractMarkdownReferences(child);
+               this.extractMarkdownReferences(child, args);
            }
        }
    }

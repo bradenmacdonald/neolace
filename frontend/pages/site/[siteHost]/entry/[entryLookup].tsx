@@ -26,6 +26,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
 const EntryPage: NextPage<PageProps> = function(props) {
 
     const mdtContext = React.useMemo(() => new MDTContext({
+        entryId: props.entry.id,
         refCache: props.entry.referenceCache,
     }), [props.entry.id]);
     //const user = React.useContext(UserContext);
@@ -115,10 +116,10 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                             {props.entry.propertiesSummary?.map(p => 
                                                 <tr key={p.propertyId}>
                                                     <th className="block md:table-cell text-xs md:text-base -mb-1 md:mb-0 pr-2 align-top text-left font-normal text-gray-500 md:text-gray-700 min-w-[120px]">
-                                                        <LookupValue value={{type: "Property", id: p.propertyId}} refCache={props.entry.referenceCache} mdtContext={mdtContext} />
+                                                        <LookupValue value={{type: "Property", id: p.propertyId}} mdtContext={mdtContext} />
                                                     </th>
                                                     <td className="block md:table-cell pr-2 pb-1 md:pb-0 text-sm md:text-base">
-                                                        <LookupValue value={p.value} refCache={props.entry.referenceCache} mdtContext={mdtContext} />
+                                                        <LookupValue value={p.value} mdtContext={mdtContext} />
                                                     </td>
                                                 </tr>
                                             )}

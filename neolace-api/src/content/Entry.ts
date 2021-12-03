@@ -74,6 +74,11 @@ export const ReferenceCacheSchema = Schema({
         importance: number,
         displayAs: string,
     })),
+    lookups: array.of(Schema({
+        entryContext: vnidString.strictOptional(),  // VNID of the entry where the lookup expression was referenced, if applicable.
+        lookupExpression: string,  // The lookup expression as parsed by the MDT library in the Neolace API
+        value: object.transform(x => x as AnyLookupValue),
+    })),
 });
 
 export type ReferenceCacheData = Type<typeof ReferenceCacheSchema>;

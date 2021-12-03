@@ -1,6 +1,7 @@
 import { NeolaceHttpResource, graph, api, permissions } from "neolace/api/mod.ts";
 import { Site } from "neolace/core/Site.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
+import { CachedLookupContext } from "neolace/core/lookup/context.ts";
 
 
 
@@ -17,11 +18,11 @@ export class SiteHomeResource extends NeolaceHttpResource {
         
         const siteData = await graph.pullOne(Site, s => s.homePageMD, {key: siteId});
         const refCache = new ReferenceCache({siteId});
-        refCache.extractMarkdownReferences(siteData.homePageMD ?? "");
+        refCache.extractMarkdownReferences(siteData.homePageMD ?? "", {currentEntryId: undefined});
 
         return {
             homePageMD: siteData.homePageMD ?? "",
-            referenceCache: await graph.read(tx => refCache.getData(tx)),
+            referenceCache: await graph.read(tx => refCache.getData(tx, new CachedLookupContext(tx, siteId, undefined))),
         };
     });
 }

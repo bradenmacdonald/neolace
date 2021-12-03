@@ -23,6 +23,7 @@ const HomePage: NextPage<PageProps> = function(props) {
 
     
     const mdtContext = React.useMemo(() => new MDTContext({
+        entryId: undefined,
         refCache: props.refCache,
     }), [props.site.shortId]);
     const user = React.useContext(UserContext);

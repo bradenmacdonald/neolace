@@ -2,8 +2,7 @@ import { api } from "neolace/api/mod.ts";
 import { VNID, WrappedTransaction, isVNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
-import { parseLookupString } from "neolace/core/lookup/parse.ts";
-import { LookupContext } from "neolace/core/lookup/context.ts";
+import { CachedLookupContext } from "neolace/core/lookup/context.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
 import { AnnotatedValue, ConcreteValue, ErrorValue, InlineMarkdownStringValue, IntegerValue, NullValue, PageValue, StringValue } from "neolace/core/lookup/values.ts";
 import { EntryPropertyValueSet, getEntryProperties } from "neolace/core/entry/properties.ts";
@@ -68,33 +67,25 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
     // consumers to show the right data (e.g. link tooltips) in that case.
     refCache?.addReferenceToEntryId(entryData.id);
 
+    const maxValuesPerProp = 5;
+    const lookupContext = new CachedLookupContext(tx, siteId, entryData.id, BigInt(maxValuesPerProp));
+
     if (flags.has(api.GetEntryFlags.IncludePropertiesSummary)) {
         // Include a summary of property values for this entry (up to 15 importance properties - whose importance is <= 20)
         const properties = await getEntryProperties(entryData.id, {tx, limit: 15, maxImportance: 20});
-        const maxValuesPerProp = 5;
-        const context: LookupContext = {tx, siteId, entryId: entryData.id, defaultPageSize: BigInt(maxValuesPerProp)};
 
         // ** In the near future, we'll need to resolve a dependency graph and compute these in parallel / async. **
 
         /** Helper function to return a single property value as an annotated lookup value */
         const factToValue = async (fact: EntryPropertyValueSet["facts"][0], prop: EntryPropertyValueSet["property"]) => {
-            let innerValue;
             const extraAnnotations: Record<string, unknown> = {};
-            try {
-                innerValue = await parseLookupString(fact.valueExpression).getValue(context).then(v => v.makeConcrete());
-                if (prop.displayAs) {
-                    // displayAs is used to format the value using Markdown, e.g. to convert it into a link
-                    // or display it in italics. But we still make the original value avaiable as an annotation.
-                    const innerValueAsString = innerValue.castTo(StringValue, context)?.value || "(error - cannot convert value to string)";
-                    extraAnnotations.plainValue = innerValue;
-                    innerValue = new InlineMarkdownStringValue(prop.displayAs.replaceAll("{value}", innerValueAsString));
-                }
-            } catch (err: unknown) {
-                if (err instanceof LookupError) {
-                    innerValue = new ErrorValue(err);
-                } else {
-                    throw err;
-                }
+            let innerValue = await lookupContext.evaluateExpr(fact.valueExpression).then(v => v.makeConcrete());
+            if (prop.displayAs) {
+                // displayAs is used to format the value using Markdown, e.g. to convert it into a link
+                // or display it in italics. But we still make the original value avaiable as an annotation.
+                const innerValueAsString = innerValue.castTo(StringValue, lookupContext)?.value || "(error - cannot convert value to string)";
+                extraAnnotations.plainValue = innerValue;
+                innerValue = new InlineMarkdownStringValue(prop.displayAs.replaceAll("{value}", innerValueAsString));
             }
             return new AnnotatedValue(innerValue, {
                 source: new StringValue(fact.source.from === "ThisEntry" ? "ThisEntry" : "AncestorEntry"),
@@ -111,7 +102,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
             try {
                 if (facts.length === 0) {
                     if (property.default) {
-                        const innerValue = await parseLookupString(property.default).getValue(context).then(v => v.makeConcrete());
+                        const innerValue = await lookupContext.evaluateExpr(property.default).then(v => v.makeConcrete());
                         value = new AnnotatedValue(innerValue, {source: new StringValue("Default")});
                     } else {
                         throw new Error("Unexpected property with no values and no default");
@@ -148,7 +139,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                 value: serializedValue,
             });
             refCache?.addReferenceToPropertyId(property.id);
-            refCache?.extractLookupReferences(serializedValue);
+            refCache?.extractLookupReferences(serializedValue, {currentEntryId: entryData.id});
         }
     }
 
@@ -160,8 +151,8 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
 
     if (flags.has(api.GetEntryFlags.IncludeReferenceCache)) {
         // Extract references from the description of this entry
-        refCache?.extractMarkdownReferences(entryData.description);
-        result.referenceCache = await refCache!.getData(tx);
+        refCache?.extractMarkdownReferences(entryData.description, {currentEntryId: entryData.id});
+        result.referenceCache = await refCache!.getData(tx, lookupContext);
     }
 
     return result;
