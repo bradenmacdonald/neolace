@@ -104,7 +104,7 @@ group(import.meta, () => {
             headings: [
                 {title: "Heading 1", id: "heading-1"},
                 {title: "Same Heading", id: "same-heading"},
-                {title: "Same Heading", id: "same-heading-1"},
+                {title: "Same Heading", id: "same-heading-2"},
             ],
         });
     });

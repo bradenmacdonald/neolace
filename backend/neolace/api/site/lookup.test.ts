@@ -16,6 +16,7 @@ group(import.meta, () => {
                 shortId: "plantdb",
                 domain: "plantdb.local.neolace.net",
                 description: null,
+                footerMD: "Powered by [Neolace](https://www.neolace.com/).",
             });
         });
 
