@@ -46,7 +46,7 @@ export abstract class LookupExpression {
         if (value.length <= 50) {
             return value;
         } else {
-            return value.slice(0, 45) + "…" + value.slice(-5);
+            return value.slice(0, 45) + "…" + value.slice(-4);
         }
     }
 }
