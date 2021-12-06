@@ -36,4 +36,17 @@ export abstract class LookupExpression {
      * e.g. if this is an addition expression, it could return the string "3 + 4"
      */
     public abstract toString(): string;
+
+    /**
+     * Format this expression as a string, but if it's longer than 50 characters
+     * just print the first part followed by an ellipsis.
+     */
+    public toDebugString(): string {
+        const value = this.toString();
+        if (value.length <= 50) {
+            return value;
+        } else {
+            return value.slice(0, 45) + "…" + value.slice(-5);
+        }
+    }
 }

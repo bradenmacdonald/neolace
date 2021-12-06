@@ -16,7 +16,7 @@ function isCountableValue(value: unknown): value is ICountableValue {
  */
  export class Count extends LookupExpression {
 
-    // An expression that specifies what entry's ancestors we want to retrieve
+    // An expression that specifies what value's count we want to retrieve
     readonly exprToCount: LookupExpression;
 
     constructor(exprToCount: LookupExpression) {
@@ -29,7 +29,7 @@ function isCountableValue(value: unknown): value is ICountableValue {
         if (isCountableValue(valueToCount)) {
             return new IntegerValue(await valueToCount.getCount());
         } else {
-            throw new LookupEvaluationError(`The expression "${this.exprToCount.toString()}" cannot be counted with count().`);
+            throw new LookupEvaluationError(`The expression "${this.exprToCount.toDebugString()}" cannot be counted with count().`);
         }
     }
 

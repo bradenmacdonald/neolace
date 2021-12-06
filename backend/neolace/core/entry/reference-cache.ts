@@ -130,7 +130,6 @@ export class ReferenceCache {
      */
     public extractLookupReferences(value: api.AnyLookupValue, args: {currentEntryId?: VNID}) {
         switch (value.type) {
-            case "List":
             case "Page": {
                 value.values.forEach(v => this.extractLookupReferences(v, args));
                 return;

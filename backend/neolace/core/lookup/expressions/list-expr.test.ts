@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
-import { IntegerValue, ListValue, NullValue } from "../values.ts";
+import { IntegerValue, PageValue, NullValue } from "../values.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { List } from "./list-expr.ts";
 import { LookupExpression } from "../expression.ts";
@@ -19,7 +19,7 @@ group(import.meta, () => {
 
         test(`An empty list`, async () => {
             const expression = new List([]);
-            const value = new ListValue([]);
+            const value = PageValue.from([], 10n);
 
             assertEquals(await evalExpression(expression), value);
             assertEquals(expression.toString(), "[]");
@@ -27,7 +27,7 @@ group(import.meta, () => {
 
         test(`It can hold two integers`, async () => {
             const expression = new List([Int(15), Int(-30)]);
-            const value = new ListValue([new IntegerValue(15), new IntegerValue(-30)]);
+            const value = PageValue.from([new IntegerValue(15), new IntegerValue(-30)], 10n);
 
             assertEquals(await evalExpression(expression), value);
             assertEquals(expression.toString(), `[15, -30]`);
