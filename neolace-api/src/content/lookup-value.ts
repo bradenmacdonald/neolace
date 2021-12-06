@@ -29,6 +29,19 @@ export interface PropertyValue extends LookupValue {
     id: VNID;
 }
 
+export interface ImageValue extends LookupValue {
+    type: "Image";
+    entryId: VNID;
+    caption: InlineMarkdownString;
+    imageUrl: string;
+    contentType: string;
+    size?: number;
+    width?: number;
+    height?: number;
+    blurHash?: string;
+    format: "thumb"|"right";
+}
+
 export interface AnnotatedValue extends LookupValue {
     type: "Annotated";
     value: AnyLookupValue;
@@ -59,9 +72,9 @@ export interface ErrorValue extends LookupValue {
 
 export type AnyLookupValue = (
     | PageValue
-    | ListValue
     | EntryValue
     | PropertyValue
+    | ImageValue
     | AnnotatedValue
     | IntegerValue
     | StringValue

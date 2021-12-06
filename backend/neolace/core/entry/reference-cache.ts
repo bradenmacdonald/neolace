@@ -142,6 +142,11 @@ export class ReferenceCache {
                 this._entryIdsUsed.add(value.id);
                 return;
             }
+            case "Image": {
+                this._entryIdsUsed.add(value.entryId);
+                this.extractLookupReferences(value.caption, args);
+                return;
+            }
             case "InlineMarkdownString": {
                 // Extract any references to entries linked from this inline string.
                 this.extractMarkdownReferences(api.MDT.tokenizeMDT(value.value, {inline: true}), args);

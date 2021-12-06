@@ -8,6 +8,7 @@ import {
     // Count,
     Descendants,
     GetProperty,
+    Image,
     List,
     LiteralExpression,
     Markdown,
@@ -27,6 +28,8 @@ export function parseLookupString(lookup: string): LookupExpression {
 
     // To save time and make development faster, we are cheating with a working but very fake parser.
     // In the future this function should be replaced with a proper parser built using https://chevrotain.io/
+
+    lookup = lookup.trim();
 
     if (lookup === "null") { return new LiteralExpression(new V.NullValue()); }
     if (lookup === "this") { return new This(); }
@@ -69,6 +72,9 @@ export function parseLookupString(lookup: string): LookupExpression {
         [/^this\.andDescendants\(\)\.reverse\(prop=(.*)\)$/, m => new ReverseProperty(new AndDescendants(new This()), {propertyExpr: parseLookupString(m[1])})],
         // reverse(andDescendants(this), prop=...)
         [/^reverse\(andDescendants\(this\), prop=(.*)\)$/, m => new ReverseProperty(new AndDescendants(new This()), {propertyExpr: parseLookupString(m[1])})],
+
+        // [[/entry/...]].image(format="...")
+        [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*)\)$/, m => new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {formatExpr: parseLookupString(m[2])})],
 
         // markdown("*string*")
         [/^markdown\((.*)\)$/, m => new Markdown( parseLookupString(m[1]) )],
