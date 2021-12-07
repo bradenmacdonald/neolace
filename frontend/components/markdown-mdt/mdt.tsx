@@ -165,7 +165,7 @@ function nodeToComponent(node: MDT.Node, context: MDTContext) {
         case "lookup_block": {
             const lookupData = context.refCache.lookups.find(x => x.entryContext === context.entryId && x.lookupExpression === node.content);
             if (lookupData) {
-                return <LookupValue mdtContext={context} value={lookupData.value} />
+                return <LookupValue key={key} mdtContext={context} value={lookupData.value} />
             }
             return <code key={key} className="text-red-500"><pre>{'{'}{node.content}{'}'}</pre></code>;
         }
