@@ -43,6 +43,22 @@ export class ReferenceCache {
             properties: {},
             lookups: [],
         };
+
+        // Lookup expressions:
+        for (const lookup of this._lookupExpressions) {
+            const context = lookupContext.getContextFor(lookup.entryContext);
+            const value = await context.evaluateExpr(lookup.lookupExpression).then(v => v.makeConcrete());
+            const valueJSON = value.toJSON();
+            data.lookups.push({
+                entryContext: lookup.entryContext,
+                lookupExpression: lookup.lookupExpression,
+                value: valueJSON,
+            });
+            // Extract any references from the resulting lookup value:
+            this.extractLookupReferences(valueJSON, {currentEntryId: lookup.entryContext});
+        }
+
+        // Entries referenced:
         const entryReferences = await tx.pull(Entry,
             e => e.id.name.description.friendlyId().type(et => et.id.name.site(s => s.id)),
             {where: C`@this.id IN ${Array.from(this.entryIdsUsed)} OR @this.slugId IN ${Array.from(this.friendlyIdsUsed).map(friendlyId => siteCode + friendlyId)}`},
@@ -88,17 +104,6 @@ export class ReferenceCache {
                 importance: prop.importance,
                 displayAs: prop.displayAs,
             };
-        }
-
-        // Lookup expressions:
-        for (const lookup of this._lookupExpressions) {
-            const context = lookupContext.getContextFor(lookup.entryContext);
-            const value = await context.evaluateExpr(lookup.lookupExpression).then(v => v.makeConcrete());
-            data.lookups.push({
-                entryContext: lookup.entryContext,
-                lookupExpression: lookup.lookupExpression,
-                value: value.toJSON(),
-            });
         }
 
         return data;
