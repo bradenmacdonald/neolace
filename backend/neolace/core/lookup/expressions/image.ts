@@ -1,5 +1,4 @@
 import { getEntryFeatureData } from "neolace/core/entry/features/get-feature-data.ts";
-import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { LookupExpression } from "../expression.ts";
 import {
@@ -55,8 +54,7 @@ export class Image extends LookupExpression {
         if (entry === undefined) {
             throw new LookupEvaluationError(`The expression "${this.entriesExpr.toDebugString()}" cannot be used with image().`);
         }
-        const imgDescription = (await context.tx.pullOne(Entry, e => e.description, {key: entry.id})).description;
-        const caption = new InlineMarkdownStringValue(imgDescription);
+        const caption = new InlineMarkdownStringValue("");  // TODO in future: allow specifying the caption.
         const imageData = await getEntryFeatureData(entry.id, {featureType: "Image", tx: context.tx});
         if (imageData === undefined) {
             return new NullValue();

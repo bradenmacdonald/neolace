@@ -1,9 +1,14 @@
 import React from 'react';
 import { api } from 'lib/api-client';
 import { FormattedListParts, FormattedMessage } from 'react-intl';
+import { Blurhash } from 'react-blurhash';
+import Image from 'next/image';
+
 import { Tooltip } from 'components/widgets/tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { EntryLink } from './EntryLink';
+import { RatioBox } from './widgets/ratio-box';
+import { MDT } from 'neolace-api';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -22,18 +27,6 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
     }
 
     switch (value.type) {
-        case "List": {
-
-            const listValues = value.values.map((v, idx) => 
-                <LookupValue key={idx} value={v} mdtContext={props.mdtContext} />
-            );
-
-            return <span className="neo-lookup-paged-values">
-                <FormattedListParts type="unit" value={listValues}>
-                    {parts => <>{parts.map(p => p.value)}</>}
-                </FormattedListParts>
-            </span>;
-        }
         case "Page": {
 
             const listValues = value.values.map((v, idx) => 
@@ -61,6 +54,26 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             const entry = props.mdtContext.refCache.entries[value.id];
             const linkText = entry ? entry.name : value.id;
             return <EntryLink entryKey={value.id} mdtContext={props.mdtContext}>{linkText}</EntryLink>
+        }
+        case "Image": {
+            const ratio = value.width && value.height ? value.width / value.height : undefined;
+            return <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 md:ml-4">
+                <RatioBox ratio={ratio}>
+                    {/* A blurry representation of the image, shown while it is loading: */}
+                    {value.blurHash ? <Blurhash hash={value.blurHash} width="100%" height="100%" className="p-1 box-content -m-1" /> : null }
+                    {/* the image: */}
+                    <Image
+                        src={value.imageUrl}
+                        alt={ MDT.renderInlineToPlainText(
+                            MDT.tokenizeInlineMDT(props.mdtContext.refCache.entries[value.entryId]?.description ?? "")
+                        )}
+                        layout="fill"
+                        objectFit="contain"
+                    />
+                    <div className="border-4 border-white w-full h-full absolute top-0 left-0">
+                    </div>
+                </RatioBox>
+            </div>
         }
         case "Property": {
             const prop = props.mdtContext.refCache.properties[value.id];

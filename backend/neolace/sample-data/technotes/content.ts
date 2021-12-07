@@ -55,22 +55,20 @@ export const edits: AnyContentEdit[] = [
         props: {},
         features: [
             {featureType: "Article", articleMD: dedent`
+                { [[/entry/${ids.imgTeamBraden}]].image(format="right") }
+
                 # Braden MacDonald
-                
+
                 *CEO*
 
-                { [[/entry/${ids.imgTeamBraden}]].asImage(align="right") }
-
-                <img alt="[Photo of Braden]" src="/team-braden.jpg" class="border-gray-700 border-4 rounded-lg mb-3 w-max md:w-64 md:float-right md:ml-6">
-                
                 Braden is a software developer and technology enthusiast. He is the co-founder and CEO of [TechNotes](https://www.technotes.org) and the CTO of [OpenCraft](https://opencraft.com/). Prior to TechNotes, Braden's most recent major project was [LabXchange](https://www.labxchange.org/), an online platform from Harvard University which provides world-class life sciences education materials to the world on-demand and for free. Braden led the software development for the project, which went on to have over two million users in its first year and won the 2020 Open edX Prize for creating the most impactful technical project built with Open edX.
-                
+
                 An avid programmer since childhood, Braden has worked with a wide variety of projects, platforms, and programming languages over the years. Braden is known for his deep technical knowledge, his wide-ranging experience, his approach to understanding problems from many perspectives, his ability to communicate clearly, and his relentless optimism.
-                
+
                 Outside of work, Braden has enjoyed serving on several non-profit boards, notably the OGO Car Share Co-op which brought car sharing to BC's Okanagan Valley and was acquired by [Modo](https://modo.coop/). Braden holds an Honours B.Sc. in Physics from the University of British Columbia.
 
                 # Joel Krupa
-                
+
                 *COO*
 
                 <img alt="[Photo of Joel]" src="/team-joel.jpg" class="border-gray-700 border-4 rounded-lg mb-3 w-max md:w-64 md:float-right md:ml-6">
@@ -80,7 +78,7 @@ export const edits: AnyContentEdit[] = [
                 Joel completed a postdoctoral fellowship at Harvard Engineering after earning a B.A. at the University of British Columbia, a B.Sc. at the London School of Economics, an M.Sc. at the University of Oxford, and a Ph.D. at the University of Toronto. He has undertaken visiting research appointments at research centres affiliated with Imperial College London and the University of Oxford.
 
                 # Jeff Krupa
-                
+
                 *VP Content & Partnerships*
 
                 <img alt="[Photo of Jeff]" src="/team-jeff.jpg" class="border-gray-700 border-4 rounded-lg mb-3 w-max md:w-64 md:float-right md:ml-6">
@@ -552,7 +550,7 @@ export const edits: AnyContentEdit[] = [
         name: "photo of Braden MacDonald",
         friendlyId: "img-technotes-braden",
         type: schemaIds.image,
-        description: `TechNotes co-founder, Braden MacDonald`,
+        description: `Photo of TechNotes co-founder, Braden MacDonald`,
         features: [{featureType: "Image", dataFileId: files.teamBraden.id}],
         props: {
             [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Please contact TechNotes if you wish to use this image anywhere other than within TechNotes itself."` },
