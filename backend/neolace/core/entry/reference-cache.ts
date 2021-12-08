@@ -45,7 +45,10 @@ export class ReferenceCache {
         };
 
         // Lookup expressions:
-        for (const lookup of this._lookupExpressions) {
+        const evaluateLookupExpressions = async (lookup: {entryContext?: VNID; lookupExpression: string}) => {
+            if (data.lookups.find(x => x.entryContext === lookup.entryContext && x.lookupExpression === lookup.lookupExpression)) {
+                return;  // Already processed
+            }
             const context = lookupContext.getContextFor(lookup.entryContext);
             const value = await context.evaluateExpr(lookup.lookupExpression).then(v => v.makeConcrete());
             const valueJSON = value.toJSON();
@@ -56,6 +59,9 @@ export class ReferenceCache {
             });
             // Extract any references from the resulting lookup value:
             this.extractLookupReferences(valueJSON, {currentEntryId: lookup.entryContext});
+        };
+        for (const lookup of this._lookupExpressions) {
+            await evaluateLookupExpressions(lookup);
         }
 
         // Entries referenced:
@@ -76,6 +82,7 @@ export class ReferenceCache {
                 description: reference.description,
                 entryType: {id: reference.type.id},
             };
+            this.extractMarkdownReferences(reference.description, {currentEntryId: reference.id});
 
             if (data.entryTypes[reference.type.id] === undefined) {
                 data.entryTypes[reference.type.id] = {
@@ -83,6 +90,11 @@ export class ReferenceCache {
                     name: reference.type.name,
                 };
             }
+        }
+        // Now, the descriptions of referenced entries may contain lookup expressions that we need to evaluate:
+        // TODO: remove this, and fetch descriptions in real time. This is too much like recursion
+        for (const lookup of this._lookupExpressions) {
+            await evaluateLookupExpressions(lookup);
         }
 
         const propertyReferences = await tx.pull(Property,

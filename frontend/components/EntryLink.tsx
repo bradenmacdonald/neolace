@@ -34,7 +34,7 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
     }
     return <Tooltip tooltipContent={<>
         <strong>{entry.name}</strong> ({refCache.entryTypes[entry.entryType.id]?.name})<br/>
-        <p className="text-sm"><InlineMDT mdt={entry.description} context={props.mdtContext} /></p>
+        <p className="text-sm"><InlineMDT mdt={entry.description} context={props.mdtContext.childContextWith({entryId: entry.id})} /></p>
     </>}>
         {attribs => <Link href={`/entry/${entry.friendlyId}`}><a {...attribs}>{props.children}</a></Link>}
     </Tooltip>;
