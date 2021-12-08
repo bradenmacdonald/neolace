@@ -57,26 +57,19 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         }
         case "Image": {
             const ratio = value.width && value.height ? value.width / value.height : undefined;
-            return <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 md:ml-4 mb-2 md:clear-right">
+            return <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 border-gray-400 md:ml-4 mb-2 md:clear-right">
                 <RatioBox ratio={ratio}>
-                    {/* The goal here is to have an outer border formed by the blurhash, then a white rectangular border, then the image inside */}
-                    <div className="relative w-full h-full border-2 border-black">
-                        {/* A blurry representation of the image, shown while it is loading, and also forming the outer border */}
-                        <div className="absolute w-full h-full left-0 top-0">
-                            {value.blurHash ? <Blurhash hash={value.blurHash} width="100%" height="100%" className="p-1 box-content -m-1" /> : null }
-                        </div>
-                        {/* the image: */}
-                        <Image
-                            src={value.imageUrl}
-                            alt={ MDT.renderInlineToPlainText(
-                                MDT.tokenizeInlineMDT(props.mdtContext.refCache.entries[value.entryId]?.description ?? "")
-                            )}
-                            layout="fill"
-                            objectFit="contain"
-                        />
-                    </div>
-                    <div className="border-2 border-white w-full h-full absolute top-0 left-0">
-                    </div>
+                    {/* A blurry representation of the image, shown while it is loading, and also forming the outer border */}
+                    <Blurhash hash={value.blurHash} width="100%" height="100%" />
+                    {/* the image: */}
+                    <Image
+                        src={value.imageUrl}
+                        alt={ MDT.renderInlineToPlainText(
+                            MDT.tokenizeInlineMDT(props.mdtContext.refCache.entries[value.entryId]?.description ?? "")
+                        )}
+                        layout="fill"
+                        objectFit="contain"
+                    />
                 </RatioBox>
             </div>
         }
