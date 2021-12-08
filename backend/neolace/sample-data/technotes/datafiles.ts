@@ -16,8 +16,8 @@ export const files = Object.freeze({
     cell18650sparkfun: {id: VNID("_Ti9O7i7a3KibJWbQSiW6P"), path: "images/sparkfun-18650.webp"},
     aaBattery: {id: VNID("_6tT4Jw1MVwN2kBEA5lVKz0"), path: "images/energizer-aa.webp"},
     teamBraden: {id: VNID("_54kqEz80XKazlagzNU3kgd"), path: "images/team-braden.jpg"},
-    // spare: {id: VNID("_1MFuZbHV6rFD9OcfzCwzdG"), path: ""},
-    // spare: {id: VNID("_2DGa0G8dw8KZye6AHDtQmT"), path: ""},
+    teamJoel: {id: VNID("_1MFuZbHV6rFD9OcfzCwzdG"), path: "images/team-joel.jpg"},
+    teamJeff: {id: VNID("_2DGa0G8dw8KZye6AHDtQmT"), path: "images/team-jeff.jpg"},
     // spare: {id: VNID("_2BLaIEv3OIpNqnaY2Bgup9"), path: ""},
     // spare: {id: VNID("_lCylFGMj67elCMvvmsRVJ"), path: ""},
 });

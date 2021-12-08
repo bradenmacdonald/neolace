@@ -57,7 +57,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         }
         case "Image": {
             const ratio = value.width && value.height ? value.width / value.height : undefined;
-            return <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 md:ml-4">
+            return <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 md:ml-4 mb-2 md:clear-right">
                 <RatioBox ratio={ratio}>
                     {/* The goal here is to have an outer border formed by the blurhash, then a white rectangular border, then the image inside */}
                     <div className="relative w-full h-full border-2 border-black">
