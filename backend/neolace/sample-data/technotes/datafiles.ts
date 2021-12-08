@@ -18,8 +18,13 @@ export const files = Object.freeze({
     teamBraden: {id: VNID("_54kqEz80XKazlagzNU3kgd"), path: "images/team-braden.jpg"},
     teamJoel: {id: VNID("_1MFuZbHV6rFD9OcfzCwzdG"), path: "images/team-joel.jpg"},
     teamJeff: {id: VNID("_2DGa0G8dw8KZye6AHDtQmT"), path: "images/team-jeff.jpg"},
-    // spare: {id: VNID("_2BLaIEv3OIpNqnaY2Bgup9"), path: ""},
-    // spare: {id: VNID("_lCylFGMj67elCMvvmsRVJ"), path: ""},
+    homeLogoNRC: {id: VNID("_2BLaIEv3OIpNqnaY2Bgup9"), path: "images/nrc-logo.png"},
+    homeLogoSandbox: {id: VNID("_lCylFGMj67elCMvvmsRVJ"), path: "images/mit-sandbox-logo.png"},
+    homeLogoILab: {id: VNID("_6nT9EiaXulRVSQhSev19B5"), path: "images/harvard-innovation-labs-logo.png"},
+    // spare: {id: VNID("_ri1ZXkgEhPLfOQc1OpePH"), path: ""},
+    // spare: {id: VNID("_6YqLTa9UnnUXIHn5M8FWo4"), path: ""},
+    // spare: {id: VNID("_63b0ourIXePUej3d5bcPvl"), path: ""},
+    // spare: {id: VNID("_4dT5ZB53PE0XNywEnvTgMf"), path: ""},
 });
 
 export function getFullPath(path: string) {

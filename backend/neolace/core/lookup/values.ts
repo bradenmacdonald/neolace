@@ -365,7 +365,7 @@ interface ImageData {
     width?: number;
     height?: number;
     blurHash?: string;
-    format: "thumb" | "right";
+    format: api.ImageDisplayFormat;
 }
 
 /**

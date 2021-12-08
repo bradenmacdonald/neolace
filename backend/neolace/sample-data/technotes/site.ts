@@ -35,6 +35,20 @@ export const siteData: Partial<Parameters<typeof UpdateSite>[0]> = {
         * Twitter: [@TechNotesOrg](https://twitter.com/TechNotesOrg)
         * Newsletter: [Subscribe](http://eepurl.com/hzpb3b)
         * Email us: [team@technotes.org](mailto:team@technotes.org)
+
+        ## Support
+
+        { [[/entry/${ids.imgHomeLogoNRC}]].image(format="logo") }
+
+        TechNotes is supported in part by advisory services and research and development funding from the National Research Council of Canada Industrial Research Assistance Program (NRC IRAP).
+
+        { [[/entry/${ids.imgHomeLogoILab}]].image(format="logo") }
+
+        TechNotes is a member of the Harvard Innovation Labs Venture Program.
+
+        { [[/entry/${ids.imgHomeLogoSandbox}]].image(format="logo") }
+
+        Supported and funded by the MIT Sandbox Innovation Fund Program
     `,
     footerMD: dedent`
         **Legal notice**: The content on this site is provided with no warranty, express or implied. **Do not rely on this content for any important purpose without verifying it independently**.

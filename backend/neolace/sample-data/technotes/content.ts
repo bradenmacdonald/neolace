@@ -23,6 +23,9 @@ export const ids = {
     motorVehicle: VNID("_5lqx2yOMSlbibeIT5psLCr"),
     img18650cell: VNID("_5Dk4j3EUjThp91B1SeGwUF"),
     imgAABattery: VNID("_1nmqoMNKS0MYZRjjzUiQd3"),
+    imgHomeLogoNRC: VNID("_3FBIrCRwznnyPOo0Ln3Zf0"),
+    imgHomeLogoILab: VNID("_4kfv0p8IFnzOOOdjmJRw4E"),
+    imgHomeLogoSandbox: VNID("_4OPh7CUZA88UKYakBM2NUK"),
     imgLiIonBatteryJellyRoll: VNID("_52FWviI73eaW6sIO8sZx0F"),
     imgMiniCooperSe: VNID("_5hqETvE3WTHuYvhHbwWuD"),
     imgTeamBraden: VNID("_2jhlA8cESf5nD9dlURERw5"),
@@ -37,9 +40,6 @@ export const ids = {
     secondaryCell: VNID("_4HwJfgRjCzfOI7z2XTzY0r"),
     standarizedBattery: VNID("_51YyfHlwYxW1X5QfjRBai6"),
     technotesTeam: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
-    //spare: VNID("_3FBIrCRwznnyPOo0Ln3Zf0"),
-    //spare: VNID("_4kfv0p8IFnzOOOdjmJRw4E"),
-    //spare: VNID("_4OPh7CUZA88UKYakBM2NUK"),
     //spare: VNID("_6zvYuCnfuiQKEWHff2rWC2"),
     //spare: VNID("_1CZTpr2BFC76f54Q3vNuB4"),
     //spare: VNID("_7L82mzuTE4VBE7qtgSCw5q"),
@@ -52,11 +52,6 @@ export const ids = {
     //spare: VNID("_3YpHBvg2F7BaDUGHzUl5js"),
     //spare: VNID("_516aUfKmnKsrsUZRnnR0BI"),
     //spare: VNID("_708vyHRgZpnr7bRkiBswtT"),
-    //spare: VNID("_6nT9EiaXulRVSQhSev19B5"),
-    //spare: VNID("_ri1ZXkgEhPLfOQc1OpePH"),
-    //spare: VNID("_6YqLTa9UnnUXIHn5M8FWo4"),
-    //spare: VNID("_63b0ourIXePUej3d5bcPvl"),
-    //spare: VNID("_4dT5ZB53PE0XNywEnvTgMf"),
     // To generate more IDs:
     // From backend, run "deno", then
     //  import { VNID } from "./neolace/deps/vertex-framework.ts";
@@ -592,6 +587,42 @@ export const edits: AnyContentEdit[] = [
         features: [{featureType: "Image", dataFileId: files.teamJeff.id}],
         props: {
             [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Please contact TechNotes if you wish to use this image anywhere other than within TechNotes itself."` },
+        },
+    }),
+    // NRC Logo
+    ...createEntry({
+        id: ids.imgHomeLogoNRC,
+        name: "National Research Council of Canada logo",
+        friendlyId: "img-home-logo-nrc",
+        type: schemaIds.image,
+        description: `National Research Council of Canada logo`,
+        features: [{featureType: "Image", dataFileId: files.homeLogoNRC.id}],
+        props: {
+            [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Used with permission."` },
+        },
+    }),
+    // Harvard i-lab Logo
+    ...createEntry({
+        id: ids.imgHomeLogoILab,
+        name: "Harvard Innovation Labs Logo",
+        friendlyId: "img-home-logo-i-lab",
+        type: schemaIds.image,
+        description: `Harvard Innovation Labs Logo`,
+        features: [{featureType: "Image", dataFileId: files.homeLogoILab.id}],
+        props: {
+            [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Used with permission."` },
+        },
+    }),
+    // MIT Sandbox logo
+    ...createEntry({
+        id: ids.imgHomeLogoSandbox,
+        name: "MIT Sandbox Logo",
+        friendlyId: "img-home-logo-sandbox",
+        type: schemaIds.image,
+        description: `MIT Sandbox Logo`,
+        features: [{featureType: "Image", dataFileId: files.homeLogoSandbox.id}],
+        props: {
+            [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Used with permission."` },
         },
     }),
 ];

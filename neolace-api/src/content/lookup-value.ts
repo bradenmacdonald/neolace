@@ -29,6 +29,12 @@ export interface PropertyValue extends LookupValue {
     id: VNID;
 }
 
+export const enum ImageDisplayFormat {
+    Thumbnail = "thumb",
+    RightAligned = "right",
+    PlainLogo = "plain",
+}
+
 export interface ImageValue extends LookupValue {
     type: "Image";
     entryId: VNID;
@@ -39,7 +45,7 @@ export interface ImageValue extends LookupValue {
     width?: number;
     height?: number;
     blurHash?: string;
-    format: "thumb"|"right";
+    format: ImageDisplayFormat;
 }
 
 export interface AnnotatedValue extends LookupValue {

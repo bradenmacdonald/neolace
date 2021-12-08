@@ -1,3 +1,4 @@
+import { ImageDisplayFormat } from "neolace/deps/neolace-api.ts";
 import { getEntryFeatureData } from "neolace/core/entry/features/get-feature-data.ts";
 
 import { LookupExpression } from "../expression.ts";
@@ -36,11 +37,12 @@ export class Image extends LookupExpression {
     }
 
     public async getValue(context: LookupContext) {
-        let format: "thumb"|"right" = "thumb";
         const formatArgValue = await this.formatExpr.getValueAs(context, StringValue);
-        if (formatArgValue.value === "right") {
-            format = "right";
-        }
+        const format: ImageDisplayFormat = (
+            formatArgValue.value === "right" ? ImageDisplayFormat.RightAligned :
+            formatArgValue.value === "logo" ? ImageDisplayFormat.PlainLogo :
+            ImageDisplayFormat.Thumbnail
+        );
         let entry = (await this.entriesExpr.getValue(context)).castTo(EntryValue, context);
         if (entry === undefined) {
             // We were given an entry set, not an entry - so just take the first one:
