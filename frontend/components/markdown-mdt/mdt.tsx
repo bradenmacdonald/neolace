@@ -79,8 +79,17 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode, context: 
                     // Not sure what this is linking to...
                     return <Link href={node.href} key={key}><a>{node.children.map(child => inlineNodeToComponent(child, context))}</a></Link>;
                 }
-            } else if (node.href.startsWith("http://") || node.href.startsWith("https://")) {
-                return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</a>;
+            } else if (node.href.startsWith("http://") || node.href.startsWith("https://") || node.href.startsWith("mailto:")) {
+                return <a href={node.href} key={key} target="_blank">
+                    {node.children.map(child => inlineNodeToComponent(child, context))}
+                    {/* Icon to indicate this is an external link */}
+                    <span title="(External Link)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="inline-block mx-1 text-gray-400 align-baseline" viewBox="0 0 16 16">
+                            <path fillRule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                            <path fillRule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                        </svg>
+                    </span>
+                </a>;
             } else {
                 // We don't know what this link is - seems invalid.
                 return <React.Fragment key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</React.Fragment>;
