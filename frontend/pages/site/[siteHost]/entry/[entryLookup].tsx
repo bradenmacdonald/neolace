@@ -30,6 +30,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
         refCache: props.entry.referenceCache,
     }), [props.entry.id]);
     //const user = React.useContext(UserContext);
+    const hasProps = props.entry.propertiesSummary?.length ?? 0 > 0;
 
     return (
         <SitePage
@@ -47,11 +48,11 @@ const EntryPage: NextPage<PageProps> = function(props) {
                     <h1 className="font-bold text-base">{props.entry.name}</h1>
                     <span id="entry-type-name" className="font-light">{props.entry.entryType.name}</span>
                     <br/>
-                    <code id="entry-id" data-entry-id={props.entry.id} className="font-mono font-light">{props.entry.friendlyId}</code>
+                    <code id="entry-id" data-entry-id={props.entry.id} className="font-mono font-light hidden">{props.entry.friendlyId}</code>
 
                     <ul id="left-toc-headings" className="text-xl font-normal min-h-[400px] flex flex-col justify-center flex-grow">
                         <li className="my-2 truncate"><a href={`#summary`}><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></li>
-                        <li className="my-2 truncate"><a href={`#properties`}><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></li>
+                        <li className={`my-2 truncate ${hasProps || "hidden"}`}><a href={`#properties`}><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></li>
                         {
                             props.entry.features.Article?.headings.map(heading =>
                                 <li key={heading.id} className="my-2 truncate"><a href={`#h-${heading.id}`}>{heading.title}</a></li>
@@ -97,7 +98,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         <nav className="md:hidden sticky top-0 -mx-4 py-1 -mt-2 pb-2 -mb-2 bg-white bg-opacity-90 backdrop-blur-sm text-gray-600">
                             <ul className="mx-auto text-center">
                                 <li className="inline-block p-1 mx-2 text-sm"><a href="#summary">Summary</a></li>
-                                <li className="inline-block p-1 mx-2 text-sm"><a href="#properties">Properties</a></li>
+                                <li className={`inline-block p-1 mx-2 text-sm ${hasProps || "hidden"}`}><a href="#properties">Properties</a></li>
                                 <li className="inline-block p-1 mx-2 text-sm"><a href="#contents">Contents</a></li>
                                 <li className="inline-block p-1 mx-2 text-sm"><a href="#tools">Tools</a></li>
                             </ul>
@@ -108,7 +109,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                             <h1 id="summary">{props.entry.name}</h1>
                             <p id="description"><InlineMDT mdt={props.entry.description} context={mdtContext} /></p>
 
-                            <div className="flex flex-wrap xl:flex-nowrap">
+                            <div className={`flex flex-wrap xl:flex-nowrap ${hasProps || "hidden"}`}>
                                 <div id="properties" className="flex-auto">
                                     <h2><FormattedMessage id="site.entry.propertiesHeading" defaultMessage="Properties"/></h2>
                                     <table>
