@@ -19,7 +19,7 @@ export abstract class LookupExpression {
 
     public abstract getValue(context: LookupContext): Promise<LookupValue>;
 
-    public async getValueAs<ValueType extends LookupValue>(context: LookupContext, valueType: ClassOf<ValueType>): Promise<ValueType> {
+    public async getValueAs<ValueType extends LookupValue>(valueType: ClassOf<ValueType>, context: LookupContext): Promise<ValueType> {
         const initialValue = await this.getValue(context);
         if (initialValue instanceof valueType) {
             return initialValue;
@@ -29,7 +29,7 @@ export abstract class LookupExpression {
         if (castValue !== undefined) {
             return castValue;
         }
-        throw new LookupEvaluationError(`Expected a ${valueType.name} value, but got ${initialValue.constructor.name}.`);
+        throw new LookupEvaluationError(`The expression "${this.toDebugString()}" is not of the right type.`);
     }
 
     public async getValueAsOneOf<VT1 extends LookupValue>(valueTypes: [ClassOf<VT1>], context: LookupContext): Promise<VT1>;

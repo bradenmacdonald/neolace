@@ -56,7 +56,7 @@ export class Image extends LookupExpression {
     }
 
     public async getValue(context: LookupContext) {
-        const formatArgValue = await this.formatExpr.getValueAs(context, StringValue);
+        const formatArgValue = await this.formatExpr.getValueAs(StringValue, context);
         const format: ImageDisplayFormat = (
             formatArgValue.value === "right" ? ImageDisplayFormat.RightAligned :
             formatArgValue.value === "logo" ? ImageDisplayFormat.PlainLogo :
@@ -65,7 +65,7 @@ export class Image extends LookupExpression {
         let entry = (await this.entriesExpr.getValue(context)).castTo(EntryValue, context);
         if (entry === undefined) {
             // We were given an entry set, not an entry - so just take the first one:
-            const entrySet = await this.entriesExpr.getValueAs(context, LazyEntrySetValue);
+            const entrySet = await this.entriesExpr.getValueAs(LazyEntrySetValue, context);
             const slice = await entrySet.getSlice(0n, 1n);  // Get the first value from the set
             if (slice.length === 0) {
                 return new NullValue();
@@ -93,7 +93,7 @@ export class Image extends LookupExpression {
         }
         let maxWidth = undefined;
         if (this.maxWidthExpr) {
-            maxWidth = Number((await this.maxWidthExpr.getValueAs(context, IntegerValue)).value);
+            maxWidth = Number((await this.maxWidthExpr.getValueAs(IntegerValue, context)).value);
         }
 
         return new ImageValue({...imageData, format, entryId: entry.id, altText, caption, link, maxWidth});

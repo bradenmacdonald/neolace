@@ -17,7 +17,7 @@ import { LookupContext } from "../context.ts";
     }
 
     public async getValue(context: LookupContext) {
-        const strValue = await this.argument.getValueAs(context, StringValue);
+        const strValue = await this.argument.getValueAs(StringValue, context);
         return new InlineMarkdownStringValue(strValue.value);
     }
 

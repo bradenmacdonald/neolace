@@ -30,7 +30,7 @@ group(import.meta, () => {
             await assertRejects(
                 () => evalExpression(expression),
                 LookupEvaluationError,
-                "Expected a StringValue value, but got NullValue."
+                `The expression "null" is not of the right type.`,
             );
         });
 

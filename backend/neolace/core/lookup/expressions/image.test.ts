@@ -73,9 +73,7 @@ group(import.meta, () => {
             await assertRejects(
                 () => evalExpression(expression),
                 LookupEvaluationError,
-                // TODO: this error message is more of an internal message; need something more helpful, like
-                // expr.toDebugString()
-                `Expected a LazyEntrySetValue value, but got IntegerValue.`,
+                `The expression "123" is not of the right type.`,
             )
         });
 

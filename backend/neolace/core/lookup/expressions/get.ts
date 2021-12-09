@@ -100,7 +100,7 @@ export class GetProperty extends LookupExpression {
         // TODO: if this.fromEntriesExpr is a Placeholder (X), return a special placeholder value.
 
         // First, look up the property we are retrieving:
-        const propValue = await this.propertyExpr.getValueAs(context, PropertyValue);
+        const propValue = await this.propertyExpr.getValueAs(PropertyValue, context);
         let propertyData;
         try {
             propertyData = await context.tx.queryOne(C`
@@ -116,7 +116,7 @@ export class GetProperty extends LookupExpression {
 
         if (propType === PropertyType.RelIsA || propType === PropertyType.RelOther) {
             // This is a relationship property.
-            const startingEntrySet = await this.fromEntriesExpr.getValueAs(context, LazyEntrySetValue);
+            const startingEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
             // Using a simplified version of our "get property value" code, we are finding all the entries that are
             // related via a specific property to the source entry/entries.
             return new LazyEntrySetValue(context, C`
@@ -181,7 +181,7 @@ export class GetProperty extends LookupExpression {
                 }
             } else {
                 // We are lookup up this value property for many entries.
-                // const forEntrySet = await this.fromEntriesExpr.getValueAs(context, LazyEntrySetValue);
+                // const forEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
                 throw new LookupEvaluationError("Multiple property values not yet supported for get()");
             }
         }
