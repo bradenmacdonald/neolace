@@ -1,13 +1,14 @@
 import React from 'react';
 import { api } from 'lib/api-client';
 import { FormattedListParts, FormattedMessage } from 'react-intl';
+
 import { Tooltip } from 'components/widgets/tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { EntryLink } from './EntryLink';
+import { LookupImage } from './LookupImage';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
-    refCache: api.EntryData["referenceCache"];
     mdtContext: MDTContext;
     children?: never;
 }
@@ -23,22 +24,10 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
     }
 
     switch (value.type) {
-        case "List": {
-
-            const listValues = value.values.map((v, idx) => 
-                <LookupValue key={idx} value={v} refCache={props.refCache} mdtContext={props.mdtContext} />
-            );
-
-            return <span className="neo-lookup-paged-values">
-                <FormattedListParts type="unit" value={listValues}>
-                    {parts => <>{parts.map(p => p.value)}</>}
-                </FormattedListParts>
-            </span>;
-        }
         case "Page": {
 
             const listValues = value.values.map((v, idx) => 
-                <LookupValue key={idx} value={v} refCache={props.refCache} mdtContext={props.mdtContext} />
+                <LookupValue key={idx} value={v} mdtContext={props.mdtContext} />
             );
             if (listValues.length < value.totalCount) {
                 listValues.push(
@@ -59,12 +48,15 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             </span>;
         }
         case "Entry": {
-            const entry = props.refCache.entries[value.id];
+            const entry = props.mdtContext.refCache.entries[value.id];
             const linkText = entry ? entry.name : value.id;
             return <EntryLink entryKey={value.id} mdtContext={props.mdtContext}>{linkText}</EntryLink>
         }
+        case "Image": {
+            return <LookupImage value={value} mdtContext={props.mdtContext} />;
+        }
         case "Property": {
-            const prop = props.refCache.properties[value.id];
+            const prop = props.mdtContext.refCache.properties[value.id];
             if (prop === undefined) {
                 // return <Link href={`/prop/${value.id}`}><a className="text-red-700 font-bold">{value.id}</a></Link>
                 return <span className="text-red-700 font-bold">{value.id}</span>
@@ -92,7 +84,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Annotated":
             if (value.annotations.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
                 return <>
-                    <LookupValue value={value.value} refCache={props.refCache} mdtContext={props.mdtContext} />
+                    <LookupValue value={value.value} mdtContext={props.mdtContext} />
                     <Tooltip tooltipContent={<>
                         <p className="text-sm"><InlineMDT mdt={value.annotations.note.value} context={props.mdtContext} /></p>
                     </>}>
@@ -100,7 +92,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                     </Tooltip>
                 </>;
             }
-            return <LookupValue value={value.value} refCache={props.refCache} mdtContext={props.mdtContext} />
+            return <LookupValue value={value.value} mdtContext={props.mdtContext} />
         default: {
             return <code>{JSON.stringify(value)}</code>;
         }

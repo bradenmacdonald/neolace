@@ -29,6 +29,30 @@ export interface PropertyValue extends LookupValue {
     id: VNID;
 }
 
+export enum ImageDisplayFormat {
+    Thumbnail = "thumb",
+    RightAligned = "right",
+    PlainLogo = "plain",
+}
+
+export interface ImageValue extends LookupValue {
+    type: "Image";
+    entryId: VNID;
+    imageUrl: string;
+    contentType: string;
+    altText: string;
+    size?: number;
+    width?: number;
+    height?: number;
+    blurHash?: string;
+    // Should this image be a link?
+    link?: EntryValue|StringValue;
+    // How the image should be displayed:
+    format: ImageDisplayFormat;
+    caption?: InlineMarkdownString|StringValue;
+    maxWidth?: number;  // maximum width in pixels (CSS reference pixel at 96dpi), for "logo" format only
+}
+
 export interface AnnotatedValue extends LookupValue {
     type: "Annotated";
     value: AnyLookupValue;
@@ -59,9 +83,9 @@ export interface ErrorValue extends LookupValue {
 
 export type AnyLookupValue = (
     | PageValue
-    | ListValue
     | EntryValue
     | PropertyValue
+    | ImageValue
     | AnnotatedValue
     | IntegerValue
     | StringValue

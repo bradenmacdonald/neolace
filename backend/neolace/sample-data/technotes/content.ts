@@ -23,8 +23,14 @@ export const ids = {
     motorVehicle: VNID("_5lqx2yOMSlbibeIT5psLCr"),
     img18650cell: VNID("_5Dk4j3EUjThp91B1SeGwUF"),
     imgAABattery: VNID("_1nmqoMNKS0MYZRjjzUiQd3"),
+    imgHomeLogoNRC: VNID("_3FBIrCRwznnyPOo0Ln3Zf0"),
+    imgHomeLogoILab: VNID("_4kfv0p8IFnzOOOdjmJRw4E"),
+    imgHomeLogoSandbox: VNID("_4OPh7CUZA88UKYakBM2NUK"),
     imgLiIonBatteryJellyRoll: VNID("_52FWviI73eaW6sIO8sZx0F"),
     imgMiniCooperSe: VNID("_5hqETvE3WTHuYvhHbwWuD"),
+    imgTeamBraden: VNID("_2jhlA8cESf5nD9dlURERw5"),
+    imgTeamJoel: VNID("_5IgIEXFV54PUucrhcKN26E"),
+    imgTeamJeff: VNID("_1HKE5qN2QazUiSYdvuEfjz"),
     primaryCell: VNID("_7OCTF7b5Z4wM7KvEE16OtK"),
     productPanasonicNCR18650B: VNID("_3KPUsKAzTQZ6ZJT05VvagC"),
     productTesla18650cell: VNID("_5QZEkrIjvgA7y3iP9qSEVi"),
@@ -34,14 +40,23 @@ export const ids = {
     secondaryCell: VNID("_4HwJfgRjCzfOI7z2XTzY0r"),
     standarizedBattery: VNID("_51YyfHlwYxW1X5QfjRBai6"),
     technotesTeam: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
-    //spare: VNID("_1vRUxDKM7tGDscdt4oDyzo"),
-    //spare: VNID("_5IgIEXFV54PUucrhcKN26E"),
-    //spare: VNID("_1HKE5qN2QazUiSYdvuEfjz"),
+    //spare: VNID("_6zvYuCnfuiQKEWHff2rWC2"),
+    //spare: VNID("_1CZTpr2BFC76f54Q3vNuB4"),
+    //spare: VNID("_7L82mzuTE4VBE7qtgSCw5q"),
+    //spare: VNID("_4039TU7Xn7xYBEvhtzA65D"),
+    //spare: VNID("_4R4bJmIhMJiQ5bXALcYmz1"),
+    //spare: VNID("_1X8ysL1NXDrJv2XDYmXRua"),
+    //spare: VNID("_yP5CLTAiFrhoCOtFkpsS2"),
+    //spare: VNID("_7J1EEePxd3wm8gfRFUDpML"),
+    //spare: VNID("_3Zw5NqCBkoTQZXT7LjLqVe"),
+    //spare: VNID("_3YpHBvg2F7BaDUGHzUl5js"),
+    //spare: VNID("_516aUfKmnKsrsUZRnnR0BI"),
+    //spare: VNID("_708vyHRgZpnr7bRkiBswtT"),
     // To generate more IDs:
     // From backend, run "deno", then
     //  import { VNID } from "./neolace/deps/vertex-framework.ts";
     // then
-    //  new Array(20).fill(undefined).map(_ => VNID())
+    //  new Array(20).fill(undefined).map(_ => VNID()).forEach(v => console.log(`//spare: VNID("${v}"),`))
 };
 
 export const edits: AnyContentEdit[] = [
@@ -55,29 +70,27 @@ export const edits: AnyContentEdit[] = [
         props: {},
         features: [
             {featureType: "Article", articleMD: dedent`
-                # Braden MacDonald
-                
-                *CEO*
+                { [[/entry/${ids.imgTeamBraden}]].image(format="right") }
 
-                <img alt="[Photo of Braden]" src="/team-braden.jpg" class="border-gray-700 border-4 rounded-lg mb-3 w-max md:w-64 md:float-right md:ml-6">
-                
+                # Braden MacDonald, *CEO*
+
                 Braden is a software developer and technology enthusiast. He is the co-founder and CEO of [TechNotes](https://www.technotes.org) and the CTO of [OpenCraft](https://opencraft.com/). Prior to TechNotes, Braden's most recent major project was [LabXchange](https://www.labxchange.org/), an online platform from Harvard University which provides world-class life sciences education materials to the world on-demand and for free. Braden led the software development for the project, which went on to have over two million users in its first year and won the 2020 Open edX Prize for creating the most impactful technical project built with Open edX.
-                
+
                 An avid programmer since childhood, Braden has worked with a wide variety of projects, platforms, and programming languages over the years. Braden is known for his deep technical knowledge, his wide-ranging experience, his approach to understanding problems from many perspectives, his ability to communicate clearly, and his relentless optimism.
-                
+
                 Outside of work, Braden has enjoyed serving on several non-profit boards, notably the OGO Car Share Co-op which brought car sharing to BC's Okanagan Valley and was acquired by [Modo](https://modo.coop/). Braden holds an Honours B.Sc. in Physics from the University of British Columbia.
 
-                # Joel Krupa
-                
-                *COO*
+                { [[/entry/${ids.imgTeamJoel}]].image(format="right") }
+
+                # Joel Krupa, *COO*
 
                 Joel started his career as an intern in the office of former California Governor Arnold Schwarzenegger. He went on to hold senior roles in both private sector and public sector clean energy and technology organizations. In parallel with this work, he has maintained an academic career that included teaching numerous undergraduate classes, publishing 10 energy-related academic papers, and writing over 50 book reviews on a range of technical and popular topics.
 
                 Joel completed a postdoctoral fellowship at Harvard Engineering after earning a B.A. at the University of British Columbia, a B.Sc. at the London School of Economics, an M.Sc. at the University of Oxford, and a Ph.D. at the University of Toronto. He has undertaken visiting research appointments at research centres affiliated with Imperial College London and the University of Oxford.
 
-                # Jeff Krupa
-                
-                *VP Content & Partnerships*
+                { [[/entry/${ids.imgTeamJeff}]].image(format="right") }
+
+                # Jeff Krupa, *VP Content & Partnerships*
 
                 Jeff Krupa is a PhD candidate in high energy physics at MIT. His research focuses on AI and the analysis of large datasets. He's interested in existential risks including climate change and excited about delivering technological solutions via accelerated innovation.
             `},
@@ -218,8 +231,10 @@ export const edits: AnyContentEdit[] = [
         friendlyId: "tc-ec-cell-18650",
         type: schemaIds.techConcept,
         description: dedent`
-            An 18650 cell is a standard format [cylindrical lithium-ion](/entry/${ids.cylindricalLithiumIonCell}) [cell](/entry/${ids.secondaryCell}),
-            with a diameter of 18mm and a length of 65mm (slightly larger than a [AA battery](/entry/${ids.batteryAA})).
+            An 18650 cell is a standard format [cylindrical lithium-ion](/entry/${ids.cylindricalLithiumIonCell})
+            [cell](/entry/${ids.secondaryCell}), with a diameter of {this.get(prop=[[/prop/${schemaIds.propDiameter}]])}
+            and a length of {this.get(prop=[[/prop/${schemaIds.propLength}]])} (slightly larger than a
+            [AA battery](/entry/${ids.batteryAA})).
             The 18650 cell has been used since the late 1990s and has been popular for a wide range of applications that
             require a rechargeable battery - such as flashlights, laptops, power tools, and even electric vehicles. Due
             to the popularity of the 18650 cell, they are usually an easily available, well-understood, and affordable
@@ -537,6 +552,79 @@ export const edits: AnyContentEdit[] = [
     setHeroImage(ids.batteryAA, ids.imgAABattery),
     setHeroImage(ids.standarizedBattery, ids.imgAABattery),
     setHeroImage(ids.battery, ids.imgAABattery),
+
+    // Photo of Braden
+    ...createEntry({
+        id: ids.imgTeamBraden,
+        name: "photo of Braden MacDonald",
+        friendlyId: "img-technotes-braden",
+        type: schemaIds.image,
+        description: `Photo of TechNotes co-founder, Braden MacDonald`,
+        features: [{featureType: "Image", dataFileId: files.teamBraden.id}],
+        props: {
+            [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Please contact TechNotes if you wish to use this image anywhere other than within TechNotes itself."` },
+        },
+    }),
+    // Photo of Joel
+    ...createEntry({
+        id: ids.imgTeamJoel,
+        name: "Photo of Joel Krupa",
+        friendlyId: "img-technotes-joel",
+        type: schemaIds.image,
+        description: `Photo of TechNotes co-founder, Joel Krupa`,
+        features: [{featureType: "Image", dataFileId: files.teamJoel.id}],
+        props: {
+            [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Please contact TechNotes if you wish to use this image anywhere other than within TechNotes itself."` },
+        },
+    }),
+    // Photo of Jeff
+    ...createEntry({
+        id: ids.imgTeamJeff,
+        name: "Photo of Jeff Krupa",
+        friendlyId: "img-technotes-jeff",
+        type: schemaIds.image,
+        description: `Photo of TechNotes co-founder, Jeff Krupa`,
+        features: [{featureType: "Image", dataFileId: files.teamJeff.id}],
+        props: {
+            [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Please contact TechNotes if you wish to use this image anywhere other than within TechNotes itself."` },
+        },
+    }),
+    // NRC Logo
+    ...createEntry({
+        id: ids.imgHomeLogoNRC,
+        name: "National Research Council of Canada logo",
+        friendlyId: "img-home-logo-nrc",
+        type: schemaIds.image,
+        description: `National Research Council of Canada logo`,
+        features: [{featureType: "Image", dataFileId: files.homeLogoNRC.id}],
+        props: {
+            [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Used with permission."` },
+        },
+    }),
+    // Harvard i-lab Logo
+    ...createEntry({
+        id: ids.imgHomeLogoILab,
+        name: "Harvard Innovation Labs Logo",
+        friendlyId: "img-home-logo-i-lab",
+        type: schemaIds.image,
+        description: `Harvard Innovation Labs Logo`,
+        features: [{featureType: "Image", dataFileId: files.homeLogoILab.id}],
+        props: {
+            [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Used with permission."` },
+        },
+    }),
+    // MIT Sandbox logo
+    ...createEntry({
+        id: ids.imgHomeLogoSandbox,
+        name: "MIT Sandbox Logo",
+        friendlyId: "img-home-logo-sandbox",
+        type: schemaIds.image,
+        description: `MIT Sandbox Logo`,
+        features: [{featureType: "Image", dataFileId: files.homeLogoSandbox.id}],
+        props: {
+            [schemaIds.propLicense]: { valueExpr: `"All rights reserved. Used with permission."` },
+        },
+    }),
 ];
 
 function createEntry({id, ...args}: {

@@ -123,7 +123,7 @@ export const HeroImageFeature = EntryTypeFeature({
 
         refCache?.addReferenceToEntryId(imageEntryId);
         if (caption) {
-            refCache?.extractMarkdownReferences(caption);
+            refCache?.extractMarkdownReferences(caption, {currentEntryId: imageEntryId});
         }
 
         return {

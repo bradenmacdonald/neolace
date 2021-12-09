@@ -33,7 +33,7 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
     }
 
     public async getValue(context: LookupContext) {
-        const startingEntry = await this.entryExpr.getValueAs(context, EntryValue);
+        const startingEntry = await this.entryExpr.getValueAs(EntryValue, context);
 
         return new LazyEntrySetValue(context, C`
             MATCH (entry:${Entry} {id: ${startingEntry.id}})
@@ -66,7 +66,7 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
     }
 
     public async getValue(context: LookupContext) {
-        const startingEntry = await this.entryExpr.getValueAs(context, EntryValue);
+        const startingEntry = await this.entryExpr.getValueAs(EntryValue, context);
 
         return new LazyEntrySetValue(context, C`
             MATCH (entry:${Entry} {id: ${startingEntry.id}})

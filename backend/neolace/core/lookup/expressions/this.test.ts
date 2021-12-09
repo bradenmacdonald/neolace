@@ -18,7 +18,7 @@ group(import.meta, () => {
             const expression = new This();
 
             const value = await graph.read(tx => 
-                expression.getValue({tx, siteId, entryId: ponderosaPine.id})
+                expression.getValue({tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n})
             );
 
             assertEquals(
@@ -32,7 +32,7 @@ group(import.meta, () => {
             const expression = new This();
 
             await assertRejects(
-                () => graph.read(tx => expression.getValue({tx, siteId, entryId: undefined})),
+                () => graph.read(tx => expression.getValue({tx, siteId, entryId: undefined, defaultPageSize: 10n})),
                 LookupEvaluationError,
                 `The keyword "this" only works in the context of a specific entry.`,
             );

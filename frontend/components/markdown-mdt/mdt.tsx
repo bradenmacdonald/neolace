@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { api } from 'lib/api-client';
 import { EntryLink } from 'components/EntryLink';
 import { MDT } from 'neolace-api';
+import { VNID } from 'neolace-api/types.ts';
+import { LookupValue } from 'components/LookupValue';
 
 
 /**
@@ -13,18 +15,21 @@ import { MDT } from 'neolace-api';
  * current page.
  */
 export class MDTContext {
+    readonly entryId: VNID|undefined;
     readonly refCache: api.ReferenceCacheData;
     /** Decrease the size of the headings by this number (1 means <h1> becomes <h2>, etc.) */
     readonly headingShift: number;
 
-    constructor(args: {refCache?: api.ReferenceCacheData, headingShift?: number}) {
+    constructor(args: {entryId: VNID|undefined, refCache?: api.ReferenceCacheData, headingShift?: number}) {
+        this.entryId = args.entryId;
         // If no reference cache is available, create an empty one for consistency.
-        this.refCache = args.refCache ?? {entries: {}, entryTypes: {}, properties: {}};
+        this.refCache = args.refCache ?? {entries: {}, entryTypes: {}, properties: {}, lookups: []};
         this.headingShift = args.headingShift ?? 0;
     }
 
-    public childContextWith(args: {headingShift?: number}) {
+    public childContextWith(args: {entryId?: VNID|undefined, headingShift?: number}) {
         return new MDTContext({
+            entryId: 'entryId' in args ? args.entryId : this.entryId,
             refCache: this.refCache,
             headingShift: this.headingShift + (args.headingShift ?? 0),
         });
@@ -74,14 +79,30 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode, context: 
                     // Not sure what this is linking to...
                     return <Link href={node.href} key={key}><a>{node.children.map(child => inlineNodeToComponent(child, context))}</a></Link>;
                 }
-            } else if (node.href.startsWith("http://") || node.href.startsWith("https://")) {
-                return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</a>;
+            } else if (node.href.startsWith("http://") || node.href.startsWith("https://") || node.href.startsWith("mailto:")) {
+                return <a href={node.href} key={key} target="_blank">
+                    {node.children.map(child => inlineNodeToComponent(child, context))}
+                    {/* Icon to indicate this is an external link */}
+                    <span title="(External Link)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="inline-block mx-1 text-gray-400 align-baseline" viewBox="0 0 16 16">
+                            <path fillRule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                            <path fillRule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                        </svg>
+                    </span>
+                </a>;
             } else {
                 // We don't know what this link is - seems invalid.
                 return <React.Fragment key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</React.Fragment>;
             }
         case "code_inline":
             return <code key={key}>{node.content}</code>;
+        case "lookup_inline": {
+            const lookupData = context.refCache.lookups.find(x => x.entryContext === context.entryId && x.lookupExpression === node.content);
+            if (lookupData) {
+                return <LookupValue mdtContext={context} value={lookupData.value} />
+            }
+            return <code key={key} className="text-red-500">{'{'}{node.content}{'}'}</code>;
+        }
         case "strong":
             return <strong key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</strong>;
         case "em":
@@ -150,6 +171,13 @@ function nodeToComponent(node: MDT.Node, context: MDTContext) {
         }
         case "hr":
             return <hr key={key} />;
+        case "lookup_block": {
+            const lookupData = context.refCache.lookups.find(x => x.entryContext === context.entryId && x.lookupExpression === node.content);
+            if (lookupData) {
+                return <LookupValue key={key} mdtContext={context} value={lookupData.value} />
+            }
+            return <code key={key} className="text-red-500"><pre>{'{'}{node.content}{'}'}</pre></code>;
+        }
         case "code_block":
             return <code key={key}><pre>{node.content}</pre></code>;
         case "table":

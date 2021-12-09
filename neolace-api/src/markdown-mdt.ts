@@ -3,8 +3,9 @@ import markdown from "./deps/markdown-it.min.js";
 import type { Token } from "./deps/markdown-it/Token.ts";
 import { Node, InlineNode, RootNode, AnyInlineNode, AnyBlockNode } from "./markdown-mdt-ast.ts";
 export type { Node, InlineNode, RootNode, AnyInlineNode, AnyBlockNode }
-import { SubPlugin } from "./markdown-mdt-sub-plugin.ts";
 import { HeadingIdPlugin } from "./markdown-mdt-heading-id-plugin.ts";
+import { LookupExpressionPlugin } from "./markdown-mdt-lookup-plugin.ts";
+import { SubPlugin } from "./markdown-mdt-sub-plugin.ts";
 
 const parser = markdown("commonmark", {
     breaks: false,  // Don't convert \n in paragraphs into <br>
@@ -17,6 +18,7 @@ const parser = markdown("commonmark", {
 .enable("strikethrough") // Enable ~~strikethrough~~
 .enable("table") // Enable tables (GitHub-style)
 .use(HeadingIdPlugin) // Give each heading an ID
+.use(LookupExpressionPlugin) // Parse { lookup expressions }
 .use(SubPlugin); // Allow use of <sub> and <sup> tags
 
 
@@ -143,7 +145,7 @@ function tokenToNode(token: Token): Node {
     }
 
     // Content/children attributes:
-    if (type === "text" || type === "code_inline" || type === "code_block") {
+    if (type === "text" || type === "code_inline" || type === "code_block" || type === "lookup_inline" || type === "lookup_block") {
         // This node contains text content:
         node.content = token.content;
     } else {
@@ -205,6 +207,9 @@ export function renderInlineToHTML(inlineNode: Node): string {
         } else if (childNode.type === "hardbreak") {
             html += "<br>";
             return;
+        } else if (childNode.type === "lookup_inline") {
+            html += "<code>" + parser.utils.escapeHtml(childNode.content) + "</code>";
+            return;
         }
         let start = "", end = "";
         switch (childNode.type) {
@@ -246,7 +251,7 @@ export function renderInlineToPlainText(inlineNode: Node): string {
         if (childNode.type === "text") {
             text += childNode.content;
             return;
-        } else if (childNode.type === "code_inline") {
+        } else if (childNode.type === "code_inline" || childNode.type === "lookup_inline") {
             text += childNode.content;
             return;
         } else if (childNode.type === "softbreak" || childNode.type === "hardbreak") {

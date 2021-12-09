@@ -78,6 +78,24 @@ export interface ICountableValue {
     getCount(): Promise<bigint>;
 }
 
+/**
+ * Value types that can be iterated (lists, queries, strings, etc.) should conform to this interface, so they can be used
+ * with standard functions like first(), filter(), map(), etc.
+ */
+export interface IIterableValue {
+    isIterable: true;
+    /**
+     * Get a "slice" containing up to numItems values from this iterator.
+     * To get the first item use getSlice(0, 1); for the second item, getSlice(1, 1), etc.
+     * When the returned array has length less than numItems, the iterator is exhausted.
+     */
+    getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]>;
+}
+
+export function isIterableValue(value: unknown): value is (LookupValue & IIterableValue) {
+    return value instanceof LookupValue && (value as unknown as IIterableValue).isIterable === true;
+}
+
 /** Any value that can always be expressed as a simple literal (e.g. an integer "5") should conform to this interface. */
 export interface IHasLiteralExpression {
     /**
@@ -121,8 +139,9 @@ export class IntegerValue extends ConcreteValue {
 /**
  * A value that respresents a string
  */
-export class StringValue extends ConcreteValue implements IHasLiteralExpression {
+export class StringValue extends ConcreteValue implements IHasLiteralExpression, IIterableValue {
     readonly value: string;
+    readonly isIterable = true;
 
     constructor(value: string) {
         super();
@@ -136,6 +155,17 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression 
     public override asLiteral(): string {
         // JSON.stringify() will create a "quoted" and \"escaped\" string for us.
         return JSON.stringify(this.value);
+    }
+
+    /**
+     * Get a slice of the characters in this string.
+     * This does NOT return a substring; it returns an array of single-character strings, because this is part of the
+     * iterable interface, not a string-specific function.
+     */
+    // deno-lint-ignore require-await
+    public async getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]> {
+        const slicedStr = this.value.slice(Number(offset), Number(offset + numItems));
+        return slicedStr.split('').map(char => new StringValue(char));
     }
 
     protected serialize() {
@@ -326,6 +356,56 @@ export class AnnotatedValue extends ConcreteValue {
     }
 }
 
+interface ImageData {
+    entryId: VNID;
+    altText: string;
+    imageUrl: string;
+    contentType: string;
+    size: number;
+    width?: number;
+    height?: number;
+    blurHash?: string;
+    // Should this image be a link?
+    link?: EntryValue|StringValue;
+    // How the image should be displayed:
+    format: api.ImageDisplayFormat;
+    caption?: InlineMarkdownStringValue|StringValue;
+    maxWidth?: number;
+}
+
+/**
+ * An image
+ */
+export class ImageValue extends ConcreteValue {
+   public readonly data: ImageData;
+
+    constructor(data: ImageData) {
+        super();
+        this.data = data;
+    }
+
+    public override asLiteral() {
+        return undefined;  // There is no literal expression for an image
+    }
+    
+    protected serialize(): Omit<api.ImageValue, "type"> {
+        return {
+            entryId: this.data.entryId,
+            altText: this.data.altText,
+            caption: this.data.caption?.toJSON() as api.InlineMarkdownString|api.StringValue|undefined,
+            imageUrl: this.data.imageUrl,
+            contentType: this.data.contentType,
+            size: this.data.size,
+            width: this.data.width,
+            height: this.data.height,
+            blurHash: this.data.blurHash,
+            format: this.data.format,
+            link: this.data.link?.toJSON() as api.StringValue|api.EntryValue|undefined,
+            maxWidth: this.data.maxWidth,
+        };
+    }
+}
+
 /**
  * A subset of values from a larger value set.
  */
@@ -355,52 +435,58 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
             totalCount: Number(this.totalCount),
         };
     }
-}
 
-/**
- * An immutable array of values of fixed length.
- * Values do not necessarily have to be of the same type, so this can work as a tuple.
- */
- export class ListValue extends ConcreteValue implements ICountableValue {
-    readonly values: ReadonlyArray<ConcreteValue>;
-    readonly hasCount = true;
-
-    constructor(values: (ConcreteValue)[]) {
-        super();
-        this.values = values;
-    }
-
-    // deno-lint-ignore require-await
-    public async getCount(): Promise<bigint> {
-        return BigInt(this.values.length);
-    }
-
-    /**
-     * Return this value as a string, in Neolace Lookup Expression format.
-     * This string should parse to an expression that yields the same value.
-     */
-    public override asLiteral(): string|undefined {
-        const literalValues = this.values.map(v => v.asLiteral());
-        if (literalValues.includes(undefined)) {
-            return undefined;  // One of more of the values in this list cannot be expressed as a literal
-        }
-        return "[" + literalValues.join(", ") + "]";
-    }
-
-    protected serialize() {
-        return {
-            values: this.values.map(v => v.toJSON()),
-        };
-    }
-
-    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
-        if (newType === PageValue) {
-            const totalCount = BigInt(this.values.length);
-            return new PageValue(this.values, {totalCount, pageSize: totalCount, startedAt: 0n});
-        }
-        return undefined;
+    /** Helper method to quickly make a "Page" value from a fixed array of values */
+    static from<T extends ConcreteValue>(values: T[], minPageSize = 1n): PageValue<T> {
+        const pageSize = values.length < minPageSize ? minPageSize : BigInt(values.length);
+        return new PageValue(values, { startedAt: 0n, pageSize, totalCount: BigInt(values.length) });
     }
 }
+
+// /**
+//  * An immutable array of values of fixed length.
+//  * Values do not necessarily have to be of the same type, so this can work as a tuple.
+//  */
+// export class ListValue extends ConcreteValue implements ICountableValue {
+//     readonly values: ReadonlyArray<ConcreteValue>;
+//     readonly hasCount = true;
+
+//     constructor(values: (ConcreteValue)[]) {
+//         super();
+//         this.values = values;
+//     }
+
+//     // deno-lint-ignore require-await
+//     public async getCount(): Promise<bigint> {
+//         return BigInt(this.values.length);
+//     }
+
+//     /**
+//      * Return this value as a string, in Neolace Lookup Expression format.
+//      * This string should parse to an expression that yields the same value.
+//      */
+//     public override asLiteral(): string|undefined {
+//         const literalValues = this.values.map(v => v.asLiteral());
+//         if (literalValues.includes(undefined)) {
+//             return undefined;  // One of more of the values in this list cannot be expressed as a literal
+//         }
+//         return "[" + literalValues.join(", ") + "]";
+//     }
+
+//     protected serialize() {
+//         return {
+//             values: this.values.map(v => v.toJSON()),
+//         };
+//     }
+
+//     protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+//         if (newType === PageValue) {
+//             const totalCount = BigInt(this.values.length);
+//             return new PageValue(this.values, {totalCount, pageSize: totalCount, startedAt: 0n});
+//         }
+//         return undefined;
+//     }
+// }
 
 
 /**
@@ -445,7 +531,7 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
         super(context);
         this.cypherQuery = cypherQuery;
         this.skip = options.skip ?? 0n;
-        this.limit = options.limit ?? context.defaultPageSize ?? 50n;
+        this.limit = options.limit ?? context.defaultPageSize;
     }
 
     /** Helper method for cloning instances of this */
@@ -475,8 +561,9 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
  */
 type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
 
-export class LazyEntrySetValue extends LazyCypherQueryValue {
+export class LazyEntrySetValue extends LazyCypherQueryValue implements IIterableValue {
     readonly annotations: Readonly<Record<string, AnnotationReviver>>|undefined;
+    public readonly isIterable = true;
 
     constructor(context: LookupContext, cypherQuery: CypherQuery, options: {skip?: bigint, limit?: bigint, annotations?: Record<string, AnnotationReviver>} = {}) {
         super(context, cypherQuery, options);
@@ -484,26 +571,11 @@ export class LazyEntrySetValue extends LazyCypherQueryValue {
     }
 
     public override async toDefaultConcreteValue(): Promise<PageValue<EntryValue|AnnotatedValue>> {
-        const query = C`
-            ${this.cypherQuery}
-            RETURN entry.id, annotations
-            ${this.getSkipLimitClause()}
-        `.givesShape({"entry.id": Field.VNID, annotations: Field.Any});
-        const result = await this.context.tx.query(query);
-        const totalCount = this.skip === 0n && result.length < this.limit ? BigInt(result.length) : await this.getCount();
+        const firstPageValues = await this.getSlice(0n, this.limit);
+        const totalCount = this.skip === 0n && firstPageValues.length < this.limit ? BigInt(firstPageValues.length) : await this.getCount();
 
         return new PageValue<EntryValue|AnnotatedValue>(
-            result.map(r => {
-                if (this.annotations) {
-                    const annotatedValues: Record<string, ConcreteValue> = {};
-                    for (const key in this.annotations) {
-                        annotatedValues[key] = this.annotations[key](r.annotations[key]);
-                    }
-                    return new AnnotatedValue(new EntryValue(r["entry.id"]), annotatedValues);
-                } else {
-                    return new EntryValue(r["entry.id"])
-                }
-            }),
+            firstPageValues,
             {
                 startedAt: this.skip,
                 pageSize: this.limit,
@@ -511,33 +583,77 @@ export class LazyEntrySetValue extends LazyCypherQueryValue {
             },
         );
     }
+
+
+    public async getSlice(offset: bigint, numItems: bigint): Promise<Array<EntryValue|AnnotatedValue>> {
+        const query = C`
+            ${this.cypherQuery}
+            RETURN entry.id, annotations
+            SKIP ${C(String(BigInt(offset)))} LIMIT ${C(String(BigInt(numItems)))}
+        `.givesShape({"entry.id": Field.VNID, annotations: Field.Any});
+        const result = await this.context.tx.query(query);
+
+        return result.map(r => {
+            if (this.annotations) {
+                const annotatedValues: Record<string, ConcreteValue> = {};
+                for (const key in this.annotations) {
+                    annotatedValues[key] = this.annotations[key](r.annotations[key]);
+                }
+                return new AnnotatedValue(new EntryValue(r["entry.id"]), annotatedValues);
+            } else {
+                return new EntryValue(r["entry.id"])
+            }
+        })
+    }
 }
 
-
 /**
- * An immutable array of values of fixed length.
- * Values can be "lazy" (not yet fully evaluated)
+ * Some collection of iterable values, or abstract generator that can produce values.
  */
- export class LazyListValue extends LazyValue implements ICountableValue {
-    readonly values: ReadonlyArray<LookupValue>;
-    readonly hasCount = true;
+export class LazyIterableValue extends LazyValue implements IIterableValue {
+    readonly hasCount: boolean;
+    public readonly isIterable = true;
+    public getCount?: () => Promise<bigint>;
+    public getSlice: (offset: bigint, numItems: bigint) => Promise<LookupValue[]>;
 
-    constructor(context: LookupContext, values: (LookupValue)[]) {
+    constructor({context, getCount, getSlice}: {
+        context: LookupContext,
+        getCount?: () => Promise<bigint>,
+        getSlice: (offset: bigint, numItems: bigint) => Promise<LookupValue[]>,
+    }) {
         super(context);
-        this.values = values;
+        this.hasCount = getCount !== undefined;
+        this.getCount = getCount;
+        this.getSlice = getSlice;
     }
 
-    // deno-lint-ignore require-await
-    public async getCount(): Promise<bigint> {
-        return BigInt(this.values.length);
-    }
-
-    public override async toDefaultConcreteValue(): Promise<ListValue> {
+    public override async toDefaultConcreteValue(): Promise<PageValue<ConcreteValue>> {
+        const pageSize = this.context.defaultPageSize;
+        const slicedValues = await this.getSlice(0n, pageSize);
+        let totalCount: bigint;
+        if (slicedValues.length < pageSize) {
+            totalCount = BigInt(slicedValues.length);
+        } else {
+            if (this.getCount) {
+                totalCount = await this.getCount();
+            } else {
+                // We'll have to inefficiently count all the items in this iterator to determine the count.
+                totalCount = BigInt(slicedValues.length);
+                while(true) {
+                    const countStep = 100n;
+                    const nextCount = BigInt((await this.getSlice(totalCount, countStep)).length);
+                    totalCount += nextCount;
+                    if (nextCount < countStep) {
+                        break;
+                    }
+                }
+            }
+        }
         const concreteValues: ConcreteValue[] = [];
-        for (const value of this.values) {
+        for (const value of slicedValues) {
             concreteValues.push(await value.makeConcrete());
         }
-        return new ListValue(concreteValues);
+        return new PageValue(concreteValues, {pageSize, startedAt: 0n, totalCount});
     }
 }
 

@@ -10,7 +10,7 @@ import { LookupExpression } from "../expression.ts";
 group(import.meta, () => {
 
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId})).then(v => v.makeConcrete());
+    const evalExpression = (expr: LookupExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId, defaultPageSize: 10n})).then(v => v.makeConcrete());
     const siteId = defaultData.site.id;
 
     group("count()", () => {

@@ -334,7 +334,8 @@ group(import.meta, () => {
                         standardURL: "",
                         displayAs: "",
                     },
-                }
+                },
+                lookups: [],
             });
         });
 
@@ -347,6 +348,8 @@ group(import.meta, () => {
 
             assertEquals(result.referenceCache, {
                 entryTypes: {
+                    // The hero image feature references an image:
+                    [defaultData.schema.entryTypes._ETIMAGE.id]: {id: defaultData.schema.entryTypes._ETIMAGE.id, name: defaultData.schema.entryTypes._ETIMAGE.name},
                     // The text only mentions these entries:
                     [defaultData.schema.entryTypes._ETCLASS.id]: {id: defaultData.schema.entryTypes._ETCLASS.id, name: defaultData.schema.entryTypes._ETCLASS.name},
                     [defaultData.schema.entryTypes._ETGENUS.id]: {id: defaultData.schema.entryTypes._ETGENUS.id, name: defaultData.schema.entryTypes._ETGENUS.name},
@@ -369,10 +372,15 @@ group(import.meta, () => {
                         ...defaultData.entries.ponderosaPine,
                         entryType: {id: defaultData.schema.entryTypes._ETSPECIES.id},
                     },
+                    [defaultData.entries.imgPonderosaTrunk.id]: {
+                        ...defaultData.entries.imgPonderosaTrunk,
+                        entryType: {id: defaultData.schema.entryTypes._ETIMAGE.id},
+                    },
                 },
                 properties: {
                     /* We didn't include the properties summary, so no properties should be referenced. */
                 },
+                lookups: [],
             });
         });
 

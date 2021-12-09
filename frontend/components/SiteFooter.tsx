@@ -19,10 +19,10 @@ export const SiteFooter: React.FunctionComponent<Props> = (props) => {
     // const router = useRouter();
     // router.query.siteHost gives the site's domain
 
-    return <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 neo-typography">
+    return <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 neo-typography clear-both">
         <RenderMDT
             mdt={props.site.footerMD}
-            context={new MDTContext({})}
+            context={new MDTContext({entryId: undefined})}
         />
     </footer>;
 };

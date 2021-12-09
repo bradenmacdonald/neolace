@@ -84,7 +84,7 @@ export class ReverseProperty extends LookupExpression {
         // TODO: if this.fromEntriesExpr is a Placeholder (X), return a special placeholder value.
 
         // First, look up the property we are retrieving:
-        const propValue = await this.propertyExpr.getValueAs(context, PropertyValue);
+        const propValue = await this.propertyExpr.getValueAs(PropertyValue, context);
         let propertyData;
         try {
             propertyData = await context.tx.queryOne(C`
@@ -101,7 +101,7 @@ export class ReverseProperty extends LookupExpression {
             throw new LookupEvaluationError("reverse() only works with relationship properties.")
         }
 
-        const startingEntrySet = await this.fromEntriesExpr.getValueAs(context, LazyEntrySetValue);
+        const startingEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
 
         // Find all the entries that are related via the specified property to the source entry/entries.
         return new LazyEntrySetValue(context, C`

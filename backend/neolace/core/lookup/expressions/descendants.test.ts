@@ -53,7 +53,7 @@ group(import.meta, () => {
             const expression = new Count(new Descendants(new This()));
 
             const value = await graph.read(tx => 
-                expression.getValue({tx, siteId, entryId: familyPinaceae.id})
+                expression.getValue({tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 10n})
             );
 
             assertEquals(value, new IntegerValue(9));
@@ -99,7 +99,7 @@ group(import.meta, () => {
             const expression = new Count(new AndDescendants(new This()));
 
             const value = await graph.read(tx => 
-                expression.getValue({tx, siteId, entryId: familyPinaceae.id})
+                expression.getValue({tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 10n})
             );
 
             assertEquals(value, new IntegerValue(10));
@@ -111,7 +111,7 @@ group(import.meta, () => {
 
             const start = performance.now();
             await graph.read(tx => 
-                expression.getValue({tx, siteId, entryId: familyPinaceae.id}).then(v => v.makeConcrete())
+                expression.getValue({tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 10n}).then(v => v.makeConcrete())
             );
             const end = performance.now();
             assert(end - start < maxTime, `Expected andDescendants() to take under ${maxTime}ms but it took ${end - start}ms.`);
@@ -127,20 +127,20 @@ group(import.meta, () => {
         const A = VNID(), B = VNID(), C = VNID(), D = VNID(), E = VNID(), F = VNID(), G = VNID(), H = VNID(), I = VNID();
 
         const evalExpr = async (expr: LookupExpression, entryId: VNID) => await graph.read(tx => 
-            expr.getValue({tx, siteId, entryId}).then(v => v.makeConcrete())
+            expr.getValue({tx, siteId, entryId, defaultPageSize: 10n}).then(v => v.makeConcrete())
         );
 
         const checkDescendants = async (entryId: VNID, expected: AnnotatedValue[]) => {
             // with descendants():
             assertEquals(await evalExpr( new Descendants(new This()), entryId), new PageValue([
                 ...expected,
-            ], {pageSize: 50n, startedAt: 0n, totalCount: BigInt(expected.length)}));
+            ], {pageSize: 10n, startedAt: 0n, totalCount: BigInt(expected.length)}));
 
             // And with andDescendants():
             assertEquals(await evalExpr( new AndDescendants(new This()), entryId), new PageValue([
                 MakeAnnotatedEntryValue(entryId, {distance: new IntegerValue(0n)}),
                 ...expected,
-            ], {pageSize: 50n, startedAt: 0n, totalCount: BigInt(expected.length + 1)}));
+            ], {pageSize: 10n, startedAt: 0n, totalCount: BigInt(expected.length + 1)}));
         };
 
         test("Returns only the shortest distance to duplicate descendants", async () => {
