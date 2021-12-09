@@ -19,7 +19,7 @@ export interface LookupContext {
     siteId: VNID;
     entryId?: VNID;
     // If lookup result values have to be paginated in this context, what's the default page size?
-    defaultPageSize?: bigint;
+    defaultPageSize: bigint;
 }
 
 
@@ -29,7 +29,7 @@ export class LookupCache {
     constructor(
         public readonly tx: WrappedTransaction,
         public readonly siteId: VNID,
-        public readonly defaultPageSize?: bigint,
+        public readonly defaultPageSize: bigint,
     ) {}
 
     public async evaluateExprWithCache(expr: LookupExpression, entryId: VNID|undefined) {

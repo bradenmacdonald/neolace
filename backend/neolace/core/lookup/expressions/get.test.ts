@@ -22,7 +22,7 @@ group(import.meta, () => {
     const cone = defaultData.entries.cone.id;
     const seedCone = defaultData.entries.seedCone.id;
     const pollenCone = defaultData.entries.pollenCone.id;
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId}).then(v => v.makeConcrete()));
+    const evalExpression = (expr: LookupExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId, defaultPageSize: 10n}).then(v => v.makeConcrete()));
 
     // Literal expressions referencing some properties in the default PlantDB data set:
     const scientificName = new LiteralExpression(new PropertyValue(defaultData.schema.properties._propScientificName.id));
@@ -75,7 +75,7 @@ group(import.meta, () => {
             // A "seed cone" is a "cone":
             assertEquals(value, new PageValue([
                 MakeAnnotatedEntryValue(cone, {...defaultAnnotations}),
-            ], {pageSize: 50n, startedAt: 0n, totalCount: 1n}));
+            ], {pageSize: 10n, startedAt: 0n, totalCount: 1n}));
         });
 
         test(`Can retrieve a simple HAS PART relationship property value`, async () => {
@@ -85,7 +85,7 @@ group(import.meta, () => {
             assertEquals(value, new PageValue([
                 MakeAnnotatedEntryValue(pollenCone, {...defaultAnnotations, slot: new StringValue("pollen-cone")}),
                 MakeAnnotatedEntryValue(seedCone, {...defaultAnnotations, slot: new StringValue("seed-cone"), rank: new IntegerValue(2n)}),
-            ], {pageSize: 50n, startedAt: 0n, totalCount: 2n}));
+            ], {pageSize: 10n, startedAt: 0n, totalCount: 2n}));
         });
     });
 });

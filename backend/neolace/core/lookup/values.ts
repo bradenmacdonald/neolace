@@ -531,7 +531,7 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
         super(context);
         this.cypherQuery = cypherQuery;
         this.skip = options.skip ?? 0n;
-        this.limit = options.limit ?? context.defaultPageSize ?? 50n;
+        this.limit = options.limit ?? context.defaultPageSize;
     }
 
     /** Helper method for cloning instances of this */
@@ -628,7 +628,7 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
     }
 
     public override async toDefaultConcreteValue(): Promise<PageValue<ConcreteValue>> {
-        const pageSize = this.context.defaultPageSize ?? 10n;
+        const pageSize = this.context.defaultPageSize;
         const slicedValues = await this.getSlice(0n, pageSize);
         let totalCount: bigint;
         if (slicedValues.length < pageSize) {

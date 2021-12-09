@@ -25,7 +25,7 @@ group(import.meta, () => {
             const expression = new Ancestors(new This());
 
             const value = await graph.read(tx => 
-                expression.getValue({tx, siteId, entryId: ponderosaPine.id}).then(v => v.makeConcrete())
+                expression.getValue({tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n}).then(v => v.makeConcrete())
             );
 
             assertEquals(
@@ -39,7 +39,7 @@ group(import.meta, () => {
                         MakeAnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {distance: new IntegerValue(5)}),
                     ],
                     {
-                        pageSize: 50n,
+                        pageSize: 10n,
                         startedAt: 0n,
                         totalCount: 5n
                     },
@@ -52,7 +52,7 @@ group(import.meta, () => {
             const expression = new Count(new Ancestors(new This()));
 
             const value = await graph.read(tx => 
-                expression.getValue({tx, siteId, entryId: ponderosaPine.id})
+                expression.getValue({tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n})
             );
 
             assertEquals(value, new IntegerValue(5));
@@ -71,7 +71,7 @@ group(import.meta, () => {
 
             const expression = new AndAncestors(new This());
             const value = await graph.read(tx => 
-                expression.getValue({tx, siteId, entryId: ponderosaPine.id}).then(v => v.makeConcrete())
+                expression.getValue({tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n}).then(v => v.makeConcrete())
             );
 
             assertEquals(
@@ -86,7 +86,7 @@ group(import.meta, () => {
                         MakeAnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {distance: new IntegerValue(5)}),
                     ],
                     {
-                        pageSize: 50n,
+                        pageSize: 10n,
                         startedAt: 0n,
                         totalCount: 6n
                     },
@@ -99,7 +99,7 @@ group(import.meta, () => {
             const expression = new Count(new AndAncestors(new This()));
 
             const value = await graph.read(tx => 
-                expression.getValue({tx, siteId, entryId: ponderosaPine.id})
+                expression.getValue({tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n})
             );
 
             assertEquals(value, new IntegerValue(6));
@@ -111,7 +111,7 @@ group(import.meta, () => {
 
             const start = performance.now();
             await graph.read(tx => 
-                expression.getValue({tx, siteId, entryId: ponderosaPine.id}).then(v => v.makeConcrete())
+                expression.getValue({tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n}).then(v => v.makeConcrete())
             );
             const end = performance.now();
             assert(end - start < maxTime, `Expected andAncestors() to take under ${maxTime}ms but it took ${end - start}ms.`);
@@ -127,20 +127,20 @@ group(import.meta, () => {
         const A = VNID(), B = VNID(), C = VNID(), D = VNID(), E = VNID(), F = VNID(), G = VNID(), H = VNID(), I = VNID();
 
         const evalExpr = async (expr: LookupExpression, entryId: VNID) => await graph.read(tx => 
-            expr.getValue({tx, siteId, entryId}).then(v => v.makeConcrete())
+            expr.getValue({tx, siteId, entryId, defaultPageSize: 10n}).then(v => v.makeConcrete())
         );
 
         const checkAncestors = async (entryId: VNID, expected: AnnotatedValue[]) => {
             // with ancestors():
             assertEquals(await evalExpr( new Ancestors(new This()), entryId), new PageValue([
                 ...expected,
-            ], {pageSize: 50n, startedAt: 0n, totalCount: BigInt(expected.length)}));
+            ], {pageSize: 10n, startedAt: 0n, totalCount: BigInt(expected.length)}));
 
             // And with andAncestors():
             assertEquals(await evalExpr( new AndAncestors(new This()), entryId), new PageValue([
                 MakeAnnotatedEntryValue(entryId, {distance: new IntegerValue(0n)}),
                 ...expected,
-            ], {pageSize: 50n, startedAt: 0n, totalCount: BigInt(expected.length + 1)}));
+            ], {pageSize: 10n, startedAt: 0n, totalCount: BigInt(expected.length + 1)}));
         };
 
         test("Returns only the shortest distance to duplicate ancestors", async () => {

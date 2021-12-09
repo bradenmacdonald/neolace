@@ -21,7 +21,7 @@ group(import.meta, () => {
     const cone = defaultData.entries.cone.id;
     const seedCone = defaultData.entries.seedCone.id;
     const pollenCone = defaultData.entries.pollenCone.id;
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId}).then(v => v.makeConcrete()));
+    const evalExpression = (expr: LookupExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId, defaultPageSize: 10n}).then(v => v.makeConcrete()));
 
     // Literal expressions referencing some properties in the default PlantDB data set:
     const partIsAPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._partIsAPart.id));
@@ -43,7 +43,7 @@ group(import.meta, () => {
             assertEquals(value, new PageValue([
                 MakeAnnotatedEntryValue(pollenCone, {...defaultAnnotations}),
                 MakeAnnotatedEntryValue(seedCone, {...defaultAnnotations}),
-            ], {pageSize: 50n, startedAt: 0n, totalCount: 2n}));
+            ], {pageSize: 10n, startedAt: 0n, totalCount: 2n}));
         });
 
     });
