@@ -37,7 +37,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
     const {value} = props;
     const ratio = value.width && value.height ? value.width / value.height : undefined;
     if (value.format === api.ImageDisplayFormat.PlainLogo) {
-        return <div className="w-full" style={{maxWidth: `${value.maxWidth ?? 400}px`}}>
+        return <div className="w-full mt-2 mb-1" style={{maxWidth: `${value.maxWidth ?? 400}px`}}>
             <OptionalLink href={value.link} mdtContext={props.mdtContext}>
                 <Image
                     src={value.imageUrl}
