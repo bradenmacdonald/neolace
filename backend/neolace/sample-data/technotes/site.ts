@@ -38,15 +38,15 @@ export const siteData: Partial<Parameters<typeof UpdateSite>[0]> = {
 
         ## Support
 
-        { [[/entry/${ids.imgHomeLogoNRC}]].image(format="logo") }
+        { [[/entry/${ids.imgHomeLogoNRC}]].image(format="logo", link="https://nrc.canada.ca/en/support-technology-innovation") }
 
         TechNotes is supported in part by advisory services and research and development funding from the National Research Council of Canada Industrial Research Assistance Program (NRC IRAP).
 
-        { [[/entry/${ids.imgHomeLogoILab}]].image(format="logo") }
+        { [[/entry/${ids.imgHomeLogoILab}]].image(format="logo", link="https://innovationlabs.harvard.edu/", maxWidth=60) }
 
         TechNotes is a member of the Harvard Innovation Labs Venture Program.
 
-        { [[/entry/${ids.imgHomeLogoSandbox}]].image(format="logo") }
+        { [[/entry/${ids.imgHomeLogoSandbox}]].image(format="logo", link="https://sandbox.mit.edu/", maxWidth=120) }
 
         Supported and funded by the MIT Sandbox Innovation Fund Program
     `,

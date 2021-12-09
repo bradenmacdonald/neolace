@@ -161,7 +161,9 @@ export class ReferenceCache {
             }
             case "Image": {
                 this._entryIdsUsed.add(value.entryId);
-                this.extractLookupReferences(value.caption, args);
+                if (value.caption?.type === "InlineMarkdownString") {
+                    this.extractMarkdownReferences(api.MDT.tokenizeMDT(value.caption.value, {inline: true}), args);
+            }
                 return;
             }
             case "InlineMarkdownString": {

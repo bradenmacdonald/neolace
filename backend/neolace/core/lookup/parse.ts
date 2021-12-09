@@ -74,6 +74,9 @@ export function parseLookupString(lookup: string): LookupExpression {
         [/^reverse\(andDescendants\(this\), prop=(.*)\)$/, m => new ReverseProperty(new AndDescendants(new This()), {propertyExpr: parseLookupString(m[1])})],
 
         // [[/entry/...]].image(format="...")
+
+        [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*), link=(.*), maxWidth=(.*)\)$/, m => new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {formatExpr: parseLookupString(m[2]), linkExpr: parseLookupString(m[3]), maxWidthExpr: parseLookupString(m[4])})],
+        [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*), link=(.*)\)$/, m => new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {formatExpr: parseLookupString(m[2]), linkExpr: parseLookupString(m[3])})],
         [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*)\)$/, m => new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {formatExpr: parseLookupString(m[2])})],
 
         // markdown("*string*")

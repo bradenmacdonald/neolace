@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { group, test, setTestIsolation, assertRejects, assertEquals, assert } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
-import { EntryValue, ImageValue, InlineMarkdownStringValue, IntegerValue, NullValue, PropertyValue, StringValue } from "../values.ts";
+import { EntryValue, ImageValue, IntegerValue, NullValue, PropertyValue, StringValue } from "../values.ts";
 import { Image } from "./image.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { LookupEvaluationError } from "../errors.ts";
@@ -26,7 +26,8 @@ group(import.meta, () => {
             assert(result instanceof ImageValue);
             assertEquals(result.data, {
                 entryId: defaultData.entries.imgPonderosaTrunk.id,
-                caption: new InlineMarkdownStringValue(defaultData.entries.imgPonderosaTrunk.description),
+                altText: defaultData.entries.imgPonderosaTrunk.name,
+                caption: undefined,
                 contentType: "image/webp",
                 format: "thumb",  // default format
                 imageUrl: result.data.imageUrl,
@@ -34,6 +35,8 @@ group(import.meta, () => {
                 size: 1581898,
                 width: 3504,
                 height: 2336,
+                link: undefined,
+                maxWidth: undefined,
             });
         });
 

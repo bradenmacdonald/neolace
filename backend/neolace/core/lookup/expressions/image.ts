@@ -1,4 +1,5 @@
 import { ImageDisplayFormat } from "neolace/deps/neolace-api.ts";
+import { Entry } from "neolace/core/entry/Entry.ts";
 import { getEntryFeatureData } from "neolace/core/entry/features/get-feature-data.ts";
 
 import { LookupExpression } from "../expression.ts";
@@ -9,6 +10,7 @@ import {
     EntryValue,
     ImageValue,
     InlineMarkdownStringValue,
+    IntegerValue,
 } from "../values.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupContext } from "../context.ts";
@@ -29,11 +31,28 @@ export class Image extends LookupExpression {
     // - "right" to float a thumbnail of the image to the right.
     // - "thumb" to display a thumbnail of the image(s) where a paragraph of text would go
     readonly formatExpr: LookupExpression;
+    // Optional paramater - entry or URL to link to
+    readonly linkExpr?: LookupExpression;
+    // Optional parameter - caption to display under the image
+    readonly captionExpr?: LookupExpression;
+    // Optional parameter - maximum width of the image.
+    readonly maxWidthExpr?: LookupExpression;
 
-    constructor(entriesExpr: LookupExpression, extraParams: {formatExpr?: LookupExpression}) {
+    constructor(
+        entriesExpr: LookupExpression,
+        extraParams: {
+            formatExpr?: LookupExpression,
+            linkExpr?: LookupExpression,
+            captionExpr?: LookupExpression,
+            maxWidthExpr?: LookupExpression,
+        },
+    ) {
         super();
         this.entriesExpr = entriesExpr;
         this.formatExpr = extraParams.formatExpr ?? new LiteralExpression(new StringValue("thumb"));
+        this.linkExpr = extraParams.linkExpr;
+        this.captionExpr = extraParams.captionExpr;
+        this.maxWidthExpr = extraParams.maxWidthExpr;
     }
 
     public async getValue(context: LookupContext) {
@@ -56,12 +75,28 @@ export class Image extends LookupExpression {
         if (entry === undefined) {
             throw new LookupEvaluationError(`The expression "${this.entriesExpr.toDebugString()}" cannot be used with image().`);
         }
-        const caption = new InlineMarkdownStringValue("");  // TODO in future: allow specifying the caption.
         const imageData = await getEntryFeatureData(entry.id, {featureType: "Image", tx: context.tx});
         if (imageData === undefined) {
             return new NullValue();
         }
-        return new ImageValue({...imageData, format, entryId: entry.id, caption});
+
+        const altText = (await context.tx.pullOne(Entry, e => e.name, {key: entry.id})).name;
+
+        // Optional parameters:
+        let caption = undefined;
+        if (this.captionExpr) {
+            caption = await this.captionExpr.getValueAsOneOf([InlineMarkdownStringValue, StringValue], context);
+        }
+        let link = undefined;
+        if (this.linkExpr) {
+            link = await this.linkExpr.getValueAsOneOf([EntryValue, StringValue], context);
+        }
+        let maxWidth = undefined;
+        if (this.maxWidthExpr) {
+            maxWidth = Number((await this.maxWidthExpr.getValueAs(context, IntegerValue)).value);
+        }
+
+        return new ImageValue({...imageData, format, entryId: entry.id, altText, caption, link, maxWidth});
     }
 
     public toString(): string {

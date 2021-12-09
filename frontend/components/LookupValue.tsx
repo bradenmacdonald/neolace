@@ -1,14 +1,11 @@
 import React from 'react';
 import { api } from 'lib/api-client';
 import { FormattedListParts, FormattedMessage } from 'react-intl';
-import { Blurhash } from 'react-blurhash';
-import Image from 'next/image';
 
 import { Tooltip } from 'components/widgets/tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { EntryLink } from './EntryLink';
-import { RatioBox } from './widgets/ratio-box';
-import { MDT } from 'neolace-api';
+import { LookupImage } from './LookupImage';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -56,50 +53,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             return <EntryLink entryKey={value.id} mdtContext={props.mdtContext}>{linkText}</EntryLink>
         }
         case "Image": {
-            const ratio = value.width && value.height ? value.width / value.height : undefined;
-            const altText = MDT.renderInlineToPlainText(
-                MDT.tokenizeInlineMDT(props.mdtContext.refCache.entries[value.entryId]?.description ?? "")
-            );
-            if (value.format === api.ImageDisplayFormat.PlainLogo) {
-                return <div className="max-w-[400px] w-full">
-                    <Image
-                        src={value.imageUrl}
-                        width={value.width}
-                        height={value.height}
-                        alt={altText}
-                        layout="intrinsic"
-                    />
-                </div>
-            } else if (value.format === api.ImageDisplayFormat.RightAligned) {
-                return <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 border-gray-400 md:ml-4 mb-2 md:clear-right">
-                    <RatioBox ratio={ratio}>
-                        {/* A blurry representation of the image, shown while it is loading, and also forming the outer border */}
-                        <Blurhash hash={value.blurHash} width="100%" height="100%" />
-                        {/* the image: */}
-                        <Image
-                            src={value.imageUrl}
-                            alt={altText}
-                            layout="fill"
-                            objectFit="contain"
-                        />
-                    </RatioBox>
-                </div>
-            } else {
-                // Thumbnail:
-                return <div className="w-full md:w-1/3 lg:w-1/4 border-2 border-gray-400 md:ml-4 mb-2">
-                    <RatioBox ratio={ratio}>
-                        {/* A blurry representation of the image, shown while it is loading, and also forming the outer border */}
-                        <Blurhash hash={value.blurHash} width="100%" height="100%" />
-                        {/* the image: */}
-                        <Image
-                            src={value.imageUrl}
-                            alt={altText}
-                            layout="fill"
-                            objectFit="contain"
-                        />
-                    </RatioBox>
-                </div>
-            }
+            return <LookupImage value={value} mdtContext={props.mdtContext} />;
         }
         case "Property": {
             const prop = props.mdtContext.refCache.properties[value.id];

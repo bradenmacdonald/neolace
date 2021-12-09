@@ -358,14 +358,19 @@ export class AnnotatedValue extends ConcreteValue {
 
 interface ImageData {
     entryId: VNID;
-    caption: InlineMarkdownStringValue;
+    altText: string;
     imageUrl: string;
     contentType: string;
     size: number;
     width?: number;
     height?: number;
     blurHash?: string;
+    // Should this image be a link?
+    link?: EntryValue|StringValue;
+    // How the image should be displayed:
     format: api.ImageDisplayFormat;
+    caption?: InlineMarkdownStringValue|StringValue;
+    maxWidth?: number;
 }
 
 /**
@@ -382,11 +387,12 @@ export class ImageValue extends ConcreteValue {
     public override asLiteral() {
         return undefined;  // There is no literal expression for an image
     }
-
-    protected serialize() {
+    
+    protected serialize(): Omit<api.ImageValue, "type"> {
         return {
             entryId: this.data.entryId,
-            caption: this.data.caption.toJSON(),
+            altText: this.data.altText,
+            caption: this.data.caption?.toJSON() as api.InlineMarkdownString|api.StringValue|undefined,
             imageUrl: this.data.imageUrl,
             contentType: this.data.contentType,
             size: this.data.size,
@@ -394,6 +400,8 @@ export class ImageValue extends ConcreteValue {
             height: this.data.height,
             blurHash: this.data.blurHash,
             format: this.data.format,
+            link: this.data.link?.toJSON() as api.StringValue|api.EntryValue|undefined,
+            maxWidth: this.data.maxWidth,
         };
     }
 }
