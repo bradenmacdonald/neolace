@@ -1,0 +1,35 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: v1.x
+
+      # - name: Verify formatting
+      #   run: deno fmt --check
+
+      - name: Run linter (backend)
+        run: deno lint
+        working-directory: ./backend
+
+      - name: Run linter (API)
+        run: deno lint src
+        working-directory: ./neolace-api
+
+      - name: Run linter (frontend)
+        run: deno lint components pages lib
+        working-directory: ./frontend
