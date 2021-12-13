@@ -70,7 +70,7 @@ expressions) are of the following types:
 5. String
 6. Date, DateTime, FuzzyDate ([YYYY-MM-DD or YYYY-MM or YYYY] -> [YYYY-MM-DD or YYYY-MM or YYYY])
 7. Entry, EntryType, Property, PropertyValue
-8. List and Page
+8. Page (like a list but may only be a subset of a list; some values may be missing. The total size is always known.)
 9. Range (Holds two Integer, Quantity, Date/DateTime/FuzzyDate of the same type, the second being larger or equal to the first)
 10. X Expression
 11. Type
