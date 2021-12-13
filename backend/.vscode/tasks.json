@@ -28,10 +28,11 @@
             "problemMatcher": [],
         },
         {
-            "label": "Run backend",
+            "label": "Run backend (watch mode)",
             "type": "shell",
             "command": "deno",
-            "args": ["run", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "neolace/api/server.ts"],
+            // We can make this stable once "Deno.addSignalListener" and "--watch" are stabilized.
+            "args": ["run", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "--watch", "--no-check", "neolace/api/server.ts"],
             "problemMatcher": [],
         },
         {
