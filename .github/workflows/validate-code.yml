@@ -1,4 +1,4 @@
-name: Lint
+name: Validate
 
 on:
   push:
@@ -62,8 +62,6 @@ jobs:
         with:
           deno-version: v1.x
 
-      # TODO: Start docker-compose
-
       - name: Run neolace database servers
         run: docker-compose -f "docker-compose.yml" up -d
 
@@ -73,15 +71,38 @@ jobs:
       - name: Test Suite setup (backend)
         env:
           ENV_TYPE: test
-        run: deno run --import-map=import_map.json --allow-net --allow-read --allow-env --allow-write --unstable neolace/scripts/test-setup.ts
+        run: deno run --import-map=import_map.json --allow-net --allow-read --allow-env --allow-write --unstable --no-check neolace/scripts/test-setup.ts
         working-directory: ./backend
 
       - name: Run tests (backend)
         env:
           ENV_TYPE: test
-        run: deno test --import-map=import_map.json --allow-net --allow-env --allow-read --unstable
+        run: deno test --import-map=import_map.json --allow-net --allow-env --allow-read --unstable --no-check
         working-directory: ./backend
 
       - name: Stop containers
         if: always()
         run: docker-compose -f "docker-compose.yml" down
+
+  # Type checking the test suite is VERY slow we do it asynchronously, while the actual tests themselves run in a separate job
+  type-check-backend-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: v1.x
+
+      - name: Type check test suite setup
+        run: deno cache --import-map=import_map.json --unstable neolace/scripts/test-setup.ts
+        working-directory: ./backend
+
+      - name: Type check tests
+        env:
+          ENV_TYPE: test
+        run: deno test --import-map=import_map.json --no-run --unstable
+        working-directory: ./backend
