@@ -50,6 +50,18 @@ jobs:
         run: deno cache --import-map=import_map.json --unstable neolace/api/server.ts
         working-directory: ./backend
 
+      # Type checking the test suite is very slow we do it asynchronously now too, while the actual tests themselves run in a separate job
+
+      - name: Type check test suite setup
+        run: deno cache --import-map=import_map.json --unstable neolace/scripts/test-setup.ts
+        working-directory: ./backend
+
+      - name: Type check tests
+        env:
+          ENV_TYPE: test
+        run: deno test --import-map=import_map.json --no-run --unstable
+        working-directory: ./backend
+
   test-backend:
     runs-on: ubuntu-latest
 
@@ -83,26 +95,3 @@ jobs:
       - name: Stop containers
         if: always()
         run: docker-compose -f "docker-compose.yml" down
-
-  # Type checking the test suite is VERY slow we do it asynchronously, while the actual tests themselves run in a separate job
-  type-check-backend-tests:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Setup repo
-        uses: actions/checkout@v2
-
-      - name: Setup Deno
-        uses: denoland/setup-deno@v1.1.0
-        with:
-          deno-version: v1.x
-
-      - name: Type check test suite setup
-        run: deno cache --import-map=import_map.json --unstable neolace/scripts/test-setup.ts
-        working-directory: ./backend
-
-      - name: Type check tests
-        env:
-          ENV_TYPE: test
-        run: deno test --import-map=import_map.json --no-run --unstable
-        working-directory: ./backend
