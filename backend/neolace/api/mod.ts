@@ -20,10 +20,9 @@ interface AuthenticatedUserData {
     fullName: string|null,
 }
 
-export class NeolaceHttpRequest extends Drash.Http.Request {
+export type NeolaceHttpRequest = Drash.Request & {
     user?: AuthenticatedUserData;
-}
-Drash.Http.Request = NeolaceHttpRequest;
+};
 
 type JsonCompatibleValue = string | boolean | Record<string, unknown> | null | undefined;
 
@@ -32,20 +31,7 @@ type JsonCompatibleValue = string | boolean | Record<string, unknown> | null | u
  * 
  * A resource has a path like "/user/profile" and can have one or more methods (like POST, GET, etc.)
  */
-export abstract class NeolaceHttpResource extends Drash.Http.Resource {
-    // Override the type of this.request; Since we assigned NeolaceHttpRequest to the Drash.Http.Request global, this
-    // will have the correct type.
-    protected request: NeolaceHttpRequest;
-    constructor(
-        request: Drash.Http.Request,
-        response: Drash.Http.Response,
-        server: Drash.Http.Server,
-        paths: string[],
-        middleware: { after_request?: []; before_request?: [] },
-      ) {
-          super(request, response, server, paths, middleware);
-          this.request = request;  // We have to re-initialize request, because the declaration above will otherwise reset it to undefined
-      }
+export abstract class NeolaceHttpResource extends Drash.Resource {
 
     method<Response extends JsonCompatibleValue, RequestBody extends JsonCompatibleValue = undefined>(
         metadata: {
@@ -54,44 +40,46 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
             description?: string,
             notes?: string,
         },
-        fn: (bodyData: api.schemas.Type<api.schemas.Validator<RequestBody>>) => Promise<api.schemas.Type<api.schemas.Validator<Response>>>
+        fn: (args: {request: NeolaceHttpRequest, response: Drash.Response, bodyData: api.schemas.Type<api.schemas.Validator<RequestBody>>}) => Promise<api.schemas.Type<api.schemas.Validator<Response>>>
     ) {
-        return async (): Promise<Drash.Http.Response> => {
+        return async (request: Drash.Request, response: Drash.Response): Promise<void> => {
             try {
                 // Validate the request body, if any:
-                const requestBodyValidated = this.validateRequestBody(metadata.requestBodySchema);
+                const requestBodyValidated = this.validateRequestBody(request, metadata.requestBodySchema);
 
                 // Run the request:
-                // deno-lint-ignore no-explicit-any
-                this.response.body = metadata.responseSchema(await fn(requestBodyValidated as any));
+                const responseBodyValidated = metadata.responseSchema(await fn({request, response, bodyData: requestBodyValidated}));
+                if (typeof responseBodyValidated !== "object" || responseBodyValidated === null) {
+                    throw new Error(`Expected API implementation to return an object, not ${typeof responseBodyValidated}`);
+                }
+                response.json(responseBodyValidated);
             } catch (err: unknown) {
                 // Log errors as structured JSON objects
                 if (err instanceof api.ApiError) {
-                    this.response.status_code = err.statusCode;
+                    response.status = err.statusCode;
                     const errorData: Record<string, unknown> = { message: err.message };
                     if (err instanceof api.InvalidRequest) { errorData.reason = err.reason; }
                     if (err instanceof api.InvalidFieldValue) { errorData.fieldErrors = err.fieldErrors; }
-                    this.response.body = errorData;
+                    response.json(errorData);
                     log.warning(`Returned error response: ${err.message}`);
                 } else {
-                    this.response.status_code = 500;
-                    this.response.body = { message: "An internal error occurred" };
+                    response.status = 500;
+                    response.json({ message: "An internal error occurred" });
                     log.warning(`Returned "Internal error" response`);
                     log.error(err);
                 }
             }
-            return this.response;
         };
     }
 
-    private validateRequestBody<DataShape>(schema?: api.schemas.Validator<DataShape>): api.schemas.Type<api.schemas.Validator<DataShape>> {
+    private validateRequestBody<DataShape>(request: NeolaceHttpRequest, schema?: api.schemas.Validator<DataShape>): api.schemas.Type<api.schemas.Validator<DataShape>> {
         if (schema === undefined) {
             // deno-lint-ignore no-explicit-any
             return undefined as any;
         }
         try {
             // deno-lint-ignore no-explicit-any
-            return schema(this.request.getAllBodyParams().data) as any;
+            return schema(request.bodyAll()) as any;
         } catch (validationError) {
             // Convert schema validation errors to the format our API uses.
             // deno-lint-ignore no-explicit-any
@@ -109,15 +97,6 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
     }
 
     /**
-     * Given a schema, validate that the HTTP request's body payload matches that schema, and return the validated data.
-     */
-    // deno-lint-ignore no-explicit-any
-    protected getRequestPayload<SchemaType extends (...args: any[]) => unknown>(schema: SchemaType): ReturnType<SchemaType> {
-        // deno-lint-ignore no-explicit-any
-        return schema(this.request.getAllBodyParams().data as any) as any;
-    }
-
-    /**
      * Get siteId and siteCode from the siteShortId parameter that's in the URL.
      * 
      * Most of our REST API methods include a human-readable "shortId" for the Site in the URL, like this:
@@ -131,8 +110,8 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
      * @param request The current REST API request
      * @returns 
      */
-    protected async getSiteDetails(): Promise<{siteId: VNID, siteCode: string}> {
-        const siteShortId = this.request.getPathParam("siteShortId");
+    protected async getSiteDetails(request: NeolaceHttpRequest): Promise<{siteId: VNID, siteCode: string}> {
+        const siteShortId = request.pathParam("siteShortId");
         if (typeof siteShortId !== "string") {
             throw new Error("Expected the API endpoint URL to contain a siteShortId parameter.")
         }
@@ -141,17 +120,17 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
         return {siteId, siteCode};
     }
 
-    protected requireUser(): AuthenticatedUserData {
-        const user = this.request.user;
+    protected requireUser(request: NeolaceHttpRequest): AuthenticatedUserData {
+        const user = request.user;
         if (user === undefined) {
             throw new api.NotAuthenticated();
         }
         return user;
     }
 
-    protected async requirePermission(check: Check, ...otherChecks: Check[]): Promise<void> {
-        const siteId = this.request.getPathParam("siteShortId") ? (await this.getSiteDetails()).siteId : undefined;
-        const userId = this.request.user?.id ?? undefined;
+    protected async requirePermission(request: NeolaceHttpRequest, check: Check, ...otherChecks: Check[]): Promise<void> {
+        const siteId = request.pathParam("siteShortId") ? (await this.getSiteDetails(request)).siteId : undefined;
+        const userId = request.user?.id ?? undefined;
     
         const checksPassed = await graph.read(async tx => {
             const context: CheckContext = {tx, siteId, userId};
@@ -180,9 +159,9 @@ export abstract class NeolaceHttpResource extends Drash.Http.Resource {
      * @param flagsEnum a string enum which contains all the valid fields (flags) that can be enabled.
      * @returns 
      */
-    protected getRequestFlags<T extends string>(flagsEnum: {[K: string]: T}): Set<T> {
-        const include = this.request.getUrlQueryParam("include");
-        if (include === null) {
+    protected getRequestFlags<T extends string>(request: NeolaceHttpRequest, flagsEnum: {[K: string]: T}): Set<T> {
+        const include = request.queryParam("include");
+        if (include === undefined) {
             return new Set();
         }
         const enabledFlags = new Set<T>();

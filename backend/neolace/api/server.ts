@@ -1,8 +1,7 @@
 import * as log from "std/log/mod.ts";
-import { Drash } from "neolace/deps/drash.ts";
-import { Cors } from "neolace/deps/drash-cors.ts";
+import { Drash, CORSService } from "neolace/deps/drash.ts";
 import { config } from "neolace/app/config.ts";
-import { neolaceAuthMiddleware } from "neolace/api/auth-middleware.ts";
+import { NeolaceAuthService } from "neolace/api/auth-middleware.ts";
 import { allResources } from "neolace/api/resources.ts";
 import { onShutDown } from "neolace/app/shutdown.ts";
 
@@ -11,30 +10,25 @@ export const serverPromise = new Promise<void>((_resolve, _reject) => { resolve 
 
 (async () => {
 
-    const server = new Drash.Http.Server({
-        logger: new Drash.CoreLoggers.ConsoleLogger({enabled: true, level: "debug"}),
-        response_output: "application/json",
+    const hostname = "0.0.0.0";
+    const port = config.port;
+    const server = new Drash.Server({
         resources: allResources,
-        middleware: {
-            before_request: [
-                neolaceAuthMiddleware,
-            ],
-            after_request: [
-                Cors({
-                    allowHeaders: ["Accept", "Authorization", "Content-Type", "If-None-Match"],
-                }),
-            ],
-        },
+        services: [
+            new NeolaceAuthService(),
+            new CORSService({
+                allowHeaders: ["Accept", "Authorization", "Content-Type", "If-None-Match"],
+            }),
+        ],
+        hostname,
+        port,
+        protocol: "http",
     });
 
-    await server.run({
-        hostname: "0.0.0.0",
-        port: config.port,
-    });
-
+    await server.run();
 
     onShutDown(async () => { await server.close(); });
-    log.info(`Neolace REST API server is now listening at ${server.hostname}:${server.port}`);
+    log.info(`Neolace REST API server is now listening at ${hostname}:${port}`);
     resolve();
 
 })().then(() => {

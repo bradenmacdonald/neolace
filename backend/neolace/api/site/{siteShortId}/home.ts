@@ -6,15 +6,15 @@ import { CachedLookupContext } from "neolace/core/lookup/context.ts";
 
 
 export class SiteHomeResource extends NeolaceHttpResource {
-    static paths = ["/site/:siteShortId/home"];
+    public paths = ["/site/:siteShortId/home"];
 
     GET = this.method({
         responseSchema: api.SiteHomePageSchema,
         description: "Get the home page content for the specified site",
-    }, async () => {
+    }, async ({request}) => {
         // Permissions and parameters:
-        await this.requirePermission(permissions.CanViewHomePage);
-        const {siteId} = await this.getSiteDetails();
+        await this.requirePermission(request, permissions.CanViewHomePage);
+        const {siteId} = await this.getSiteDetails(request);
         
         const siteData = await graph.pullOne(Site, s => s.homePageMD, {key: siteId});
         const refCache = new ReferenceCache({siteId});

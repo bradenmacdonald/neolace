@@ -36,6 +36,14 @@
             "problemMatcher": [],
         },
         {
+            "label": "Run backend (with type checks)",
+            "type": "shell",
+            "command": "deno",
+            // We can make this stable once "Deno.addSignalListener" and "--watch" are stabilized.
+            "args": ["run", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "neolace/api/server.ts"],
+            "problemMatcher": [],
+        },
+        {
             "label": "Run neolace database servers",
             "type": "shell",
             "command": "docker-compose",

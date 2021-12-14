@@ -1,20 +1,16 @@
-import { NeolaceHttpResource, api } from "neolace/api/mod.ts";
+import { NeolaceHttpResource, Drash } from "neolace/api/mod.ts";
 
 export class HomePageResource extends NeolaceHttpResource {
-    static paths = ["/"];
+    public paths = ["/"];
 
-    GET = this.method({
-        responseSchema: api.schemas.string,
-        // deno-lint-ignore require-await
-    }, async () => {
-        this.response.headers.set("Content-Type", "text/html");
-        return `
+    public GET(_request: Drash.Request, response: Drash.Response): void {
+        response.html(`
             <html>
                 <head><title>Neolace API</title></head>
                 <body>
                     This is the <strong>neolace<strong> API.
                 </body>
             </html>
-        `;
-    });
+        `);
+    }
 }
