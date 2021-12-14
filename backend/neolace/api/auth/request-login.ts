@@ -5,13 +5,14 @@ import { HumanUser } from "../../core/User.ts";
 
 
 export class RequestLoginResource extends NeolaceHttpResource {
-    static paths = ["/auth/request-login"];
+    public paths = ["/auth/request-login"];
 
     POST = this.method({
         requestBodySchema: api.schemas.Schema({email: Field.validators.email, }),
         responseSchema: api.schemas.Schema({requested: api.schemas.boolean}),
         description: "Request passwordless login",
-    }, async ({email}) => {
+    }, async ({bodyData}) => {
+        const {email} = bodyData;
         try {
             const user = await graph.pullOne(HumanUser, u => u.id, {where: C`@this.email = ${email}`});
             await authClient.requestPasswordlessLogin({username: user.id});

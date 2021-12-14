@@ -36,9 +36,9 @@ export async function getPublicUserData(usernameOrVNID: string|VNID): Promise<ap
         if (isVNID(usernameOrVNID)) {
             log.error(`Failed to fetch user with key ${usernameOrVNID}`);
             // Don't leak user VNIDs via the API, even if it seems to be invalid.
-            throw new Drash.Exceptions.HttpException(404, `No user found with that VNID.`);
+            throw new Drash.Errors.HttpError(404, `No user found with that VNID.`);
         } else {
-            throw new Drash.Exceptions.HttpException(404, `No user found with the username "${usernameOrVNID}".`);
+            throw new Drash.Errors.HttpError(404, `No user found with the username "${usernameOrVNID}".`);
         }
     } else if (botResult.length > 1) { throw new Error("Inconsistent - Multiple users matched"); }
 

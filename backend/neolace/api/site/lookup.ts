@@ -4,15 +4,15 @@ import { Site } from "neolace/core/Site.ts";
 
 
 export class SiteLookupResource extends NeolaceHttpResource {
-    static paths = ["/site/lookup"];
+    public paths = ["/site/lookup"];
 
     GET = this.method({
         responseSchema: api.SiteDetailsSchema,
         description: "Lookup a site by domain name.",
-    }, async () => {
+    }, async ({request}) => {
         // Permissions and parameters:
-        const domain = this.request.getUrlQueryParam("domain");
-        if (domain === null) {
+        const domain = request.queryParam("domain");
+        if (domain === undefined) {
             throw new api.InvalidFieldValue([{fieldPath: "domain", message: "domain lookup is missing. Specify ?domain=... to look up a site by domain."}]);
         }
         // The *Name*, *URL*, and basic information about a site is available to anyone who knows the URL of the site

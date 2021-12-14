@@ -5,20 +5,20 @@ import { getDraft } from "./_helpers.ts";
 
 
 export class DraftIndexResource extends NeolaceHttpResource {
-    static paths = ["/site/:siteShortId/draft"];
+    public paths = ["/site/:siteShortId/draft"];
 
     POST = this.method({
         requestBodySchema: api.CreateDraftSchema,
         responseSchema: api.DraftSchema,
         description: "Create a new draft",
-    }, async (payload) => {
+    }, async ({request, bodyData}) => {
         // Permissions and parameters:
-        await this.requirePermission(permissions.CanCreateDraft);
-        const {siteId} = await this.getSiteDetails();
-        const userId = this.requireUser().id;
+        await this.requirePermission(request, permissions.CanCreateDraft);
+        const {siteId} = await this.getSiteDetails(request);
+        const userId = this.requireUser(request).id;
 
         // Response:
-        const edits = payload.edits as api.EditList;
+        const edits = bodyData.edits as api.EditList;
 
         let hasSchemaChanges = false;
         let hasEntryChanges = false;
@@ -42,17 +42,17 @@ export class DraftIndexResource extends NeolaceHttpResource {
         }
 
         if (hasEntryChanges) {
-            await this.requirePermission(permissions.CanProposeEntryEdits);
+            await this.requirePermission(request, permissions.CanProposeEntryEdits);
         }
         if (hasSchemaChanges) {
-            await this.requirePermission(permissions.CanProposeSchemaChanges);
+            await this.requirePermission(request, permissions.CanProposeSchemaChanges);
         }
 
         const {id} = await graph.runAs(userId, CreateDraft({
             siteId,
             authorId: userId,
-            title: payload.title,
-            description: payload.description,
+            title: bodyData.title,
+            description: bodyData.description,
             edits,
         })).catch(adaptErrors("title", "description", adaptErrors.remap("data", "edits.?.data")));
 

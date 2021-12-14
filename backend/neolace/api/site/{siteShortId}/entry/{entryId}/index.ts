@@ -4,20 +4,20 @@ import { getEntry } from "neolace/api/site/{siteShortId}/entry/{entryId}/_helper
 
 
 export class EntryResource extends NeolaceHttpResource {
-    static paths = ["/site/:siteShortId/entry/:entryKey"];
+    public paths = ["/site/:siteShortId/entry/:entryKey"];
 
     GET = this.method({
         responseSchema: api.EntrySchema,
         description: "Get an entry",
-    }, async () => {
+    }, async ({request}) => {
         // Permissions and parameters:
-        await this.requirePermission(permissions.CanViewEntries);
-        const {siteId} = await this.getSiteDetails();
-        const entryKey = this.request.getPathParam("entryKey");
-        if (entryKey === null) {
+        await this.requirePermission(request, permissions.CanViewEntries);
+        const {siteId} = await this.getSiteDetails(request);
+        const entryKey = request.pathParam("entryKey");
+        if (entryKey === undefined) {
             throw new api.InvalidFieldValue([{fieldPath: "entryKey", message: "entryKey is required."}]);
         }
-        const flags = this.getRequestFlags(api.GetEntryFlags);
+        const flags = this.getRequestFlags(request, api.GetEntryFlags);
 
         // Response:
         return await graph.read(tx => getEntry(entryKey, siteId, tx, flags));
