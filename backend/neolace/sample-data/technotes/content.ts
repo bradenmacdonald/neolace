@@ -39,8 +39,8 @@ export const ids = {
     productTesla85BatteryModule: VNID("_6dF6GUIrPx8ToREmsFAZ5R"),
     secondaryCell: VNID("_4HwJfgRjCzfOI7z2XTzY0r"),
     standarizedBattery: VNID("_51YyfHlwYxW1X5QfjRBai6"),
+    technotesAbout: VNID("_6zvYuCnfuiQKEWHff2rWC2"),
     technotesTeam: VNID("_2G5LENTkqIXwRZkOD2xDRa"),
-    //spare: VNID("_6zvYuCnfuiQKEWHff2rWC2"),
     //spare: VNID("_1CZTpr2BFC76f54Q3vNuB4"),
     //spare: VNID("_7L82mzuTE4VBE7qtgSCw5q"),
     //spare: VNID("_4039TU7Xn7xYBEvhtzA65D"),
@@ -93,6 +93,59 @@ export const edits: AnyContentEdit[] = [
                 # Jeff Krupa, *VP Content & Partnerships*
 
                 Jeff Krupa is a PhD candidate in high energy physics at MIT. His research focuses on AI and the analysis of large datasets. He's interested in existential risks including climate change and excited about delivering technological solutions via accelerated innovation.
+            `},
+        ],
+    }),
+    // About TechNotes
+    ...createEntry({
+        id: ids.technotesAbout,
+        name: "About TechNotes",
+        friendlyId: "about",
+        type: schemaIds.technotesMetaPage,
+        description: `
+            TechNotes is an open engineering library focused on clean tech - specifically electric vehicle (EV) and
+            battery technology. Our goal is to combine data, reference articles, design examples, datasets, patents,
+            technical drawings, and discussion forums together in one integrated resource that's exceptionally easy to
+            use and well-organized.
+        `,
+        props: {},
+        features: [
+            {featureType: "Article", articleMD: dedent`            
+            # Long-term Vision
+
+            Our long-term vision is to build an authoritative, free, collaboratively developed online library of
+            detailed and practical information about engineering and technology. This website would be somewhat
+            analogous to Wikipedia or Wikidata, but focused entirely on technology and built with different content and
+            capabilities.
+            
+            **Mission statement: to accelerate and protect humanity’s technological advancement by providing a
+            comprehensive, open, and practical library of technological knowledge.**
+
+            # Goals
+
+            The goals for this project are:
+            
+            1. To accelerate the pace of technological and scientific innovation
+
+               *Humanity has a lot of knowledge about how to build amazing things, but much of it is not easily accessible - available only from specialist books, obscure research papers, internal corporate documents, and in-person instruction. This is especially true of the hard-won practical advice that is necessary to go beyond theory and actually build things yourself.*
+            
+            2. To make all of its information easily discoverable, cross-referenced, in standardized formats, and as accessible as possible
+
+               *Here accessible means both to humans and to machines.*
+            
+            3. To promote standardization, collaboration, and open standards
+            
+            4. To create a single resource that contains enough in-depth engineering and technological information to build a modern technological civilization from scratch
+            
+               *If humans had to abandon earth and land on another habitable planet, TechNotes would provide the knowledge needed to quickly build mines, factories, power sources, habitats, and (eventually) things like smart phones. This scenario is hopefully never going to occur, but any resource which meets that aspirational goal would provide countless very real benefits here and now.*
+            
+            5. To collaboratively develop and publish open-source ready-to-use designs for important tools, devices, and technologies
+            
+               *If an engineer were asked to design a lightweight habitat that humans could live in on Mars, instead of having to design everything from scratch, her team could start by downloading complete plans for things like washing machines, lighting fixtures, microwaves, smoke detectors, door locks, etc., then modify them to be as simple and lightweight as possible, then print/order the components - creating a much more complete and functional habitat in a fraction of the time as would otherwise be possible. And of course, the community could continue to iterate on and improve these Mars design variants.*
+            
+            6. To preserve detailed knowledge of now-obsolete technologies
+            
+               *Why? For historical purposes, to avoid any loss of technological capability, to serve as inspiration for future discoveries, and to be used if needed to rebuild civilization after an apocalypse.*
             `},
         ],
     }),
