@@ -49,26 +49,29 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
             </OptionalLink>
         </div>
     } else if (value.format === api.ImageDisplayFormat.RightAligned) {
-        return <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 border-gray-400 md:ml-4 mb-2 md:clear-right">
-            <RatioBox ratio={ratio}>
-                {/* A blurry representation of the image, shown while it is loading, and also forming the outer border */}
-                <Blurhash hash={value.blurHash} width="100%" height="100%" />
-                {/* the image: */}
-                <OptionalLink href={value.link} mdtContext={props.mdtContext}>
-                    <Image
-                        src={value.imageUrl}
-                        alt={value.altText}
-                        layout="fill"
-                        objectFit="contain"
-                    />
-                </OptionalLink>
-            </RatioBox>
-        </div>
+        return <>
+            <div className="md:clear-right"></div> {/* TODO: make this way of clearing text+images optional?, just have md:clear-right applied to the div below */}
+            <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 border-gray-400 md:ml-4 mb-2">
+                <RatioBox ratio={ratio}>
+                    {/* A blurry representation of the image, shown while it is loading. */}
+                    <Blurhash hash={value.blurHash} width="100%" height="100%" />
+                    {/* the image: */}
+                    <OptionalLink href={value.link} mdtContext={props.mdtContext}>
+                        <Image
+                            src={value.imageUrl}
+                            alt={value.altText}
+                            layout="fill"
+                            objectFit="contain"
+                        />
+                    </OptionalLink>
+                </RatioBox>
+            </div>
+        </>
     } else {
         // Thumbnail:
         return <div className="w-full md:w-1/3 lg:w-1/4 border-2 border-gray-400 md:ml-4 mb-2">
             <RatioBox ratio={ratio}>
-                {/* A blurry representation of the image, shown while it is loading, and also forming the outer border */}
+                {/* A blurry representation of the image, shown while it is loading. */}
                 <Blurhash hash={value.blurHash} width="100%" height="100%" />
                 {/* the image: */}
                 <Image
