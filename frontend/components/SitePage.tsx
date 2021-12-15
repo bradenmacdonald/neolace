@@ -27,15 +27,6 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         {text: "Home", href: "/"},
         {text: "About", href: "/entry/about"},
         {text: "Team", href: "/entry/team"},
-        {text: "TesteroniA", href: "/entry/teamX"},
-        {text: "TesteroniB", href: "/entry/teamX"},
-        {text: "TesteroniC", href: "/entry/teamX"},
-        {text: "TesteroniD", href: "/entry/teamX"},
-        {text: "TesteroniE", href: "/entry/teamX"},
-        {text: "TesteroniF", href: "/entry/teamX"},
-        {text: "TesteroniG", href: "/entry/teamX"},
-        {text: "TesteroniH", href: "/entry/teamX"},
-        {text: "TesteroniI", href: "/entry/teamX"},
     ];
 
     return <div>
@@ -58,17 +49,18 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         {/* Main header: */}
         <header id="neo-main-header" className="bg-header-color w-screen h-8 md:h-24 flex flex-row flex-nowrap">
             {/* Site name/logo */}
-            <div className="flex-none max-h-8 md:max-h-24 p-1 md:p-3">
+            <div className="flex-none max-h-8 md:max-h-24 p-1 md:p-3 md:pr-6 mr-1 md:min-w-[min(20rem,25vw)]">
                 <Link href="/">
                     {/* a: block w-full h-full fix the image sizing on safari */}
                     <a className="block w-full h-full"><img alt={props.site.name} src={`/${props.site.shortId}.svg`} id="neo-site-logo" className="max-w-full max-h-full" /></a>
                 </Link>
             </div>
-            <div className="flex-auto min-w-0 items-center p-1 md:p-3 text-header-color-light self-center text-center text-sm md:text-lg"> {/* min-w-0 is required here per https://stackoverflow.com/a/66689926 */}
+            <div className="flex-auto min-w-0 items-center p-1 md:p-3 md:pl-0 text-header-color-light self-center text-center text-sm md:text-lg"> {/* min-w-0 is required here per https://stackoverflow.com/a/66689926 */}
                 {/* Site-Specific Nav Links */}
                 <nav>
                     <ul className="flex">
                         {
+                            // This styling will ensure that links other than the first two will be truncated if there is not enough room on screen to display them all in full.
                             siteLinks.map((link, idx) => 
                                 <li key={idx} className={`inline-block mr-4 hover:text-gray-300 whitespace-nowrap ${idx >= 2 ? "overflow-hidden overflow-ellipsis" : ""}`}><Link href={link.href}><a>{link.text}</a></Link></li>
                             )
