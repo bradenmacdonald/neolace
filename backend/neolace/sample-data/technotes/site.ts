@@ -71,5 +71,9 @@ export const siteData: Partial<Parameters<typeof UpdateSite>[0]> = {
             "/about": "/entry/about",
             "/faq": "/entry/about",
         },
+        integrations: {
+            // Analytics is only enabled on prod, see 'update-technotes-proto-site.ts'
+            plausibleAnalytics: {enabled: false},
+        },
     },
 };

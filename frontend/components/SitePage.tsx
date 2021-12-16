@@ -38,6 +38,10 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     --site-link-color: 0, 0, 255;
                 }
             `}</style>
+            {/* Analytics */}
+            {props.site.frontendConfig.integrations?.plausibleAnalytics?.enabled ?
+                <script defer data-domain={props.site.domain} src="https://plausible.io/js/plausible.js"></script>
+            :null}
         </Head>
 
         {/* Main header: */}

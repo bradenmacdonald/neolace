@@ -46,12 +46,15 @@ const {id: siteId} = await graph.pullOne(Site, s => s.id, {key: "site-technotes"
     return graph.runAs(bradenId, CreateSite({
         id: VNID("_siteTECHNOTES"),
         name: "TechNotes",
-        domain: "proto.technotes.org",
+        domain: "technotes.org",
         slugId: `site-technotes`,
         siteCode: "TECHN",
         adminUser: bradenId,
     }));
 });
+
+// Enable analytics on prod:
+siteData.frontendConfig!.integrations!.plausibleAnalytics!.enabled = true;
 
 await graph.runAsSystem(UpdateSite({key: siteId, ...siteData}));
 
