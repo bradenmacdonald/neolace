@@ -66,5 +66,10 @@ export const siteData: Partial<Parameters<typeof UpdateSite>[0]> = {
             {text: "Team", href: "/entry/team"},
             {text: "Contact", href: "/#h-connect-with-us"},
         ],
+        redirects: {
+            "/team": "/entry/team",
+            "/about": "/entry/about",
+            "/faq": "/entry/about",
+        },
     },
 };
