@@ -1,3 +1,4 @@
+import { FrontendConfigData, FrontendConfigSchema } from "neolace/deps/neolace-api.ts";
 import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
@@ -10,6 +11,8 @@ import {
     VNID,
     VNodeTypeRef,
     DerivedProperty,
+    RawVNode,
+    ValidationError,
 } from "neolace/deps/vertex-framework.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -105,6 +108,28 @@ export class Site extends VNodeType {
 
         // Access Mode: Determines what parts of the site are usable without logging in
         accessMode: Field.String.Check(check.Schema.enum(AccessMode)),
+
+        /**
+         * Configuration related to the frontend, such as:
+         *   - theme/colors (future)
+         *   - links shown in the header
+         *   - analytics integrations to use
+         *   - redirects
+         * 
+         * This is a JSON object with the format:
+         * {
+         *     "links": [{"text": "Home", "href": "/"}, {"text": "About", "href": "/about"}, ...],
+         *     "integrations": {
+         *         "plausible-analytics": {...},
+         *         ...
+         *     },
+         *     "redirects": {
+         *         "/team": "/entry/team",
+         *         ...
+         *     }
+         * }
+         */
+        frontendConfigJSON: Field.String.Check(check.string.max(10_000)),
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({
@@ -128,7 +153,18 @@ export class Site extends VNodeType {
     }));
     static readonly derivedProperties = this.hasDerivedProperties({
         shortId,
+        frontendConfig,
     });
+
+    // deno-lint-ignore require-await
+    static async validate(dbObject: RawVNode<typeof this>): Promise<void> {
+        // Validate the frontendConfigJSON field:
+        let frontendConfigJSON;
+        try {
+            frontendConfigJSON = JSON.parse(dbObject.frontendConfigJSON);
+        } catch (_err: unknown) { throw new ValidationError(`frontendConfigJSON is not valid JSON.`); }
+        FrontendConfigSchema(frontendConfigJSON);
+    }
 }
 
 VNodeTypeRef.resolve(SiteRef, Site);
@@ -147,10 +183,19 @@ export const siteIdFromShortId = makeCachedLookup((shortId: string) => graph.vni
  * Note: Sites have "shortId", without the "site-" prefix. This is different from the siteCode.
  * whereas Entries have "friendlyId", without the siteCode prefix, which varies.
  */
- export function shortId(): DerivedProperty<string> { return DerivedProperty.make(
+export function shortId(): DerivedProperty<string> { return DerivedProperty.make(
     Site,
     s => s.slugId,
     s => s.slugId.substr(5),  // Remove the "site-" prefix
+);}
+
+/**
+ * A derived property that provides the "frontend config", parsed from JSON
+ */
+export function frontendConfig(): DerivedProperty<FrontendConfigData> { return DerivedProperty.make(
+    Site,
+    s => s.frontendConfigJSON,
+    s => JSON.parse(s.frontendConfigJSON),
 );}
 
 /** Cache to look up a Site's siteCode from its VNID */
@@ -167,7 +212,17 @@ export function slugIdToFriendlyId(slugId: string): string {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Action to make changes to an existing Site:
-export const UpdateSite = defaultUpdateFor(Site, s => s.slugId.description.homePageMD.footerMD.domain.accessMode, {});
+export const UpdateSite = defaultUpdateFor(Site, s => s.slugId.description.homePageMD.footerMD.domain.accessMode, {
+    otherUpdates: async (args: {frontendConfig?: FrontendConfigData}, tx, nodeSnapshot) => {
+        if (args.frontendConfig) {
+            await tx.queryOne(C`
+                MATCH (site:${Site} {id: ${nodeSnapshot.id}})
+                SET site.frontendConfigJSON = ${JSON.stringify(args.frontendConfig)}
+            `.RETURN({}));
+        }
+        return {};
+    },
+});
 
 export const DeleteSite = defaultDeleteFor(Site);
 
@@ -185,6 +240,7 @@ export const CreateSite = defineAction({
         siteCode?: string;
         adminUser?: VNID;
         accessMode?: AccessMode;
+        frontendConfig?: FrontendConfigData;
     },
     resultData: {} as {
         id: VNID;
@@ -221,7 +277,8 @@ export const CreateSite = defineAction({
                 homePageMD: ${data.homePageMD || null},
                 footerMD: ${data.footerMD || ""},
                 domain: ${data.domain},
-                accessMode: ${data.accessMode ?? AccessMode.PublicContributions}
+                accessMode: ${data.accessMode ?? AccessMode.PublicContributions},
+                frontendConfigJSON: ${JSON.stringify(data.frontendConfig ?? {})}
             })
         `.RETURN({}));
 

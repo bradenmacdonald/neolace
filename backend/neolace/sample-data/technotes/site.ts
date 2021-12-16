@@ -59,4 +59,12 @@ export const siteData: Partial<Parameters<typeof UpdateSite>[0]> = {
 
         **Platform**: Powered by [Neolace](https://www.neolace.com/).
     `,
+    frontendConfig: {
+        headerLinks: [
+            {text: "Home", href: "/"},
+            {text: "About", href: "/entry/about"},
+            {text: "Team", href: "/entry/team"},
+            {text: "Contact", href: "/#h-connect-with-us"},
+        ],
+    },
 };

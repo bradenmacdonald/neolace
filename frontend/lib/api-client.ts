@@ -1,9 +1,11 @@
 import * as KeratinAuthN from 'keratin-authn';
 import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
-import { NeolaceApiClient, NotFound, schemas, types } from 'neolace-api';
+import { NeolaceApiClient, NotFound, schemas, SiteDetailsData, types } from 'neolace-api';
 import { AsyncCache } from './async-cache';
 
 export * as api from 'neolace-api';
+
+export type SiteData = SiteDetailsData;
 
 export function isVNID(key: string): key is types.VNID {
     try {
@@ -60,27 +62,14 @@ export const client = new NeolaceApiClient({
     getExtraHeadersForRequest,
 });
 
-export interface SiteData {
-    name: string;
-    domain: string;
-    shortId: string;
-    footerMD: string;
-}
-
-const siteDataCache = new AsyncCache<string, SiteData>(
+const siteDataCache = new AsyncCache<string, SiteDetailsData>(
     async (domain) => {
-        const siteData = await client.getSite({domain,});
-        return {
-            name: siteData.name,
-            domain: siteData.domain,
-            shortId: siteData.shortId,
-            footerMD: siteData.footerMD,
-        };
+        return await client.getSite({domain,});
     },
     5 * 60_000,  // timeout is 5 minutes
 );
 
-export async function getSiteData(domain: string): Promise<SiteData|null> {
+export async function getSiteData(domain: string): Promise<SiteDetailsData|null> {
     try {
         // If the site has been previously retrieved, this cache will always return the cached value immediately.
         // (Occasionally it will be refreshed in the background, but we still get an immediate result here.)

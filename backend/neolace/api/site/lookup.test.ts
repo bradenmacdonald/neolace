@@ -17,6 +17,12 @@ group(import.meta, () => {
                 domain: "plantdb.local.neolace.net",
                 description: null,
                 footerMD: "Powered by [Neolace](https://www.neolace.com/).",
+                frontendConfig: {
+                    headerLinks: [
+                        { text: "Home", href: "/" },
+                        { text: "Ponderosa", href: "/entry/s-pinus-ponderosa" },
+                    ],
+                },
             });
         });
 

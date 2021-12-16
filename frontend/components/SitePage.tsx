@@ -23,12 +23,6 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // const router = useRouter();
     // router.query.siteHost gives the site's domain
 
-    const siteLinks = [
-        {text: "Home", href: "/"},
-        {text: "About", href: "/entry/about"},
-        {text: "Team", href: "/entry/team"},
-    ];
-
     return <div>
         <Head>
             <title>{props.title}</title>
@@ -61,7 +55,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     <ul className="flex">
                         {
                             // This styling will ensure that links other than the first two will be truncated if there is not enough room on screen to display them all in full.
-                            siteLinks.map((link, idx) => 
+                            props.site.frontendConfig.headerLinks?.map((link, idx) => 
                                 <li key={idx} className={`inline-block mr-4 hover:text-gray-300 whitespace-nowrap ${idx >= 2 ? "overflow-hidden overflow-ellipsis" : ""}`}><Link href={link.href}><a>{link.text}</a></Link></li>
                             )
                         }

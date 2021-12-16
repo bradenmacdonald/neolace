@@ -129,10 +129,24 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
     }
 
     protected async requirePermission(request: NeolaceHttpRequest, check: Check, ...otherChecks: Check[]): Promise<void> {
+        const checksPassed = await this.hasPermission(request, check, ...otherChecks);
+    
+        if (!checksPassed) {
+            if (request.user?.id === undefined) {
+                // We don't know who this user is, so we don't know if they have permission or not.
+                throw new api.NotAuthenticated();
+            } else {
+                // We know who this user is, and they're not allowed to do that.
+                throw new api.NotAuthorized("You do not have sufficient permissions.");
+            }
+        }
+    }
+
+    protected async hasPermission(request: NeolaceHttpRequest, check: Check, ...otherChecks: Check[]): Promise<boolean> {
         const siteId = request.pathParam("siteShortId") ? (await this.getSiteDetails(request)).siteId : undefined;
         const userId = request.user?.id ?? undefined;
     
-        const checksPassed = await graph.read(async tx => {
+        return await graph.read(async tx => {
             const context: CheckContext = {tx, siteId, userId};
             for (const c of [check, ...otherChecks]) {
                 if (await c(context) !== true) {
@@ -141,17 +155,6 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
             }
             return true;  // All checks passed
         });
-    
-        if (!checksPassed) {
-    
-            if (userId === undefined) {
-                // We don't know who this user is, so we don't know if they have permission or not.
-                throw new api.NotAuthenticated();
-            } else {
-                // We know who this user is, and they're not allowed to do that.
-                throw new api.NotAuthorized("You do not have sufficient permissions.");
-            }
-        }
     }
 
     /**
