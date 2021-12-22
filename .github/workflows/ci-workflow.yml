@@ -165,6 +165,7 @@ jobs:
           tags: ghcr.io/neolace-dev/neolace-${{ matrix.component }}:${{ steps.tag-condition.outputs.value }}
           labels: |
             org.opencontainers.image.title=${{ matrix.title }}
+            org.opencontainers.image.description=${{ matrix.title }}
             org.opencontainers.image.url=https://www.neolace.com
             org.opencontainers.image.source=https://github.com/neolace-dev/neolace-app
             org.opencontainers.image.revision=${{ github.sha }}
