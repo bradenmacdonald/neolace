@@ -149,28 +149,18 @@ jobs:
           # registry with too many random branch builds.
           if_false: ${{ steps.branch-name.outputs.current_branch }}
 
-      # - name: Extract metadata (tags, labels) for Docker
-      #   id: meta
-      #   uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-      #   with:
-      #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      - name: Build and push backend Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: debug
-        run: echo "${{ steps.meta.outputs.tags }} , labels ${{ steps.meta.outputs.labels }}"
-
-      # - name: Build and push Docker image
-      #   uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
-      #   with:
-      #     file: backend/Dockerfile
-      #     context: .
-      #     push: true
-      #     tags: neolace-dev/neolace-app/backend:${{ steps.tag-condition.outputs.value }}
+          file: backend/Dockerfile
+          context: .
+          push: true
+          tags: ghcr.io/neolace-dev/neolace-backend:${{ steps.tag-condition.outputs.value }}
+          labels: |
+            org.opencontainers.image.title=Neolace Backend
+            org.opencontainers.image.url=https://www.neolace.com
+            org.opencontainers.image.source=https://github.com/neolace-dev/neolace-app
+            org.opencontainers.image.revision=${{ github.sha }}
 
   ######################################################################################################################
   ## Deploy Docker Images
