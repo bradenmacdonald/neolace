@@ -133,28 +133,20 @@ jobs:
       - name: Add SHORT_SHA env property with commit short sha since GitHub doesn't provide it
         run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
 
-      - name: github.ref_type
-        run: echo "${{ github.ref_type }}"
-
-      - name: github.ref
-        run: echo "${{ github.ref }}"
-
-      - name: github.ref_name
-        run: echo "${{ github.ref_name }}"
-
-      - name: github.github.head_ref
-        run: echo "${{ github.github.head_ref }}"
+      - name: Get branch name since GitHub doesn't provide it
+        id: branch-name
+        uses: tj-actions/branch-names@7f0a69aa8e80f46987e8979c73ac9923d6a3c004
 
       - name: Determine tag to use
         uses: haya14busa/action-cond@fcf25c40aad2d8f13112d74eb825a2d48a9726bc
         id: tag-condition
         with:
-          cond: ${{ github.ref_name == 'main' }}
+          cond: ${{ steps.branch-name.outputs.is_default == 'true' }}
           # On main, we tag with a release name like "build14-abcd678"
           if_true: build${{ github.run_number }}-${{ env.SHORT_SHA }}
           # For merge requests, just use the branch name as the image tag; we don't want to pollute the container
           # registry with too many random branch builds.
-          if_false: ${{ github.ref_name }}
+          if_false: ${{ steps.branch-name.outputs.current_branch }}
 
       # - name: Extract metadata (tags, labels) for Docker
       #   id: meta
