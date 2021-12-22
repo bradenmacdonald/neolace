@@ -1,6 +1,15 @@
-import { Schema, Type, string, nullable, } from "../api-schemas.ts";
+import { Schema, Type, string, nullable, array, boolean, Record, } from "../api-schemas.ts";
 import { ReferenceCacheSchema } from "../content/Entry.ts";
 
+
+export const FrontendConfigSchema = Schema({
+    headerLinks: array.of(Schema({text: string, href: string})).strictOptional(),
+    integrations: Schema({
+        plausibleAnalytics: Schema({enabled: boolean}).strictOptional(),
+    }).strictOptional(),
+    redirects: Record(string, string).strictOptional(),
+});
+export type FrontendConfigData = Type<typeof FrontendConfigSchema>;
 
 /**
  * Data type that gives information about a Site
@@ -24,6 +33,15 @@ export const SiteDetailsSchema = Schema({
      * The footer text (as Markdown) to display on every page of this site.
      */
     footerMD: string,
+
+    /**
+     * Configuration related to the frontend, such as:
+     *   - theme/colors (future)
+     *   - links shown in the header
+     *   - analytics integrations to use
+     *   - redirects
+     */
+    frontendConfig: FrontendConfigSchema,
 });
 export type SiteDetailsData = Type<typeof SiteDetailsSchema>;
 

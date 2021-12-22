@@ -38,22 +38,38 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     --site-link-color: 0, 0, 255;
                 }
             `}</style>
+            {/* Analytics */}
+            {props.site.frontendConfig.integrations?.plausibleAnalytics?.enabled ?
+                <script defer data-domain={props.site.domain} src="https://plausible.io/js/plausible.js"></script>
+            :null}
         </Head>
 
         {/* Main header: */}
-        <header id="neo-main-header" className="bg-header-color w-screen h-8 md:h-24 grid grid-cols-12">
+        <header id="neo-main-header" className="bg-header-color w-screen h-8 md:h-24 flex flex-row flex-nowrap">
             {/* Site name/logo */}
-            <div className="col-span-6 md:col-span-5 max-h-8 md:max-h-24 p-1 md:p-3">
+            <div className="flex-none max-h-8 md:max-h-24 p-1 md:p-3 md:pr-6 mr-1 md:min-w-[min(20rem,25vw)]">
                 <Link href="/">
                     {/* a: block w-full h-full fix the image sizing on safari */}
                     <a className="block w-full h-full"><img alt={props.site.name} src={`/${props.site.shortId}.svg`} id="neo-site-logo" className="max-w-full max-h-full" /></a>
                 </Link>
             </div>
-            {/* Search (TODO) */}
-            <div className="col-span-4 md:col-span-6">
+            <div className="flex-auto min-w-0 items-center p-1 md:p-3 md:pl-0 text-header-color-light self-center text-center text-sm md:text-lg"> {/* min-w-0 is required here per https://stackoverflow.com/a/66689926 */}
+                {/* Site-Specific Nav Links */}
+                <nav>
+                    <ul className="flex">
+                        {
+                            // This styling will ensure that links other than the first two will be truncated if there is not enough room on screen to display them all in full.
+                            props.site.frontendConfig.headerLinks?.map((link, idx) => 
+                                <li key={idx} className={`inline-block mr-4 hover:text-gray-300 whitespace-nowrap ${idx >= 2 ? "overflow-hidden overflow-ellipsis" : ""}`}><Link href={link.href}><a>{link.text}</a></Link></li>
+                            )
+                        }
+                    </ul>
+                </nav>
+                {/* Search */}
+                {/* TODO - search box */}
             </div>
-            <div className="col-span-2 md:col-span-1 flex justify-end items-center p-1 md:p-3 text-header-color-light">
-                {/*
+            <div className="flex-none flex justify-center p-1 md:p-3 text-header-color-light">
+                {
                     // Show the user's avatar if they're logged in, otherwise a placeholder link to the login page.
                     user.status === UserStatus.LoggedIn ? (
                         <img className="rounded max-h-100" alt="User Avatar" src="/avatar-unsplash-theyshane.jpg" />
@@ -61,13 +77,13 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                         <Link href="/login"><a className="inline-block w-auto h-full">
                             <svg className="rounded h-full" role="img" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
-                                {/ * Thanks https://icons.getbootstrap.com/icons/person-fill/ (MIT) * /}
+                                {/* Thanks https://icons.getbootstrap.com/icons/person-fill/ (MIT) */}
                             </svg>
                         </a></Link>
-                    ): / * default case, user status is unknown: * / (
+                    ): /* default case, user status is unknown: */ (
                         <svg className="rounded h-full" role="img" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect width="16" height="16" /></svg>
                     )
-                */}
+                }
             </div>
         </header>
 

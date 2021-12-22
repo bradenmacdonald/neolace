@@ -1,6 +1,7 @@
 import { C, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { NeolaceHttpResource, graph, api } from "neolace/api/mod.ts";
 import { Site } from "neolace/core/Site.ts";
+import { CanViewHomePage } from "../../core/permissions.ts";
 
 
 export class SiteLookupResource extends NeolaceHttpResource {
@@ -19,7 +20,7 @@ export class SiteLookupResource extends NeolaceHttpResource {
         // (knows its domain).
 
         // Load the site or throw a 404 error:
-        const site = await graph.pullOne(Site, s => s.name.description.domain.footerMD.shortId(), {where: C`@this.domain = ${domain}`}).catch((err) => {
+        const site = await graph.pullOne(Site, s => s.name.description.domain.footerMD.shortId().frontendConfig(), {where: C`@this.domain = ${domain}`}).catch((err) => {
             if (err instanceof EmptyResultError) {
                 throw new api.NotFound(`Site with domain "${domain}" not found.`);
             } else {
@@ -29,6 +30,12 @@ export class SiteLookupResource extends NeolaceHttpResource {
 
         if (domain !== site.domain) {
             throw new api.ApiError("Internal error - domain mismatch.", 500);
+        }
+
+        if (!this.hasPermission(request, CanViewHomePage)) {
+            // If the user doesn't have permission to view the site, they're not allowed to see the footer or frontend config:
+            site.footerMD = "";
+            site.frontendConfig = {};
         }
 
         // Response:

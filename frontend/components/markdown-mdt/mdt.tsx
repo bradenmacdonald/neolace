@@ -118,7 +118,7 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode, context: 
         case "sup":
             return <sup key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</sup>;
         default:
-            return <> [Unknown MDT Node] </>;
+            return <React.Fragment key={key}> [Unknown MDT Node] </React.Fragment>;
     }
 }
 
@@ -196,7 +196,7 @@ function nodeToComponent(node: MDT.Node, context: MDTContext) {
             return React.createElement(node.type, props, node.children.map(child => nodeToComponent(child, context)));
         }
         default:
-            return `[ Unimplemented MDT node type ${node.type} ]`;
+            return <React.Fragment key={key}>[ Unimplemented MDT node type: {node.type} ]</React.Fragment>;
     }
 }
 
