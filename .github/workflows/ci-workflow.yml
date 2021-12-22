@@ -12,6 +12,7 @@ on:
 
 env:
   deno-version: v1.16.x
+  docker-registry: ghcr.io
 
 jobs:
 
@@ -125,7 +126,7 @@ jobs:
       - name: Log in to the Container registry
         uses: docker/login-action@42d299face0c5c43a0487c477f595ac9cf22f1a7
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ env.docker-registry }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
