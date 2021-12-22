@@ -12,11 +12,6 @@ env:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    steps:
-
-      - name: Setup repo
-        uses: actions/checkout@v2
-
-      - uses: ./.github/workflows/validate-code.yml
-        with:
-          deno-version: ${{ env.deno-version }}
+    uses: ./.github/workflows/validate-code.yml
+    with:
+      deno-version: ${{ env.deno-version }}
