@@ -30,7 +30,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v1.1.0
         with:
-          deno-version: ${{ inputs.deno-version }}
+          deno-version: ${{ env.deno-version }}
 
       # - name: Verify formatting
       #   run: deno fmt --check
@@ -57,7 +57,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v1.1.0
         with:
-          deno-version: ${{ inputs.deno-version }}
+          deno-version: ${{ env.deno-version }}
 
       - name: Check types and cache dependencies (backend)
         run: deno cache --import-map=import_map.json --unstable neolace/api/server.ts
@@ -85,7 +85,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v1.1.0
         with:
-          deno-version: ${{ inputs.deno-version }}
+          deno-version: ${{ env.deno-version }}
 
       - name: Run neolace database servers
         run: docker-compose -f "docker-compose.yml" up -d
@@ -131,6 +131,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Detect deno version using the same mechanism as the other Deno jobs in this file (e.g. "v1.16.x" becomes "1.16.4")
+      - name: Detect which Deno version to use
+        id: deno-version
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: ${{ env.deno-version }}
+
       - name: Log in to the Container registry
         uses: docker/login-action@42d299face0c5c43a0487c477f595ac9cf22f1a7
         with:
@@ -164,6 +171,8 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/neolace-dev/neolace-${{ matrix.component }}:${{ steps.tag-condition.outputs.value }}
+          build-args:
+            DENO_IMAGE_VERSION=alpine-${{ steps.deno-version.outputs.deno-version }}
           labels: |
             org.opencontainers.image.title=${{ matrix.title }}
             org.opencontainers.image.description=${{ matrix.title }}
