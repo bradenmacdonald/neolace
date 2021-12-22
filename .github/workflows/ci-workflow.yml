@@ -47,67 +47,67 @@ jobs:
         run: deno lint components pages lib
         working-directory: ./frontend
 
-  # check-backend-types:
-  #   runs-on: ubuntu-latest
+  check-backend-types:
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Setup repo
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
 
-  #     - name: Setup Deno
-  #       uses: denoland/setup-deno@v1.1.0
-  #       with:
-  #         deno-version: ${{ inputs.deno-version }}
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: ${{ inputs.deno-version }}
 
-  #     - name: Check types and cache dependencies (backend)
-  #       run: deno cache --import-map=import_map.json --unstable neolace/api/server.ts
-  #       working-directory: ./backend
+      - name: Check types and cache dependencies (backend)
+        run: deno cache --import-map=import_map.json --unstable neolace/api/server.ts
+        working-directory: ./backend
 
-  #     # Type checking the test suite is very slow we do it asynchronously now too, while the actual tests themselves run in a separate job
+      # Type checking the test suite is very slow we do it asynchronously now too, while the actual tests themselves run in a separate job
 
-  #     - name: Type check test suite setup
-  #       run: deno cache --import-map=import_map.json --unstable neolace/scripts/test-setup.ts
-  #       working-directory: ./backend
+      - name: Type check test suite setup
+        run: deno cache --import-map=import_map.json --unstable neolace/scripts/test-setup.ts
+        working-directory: ./backend
 
-  #     - name: Type check tests
-  #       env:
-  #         ENV_TYPE: test
-  #       run: deno test --import-map=import_map.json --no-run --unstable
-  #       working-directory: ./backend
+      - name: Type check tests
+        env:
+          ENV_TYPE: test
+        run: deno test --import-map=import_map.json --no-run --unstable
+        working-directory: ./backend
 
-  # test-backend:
-  #   runs-on: ubuntu-latest
+  test-backend:
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Setup repo
-  #       uses: actions/checkout@v2
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
 
-  #     - name: Setup Deno
-  #       uses: denoland/setup-deno@v1.1.0
-  #       with:
-  #         deno-version: ${{ inputs.deno-version }}
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: ${{ inputs.deno-version }}
 
-  #     - name: Run neolace database servers
-  #       run: docker-compose -f "docker-compose.yml" up -d
+      - name: Run neolace database servers
+        run: docker-compose -f "docker-compose.yml" up -d
 
-  #     - name: Wait for Neo4j
-  #       run: sleep 10
+      - name: Wait for Neo4j
+        run: sleep 10
 
-  #     - name: Test Suite setup (backend)
-  #       env:
-  #         ENV_TYPE: test
-  #       run: deno run --import-map=import_map.json --allow-net --allow-read --allow-env --allow-write --unstable --no-check neolace/scripts/test-setup.ts
-  #       working-directory: ./backend
+      - name: Test Suite setup (backend)
+        env:
+          ENV_TYPE: test
+        run: deno run --import-map=import_map.json --allow-net --allow-read --allow-env --allow-write --unstable --no-check neolace/scripts/test-setup.ts
+        working-directory: ./backend
 
-  #     - name: Run tests (backend)
-  #       env:
-  #         ENV_TYPE: test
-  #       run: deno test --import-map=import_map.json --allow-net --allow-env --allow-read --unstable --no-check
-  #       working-directory: ./backend
+      - name: Run tests (backend)
+        env:
+          ENV_TYPE: test
+        run: deno test --import-map=import_map.json --allow-net --allow-env --allow-read --unstable --no-check
+        working-directory: ./backend
 
-  #     - name: Stop containers
-  #       if: always()
-  #       run: docker-compose -f "docker-compose.yml" down
+      - name: Stop containers
+        if: always()
+        run: docker-compose -f "docker-compose.yml" down
 
   ######################################################################################################################
   ## Build & Publish Docker Images
@@ -115,6 +115,7 @@ jobs:
 
   build-and-push-images:
     runs-on: ubuntu-latest
+    needs: [lint, check-backend-types, test-backend]
     strategy:
       matrix:
         include:
