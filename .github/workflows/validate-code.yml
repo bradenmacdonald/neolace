@@ -1,13 +1,14 @@
 name: Validate
 
+# This workflow isn't run directly, but is triggered by the 'main' workflow
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-env:
-  deno-version: v1.16.x
+  workflow_call:
+    inputs:
+      deno-version:
+        description: 'Which version of Deno to use'
+        default: 'vx.x.x'
+        required: true
+        type: string
 
 jobs:
   lint:
@@ -20,7 +21,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v1.1.0
         with:
-          deno-version: ${{ env.deno-version }}
+          deno-version: ${{ inputs.deno-version }}
 
       # - name: Verify formatting
       #   run: deno fmt --check
@@ -47,7 +48,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v1.1.0
         with:
-          deno-version: ${{ env.deno-version }}
+          deno-version: ${{ inputs.deno-version }}
 
       - name: Check types and cache dependencies (backend)
         run: deno cache --import-map=import_map.json --unstable neolace/api/server.ts
@@ -75,7 +76,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v1.1.0
         with:
-          deno-version: ${{ env.deno-version }}
+          deno-version: ${{ inputs.deno-version }}
 
       - name: Run neolace database servers
         run: docker-compose -f "docker-compose.yml" up -d
