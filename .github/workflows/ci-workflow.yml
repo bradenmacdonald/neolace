@@ -141,6 +141,7 @@ jobs:
         uses: haya14busa/action-cond@fcf25c40aad2d8f13112d74eb825a2d48a9726bc
         id: tag-condition
         with:
+          # Are we running on main (the default branch) or a PR that will merge into main?
           cond: ${{ steps.branch-name.outputs.is_default == 'true' }}
           # On main, we tag with a release name like "build14-abcd678"
           if_true: build${{ github.run_number }}-${{ env.SHORT_SHA }}
@@ -154,15 +155,13 @@ jobs:
       #   with:
       #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-      # - name: Build and push Docker image
-      #   uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
-      #   with:
-      #     context: .
-      #     push: true
-      #     tags: ${{ steps.meta.outputs.tags }}
-      #     labels: ${{ steps.meta.outputs.labels }}
-      - name: Test tags used
-        run: echo "${{ steps.tag-condition.outputs.value }}"
+      - name: Build and push Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          file: backend/Dockerfile
+          context: .
+          push: true
+          tags: neolace-dev/neolace-app/backend:${{ steps.tag-condition.outputs.value }}
 
   ######################################################################################################################
   ## Deploy Docker Images
