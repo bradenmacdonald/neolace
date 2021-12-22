@@ -113,8 +113,15 @@ jobs:
   ## Build & Publish Docker Images
   ######################################################################################################################
 
-  build-and-push-image:
+  build-and-push-images:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - component: backend
+            title: Neolace Backend
+          - component: frontend
+            title: Neolace Frontend
     permissions:
       contents: read
       packages: write
@@ -149,18 +156,21 @@ jobs:
           # registry with too many random branch builds.
           if_false: ${{ steps.branch-name.outputs.current_branch }}
 
-      - name: Build and push backend Docker image
+      - name: Build and push ${{ matrix.component }} Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
-          file: backend/Dockerfile
+          file: ${{ matrix.component }}/Dockerfile
           context: .
           push: true
-          tags: ghcr.io/neolace-dev/neolace-backend:${{ steps.tag-condition.outputs.value }}
+          tags: ghcr.io/neolace-dev/neolace-${{ matrix.component }}:${{ steps.tag-condition.outputs.value }}
           labels: |
-            org.opencontainers.image.title=Neolace Backend
+            org.opencontainers.image.title=${{ matrix.title }}
             org.opencontainers.image.url=https://www.neolace.com
             org.opencontainers.image.source=https://github.com/neolace-dev/neolace-app
             org.opencontainers.image.revision=${{ github.sha }}
+      # It will now be available at:
+      # https://github.com/neolace-dev/neolace-app/pkgs/container/neolace-backend
+      # https://github.com/neolace-dev/neolace-app/pkgs/container/neolace-frontend
 
   ######################################################################################################################
   ## Deploy Docker Images
