@@ -158,11 +158,11 @@ jobs:
         with:
           # Are we running on main (the default branch) or a PR that will merge into main?
           cond: ${{ steps.branch-name.outputs.is_default == 'true' }}
-          # On main, we tag with a release name like "build14-abcd678"
-          if_true: build${{ github.run_number }}-${{ env.SHORT_SHA }}
+          # On main, we tag with a release name like "build14-abcd678" as well as "latest"
+          if_true: ghcr.io/neolace-dev/neolace-${{ matrix.component }}:build${{ github.run_number }}-${{ env.SHORT_SHA }},ghcr.io/neolace-dev/neolace-${{ matrix.component }}:latest
           # For merge requests, just use the branch name as the image tag; we don't want to pollute the container
           # registry with too many random branch builds.
-          if_false: ${{ steps.branch-name.outputs.current_branch }}
+          if_false: ghcr.io/neolace-dev/neolace-${{ matrix.component }}:${{ steps.branch-name.outputs.current_branch }}
 
       - name: Build and push ${{ matrix.component }} Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
@@ -170,7 +170,7 @@ jobs:
           file: ${{ matrix.component }}/Dockerfile
           context: .
           push: true
-          tags: ghcr.io/neolace-dev/neolace-${{ matrix.component }}:${{ steps.tag-condition.outputs.value }}
+          tags: ${{ steps.tag-condition.outputs.value }}
           build-args:
             DENO_IMAGE_VERSION=alpine-${{ steps.deno-version.outputs.deno-version }}
           labels: |
