@@ -133,6 +133,18 @@ jobs:
       - name: Add SHORT_SHA env property with commit short sha since GitHub doesn't provide it
         run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
 
+      - name: github.ref_type
+        run: echo "${{ github.ref_type }}"
+
+      - name: github.ref
+        run: echo "${{ github.ref }}"
+
+      - name: github.ref_name
+        run: echo "${{ github.ref_name }}"
+
+      - name: github.github.head_ref
+        run: echo "${{ github.github.head_ref }}"
+
       - name: Determine tag to use
         uses: haya14busa/action-cond@fcf25c40aad2d8f13112d74eb825a2d48a9726bc
         id: tag-condition
