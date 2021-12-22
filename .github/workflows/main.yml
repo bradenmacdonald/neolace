@@ -12,6 +12,6 @@ env:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    uses: ./.github/workflows/validate-code.yml
+    uses: ./.github/workflows/validate-code.yml@${{ github.ref }}
     with:
       deno-version: ${{ env.deno-version }}
