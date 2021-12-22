@@ -1,4 +1,5 @@
-FROM denoland/deno:alpine
+ARG DENO_IMAGE_VERSION=alpine
+FROM denoland/deno:${DENO_IMAGE_VERSION}
 WORKDIR /neolace/backend
 ENV DENO_DIR /neolace/deno_dir
 ENV ENV_TYPE production

@@ -1,14 +1,15 @@
 ################################################################
 # Stage 1: Transpile the API client
 ################################################################
-FROM denoland/deno:alpine AS transpile
+ARG DENO_IMAGE_VERSION=alpine
+FROM denoland/deno:${DENO_IMAGE_VERSION} AS transpile
 WORKDIR /build/neolace-api/
 COPY ./neolace-api/ /build/neolace-api/
 RUN deno run --allow-read --allow-write --unstable _compile.ts
 ################################################################
 # Stage 2: Intall our Next.js frontend
 ################################################################
-FROM node:14-alpine
+FROM node:16-alpine
 WORKDIR /neolace/frontend
 ENV NODE_ENV production
 ENV PATH /neolace/frontend/node_modules/.bin:$PATH

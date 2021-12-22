@@ -1,0 +1,188 @@
+name: CI Workflow
+# Note: we want to split this huge workflow up into smaller ones (validate, build, deploy)
+# But until it's possible to reference workflows that use the same commit
+# (see https://stackoverflow.com/questions/69532525/workflow )
+# We just have to use this one giant workflow.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  deno-version: v1.16.x
+  docker-registry: ghcr.io
+
+jobs:
+
+  ######################################################################################################################
+  ## Validate
+  ######################################################################################################################
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: ${{ env.deno-version }}
+
+      # - name: Verify formatting
+      #   run: deno fmt --check
+
+      - name: Run linter (backend)
+        run: deno lint
+        working-directory: ./backend
+
+      - name: Run linter (API)
+        run: deno lint src
+        working-directory: ./neolace-api
+
+      - name: Run linter (frontend)
+        run: deno lint components pages lib
+        working-directory: ./frontend
+
+  check-backend-types:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: ${{ env.deno-version }}
+
+      - name: Check types and cache dependencies (backend)
+        run: deno cache --import-map=import_map.json --unstable neolace/api/server.ts
+        working-directory: ./backend
+
+      # Type checking the test suite is very slow we do it asynchronously now too, while the actual tests themselves run in a separate job
+
+      - name: Type check test suite setup
+        run: deno cache --import-map=import_map.json --unstable neolace/scripts/test-setup.ts
+        working-directory: ./backend
+
+      - name: Type check tests
+        env:
+          ENV_TYPE: test
+        run: deno test --import-map=import_map.json --no-run --unstable
+        working-directory: ./backend
+
+  test-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: ${{ env.deno-version }}
+
+      - name: Run neolace database servers
+        run: docker-compose -f "docker-compose.yml" up -d
+
+      - name: Wait for Neo4j
+        run: sleep 10
+
+      - name: Test Suite setup (backend)
+        env:
+          ENV_TYPE: test
+        run: deno run --import-map=import_map.json --allow-net --allow-read --allow-env --allow-write --unstable --no-check neolace/scripts/test-setup.ts
+        working-directory: ./backend
+
+      - name: Run tests (backend)
+        env:
+          ENV_TYPE: test
+        run: deno test --import-map=import_map.json --allow-net --allow-env --allow-read --unstable --no-check
+        working-directory: ./backend
+
+      - name: Stop containers
+        if: always()
+        run: docker-compose -f "docker-compose.yml" down
+
+  ######################################################################################################################
+  ## Build & Publish Docker Images
+  ######################################################################################################################
+
+  build-and-push-images:
+    runs-on: ubuntu-latest
+    needs: [lint, check-backend-types, test-backend]
+    strategy:
+      matrix:
+        include:
+          - component: backend
+            title: Neolace Backend
+          - component: frontend
+            title: Neolace Frontend
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Detect deno version using the same mechanism as the other Deno jobs in this file (e.g. "v1.16.x" becomes "1.16.4")
+      - name: Detect which Deno version to use
+        id: deno-version
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: ${{ env.deno-version }}
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@42d299face0c5c43a0487c477f595ac9cf22f1a7
+        with:
+          registry: ${{ env.docker-registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add SHORT_SHA env property with commit short sha since GitHub doesn't provide it
+        run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+
+      - name: Get branch name since GitHub doesn't provide it
+        id: branch-name
+        uses: tj-actions/branch-names@7f0a69aa8e80f46987e8979c73ac9923d6a3c004
+
+      - name: Determine tag to use
+        uses: haya14busa/action-cond@fcf25c40aad2d8f13112d74eb825a2d48a9726bc
+        id: tag-condition
+        with:
+          # Are we running on main (the default branch) or a PR that will merge into main?
+          cond: ${{ steps.branch-name.outputs.is_default == 'true' }}
+          # On main, we tag with a release name like "build14-abcd678"
+          if_true: build${{ github.run_number }}-${{ env.SHORT_SHA }}
+          # For merge requests, just use the branch name as the image tag; we don't want to pollute the container
+          # registry with too many random branch builds.
+          if_false: ${{ steps.branch-name.outputs.current_branch }}
+
+      - name: Build and push ${{ matrix.component }} Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          file: ${{ matrix.component }}/Dockerfile
+          context: .
+          push: true
+          tags: ghcr.io/neolace-dev/neolace-${{ matrix.component }}:${{ steps.tag-condition.outputs.value }}
+          build-args:
+            DENO_IMAGE_VERSION=alpine-${{ steps.deno-version.outputs.deno-version }}
+          labels: |
+            org.opencontainers.image.title=${{ matrix.title }}
+            org.opencontainers.image.description=${{ matrix.title }}
+            org.opencontainers.image.url=https://www.neolace.com
+            org.opencontainers.image.source=https://github.com/neolace-dev/neolace-app
+            org.opencontainers.image.revision=${{ github.sha }}
+      # It will now be available at:
+      # https://github.com/neolace-dev/neolace-app/pkgs/container/neolace-backend
+      # https://github.com/neolace-dev/neolace-app/pkgs/container/neolace-frontend
+
+  ######################################################################################################################
+  ## Deploy Docker Images
+  ######################################################################################################################
