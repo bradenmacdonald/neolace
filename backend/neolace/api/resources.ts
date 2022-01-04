@@ -1,4 +1,5 @@
 import { HomePageResource } from "./index.ts";
+import { HealthCheckResource } from "./health.ts";
 import { RequestLoginResource } from "./auth/request-login.ts";
 import { PasswordlessLoginWebhookResource } from "./auth/hooks/passwordless-login.ts";
 import { SiteLookupResource } from "./site/lookup.ts";
@@ -13,6 +14,7 @@ import { UserMeResource } from "./user/me.ts";
 
 export const allResources = [
     HomePageResource,
+    HealthCheckResource,
     RequestLoginResource,
     PasswordlessLoginWebhookResource,
     SiteLookupResource,
