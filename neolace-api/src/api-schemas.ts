@@ -34,6 +34,11 @@ export const Record = <KeyType extends string | number | symbol, ValueType>(keyS
 // Most string types have the following validation:
 export const normalString = string.trim().max(1_000);
 
+export const HealthCheckResponse = Schema({
+    reachable: boolean,
+    databaseWorking: boolean,
+});
+
 // TODO: move these to "User" file/namespace
 
 export const CreateHumanUser = Schema({
