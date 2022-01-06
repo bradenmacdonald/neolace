@@ -1,5 +1,5 @@
 /**
- * Configuration of the TechNotes backend application
+ * Configuration of the Neolace backend application
  */
 
 // What type of environment this is: development, production, or testing
