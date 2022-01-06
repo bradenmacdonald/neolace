@@ -45,18 +45,18 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         </Head>
 
         {/* Main header: */}
-        <header id="neo-main-header" className="bg-header-color w-screen h-8 md:h-24 flex flex-row flex-nowrap">
+        <header id="neo-main-header" className="bg-header-color w-screen h-8 md:h-24 flex flex-row flex-nowrap items-center">
             {/* Site name/logo */}
-            <div className="flex-none max-h-8 md:max-h-24 p-1 md:p-3 md:pr-6 mr-1 md:min-w-[min(20rem,25vw)]">
-                <Link href="/">
-                    {/* a: block w-full h-full fix the image sizing on safari */}
-                    <a className="block w-full h-full"><img alt={props.site.name} src={`/${props.site.shortId}.svg`} id="neo-site-logo" className="max-w-full max-h-full" /></a>
-                </Link>
-            </div>
-            <div className="flex-auto min-w-0 items-center p-1 md:p-3 md:pl-0 text-header-color-light self-center text-center text-sm md:text-lg"> {/* min-w-0 is required here per https://stackoverflow.com/a/66689926 */}
+            <Link href="/">
+                {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
+                <a className="flex-none h-8 md:h-24 p-1 md:p-3 mr-1 flex items-center">
+                    <img alt={props.site.name} src={`/${props.site.shortId}.svg`} id="neo-site-logo" className="w-auto h-full block" />
+                </a>
+            </Link>
+            <div className="flex-1 min-w-0 items-center p-1 md:p-3 md:pl-0 text-header-color-light text-center text-sm md:text-lg"> {/* min-w-0 is required here per https://stackoverflow.com/a/66689926 */}
                 {/* Site-Specific Nav Links */}
                 <nav>
-                    <ul className="flex">
+                    <ul className="flex justify-center">
                         {
                             // This styling will ensure that links other than the first two will be truncated if there is not enough room on screen to display them all in full.
                             props.site.frontendConfig.headerLinks?.map((link, idx) => 
@@ -68,14 +68,14 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 {/* Search */}
                 {/* TODO - search box */}
             </div>
-            <div className="flex-none flex justify-center p-1 md:p-3 text-header-color-light">
+            <div className="flex-none flex flex-row items-center justify-center p-1 md:px-3 text-header-color-light">
                 {
                     // Show the user's avatar if they're logged in, otherwise a placeholder link to the login page.
                     user.status === UserStatus.LoggedIn ? (
                         <img className="rounded max-h-100" alt="User Avatar" src="/avatar-unsplash-theyshane.jpg" />
                     ): user.status === UserStatus.Anonymous ? (
-                        <Link href="/login"><a className="inline-block w-auto h-full">
-                            <svg className="rounded h-full" role="img" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <Link href="/login"><a>
+                            <svg className="rounded w-6 h-6 md:w-16 md:h-16" role="img" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
                                 {/* Thanks https://icons.getbootstrap.com/icons/person-fill/ (MIT) */}
                             </svg>
