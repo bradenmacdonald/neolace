@@ -7,6 +7,7 @@ import {
     AndAncestors,
     List,
     // Count,
+    DateExpression,
     LiteralExpression,
     GetProperty,
     This,
@@ -43,6 +44,9 @@ group(import.meta, () => {
         checkParse("ancestors(this)", new Ancestors(new This()));
         checkParse("this.andAncestors()", new AndAncestors(new This()));
         checkParse("andAncestors(this)", new AndAncestors(new This()));
+    });
+    test("Date", () => {
+        checkParse(`date("2017-06-01")`, new DateExpression(new LiteralExpression(new V.StringValue("2017-06-01"))));
     });
     test("GetProperty - get(...)", () => {
         checkParse(

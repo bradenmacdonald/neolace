@@ -65,6 +65,12 @@ export interface IntegerValue extends LookupValue {
     value: string;
 }
 
+export interface DateValue extends LookupValue {
+    type: "Date";
+    /** ISO 8601 date string (no time information) */
+    value: string;
+}
+
 export interface StringValue extends LookupValue {
     type: "String";
     value: string;
@@ -73,6 +79,10 @@ export interface StringValue extends LookupValue {
 export interface InlineMarkdownString extends LookupValue {
     type: "InlineMarkdownString";
     value: string;
+}
+
+export interface NullValue extends LookupValue {
+    type: "Null";
 }
 
 export interface ErrorValue extends LookupValue {
@@ -88,7 +98,9 @@ export type AnyLookupValue = (
     | ImageValue
     | AnnotatedValue
     | IntegerValue
+    | DateValue
     | StringValue
     | InlineMarkdownString
+    | NullValue
     | ErrorValue
 );
