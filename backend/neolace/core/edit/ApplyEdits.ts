@@ -100,7 +100,7 @@ export const ApplyEdits = defineAction({
                         slot: "",
                     };
                     if (edit.data.rank !== undefined) {
-                        updatedPropertyFactFields.rank = edit.data.rank;
+                        updatedPropertyFactFields.rank = BigInt(edit.data.rank);
                     }
                     if (edit.data.slot !== undefined) {
                         updatedPropertyFactFields.slot = edit.data.slot;
