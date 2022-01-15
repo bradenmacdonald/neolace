@@ -70,6 +70,12 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             </Tooltip>
         }
         case "String":
+            // Temporary special case hack for the TechNotes hompage until we support video:
+            if (value.value === "$TN_HOME_VIDEO$") {
+                return <div className="max-h-[400px]">
+                    <video src="https://f000.backblazeb2.com/file/technotes/technotes-home.mp4" muted autoPlay loop className="block mx-auto w-full h-full max-h-[400px] max-w-none "></video>
+                </div>;
+            }
             return <>{value.value}</>;
         case "InlineMarkdownString":
             return <InlineMDT mdt={value.value} context={props.mdtContext} />;
