@@ -200,6 +200,11 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
             }
             const oldProp: PropertyData = oldSchema.properties[propId];
             const newProp: PropertyData = newSchema.properties[propId];
+            if (newProp.type !== oldProp.type) {
+                // The type has changed - need to delete and re-create this property
+                throw new Error("Property type has changed. Need to delete and re-create it but deleting Properties from the schema is not implemented.");
+            }
+
             const changes: Partial<Type<typeof UpdateProperty["dataSchema"]>> = {};
 
             // Handle appliesTo
@@ -214,7 +219,6 @@ export function diffSchema(oldSchema: Readonly<SiteSchemaData>, newSchema: Reado
             for (const key of [
                 "name",
                 "descriptionMD",
-                "type",
                 "mode",
                 "valueConstraint",
                 "isA",

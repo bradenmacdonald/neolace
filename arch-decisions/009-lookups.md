@@ -64,14 +64,14 @@ Values that result from lookup expressions (and can be used in lookup
 expressions) are of the following types:
 
 1. Integer, which can be of arbitrary size (uses JavaScript's `BigInt`)
-2. Quantity, a float with an optional unit (e.g. "350.2 g m^2 / s^3") (and an optional error range?)
+2. Quantity, a float with an optional unit (e.g. "350.2 g m^2 / s^3") (preserves number of decimal places)
 3. Boolean
 4. Null
 5. String
-6. Date, DateTime, FuzzyDate ([YYYY-MM-DD or YYYY-MM or YYYY] -> [YYYY-MM-DD or YYYY-MM or YYYY])
+6. Date, DateTime (TBD: do we want year or fuzzydate?)
 7. Entry, EntryType, Property, PropertyValue
 8. Page (like a list but may only be a subset of a list; some values may be missing. The total size is always known.)
-9. Range (Holds two Integer, Quantity, Date/DateTime/FuzzyDate of the same type, the second being larger or equal to the first)
+9. Range (For Integer, Quantity, Date/DateTime values of the same type and units, this holds up to three values: a min, main, and/or max value, which can be used to express things like tolerances e.g. "typ 3.55mm max 4.00mm", uncertainy e.g. "1940-1943?", confidence intervals, or spans e.g. "sold from 2014-2018", or for aerospace "NET 2012-07-15")
 10. X Expression
 11. Type
 

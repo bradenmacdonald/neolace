@@ -5,6 +5,7 @@ import {
     Ancestors,
     AndAncestors,
     AndDescendants,
+    DateExpression,
     // Count,
     Descendants,
     GetProperty,
@@ -81,6 +82,8 @@ export function parseLookupString(lookup: string): LookupExpression {
 
         // markdown("*string*")
         [/^markdown\((.*)\)$/, m => new Markdown( parseLookupString(m[1]) )],
+        // date("*string*")
+        [/^date\((.*)\)$/, m => new DateExpression( parseLookupString(m[1]) )],
     ];
 
     for (const [re, fn] of otherTemplates) {

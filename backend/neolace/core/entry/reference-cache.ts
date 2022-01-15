@@ -173,6 +173,8 @@ export class ReferenceCache {
             }
             case "Integer":
             case "String":
+            case "Date":
+            case "Null":
             case "Error":
                 return;
             default:
