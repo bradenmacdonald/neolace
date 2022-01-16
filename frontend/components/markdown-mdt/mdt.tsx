@@ -195,8 +195,12 @@ function nodeToComponent(node: MDT.Node, context: MDTContext) {
             if (node.align !== undefined) { props.style = {textAlign: node.align}; }
             return React.createElement(node.type, props, node.children.map(child => nodeToComponent(child, context)));
         }
+        case "blockquote": {
+            return <blockquote>{node.children.map(child => nodeToComponent(child, context))}</blockquote>
+        }
         default:
-            return <React.Fragment key={key}>[ Unimplemented MDT node type: {node.type} ]</React.Fragment>;
+            //deno-lint-ignore no-explicit-any
+            return <React.Fragment key={key}>[ Unimplemented MDT node type: {(node as any).type} ]</React.Fragment>;
     }
 }
 

@@ -78,6 +78,7 @@ export function parseLookupString(lookup: string): LookupExpression {
 
         [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*), link=(.*), maxWidth=(.*)\)$/, m => new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {formatExpr: parseLookupString(m[2]), linkExpr: parseLookupString(m[3]), maxWidthExpr: parseLookupString(m[4])})],
         [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*), link=(.*)\)$/, m => new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {formatExpr: parseLookupString(m[2]), linkExpr: parseLookupString(m[3])})],
+        [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*), caption=(.*)\)$/, m => new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {formatExpr: parseLookupString(m[2]), captionExpr: parseLookupString(m[3])})],
         [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*)\)$/, m => new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {formatExpr: parseLookupString(m[2])})],
 
         // markdown("*string*")

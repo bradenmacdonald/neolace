@@ -6,9 +6,9 @@ import { api } from 'lib/api-client';
 import { Blurhash } from 'react-blurhash';
 import Image from 'next/image';
 
-import { MDTContext } from './markdown-mdt/mdt';
+import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { RatioBox } from './widgets/ratio-box';
-import { MDT } from 'neolace-api';
+import { LookupValue } from './LookupValue';
  
 const OptionalLink = (props: {children: React.ReactNode; href?: api.EntryValue|api.StringValue; mdtContext: MDTContext;}) => {
     if (props.href) {
@@ -36,6 +36,14 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
 
     const {value} = props;
     const ratio = value.width && value.height ? value.width / value.height : undefined;
+
+    const imgEntryData = props.mdtContext.refCache.entries[value.entryId];
+    const caption = (
+        value.caption?.value === "" ? null :  // If caption is an empty string, don't display anything
+        value.caption ? <LookupValue value={value.caption} mdtContext={props.mdtContext} /> 
+        : <InlineMDT mdt={imgEntryData?.description ?? ""} context={props.mdtContext.childContextWith({entryId: value.entryId})} />
+    );
+
     if (value.format === api.ImageDisplayFormat.PlainLogo) {
         return <div className="w-full mt-2 mb-1" style={{maxWidth: `${value.maxWidth ?? 400}px`}}>
             <OptionalLink href={value.link} mdtContext={props.mdtContext}>
@@ -65,6 +73,11 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                         />
                     </OptionalLink>
                 </RatioBox>
+                {caption &&
+                    <div className="p-1 text-sm">
+                        {caption}
+                    </div>
+                }
             </div>
         </>
     } else {

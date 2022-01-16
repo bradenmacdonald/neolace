@@ -35,7 +35,7 @@ group(import.meta, () => {
                 size: 1581898,
                 width: 3504,
                 height: 2336,
-                link: undefined,
+                link: new EntryValue(defaultData.entries.imgPonderosaTrunk.id),
                 maxWidth: undefined,
             });
         });

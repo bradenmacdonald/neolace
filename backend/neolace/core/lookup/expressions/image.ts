@@ -29,9 +29,10 @@ export class Image extends LookupExpression {
     readonly entriesExpr: LookupExpression;
     // The format mode:
     // - "right" to float a thumbnail of the image to the right.
+    // - "logo" to display the image at actual size, with no border
     // - "thumb" to display a thumbnail of the image(s) where a paragraph of text would go
     readonly formatExpr: LookupExpression;
-    // Optional paramater - entry or URL to link to
+    // Optional paramater - URL to link to. Only valid for "logo" format.
     readonly linkExpr?: LookupExpression;
     // Optional parameter - caption to display under the image
     readonly captionExpr?: LookupExpression;
@@ -87,8 +88,8 @@ export class Image extends LookupExpression {
         if (this.captionExpr) {
             caption = await this.captionExpr.getValueAsOneOf([InlineMarkdownStringValue, StringValue], context);
         }
-        let link = undefined;
-        if (this.linkExpr) {
+        let link: EntryValue | StringValue = entry;
+        if (format === ImageDisplayFormat.PlainLogo && this.linkExpr) {
             link = await this.linkExpr.getValueAsOneOf([EntryValue, StringValue], context);
         }
         let maxWidth = undefined;
