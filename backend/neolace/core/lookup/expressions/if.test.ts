@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
-import { BooleanValue, IntegerValue, NullValue, StringValue, ConcreteValue } from "../values.ts";
+import { BooleanValue, IntegerValue, NullValue, StringValue, ConcreteValue, EntryValue, EntryTypeValue } from "../values.ts";
 import { If } from "./if.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { LookupExpression } from "../expression.ts";
@@ -54,6 +54,9 @@ group(import.meta, () => {
             await checkTruthy(new IntegerValue(-1));
             // if("hello world") -> "hello world"
             await checkTruthy(new StringValue("hello world"));
+            // Generally any object value (Entry, EntryType, etc.) is truthy
+            await checkTruthy(new EntryValue(VNID("_entryId")));
+            await checkTruthy(new EntryTypeValue(VNID("_entryId")));
         });
 
         test(`if(conditional, then=X) returns X if conditional is truthy`, async () => {

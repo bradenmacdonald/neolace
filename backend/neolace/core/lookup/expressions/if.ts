@@ -36,7 +36,7 @@ export class If extends LookupExpression {
     }
 
     public async getValue(context: LookupContext) {
-        const booleanValue = (await this.conditionExpr.getValue(context)).castTo(BooleanValue, context);
+        const booleanValue = await (await this.conditionExpr.getValue(context)).castTo(BooleanValue, context);
         if (booleanValue === undefined) {
             throw new LookupEvaluationError(`The expression "${this.conditionExpr.toDebugString()}" cannot be converted to a boolean (true/false).`);
         }

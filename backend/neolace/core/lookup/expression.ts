@@ -25,7 +25,7 @@ export abstract class LookupExpression {
             return initialValue;
         }
         // Try casting it:
-        const castValue = initialValue.castTo(valueType, context);
+        const castValue = await initialValue.castTo(valueType, context);
         if (castValue !== undefined) {
             return castValue;
         }
@@ -39,7 +39,7 @@ export abstract class LookupExpression {
         const initialValue = await this.getValue(context);
         for (const valueType of valueTypes) {
             // Try casting it:
-            const castValue = initialValue.castTo(valueType, context);
+            const castValue = await initialValue.castTo(valueType, context);
             if (castValue !== undefined) {
                 return castValue;
             }

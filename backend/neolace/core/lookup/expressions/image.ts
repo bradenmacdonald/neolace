@@ -63,7 +63,7 @@ export class Image extends LookupExpression {
             formatArgValue.value === "logo" ? ImageDisplayFormat.PlainLogo :
             ImageDisplayFormat.Thumbnail
         );
-        let entry = (await this.entriesExpr.getValue(context)).castTo(EntryValue, context);
+        let entry = await (await this.entriesExpr.getValue(context)).castTo(EntryValue, context);
         if (entry === undefined) {
             // We were given an entry set, not an entry - so just take the first one:
             const entrySet = await this.entriesExpr.getValueAs(LazyEntrySetValue, context);
@@ -71,7 +71,7 @@ export class Image extends LookupExpression {
             if (slice.length === 0) {
                 return new NullValue();
             }
-            entry = slice[0].castTo(EntryValue, context);
+            entry = await slice[0].castTo(EntryValue, context);
         }
         if (entry === undefined) {
             throw new LookupEvaluationError(`The expression "${this.entriesExpr.toDebugString()}" cannot be used with image().`);
