@@ -1,12 +1,10 @@
 import { LookupExpression } from "../expression.ts";
-import { LookupValue, ICountableValue, IntegerValue } from "../values.ts";
+import { isCountableValue, IntegerValue } from "../values.ts";
 import { LookupContext } from "../context.ts";
 import { LookupEvaluationError } from "../errors.ts";
 
 
-function isCountableValue(value: unknown): value is ICountableValue {
-    return value instanceof LookupValue && (value as unknown as ICountableValue).hasCount === true;
-}
+
 
 
 /**

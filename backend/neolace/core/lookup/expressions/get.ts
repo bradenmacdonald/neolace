@@ -154,7 +154,7 @@ export class GetProperty extends LookupExpression {
             `, {annotations: {rank: dbRankToValue, note: dbNoteToValue, slot: dbSlotToValue}});
         } else {
             // This is a value property. Are we retieving it for one entry or many?
-            const forEntry = (await this.fromEntriesExpr.getValue(context)).castTo(EntryValue, context);
+            const forEntry = await (await this.fromEntriesExpr.getValue(context)).castTo(EntryValue, context);
             if (forEntry !== undefined) {
                 // Yes, we are looking up this value for a single entry.
                 const propFacts = await getEntryProperty({

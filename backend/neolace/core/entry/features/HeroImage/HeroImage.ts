@@ -99,7 +99,7 @@ export const HeroImageFeature = EntryTypeFeature({
         if (value instanceof AnnotatedValue && value.value instanceof EntryValue) {
             imageEntryId = value.value.id;
             if (value.annotations.note) {
-                const captionValue = value.annotations.note.castTo(InlineMarkdownStringValue, context);
+                const captionValue = await value.annotations.note.castTo(InlineMarkdownStringValue, context);
                 if (captionValue) {
                     caption = captionValue.value;
                 }

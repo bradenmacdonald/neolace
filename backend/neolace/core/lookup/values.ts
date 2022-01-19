@@ -1,3 +1,4 @@
+// deno-lint-ignore-file require-await
 import {
     C,
     CypherQuery,
@@ -19,16 +20,34 @@ export abstract class LookupValue {
     public static readonly isLazy: boolean;
 
     /** Convert this value to a different value type if possible, or otherwise return undefined */
-    public castTo<NewType extends LookupValue>(newType: ClassOf<NewType>, context: LookupContext): NewType|undefined {
+    public async castTo<NewType extends LookupValue>(newType: ClassOf<NewType>, context: LookupContext): Promise<NewType|undefined> {
         if (this instanceof newType) {
             return this;
         }
-        const newValue = this.doCastTo(newType, context);
+
+        // Special case for casting to bool - any countable value is true unless its count is zero
+        // Note: boolean casting logic is tested in 'if.test.ts'
+        if ((newType as ClassOf<LookupValue>) === BooleanValue) {
+            if (isCountableValue(this)) {
+                // deno-lint-ignore no-explicit-any
+                return new BooleanValue(await this.getCount() !== 0n) as any;
+            }
+        }
+
+        // Do the cast, using the subclass's implementation
+        const newValue = await this.doCastTo(newType, context);
         if (newValue) {
             if (!(newValue instanceof newType)) {
                 throw new LookupEvaluationError(`Internal error, cast from ${this.constructor.name} to ${newType.name} failed.`);
             }
         }
+
+        // A second special case for casting to bool - any value which isn't explicitly falsy is truthy.
+        if (newValue === undefined && (newType as ClassOf<LookupValue>) === BooleanValue) {
+            // deno-lint-ignore no-explicit-any
+            return new BooleanValue(true) as any;
+        }
+
         return newValue;
     }
 
@@ -40,8 +59,12 @@ export abstract class LookupValue {
      */
     public abstract asLiteral(): string|undefined;
 
-    /** Subclasses should override this method to implement type casting. */
-    protected doCastTo(_newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+    /**
+     * Subclasses should override this method to implement type casting.
+     * Casting to bool is generally automatically handled (see castTo() above), so bool casting only needs to be
+     * implemented if this value type can be falsy.
+     **/
+    protected doCastTo(_newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined|Promise<LookupValue|undefined> {
         return undefined;
     }
 
@@ -78,6 +101,10 @@ export interface ICountableValue {
     getCount(): Promise<bigint>;
 }
 
+export function isCountableValue(value: unknown): value is ICountableValue {
+    return value instanceof LookupValue && (value as unknown as ICountableValue).hasCount === true;
+}
+
 /**
  * Value types that can be iterated (lists, queries, strings, etc.) should conform to this interface, so they can be used
  * with standard functions like first(), filter(), map(), etc.
@@ -108,6 +135,29 @@ export function hasLiteralExpression(value: LookupValue): value is (LookupValue 
     return value instanceof LookupValue && value.asLiteral() !== undefined;
 }
 
+/**
+ * A value that respresents a boolean
+ */
+ export class BooleanValue extends ConcreteValue {
+    readonly value: boolean;
+
+    constructor(value: boolean) {
+        super();
+        this.value = value;
+    }
+
+    /**
+     * Return this value as a string, in Neolace Lookup Expression format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public override asLiteral(): string {
+        return this.value ? "true" : "false";
+    }
+
+    protected serialize() {
+        return {value: this.value};
+    }
+}
 
 /**
  * A value that respresents an integer (BigInt)
@@ -133,6 +183,13 @@ export class IntegerValue extends ConcreteValue {
         // Unfortunately JavaScript cannot serialize BigInt to JSON numbers (even though JSON numbers can have
         // arbitrary digits), so we have to serialize it as a string.
         return {value: String(this.value)};
+    }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(this.value !== 0n);
+        }
+        return undefined;
     }
 }
 
@@ -183,6 +240,13 @@ export class DateValue extends ConcreteValue {
     protected serialize() {
         return {value: this.asIsoString()};
     }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(true);
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -211,7 +275,6 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
      * This does NOT return a substring; it returns an array of single-character strings, because this is part of the
      * iterable interface, not a string-specific function.
      */
-    // deno-lint-ignore require-await
     public async getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]> {
         const slicedStr = this.value.slice(Number(offset), Number(offset + numItems));
         return slicedStr.split('').map(char => new StringValue(char));
@@ -219,6 +282,13 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
 
     protected serialize() {
         return {value: this.value};
+    }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(this.value.length !== 0);
+        }
+        return undefined;
     }
 }
 
@@ -247,6 +317,13 @@ export class InlineMarkdownStringValue extends ConcreteValue implements IHasLite
     protected serialize() {
         return {value: this.value};
     }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(this.value.length !== 0);
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -262,6 +339,13 @@ export class NullValue extends ConcreteValue implements IHasLiteralExpression {
     }
 
     protected serialize() { return {}; }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(false);
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -396,7 +480,7 @@ export class AnnotatedValue extends ConcreteValue {
         return {value: this.value.toJSON(), annotations}; 
     }
 
-    protected override doCastTo(newType: ClassOf<LookupValue>, context: LookupContext): LookupValue|undefined {
+    protected override doCastTo(newType: ClassOf<LookupValue>, context: LookupContext): Promise<LookupValue|undefined> {
         return this.value.castTo(newType, context);
     }
 
@@ -505,7 +589,6 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
 //         this.values = values;
 //     }
 
-//     // deno-lint-ignore require-await
 //     public async getCount(): Promise<bigint> {
 //         return BigInt(this.values.length);
 //     }

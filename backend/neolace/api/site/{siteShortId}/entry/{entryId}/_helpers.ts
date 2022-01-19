@@ -83,7 +83,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
             if (prop.displayAs) {
                 // displayAs is used to format the value using Markdown, e.g. to convert it into a link
                 // or display it in italics. But we still make the original value avaiable as an annotation.
-                const innerValueAsString = innerValue.castTo(StringValue, lookupContext)?.value || "(error - cannot convert value to string)";
+                const innerValueAsString = (await innerValue.castTo(StringValue, lookupContext))?.value || "(error - cannot convert value to string)";
                 extraAnnotations.plainValue = innerValue;
                 innerValue = new InlineMarkdownStringValue(prop.displayAs.replaceAll("{value}", innerValueAsString));
             }
