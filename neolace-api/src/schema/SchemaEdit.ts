@@ -85,11 +85,16 @@ export const UpdateEntryTypeFeature = SchemaEditType({
         entryTypeId: vnidString,
         feature: Schema.either(
             {
-                featureType: Schema.either("Article" as const, "Image" as const, "HeroImage" as const),
+                featureType: Schema.either("Article" as const, "Files" as const, "Image" as const, "HeroImage" as const),
                 enabled: false as const,
             },
             {
                 featureType: "Article" as const,
+                enabled: true as const,
+                config: Schema({}),
+            },
+            {
+                featureType: "Files" as const,
                 enabled: true as const,
                 config: Schema({}),
             },

@@ -29,6 +29,15 @@ export const EntryFeaturesSchema = Schema({
         headings: array.of(Schema({title: string, id: string})),
     }).strictOptional(),
 
+    Files: Schema({
+        files: array.of(Schema({
+            filename: string,
+            url: string,
+            contentType: string,
+            size: number,
+        })),
+    }).strictOptional(),
+
     Image: Schema({
         imageUrl: string,
         contentType: string,
