@@ -108,6 +108,29 @@ export function hasLiteralExpression(value: LookupValue): value is (LookupValue 
     return value instanceof LookupValue && value.asLiteral() !== undefined;
 }
 
+/**
+ * A value that respresents a boolean
+ */
+ export class BooleanValue extends ConcreteValue {
+    readonly value: boolean;
+
+    constructor(value: boolean) {
+        super();
+        this.value = value;
+    }
+
+    /**
+     * Return this value as a string, in Neolace Lookup Expression format.
+     * This string should parse to an expression that yields the same value.
+     */
+    public override asLiteral(): string {
+        return this.value ? "true" : "false";
+    }
+
+    protected serialize() {
+        return {value: this.value};
+    }
+}
 
 /**
  * A value that respresents an integer (BigInt)
@@ -133,6 +156,13 @@ export class IntegerValue extends ConcreteValue {
         // Unfortunately JavaScript cannot serialize BigInt to JSON numbers (even though JSON numbers can have
         // arbitrary digits), so we have to serialize it as a string.
         return {value: String(this.value)};
+    }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(this.value !== 0n);
+        }
+        return undefined;
     }
 }
 
@@ -183,6 +213,13 @@ export class DateValue extends ConcreteValue {
     protected serialize() {
         return {value: this.asIsoString()};
     }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(true);
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -220,6 +257,13 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
     protected serialize() {
         return {value: this.value};
     }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(this.value.length !== 0);
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -247,6 +291,13 @@ export class InlineMarkdownStringValue extends ConcreteValue implements IHasLite
     protected serialize() {
         return {value: this.value};
     }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(this.value.length !== 0);
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -262,6 +313,13 @@ export class NullValue extends ConcreteValue implements IHasLiteralExpression {
     }
 
     protected serialize() { return {}; }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(false);
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -310,6 +368,8 @@ export class EntryValue extends ConcreteValue implements IHasLiteralExpression {
                 MATCH (entry:${Entry} {id: ${this.id}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
                 WITH entry, {} AS annotations
             `);
+        } else if (newType === BooleanValue) {
+            return new BooleanValue(true);
         }
         return undefined;
     }
@@ -337,6 +397,13 @@ export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpressi
     }
 
     protected serialize() { return {id: this.id}; }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(true);
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -359,6 +426,13 @@ export class PropertyValue extends ConcreteValue implements IHasLiteralExpressio
     }
 
     protected serialize() { return {id: this.id}; }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(true);
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -453,6 +527,13 @@ export class ImageValue extends ConcreteValue {
             maxWidth: this.data.maxWidth,
         };
     }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(true);
+        }
+        return undefined;
+    }
 }
 
 /**
@@ -489,6 +570,13 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
     static from<T extends ConcreteValue>(values: T[], minPageSize = 1n): PageValue<T> {
         const pageSize = values.length < minPageSize ? minPageSize : BigInt(values.length);
         return new PageValue(values, { startedAt: 0n, pageSize, totalCount: BigInt(values.length) });
+    }
+
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+        if (newType === BooleanValue) {
+            return new BooleanValue(this.totalCount !== 0n);
+        }
+        return undefined;
     }
 }
 
