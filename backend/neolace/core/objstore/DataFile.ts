@@ -100,18 +100,18 @@ export const CreateDataFile = defineAction({
 /**
  * Get the full public path to view/download this image
  */
- export function publicUrl(): DerivedProperty<string> { return DerivedProperty.make(
+export function publicUrl(): DerivedProperty<string> { return DerivedProperty.make(
     DataFile,
     df => df.filename,
     data => {
-        return `${config.objStorePublicUrlPrefix}/${data.filename}`;
+        return `${config.objStorePublicUrlPrefix}/${data.filename}`;  // This is duplicated in lookup/expressions/files.ts until we can refactor vertex framework
     },
 );}
 
 /**
  * Get the metadata, which depends on the file type
  */
- export function metadata(): DerivedProperty<FileMetadata> { return DerivedProperty.make(
+export function metadata(): DerivedProperty<FileMetadata> { return DerivedProperty.make(
     DataFile,
     df => df.metadataJSON,
     data => {

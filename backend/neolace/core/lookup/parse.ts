@@ -9,12 +9,14 @@ import {
     // Count,
     Descendants,
     GetProperty,
+    Files,
     Image,
     List,
     LiteralExpression,
     Markdown,
     ReverseProperty,
     This,
+First,
 } from "./expressions/index.ts";
 import * as V from "./values.ts";
 
@@ -44,6 +46,9 @@ export function parseLookupString(lookup: string): LookupExpression {
     if (lookup === "descendants(this)") { return new Descendants(new This()); }
     if (lookup === "this.andDescendants()") { return new AndDescendants(new This()); }
     if (lookup === "andDescendants(this)") { return new AndDescendants(new This()); }
+
+    if (lookup === "this.files()") { return new Files(new This(), {}); }
+    if (lookup === "this.files().first()") { return new First(new Files(new This(), {})); }
 
     const otherTemplates: [RegExp, (match: RegExpMatchArray) => LookupExpression ][] = [
         // "foo" (String literal)

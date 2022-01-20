@@ -6,6 +6,7 @@ import { Tooltip } from 'components/widgets/tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { EntryLink } from './EntryLink';
 import { LookupImage } from './LookupImage';
+import { FormattedFileSize } from './widgets/FormattedFileSize';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -54,6 +55,11 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         }
         case "Image": {
             return <LookupImage value={value} mdtContext={props.mdtContext} />;
+        }
+        case "File": {
+            return <>
+                <a href={value.url}>{value.filename}</a> (<FormattedFileSize sizeInBytes={value.size} />)
+            </>;
         }
         case "Property": {
             const prop = props.mdtContext.refCache.properties[value.id];

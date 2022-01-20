@@ -29,6 +29,17 @@ export const UpdateEntryArticleSchema = Schema({
     articleMD: string.strictOptional(),
 });
 
+export const UpdateEntryFilesSchema = Schema({
+    changeType: Schema.either("addFile" as const, "removeFile" as const),
+    /**
+     * filename, e.g. "instructions.pdf".
+     * When adding, this specified the filename. When removing, will remove any attached file(s) with this name
+     */
+    filename: string,
+    /** When adding a new file, specify its upload ID here. */
+    dataFileId: vnidString.strictOptional(),
+});
+
 export const UpdateEntryImageSchema = Schema({
     /** Change which actual image file this entry "holds" */
     dataFileId: vnidString.strictOptional(),
@@ -44,6 +55,10 @@ export const UpdateEntryFeature = ContentEditType({
             Schema.merge(
                 {featureType: "Article" as const},
                 UpdateEntryArticleSchema,
+            ),
+            Schema.merge(
+                {featureType: "Files" as const},
+                UpdateEntryFilesSchema,
             ),
             Schema.merge(
                 {featureType: "Image" as const},

@@ -12,6 +12,8 @@ export const EntryTypeSchema = Schema({
     enabledFeatures: Schema({
         Article: Schema({
         }).strictOptional(),
+        Files: Schema({
+        }).strictOptional(),
         Image: Schema({
         }).strictOptional(),
         HeroImage: Schema({

@@ -35,13 +35,22 @@ export enum ImageDisplayFormat {
     PlainLogo = "plain",
 }
 
+/** A file attached to an entry */
+export interface FileValue extends LookupValue {
+    type: "File";
+    filename: string;
+    url: string;
+    contentType: string;
+    size: number;
+}
+
 export interface ImageValue extends LookupValue {
     type: "Image";
     entryId: VNID;
     imageUrl: string;
     contentType: string;
     altText: string;
-    size?: number;
+    size: number;
     width?: number;
     height?: number;
     blurHash?: string;
@@ -94,6 +103,7 @@ export interface ErrorValue extends LookupValue {
 export type AnyLookupValue = (
     | PageValue
     | EntryValue
+    | FileValue
     | PropertyValue
     | ImageValue
     | AnnotatedValue
