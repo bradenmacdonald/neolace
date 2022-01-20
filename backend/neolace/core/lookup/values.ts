@@ -489,6 +489,35 @@ export class AnnotatedValue extends ConcreteValue {
     }
 }
 
+
+/**
+ * A file attached to an entry (using the Files feature)
+ */
+export class FileValue extends ConcreteValue {
+
+    constructor(
+         public readonly filename: string,
+         public readonly url: string,
+         public readonly contentType: string,
+         public readonly size: number,
+    ) {
+        super();
+    }
+ 
+    public override asLiteral() {
+        return undefined;  // There is no literal expression for a file
+    }
+     
+    protected serialize(): Omit<api.FileValue, "type"> {
+        return {
+            filename: this.filename,
+            url: this.url,
+            contentType: this.contentType,
+            size: this.size,
+        };
+    }
+ }
+
 interface ImageData {
     entryId: VNID;
     altText: string;
@@ -644,13 +673,11 @@ abstract class LazyValue extends LookupValue {
     public abstract toDefaultConcreteValue(): Promise<ConcreteValue>;
 }
 
-
-
 /**
  * A cypher-based lookup / query that has not yet been evaluated. Expressions can wrap this query to control things like
  * pagination, annotations, or retrieve only the total count().
  */
-abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue, IIterableValue {
+abstract class AbstractLazyCypherQueryValue extends LazyValue implements ICountableValue, IIterableValue {
     public readonly hasCount = true;
     public readonly isIterable = true;
     /**
@@ -699,7 +726,10 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
  */
 type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
 
-export class LazyEntrySetValue extends LazyCypherQueryValue implements IIterableValue {
+/**
+ * A cypher query that evaluates to a set of entries, with optional annotations (extra data associated with each entry)
+ */
+export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
     readonly annotations: Readonly<Record<string, AnnotationReviver>>|undefined;
 
     constructor(context: LookupContext, cypherQuery: CypherQuery, options: {annotations?: Record<string, AnnotationReviver>} = {}) {
@@ -711,7 +741,7 @@ export class LazyEntrySetValue extends LazyCypherQueryValue implements IIterable
         const query = C`
             ${this.cypherQuery}
             RETURN entry.id, annotations
-            SKIP ${C(String(BigInt(offset)))} LIMIT ${C(String(BigInt(numItems)))}
+            ${this.getSkipLimitClause(offset, numItems)}
         `.givesShape({"entry.id": Field.VNID, annotations: Field.Any});
         const result = await this.context.tx.query(query);
 
@@ -726,6 +756,21 @@ export class LazyEntrySetValue extends LazyCypherQueryValue implements IIterable
                 return new EntryValue(r["entry.id"])
             }
         })
+    }
+}
+
+/**
+ * An iterable that uses a cypher query to produce some set of results that are not entries.
+ * For an iterable that produces entries, use LazyEntrySetValue.
+ */
+export class LazyCypherIterableValue<ValueType extends LookupValue> extends AbstractLazyCypherQueryValue {
+
+    constructor(
+        context: LookupContext,
+        cypherQuery: CypherQuery,
+        public readonly getSlice: (offset: bigint, numItems: bigint) => Promise<ValueType[]>,
+    ) {
+        super(context, cypherQuery);
     }
 }
 
