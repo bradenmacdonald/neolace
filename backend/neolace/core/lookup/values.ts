@@ -650,32 +650,26 @@ abstract class LazyValue extends LookupValue {
  * A cypher-based lookup / query that has not yet been evaluated. Expressions can wrap this query to control things like
  * pagination, annotations, or retrieve only the total count().
  */
-abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue {
-    readonly hasCount = true;
+abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue, IIterableValue {
+    public readonly hasCount = true;
+    public readonly isIterable = true;
     /**
      * The first part of the Cypher query, without a RETURN statement or SKIP, LIMIT, etc.
      */
     readonly cypherQuery: CypherQuery;
-    readonly skip: bigint;  // How many rows to skip when retrieving the result (used for pagination)
-    readonly limit: bigint;  // How many rows to return per page
+    private defaultPageSize: bigint;
 
-    constructor(context: LookupContext, cypherQuery: CypherQuery, options: {skip?: bigint, limit?: bigint} = {}) {
+    constructor(context: LookupContext, cypherQuery: CypherQuery) {
         super(context);
+        this.defaultPageSize = context.defaultPageSize;
         this.cypherQuery = cypherQuery;
-        this.skip = options.skip ?? 0n;
-        this.limit = options.limit ?? context.defaultPageSize;
     }
 
-    /** Helper method for cloning instances of this */
-    protected getOptions() {
-        return {skip: this.skip, limit: this.limit};
-    }
-
-    protected getSkipLimitClause() {
-        if (typeof this.skip !== "bigint" || typeof this.limit !== "bigint") {
+    protected getSkipLimitClause(skip: bigint, limit: bigint) {
+        if (typeof skip !== "bigint" || typeof limit !== "bigint") {
             throw new LookupEvaluationError("Internal error - unsafe skip/limit value.");
         }
-        return C`SKIP ${C(String(this.skip))} LIMIT ${C(String(this.limit))}`;
+        return C`SKIP ${C(String(skip))} LIMIT ${C(String(limit))}`;
     }
 
     public async getCount(): Promise<bigint> {
@@ -683,6 +677,18 @@ abstract class LazyCypherQueryValue extends LazyValue implements ICountableValue
         const result = await this.context.tx.query(countQuery);
         return result[0]["count(*)"];
     }
+
+    public override async toDefaultConcreteValue(): Promise<PageValue<ConcreteValue>> {
+        const pageSize = this.defaultPageSize;
+        const firstPageValues = await this.getSlice(0n, pageSize);
+        const totalCount = firstPageValues.length < pageSize ? BigInt(firstPageValues.length) : await this.getCount();
+
+        const concreteValues = await Promise.all(firstPageValues.map(v => v.makeConcrete()));
+
+        return new PageValue<ConcreteValue>(concreteValues, { startedAt: 0n, pageSize, totalCount});
+    }
+
+    public abstract getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]>;
 }
 
 /**
@@ -695,27 +701,11 @@ type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
 
 export class LazyEntrySetValue extends LazyCypherQueryValue implements IIterableValue {
     readonly annotations: Readonly<Record<string, AnnotationReviver>>|undefined;
-    public readonly isIterable = true;
 
-    constructor(context: LookupContext, cypherQuery: CypherQuery, options: {skip?: bigint, limit?: bigint, annotations?: Record<string, AnnotationReviver>} = {}) {
-        super(context, cypherQuery, options);
+    constructor(context: LookupContext, cypherQuery: CypherQuery, options: {annotations?: Record<string, AnnotationReviver>} = {}) {
+        super(context, cypherQuery);
         this.annotations = options.annotations;
     }
-
-    public override async toDefaultConcreteValue(): Promise<PageValue<EntryValue|AnnotatedValue>> {
-        const firstPageValues = await this.getSlice(0n, this.limit);
-        const totalCount = this.skip === 0n && firstPageValues.length < this.limit ? BigInt(firstPageValues.length) : await this.getCount();
-
-        return new PageValue<EntryValue|AnnotatedValue>(
-            firstPageValues,
-            {
-                startedAt: this.skip,
-                pageSize: this.limit,
-                totalCount,
-            },
-        );
-    }
-
 
     public async getSlice(offset: bigint, numItems: bigint): Promise<Array<EntryValue|AnnotatedValue>> {
         const query = C`
