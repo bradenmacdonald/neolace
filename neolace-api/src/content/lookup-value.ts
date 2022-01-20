@@ -103,6 +103,7 @@ export interface ErrorValue extends LookupValue {
 export type AnyLookupValue = (
     | PageValue
     | EntryValue
+    | FileValue
     | PropertyValue
     | ImageValue
     | AnnotatedValue

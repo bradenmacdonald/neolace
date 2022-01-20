@@ -76,8 +76,18 @@ group(import.meta, () => {
             const result = await evalExpression(expression);
 
             assertEquals(result, new PageValue([
-                new FileValue("first.pdf", firstPdf.url, "application/pdf", firstPdf.size),
-                new FileValue("second.pdf", secondPdf.url, "application/pdf", secondPdf.size),
+                new FileValue(
+                    "first.pdf",
+                    firstPdf.url + `?response-content-disposition=${encodeURIComponent(`inline; filename=first.pdf`)}`,
+                    "application/pdf",
+                    firstPdf.size,
+                ),
+                new FileValue(
+                    "second.pdf",
+                    secondPdf.url + `?response-content-disposition=${encodeURIComponent(`inline; filename=second.pdf`)}`,
+                    "application/pdf",
+                    secondPdf.size,
+                ),
             ], {startedAt: 0n, pageSize: 10n, totalCount: 2n}));
         });
 

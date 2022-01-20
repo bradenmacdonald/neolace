@@ -60,7 +60,8 @@ export class Files extends LookupExpression {
             }));
             return records.map(r => new FileValue(
                 r.displayFilename,
-                `${config.objStorePublicUrlPrefix}/${r.objstoreFilename}`,  // From DataFile.ts, duplicated here temporarily
+                // TODO: this logic should be centralized; it's shared here and in DataFile.ts
+                `${config.objStorePublicUrlPrefix}/${r.objstoreFilename}?response-content-disposition=${encodeURIComponent(`inline; filename=${r.displayFilename}`)}`,
                 r.contentType,
                 r.size,
             ));

@@ -5,6 +5,7 @@ export { Count } from "./count.ts";
 export { DateExpression } from "./date.ts";
 export { Descendants, AndDescendants } from "./descendants.ts";
 export { GetProperty } from "./get.ts";
+export { Files } from "./files.ts";
 export { First } from "./first.ts";
 export { If } from "./if.ts";
 export { Image } from "./image.ts";

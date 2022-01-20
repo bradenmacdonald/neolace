@@ -176,6 +176,7 @@ export class ReferenceCache {
             case "Date":
             case "Null":
             case "Error":
+            case "File":
                 return;
             default:
                 // deno-lint-ignore no-explicit-any
