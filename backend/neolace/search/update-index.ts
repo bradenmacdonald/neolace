@@ -6,6 +6,8 @@ import { TypeSense } from "neolace/deps/typesense.ts";
 import { graph } from "neolace/core/graph.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
+import { getEntry } from "../api/site/%7BsiteShortId%7D/entry/%7BentryId%7D/_helpers.ts";
+import { GetEntryFlags } from "neolace/deps/neolace-api.ts";
 
 // TODO: store this in Redis, with an expiring key
 const _sitesBeingReindexed = new Map<VNID, string>(); // Map of site VNID to collection name
@@ -53,8 +55,24 @@ async function _getCollectionToUpdate(siteId: VNID): Promise<string | undefined>
     }
 }
 
-function reindexEntry(entryId: VNID, collection: string) {
-    log.info(`Reindexing ${entryId} to ${collection}`);
+/**
+ * Generate a TypeSense document for a given entry, so we can upsert it into the search index.
+ */
+async function entryToDocument(entryId: VNID, siteId: VNID) {
+    // log.info(`Reindexing ${entryId} to ${collection}`);
+    const entryData = await graph.read(tx => getEntry(
+        entryId,
+        siteId,
+        tx,
+        new Set([GetEntryFlags.IncludeFeatures, GetEntryFlags.IncludePropertiesSummary]),
+    ));
+    return {
+        id: entryId,
+        name: entryData.name,
+        type: entryData.entryType.name,
+        description: entryData.description,
+        article_text: entryData.features?.Article?.articleMD ?? "",
+    };
 }
 
 export async function reindexAllEntries(siteId: VNID) {
@@ -68,6 +86,7 @@ export async function reindexAllEntries(siteId: VNID) {
     client.collections().create({
         name: newCollectionName,
         fields: [
+            { name: "id", type: "string", facet: false },
             { name: "name", type: "string", facet: false },
             { name: "type", type: "string", facet: true },
             { name: "description", type: "string", facet: false },
@@ -93,11 +112,17 @@ export async function reindexAllEntries(siteId: VNID) {
                     RETURN entry.id SKIP ${C(offset.toFixed(0))} LIMIT ${C(pageSize.toFixed(0))}
                 `.givesShape({ "entry.id": Field.VNID }));
 
-                for (const row of entriesChunk) {
-                    const entryId = row["entry.id"];
-                    await reindexEntry(entryId, newCollectionName);
+                const documents = await Promise.all(entriesChunk.map(row => entryToDocument(row["entry.id"], siteId)));
+                try {
+                    await client.collections(newCollectionName).documents().import(documents, {action: "upsert"});
+                } catch (err) {
+                    if (err instanceof TypeSense.Errors.ImportError) {
+                        log.error(err.importResults);
+                    }
+                    throw err;
                 }
 
+                log.info(`Re-indexed ${entriesChunk.length} entries...`);
                 if (entriesChunk.length < pageSize) {
                     break;
                 } else {
@@ -105,7 +130,7 @@ export async function reindexAllEntries(siteId: VNID) {
                 }
             }
         });
-    } catch {
+    } catch (err) {
         log.error(`Reindex failed.`);
         try {
             await setCurrentReIndexJobForSite(siteId, newCollectionName, false);
@@ -113,6 +138,7 @@ export async function reindexAllEntries(siteId: VNID) {
         } catch {
             log.error(`Failed to delete incomplete reindex collection ${newCollectionName}`);
         }
+        throw err;
     }
     // Reindex complete! Update the alias to point to the new collection.
     client.aliases().upsert(siteAliasName, { collection_name: newCollectionName });
