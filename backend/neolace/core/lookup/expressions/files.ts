@@ -58,10 +58,12 @@ export class Files extends LookupExpression {
                 "size": Field.Int,
                 "contentType": Field.String,
             }));
+
             return records.map(r => new FileValue(
                 r.displayFilename,
                 // TODO: this logic should be centralized; it's shared here and in DataFile.ts
-                `${config.objStorePublicUrlPrefix}/${r.objstoreFilename}?response-content-disposition=${encodeURIComponent(`inline; filename=${r.displayFilename}`)}`,
+                // Content-Disposition is only working with MinIO (and seems to be required?) but not with BackBlaze
+                `${config.objStorePublicUrlPrefix}/${r.objstoreFilename}${config.objStorePublicUrlPrefix.includes("backblazeb2") ? "" : `?response-content-disposition=${encodeURIComponent(`inline; filename=${r.displayFilename}`)}`}`,
                 r.contentType,
                 r.size,
             ));
