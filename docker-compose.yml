@@ -90,6 +90,18 @@ services:
       - authn-data:/data
 
   ################################################################
+  # TypeSense (search server)
+  ################################################################
+  search:
+    image: typesense/typesense:0.22.1
+    ports:
+      - 5556:8108
+    command: >
+     --data-dir /data --api-key=typesensedevkey
+    volumes:
+      - typesense-data:/data
+
+  ################################################################
   # S3-compatible object storage (used only for development)
   ################################################################
   objstore:
@@ -168,3 +180,4 @@ volumes:
   neo4j-data:
   authn-data:
   objstore-data:
+  typesense-data:

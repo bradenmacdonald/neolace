@@ -40,6 +40,7 @@ export class Group extends VNodeType {
         // Admin-level permissions:
         [PermissionGrant.administerSite]: Field.Boolean, // Can set properties of the site like domain name, name, private/public, etc.
         [PermissionGrant.administerGroups]: Field.Boolean, // Can administer users and groups on this site:
+        // Editor level permissions:
         [PermissionGrant.approveSchemaChanges]: Field.Boolean, // Can approve change requests related to the site schema
         [PermissionGrant.approveEntryEdits]: Field.Boolean, // Can approve change requests related to the site content
         // Normal user level permissions:
