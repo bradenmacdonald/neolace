@@ -31,7 +31,7 @@
     .neo-typography h4,
     .neo-typography h5,
     .neo-typography h6  {
-        @apply font-semibold mt-3;
+        @apply font-semibold mt-3 text-theme-heading-color;
     }
     .neo-typography h1 { @apply text-4xl; }
     .neo-typography h2 { @apply text-3xl; }
@@ -39,7 +39,7 @@
     .neo-typography h4 { @apply text-xl; }
     .neo-typography h5 { @apply text-lg; }
     .neo-typography p { font-weight: 400; @apply my-1; }
-    .neo-typography a { @apply underline; }
+    .neo-typography a { @apply underline text-theme-link-color; }
 
     /* Unordered lists */
     .neo-typography ul li {

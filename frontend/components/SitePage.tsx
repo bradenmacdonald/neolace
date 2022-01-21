@@ -25,6 +25,11 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // const router = useRouter();
     // router.query.siteHost gives the site's domain
 
+    const themeColor = (name: string, defaultColor: [number, number, number])=> {
+        const color: [number, number, number] = props.site.frontendConfig.theme?.[name] ?? defaultColor;
+        return color.join(", ");
+    };
+
     return <SiteContext.Provider value={props.site}><div>
         <Head>
             <title>{props.title}</title>
@@ -37,7 +42,8 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             <style>{`
                 :root {
                     --site-primary-color: 0, 255, 0;
-                    --site-link-color: 0, 0, 255;
+                    --site-link-color: ${themeColor("linkColor", [0, 0, 0])};
+                    --site-heading-color: ${themeColor("headingColor", [0, 0, 0])};
                 }
             `}</style>
             {/* Analytics */}

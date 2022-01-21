@@ -33,8 +33,10 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                primary: themeColorFromRbgTupleVar("--site-primary-color"),
-                link: themeColorFromRbgTupleVar("--site-link-color"),
+                // primary: themeColorFromRbgTupleVar("--site-primary-color"),
+                "theme-link-color": themeColorFromRbgTupleVar("--site-link-color"),
+                "theme-heading-color": themeColorFromRbgTupleVar("--site-heading-color"),
+                // The header at the top of the page:
                 "header-color": "#343a40",
                 "header-color-light": "#6c757d",
             },
