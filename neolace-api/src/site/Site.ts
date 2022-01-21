@@ -1,6 +1,7 @@
-import { Schema, Type, string, nullable, array, boolean, Record, } from "../api-schemas.ts";
+import { Schema, Type, string, nullable, array, boolean, Record, number, } from "../api-schemas.ts";
 import { ReferenceCacheSchema } from "../content/Entry.ts";
 
+const rgbTuple = array.min(3).max(3).of(number).transform(x => x as [number, number, number]);
 
 export const FrontendConfigSchema = Schema({
     headerLinks: array.of(Schema({text: string, href: string})).strictOptional(),
@@ -8,6 +9,13 @@ export const FrontendConfigSchema = Schema({
         plausibleAnalytics: Schema({enabled: boolean}).strictOptional(),
     }).strictOptional(),
     redirects: Record(string, string).strictOptional(),
+    features: Schema({
+        hoverPreview: Schema({enabled: boolean}).strictOptional(),
+    }).strictOptional(),
+    theme: Schema({
+        headingColor: rgbTuple,
+        linkColor: rgbTuple,
+    }).strictOptional(),
 });
 export type FrontendConfigData = Type<typeof FrontendConfigSchema>;
 

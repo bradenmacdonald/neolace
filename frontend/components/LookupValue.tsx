@@ -107,6 +107,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 </>;
             }
             return <LookupValue value={value.value} mdtContext={props.mdtContext} />
+        case "Null":
+            return <></>;
         default: {
             return <code>{JSON.stringify(value)}</code>;
         }

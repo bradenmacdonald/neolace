@@ -136,6 +136,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 {text: "Home", href: "/"},
                 {text: "Ponderosa", href: "/entry/s-pinus-ponderosa"},
             ],
+            features: {
+                hoverPreview: {enabled: true},
+            },
         },
     })).then(result => {
         data.site.id = result.id;

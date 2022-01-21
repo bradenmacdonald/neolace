@@ -22,6 +22,11 @@ group(import.meta, () => {
                         { text: "Home", href: "/" },
                         { text: "Ponderosa", href: "/entry/s-pinus-ponderosa" },
                     ],
+                    features: {
+                        hoverPreview: {
+                            enabled: true,
+                        },
+                    },
                 },
             });
         });

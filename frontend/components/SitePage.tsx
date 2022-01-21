@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData } from 'lib/api-client';
 import { SiteFooter } from './SiteFooter';
+import { SiteContext } from './SiteContext';
 
 interface Props {
     title: string;
     site: SiteData;
     hideFooter?: boolean;
 }
+
 
 /**
  * Template for a "regular" Neolace page, for a specific site (e.g. foo.neolace.com), as opposed to the Neolace Admin UI
@@ -23,7 +25,12 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // const router = useRouter();
     // router.query.siteHost gives the site's domain
 
-    return <div>
+    const themeColor = (name: string, defaultColor: [number, number, number])=> {
+        const color: [number, number, number] = props.site.frontendConfig.theme?.[name] ?? defaultColor;
+        return color.join(", ");
+    };
+
+    return <SiteContext.Provider value={props.site}><div>
         <Head>
             <title>{props.title}</title>
             <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
@@ -35,7 +42,8 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             <style>{`
                 :root {
                     --site-primary-color: 0, 255, 0;
-                    --site-link-color: 0, 0, 255;
+                    --site-link-color: ${themeColor("linkColor", [0, 0, 0])};
+                    --site-heading-color: ${themeColor("headingColor", [0, 0, 0])};
                 }
             `}</style>
             {/* Analytics */}
@@ -91,5 +99,5 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             {props.children}
             {!props.hideFooter ? <SiteFooter site={props.site} /> : null}
         </main>
-  </div>
+    </div></SiteContext.Provider>;
 };
