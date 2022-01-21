@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData } from 'lib/api-client';
 import { SiteFooter } from './SiteFooter';
+import { SiteContext } from './SiteContext';
 
 interface Props {
     title: string;
     site: SiteData;
     hideFooter?: boolean;
 }
+
 
 /**
  * Template for a "regular" Neolace page, for a specific site (e.g. foo.neolace.com), as opposed to the Neolace Admin UI
@@ -23,7 +25,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // const router = useRouter();
     // router.query.siteHost gives the site's domain
 
-    return <div>
+    return <SiteContext.Provider value={props.site}><div>
         <Head>
             <title>{props.title}</title>
             <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
@@ -91,5 +93,5 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             {props.children}
             {!props.hideFooter ? <SiteFooter site={props.site} /> : null}
         </main>
-  </div>
+    </div></SiteContext.Provider>;
 };

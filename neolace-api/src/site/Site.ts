@@ -8,6 +8,9 @@ export const FrontendConfigSchema = Schema({
         plausibleAnalytics: Schema({enabled: boolean}).strictOptional(),
     }).strictOptional(),
     redirects: Record(string, string).strictOptional(),
+    features: Schema({
+        hoverPreview: Schema({enabled: boolean}).strictOptional(),
+    }).strictOptional(),
 });
 export type FrontendConfigData = Type<typeof FrontendConfigSchema>;
 

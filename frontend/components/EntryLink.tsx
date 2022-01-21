@@ -5,6 +5,7 @@ import { DEVELOPMENT_MODE } from 'lib/config';
 import { FormattedListParts, FormattedMessage } from 'react-intl';
 import { Tooltip } from 'components/widgets/tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
+import { SiteContext } from './SiteContext';
 
 interface Props {
     /** VNID or friendlyId */
@@ -17,6 +18,8 @@ interface Props {
  * A link to an entry (on the same site)
  */
 export const EntryLink: React.FunctionComponent<Props> = (props) => {
+
+    const siteContext = React.useContext(SiteContext);
 
     const refCache = props.mdtContext.refCache;
     let entry: undefined|api.EntryData["referenceCache"]["entries"]["entryId"];
@@ -32,10 +35,16 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
         const textColorClass = DEVELOPMENT_MODE ? "text-red-600 font-bold" : "";
         return <Link href={`/entry/${props.entryKey}`}><a className={textColorClass}>{props.children}</a></Link>
     }
-    return <Tooltip tooltipContent={<>
-        <strong>{entry.name}</strong> ({refCache.entryTypes[entry.entryType.id]?.name})<br/>
-        <p className="text-sm"><InlineMDT mdt={entry.description} context={props.mdtContext.childContextWith({entryId: entry.id})} /></p>
-    </>}>
-        {attribs => <Link href={`/entry/${entry.friendlyId}`}><a {...attribs}>{props.children}</a></Link>}
-    </Tooltip>;
+
+    if (siteContext.frontendConfig.features?.hoverPreview?.enabled) {
+        return <Tooltip tooltipContent={<>
+            <strong>{entry.name}</strong> ({refCache.entryTypes[entry.entryType.id]?.name})<br/>
+            <p className="text-sm"><InlineMDT mdt={entry.description} context={props.mdtContext.childContextWith({entryId: entry.id})} /></p>
+        </>}>
+            {attribs => <Link href={`/entry/${entry.friendlyId}`}><a {...attribs}>{props.children}</a></Link>}
+        </Tooltip>;
+    } else {
+        return <Link href={`/entry/${entry.friendlyId}`}><a>{props.children}</a></Link>;
+    }
+
 };
