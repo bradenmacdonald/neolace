@@ -156,7 +156,6 @@ export class Site extends VNodeType {
         frontendConfig,
     });
 
-    // deno-lint-ignore require-await
     static async validate(dbObject: RawVNode<typeof this>): Promise<void> {
         // Validate the frontendConfigJSON field:
         let frontendConfigJSON;

@@ -20,7 +20,6 @@ export class LiteralExpression extends LookupExpression {
         this.value = value;
     }
 
-    // deno-lint-ignore require-await
     public override async getValue(_context: LookupContext) {
         return this.value;
     }

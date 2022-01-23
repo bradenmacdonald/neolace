@@ -23,7 +23,6 @@ export class EnabledFeature extends VNodeType {
 
     static derivedProperties = this.hasDerivedProperties({});
 
-    // deno-lint-ignore require-await
     static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {        
         if (dbObject._labels.length !== 3) {
             throw new Error(`Every EnabledFeature VNode should have exactly three labels: VNode, EnabledFeature, and _________Enabled (a specific feature type)`);

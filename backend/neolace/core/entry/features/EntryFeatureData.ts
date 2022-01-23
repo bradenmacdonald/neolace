@@ -24,7 +24,6 @@ export class EntryFeatureData extends VNodeType {
 
     static derivedProperties = this.hasDerivedProperties({});
 
-    // deno-lint-ignore require-await
     static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
         if (dbObject._labels.length !== 3) {
             throw new Error(`Every EntryFeatureData VNode should have exactly three labels: VNode, EntryFeature, and _______Feature (a specific feature type)`);

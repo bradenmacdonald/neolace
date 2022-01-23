@@ -52,7 +52,6 @@ const sigtermWatcher = async () => {
     Deno.exit(0);
 }
 Deno.addSignalListener("SIGTERM", sigtermWatcher);
-// deno-lint-ignore require-await
 onShutDown(async () => {
     Deno.removeSignalListener("SIGINT", sigintWatcher);
     Deno.removeSignalListener("SIGTERM", sigtermWatcher);

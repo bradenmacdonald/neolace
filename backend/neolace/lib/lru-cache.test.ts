@@ -23,7 +23,6 @@ group(import.meta, () => {
         };
         let numCalls = 0;
         const expensiveFn = (key: string): ValueType => { numCalls++; return expensiveData[key]; }
-        // deno-lint-ignore require-await
         const expensiveFnAsync = async (key: string): Promise<ValueType> => { numCalls++; return expensiveData[key]; } 
         
         const cache = new LruCache<string, ValueType>(3);

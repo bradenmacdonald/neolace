@@ -18,13 +18,11 @@ import { LookupContext } from "../context.ts";
         this.items = items;
     }
 
-    // deno-lint-ignore require-await
     public async getValue(context: LookupContext) {
         // We return a lazy value so that e.g. you can get the count() or first() of the list without evaluating any
         // expensive expressions within the list.
         return new LazyIterableValue({
             context,
-            // deno-lint-ignore require-await
             getCount: async () => { return BigInt(this.items.length); },
             getSlice: (offset: bigint, numItems: bigint) => {
                 return Promise.all(this.items.slice(Number(offset), Number(offset + numItems)).map(v => v.getValue(context)));

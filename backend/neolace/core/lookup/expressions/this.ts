@@ -8,7 +8,6 @@ import { LookupContext } from "../context.ts";
  */
  export class This extends LookupExpression {
 
-    // deno-lint-ignore require-await
     public async getValue(context: LookupContext) {
         if (!context.entryId) {
             throw new LookupEvaluationError(`The keyword "this" only works in the context of a specific entry.`);
