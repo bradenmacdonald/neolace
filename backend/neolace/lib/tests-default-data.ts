@@ -1,11 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
 import * as log from "std/log/mod.ts";
-import { VNID, VertexTestDataSnapshot, C, Field } from "neolace/deps/vertex-framework.ts";
+import { C, Field, VertexTestDataSnapshot, VNID } from "neolace/deps/vertex-framework.ts";
 import { PropertyType } from "neolace/deps/neolace-api.ts";
 
 import { graph } from "neolace/core/graph.ts";
 import { CreateBot, CreateUser } from "../core/User.ts";
-import { CreateSite, AccessMode } from "neolace/core/Site.ts";
+import { AccessMode, CreateSite } from "neolace/core/Site.ts";
 import { CreateGroup } from "neolace/core/Group.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
@@ -18,7 +18,7 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { parseLookupExpressionToEntryId, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 
-// Data that gets created by default. 
+// Data that gets created by default.
 // To access this, use the return value of setTestIsolation(setTestIsolation.levels.DEFAULT_...)
 const data = {
     users: {
@@ -26,19 +26,19 @@ const data = {
             email: "alex@example.com",
             fullName: "Alex Admin",
             username: "alex",
-            id: undefined as any as VNID,  // will be set once created.
+            id: undefined as any as VNID, // will be set once created.
             bot: {
                 username: "alex-bot",
                 fullName: "Alex Bot 1",
-                id: undefined as any as VNID,  // will be set once created.
-                authToken: undefined as any as string,  // will be set once created.
-            }
+                id: undefined as any as VNID, // will be set once created.
+                authToken: undefined as any as string, // will be set once created.
+            },
         },
         regularUser: {
             email: "jamie@example.com",
             fullName: "Jamie User",
             username: "jamie",
-            id: undefined as any as VNID,  // will be set once created.
+            id: undefined as any as VNID, // will be set once created.
         },
     },
     // A Site, with Alex as the admin and Jamie as a regular user
@@ -48,28 +48,25 @@ const data = {
         shortId: "plantdb",
         // The site will default to "PublicContributions" access mode. To test different access modes, update the site's access mode in your test case.
         initialAccessMode: AccessMode.PublicContributions as const,
-        id: undefined as any as VNID,  // will be set once created.
-        adminsGroupId: undefined as any as VNID,  // will be set once created.
-        usersGroupId: undefined as any as VNID,  // will be set once created.
+        id: undefined as any as VNID, // will be set once created.
+        adminsGroupId: undefined as any as VNID, // will be set once created.
+        usersGroupId: undefined as any as VNID, // will be set once created.
     },
     schema,
     entries: entryData,
 };
 
-
-
 export interface TestSetupData {
-    emptySnapshot: VertexTestDataSnapshot,
-    defaultDataSnapshot: VertexTestDataSnapshot,
-    data: typeof data,
+    emptySnapshot: VertexTestDataSnapshot;
+    defaultDataSnapshot: VertexTestDataSnapshot;
+    data: typeof data;
 }
 export const testDataFile = ".neolace-tests-data.json";
 
 export async function generateTestFixtures(): Promise<TestSetupData> {
-
     // Wipe out all existing Neo4j data
     await graph.reverseAllMigrations();
-    await graph.resetDBToSnapshot({cypherSnapshot: ""});
+    await graph.resetDBToSnapshot({ cypherSnapshot: "" });
     await graph.runMigrations();
 
     log.info(`Creating "empty" snapshot...`);
@@ -97,14 +94,14 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         username: data.users.admin.username,
     });
 
-    await graph.runAsSystem(action).then(result => data.users.admin.id = result.id);
+    await graph.runAsSystem(action).then((result) => data.users.admin.id = result.id);
 
     await graph.runAsSystem(CreateBot({
         ownedByUser: data.users.admin.id,
         username: data.users.admin.bot.username,
         fullName: data.users.admin.bot.fullName,
         inheritPermissions: true,
-    })).then(result => {
+    })).then((result) => {
         data.users.admin.bot.id = result.id;
         data.users.admin.bot.authToken = result.authToken;
     });
@@ -113,7 +110,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         email: data.users.regularUser.email,
         fullName: data.users.regularUser.fullName,
         username: data.users.regularUser.username,
-    })).then(result => data.users.regularUser.id = result.id);
+    })).then((result) => data.users.regularUser.id = result.id);
 
     await graph.runAsSystem(CreateSite({
         name: data.site.name,
@@ -133,14 +130,14 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         footerMD: `Powered by [Neolace](https://www.neolace.com/).`,
         frontendConfig: {
             headerLinks: [
-                {text: "Home", href: "/"},
-                {text: "Ponderosa", href: "/entry/s-pinus-ponderosa"},
+                { text: "Home", href: "/" },
+                { text: "Ponderosa", href: "/entry/s-pinus-ponderosa" },
             ],
             features: {
-                hoverPreview: {enabled: true},
+                hoverPreview: { enabled: true },
             },
         },
-    })).then(result => {
+    })).then((result) => {
         data.site.id = result.id;
         data.site.adminsGroupId = result.adminGroup!;
     });
@@ -155,32 +152,32 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         approveSchemaChanges: false,
         proposeEntryEdits: true,
         proposeSchemaChanges: true,
-    })).then(result => data.site.usersGroupId = result.id);
+    })).then((result) => data.site.usersGroupId = result.id);
 
     // Import the schema
-    await graph.runAsSystem(ImportSchema({siteId: data.site.id, schema: data.schema}));
+    await graph.runAsSystem(ImportSchema({ siteId: data.site.id, schema: data.schema }));
 
     // Import the files
     await ensureFilesExist();
 
     // Create some initial entry data, specifically entries about plants.
-    await graph.runAsSystem(ApplyEdits({siteId: data.site.id, edits: makePlantDbContent}));
+    await graph.runAsSystem(ApplyEdits({ siteId: data.site.id, edits: makePlantDbContent }));
 
     const defaultDataSnapshot = await graph.snapshotDataForTesting();
 
-    return Object.freeze({emptySnapshot, defaultDataSnapshot, data});
+    return Object.freeze({ emptySnapshot, defaultDataSnapshot, data });
 }
 
 /**
  * Unfortunately restoring the snapshot does not restore relationship IDs, which
  * we rely on as the only way to uniquely identify relationships.
- * 
+ *
  * This hacky function will re-create update the PropertyFacts to have the
  * new relationship IDs.
  */
 export async function fixRelationshipIdsAfterRestoringSnapshot() {
     await graph._restrictedAllowWritesWithoutAction(async () => {
-        await graph._restrictedWrite(async tx => {
+        await graph._restrictedWrite(async (tx) => {
             await tx.query(C`
                 MATCH (:${Entry})-[rel:${Entry.rel.IS_A}|${Entry.rel.RELATES_TO}]->(:${Entry})
                 DELETE rel
@@ -189,7 +186,12 @@ export async function fixRelationshipIdsAfterRestoringSnapshot() {
                 MATCH (pf:${PropertyFact}) WHERE NOT pf.directRelNeo4jId IS NULL
                 MATCH (pf)-[:${PropertyFact.rel.FOR_PROP}]->(prop:${Property})
                 MATCH (entry:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf)
-            `.RETURN({"entry.id": Field.VNID, "prop.type": Field.String, "pf.id": Field.VNID, "pf.valueExpression": Field.String}));
+            `.RETURN({
+                "entry.id": Field.VNID,
+                "prop.type": Field.String,
+                "pf.id": Field.VNID,
+                "pf.valueExpression": Field.String,
+            }));
             // Set directRelNeo4jId NULL for each PropertyFact because Neo4j re-uses IDs and we may otherwise
             // get conflicts as we start to update these with the current IDs.
             await tx.query(C`
@@ -197,7 +199,7 @@ export async function fixRelationshipIdsAfterRestoringSnapshot() {
                 SET pf.directRelNeo4jId = NULL
             `);
             // Re-create all direct IS_A relationships:
-            const toCreateIsA = toProcess.filter(r => r["prop.type"] === PropertyType.RelIsA).map(row => ({
+            const toCreateIsA = toProcess.filter((r) => r["prop.type"] === PropertyType.RelIsA).map((row) => ({
                 "fromEntryId": row["entry.id"],
                 "toEntryId": parseLookupExpressionToEntryId(row["pf.valueExpression"]),
                 "pfId": row["pf.id"],
@@ -211,7 +213,7 @@ export async function fixRelationshipIdsAfterRestoringSnapshot() {
                 SET pf.directRelNeo4jId = id(rel)
             `);
             // Re-create all direct RELATES_TO/Other relationships:
-            const toCreateOther = toProcess.filter(r => r["prop.type"] === PropertyType.RelOther).map(row => ({
+            const toCreateOther = toProcess.filter((r) => r["prop.type"] === PropertyType.RelOther).map((row) => ({
                 "fromEntryId": row["entry.id"],
                 "toEntryId": parseLookupExpressionToEntryId(row["pf.valueExpression"]),
                 "pfId": row["pf.id"],

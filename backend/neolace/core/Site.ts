@@ -2,27 +2,25 @@ import { FrontendConfigData, FrontendConfigSchema } from "neolace/deps/neolace-a
 import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
-    VNodeType,
-    VirtualPropType,
-    defaultUpdateFor,
     defaultDeleteFor,
-    Field,
+    defaultUpdateFor,
     defineAction,
-    VNID,
-    VNodeTypeRef,
     DerivedProperty,
+    Field,
     RawVNode,
     ValidationError,
+    VirtualPropType,
+    VNID,
+    VNodeType,
+    VNodeTypeRef,
 } from "neolace/deps/vertex-framework.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { graph } from "neolace/core/graph.ts";
 
-
 // Forward reference
 export const SiteRef: typeof Site = VNodeTypeRef();
 
-import { CreateGroup, GroupMaxDepth, Group } from "./Group.ts";
-
+import { CreateGroup, Group, GroupMaxDepth } from "./Group.ts";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Constants for "site codes" - See arch-decisions/007-sites-multitenancy for details.
@@ -38,7 +36,6 @@ const siteCodeLength = 5;
 // The first character cannot start with "z"; this is reserved for future expansion.
 const siteCodesMaxCount = (siteCodeChars.length - 1) * Math.pow(siteCodeChars.length, siteCodeLength - 1);
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Site model
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,16 +46,16 @@ export enum AccessMode {
     /** Public (contributions): anyone can read all entries and propose edits (default) */
     PublicContributions = "pubcont",
     /** Public (read only): anyone can read all entries but only those with permission can propose edits */
-    PublicReadOnly = "readonly", 
+    PublicReadOnly = "readonly",
 }
 
 /**
  * Neolace is designed to support multi-tenant use cases (so lots of small sites can share a single large installation).
- * 
+ *
  * This "Site" model defines each site, which has its own schema and set of entries, etc.
- * 
+ *
  * See arch-decisions/007-sites-multitenancy for details.
- * 
+ *
  * Users are shared among all sites on a given installation.
  */
 export class Site extends VNodeType {
@@ -77,10 +74,10 @@ export class Site extends VNodeType {
          *                                  ^^^^^^- indicated slugId is "site-braden"
          */
         slugId: Field.Slug,
-        /** 
+        /**
          * The "site code" which gives this site's slugIds a unique namespace. Example: "00001" or "Yb3FF"
          * See arch-decisions/007-sites-multitenancy for details.
-         * 
+         *
          * This is an internal detail and is never exposed via the API. It should also never change.
          */
         siteCode: Field.String.Check(check.string.regexp(siteCodeRegex)),
@@ -88,7 +85,7 @@ export class Site extends VNodeType {
          * The canonical domain for this site, e.g. "mysite.neolace.com".
          *
          * It is important to verify that the user actually controls this domain before setting it here.
-         * 
+         *
          * This value must be unique among all sites.
          */
         domain: Field.String,
@@ -115,7 +112,7 @@ export class Site extends VNodeType {
          *   - links shown in the header
          *   - analytics integrations to use
          *   - redirects
-         * 
+         *
          * This is a JSON object with the format:
          * {
          *     "links": [{"text": "Home", "href": "/"}, {"text": "About", "href": "/about"}, ...],
@@ -161,13 +158,14 @@ export class Site extends VNodeType {
         let frontendConfigJSON;
         try {
             frontendConfigJSON = JSON.parse(dbObject.frontendConfigJSON);
-        } catch (_err: unknown) { throw new ValidationError(`frontendConfigJSON is not valid JSON.`); }
+        } catch (_err: unknown) {
+            throw new ValidationError(`frontendConfigJSON is not valid JSON.`);
+        }
         FrontendConfigSchema(frontendConfigJSON);
     }
 }
 
 VNodeTypeRef.resolve(SiteRef, Site);
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Site helper functions
@@ -178,41 +176,47 @@ export const siteIdFromShortId = makeCachedLookup((shortId: string) => graph.vni
 
 /**
  * A derived property that provides the shortId of a Site.
- * 
+ *
  * Note: Sites have "shortId", without the "site-" prefix. This is different from the siteCode.
  * whereas Entries have "friendlyId", without the siteCode prefix, which varies.
  */
-export function shortId(): DerivedProperty<string> { return DerivedProperty.make(
-    Site,
-    s => s.slugId,
-    s => s.slugId.substr(5),  // Remove the "site-" prefix
-);}
+export function shortId(): DerivedProperty<string> {
+    return DerivedProperty.make(
+        Site,
+        (s) => s.slugId,
+        (s) => s.slugId.substr(5), // Remove the "site-" prefix
+    );
+}
 
 /**
  * A derived property that provides the "frontend config", parsed from JSON
  */
-export function frontendConfig(): DerivedProperty<FrontendConfigData> { return DerivedProperty.make(
-    Site,
-    s => s.frontendConfigJSON,
-    s => JSON.parse(s.frontendConfigJSON),
-);}
+export function frontendConfig(): DerivedProperty<FrontendConfigData> {
+    return DerivedProperty.make(
+        Site,
+        (s) => s.frontendConfigJSON,
+        (s) => JSON.parse(s.frontendConfigJSON),
+    );
+}
 
 /** Cache to look up a Site's siteCode from its VNID */
-export const siteCodeForSite = makeCachedLookup((siteId: VNID) => graph.pullOne(Site, s => s.siteCode, {key: siteId}).then(s => s.siteCode), 10_000);
+export const siteCodeForSite = makeCachedLookup(
+    (siteId: VNID) => graph.pullOne(Site, (s) => s.siteCode, { key: siteId }).then((s) => s.siteCode),
+    10_000,
+);
 
 /** Convert an entry's slugId (with siteCode prefix) into a "friendlyId" */
 export function slugIdToFriendlyId(slugId: string): string {
     return slugId.substr(5);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Site actions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Action to make changes to an existing Site:
-export const UpdateSite = defaultUpdateFor(Site, s => s.slugId.description.homePageMD.footerMD.domain.accessMode, {
-    otherUpdates: async (args: {frontendConfig?: FrontendConfigData}, tx, nodeSnapshot) => {
+export const UpdateSite = defaultUpdateFor(Site, (s) => s.slugId.description.homePageMD.footerMD.domain.accessMode, {
+    otherUpdates: async (args: { frontendConfig?: FrontendConfigData }, tx, nodeSnapshot) => {
         if (args.frontendConfig) {
             await tx.queryOne(C`
                 MATCH (site:${Site} {id: ${nodeSnapshot.id}})
@@ -224,7 +228,6 @@ export const UpdateSite = defaultUpdateFor(Site, s => s.slugId.description.homeP
 });
 
 export const DeleteSite = defaultDeleteFor(Site);
-
 
 export const CreateSite = defineAction({
     type: "CreateSite",
@@ -254,12 +257,13 @@ export const CreateSite = defineAction({
             siteCode = data.siteCode;
         } else {
             // Generate an unused site code:
-            const siteCodeIsTaken = async (): Promise<boolean> => (await tx.pull(Site, s => s.id, {where: C`@this.siteCode = ${siteCode}`})).length > 0;
+            const siteCodeIsTaken = async (): Promise<boolean> =>
+                (await tx.pull(Site, (s) => s.id, { where: C`@this.siteCode = ${siteCode}` })).length > 0;
             do {
                 siteCode = siteCodeFromNumber(Math.floor(Math.random() * siteCodesMaxCount));
             } while (await siteCodeIsTaken());
         }
-        const resultData: { id: VNID; siteCode: string; adminGroup?: VNID; } = {
+        const resultData: { id: VNID; siteCode: string; adminGroup?: VNID } = {
             id,
             siteCode,
         };
@@ -306,16 +310,13 @@ export const CreateSite = defineAction({
     },
 });
 
-
-
-
 function siteCodeFromNumber(i: number): string {
     if (i < 0 || i >= siteCodesMaxCount || isNaN(i)) {
         throw new Error(`${i} is out of range for a site code.`);
     }
     let siteCode = "";
-    for (let pos = 0; pos < siteCodeLength; pos ++) {
-        const value = i % (siteCodeChars.length)
+    for (let pos = 0; pos < siteCodeLength; pos++) {
+        const value = i % (siteCodeChars.length);
         siteCode = siteCodeChars[value] + siteCode;
         i = (i - value) / siteCodeChars.length;
     }

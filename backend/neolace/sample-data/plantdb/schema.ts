@@ -1,17 +1,20 @@
-import { VNID, } from "neolace/deps/vertex-framework.ts";
-import { SiteSchemaData, PropertyType, PropertyMode } from "neolace/deps/neolace-api.ts";
+import { VNID } from "neolace/deps/vertex-framework.ts";
+import { PropertyMode, PropertyType, SiteSchemaData } from "neolace/deps/neolace-api.ts";
 
 // Type helper to ensure that the schema is a valid SiteSchemaData without
 // collapsing the type down to just "SiteSchemaData"
-function ValidateSiteSchema<X extends SiteSchemaData>(x: X): X { return x; }
- 
+function ValidateSiteSchema<X extends SiteSchemaData>(x: X): X {
+    return x;
+}
+
 // Import the schema:
 export const schema = ValidateSiteSchema({
     entryTypes: {
         "_ETDIVISION": {
             id: VNID("_ETDIVISION"),
             name: "Division",
-            description: "A division (also called Phylum outside of botany) is the main taxonomic classification within the Plant Kingdom.",
+            description:
+                "A division (also called Phylum outside of botany) is the main taxonomic classification within the Plant Kingdom.",
             friendlyIdPrefix: "d-",
             enabledFeatures: {},
         },
@@ -84,10 +87,10 @@ export const schema = ValidateSiteSchema({
         },
         "_parentDivision": {
             id: VNID("_parentDivision"),
-            isA: [VNID("_parentTaxon")],  // This is a more specific "parent taxon" property
+            isA: [VNID("_parentTaxon")], // This is a more specific "parent taxon" property
             name: "Division",
             type: PropertyType.RelIsA,
-            appliesTo: [{entryType: VNID("_ETCLASS")}],
+            appliesTo: [{ entryType: VNID("_ETCLASS") }],
             valueConstraint: `x.type() = entryType("_ETDIVISION")`,
             mode: PropertyMode.Required,
             descriptionMD: `The parent division of this class.`,
@@ -95,10 +98,10 @@ export const schema = ValidateSiteSchema({
         },
         "_parentClass": {
             id: VNID("_parentClass"),
-            isA: [VNID("_parentTaxon")],  // This is a more specific "parent taxon" property
+            isA: [VNID("_parentTaxon")], // This is a more specific "parent taxon" property
             name: "Class",
             type: PropertyType.RelIsA,
-            appliesTo: [{entryType: VNID("_ETORDER")}],
+            appliesTo: [{ entryType: VNID("_ETORDER") }],
             valueConstraint: `x.type() = entryType("_ETCLASS")`,
             mode: PropertyMode.Required,
             descriptionMD: `The parent class of this order.`,
@@ -106,10 +109,10 @@ export const schema = ValidateSiteSchema({
         },
         "_parentOrder": {
             id: VNID("_parentOrder"),
-            isA: [VNID("_parentTaxon")],  // This is a more specific "parent taxon" property
+            isA: [VNID("_parentTaxon")], // This is a more specific "parent taxon" property
             name: "Order",
             type: PropertyType.RelIsA,
-            appliesTo: [{entryType: VNID("_ETFAMILY")}],
+            appliesTo: [{ entryType: VNID("_ETFAMILY") }],
             valueConstraint: `x.type() = entryType("_ETORDER")`,
             mode: PropertyMode.Required,
             descriptionMD: `The parent order of this family.`,
@@ -117,10 +120,10 @@ export const schema = ValidateSiteSchema({
         },
         "_parentFamily": {
             id: VNID("_parentFamily"),
-            isA: [VNID("_parentTaxon")],  // This is a more specific "parent taxon" property
+            isA: [VNID("_parentTaxon")], // This is a more specific "parent taxon" property
             name: "Family",
             type: PropertyType.RelIsA,
-            appliesTo: [{entryType: VNID("_ETGENUS")}],
+            appliesTo: [{ entryType: VNID("_ETGENUS") }],
             valueConstraint: `x.type() = entryType("_ETFAMILY")`,
             mode: PropertyMode.Required,
             descriptionMD: `The parent family of this genus.`,
@@ -128,10 +131,10 @@ export const schema = ValidateSiteSchema({
         },
         "_parentGenus": {
             id: VNID("_parentGenus"),
-            isA: [VNID("_parentTaxon")],  // This is a more specific "parent taxon" property
+            isA: [VNID("_parentTaxon")], // This is a more specific "parent taxon" property
             name: "Genus",
             type: PropertyType.RelIsA,
-            appliesTo: [{entryType: VNID("_ETSPECIES")}],
+            appliesTo: [{ entryType: VNID("_ETSPECIES") }],
             valueConstraint: `x.type() = entryType("_ETGENUS")`,
             mode: PropertyMode.Required,
             descriptionMD: `The parent genus of this species.`,
@@ -141,7 +144,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_divClasses"),
             name: "Classes",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: VNID("_ETDIVISION")}],
+            appliesTo: [{ entryType: VNID("_ETDIVISION") }],
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_parentDivision]])`,
             descriptionMD: `Classes that are part of this division.`,
@@ -151,7 +154,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_classOrders"),
             name: "Orders",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: VNID("_ETCLASS")}],
+            appliesTo: [{ entryType: VNID("_ETCLASS") }],
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_parentClass]])`,
             descriptionMD: `Orders that are part of this class.`,
@@ -161,7 +164,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_orderFamilies"),
             name: "Families",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: VNID("_ETORDER")}],
+            appliesTo: [{ entryType: VNID("_ETORDER") }],
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_parentOrder]])`,
             descriptionMD: `Families that are part of this order.`,
@@ -171,7 +174,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_familyGenera"),
             name: "Genera",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: VNID("_ETFAMILY")}],
+            appliesTo: [{ entryType: VNID("_ETFAMILY") }],
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_parentFamily]])`,
             descriptionMD: `Genera (genuses) that are part of this family.`,
@@ -181,7 +184,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_genusSpecies"),
             name: "Species",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: VNID("_ETGENUS"),}],
+            appliesTo: [{ entryType: VNID("_ETGENUS") }],
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_parentGenus]])`,
             descriptionMD: `Species that are part of this genus.`,
@@ -192,12 +195,12 @@ export const schema = ValidateSiteSchema({
             name: "Taxonomy",
             type: PropertyType.RelOther,
             appliesTo: [
-                {entryType: VNID("_ETCLASS")},
-                {entryType: VNID("_ETDIVISION")},
-                {entryType: VNID("_ETFAMILY")},
-                {entryType: VNID("_ETGENUS")},
-                {entryType: VNID("_ETORDER")},
-                {entryType: VNID("_ETSPECIES")},
+                { entryType: VNID("_ETCLASS") },
+                { entryType: VNID("_ETDIVISION") },
+                { entryType: VNID("_ETFAMILY") },
+                { entryType: VNID("_ETGENUS") },
+                { entryType: VNID("_ETORDER") },
+                { entryType: VNID("_ETSPECIES") },
             ],
             mode: PropertyMode.Auto,
             default: `this.ancestors()`,
@@ -209,8 +212,9 @@ export const schema = ValidateSiteSchema({
             id: VNID("_imgRelTo"),
             name: "Relates to",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: VNID("_ETIMAGE")}],
-            valueConstraint: `x.type() in [entryType("_ETCLASS"), entryType("_ETDIVISION"), entryType("_ETFAMILY"), entryType("_ETGENUS"), entryType("_ETORDER"), entryType("_ETPLANTPART"), entryType("_ETSPECIES")]`,
+            appliesTo: [{ entryType: VNID("_ETIMAGE") }],
+            valueConstraint:
+                `x.type() in [entryType("_ETCLASS"), entryType("_ETDIVISION"), entryType("_ETFAMILY"), entryType("_ETGENUS"), entryType("_ETORDER"), entryType("_ETPLANTPART"), entryType("_ETSPECIES")]`,
             mode: PropertyMode.Recommended,
             descriptionMD: `Lists PlantDB entries that this images relates to.`,
             importance: 8,
@@ -221,13 +225,13 @@ export const schema = ValidateSiteSchema({
             name: "Related images",
             type: PropertyType.RelOther,
             appliesTo: [
-                {entryType: VNID("_ETCLASS"),},
-                {entryType: VNID("_ETDIVISION")},
-                {entryType: VNID("_ETFAMILY")},
-                {entryType: VNID("_ETGENUS")},
-                {entryType: VNID("_ETORDER")},
-                {entryType: VNID("_ETPLANTPART")},
-                {entryType: VNID("_ETSPECIES")},
+                { entryType: VNID("_ETCLASS") },
+                { entryType: VNID("_ETDIVISION") },
+                { entryType: VNID("_ETFAMILY") },
+                { entryType: VNID("_ETGENUS") },
+                { entryType: VNID("_ETORDER") },
+                { entryType: VNID("_ETPLANTPART") },
+                { entryType: VNID("_ETSPECIES") },
             ],
             mode: PropertyMode.Auto,
             default: `this.andDescendants().reverse(prop=[[/prop/_imgRelTo]])`,
@@ -240,13 +244,13 @@ export const schema = ValidateSiteSchema({
             name: "Has hero image",
             type: PropertyType.RelOther,
             appliesTo: [
-                {entryType: VNID("_ETCLASS"),},
-                {entryType: VNID("_ETDIVISION")},
-                {entryType: VNID("_ETFAMILY")},
-                {entryType: VNID("_ETGENUS")},
-                {entryType: VNID("_ETORDER")},
-                {entryType: VNID("_ETPLANTPART")},
-                {entryType: VNID("_ETSPECIES")},
+                { entryType: VNID("_ETCLASS") },
+                { entryType: VNID("_ETDIVISION") },
+                { entryType: VNID("_ETFAMILY") },
+                { entryType: VNID("_ETGENUS") },
+                { entryType: VNID("_ETORDER") },
+                { entryType: VNID("_ETPLANTPART") },
+                { entryType: VNID("_ETSPECIES") },
             ],
             mode: PropertyMode.Recommended,
             descriptionMD: `Hero image used for this entry`,
@@ -258,12 +262,12 @@ export const schema = ValidateSiteSchema({
             name: "Has part",
             type: PropertyType.RelOther,
             appliesTo: [
-                {entryType: VNID("_ETCLASS")},
-                {entryType: VNID("_ETDIVISION")},
-                {entryType: VNID("_ETFAMILY")},
-                {entryType: VNID("_ETGENUS")},
-                {entryType: VNID("_ETORDER")},
-                {entryType: VNID("_ETSPECIES")},
+                { entryType: VNID("_ETCLASS") },
+                { entryType: VNID("_ETDIVISION") },
+                { entryType: VNID("_ETFAMILY") },
+                { entryType: VNID("_ETGENUS") },
+                { entryType: VNID("_ETORDER") },
+                { entryType: VNID("_ETSPECIES") },
             ],
             mode: PropertyMode.Optional,
             valueConstraint: `x.type() = entryType("_ETPLANTPART")`,
@@ -277,7 +281,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_partFoundIn"),
             name: "Found in",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: VNID("_ETPLANTPART")}],
+            appliesTo: [{ entryType: VNID("_ETPLANTPART") }],
             mode: PropertyMode.Auto,
             default: `this.andDescendants().reverse(prop=[[/prop/_hasPart]])`,
             descriptionMD: `This plant is found in these species/genera/etc.`,
@@ -288,7 +292,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_partIsAPart"),
             name: "Is a",
             type: PropertyType.RelIsA,
-            appliesTo: [{entryType: VNID("_ETPLANTPART")}],
+            appliesTo: [{ entryType: VNID("_ETPLANTPART") }],
             mode: PropertyMode.Recommended,
             descriptionMD: `The more general class of this plant part.`,
             importance: 0,
@@ -297,7 +301,7 @@ export const schema = ValidateSiteSchema({
             id: VNID("_partHasTypes"),
             name: "Has types",
             type: PropertyType.RelOther,
-            appliesTo: [{entryType: VNID("_ETPLANTPART")}],
+            appliesTo: [{ entryType: VNID("_ETPLANTPART") }],
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_partIsAPart]])`,
             descriptionMD: `Sub-types of this plant part`,
@@ -311,9 +315,10 @@ export const schema = ValidateSiteSchema({
             id: VNID("_propScientificName"),
             name: "Scientific name",
             type: PropertyType.Value,
-            appliesTo: [{entryType: VNID("_ETSPECIES")}],
+            appliesTo: [{ entryType: VNID("_ETSPECIES") }],
             mode: PropertyMode.Required,
-            descriptionMD: "The **scientific name**, sometimes called the **binomial name** or **latin name** is an unambiguous species identifier.",
+            descriptionMD:
+                "The **scientific name**, sometimes called the **binomial name** or **latin name** is an unambiguous species identifier.",
             importance: 3,
             displayAs: "*{value}*",
         },
@@ -323,12 +328,12 @@ export const schema = ValidateSiteSchema({
             name: "Wikidata Item ID",
             type: PropertyType.Value,
             appliesTo: [
-                {entryType: VNID("_ETCLASS")},
-                {entryType: VNID("_ETDIVISION")},
-                {entryType: VNID("_ETFAMILY")},
-                {entryType: VNID("_ETGENUS")},
-                {entryType: VNID("_ETORDER")},
-                {entryType: VNID("_ETSPECIES")},
+                { entryType: VNID("_ETCLASS") },
+                { entryType: VNID("_ETDIVISION") },
+                { entryType: VNID("_ETFAMILY") },
+                { entryType: VNID("_ETGENUS") },
+                { entryType: VNID("_ETORDER") },
+                { entryType: VNID("_ETSPECIES") },
             ],
             mode: PropertyMode.Optional,
             descriptionMD: "ID of this item on Wikidata, the free knowledge base that anyone can edit.",

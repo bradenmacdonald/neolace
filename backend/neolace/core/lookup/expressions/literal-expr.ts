@@ -5,7 +5,7 @@ import { LookupContext } from "../context.ts";
 
 /**
  * LiteralExpression: a simple constant expression that holds a primitive value: an integer, a boolean, etc.
- * 
+ *
  * A string can be a literal expression, but some string expressions that contain expressions are not literal expressions.
  * e.g. "hello" is a string literal, but `{1 + 1} is two` is not.
  */

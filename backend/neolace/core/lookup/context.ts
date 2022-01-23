@@ -1,13 +1,9 @@
-import {
-    VNID,
-    WrappedTransaction,
-} from "neolace/deps/vertex-framework.ts";
+import { VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { LookupError, LookupParseError } from "./errors.ts";
 
 import type { LookupExpression } from "./expression.ts";
 import { parseLookupString } from "./parse.ts";
 import { ErrorValue, LookupValue } from "./values.ts";
-
 
 /**
  * The lookup context defines some data required to evaluate a lookup expression, like:
@@ -22,7 +18,6 @@ export interface LookupContext {
     defaultPageSize: bigint;
 }
 
-
 export class LookupCache {
     private cache = new Map<string, LookupValue>();
 
@@ -32,7 +27,7 @@ export class LookupCache {
         public readonly defaultPageSize: bigint,
     ) {}
 
-    public async evaluateExprWithCache(expr: LookupExpression, entryId: VNID|undefined) {
+    public async evaluateExprWithCache(expr: LookupExpression, entryId: VNID | undefined) {
         const prefix = (entryId ?? "") + ":";
         // Key is the entry ID, then a colon, then the expression in "standard form"
         const key = prefix + expr.toString();
@@ -46,7 +41,7 @@ export class LookupCache {
             siteId: this.siteId,
             defaultPageSize: this.defaultPageSize,
             entryId,
-        }
+        };
         let value;
         try {
             value = await expr.getValue(context);
@@ -81,11 +76,11 @@ export class CachedLookupContext implements LookupContext {
      * For evaluating lookup expressions in a related entry or not an entry at all, but still sharing the same cache.
      * @param entryId The new entry ID to use in this child context
      */
-    protected getChildContext(entryId: VNID|undefined) {
+    protected getChildContext(entryId: VNID | undefined) {
         return new CachedLookupContext(this.tx, this.siteId, entryId, this.defaultPageSize, this._cache);
     }
 
-    public getContextFor(entryId: VNID|undefined) {
+    public getContextFor(entryId: VNID | undefined) {
         if (entryId === this.entryId) {
             return this;
         } else {
@@ -93,7 +88,7 @@ export class CachedLookupContext implements LookupContext {
         }
     }
 
-    public evaluateExpr(expr: LookupExpression|string): Promise<LookupValue> {
+    public evaluateExpr(expr: LookupExpression | string): Promise<LookupValue> {
         if (typeof expr === "string") {
             // We were just given a string, so first parse it to a lookup expression.
             // We always parse it because this allows us to normalize the expression to make the cache more likely to
@@ -102,7 +97,7 @@ export class CachedLookupContext implements LookupContext {
                 expr = parseLookupString(expr);
             } catch (err) {
                 if (err instanceof LookupParseError) {
-                    return new Promise(r => r(new ErrorValue(err)));
+                    return new Promise((r) => r(new ErrorValue(err)));
                 }
                 throw err;
             }

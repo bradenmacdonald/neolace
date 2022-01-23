@@ -32,8 +32,9 @@ jobs:
         with:
           deno-version: ${{ env.deno-version }}
 
-      # - name: Verify formatting
-      #   run: deno fmt --check
+      - name: Verify formatting (backend)
+        run: deno fmt --check
+        working-directory: ./backend
 
       - name: Run linter (backend)
         run: deno lint

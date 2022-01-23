@@ -1,8 +1,7 @@
 import { decodeImage } from "neolace/deps/wasm-image-decoder.ts";
 import { encode as encodeBlurHash } from "neolace/deps/blurhash.ts";
 import { resizeImagePixels } from "neolace/deps/resize-image.ts";
-import { number, Schema, Type, string } from "neolace/deps/computed-types.ts";
-
+import { number, Schema, string, Type } from "neolace/deps/computed-types.ts";
 
 export const ImageMetadataSchema = Schema({
     type: "image",
@@ -15,10 +14,9 @@ export type ImageMetadata = Type<typeof ImageMetadataSchema>;
 export const FileMetadataSchema = Schema.either(ImageMetadataSchema, Schema({}));
 export type FileMetadata = Type<typeof FileMetadataSchema>;
 
-
 /**
  * Given the encoded binary data of an image (e.g. a JPEG file), detect some metadata about it.
- * @param buffer 
+ * @param buffer
  */
 export async function detectImageMetadata(encodedImageData: Uint8Array): Promise<ImageMetadata> {
     const imageData = decodeImage(encodedImageData.buffer);
@@ -29,7 +27,13 @@ export async function detectImageMetadata(encodedImageData: Uint8Array): Promise
         newMaxWidth: 20,
         newMaxHeight: 20,
     });
-    const blurHash = encodeBlurHash(new Uint8ClampedArray(smallImageData.pixels.buffer), smallImageData.width, smallImageData.height, 4, 3);
+    const blurHash = encodeBlurHash(
+        new Uint8ClampedArray(smallImageData.pixels.buffer),
+        smallImageData.width,
+        smallImageData.height,
+        4,
+        3,
+    );
     return {
         type: "image",
         width: imageData.width,
@@ -39,4 +43,3 @@ export async function detectImageMetadata(encodedImageData: Uint8Array): Promise
         blurHash,
     };
 }
-

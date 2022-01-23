@@ -1,13 +1,7 @@
-import {
-    C,
-    Field,
-    VirtualPropType,
-    VNodeType,
-} from "neolace/deps/vertex-framework.ts";
+import { C, Field, VirtualPropType, VNodeType } from "neolace/deps/vertex-framework.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
 import { DataFile } from "neolace/core/objstore/DataFile.ts";
 import { string } from "neolace/deps/computed-types.ts";
-
 
 /**
  * If an EntryType has the Files Feature enabled, then its entries can each have one or more files attached to them.
@@ -39,5 +33,4 @@ export class FilesData extends EntryFeatureData {
             defaultOrderBy: "@rel.displayFilename",
         },
     }));
-
 }

@@ -3,13 +3,11 @@ import { isIterableValue, NullValue } from "../values.ts";
 import { LookupContext } from "../context.ts";
 import { LookupEvaluationError } from "../errors.ts";
 
-
 /**
  * first(value): given an iterable, return the first item, or null if there is
  * no first item.
  */
- export class First extends LookupExpression {
-
+export class First extends LookupExpression {
     // An expression that we want to take the first item from
     readonly expr: LookupExpression;
 
@@ -28,7 +26,9 @@ import { LookupEvaluationError } from "../errors.ts";
                 return new NullValue();
             }
         } else {
-            throw new LookupEvaluationError(`The expression "${this.expr.toDebugString()}" cannot be used with first().`);
+            throw new LookupEvaluationError(
+                `The expression "${this.expr.toDebugString()}" cannot be used with first().`,
+            );
         }
     }
 

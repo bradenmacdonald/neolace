@@ -1,11 +1,7 @@
 import { LookupExpression } from "../expression.ts";
-import {
-    NullValue,
-    BooleanValue,
-} from "../values.ts";
+import { BooleanValue, NullValue } from "../values.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupContext } from "../context.ts";
-
 
 /**
  * if([boolean expression], then=[some value], else=[some value])
@@ -14,7 +10,6 @@ import { LookupContext } from "../context.ts";
  * is specified; otherwise return the 'else' value, or NULL if no 'else' value is specified.
  */
 export class If extends LookupExpression {
-
     // An expression that is truthy or falsy
     readonly conditionExpr: LookupExpression;
     // Value to return if 'booleanExpr' is truthy
@@ -25,8 +20,8 @@ export class If extends LookupExpression {
     constructor(
         conditionExpr: LookupExpression,
         extraParams: {
-            thenExpr?: LookupExpression,
-            elseExpr?: LookupExpression,
+            thenExpr?: LookupExpression;
+            elseExpr?: LookupExpression;
         },
     ) {
         super();
@@ -38,14 +33,16 @@ export class If extends LookupExpression {
     public async getValue(context: LookupContext) {
         const booleanValue = await (await this.conditionExpr.getValue(context)).castTo(BooleanValue, context);
         if (booleanValue === undefined) {
-            throw new LookupEvaluationError(`The expression "${this.conditionExpr.toDebugString()}" cannot be converted to a boolean (true/false).`);
+            throw new LookupEvaluationError(
+                `The expression "${this.conditionExpr.toDebugString()}" cannot be converted to a boolean (true/false).`,
+            );
         }
         if (booleanValue.value) {
             // The condition is true:
             if (this.thenExpr) {
                 return await this.thenExpr.getValue(context);
             } else {
-                return await this.conditionExpr.getValue(context);  // e.g. if(something) will return 'something' only if it's truthy, else NULL
+                return await this.conditionExpr.getValue(context); // e.g. if(something) will return 'something' only if it's truthy, else NULL
             }
         } else {
             // The condition is false:

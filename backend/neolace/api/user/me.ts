@@ -1,4 +1,4 @@
-import { NeolaceHttpResource, api } from "neolace/api/mod.ts";
+import { api, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getPublicUserData } from "./_helpers.ts";
 
 export class UserMeResource extends NeolaceHttpResource {
@@ -8,7 +8,7 @@ export class UserMeResource extends NeolaceHttpResource {
         responseSchema: api.schemas.UserDataResponse,
         description: "Get my public profile data",
         notes: "Get information about the logged in user (or bot)",
-    }, async ({request}) => {
+    }, async ({ request }) => {
         const user = this.requireUser(request);
         return await getPublicUserData(user.username);
     });

@@ -16,20 +16,20 @@
 // a bundlerless ES module environment (which has a few differences).
 
 function waitForMsgType(target, type) {
-  return new Promise(resolve => {
-    target.addEventListener('message', function onMsg({ data }) {
-      if (data == null || data.type !== type) return;
-      target.removeEventListener('message', onMsg);
-      resolve(data);
+    return new Promise((resolve) => {
+        target.addEventListener("message", function onMsg({ data }) {
+            if (data == null || data.type !== type) return;
+            target.removeEventListener("message", onMsg);
+            resolve(data);
+        });
     });
-  });
 }
 
-waitForMsgType(self, 'wasm_bindgen_worker_init').then(async data => {
-  const pkg = await import(data.mainJS);
-  await pkg.default(data.module, data.memory);
-  postMessage({ type: 'wasm_bindgen_worker_ready' });
-  pkg.wbg_rayon_start_worker(data.receiver);
+waitForMsgType(self, "wasm_bindgen_worker_init").then(async (data) => {
+    const pkg = await import(data.mainJS);
+    await pkg.default(data.module, data.memory);
+    postMessage({ type: "wasm_bindgen_worker_ready" });
+    pkg.wbg_rayon_start_worker(data.receiver);
 });
 
 // Note: this is never used, but necessary to prevent a bug in Firefox
@@ -42,31 +42,33 @@ waitForMsgType(self, 'wasm_bindgen_worker_init').then(async data => {
 let _workers;
 
 export async function startWorkers(module, memory, builder) {
-  const workerInit = {
-    type: 'wasm_bindgen_worker_init',
-    module,
-    memory,
-    receiver: builder.receiver(),
-    mainJS: builder.mainJS()
-  };
+    const workerInit = {
+        type: "wasm_bindgen_worker_init",
+        module,
+        memory,
+        receiver: builder.receiver(),
+        mainJS: builder.mainJS(),
+    };
 
-  _workers = await Promise.all(
-    Array.from({ length: builder.numThreads() }, async () => {
-      // Self-spawn into a new Worker.
-      // The script is fetched as a blob so it works even if this script is
-      // hosted remotely (e.g. on a CDN). This avoids a cross-origin
-      // security error.
-      const getScript = import.meta.url.startsWith("file:") ? new Blob([await Deno.readFile(new URL(import.meta.url).pathname)]) : fetch(import.meta.url).then(r => r.blob());
-      let scriptBlob = await getScript;
-      let url = URL.createObjectURL(scriptBlob);
-      const worker = new Worker(url, {
-        type: 'module'
-      });
-      worker.postMessage(workerInit);
-      await waitForMsgType(worker, 'wasm_bindgen_worker_ready');
-      URL.revokeObjectURL(url);
-      return worker;
-    })
-  );
-  builder.build();
+    _workers = await Promise.all(
+        Array.from({ length: builder.numThreads() }, async () => {
+            // Self-spawn into a new Worker.
+            // The script is fetched as a blob so it works even if this script is
+            // hosted remotely (e.g. on a CDN). This avoids a cross-origin
+            // security error.
+            const getScript = import.meta.url.startsWith("file:")
+                ? new Blob([await Deno.readFile(new URL(import.meta.url).pathname)])
+                : fetch(import.meta.url).then((r) => r.blob());
+            let scriptBlob = await getScript;
+            let url = URL.createObjectURL(scriptBlob);
+            const worker = new Worker(url, {
+                type: "module",
+            });
+            worker.postMessage(workerInit);
+            await waitForMsgType(worker, "wasm_bindgen_worker_ready");
+            URL.revokeObjectURL(url);
+            return worker;
+        }),
+    );
+    builder.build();
 }

@@ -3,7 +3,7 @@ import { LookupEvaluationError } from "./errors.ts";
 import { LookupValue } from "./values.ts";
 
 // deno-lint-ignore no-explicit-any
-type ClassOf<QV extends LookupValue> = {new(...args: any[]): QV};
+type ClassOf<QV extends LookupValue> = { new (...args: any[]): QV };
 
 /**
  * Base class for a Lookup Expression, something that evaluates to a value.
@@ -19,7 +19,10 @@ export abstract class LookupExpression {
 
     public abstract getValue(context: LookupContext): Promise<LookupValue>;
 
-    public async getValueAs<ValueType extends LookupValue>(valueType: ClassOf<ValueType>, context: LookupContext): Promise<ValueType> {
+    public async getValueAs<ValueType extends LookupValue>(
+        valueType: ClassOf<ValueType>,
+        context: LookupContext,
+    ): Promise<ValueType> {
         const initialValue = await this.getValue(context);
         if (initialValue instanceof valueType) {
             return initialValue;
@@ -32,10 +35,22 @@ export abstract class LookupExpression {
         throw new LookupEvaluationError(`The expression "${this.toDebugString()}" is not of the right type.`);
     }
 
-    public async getValueAsOneOf<VT1 extends LookupValue>(valueTypes: [ClassOf<VT1>], context: LookupContext): Promise<VT1>;
-    public async getValueAsOneOf<VT1 extends LookupValue, VT2 extends LookupValue>(valueTypes: [ClassOf<VT1>, ClassOf<VT2>], context: LookupContext): Promise<VT1|VT2>;
-    public async getValueAsOneOf<VT1 extends LookupValue, VT2 extends LookupValue, VT3 extends LookupValue>(valueTypes: [ClassOf<VT1>, ClassOf<VT2>, ClassOf<VT3>], context: LookupContext): Promise<VT1|VT2|VT3>;
-    public async getValueAsOneOf(valueTypes: Array<ClassOf<LookupValue>>, context: LookupContext): Promise<LookupValue> {
+    public async getValueAsOneOf<VT1 extends LookupValue>(
+        valueTypes: [ClassOf<VT1>],
+        context: LookupContext,
+    ): Promise<VT1>;
+    public async getValueAsOneOf<VT1 extends LookupValue, VT2 extends LookupValue>(
+        valueTypes: [ClassOf<VT1>, ClassOf<VT2>],
+        context: LookupContext,
+    ): Promise<VT1 | VT2>;
+    public async getValueAsOneOf<VT1 extends LookupValue, VT2 extends LookupValue, VT3 extends LookupValue>(
+        valueTypes: [ClassOf<VT1>, ClassOf<VT2>, ClassOf<VT3>],
+        context: LookupContext,
+    ): Promise<VT1 | VT2 | VT3>;
+    public async getValueAsOneOf(
+        valueTypes: Array<ClassOf<LookupValue>>,
+        context: LookupContext,
+    ): Promise<LookupValue> {
         const initialValue = await this.getValue(context);
         for (const valueType of valueTypes) {
             // Try casting it:

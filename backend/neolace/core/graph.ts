@@ -12,72 +12,74 @@ export const graph = new Vertex({
         // Users have unique email addresses:
         userEmailUnique: {
             forward: async (dbWrite) => {
-                await dbWrite(async tx => {
+                await dbWrite(async (tx) => {
                     await tx.run("CREATE CONSTRAINT user_email_uniq ON (u:Human) ASSERT u.email IS UNIQUE");
                 });
             },
             backward: async (dbWrite) => {
-                await dbWrite(tx => tx.run("DROP CONSTRAINT user_email_uniq IF EXISTS"));
+                await dbWrite((tx) => tx.run("DROP CONSTRAINT user_email_uniq IF EXISTS"));
             },
             dependsOn: [],
         },
         // Users have unique authN ID values:
         userAuthNIdUnique: {
             forward: async (dbWrite) => {
-                await dbWrite(async tx => {
+                await dbWrite(async (tx) => {
                     await tx.run("CREATE CONSTRAINT user_authnId_uniq ON (u:Human) ASSERT u.authnId IS UNIQUE");
                 });
             },
             backward: async (dbWrite) => {
-                await dbWrite(tx => tx.run("DROP CONSTRAINT user_authnId_uniq IF EXISTS"));
+                await dbWrite((tx) => tx.run("DROP CONSTRAINT user_authnId_uniq IF EXISTS"));
             },
             dependsOn: [],
         },
         // Bots have unique auth token values:
         botAuthTokenUnique: {
             forward: async (dbWrite) => {
-                await dbWrite(async tx => {
+                await dbWrite(async (tx) => {
                     await tx.run("CREATE CONSTRAINT bot_authtoken_uniq ON (u:Bot) ASSERT u.authToken IS UNIQUE");
                 });
             },
             backward: async (dbWrite) => {
-                await dbWrite(tx => tx.run("DROP CONSTRAINT bot_authtoken_uniq IF EXISTS"));
+                await dbWrite((tx) => tx.run("DROP CONSTRAINT bot_authtoken_uniq IF EXISTS"));
             },
             dependsOn: [],
         },
         // Sites have unique "domain" values:
         siteDomainUnique: {
             forward: async (dbWrite) => {
-                await dbWrite(async tx => {
+                await dbWrite(async (tx) => {
                     await tx.run("CREATE CONSTRAINT site_domain_uniq ON (s:Site) ASSERT s.domain IS UNIQUE");
                 });
             },
             backward: async (dbWrite) => {
-                await dbWrite(tx => tx.run("DROP CONSTRAINT site_domain_uniq IF EXISTS"));
+                await dbWrite((tx) => tx.run("DROP CONSTRAINT site_domain_uniq IF EXISTS"));
             },
             dependsOn: [],
         },
         // Sites have unique "site code" values:
         siteCodeUnique: {
             forward: async (dbWrite) => {
-                await dbWrite(async tx => {
+                await dbWrite(async (tx) => {
                     await tx.run("CREATE CONSTRAINT site_sitecode_uniq ON (s:Site) ASSERT s.siteCode IS UNIQUE");
                 });
             },
             backward: async (dbWrite) => {
-                await dbWrite(tx => tx.run("DROP CONSTRAINT site_sitecode_uniq IF EXISTS"));
+                await dbWrite((tx) => tx.run("DROP CONSTRAINT site_sitecode_uniq IF EXISTS"));
             },
             dependsOn: [],
         },
         // The "directRelNeo4jId" field of PropertyFact nodes must be unique:
         propFactUniqueRelId: {
             forward: async (dbWrite) => {
-                await dbWrite(async tx => {
-                    await tx.run("CREATE CONSTRAINT propertyfact_directrelneo4jid_uniq ON (pf:PropertyFact) ASSERT pf.directRelNeo4jId IS UNIQUE");
+                await dbWrite(async (tx) => {
+                    await tx.run(
+                        "CREATE CONSTRAINT propertyfact_directrelneo4jid_uniq ON (pf:PropertyFact) ASSERT pf.directRelNeo4jId IS UNIQUE",
+                    );
                 });
             },
             backward: async (dbWrite) => {
-                await dbWrite(tx => tx.run("DROP CONSTRAINT propertyfact_directrelneo4jid_uniq IF EXISTS"));
+                await dbWrite((tx) => tx.run("DROP CONSTRAINT propertyfact_directrelneo4jid_uniq IF EXISTS"));
             },
             dependsOn: [],
         },

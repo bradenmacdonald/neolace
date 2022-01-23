@@ -1,19 +1,14 @@
 import { LookupExpression } from "../expression.ts";
-import { isCountableValue, IntegerValue } from "../values.ts";
+import { IntegerValue, isCountableValue } from "../values.ts";
 import { LookupContext } from "../context.ts";
 import { LookupEvaluationError } from "../errors.ts";
-
-
-
-
 
 /**
  * count(entry): returns the count of the specified value
  * -> Lazy Query: give the number of results (rows)
  * -> List: give the number of items in the list
  */
- export class Count extends LookupExpression {
-
+export class Count extends LookupExpression {
     // An expression that specifies what value's count we want to retrieve
     readonly exprToCount: LookupExpression;
 
@@ -27,7 +22,9 @@ import { LookupEvaluationError } from "../errors.ts";
         if (isCountableValue(valueToCount)) {
             return new IntegerValue(await valueToCount.getCount());
         } else {
-            throw new LookupEvaluationError(`The expression "${this.exprToCount.toDebugString()}" cannot be counted with count().`);
+            throw new LookupEvaluationError(
+                `The expression "${this.exprToCount.toDebugString()}" cannot be counted with count().`,
+            );
         }
     }
 

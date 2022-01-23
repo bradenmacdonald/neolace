@@ -1,22 +1,21 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { group, test, setTestIsolation, assertEquals } from "neolace/lib/tests.ts";
+import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
-import { IntegerValue, PageValue, NullValue } from "../values.ts";
+import { IntegerValue, NullValue, PageValue } from "../values.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { List } from "./list-expr.ts";
 import { LookupExpression } from "../expression.ts";
 import { Count } from "./count.ts";
 
 group(import.meta, () => {
-
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) => graph.read(tx => expr.getValue({tx, siteId, entryId, defaultPageSize: 10n}).then(v => v.makeConcrete()));
+    const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
+        graph.read((tx) => expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete()));
     const siteId = defaultData.site.id;
 
     const Int = (x: number) => new LiteralExpression(new IntegerValue(x));
 
     group("LiteralExpression", () => {
-
         test(`An empty list`, async () => {
             const expression = new List([]);
             const value = PageValue.from([], 10n);
@@ -35,7 +34,7 @@ group(import.meta, () => {
 
         test(`It can be counted`, async () => {
             const expression = new Count(
-                new List([ Int(1), Int(2), new LiteralExpression(new NullValue()) ])
+                new List([Int(1), Int(2), new LiteralExpression(new NullValue())]),
             );
             const value = new IntegerValue(3);
 
@@ -44,6 +43,5 @@ group(import.meta, () => {
         });
 
         // TODO test that this can be evaluated to get the count() without evaluating lazy values that it holds
-
     });
 });

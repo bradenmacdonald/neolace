@@ -1,11 +1,9 @@
-import { group, test, assertEquals, assert } from "neolace/lib/tests.ts";
+import { assert, assertEquals, group, test } from "neolace/lib/tests.ts";
 import { testExports } from "neolace/core/User.ts";
 
 group(import.meta, () => {
-
     group("createBotAuthToken", () => {
-
-        const {createBotAuthToken} = testExports;
+        const { createBotAuthToken } = testExports;
 
         test("has a length of 64 characters", async () => {
             const token: string = await createBotAuthToken();
@@ -17,7 +15,7 @@ group(import.meta, () => {
             const count = 1_000;
             const tokens = new Set();
             for (let i = 0; i < count; i++) {
-                tokens.add( await createBotAuthToken() );
+                tokens.add(await createBotAuthToken());
             }
             assertEquals(tokens.size, count);
         });

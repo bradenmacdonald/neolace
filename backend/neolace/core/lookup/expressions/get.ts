@@ -10,25 +10,24 @@ import { getEntryProperty } from "neolace/core/entry/properties.ts";
 
 import { LookupExpression } from "../expression.ts";
 import {
-    LazyEntrySetValue,
-    IntegerValue,
-    NullValue,
-    StringValue,
-    InlineMarkdownStringValue,
-    PropertyValue,
     EntryValue,
     ErrorValue,
+    InlineMarkdownStringValue,
+    IntegerValue,
+    LazyEntrySetValue,
     LookupValue,
+    NullValue,
+    PropertyValue,
+    StringValue,
 } from "../values.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupContext } from "../context.ts";
 import { parseLookupString } from "../parse.ts";
 
-
 /**
  * Helper function to read annotated rank values from a database query result
  */
-const dbRankToValue = (dbValue: unknown): IntegerValue|NullValue => {
+const dbRankToValue = (dbValue: unknown): IntegerValue | NullValue => {
     if (typeof dbValue === "bigint") {
         return new IntegerValue(dbValue);
     } else if (dbValue === null) {
@@ -36,23 +35,23 @@ const dbRankToValue = (dbValue: unknown): IntegerValue|NullValue => {
     } else {
         throw new LookupEvaluationError("Unexpected data type for 'rank' while evaluating lookup.");
     }
-}
+};
 
 /**
  * Helper function to read annotated note (markdown string) values from a database query result
  */
-const dbNoteToValue = (dbValue: unknown): InlineMarkdownStringValue|NullValue => {
+const dbNoteToValue = (dbValue: unknown): InlineMarkdownStringValue | NullValue => {
     if (typeof dbValue === "string") {
         return new InlineMarkdownStringValue(dbValue);
     } else {
         throw new LookupEvaluationError("Unexpected data type for 'note' while evaluating lookup.");
     }
-}
+};
 
 /**
  * Helper function to read annotated slot values from a database query result
  */
-const dbSlotToValue = (dbValue: unknown): StringValue|NullValue => {
+const dbSlotToValue = (dbValue: unknown): StringValue | NullValue => {
     if (dbValue === null) {
         // Slots are disabled for this property - return NULL
         return new NullValue();
@@ -62,7 +61,7 @@ const dbSlotToValue = (dbValue: unknown): StringValue|NullValue => {
     } else {
         throw new LookupEvaluationError("Unexpected data type for 'slot' while evaluating lookup.");
     }
-}
+};
 
 /**
  * get([entry or entry set], prop=...)
@@ -78,25 +77,23 @@ const dbSlotToValue = (dbValue: unknown): StringValue|NullValue => {
  *  e.g. this.get(prop=[[/prop/_dateOfBirth]])
  * Then this will return either a single value (e.g. a date) or a MultipleValues (if
  * multiple values are set for the same property on the same entry)
- * 
+ *
  * If used with a value property and multiple entries,
  *  e.g. this.andAncestors().get(prop=[[/prop/_dateOfBirth]])
  * Then this will always return a MultipleValues
  */
 export class GetProperty extends LookupExpression {
-
     // An expression that specifies what entry(ies)' property we want to retrieve
     readonly fromEntriesExpr: LookupExpression;
     readonly propertyExpr: LookupExpression;
 
-    constructor(fromEntriesExpr: LookupExpression, extraParams: {propertyExpr: LookupExpression}) {
+    constructor(fromEntriesExpr: LookupExpression, extraParams: { propertyExpr: LookupExpression }) {
         super();
         this.fromEntriesExpr = fromEntriesExpr;
         this.propertyExpr = extraParams.propertyExpr;
     }
 
     public async getValue(context: LookupContext) {
-
         // TODO: if this.fromEntriesExpr is a Placeholder (X), return a special placeholder value.
 
         // First, look up the property we are retrieving:
@@ -105,10 +102,10 @@ export class GetProperty extends LookupExpression {
         try {
             propertyData = await context.tx.queryOne(C`
                 MATCH (prop:${Property} {id: ${propValue.id}})-[:${Property.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
-            `.RETURN({"prop.type": Field.String}));
+            `.RETURN({ "prop.type": Field.String }));
         } catch (err) {
             if (err instanceof EmptyResultError) {
-                throw new LookupEvaluationError("Property not found / invalid property ID")
+                throw new LookupEvaluationError("Property not found / invalid property ID");
             }
             throw err;
         }
@@ -119,7 +116,9 @@ export class GetProperty extends LookupExpression {
             const startingEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
             // Using a simplified version of our "get property value" code, we are finding all the entries that are
             // related via a specific property to the source entry/entries.
-            return new LazyEntrySetValue(context, C`
+            return new LazyEntrySetValue(
+                context,
+                C`
                 ${startingEntrySet.cypherQuery}
 
                 WITH entry AS fromEntry  // Continue the existing entry query, discard annotations if present
@@ -151,7 +150,9 @@ export class GetProperty extends LookupExpression {
 
                 WITH entry, annotations
                 ORDER BY annotations.rank, entry.name
-            `, {annotations: {rank: dbRankToValue, note: dbNoteToValue, slot: dbSlotToValue}});
+            `,
+                { annotations: { rank: dbRankToValue, note: dbNoteToValue, slot: dbSlotToValue } },
+            );
         } else {
             // This is a value property. Are we retieving it for one entry or many?
             const forEntry = await (await this.fromEntriesExpr.getValue(context)).castTo(EntryValue, context);

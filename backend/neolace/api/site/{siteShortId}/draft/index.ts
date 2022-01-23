@@ -1,8 +1,6 @@
-import { NeolaceHttpResource, graph, api, permissions, adaptErrors } from "neolace/api/mod.ts";
+import { adaptErrors, api, graph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
 import { CreateDraft } from "neolace/core/edit/Draft.ts";
 import { getDraft } from "./_helpers.ts";
-
-
 
 export class DraftIndexResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/draft"];
@@ -11,10 +9,10 @@ export class DraftIndexResource extends NeolaceHttpResource {
         requestBodySchema: api.CreateDraftSchema,
         responseSchema: api.DraftSchema,
         description: "Create a new draft",
-    }, async ({request, bodyData}) => {
+    }, async ({ request, bodyData }) => {
         // Permissions and parameters:
         await this.requirePermission(request, permissions.CanCreateDraft);
-        const {siteId} = await this.getSiteDetails(request);
+        const { siteId } = await this.getSiteDetails(request);
         const userId = this.requireUser(request).id;
 
         // Response:
@@ -23,21 +21,27 @@ export class DraftIndexResource extends NeolaceHttpResource {
         let hasSchemaChanges = false;
         let hasEntryChanges = false;
         for (const idx in edits) {
-            const e = edits[idx];  // The payload validator will have checked that "e" has .code and .data, but not check their value
+            const e = edits[idx]; // The payload validator will have checked that "e" has .code and .data, but not check their value
             const editType = api.getEditType.OrNone(e.code);
             if (editType === undefined) {
-                throw new api.InvalidFieldValue([{fieldPath: `edits.${idx}.code`, message: `Invalid edit code: "${e.code}"`}]);
+                throw new api.InvalidFieldValue([{
+                    fieldPath: `edits.${idx}.code`,
+                    message: `Invalid edit code: "${e.code}"`,
+                }]);
             }
             if (editType.changeType === api.EditChangeType.Schema) {
                 hasSchemaChanges = true;
             } else if (editType.changeType === api.EditChangeType.Content) {
                 hasEntryChanges = true;
-            } else { throw `Unexpected entry change type ${editType.changeType}`; }
+            } else throw `Unexpected entry change type ${editType.changeType}`;
             // Validate the data too:
             try {
                 editType.dataSchema(e.data);
             } catch (err) {
-                throw new api.InvalidFieldValue([{fieldPath: `edits.${idx}.data`, message: `Invalid edit data: "${err.message}"`}]);
+                throw new api.InvalidFieldValue([{
+                    fieldPath: `edits.${idx}.data`,
+                    message: `Invalid edit data: "${err.message}"`,
+                }]);
             }
         }
 
@@ -48,15 +52,18 @@ export class DraftIndexResource extends NeolaceHttpResource {
             await this.requirePermission(request, permissions.CanProposeSchemaChanges);
         }
 
-        const {id} = await graph.runAs(userId, CreateDraft({
-            siteId,
-            authorId: userId,
-            title: bodyData.title,
-            description: bodyData.description,
-            edits,
-        })).catch(adaptErrors("title", "description", adaptErrors.remap("data", "edits.?.data")));
+        const { id } = await graph.runAs(
+            userId,
+            CreateDraft({
+                siteId,
+                authorId: userId,
+                title: bodyData.title,
+                description: bodyData.description,
+                edits,
+            }),
+        ).catch(adaptErrors("title", "description", adaptErrors.remap("data", "edits.?.data")));
 
         // Response:
-        return await graph.read(tx => getDraft(id, siteId, tx));
+        return await graph.read((tx) => getDraft(id, siteId, tx));
     });
 }

@@ -1,9 +1,6 @@
 import * as check from "neolace/deps/computed-types.ts";
-import {
-    Field,
-} from "neolace/deps/vertex-framework.ts";
+import { Field } from "neolace/deps/vertex-framework.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
-
 
 /**
  * If an EntryType has the Article Feature enabled, then it has this node which contains a [long] markdown-formatted

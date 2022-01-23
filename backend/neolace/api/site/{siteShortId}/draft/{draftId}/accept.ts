@@ -1,7 +1,6 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { NeolaceHttpResource, graph, api, permissions } from "neolace/api/mod.ts";
+import { api, graph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
 import { AcceptDraft, Draft } from "neolace/core/edit/Draft.ts";
-
 
 export class AcceptDraftResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/draft/:draftId/accept"];
@@ -9,15 +8,15 @@ export class AcceptDraftResource extends NeolaceHttpResource {
     POST = this.method({
         responseSchema: api.schemas.Schema({}),
         description: "Accept a draft",
-    }, async ({request}) => {
+    }, async ({ request }) => {
         // Permissions and parameters:
         await this.requirePermission(request, permissions.CanViewDrafts);
         const userId = this.requireUser(request).id;
-        const {siteId} = await this.getSiteDetails(request);
+        const { siteId } = await this.getSiteDetails(request);
         const draftId = VNID(request.pathParam("draftId") ?? "");
 
         // Some permissions depend on whether the draft contains schema changes or not:
-        const draft = await graph.pullOne(Draft, d => d.site(s => s.id).hasSchemaChanges().hasContentChanges())
+        const draft = await graph.pullOne(Draft, (d) => d.site((s) => s.id).hasSchemaChanges().hasContentChanges());
         if (draft.site?.id !== siteId) {
             throw new api.NotFound(`Draft not found`);
         }
@@ -31,7 +30,7 @@ export class AcceptDraftResource extends NeolaceHttpResource {
             throw new api.InvalidRequest(api.InvalidRequestReason.DraftIsEmpty, "Draft is emptyy");
         }
 
-        await graph.runAs(userId, AcceptDraft({id: draftId, }));
+        await graph.runAs(userId, AcceptDraft({ id: draftId }));
 
         // Response:
         return {};

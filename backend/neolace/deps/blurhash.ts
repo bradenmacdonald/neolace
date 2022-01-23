@@ -96,7 +96,7 @@ const digitCharacters = [
     "|",
     "}",
     "~",
-  ];
+];
 
 const encode83 = (n: number, length: number): string => {
     let result = "";
@@ -106,7 +106,6 @@ const encode83 = (n: number, length: number): string => {
     }
     return result;
 };
-
 
 const sRGBToLinear = (value: number) => {
     const v = value / 255;
@@ -128,9 +127,7 @@ const linearTosRGB = (value: number) => {
 
 const sign = (n: number) => (n < 0 ? -1 : 1);
 
-export const signPow = (val: number, exp: number) =>
-    sign(val) * Math.pow(Math.abs(val), exp);
-
+export const signPow = (val: number, exp: number) => sign(val) * Math.pow(Math.abs(val), exp);
 
 type NumberTriplet = [number, number, number];
 
@@ -140,7 +137,7 @@ const multiplyBasisFunction = (
     pixels: Uint8ClampedArray,
     width: number,
     height: number,
-    basisFunction: (i: number, j: number) => number
+    basisFunction: (i: number, j: number) => number,
 ): NumberTriplet => {
     let r = 0;
     let g = 0;
@@ -148,15 +145,12 @@ const multiplyBasisFunction = (
     const bytesPerRow = width * bytesPerPixel;
 
     for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-        const basis = basisFunction(x, y);
-        r +=
-        basis * sRGBToLinear(pixels[bytesPerPixel * x + 0 + y * bytesPerRow]);
-        g +=
-        basis * sRGBToLinear(pixels[bytesPerPixel * x + 1 + y * bytesPerRow]);
-        b +=
-        basis * sRGBToLinear(pixels[bytesPerPixel * x + 2 + y * bytesPerRow]);
-    }
+        for (let y = 0; y < height; y++) {
+            const basis = basisFunction(x, y);
+            r += basis * sRGBToLinear(pixels[bytesPerPixel * x + 0 + y * bytesPerRow]);
+            g += basis * sRGBToLinear(pixels[bytesPerPixel * x + 1 + y * bytesPerRow]);
+            b += basis * sRGBToLinear(pixels[bytesPerPixel * x + 2 + y * bytesPerRow]);
+        }
     }
 
     const scale = 1 / (width * height);
@@ -173,22 +167,22 @@ const encodeDC = (value: NumberTriplet): number => {
 
 const encodeAC = (value: NumberTriplet, maximumValue: number): number => {
     const quantR = Math.floor(
-    Math.max(
-        0,
-        Math.min(18, Math.floor(signPow(value[0] / maximumValue, 0.5) * 9 + 9.5))
-    )
+        Math.max(
+            0,
+            Math.min(18, Math.floor(signPow(value[0] / maximumValue, 0.5) * 9 + 9.5)),
+        ),
     );
     const quantG = Math.floor(
-    Math.max(
-        0,
-        Math.min(18, Math.floor(signPow(value[1] / maximumValue, 0.5) * 9 + 9.5))
-    )
+        Math.max(
+            0,
+            Math.min(18, Math.floor(signPow(value[1] / maximumValue, 0.5) * 9 + 9.5)),
+        ),
     );
     const quantB = Math.floor(
-    Math.max(
-        0,
-        Math.min(18, Math.floor(signPow(value[2] / maximumValue, 0.5) * 9 + 9.5))
-    )
+        Math.max(
+            0,
+            Math.min(18, Math.floor(signPow(value[2] / maximumValue, 0.5) * 9 + 9.5)),
+        ),
     );
 
     return quantR * 19 * 19 + quantG * 19 + quantB;
@@ -199,7 +193,7 @@ export const encode = (
     width: number,
     height: number,
     componentX: number,
-    componentY: number
+    componentY: number,
 ): string => {
     if (componentX < 1 || componentX > 9 || componentY < 1 || componentY > 9) {
         throw new ValidationError("BlurHash must have between 1 and 9 components");
@@ -219,7 +213,7 @@ export const encode = (
                 (i: number, j: number) =>
                     normalisation *
                     Math.cos((Math.PI * x * i) / width) *
-                    Math.cos((Math.PI * y * j) / height)
+                    Math.cos((Math.PI * y * j) / height),
             );
             factors.push(factor);
         }
@@ -235,9 +229,9 @@ export const encode = (
 
     let maximumValue: number;
     if (ac.length > 0) {
-        const actualMaximumValue = Math.max(...ac.map(val => Math.max(...val)));
+        const actualMaximumValue = Math.max(...ac.map((val) => Math.max(...val)));
         const quantisedMaximumValue = Math.floor(
-            Math.max(0, Math.min(82, Math.floor(actualMaximumValue * 166 - 0.5)))
+            Math.max(0, Math.min(82, Math.floor(actualMaximumValue * 166 - 0.5))),
         );
         maximumValue = (quantisedMaximumValue + 1) / 166;
         hash += encode83(quantisedMaximumValue, 1);
@@ -248,7 +242,7 @@ export const encode = (
 
     hash += encode83(encodeDC(dc), 4);
 
-    ac.forEach(factor => {
+    ac.forEach((factor) => {
         hash += encode83(encodeAC(factor, maximumValue), 2);
     });
 

@@ -12,10 +12,9 @@ import {
 import { Site } from "neolace/core/Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 
-
 /**
  * A Property is used to define an allowed relationship between entries, or a type of data about an entry
- * 
+ *
  * For example, for a Person entry, "Date of Birth" would be a data property, and "Father" would be a relationship
  * property.
  */
@@ -103,7 +102,6 @@ export class Property extends VNodeType {
     });
 
     static async validate(dbObject: RawVNode<typeof Property>, tx: WrappedTransaction): Promise<void> {
-
         // IS A relationships cannot be marked as inheritable. They define inheritance.
         if (dbObject.type === PropertyType.RelIsA && dbObject.inheritable) {
             throw new ValidationError(`"IS A" relationship properties cannot be marked as inheritable.`);
@@ -112,17 +110,20 @@ export class Property extends VNodeType {
         // Make sure each related entry type or property is from the same site:
         await tx.pullOne(
             Property,
-            p => p.site(s => s.id).appliesTo(et => et.site(s => s.id)).parentProperties(p => p.site(s => s.id)),
-            {key: dbObject.id}
-        ).then(p => {
+            (p) =>
+                p.site((s) => s.id).appliesTo((et) => et.site((s) => s.id)).parentProperties((p) =>
+                    p.site((s) => s.id)
+                ),
+            { key: dbObject.id },
+        ).then((p) => {
             const siteId = p.site?.id;
-            if (siteId === undefined) { throw new Error("Site missing - shouldn't happen"); }
-            p.appliesTo.forEach(et => {
+            if (siteId === undefined) throw new Error("Site missing - shouldn't happen");
+            p.appliesTo.forEach((et) => {
                 if (et.site?.id !== siteId) {
                     throw new ValidationError("AppliesTo EntryType is from a different Site.");
                 }
             });
-            p.parentProperties.forEach(pp => {
+            p.parentProperties.forEach((pp) => {
                 if (pp.site?.id !== siteId) {
                     throw new ValidationError("isA [Parent Property] is from a different Site.");
                 }
