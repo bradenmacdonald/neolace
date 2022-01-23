@@ -11,7 +11,7 @@
             "cwd": "${workspaceFolder}",
             "runtimeExecutable": "deno",
             "env": {
-                "ENV_TYPE": "development",
+                "ENV_TYPE": "development"
             },
             "runtimeArgs": [
                 "run",
@@ -24,7 +24,7 @@
                 "neolace/api/server.ts"
             ],
             "attachSimplePort": 9229,
-            "console": "integratedTerminal",
+            "console": "integratedTerminal"
         }
         /*{
             "name": "Deno: Setup test data",

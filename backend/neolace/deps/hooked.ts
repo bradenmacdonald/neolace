@@ -7,10 +7,10 @@ interface Hooks {
     beforeEach: Array<() => void | Promise<void>>;
     afterEach: Array<() => void | Promise<void>>;
     afterAll: Array<() => void | Promise<void>>;
-    
+
     waitingTests: number;
     completedTests: number;
-    
+
     onlyTests: number;
     completedOnlyTests: number;
 }
@@ -25,15 +25,15 @@ interface GlobalContext extends Hooks {
 
 const globalContext: GlobalContext = {
     stack: [],
-    
+
     beforeAll: [],
     beforeEach: [],
     afterEach: [],
     afterAll: [],
-    
+
     waitingTests: 0,
     completedTests: 0,
-    
+
     onlyTests: 0,
     completedOnlyTests: 0,
 };
@@ -52,12 +52,12 @@ async function callAll(fns: Array<() => void | Promise<void>>): Promise<void> {
 }
 
 /**
-* Registers a test for `deno test` while including grouping and hooks.
-*/
+ * Registers a test for `deno test` while including grouping and hooks.
+ */
 export function test(t: Deno.TestDefinition): void;
 /**
-* Registers a test for `deno test` while including grouping and hooks.
-*/
+ * Registers a test for `deno test` while including grouping and hooks.
+ */
 export function test(name: string, fn: () => void | Promise<void>): void;
 export function test(
     t: Deno.TestDefinition | string,
@@ -67,26 +67,26 @@ export function test(
     const { name: testName, fn, ...opts } = typeof t === "object"
         ? t
         : (typeof testFn !== "undefined" ? { name: t, fn: testFn } : badArgs());
-    
+
     // Set up waiting count.
     if (!opts.ignore) {
         globalContext.waitingTests++;
         globalContext.stack.map((name) => name.waitingTests++);
     }
-    
+
     if (opts.only) {
         globalContext.onlyTests++;
         globalContext.stack.map((name) => name.onlyTests++);
     }
-    
+
     // Generate name.
     const name = globalContext.stack.map(({ name: n }) => n);
     name.push(testName);
-    
+
     // Build hook stack.
     const hooks: Hooks[] = [globalContext, ...globalContext.stack];
     const revHooks: Hooks[] = [...hooks].reverse();
-    
+
     Deno.test({
         name: name.join(" > "),
         async fn(t) {
@@ -95,22 +95,22 @@ export function test(
                 if (completedTests === 0) {
                     await callAll(beforeAll);
                 }
-                
+
                 await callAll(beforeEach);
             }
-            
+
             // Test.
             try {
                 await fn(t);
             } finally {
                 for (const hook of hooks) {
                     hook.completedTests++;
-                    
+
                     if (opts.only) {
                         hook.completedOnlyTests++;
                     }
                 }
-                
+
                 // After.
                 for (
                     const {
@@ -123,7 +123,7 @@ export function test(
                     } of revHooks
                 ) {
                     await callAll(afterEach);
-                        
+
                     if (
                         waitingTests === completedTests ||
                         (onlyTests > 0 && onlyTests === completedOnlyTests)
@@ -136,28 +136,28 @@ export function test(
         ...opts,
     });
 }
-        
+
 /**
-* Creates an environment in which all tests and hooks are grouped together.
-*/
+ * Creates an environment in which all tests and hooks are grouped together.
+ */
 export function group(name: string, fn: () => void): void {
     globalContext.stack.push({
         name,
-        
+
         beforeAll: [],
         beforeEach: [],
         afterEach: [],
         afterAll: [],
-        
+
         waitingTests: 0,
         completedTests: 0,
-        
+
         onlyTests: 0,
         completedOnlyTests: 0,
     });
-    
+
     fn();
-    
+
     globalContext.stack.pop();
 }
 
@@ -170,29 +170,29 @@ function getTopHooks(): Hooks {
 }
 
 /**
-* Adds a function to be called before all tests are run.
-*/
+ * Adds a function to be called before all tests are run.
+ */
 export function beforeAll(fn: () => void | Promise<void>): void {
     getTopHooks().beforeAll.push(fn);
 }
 
 /**
-* Adds a function to be called before each test runs.
-*/
+ * Adds a function to be called before each test runs.
+ */
 export function beforeEach(fn: () => void | Promise<void>): void {
     getTopHooks().beforeEach.push(fn);
 }
 
 /**
-* Adds a function to be called after each test runs.
-*/
+ * Adds a function to be called after each test runs.
+ */
 export function afterEach(fn: () => void | Promise<void>): void {
     getTopHooks().afterEach.push(fn);
 }
 
 /**
-* Adds a function to be called after all tests have run.
-*/
+ * Adds a function to be called after all tests have run.
+ */
 export function afterAll(fn: () => void | Promise<void>): void {
     getTopHooks().afterAll.push(fn);
 }

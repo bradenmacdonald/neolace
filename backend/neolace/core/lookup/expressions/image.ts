@@ -4,18 +4,17 @@ import { getEntryFeatureData } from "neolace/core/entry/features/get-feature-dat
 
 import { LookupExpression } from "../expression.ts";
 import {
-    LazyEntrySetValue,
-    NullValue,
-    StringValue,
     EntryValue,
     ImageValue,
     InlineMarkdownStringValue,
     IntegerValue,
+    LazyEntrySetValue,
+    NullValue,
+    StringValue,
 } from "../values.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupContext } from "../context.ts";
 import { LiteralExpression } from "./literal-expr.ts";
-
 
 /**
  * image([entry or entry set], [align])
@@ -24,7 +23,6 @@ import { LiteralExpression } from "./literal-expr.ts";
  * entry type has the "hero image" feature enabled), display it as an image.
  */
 export class Image extends LookupExpression {
-
     // An expression that specifies what entry/entries image[s] we want to display
     readonly entriesExpr: LookupExpression;
     // The format mode:
@@ -42,10 +40,10 @@ export class Image extends LookupExpression {
     constructor(
         entriesExpr: LookupExpression,
         extraParams: {
-            formatExpr?: LookupExpression,
-            linkExpr?: LookupExpression,
-            captionExpr?: LookupExpression,
-            maxWidthExpr?: LookupExpression,
+            formatExpr?: LookupExpression;
+            linkExpr?: LookupExpression;
+            captionExpr?: LookupExpression;
+            maxWidthExpr?: LookupExpression;
         },
     ) {
         super();
@@ -59,29 +57,33 @@ export class Image extends LookupExpression {
     public async getValue(context: LookupContext) {
         const formatArgValue = await this.formatExpr.getValueAs(StringValue, context);
         const format: ImageDisplayFormat = (
-            formatArgValue.value === "right" ? ImageDisplayFormat.RightAligned :
-            formatArgValue.value === "logo" ? ImageDisplayFormat.PlainLogo :
-            ImageDisplayFormat.Thumbnail
+            formatArgValue.value === "right"
+                ? ImageDisplayFormat.RightAligned
+                : formatArgValue.value === "logo"
+                ? ImageDisplayFormat.PlainLogo
+                : ImageDisplayFormat.Thumbnail
         );
         let entry = await (await this.entriesExpr.getValue(context)).castTo(EntryValue, context);
         if (entry === undefined) {
             // We were given an entry set, not an entry - so just take the first one:
             const entrySet = await this.entriesExpr.getValueAs(LazyEntrySetValue, context);
-            const slice = await entrySet.getSlice(0n, 1n);  // Get the first value from the set
+            const slice = await entrySet.getSlice(0n, 1n); // Get the first value from the set
             if (slice.length === 0) {
                 return new NullValue();
             }
             entry = await slice[0].castTo(EntryValue, context);
         }
         if (entry === undefined) {
-            throw new LookupEvaluationError(`The expression "${this.entriesExpr.toDebugString()}" cannot be used with image().`);
+            throw new LookupEvaluationError(
+                `The expression "${this.entriesExpr.toDebugString()}" cannot be used with image().`,
+            );
         }
-        const imageData = await getEntryFeatureData(entry.id, {featureType: "Image", tx: context.tx});
+        const imageData = await getEntryFeatureData(entry.id, { featureType: "Image", tx: context.tx });
         if (imageData === undefined) {
             return new NullValue();
         }
 
-        const altText = (await context.tx.pullOne(Entry, e => e.name, {key: entry.id})).name;
+        const altText = (await context.tx.pullOne(Entry, (e) => e.name, { key: entry.id })).name;
 
         // Optional parameters:
         let caption = undefined;
@@ -97,7 +99,7 @@ export class Image extends LookupExpression {
             maxWidth = Number((await this.maxWidthExpr.getValueAs(IntegerValue, context)).value);
         }
 
-        return new ImageValue({...imageData, format, entryId: entry.id, altText, caption, link, maxWidth});
+        return new ImageValue({ ...imageData, format, entryId: entry.id, altText, caption, link, maxWidth });
     }
 
     public toString(): string {

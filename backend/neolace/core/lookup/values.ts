@@ -1,9 +1,4 @@
-import {
-    C,
-    CypherQuery,
-    Field,
-    VNID,
-} from "neolace/deps/vertex-framework.ts";
+import { C, CypherQuery, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import * as api from "neolace/deps/neolace-api.ts";
 import { Site } from "neolace/core/Site.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
@@ -13,13 +8,16 @@ import type { LookupContext } from "./context.ts";
 import { LookupError, LookupEvaluationError } from "./errors.ts";
 
 // deno-lint-ignore no-explicit-any
-type ClassOf<QV extends LookupValue> = {new(...args: any[]): QV};
+type ClassOf<QV extends LookupValue> = { new (...args: any[]): QV };
 
 export abstract class LookupValue {
     public static readonly isLazy: boolean;
 
     /** Convert this value to a different value type if possible, or otherwise return undefined */
-    public async castTo<NewType extends LookupValue>(newType: ClassOf<NewType>, context: LookupContext): Promise<NewType|undefined> {
+    public async castTo<NewType extends LookupValue>(
+        newType: ClassOf<NewType>,
+        context: LookupContext,
+    ): Promise<NewType | undefined> {
         if (this instanceof newType) {
             return this;
         }
@@ -37,7 +35,9 @@ export abstract class LookupValue {
         const newValue = await this.doCastTo(newType, context);
         if (newValue) {
             if (!(newValue instanceof newType)) {
-                throw new LookupEvaluationError(`Internal error, cast from ${this.constructor.name} to ${newType.name} failed.`);
+                throw new LookupEvaluationError(
+                    `Internal error, cast from ${this.constructor.name} to ${newType.name} failed.`,
+                );
             }
         }
 
@@ -56,14 +56,17 @@ export abstract class LookupValue {
      *
      * If the value cannot be expressed as a literal, this should return undefined.
      */
-    public abstract asLiteral(): string|undefined;
+    public abstract asLiteral(): string | undefined;
 
     /**
      * Subclasses should override this method to implement type casting.
      * Casting to bool is generally automatically handled (see castTo() above), so bool casting only needs to be
      * implemented if this value type can be falsy.
-     **/
-    protected doCastTo(_newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined|Promise<LookupValue|undefined> {
+     */
+    protected doCastTo(
+        _newType: ClassOf<LookupValue>,
+        _context: LookupContext,
+    ): LookupValue | undefined | Promise<LookupValue | undefined> {
         return undefined;
     }
 
@@ -80,7 +83,7 @@ export abstract class ConcreteValue extends LookupValue {
     /** Return fields other than 'type' to be included in this value when serialized as a JSON object. */
     protected abstract serialize(): Omit<api.AnyLookupValue, "type">;
     public toJSON(): api.AnyLookupValue {
-        if (!this.constructor.name.endsWith("Value")) { throw new Error("Invalid value class name"); }
+        if (!this.constructor.name.endsWith("Value")) throw new Error("Invalid value class name");
         return {
             // "type" is the name of the ____Value class without the "Value" part
             type: this.constructor.name.substr(0, this.constructor.name.length - 5),
@@ -88,7 +91,9 @@ export abstract class ConcreteValue extends LookupValue {
         } as api.AnyLookupValue;
     }
 
-    public makeConcrete(): Promise<ConcreteValue> { return new Promise(resolve => resolve(this)); }
+    public makeConcrete(): Promise<ConcreteValue> {
+        return new Promise((resolve) => resolve(this));
+    }
 }
 
 /**
@@ -137,7 +142,7 @@ export function hasLiteralExpression(value: LookupValue): value is (LookupValue 
 /**
  * A value that respresents a boolean
  */
- export class BooleanValue extends ConcreteValue {
+export class BooleanValue extends ConcreteValue {
     readonly value: boolean;
 
     constructor(value: boolean) {
@@ -154,7 +159,7 @@ export function hasLiteralExpression(value: LookupValue): value is (LookupValue 
     }
 
     protected serialize() {
-        return {value: this.value};
+        return { value: this.value };
     }
 }
 
@@ -164,7 +169,7 @@ export function hasLiteralExpression(value: LookupValue): value is (LookupValue 
 export class IntegerValue extends ConcreteValue {
     readonly value: bigint;
 
-    constructor(value: bigint|number) {
+    constructor(value: bigint | number) {
         super();
         this.value = BigInt(value);
     }
@@ -181,10 +186,10 @@ export class IntegerValue extends ConcreteValue {
     protected serialize() {
         // Unfortunately JavaScript cannot serialize BigInt to JSON numbers (even though JSON numbers can have
         // arbitrary digits), so we have to serialize it as a string.
-        return {value: String(this.value)};
+        return { value: String(this.value) };
     }
 
-    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {
         if (newType === BooleanValue) {
             return new BooleanValue(this.value !== 0n);
         }
@@ -200,7 +205,7 @@ export class DateValue extends ConcreteValue {
     readonly month: number;
     readonly day: number;
 
-    constructor(year: bigint|number, month: bigint|number, day: bigint|number) {
+    constructor(year: bigint | number, month: bigint | number, day: bigint | number) {
         super();
         this.year = Number(year);
         this.month = Number(month);
@@ -228,19 +233,21 @@ export class DateValue extends ConcreteValue {
      */
     public override asLiteral(): string {
         // An integer literal just looks like a plain integer, e.g. 5
-        return `date("${this.asIsoString()}")`
+        return `date("${this.asIsoString()}")`;
     }
 
     /** Return this date as a string in ISO 8601 format */
     public asIsoString(): string {
-        return `${this.year.toString().padStart(4, "0000")}-${this.month.toString().padStart(2, "0")}-${this.day.toString().padStart(2, "0")}`;
+        return `${this.year.toString().padStart(4, "0000")}-${this.month.toString().padStart(2, "0")}-${
+            this.day.toString().padStart(2, "0")
+        }`;
     }
 
     protected serialize() {
-        return {value: this.asIsoString()};
+        return { value: this.asIsoString() };
     }
 
-    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {
         if (newType === BooleanValue) {
             return new BooleanValue(true);
         }
@@ -276,14 +283,14 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
      */
     public async getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]> {
         const slicedStr = this.value.slice(Number(offset), Number(offset + numItems));
-        return slicedStr.split('').map(char => new StringValue(char));
+        return slicedStr.split("").map((char) => new StringValue(char));
     }
 
     protected serialize() {
-        return {value: this.value};
+        return { value: this.value };
     }
 
-    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {
         if (newType === BooleanValue) {
             return new BooleanValue(this.value.length !== 0);
         }
@@ -293,7 +300,7 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
 
 /**
  * A value that respresents an inline markdown string
- * 
+ *
  * Inline means it can only do basic formatting like links or bold/italicized text; it cannot do block elements.
  */
 export class InlineMarkdownStringValue extends ConcreteValue implements IHasLiteralExpression {
@@ -314,10 +321,10 @@ export class InlineMarkdownStringValue extends ConcreteValue implements IHasLite
     }
 
     protected serialize() {
-        return {value: this.value};
+        return { value: this.value };
     }
 
-    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {
         if (newType === BooleanValue) {
             return new BooleanValue(this.value.length !== 0);
         }
@@ -337,9 +344,11 @@ export class NullValue extends ConcreteValue implements IHasLiteralExpression {
         return "null";
     }
 
-    protected serialize() { return {}; }
+    protected serialize() {
+        return {};
+    }
 
-    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue|undefined {
+    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {
         if (newType === BooleanValue) {
             return new BooleanValue(false);
         }
@@ -349,7 +358,7 @@ export class NullValue extends ConcreteValue implements IHasLiteralExpression {
 
 /**
  * An error value - represents an error.
- * 
+ *
  * Evaluating expressions will always throw an exception, not return an error value. However, in some use cases it makes
  * sense to catch those exceptions and convert them to error values, so that a value is always returned.
  */
@@ -362,10 +371,12 @@ export class ErrorValue extends ConcreteValue {
     }
 
     public override asLiteral() {
-        return undefined;  // There is no literal expression for errors in general
+        return undefined; // There is no literal expression for errors in general
     }
 
-    protected serialize() { return {errorClass: this.error.constructor.name, message: this.error.message}; }
+    protected serialize() {
+        return { errorClass: this.error.constructor.name, message: this.error.message };
+    }
 }
 
 /**
@@ -384,20 +395,25 @@ export class EntryValue extends ConcreteValue implements IHasLiteralExpression {
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `[[/entry/${this.id}]]`;  // e.g. [[/entry/_6FisU5zxXggLcDz4Kb3Wmd]]
+        return `[[/entry/${this.id}]]`; // e.g. [[/entry/_6FisU5zxXggLcDz4Kb3Wmd]]
     }
 
-    protected override doCastTo(newType: ClassOf<LookupValue>, context: LookupContext): LookupValue|undefined {
+    protected override doCastTo(newType: ClassOf<LookupValue>, context: LookupContext): LookupValue | undefined {
         if (newType === LazyEntrySetValue) {
-            return new LazyEntrySetValue(context, C`
+            return new LazyEntrySetValue(
+                context,
+                C`
                 MATCH (entry:${Entry} {id: ${this.id}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
                 WITH entry, {} AS annotations
-            `);
+            `,
+            );
         }
         return undefined;
     }
 
-    protected serialize() { return {id: this.id}; }
+    protected serialize() {
+        return { id: this.id };
+    }
 }
 
 /**
@@ -416,10 +432,12 @@ export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpressi
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `[[/etype/${this.id}]]`;  // e.g. [[/etype/_6FisU5zxXggLcDz4Kb3Wmd]]
+        return `[[/etype/${this.id}]]`; // e.g. [[/etype/_6FisU5zxXggLcDz4Kb3Wmd]]
     }
 
-    protected serialize() { return {id: this.id}; }
+    protected serialize() {
+        return { id: this.id };
+    }
 }
 
 /**
@@ -438,10 +456,12 @@ export class PropertyValue extends ConcreteValue implements IHasLiteralExpressio
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `[[/prop/${this.id}]]`;  // e.g. [[/prop/_6FisU5zxXggLcDz4Kb3Wmd]]
+        return `[[/prop/${this.id}]]`; // e.g. [[/prop/_6FisU5zxXggLcDz4Kb3Wmd]]
     }
 
-    protected serialize() { return {id: this.id}; }
+    protected serialize() {
+        return { id: this.id };
+    }
 }
 
 /**
@@ -458,7 +478,7 @@ export class AnnotatedValue extends ConcreteValue {
         if (value instanceof AnnotatedValue) {
             // Special case: we just add annotations to the existing wrapper, don't wrap the value twice.
             this.value = value.value;
-            this.annotations = {...value.annotations, ...annotations};
+            this.annotations = { ...value.annotations, ...annotations };
         } else {
             this.value = value;
             this.annotations = annotations;
@@ -476,37 +496,38 @@ export class AnnotatedValue extends ConcreteValue {
         for (const key in this.annotations) {
             annotations[key] = this.annotations[key].toJSON();
         }
-        return {value: this.value.toJSON(), annotations}; 
+        return { value: this.value.toJSON(), annotations };
     }
 
-    protected override doCastTo(newType: ClassOf<LookupValue>, context: LookupContext): Promise<LookupValue|undefined> {
+    protected override doCastTo(
+        newType: ClassOf<LookupValue>,
+        context: LookupContext,
+    ): Promise<LookupValue | undefined> {
         return this.value.castTo(newType, context);
     }
 
     public override asLiteral() {
-        return undefined;  // Annotated values do not have literal expressions.
+        return undefined; // Annotated values do not have literal expressions.
     }
 }
-
 
 /**
  * A file attached to an entry (using the Files feature)
  */
 export class FileValue extends ConcreteValue {
-
     constructor(
-         public readonly filename: string,
-         public readonly url: string,
-         public readonly contentType: string,
-         public readonly size: number,
+        public readonly filename: string,
+        public readonly url: string,
+        public readonly contentType: string,
+        public readonly size: number,
     ) {
         super();
     }
- 
+
     public override asLiteral() {
-        return undefined;  // There is no literal expression for a file
+        return undefined; // There is no literal expression for a file
     }
-     
+
     protected serialize(): Omit<api.FileValue, "type"> {
         return {
             filename: this.filename,
@@ -515,7 +536,7 @@ export class FileValue extends ConcreteValue {
             size: this.size,
         };
     }
- }
+}
 
 interface ImageData {
     entryId: VNID;
@@ -527,10 +548,10 @@ interface ImageData {
     height?: number;
     blurHash?: string;
     // Should this image be a link?
-    link?: EntryValue|StringValue;
+    link?: EntryValue | StringValue;
     // How the image should be displayed:
     format: api.ImageDisplayFormat;
-    caption?: InlineMarkdownStringValue|StringValue;
+    caption?: InlineMarkdownStringValue | StringValue;
     maxWidth?: number;
 }
 
@@ -538,7 +559,7 @@ interface ImageData {
  * An image
  */
 export class ImageValue extends ConcreteValue {
-   public readonly data: ImageData;
+    public readonly data: ImageData;
 
     constructor(data: ImageData) {
         super();
@@ -546,14 +567,14 @@ export class ImageValue extends ConcreteValue {
     }
 
     public override asLiteral() {
-        return undefined;  // There is no literal expression for an image
+        return undefined; // There is no literal expression for an image
     }
-    
+
     protected serialize(): Omit<api.ImageValue, "type"> {
         return {
             entryId: this.data.entryId,
             altText: this.data.altText,
-            caption: this.data.caption?.toJSON() as api.InlineMarkdownString|api.StringValue|undefined,
+            caption: this.data.caption?.toJSON() as api.InlineMarkdownString | api.StringValue | undefined,
             imageUrl: this.data.imageUrl,
             contentType: this.data.contentType,
             size: this.data.size,
@@ -561,7 +582,7 @@ export class ImageValue extends ConcreteValue {
             height: this.data.height,
             blurHash: this.data.blurHash,
             format: this.data.format,
-            link: this.data.link?.toJSON() as api.StringValue|api.EntryValue|undefined,
+            link: this.data.link?.toJSON() as api.StringValue | api.EntryValue | undefined,
             maxWidth: this.data.maxWidth,
         };
     }
@@ -572,11 +593,14 @@ export class ImageValue extends ConcreteValue {
  */
 export class PageValue<T extends ConcreteValue> extends ConcreteValue {
     readonly values: ReadonlyArray<T>;
-    readonly startedAt: bigint;  // Also called "skip"
-    readonly pageSize: bigint;  // Also called "limit"
+    readonly startedAt: bigint; // Also called "skip"
+    readonly pageSize: bigint; // Also called "limit"
     readonly totalCount: bigint;
 
-    constructor(values: ReadonlyArray<T>, {startedAt, pageSize, totalCount}: {startedAt: bigint, pageSize: bigint, totalCount: bigint}) {
+    constructor(
+        values: ReadonlyArray<T>,
+        { startedAt, pageSize, totalCount }: { startedAt: bigint; pageSize: bigint; totalCount: bigint },
+    ) {
         super();
         this.values = values;
         this.startedAt = startedAt;
@@ -585,12 +609,12 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
     }
 
     public override asLiteral() {
-        return undefined;  // There is no literal expression for a page
+        return undefined; // There is no literal expression for a page
     }
 
     protected serialize() {
         return {
-            values: this.values.map(v => v.toJSON()),
+            values: this.values.map((v) => v.toJSON()),
             startedAt: Number(this.startedAt),
             pageSize: Number(this.pageSize),
             totalCount: Number(this.totalCount),
@@ -648,7 +672,6 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
 //     }
 // }
 
-
 /**
  * An intermediate value that represents something like a database query, which we haven't yet evaluated.
  * The query (or whatever the lazy value is) may still be modified before it is evaluated. For example, a lazy entry
@@ -664,11 +687,13 @@ abstract class LazyValue extends LookupValue {
     }
 
     public override asLiteral() {
-        return undefined;  // In general, lazy values don't have literal expressions
+        return undefined; // In general, lazy values don't have literal expressions
     }
 
     /** If this is a LazyValue, convert it to a default non-lazy value. */
-    public override makeConcrete() { return this.toDefaultConcreteValue(); }
+    public override makeConcrete() {
+        return this.toDefaultConcreteValue();
+    }
     public abstract toDefaultConcreteValue(): Promise<ConcreteValue>;
 }
 
@@ -699,7 +724,7 @@ abstract class AbstractLazyCypherQueryValue extends LazyValue implements ICounta
     }
 
     public async getCount(): Promise<bigint> {
-        const countQuery = this.cypherQuery.RETURN({"count(*)": Field.BigInt});
+        const countQuery = this.cypherQuery.RETURN({ "count(*)": Field.BigInt });
         const result = await this.context.tx.query(countQuery);
         return result[0]["count(*)"];
     }
@@ -709,9 +734,9 @@ abstract class AbstractLazyCypherQueryValue extends LazyValue implements ICounta
         const firstPageValues = await this.getSlice(0n, pageSize);
         const totalCount = firstPageValues.length < pageSize ? BigInt(firstPageValues.length) : await this.getCount();
 
-        const concreteValues = await Promise.all(firstPageValues.map(v => v.makeConcrete()));
+        const concreteValues = await Promise.all(firstPageValues.map((v) => v.makeConcrete()));
 
-        return new PageValue<ConcreteValue>(concreteValues, { startedAt: 0n, pageSize, totalCount});
+        return new PageValue<ConcreteValue>(concreteValues, { startedAt: 0n, pageSize, totalCount });
     }
 
     public abstract getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]>;
@@ -720,7 +745,7 @@ abstract class AbstractLazyCypherQueryValue extends LazyValue implements ICounta
 /**
  * An annotation reviver is a function that converts a single raw value loaded from the Neo4j database into a
  * concrete lookup value, e.g. bigint -> IntegerValue
- * 
+ *
  * It is only used with LazyEntrySetValue
  */
 type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
@@ -729,22 +754,26 @@ type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
  * A cypher query that evaluates to a set of entries, with optional annotations (extra data associated with each entry)
  */
 export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
-    readonly annotations: Readonly<Record<string, AnnotationReviver>>|undefined;
+    readonly annotations: Readonly<Record<string, AnnotationReviver>> | undefined;
 
-    constructor(context: LookupContext, cypherQuery: CypherQuery, options: {annotations?: Record<string, AnnotationReviver>} = {}) {
+    constructor(
+        context: LookupContext,
+        cypherQuery: CypherQuery,
+        options: { annotations?: Record<string, AnnotationReviver> } = {},
+    ) {
         super(context, cypherQuery);
         this.annotations = options.annotations;
     }
 
-    public async getSlice(offset: bigint, numItems: bigint): Promise<Array<EntryValue|AnnotatedValue>> {
+    public async getSlice(offset: bigint, numItems: bigint): Promise<Array<EntryValue | AnnotatedValue>> {
         const query = C`
             ${this.cypherQuery}
             RETURN entry.id, annotations
             ${this.getSkipLimitClause(offset, numItems)}
-        `.givesShape({"entry.id": Field.VNID, annotations: Field.Any});
+        `.givesShape({ "entry.id": Field.VNID, annotations: Field.Any });
         const result = await this.context.tx.query(query);
 
-        return result.map(r => {
+        return result.map((r) => {
             if (this.annotations) {
                 const annotatedValues: Record<string, ConcreteValue> = {};
                 for (const key in this.annotations) {
@@ -752,9 +781,9 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
                 }
                 return new AnnotatedValue(new EntryValue(r["entry.id"]), annotatedValues);
             } else {
-                return new EntryValue(r["entry.id"])
+                return new EntryValue(r["entry.id"]);
             }
-        })
+        });
     }
 }
 
@@ -763,7 +792,6 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
  * For an iterable that produces entries, use LazyEntrySetValue.
  */
 export class LazyCypherIterableValue<ValueType extends LookupValue> extends AbstractLazyCypherQueryValue {
-
     constructor(
         context: LookupContext,
         cypherQuery: CypherQuery,
@@ -782,10 +810,10 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
     public getCount?: () => Promise<bigint>;
     public getSlice: (offset: bigint, numItems: bigint) => Promise<LookupValue[]>;
 
-    constructor({context, getCount, getSlice}: {
-        context: LookupContext,
-        getCount?: () => Promise<bigint>,
-        getSlice: (offset: bigint, numItems: bigint) => Promise<LookupValue[]>,
+    constructor({ context, getCount, getSlice }: {
+        context: LookupContext;
+        getCount?: () => Promise<bigint>;
+        getSlice: (offset: bigint, numItems: bigint) => Promise<LookupValue[]>;
     }) {
         super(context);
         this.hasCount = getCount !== undefined;
@@ -805,7 +833,7 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
             } else {
                 // We'll have to inefficiently count all the items in this iterator to determine the count.
                 totalCount = BigInt(slicedValues.length);
-                while(true) {
+                while (true) {
                     const countStep = 100n;
                     const nextCount = BigInt((await this.getSlice(totalCount, countStep)).length);
                     totalCount += nextCount;
@@ -819,7 +847,7 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
         for (const value of slicedValues) {
             concreteValues.push(await value.makeConcrete());
         }
-        return new PageValue(concreteValues, {pageSize, startedAt: 0n, totalCount});
+        return new PageValue(concreteValues, { pageSize, startedAt: 0n, totalCount });
     }
 }
 

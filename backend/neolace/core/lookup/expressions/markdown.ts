@@ -1,13 +1,11 @@
 import { LookupExpression } from "../expression.ts";
-import { StringValue, InlineMarkdownStringValue } from "../values.ts";
+import { InlineMarkdownStringValue, StringValue } from "../values.ts";
 import { LookupContext } from "../context.ts";
-
 
 /**
  * markdown(str): indicates that the given string is markdown and should be rendered as markdown
  */
- export class Markdown extends LookupExpression {
-
+export class Markdown extends LookupExpression {
     // An expression that specifies the string value of the markdown
     readonly argument: LookupExpression;
 

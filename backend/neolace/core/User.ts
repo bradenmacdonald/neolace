@@ -1,15 +1,15 @@
 import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
-    VNodeType,
+    defineAction,
+    DerivedProperty,
+    Field,
     RawVNode,
     ValidationError,
-    WrappedTransaction,
-    defineAction,
-    VNID,
-    DerivedProperty,
     VirtualPropType,
-    Field,
+    VNID,
+    VNodeType,
+    WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 import { authClient } from "neolace/core/authn-client.ts";
 
@@ -49,8 +49,7 @@ export class HumanUser extends User {
         email: Field.String.Check(Field.validators.email),
     };
 
-    static readonly rel = this.hasRelationshipsFromThisTo({
-    });
+    static readonly rel = this.hasRelationshipsFromThisTo({});
 }
 
 export class BotUser extends User {
@@ -62,7 +61,7 @@ export class BotUser extends User {
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({
-        /** 
+        /**
          * If this user is a bot, it belongs to this user.
          * Every bot has exactly one human user who is responsible for it.
          */
@@ -86,16 +85,16 @@ export class BotUser extends User {
             target: HumanUser,
         },
     });
-
 }
 
-
 /** Get the username of a user */
-export function username(): DerivedProperty<string> { return DerivedProperty.make(
-    User,
-    user => user.slugId,
-    user => user.slugId.substr(User.slugIdPrefix.length),
-);}
+export function username(): DerivedProperty<string> {
+    return DerivedProperty.make(
+        User,
+        (user) => user.slugId,
+        (user) => user.slugId.substr(User.slugIdPrefix.length),
+    );
+}
 
 async function isUsernameTaken(tx: WrappedTransaction, username: string): Promise<boolean> {
     const result = await tx.query(C`
@@ -103,8 +102,6 @@ async function isUsernameTaken(tx: WrappedTransaction, username: string): Promis
     `.RETURN({}));
     return result.length > 0;
 }
-
-
 
 /** Create a human user (not a bot) */
 export const CreateUser = defineAction({
@@ -143,7 +140,7 @@ export const CreateUser = defineAction({
         }
 
         // Create a user in the auth service
-        const authnData = data.fakeAuthn ? {accountId: 123} : await authClient.createUser({username: vnid});
+        const authnData = data.fakeAuthn ? { accountId: 123 } : await authClient.createUser({ username: vnid });
 
         await tx.queryOne(C`
             CREATE (u:Human:User:VNode {
@@ -155,13 +152,12 @@ export const CreateUser = defineAction({
             })
         `.RETURN({}));
         return {
-            resultData: { id: vnid, },
+            resultData: { id: vnid },
             modifiedNodes: [vnid],
             description: `Created ${HumanUser.withId(vnid)}`,
         };
     },
 });
-
 
 /** Create a bot */
 export const CreateBot = defineAction({
@@ -194,20 +190,19 @@ export const CreateBot = defineAction({
             })-[:${BotUser.rel.OWNED_BY} {inheritPermissions: ${data.inheritPermissions ?? false}}]->(owner)
         `.RETURN({}));
         return {
-            resultData: { id: vnid, authToken, },
+            resultData: { id: vnid, authToken },
             modifiedNodes: [vnid],
             description: `Created ${BotUser.withId(vnid)}`,
         };
     },
 });
 
-
 /**
  * Create a random token which acts like a password to authenticate bot (non-human) users
- * @returns 
+ * @returns
  */
 async function createBotAuthToken(): Promise<string> {
-    const array = new Uint8Array(48);  // 48 bytes
+    const array = new Uint8Array(48); // 48 bytes
     await crypto.getRandomValues(array);
     const tokenB64 = btoa(String.fromCharCode.apply(null, Array.from(array)));
     const token = tokenB64.replace(/\+/g, "a").replace(/\//g, "b").replace(/=/g, "");

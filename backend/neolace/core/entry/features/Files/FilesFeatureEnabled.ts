@@ -1,20 +1,14 @@
-import {
-    C,
-    RawVNode,
-    VNodeType,
-    VirtualPropType,
-    WrappedTransaction,
-} from "neolace/deps/vertex-framework.ts";
+import { C, RawVNode, VirtualPropType, VNodeType, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
 
 /**
  * For each EntryType that supports (enables) the Files feature, that EntryType will have an
  * FilesFeatureEnabled (EnabledFeature) node with configuration that affects how the feature works.
- * 
+ *
  * This is part of the site's schema, not content.
  */
- export class FilesFeatureEnabled extends EnabledFeature {
+export class FilesFeatureEnabled extends EnabledFeature {
     static label = "FilesFeatureEnabled";
     static properties = {
         ...VNodeType.properties,
@@ -22,8 +16,7 @@ import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
         // TODO in future: max number of files allowed to be attached
     };
 
-    static readonly rel = this.hasRelationshipsFromThisTo({
-    });
+    static readonly rel = this.hasRelationshipsFromThisTo({});
 
     static virtualProperties = this.hasVirtualProperties(() => ({
         entryType: {

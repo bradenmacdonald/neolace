@@ -1,5 +1,5 @@
 import { C, Field } from "neolace/deps/vertex-framework.ts";
-import { NeolaceHttpResource, api, graph } from "neolace/api/mod.ts";
+import { api, graph, NeolaceHttpResource } from "neolace/api/mod.ts";
 
 export class HealthCheckResource extends NeolaceHttpResource {
     public paths = ["/health"];
@@ -10,11 +10,11 @@ export class HealthCheckResource extends NeolaceHttpResource {
     }, async () => {
         let databaseWorking = false;
         try {
-            const result = await graph.read(tx => tx.queryOne(C`RETURN 123 AS x`.givesShape({x: Field.Int})));
+            const result = await graph.read((tx) => tx.queryOne(C`RETURN 123 AS x`.givesShape({ x: Field.Int })));
             if (result.x === 123) {
                 databaseWorking = true;
             }
-        } catch {/* Ignore errors */}
+        } catch { /* Ignore errors */ }
         return {
             reachable: true,
             databaseWorking,

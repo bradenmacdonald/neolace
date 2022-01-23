@@ -1,21 +1,21 @@
 // deno-lint-ignore-file no-explicit-any
 import * as log from "std/log/mod.ts";
 import {
-    EditList,
+    AddPropertyValue,
     CreateEntry,
     CreateEntryType,
+    CreateProperty,
+    EditList,
+    getEditType,
+    PropertyMode,
+    PropertyType,
+    UpdateEntryFeature,
     UpdateEntryType,
     UpdateEntryTypeFeature,
-    AddPropertyValue,
-    UpdatePropertyValue,
-    getEditType,
-    UpdateEntryFeature,
-    CreateProperty,
-    PropertyType,
-    PropertyMode,
     UpdateProperty,
+    UpdatePropertyValue,
 } from "neolace/deps/neolace-api.ts";
-import { C, defineAction, Field, VNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
+import { C, defineAction, EmptyResultError, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { Site } from "../Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
@@ -34,13 +34,11 @@ export const ApplyEdits = defineAction({
     },
     resultData: {},
     apply: async (tx, data) => {
-
         const siteId = data.siteId;
         const modifiedNodes = new Set<VNID>();
         const descriptions: string[] = [];
 
         for (const edit of data.edits) {
-
             const editTypeDefinition = getEditType(edit.code);
             const description = editTypeDefinition.describe(edit.data);
             descriptions.push(description);
@@ -48,17 +46,16 @@ export const ApplyEdits = defineAction({
             log.info(`Applying Draft (${edit.code}): ${description}`);
 
             switch (edit.code) {
-
-                case CreateEntry.code: {  // Create a new Entry of a specific EntryType
+                case CreateEntry.code: { // Create a new Entry of a specific EntryType
                     await tx.queryOne(C`
                         MATCH (et:${EntryType} {id: ${edit.data.type}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         CREATE (e:${Entry} {id: ${edit.data.id}})
                         CREATE (e)-[:${Entry.rel.IS_OF_TYPE}]->(et)
                         SET e.slugId = site.siteCode + ${edit.data.friendlyId}
                         SET e += ${{
-                            name: edit.data.name,
-                            description: edit.data.description,
-                        }}
+                        name: edit.data.name,
+                        description: edit.data.description,
+                    }}
 
                     `.RETURN({}));
 
@@ -68,7 +65,7 @@ export const ApplyEdits = defineAction({
 
                 case UpdateEntryFeature.code: {
                     // Load details of the feature that we're editing:
-                    const feature = features.find(f => f.featureType === edit.data.feature.featureType);
+                    const feature = features.find((f) => f.featureType === edit.data.feature.featureType);
                     if (feature === undefined) {
                         throw new Error(`Unknown feature type ${edit.data.feature.featureType}`);
                     }
@@ -78,15 +75,22 @@ export const ApplyEdits = defineAction({
                         await tx.queryOne(C`
                             MATCH (e:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                             MATCH (et)-[rel:${EntryType.rel.HAS_FEATURE}]->(feature:${feature.configClass})
-                        `.RETURN({}));  // If this returns a single result, we're good; otherwise it will throw an error.
+                        `.RETURN({})); // If this returns a single result, we're good; otherwise it will throw an error.
                     } catch (err: unknown) {
                         if (err instanceof EmptyResultError) {
-                            throw new Error("Cannot set feature data for that entry - either the feature is not enabled or the entry ID is invalid.");
+                            throw new Error(
+                                "Cannot set feature data for that entry - either the feature is not enabled or the entry ID is invalid.",
+                            );
                         }
                     }
 
                     // Edit the feature:
-                    await feature.editFeature(edit.data.entryId, edit.data.feature as any, tx, id => modifiedNodes.add(id));
+                    await feature.editFeature(
+                        edit.data.entryId,
+                        edit.data.feature as any,
+                        tx,
+                        (id) => modifiedNodes.add(id),
+                    );
 
                     modifiedNodes.add(edit.data.entryId);
                     break;
@@ -136,7 +140,7 @@ export const ApplyEdits = defineAction({
                         }
                     }
                     const propType = baseData["property.type"] as PropertyType;
-                    const directRelType = directRelTypeForPropertyType(propType);  // If this is a relationship property, there is a relationship of this type directly between two entries
+                    const directRelType = directRelTypeForPropertyType(propType); // If this is a relationship property, there is a relationship of this type directly between two entries
                     if (directRelType !== null) {
                         // This is a relationship property, verify that the Entry it will be pointing to exists and is
                         // part of the same site.
@@ -157,7 +161,7 @@ export const ApplyEdits = defineAction({
                             MERGE (entry)-[rel:${directRelType}]->(toEntry)
                             SET pf.directRelNeo4jId = id(rel)
 
-                        `.RETURN({"pf.directRelNeo4jId": Field.BigInt}));
+                        `.RETURN({ "pf.directRelNeo4jId": Field.BigInt }));
                     }
 
                     // Changing a property value always counts as modifying the entry:
@@ -170,21 +174,20 @@ export const ApplyEdits = defineAction({
                     throw new Error("UpdatePropertyValue is not yet implemented.");
                 }
 
-                case CreateEntryType.code: {  // Create a new EntryType
+                case CreateEntryType.code: { // Create a new EntryType
                     await tx.queryOne(C`
                         MATCH (site:${Site} {id: ${siteId}})
                         CREATE (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site)
                         SET et += ${{
-                            name: edit.data.name,
-                        }}
+                        name: edit.data.name,
+                    }}
                     `.RETURN({}));
                     modifiedNodes.add(edit.data.id);
                     break;
                 }
 
-                case UpdateEntryType.code: {  // Update an EntryType
-
-                    const changes: any = {}
+                case UpdateEntryType.code: { // Update an EntryType
+                    const changes: any = {};
                     // Be sure we only set allowed properties onto the EditType VNode:
                     if (edit.data.name !== undefined) changes.name = edit.data.name;
                     if (edit.data.description !== undefined) changes.description = edit.data.description;
@@ -199,8 +202,8 @@ export const ApplyEdits = defineAction({
                     break;
                 }
 
-                case UpdateEntryTypeFeature.code: {  // Update a feature of a specific entry type
-                    const feature = features.find(f => f.featureType === edit.data.feature.featureType);
+                case UpdateEntryTypeFeature.code: { // Update a feature of a specific entry type
+                    const feature = features.find((f) => f.featureType === edit.data.feature.featureType);
                     if (feature === undefined) {
                         throw new Error(`Unknown feature type ${edit.data.feature.featureType}`);
                     }
@@ -210,7 +213,12 @@ export const ApplyEdits = defineAction({
                             MATCH (et:${EntryType} {id: ${edit.data.entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         `.RETURN({}));
                         // Now update it:
-                        await feature.updateConfiguration(edit.data.entryTypeId, edit.data.feature.config as any, tx, id => modifiedNodes.add(id));
+                        await feature.updateConfiguration(
+                            edit.data.entryTypeId,
+                            edit.data.feature.config as any,
+                            tx,
+                            (id) => modifiedNodes.add(id),
+                        );
                     } else {
                         await tx.query(C`
                             MATCH (et:${EntryType} {id: ${edit.data.entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
@@ -222,31 +230,31 @@ export const ApplyEdits = defineAction({
                     break;
                 }
 
-                case CreateProperty.code:  // Create a new property (in the schema)
+                case CreateProperty.code: // Create a new property (in the schema)
                     await tx.queryOne(C`
                         MATCH (site:${Site} {id: ${siteId}})
                         CREATE (p:${Property} {id: ${edit.data.id}})
                         MERGE (p)-[:${Property.rel.FOR_SITE}]->(site)
                         SET p += ${{
-                            name: "New Property",
-                            descriptionMD: "",
-                            importance: 15,
-                            // Property type - note that this cannot be changed once the property is created.
-                            type: edit.data.type ?? PropertyType.Value,
-                            mode: PropertyMode.Optional,
-                            inheritable: edit.data.inheritable ?? false,
-                            standardURL: "",
-                            editNoteMD: "",
-                            displayAs: "",
-                            default: "",
-                            enableSlots: false,
-                        }}
+                        name: "New Property",
+                        descriptionMD: "",
+                        importance: 15,
+                        // Property type - note that this cannot be changed once the property is created.
+                        type: edit.data.type ?? PropertyType.Value,
+                        mode: PropertyMode.Optional,
+                        inheritable: edit.data.inheritable ?? false,
+                        standardURL: "",
+                        editNoteMD: "",
+                        displayAs: "",
+                        default: "",
+                        enableSlots: false,
+                    }}
                     `.RETURN({}));
                     /* falls through */
                 case UpdateProperty.code: {
                     // update the "appliesTo" of this property:
                     if (edit.data.appliesTo !== undefined) {
-                        const newAppliesToIds = edit.data.appliesTo.map(at => at.entryType);
+                        const newAppliesToIds = edit.data.appliesTo.map((at) => at.entryType);
                         // Create new "applies to" links:
                         await tx.query(C`
                             MATCH (p:${Property} {id: ${edit.data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
@@ -283,19 +291,21 @@ export const ApplyEdits = defineAction({
 
                     // Other fields:
                     const changes: Record<string, unknown> = {};
-                    for (const field of [
-                        "name",
-                        "descriptionMD",
-                        "mode",
-                        "valueConstraint",
-                        "default",
-                        "inheritable",
-                        "standardURL",
-                        "importance",
-                        "displayAs",
-                        "editNoteMD",
-                        "enableSlots"
-                    ] as const) {
+                    for (
+                        const field of [
+                            "name",
+                            "descriptionMD",
+                            "mode",
+                            "valueConstraint",
+                            "default",
+                            "inheritable",
+                            "standardURL",
+                            "importance",
+                            "displayAs",
+                            "editNoteMD",
+                            "enableSlots",
+                        ] as const
+                    ) {
                         if (edit.data[field] !== undefined) {
                             changes[field] = edit.data[field];
                         }

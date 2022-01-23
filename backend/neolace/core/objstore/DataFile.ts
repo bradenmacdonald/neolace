@@ -1,14 +1,14 @@
 import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
-    VNodeType,
-    Field,
-    DerivedProperty,
     defineAction,
-    VNID,
+    DerivedProperty,
+    Field,
     RawVNode,
-    WrappedTransaction,
     ValidationError,
+    VNID,
+    VNodeType,
+    WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
 import { FileMetadata, FileMetadataSchema } from "./detect-metadata.ts";
@@ -20,7 +20,7 @@ import { FileMetadata, FileMetadataSchema } from "./detect-metadata.ts";
  *
  * This type is generally immutable and shouldn't change once created (unless the metadata or contentType needs to be
  * updated?)
- * 
+ *
  * Files may be de-duplicated at the storage level using their sha256hash, but it's always necessary to know the
  * DataFile ID to read an object - we don't allow retrieving a DataFile by its hash, which could be a security risk. So
  * the sha256hash is not necssarily unique.
@@ -54,7 +54,7 @@ export class DataFile extends VNodeType {
         if (dbObject.metadataJSON !== null) {
             try {
                 const data = JSON.parse(dbObject.metadataJSON);
-                FileMetadataSchema(data);  // Validate the metadata against the schema
+                FileMetadataSchema(data); // Validate the metadata against the schema
             } catch (_err) {
                 throw new ValidationError(`Invalid DataFile metadata: ${dbObject.metadataJSON}`);
             }
@@ -67,24 +67,24 @@ export class DataFile extends VNodeType {
 export const CreateDataFile = defineAction({
     type: `CreateDataFile` as const,
     parameters: {} as {
-        id: VNID,
-        filename: string,
-        sha256Hash: string,
-        size: number,
-        contentType: string,
-        metadata: FileMetadata,
+        id: VNID;
+        filename: string;
+        sha256Hash: string;
+        size: number;
+        contentType: string;
+        metadata: FileMetadata;
     },
     resultData: {},
     apply: async function applyCreateAction(tx, data) {
         await tx.queryOne(C`
             CREATE (df:${DataFile} {id: ${data.id}})
             SET df += ${{
-                filename: data.filename,
-                sha256Hash: data.sha256Hash,
-                contentType: data.contentType,
-                size: BigInt(data.size),
-                metadataJSON: JSON.stringify(data.metadata),
-            }}
+            filename: data.filename,
+            sha256Hash: data.sha256Hash,
+            contentType: data.contentType,
+            size: BigInt(data.size),
+            metadataJSON: JSON.stringify(data.metadata),
+        }}
         `.RETURN({}));
         const description = `Created ${DataFile.withId(data.id)}`;
         return {
@@ -95,25 +95,28 @@ export const CreateDataFile = defineAction({
     },
 });
 
-
 /**
  * Get the full public path to view/download this image
  */
-export function publicUrl(): DerivedProperty<string> { return DerivedProperty.make(
-    DataFile,
-    df => df.filename,
-    data => {
-        return `${config.objStorePublicUrlPrefix}/${data.filename}`;  // This is duplicated in lookup/expressions/files.ts until we can refactor vertex framework
-    },
-);}
+export function publicUrl(): DerivedProperty<string> {
+    return DerivedProperty.make(
+        DataFile,
+        (df) => df.filename,
+        (data) => {
+            return `${config.objStorePublicUrlPrefix}/${data.filename}`; // This is duplicated in lookup/expressions/files.ts until we can refactor vertex framework
+        },
+    );
+}
 
 /**
  * Get the metadata, which depends on the file type
  */
-export function metadata(): DerivedProperty<FileMetadata> { return DerivedProperty.make(
-    DataFile,
-    df => df.metadataJSON,
-    data => {
-        return JSON.parse(data.metadataJSON ?? "{}");
-    },
-);}
+export function metadata(): DerivedProperty<FileMetadata> {
+    return DerivedProperty.make(
+        DataFile,
+        (df) => df.metadataJSON,
+        (data) => {
+            return JSON.parse(data.metadataJSON ?? "{}");
+        },
+    );
+}

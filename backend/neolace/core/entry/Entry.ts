@@ -1,14 +1,14 @@
 import * as check from "neolace/deps/computed-types.ts";
 import {
-    DerivedProperty,
-    VirtualPropType,
     C,
-    VNodeType,
+    DerivedProperty,
     Field,
     RawVNode,
-    WrappedTransaction,
     ValidationError,
+    VirtualPropType,
     VNID,
+    VNodeType,
+    WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 
 import { EntryType } from "neolace/core/schema/EntryType.ts";
@@ -18,11 +18,10 @@ import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { graph } from "neolace/core/graph.ts";
 import { PropertyFact } from "./PropertyFact.ts";
 
-
 /**
  * An "Entry" is the main "thing" that a Neolace knowledge base contains. Every article is an entry, every image is an
  * entry, every property is an entry, and so on.
- * 
+ *
  * Every Entry is of a specific EntryType, and the EntryType controls what "features" the entry has (does it have
  * article text attached, or an image attached, or can it be used as a property?)
  */
@@ -88,7 +87,9 @@ export class Entry extends VNodeType {
 
     static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
         // Check that the slugId is prefixed with the site code.
-        const entryData = await tx.pullOne(Entry, e => e.type(t => t.friendlyIdPrefix.site(s => s.siteCode)), {key: dbObject.id});
+        const entryData = await tx.pullOne(Entry, (e) => e.type((t) => t.friendlyIdPrefix.site((s) => s.siteCode)), {
+            key: dbObject.id,
+        });
         const siteCode = entryData.type?.site?.siteCode;
         if (!siteCode) {
             throw new ValidationError("Entry is unexpectedly not linked to a site with a sitecode.");
@@ -110,29 +111,31 @@ export class Entry extends VNodeType {
             WITH entry, id(rel) AS expectedId
             OPTIONAL MATCH (entry)-[:${this.rel.PROP_FACT}]->(relFact:${PropertyFact} {directRelNeo4jId: expectedId})
             RETURN expectedId, relFact.directRelNeo4jId AS actualId
-        `.givesShape({expectedId: Field.VNID, actualId: Field.VNID}));
-        if (!isACheck.every(row => row.actualId === row.expectedId)) {
-            throw new ValidationError(`Entry ${dbObject.id} (${dbObject.slugId}) has a stranded direct relationship without a corresponding PropertyFact`);
+        `.givesShape({ expectedId: Field.VNID, actualId: Field.VNID }));
+        if (!isACheck.every((row) => row.actualId === row.expectedId)) {
+            throw new ValidationError(
+                `Entry ${dbObject.id} (${dbObject.slugId}) has a stranded direct relationship without a corresponding PropertyFact`,
+            );
         }
     }
-
 }
-
 
 /**
  * A property that provides the slugId without its site-specific prefix
  * See arch-decisions/007-sites-multitenancy for details.
  */
-export function friendlyId(): DerivedProperty<string> { return DerivedProperty.make(
-    Entry,
-    e => e.slugId,
-    e => slugIdToFriendlyId(e.slugId),
-);}
-
+export function friendlyId(): DerivedProperty<string> {
+    return DerivedProperty.make(
+        Entry,
+        (e) => e.slugId,
+        (e) => slugIdToFriendlyId(e.slugId),
+    );
+}
 
 /** Cached helper function to look up an entry's siteId (Site VNID) */
 export const siteIdForEntryId = makeCachedLookup(async (entryId: VNID) => {
-    const result = (await graph.pullOne(Entry, e => e.type(et => et.site(s => s.id)), {key: entryId})).type?.site?.id;
+    const result = (await graph.pullOne(Entry, (e) => e.type((et) => et.site((s) => s.id)), { key: entryId })).type
+        ?.site?.id;
     if (!result) {
         throw new Error("Invalid Entry ID");
     }

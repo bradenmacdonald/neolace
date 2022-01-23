@@ -22,15 +22,14 @@ export const ImageFeature = EntryTypeFeature({
     dataClass: ImageData,
     updateFeatureSchema: UpdateEntryImageSchema,
     async contributeToSchema(mutableSchema: SiteSchemaData, tx: WrappedTransaction, siteId: VNID) {
-
         const configuredOnThisSite = await tx.query(C`
             MATCH (et:${EntryType})-[:FOR_SITE]->(:${Site} {id: ${siteId}}),
                   (et)-[:${EntryType.rel.HAS_FEATURE}]->(config:${ImageFeatureEnabled})
             WITH et, config
             RETURN et.id AS entryTypeId
-        `.givesShape({entryTypeId: Field.VNID}));
+        `.givesShape({ entryTypeId: Field.VNID }));
 
-        configuredOnThisSite.forEach(config => {
+        configuredOnThisSite.forEach((config) => {
             const entryTypeId: VNID = config.entryTypeId;
             if (!(entryTypeId in mutableSchema.entryTypes)) {
                 throw new Error("EntryType not in schema");
@@ -45,7 +44,7 @@ export const ImageFeature = EntryTypeFeature({
             MATCH (et:${EntryType} {id: ${entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site)
             MERGE (et)-[:${EntryType.rel.HAS_FEATURE}]->(feature:${ImageFeatureEnabled}:${C(EnabledFeature.label)})
             ON CREATE SET feature.id = ${VNID()}
-        `.RETURN({"feature.id": Field.VNID}));
+        `.RETURN({ "feature.id": Field.VNID }));
 
         // We need to mark the ImageFeatureEnabled node as modified:
         markNodeAsModified(result["feature.id"]);
@@ -58,7 +57,7 @@ export const ImageFeature = EntryTypeFeature({
             MERGE (e)-[:${Entry.rel.HAS_FEATURE_DATA}]->(imageData:${ImageData}:${C(EntryFeatureData.label)})
             ON CREATE SET
                 imageData.id = ${VNID()}
-        `.RETURN({"imageData.id": Field.VNID}));
+        `.RETURN({ "imageData.id": Field.VNID }));
         const imageDataId = result["imageData.id"];
         // Associate the ImageData with the DataFile that holds the actual image contents
         if (editData.dataFileId !== undefined) {
@@ -79,14 +78,14 @@ export const ImageFeature = EntryTypeFeature({
     /**
      * Load the details of this feature for a single entry.
      */
-    async loadData({data, tx}) {
+    async loadData({ data, tx }) {
         if (data === undefined) {
             return undefined;
         }
         const dataFile = (await tx.pullOne(
             ImageData,
-            id => id.dataFile(df => df.publicUrl().contentType.size.metadata()),
-            {key: data.id},
+            (id) => id.dataFile((df) => df.publicUrl().contentType.size.metadata()),
+            { key: data.id },
         )).dataFile;
         if (dataFile === null) {
             return undefined;
@@ -99,5 +98,5 @@ export const ImageFeature = EntryTypeFeature({
             height: "height" in dataFile.metadata ? dataFile.metadata.height : undefined,
             blurHash: "blurHash" in dataFile.metadata ? dataFile.metadata.blurHash : undefined,
         };
-    }
+    },
 });

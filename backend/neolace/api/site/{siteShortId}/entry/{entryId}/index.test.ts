@@ -1,9 +1,7 @@
-import { group, test, setTestIsolation, api, getClient, assertEquals, assertRejects } from "neolace/api/tests.ts";
+import { api, assertEquals, assertRejects, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
 
 group(import.meta, () => {
-
     group("Get entry API", () => {
-
         // These tests are read-only so don't need isolation, but do use the default plantDB example data:
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
         const speciesEntryType = defaultData.schema.entryTypes._ETSPECIES;
@@ -39,244 +37,273 @@ group(import.meta, () => {
         });
 
         test("Get basic information about an entry plus a summary of properties", async () => {
-
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
-            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludePropertiesSummary] as const});
+            const result = await client.getEntry(ponderosaPine.friendlyId, {
+                flags: [api.GetEntryFlags.IncludePropertiesSummary] as const,
+            });
 
             const defaultAnnotations = {
                 // Default annotations on the value of a "normal" property value:
-                note: {type: "InlineMarkdownString", value: ""},
-                rank: {type: "Integer", value: "1"},
-                slot: {type: "Null"},
-                source: {type: "String", value: "ThisEntry"},
+                note: { type: "InlineMarkdownString", value: "" },
+                rank: { type: "Integer", value: "1" },
+                slot: { type: "Null" },
+                source: { type: "String", value: "ThisEntry" },
             };
 
-            assertEquals(result, {...basicResultExpected, propertiesSummary: [
-                // The parent Genus of this species:
-                {
-                    propertyId: defaultData.schema.properties._parentGenus.id,
-                    value: {
-                        type: "Annotated",
+            assertEquals(result, {
+                ...basicResultExpected,
+                propertiesSummary: [
+                    // The parent Genus of this species:
+                    {
+                        propertyId: defaultData.schema.properties._parentGenus.id,
                         value: {
-                            type: "Entry",
-                            id: defaultData.entries.genusPinus.id,
+                            type: "Annotated",
+                            value: {
+                                type: "Entry",
+                                id: defaultData.entries.genusPinus.id,
+                            },
+                            annotations: {
+                                ...defaultAnnotations,
+                            },
                         },
-                        annotations: {
-                            ...defaultAnnotations,
+                    },
+                    // Scientific name:
+                    {
+                        propertyId: defaultData.schema.properties._propScientificName.id,
+                        value: {
+                            type: "Annotated",
+                            value: { value: "*Pinus ponderosa*", type: "InlineMarkdownString" },
+                            annotations: {
+                                ...defaultAnnotations,
+                                plainValue: { value: "Pinus ponderosa", type: "String" },
+                            },
                         },
                     },
-                },
-                // Scientific name:
-                {
-                    propertyId: defaultData.schema.properties._propScientificName.id,
-                    value: {
-                        type: "Annotated",
-                        value: {value: "*Pinus ponderosa*", type: "InlineMarkdownString"},
-                        annotations: {
-                            ...defaultAnnotations,
-                            plainValue: {value: "Pinus ponderosa", type: "String"},
+                    // The species "Pinus Ponderosa" is a member of the genus "Pinus", and so on:
+                    {
+                        propertyId: defaultData.schema.properties._taxonomy.id,
+                        value: {
+                            type: "Annotated",
+                            value: {
+                                type: "Page",
+                                startedAt: 0,
+                                totalCount: 5,
+                                pageSize: 5,
+                                values: [
+                                    {
+                                        type: "Annotated",
+                                        value: {
+                                            type: "Entry",
+                                            id: defaultData.entries.genusPinus.id,
+                                        },
+                                        annotations: { distance: { type: "Integer", value: "1" } },
+                                    },
+                                    {
+                                        type: "Annotated",
+                                        value: {
+                                            type: "Entry",
+                                            id: defaultData.entries.familyPinaceae.id,
+                                        },
+                                        annotations: { distance: { type: "Integer", value: "2" } },
+                                    },
+                                    {
+                                        type: "Annotated",
+                                        value: {
+                                            type: "Entry",
+                                            id: defaultData.entries.orderPinales.id,
+                                        },
+                                        annotations: { distance: { type: "Integer", value: "3" } },
+                                    },
+                                    {
+                                        type: "Annotated",
+                                        value: {
+                                            type: "Entry",
+                                            id: defaultData.entries.classPinopsida.id,
+                                        },
+                                        annotations: { distance: { type: "Integer", value: "4" } },
+                                    },
+                                    {
+                                        type: "Annotated",
+                                        value: {
+                                            type: "Entry",
+                                            id: defaultData.entries.divisionTracheophyta.id,
+                                        },
+                                        annotations: { distance: { type: "Integer", value: "5" } },
+                                    },
+                                ],
+                            },
+                            annotations: {
+                                // This value came from the default on the entry type, not the specific entry itself.
+                                source: { type: "String", value: "Default" },
+                            },
+                        },
                     },
-                    },
-                },
-                // The species "Pinus Ponderosa" is a member of the genus "Pinus", and so on:
-                {
-                    propertyId: defaultData.schema.properties._taxonomy.id,
-                    value: {
-                        type: "Annotated",
+                    // Via "Pinopsida", this species has some plant parts:
+                    {
+                        propertyId: defaultData.schema.properties._hasPart.id,
                         value: {
                             type: "Page",
-                            startedAt: 0,
-                            totalCount: 5,
                             pageSize: 5,
+                            startedAt: 0,
+                            totalCount: 2,
                             values: [
                                 {
                                     type: "Annotated",
                                     value: {
                                         type: "Entry",
-                                        id: defaultData.entries.genusPinus.id,
-                                    },
-                                    annotations: { distance: { type: "Integer", value: "1", } },
-                                },
-                                {
-                                    type: "Annotated",
-                                    value: {
-                                        type: "Entry",
-                                        id: defaultData.entries.familyPinaceae.id,
-                                    },
-                                    annotations: { distance: { type: "Integer", value: "2" } },
-                                },
-                                {
-                                    type: "Annotated",
-                                    value: {
-                                        type: "Entry",
-                                        id: defaultData.entries.orderPinales.id,
-                                    },
-                                    annotations: { distance: { type: "Integer", value: "3" } },
-                                },
-                                {
-                                    type: "Annotated",
-                                    value: {
-                                        type: "Entry",
-                                        id: defaultData.entries.classPinopsida.id,
-                                    },
-                                    annotations: { distance: { type: "Integer", value: "4"} },
-                                },
-                                {
-                                    type: "Annotated",
-                                    value: {
-                                        type: "Entry",
-                                        id: defaultData.entries.divisionTracheophyta.id,
-                                    },
-                                    annotations: { distance: { type: "Integer", value: "5"} },
-                                },
-                            ],
-                        },
-                        annotations: {
-                            // This value came from the default on the entry type, not the specific entry itself.
-                            source: {type: "String", value: "Default"},
-                        },
-                    },
-                },
-                // Via "Pinopsida", this species has some plant parts:
-                {
-                    propertyId: defaultData.schema.properties._hasPart.id,
-                    value: {
-                        type: "Page",
-                        pageSize: 5,
-                        startedAt: 0,
-                        totalCount: 2,
-                        values: [
-                            {
-                                type: "Annotated",
-                                value: {
-                                    type: "Entry",
-                                    id: defaultData.entries.pollenCone.id,
-                                },
-                                annotations: {
-                                    ...defaultAnnotations,
-                                    slot: {type: "String", value: "pollen-cone"},
-                                    source: {type: "String", value: "AncestorEntry"},
-                                },
-                            },
-                            {
-                                type: "Annotated",
-                                value: {
-                                    type: "Entry",
-                                    id: defaultData.entries.seedCone.id,
-                                },
-                                annotations: {
-                                    ...defaultAnnotations,
-                                    slot: {type: "String", value: "seed-cone"},
-                                    rank: {type: "Integer", value: "2"},
-                                    source: {type: "String", value: "AncestorEntry"},
-                                },
-                            },
-                        ],
-                    },
-                },
-                // Entries of Species type have "related images":
-                {
-                    propertyId: defaultData.schema.properties._relImages.id,
-                    value: {
-                        type: "Annotated",
-                        value: {
-                            pageSize: 5,
-                            startedAt: 0,
-                            totalCount: 1,
-                            type: "Page",
-                            values: [
-                                {
-                                    type: "Annotated",
-                                    value: {
-                                        type: "Entry",
-                                        id: defaultData.entries.imgPonderosaTrunk.id,
+                                        id: defaultData.entries.pollenCone.id,
                                     },
                                     annotations: {
-                                        note: defaultAnnotations.note,
-                                        rank: defaultAnnotations.rank,
-                                        slot: defaultAnnotations.slot,
+                                        ...defaultAnnotations,
+                                        slot: { type: "String", value: "pollen-cone" },
+                                        source: { type: "String", value: "AncestorEntry" },
+                                    },
+                                },
+                                {
+                                    type: "Annotated",
+                                    value: {
+                                        type: "Entry",
+                                        id: defaultData.entries.seedCone.id,
+                                    },
+                                    annotations: {
+                                        ...defaultAnnotations,
+                                        slot: { type: "String", value: "seed-cone" },
+                                        rank: { type: "Integer", value: "2" },
+                                        source: { type: "String", value: "AncestorEntry" },
                                     },
                                 },
                             ],
                         },
-                        annotations: {
-                            source: {type: "String", value: "Default"},
-                        }
                     },
-                },
-                // Wikidata item ID, a regular (non "simple") property
-                {
-                    propertyId: defaultData.schema.properties._propWikidataQID.id,
-                    value: {
-                        type: "Annotated",
+                    // Entries of Species type have "related images":
+                    {
+                        propertyId: defaultData.schema.properties._relImages.id,
                         value: {
-                            type: "InlineMarkdownString",
-                            value: "[Q460523](https://www.wikidata.org/wiki/Q460523)",
-                        },
-                        annotations: {
-                            ...defaultAnnotations,
-                            plainValue: {type: "String", value: "Q460523"},
+                            type: "Annotated",
+                            value: {
+                                pageSize: 5,
+                                startedAt: 0,
+                                totalCount: 1,
+                                type: "Page",
+                                values: [
+                                    {
+                                        type: "Annotated",
+                                        value: {
+                                            type: "Entry",
+                                            id: defaultData.entries.imgPonderosaTrunk.id,
+                                        },
+                                        annotations: {
+                                            note: defaultAnnotations.note,
+                                            rank: defaultAnnotations.rank,
+                                            slot: defaultAnnotations.slot,
+                                        },
+                                    },
+                                ],
+                            },
+                            annotations: {
+                                source: { type: "String", value: "Default" },
+                            },
                         },
                     },
-                },
-            ]});
+                    // Wikidata item ID, a regular (non "simple") property
+                    {
+                        propertyId: defaultData.schema.properties._propWikidataQID.id,
+                        value: {
+                            type: "Annotated",
+                            value: {
+                                type: "InlineMarkdownString",
+                                value: "[Q460523](https://www.wikidata.org/wiki/Q460523)",
+                            },
+                            annotations: {
+                                ...defaultAnnotations,
+                                plainValue: { type: "String", value: "Q460523" },
+                            },
+                        },
+                    },
+                ],
+            });
         });
 
         test("Get basic information about an entry plus a 'reference cache' with details of entries mentioned in property summary", async () => {
-
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
-            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludePropertiesSummary, api.GetEntryFlags.IncludeReferenceCache] as const});
+            const result = await client.getEntry(ponderosaPine.friendlyId, {
+                flags: [api.GetEntryFlags.IncludePropertiesSummary, api.GetEntryFlags.IncludeReferenceCache] as const,
+            });
 
             assertEquals(result.referenceCache, {
                 entryTypes: {
-                    [defaultData.schema.entryTypes._ETDIVISION.id]: {id: defaultData.schema.entryTypes._ETDIVISION.id, name: defaultData.schema.entryTypes._ETDIVISION.name},
-                    [defaultData.schema.entryTypes._ETCLASS.id]: {id: defaultData.schema.entryTypes._ETCLASS.id, name: defaultData.schema.entryTypes._ETCLASS.name},
-                    [defaultData.schema.entryTypes._ETORDER.id]: {id: defaultData.schema.entryTypes._ETORDER.id, name: defaultData.schema.entryTypes._ETORDER.name},
-                    [defaultData.schema.entryTypes._ETFAMILY.id]: {id: defaultData.schema.entryTypes._ETFAMILY.id, name: defaultData.schema.entryTypes._ETFAMILY.name},
-                    [defaultData.schema.entryTypes._ETGENUS.id]: {id: defaultData.schema.entryTypes._ETGENUS.id, name: defaultData.schema.entryTypes._ETGENUS.name},
-                    [defaultData.schema.entryTypes._ETSPECIES.id]: {id: defaultData.schema.entryTypes._ETSPECIES.id, name: defaultData.schema.entryTypes._ETSPECIES.name},
-                    [defaultData.schema.entryTypes._ETPLANTPART.id]: {id: defaultData.schema.entryTypes._ETPLANTPART.id, name: defaultData.schema.entryTypes._ETPLANTPART.name},
-                    [defaultData.schema.entryTypes._ETIMAGE.id]: {id: defaultData.schema.entryTypes._ETIMAGE.id, name: defaultData.schema.entryTypes._ETIMAGE.name},
+                    [defaultData.schema.entryTypes._ETDIVISION.id]: {
+                        id: defaultData.schema.entryTypes._ETDIVISION.id,
+                        name: defaultData.schema.entryTypes._ETDIVISION.name,
+                    },
+                    [defaultData.schema.entryTypes._ETCLASS.id]: {
+                        id: defaultData.schema.entryTypes._ETCLASS.id,
+                        name: defaultData.schema.entryTypes._ETCLASS.name,
+                    },
+                    [defaultData.schema.entryTypes._ETORDER.id]: {
+                        id: defaultData.schema.entryTypes._ETORDER.id,
+                        name: defaultData.schema.entryTypes._ETORDER.name,
+                    },
+                    [defaultData.schema.entryTypes._ETFAMILY.id]: {
+                        id: defaultData.schema.entryTypes._ETFAMILY.id,
+                        name: defaultData.schema.entryTypes._ETFAMILY.name,
+                    },
+                    [defaultData.schema.entryTypes._ETGENUS.id]: {
+                        id: defaultData.schema.entryTypes._ETGENUS.id,
+                        name: defaultData.schema.entryTypes._ETGENUS.name,
+                    },
+                    [defaultData.schema.entryTypes._ETSPECIES.id]: {
+                        id: defaultData.schema.entryTypes._ETSPECIES.id,
+                        name: defaultData.schema.entryTypes._ETSPECIES.name,
+                    },
+                    [defaultData.schema.entryTypes._ETPLANTPART.id]: {
+                        id: defaultData.schema.entryTypes._ETPLANTPART.id,
+                        name: defaultData.schema.entryTypes._ETPLANTPART.name,
+                    },
+                    [defaultData.schema.entryTypes._ETIMAGE.id]: {
+                        id: defaultData.schema.entryTypes._ETIMAGE.id,
+                        name: defaultData.schema.entryTypes._ETIMAGE.name,
+                    },
                 },
                 entries: {
                     [defaultData.entries.divisionTracheophyta.id]: {
                         ...defaultData.entries.divisionTracheophyta,
-                        entryType: {id: defaultData.schema.entryTypes._ETDIVISION.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETDIVISION.id },
                     },
                     [defaultData.entries.classPinopsida.id]: {
                         ...defaultData.entries.classPinopsida,
-                        entryType: {id: defaultData.schema.entryTypes._ETCLASS.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETCLASS.id },
                     },
                     [defaultData.entries.orderPinales.id]: {
                         ...defaultData.entries.orderPinales,
-                        entryType: {id: defaultData.schema.entryTypes._ETORDER.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETORDER.id },
                     },
                     [defaultData.entries.familyPinaceae.id]: {
                         ...defaultData.entries.familyPinaceae,
-                        entryType: {id: defaultData.schema.entryTypes._ETFAMILY.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETFAMILY.id },
                     },
                     [defaultData.entries.genusPinus.id]: {
                         ...defaultData.entries.genusPinus,
-                        entryType: {id: defaultData.schema.entryTypes._ETGENUS.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETGENUS.id },
                     },
                     [defaultData.entries.ponderosaPine.id]: {
                         ...defaultData.entries.ponderosaPine,
-                        entryType: {id: defaultData.schema.entryTypes._ETSPECIES.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETSPECIES.id },
                     },
                     [defaultData.entries.seedCone.id]: {
                         ...defaultData.entries.seedCone,
-                        entryType: {id: defaultData.schema.entryTypes._ETPLANTPART.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETPLANTPART.id },
                     },
                     [defaultData.entries.pollenCone.id]: {
                         ...defaultData.entries.pollenCone,
-                        entryType: {id: defaultData.schema.entryTypes._ETPLANTPART.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETPLANTPART.id },
                     },
                     // Image referenced by "related images":
                     [defaultData.entries.imgPonderosaTrunk.id]: {
                         ...defaultData.entries.imgPonderosaTrunk,
-                        entryType: {id: defaultData.schema.entryTypes._ETIMAGE.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETIMAGE.id },
                     },
                 },
                 properties: {
@@ -339,42 +366,54 @@ group(import.meta, () => {
             });
         });
 
-
         test("Get basic information about an entry plus a 'reference cache' with details of entries mentioned in article text", async () => {
-
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
-            const result = await client.getEntry(ponderosaPine.friendlyId, {flags: [api.GetEntryFlags.IncludeFeatures, api.GetEntryFlags.IncludeReferenceCache] as const});
+            const result = await client.getEntry(ponderosaPine.friendlyId, {
+                flags: [api.GetEntryFlags.IncludeFeatures, api.GetEntryFlags.IncludeReferenceCache] as const,
+            });
 
             assertEquals(result.referenceCache, {
                 entryTypes: {
                     // The hero image feature references an image:
-                    [defaultData.schema.entryTypes._ETIMAGE.id]: {id: defaultData.schema.entryTypes._ETIMAGE.id, name: defaultData.schema.entryTypes._ETIMAGE.name},
+                    [defaultData.schema.entryTypes._ETIMAGE.id]: {
+                        id: defaultData.schema.entryTypes._ETIMAGE.id,
+                        name: defaultData.schema.entryTypes._ETIMAGE.name,
+                    },
                     // The text only mentions these entries:
-                    [defaultData.schema.entryTypes._ETCLASS.id]: {id: defaultData.schema.entryTypes._ETCLASS.id, name: defaultData.schema.entryTypes._ETCLASS.name},
-                    [defaultData.schema.entryTypes._ETGENUS.id]: {id: defaultData.schema.entryTypes._ETGENUS.id, name: defaultData.schema.entryTypes._ETGENUS.name},
-                    [defaultData.schema.entryTypes._ETSPECIES.id]: {id: defaultData.schema.entryTypes._ETSPECIES.id, name: defaultData.schema.entryTypes._ETSPECIES.name},
+                    [defaultData.schema.entryTypes._ETCLASS.id]: {
+                        id: defaultData.schema.entryTypes._ETCLASS.id,
+                        name: defaultData.schema.entryTypes._ETCLASS.name,
+                    },
+                    [defaultData.schema.entryTypes._ETGENUS.id]: {
+                        id: defaultData.schema.entryTypes._ETGENUS.id,
+                        name: defaultData.schema.entryTypes._ETGENUS.name,
+                    },
+                    [defaultData.schema.entryTypes._ETSPECIES.id]: {
+                        id: defaultData.schema.entryTypes._ETSPECIES.id,
+                        name: defaultData.schema.entryTypes._ETSPECIES.name,
+                    },
                 },
                 entries: {
                     [defaultData.entries.classPinopsida.id]: {
                         ...defaultData.entries.classPinopsida,
-                        entryType: {id: defaultData.schema.entryTypes._ETCLASS.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETCLASS.id },
                     },
                     [defaultData.entries.genusPinus.id]: {
                         ...defaultData.entries.genusPinus,
-                        entryType: {id: defaultData.schema.entryTypes._ETGENUS.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETGENUS.id },
                     },
                     [defaultData.entries.jeffreyPine.id]: {
                         ...defaultData.entries.jeffreyPine,
-                        entryType: {id: defaultData.schema.entryTypes._ETSPECIES.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETSPECIES.id },
                     },
                     [defaultData.entries.ponderosaPine.id]: {
                         ...defaultData.entries.ponderosaPine,
-                        entryType: {id: defaultData.schema.entryTypes._ETSPECIES.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETSPECIES.id },
                     },
                     [defaultData.entries.imgPonderosaTrunk.id]: {
                         ...defaultData.entries.imgPonderosaTrunk,
-                        entryType: {id: defaultData.schema.entryTypes._ETIMAGE.id},
+                        entryType: { id: defaultData.schema.entryTypes._ETIMAGE.id },
                     },
                 },
                 properties: {
@@ -467,6 +506,5 @@ group(import.meta, () => {
             assertEquals(resultFriendlyId, resultVNID);
             assertEquals(resultFriendlyId.name, ponderosaPine.name);
         });
-
-    })
+    });
 });

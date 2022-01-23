@@ -7,10 +7,15 @@ import { ReferenceCache } from "../reference-cache.ts";
 
 /**
  * A "feature" is some functionality that can be enbabled, disabled, and configured for each EntryType.
- * 
+ *
  * For example, if an EntryType has the "Article" feature, then entries of that type can have article content.
  */
-export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"], EF extends typeof EnabledFeature, EFD extends EntryFeatureData, UFS> {
+export interface EntryTypeFeature<
+    FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"],
+    EF extends typeof EnabledFeature,
+    EFD extends EntryFeatureData,
+    UFS,
+> {
     featureType: FT;
     configClass: EF;
     dataClass: EFD;
@@ -18,11 +23,11 @@ export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][
     /**
      * Scan the database and for all entry types in the given site that have this feature enabled, update the schema
      * data accordingly.
-     * 
+     *
      * This is used when generating the SiteSchemaData from the current Neolace database.
-     * @param mutableSchema 
-     * @param tx 
-     * @param siteId 
+     * @param mutableSchema
+     * @param tx
+     * @param siteId
      */
     contributeToSchema(mutableSchema: SiteSchemaData, tx: WrappedTransaction, siteId: VNID): Promise<void>;
     /**
@@ -41,7 +46,7 @@ export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][
      * e.g. if the "PlantImage" entry type has the "Image" feature enabled, then you can use this action to set the
      * image of a specific PlantImage entry.
      */
-     editFeature(
+    editFeature(
         entryId: VNID,
         editData: Type<UFS>,
         tx: WrappedTransaction,
@@ -56,18 +61,23 @@ export interface EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][
      * This funciton will only be called if the feature is enabled for the entry's type.
      */
     loadData(args: {
-        entryId: VNID,
+        entryId: VNID;
         /** Data (VNode of type dataClass) set on this specific entry */
-        data?: RawVNode<EFD>,
+        data?: RawVNode<EFD>;
         /** Configuration that controls how this feature is used for this entry type */
-        config: RawVNode<EF>,
-        tx: WrappedTransaction,
-        refCache?: ReferenceCache,
+        config: RawVNode<EF>;
+        tx: WrappedTransaction;
+        refCache?: ReferenceCache;
     }): Promise<EntryFeaturesData[FT]>;
 }
 
 // Helper function to declare objects with the above interface with proper typing.
-export function EntryTypeFeature<FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"], EF extends typeof EnabledFeature, EFD extends EntryFeatureData, UFS>(args: EntryTypeFeature<FT, EF, EFD, UFS>): EntryTypeFeature<FT, EF, EFD, UFS> {
+export function EntryTypeFeature<
+    FT extends keyof SiteSchemaData["entryTypes"][0]["enabledFeatures"],
+    EF extends typeof EnabledFeature,
+    EFD extends EntryFeatureData,
+    UFS,
+>(args: EntryTypeFeature<FT, EF, EFD, UFS>): EntryTypeFeature<FT, EF, EFD, UFS> {
     // Also freeze it to make sure it's immutable
     return Object.freeze(args);
 }

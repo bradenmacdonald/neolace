@@ -1,15 +1,15 @@
 import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
-    VNodeType,
-    Field,
-    RawVNode,
-    WrappedTransaction,
-    VirtualPropType,
-    ValidationError,
     EmptyResultError,
+    Field,
     getRelationshipType,
+    RawVNode,
+    ValidationError,
+    VirtualPropType,
     VNID,
+    VNodeType,
+    WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 import { PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
 import { Site } from "neolace/core/Site.ts";
@@ -17,18 +17,19 @@ import { EntryType } from "../schema/EntryType.ts";
 import { Property } from "../schema/Property.ts";
 import { Entry } from "./Entry.ts";
 
-
 export function directRelTypeForPropertyType(propType: PropertyType) {
     return (
-        propType === PropertyType.RelIsA ? Entry.rel.IS_A :
-        propType === PropertyType.RelOther ? Entry.rel.RELATES_TO :
-        null
+        propType === PropertyType.RelIsA
+            ? Entry.rel.IS_A
+            : propType === PropertyType.RelOther
+            ? Entry.rel.RELATES_TO
+            : null
     );
 }
 
 /**
  * A property fact records a value for a property of an Entry.
- * 
+ *
  * e.g. if Bob (Entry of EntryType "Person") has a Birth Date (Property) of "1990-02-03" (property value), then a
  *      Property Fact is what ties those three things (Entry, Property, Value) together.
  *
@@ -42,7 +43,6 @@ export class PropertyFact extends VNodeType {
         ...VNodeType.properties,
         /**
          * A Lookup expression (usually a literal expression) defining the value of this property value, e.g. "5"
-         * 
          */
         valueExpression: Field.String,
 
@@ -58,7 +58,7 @@ export class PropertyFact extends VNodeType {
         /**
          * If this is a relationship (from an Entry, to another Entry), then we actually create a direct relationship
          * between the entries (as well as this PropertyFact), and we store the Neo4j ID of that relationship here.
-         * 
+         *
          * It is generally recommended to
          * [avoid using Neo4j IDs](https://neo4j.com/docs/cypher-manual/current/clauses/match/#match-node-by-id),
          * but it is reasonable to do it in this case because:
@@ -108,16 +108,15 @@ export class PropertyFact extends VNodeType {
 
     static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
         // Validate:
-        const data = await tx.pullOne(PropertyFact, pf => pf
-            .entry(e => e.id.type(et => et.id.site(s => s.id)))
-            .property(p => p.id.name.type.mode.enableSlots.site(s => s.id)),
-            { key: dbObject.id, }
-        );
+        const data = await tx.pullOne(PropertyFact, (pf) =>
+            pf
+                .entry((e) => e.id.type((et) => et.id.site((s) => s.id)))
+                .property((p) => p.id.name.type.mode.enableSlots.site((s) => s.id)), { key: dbObject.id });
         const property = data.property;
-        if (property === null) { throw new Error("Internal error - property unexpectedly null."); }
+        if (property === null) throw new Error("Internal error - property unexpectedly null.");
 
         const siteId = data.entry?.type?.site?.id;
-        if (siteId === null) { throw new Error(`PropertyFact: siteId unexpectedly null`); }
+        if (siteId === null) throw new Error(`PropertyFact: siteId unexpectedly null`);
 
         if (property.site?.id !== siteId) {
             throw new Error(`PropertyFact: property and entry are from different sites.`);
@@ -140,13 +139,12 @@ export class PropertyFact extends VNodeType {
         // If property mode is auto, PropertyFacts are not allowed - the property is instead computed automatically.
         if (property.mode === PropertyMode.Auto) {
             throw new ValidationError(
-                `The ${property.name} property is an Automatic property so a value cannot be set explicitly.`
+                `The ${property.name} property is an Automatic property so a value cannot be set explicitly.`,
             );
         }
 
         // TODO: validate uniqueness? (if required/enabled for the entrytype/property)
 
-        
         // Additional validation based on the property type.
         const valueExpression = dbObject.valueExpression;
         if (property.type === PropertyType.Value) {
@@ -162,7 +160,7 @@ export class PropertyFact extends VNodeType {
             await tx.queryOne(C`
                 MATCH (e:${Entry} {id: ${toEntryId}})
                 MATCH (e)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-            `.RETURN({"e.id": Field.VNID}));
+            `.RETURN({ "e.id": Field.VNID }));
 
             // For relationship properties, we also need a direct Entry-[:REL_TYPE]->Entry relationship created on the
             // graph, which makes ancestor lookups much more efficient, and also makes generally working with the graph
@@ -175,13 +173,17 @@ export class PropertyFact extends VNodeType {
                 MATCH (entry:${Entry} {id: ${data.entry?.id}})
                 MATCH (entry)-[directRel:${explicitRelType}]->(toEntry:${Entry})
                 WHERE id(directRel) = ${dbObject.directRelNeo4jId}
-            `.RETURN({"toEntry.id": Field.VNID}));
+            `.RETURN({ "toEntry.id": Field.VNID }));
             if (directRelCheck.length === 0) {
                 throw new ValidationError(
-                    `PropertyFact ${dbObject.id} is missing the direct (Entry)-[${getRelationshipType(explicitRelType)}]->(Entry) relationship.`
+                    `PropertyFact ${dbObject.id} is missing the direct (Entry)-[${
+                        getRelationshipType(explicitRelType)
+                    }]->(Entry) relationship.`,
                 );
             } else if (directRelCheck[0]["toEntry.id"] !== toEntryId) {
-                throw new ValidationError(`PropertyFact ${dbObject.id} has a direct relationship pointing to the wrong entry.`);
+                throw new ValidationError(
+                    `PropertyFact ${dbObject.id} has a direct relationship pointing to the wrong entry.`,
+                );
             }
         }
     }

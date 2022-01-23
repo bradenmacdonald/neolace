@@ -1,9 +1,8 @@
-import { group, test, setTestIsolation, getClient, assertEquals } from "neolace/api/tests.ts";
+import { assertEquals, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { UpdateSite } from "../../../core/Site.ts";
 
 group(import.meta, () => {
-
     // Test using the PlantDB example site
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
     const speciesEntryType = defaultData.schema.entryTypes._ETSPECIES;
@@ -24,15 +23,14 @@ group(import.meta, () => {
         assertEquals(result.homePageMD, homePageMD);
         const refCacheEntries = Object.values(result.referenceCache.entries);
         assertEquals(
-            refCacheEntries.map(e => ({name: e.name, friendlyId: e.friendlyId})),
-            [{name: ponderosaPine.name, friendlyId: ponderosaPine.friendlyId}],
+            refCacheEntries.map((e) => ({ name: e.name, friendlyId: e.friendlyId })),
+            [{ name: ponderosaPine.name, friendlyId: ponderosaPine.friendlyId }],
         );
         assertEquals(result.referenceCache.entryTypes, {
             [speciesEntryType.id]: {
                 id: speciesEntryType.id,
                 name: speciesEntryType.name,
-            }
+            },
         });
     });
-
 });

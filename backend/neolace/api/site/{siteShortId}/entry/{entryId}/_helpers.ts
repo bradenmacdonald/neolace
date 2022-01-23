@@ -1,14 +1,22 @@
 import { api } from "neolace/api/mod.ts";
-import { VNID, WrappedTransaction, isVNID, EmptyResultError } from "neolace/deps/vertex-framework.ts";
+import { EmptyResultError, isVNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
 import { CachedLookupContext } from "neolace/core/lookup/context.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
-import { AnnotatedValue, ConcreteValue, ErrorValue, InlineMarkdownStringValue, IntegerValue, NullValue, PageValue, StringValue } from "neolace/core/lookup/values.ts";
+import {
+    AnnotatedValue,
+    ConcreteValue,
+    ErrorValue,
+    InlineMarkdownStringValue,
+    IntegerValue,
+    NullValue,
+    PageValue,
+    StringValue,
+} from "neolace/core/lookup/values.ts";
 import { EntryPropertyValueSet, getEntryProperties } from "neolace/core/entry/properties.ts";
 import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-data.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
-
 
 /**
  * Helper function to wrap an async function so that it only runs at most once. If you don't need/call it, it won't run
@@ -24,35 +32,37 @@ import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 //     };
 // }
 
-
 /**
  * A helper function to get an entry
  */
-export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: WrappedTransaction, flags: Set<api.GetEntryFlags> = new Set()): Promise<api.EntryData> {
-
+export async function getEntry(
+    vnidOrFriendlyId: VNID | string,
+    siteId: VNID,
+    tx: WrappedTransaction,
+    flags: Set<api.GetEntryFlags> = new Set(),
+): Promise<api.EntryData> {
     // If 'vnidOrFriendlyId' is a VNID, use it as-is; otherwise if it's a friendlyID we need to prepend the site prefix
     const siteCode = await siteCodeForSite(siteId);
     const key = isVNID(vnidOrFriendlyId) ? vnidOrFriendlyId : siteCode + vnidOrFriendlyId;
 
-    const entryData = await tx.pullOne(Entry, e => e
-        .id
-        .name
-        .description
-        .friendlyId()
-        .type(et => et.id.name.site(s => s.id)),
-        {key, }
-    ).catch((err) => {
-        if (err instanceof EmptyResultError) {
-            throw new api.NotFound(`Entry with key "${vnidOrFriendlyId}" not found.`);
-        } else {
-            throw err;
-        }
-    });
+    const entryData = await tx.pullOne(Entry, (e) =>
+        e
+            .id
+            .name
+            .description
+            .friendlyId()
+            .type((et) => et.id.name.site((s) => s.id)), { key }).catch((err) => {
+            if (err instanceof EmptyResultError) {
+                throw new api.NotFound(`Entry with key "${vnidOrFriendlyId}" not found.`);
+            } else {
+                throw err;
+            }
+        });
 
     // Remove the "site" field from the result
     const result: api.EntryData = {
         ...entryData,
-        entryType: {id: entryData.type!.id, name: entryData.type!.name},
+        entryType: { id: entryData.type!.id, name: entryData.type!.name },
         propertiesSummary: undefined,
         referenceCache: undefined,
     };
@@ -62,7 +72,7 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
         throw new Error("The entry ID specified is from a different site.");
     }
 
-    const refCache = flags.has(api.GetEntryFlags.IncludeReferenceCache) ? new ReferenceCache({siteId}) : undefined;
+    const refCache = flags.has(api.GetEntryFlags.IncludeReferenceCache) ? new ReferenceCache({ siteId }) : undefined;
     // We always include the current entry in the reference cache in case it references itself, to make it easy for API
     // consumers to show the right data (e.g. link tooltips) in that case.
     refCache?.addReferenceToEntryId(entryData.id);
@@ -72,18 +82,22 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
 
     if (flags.has(api.GetEntryFlags.IncludePropertiesSummary)) {
         // Include a summary of property values for this entry (up to 15 importance properties - whose importance is <= 20)
-        const properties = await getEntryProperties(entryData.id, {tx, limit: 15, maxImportance: 20});
+        const properties = await getEntryProperties(entryData.id, { tx, limit: 15, maxImportance: 20 });
 
         // ** In the near future, we'll need to resolve a dependency graph and compute these in parallel / async. **
 
         /** Helper function to return a single property value as an annotated lookup value */
-        const factToValue = async (fact: EntryPropertyValueSet["facts"][0], prop: EntryPropertyValueSet["property"]) => {
+        const factToValue = async (
+            fact: EntryPropertyValueSet["facts"][0],
+            prop: EntryPropertyValueSet["property"],
+        ) => {
             const extraAnnotations: Record<string, unknown> = {};
-            let innerValue = await lookupContext.evaluateExpr(fact.valueExpression).then(v => v.makeConcrete());
+            let innerValue = await lookupContext.evaluateExpr(fact.valueExpression).then((v) => v.makeConcrete());
             if (prop.displayAs) {
                 // displayAs is used to format the value using Markdown, e.g. to convert it into a link
                 // or display it in italics. But we still make the original value avaiable as an annotation.
-                const innerValueAsString = (await innerValue.castTo(StringValue, lookupContext))?.value || "(error - cannot convert value to string)";
+                const innerValueAsString = (await innerValue.castTo(StringValue, lookupContext))?.value ||
+                    "(error - cannot convert value to string)";
                 extraAnnotations.plainValue = innerValue;
                 innerValue = new InlineMarkdownStringValue(prop.displayAs.replaceAll("{value}", innerValueAsString));
             }
@@ -97,13 +111,15 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
         };
 
         result.propertiesSummary = [];
-        for (const {property, facts} of properties) {
+        for (const { property, facts } of properties) {
             let value: ConcreteValue;
             try {
                 if (facts.length === 0) {
                     if (property.default) {
-                        const innerValue = await lookupContext.evaluateExpr(property.default).then(v => v.makeConcrete());
-                        value = new AnnotatedValue(innerValue, {source: new StringValue("Default")});
+                        const innerValue = await lookupContext.evaluateExpr(property.default).then((v) =>
+                            v.makeConcrete()
+                        );
+                        value = new AnnotatedValue(innerValue, { source: new StringValue("Default") });
                     } else {
                         throw new Error("Unexpected property with no values and no default");
                     }
@@ -112,8 +128,8 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                 } else {
                     // There are two or more values. Show up to five.
                     value = new PageValue<AnnotatedValue>(
-                        await Promise.all(facts.slice(0, maxValuesPerProp).map(f => factToValue(f, property))),
-                        {startedAt: 0n, pageSize: BigInt(maxValuesPerProp), totalCount: BigInt(facts.length)},
+                        await Promise.all(facts.slice(0, maxValuesPerProp).map((f) => factToValue(f, property))),
+                        { startedAt: 0n, pageSize: BigInt(maxValuesPerProp), totalCount: BigInt(facts.length) },
                     );
                 }
             } catch (err: unknown) {
@@ -125,10 +141,10 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
             }
             const serializedValue = value.toJSON();
             if (
-                (serializedValue.type === "Page" && serializedValue.values.length === 0)
-                || (
-                    serializedValue.type === "Annotated" && serializedValue.value.type === "Page"
-                    && serializedValue.value.values.length === 0
+                (serializedValue.type === "Page" && serializedValue.values.length === 0) ||
+                (
+                    serializedValue.type === "Annotated" && serializedValue.value.type === "Page" &&
+                    serializedValue.value.values.length === 0
                 )
             ) {
                 // This property value is just an empty result set. Hide it from the result.
@@ -139,19 +155,19 @@ export async function getEntry(vnidOrFriendlyId: VNID|string, siteId: VNID, tx: 
                 value: serializedValue,
             });
             refCache?.addReferenceToPropertyId(property.id);
-            refCache?.extractLookupReferences(serializedValue, {currentEntryId: entryData.id});
+            refCache?.extractLookupReferences(serializedValue, { currentEntryId: entryData.id });
         }
     }
 
     if (flags.has(api.GetEntryFlags.IncludeFeatures)) {
         // Include "features" specific to this entry type. A common one is the "article" feature, which has prose text
         // (markdown). Another common one is the "Image" feature which means this entry is an image.
-        result.features = await getEntryFeaturesData(entryData.id, {tx, refCache});
+        result.features = await getEntryFeaturesData(entryData.id, { tx, refCache });
     }
 
     if (flags.has(api.GetEntryFlags.IncludeReferenceCache)) {
         // Extract references from the description of this entry
-        refCache?.extractMarkdownReferences(entryData.description, {currentEntryId: entryData.id});
+        refCache?.extractMarkdownReferences(entryData.description, { currentEntryId: entryData.id });
         result.referenceCache = await refCache!.getData(tx, lookupContext);
     }
 

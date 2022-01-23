@@ -1,8 +1,7 @@
 import * as log from "std/log/mod.ts";
-import { generateTestFixtures, TestSetupData, testDataFile } from "neolace/lib/tests-default-data.ts";
+import { generateTestFixtures, testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
 import { shutdown } from "neolace/app/shutdown.ts";
 import { environment } from "neolace/app/config.ts";
-
 
 log.info("Seting up test environment");
 if (environment !== "test") {

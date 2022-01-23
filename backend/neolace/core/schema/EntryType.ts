@@ -1,10 +1,5 @@
 import * as check from "neolace/deps/computed-types.ts";
-import {
-    C,
-    Field,
-    VirtualPropType,
-    VNodeType,
-} from "neolace/deps/vertex-framework.ts";
+import { C, Field, VirtualPropType, VNodeType } from "neolace/deps/vertex-framework.ts";
 import { Site } from "neolace/core/Site.ts";
 
 import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
@@ -21,7 +16,7 @@ export class EntryType extends VNodeType {
         /** Description: Short, rich text summary of the entry type  */
         description: Field.NullOr.String.Check(check.string.trim().max(5_000)),
         /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
-        friendlyIdPrefix: Field.NullOr.Slug.Check(check.string.regexp(/.*-$/)),  // Must end in a hyphen
+        friendlyIdPrefix: Field.NullOr.Slug.Check(check.string.regexp(/.*-$/)), // Must end in a hyphen
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({

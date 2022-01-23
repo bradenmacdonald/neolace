@@ -9,11 +9,20 @@
             "command": "deno",
             "options": {
                 "env": {
-                    "ENV_TYPE": "test",
-                },
+                    "ENV_TYPE": "test"
+                }
             },
-            "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-read", "--allow-env", "--allow-write", "--unstable", "neolace/scripts/test-setup.ts"],
-            "problemMatcher": [],
+            "args": [
+                "run",
+                "--import-map=import_map.json",
+                "--allow-net",
+                "--allow-read",
+                "--allow-env",
+                "--allow-write",
+                "--unstable",
+                "neolace/scripts/test-setup.ts"
+            ],
+            "problemMatcher": []
         },
         {
             "label": "Run test suite",
@@ -21,27 +30,52 @@
             "command": "deno",
             "options": {
                 "env": {
-                    "ENV_TYPE": "test",
-                },
+                    "ENV_TYPE": "test"
+                }
             },
-            "args": ["test", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "--unstable"],
-            "problemMatcher": [],
+            "args": [
+                "test",
+                "--import-map=import_map.json",
+                "--allow-net",
+                "--allow-env",
+                "--allow-read",
+                "--unstable"
+            ],
+            "problemMatcher": []
         },
         {
             "label": "Run backend (watch mode)",
             "type": "shell",
             "command": "deno",
             // We can make this stable once "Deno.addSignalListener" and "--watch" are stabilized.
-            "args": ["run", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "--watch", "--no-check", "neolace/api/server.ts"],
-            "problemMatcher": [],
+            "args": [
+                "run",
+                "--unstable",
+                "--import-map=import_map.json",
+                "--allow-net",
+                "--allow-env",
+                "--allow-read",
+                "--watch",
+                "--no-check",
+                "neolace/api/server.ts"
+            ],
+            "problemMatcher": []
         },
         {
             "label": "Run backend (with type checks)",
             "type": "shell",
             "command": "deno",
             // We can make this stable once "Deno.addSignalListener" and "--watch" are stabilized.
-            "args": ["run", "--unstable", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "neolace/api/server.ts"],
-            "problemMatcher": [],
+            "args": [
+                "run",
+                "--unstable",
+                "--import-map=import_map.json",
+                "--allow-net",
+                "--allow-env",
+                "--allow-read",
+                "neolace/api/server.ts"
+            ],
+            "problemMatcher": []
         },
         {
             "label": "Run neolace database servers",
@@ -50,30 +84,45 @@
             "args": ["up"],
             "isBackground": true,
             "options": {
-                "cwd": "${workspaceFolder}",
+                "cwd": "${workspaceFolder}"
             },
-            "problemMatcher": [],
+            "problemMatcher": []
         },
         {
             "label": "Erase Dev DB and re-create PlantDB example",
             "type": "shell",
             "command": "deno",
-            "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-read", "--allow-env", "--unstable", "neolace/scripts/reset-dev-data-create-plantdb.ts"],
-            "problemMatcher": [],
+            "args": [
+                "run",
+                "--import-map=import_map.json",
+                "--allow-net",
+                "--allow-read",
+                "--allow-env",
+                "--unstable",
+                "neolace/scripts/reset-dev-data-create-plantdb.ts"
+            ],
+            "problemMatcher": []
         },
         {
             "label": "Fully reset/erase data",
             "type": "shell",
             "command": "docker-compose",
             "args": ["down", "-v"],
-            "problemMatcher": [],
+            "problemMatcher": []
         },
         {
             "label": "Apply database migrations",
             "type": "shell",
             "command": "deno",
-            "args": ["run", "--import-map=import_map.json", "--allow-net", "--allow-env", "--unstable", "neolace/scripts/migrate.ts"],
-            "problemMatcher": [],
+            "args": [
+                "run",
+                "--import-map=import_map.json",
+                "--allow-net",
+                "--allow-env",
+                "--unstable",
+                "neolace/scripts/migrate.ts"
+            ],
+            "problemMatcher": []
         },
         {
             "label": "Build backend container image (prod)",
@@ -82,15 +131,24 @@
             "args": ["build", "--pull", "-t", "neolace/neolace-app/backend:latest", "-f", "backend/Dockerfile", "."],
             "problemMatcher": [],
             "options": {
-                "cwd": "${workspaceFolder}/..",
-            },
+                "cwd": "${workspaceFolder}/.."
+            }
         },
         {
             "label": "Run backend container image (prod) with local dev databases",
             "type": "shell",
             "command": "docker",
-            "args": ["run", "-e", "ENV_TYPE=development", "-e", "neo4jUrl=bolt://host.docker.internal:7687", "-p", "5554:5554", "neolace/neolace-app/backend:latest"],
-            "problemMatcher": [],
-        },
+            "args": [
+                "run",
+                "-e",
+                "ENV_TYPE=development",
+                "-e",
+                "neo4jUrl=bolt://host.docker.internal:7687",
+                "-p",
+                "5554:5554",
+                "neolace/neolace-app/backend:latest"
+            ],
+            "problemMatcher": []
+        }
     ]
 }

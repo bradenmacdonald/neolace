@@ -1,12 +1,10 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { graph } from "neolace/core/graph.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
-import { group, test, setTestIsolation, api, getClient, assertEquals, assertRejects } from "neolace/api/tests.ts";
+import { api, assertEquals, assertRejects, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
 
 group(import.meta, () => {
-
     group("Site Schema API", () => {
-
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
         /**
@@ -50,7 +48,7 @@ group(import.meta, () => {
                 edits: [
                     {
                         code: "CreateEntryType",
-                        data: { id: VNID("_ETSOFTWARE"), name: "Software"},
+                        data: { id: VNID("_ETSOFTWARE"), name: "Software" },
                     },
                 ],
             });
@@ -71,6 +69,5 @@ group(import.meta, () => {
                 properties: defaultData.schema.properties,
             });
         });
-
-    })
+    });
 });

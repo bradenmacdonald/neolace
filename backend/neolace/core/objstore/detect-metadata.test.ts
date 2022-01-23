@@ -1,10 +1,8 @@
-import { group, test, assertEquals } from "neolace/lib/tests.ts";
-import { getFullPath, files } from "neolace/sample-data/plantdb/datafiles.ts";
+import { assertEquals, group, test } from "neolace/lib/tests.ts";
+import { files, getFullPath } from "neolace/sample-data/plantdb/datafiles.ts";
 import { detectImageMetadata } from "./detect-metadata.ts";
 
-
 group(import.meta, () => {
-
     test("it can detect an image's size", async () => {
         const imageDataWebp = await Deno.readFile(getFullPath(files.ponderosaPineImg.path));
         const metadata = await detectImageMetadata(imageDataWebp);

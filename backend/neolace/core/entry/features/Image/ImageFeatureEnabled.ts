@@ -1,27 +1,20 @@
-import {
-    C,
-    RawVNode,
-    VNodeType,
-    VirtualPropType,
-    WrappedTransaction,
-} from "neolace/deps/vertex-framework.ts";
+import { C, RawVNode, VirtualPropType, VNodeType, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
 
 /**
  * For each EntryType that supports (enables) the Image feature, that EntryType will have an
  * ImageFeatureEnabled (EnabledFeature) node with configuration that affects how the feature works.
- * 
+ *
  * This is part of the site's schema, not content.
  */
- export class ImageFeatureEnabled extends EnabledFeature {
+export class ImageFeatureEnabled extends EnabledFeature {
     static label = "ImageFeatureEnabled";
     static properties = {
         ...VNodeType.properties,
     };
 
-    static readonly rel = this.hasRelationshipsFromThisTo({
-    });
+    static readonly rel = this.hasRelationshipsFromThisTo({});
 
     static virtualProperties = this.hasVirtualProperties(() => ({
         entryType: {

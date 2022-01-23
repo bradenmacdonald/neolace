@@ -1,23 +1,21 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { group, test, setTestIsolation, assertEquals, assertThrows, assertNotEquals } from "neolace/lib/tests.ts";
+import { assertEquals, assertNotEquals, assertThrows, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { LookupParseError } from "./errors.ts";
 import { LookupExpression } from "./expression.ts";
 import {
     Ancestors,
     AndAncestors,
-    List,
     // Count,
     DateExpression,
-    LiteralExpression,
     GetProperty,
+    List,
+    LiteralExpression,
     This,
 } from "./expressions/index.ts";
 import * as V from "./values.ts";
 import { parseLookupString } from "./parse.ts";
 
-
 group(import.meta, () => {
-
     // These tests just test parsing, so they don't use the database at all.
     setTestIsolation(setTestIsolation.levels.BLANK_NO_ISOLATION);
 
@@ -29,11 +27,11 @@ group(import.meta, () => {
         const parsedRoundTrip = parseLookupString(parsed.toString());
         assertEquals(parsedRoundTrip, expected);
     }
-    
+
     test("Comparison of parsed expressions", () => {
         assertEquals(new This(), new This());
         assertEquals(new Ancestors(new This()), new Ancestors(new This()));
-        assertNotEquals(new Ancestors(new This()), new AndAncestors(new This()));  // Ancestors != AndAncestors
+        assertNotEquals(new Ancestors(new This()), new AndAncestors(new This())); // Ancestors != AndAncestors
     });
 
     test("Invalid", () => {
@@ -51,24 +49,32 @@ group(import.meta, () => {
     test("GetProperty - get(...)", () => {
         checkParse(
             "this.get(prop=[[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]])",
-            new GetProperty(new This(), {propertyExpr: new LiteralExpression(new V.PropertyValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd")))}),
+            new GetProperty(new This(), {
+                propertyExpr: new LiteralExpression(new V.PropertyValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd"))),
+            }),
         );
         checkParse(
             `get(this, prop=[[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]])`,
-            new GetProperty(new This(), {propertyExpr: new LiteralExpression(new V.PropertyValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd")))}),
+            new GetProperty(new This(), {
+                propertyExpr: new LiteralExpression(new V.PropertyValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd"))),
+            }),
         );
         checkParse(
             "this.andAncestors().get(prop=[[/prop/_HASA]])",
-            new GetProperty(new AndAncestors(new This()), {propertyExpr: new LiteralExpression(new V.PropertyValue(VNID("_HASA")))}),
+            new GetProperty(new AndAncestors(new This()), {
+                propertyExpr: new LiteralExpression(new V.PropertyValue(VNID("_HASA"))),
+            }),
         );
     });
     test("List", () => {
         checkParse("[]", new List([]));
-        checkParse(`[null, 1, "hello"]`, new List([
-            new LiteralExpression(new V.NullValue()),
-            new LiteralExpression(new V.IntegerValue(1)),
-            new LiteralExpression(new V.StringValue("hello")),
-        ]));
+        checkParse(
+            `[null, 1, "hello"]`,
+            new List([
+                new LiteralExpression(new V.NullValue()),
+                new LiteralExpression(new V.IntegerValue(1)),
+                new LiteralExpression(new V.StringValue("hello")),
+            ]),
+        );
     });
-
 });

@@ -6,8 +6,7 @@ import { LookupContext } from "../context.ts";
 /**
  * this: gets a reference to the "current entry", if there is one.
  */
- export class This extends LookupExpression {
-
+export class This extends LookupExpression {
     public async getValue(context: LookupContext) {
         if (!context.entryId) {
             throw new LookupEvaluationError(`The keyword "this" only works in the context of a specific entry.`);

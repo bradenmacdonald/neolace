@@ -1,4 +1,4 @@
-import { NeolaceHttpResource, Drash } from "neolace/api/mod.ts";
+import { Drash, NeolaceHttpResource } from "neolace/api/mod.ts";
 
 export class HomePageResource extends NeolaceHttpResource {
     public paths = ["/"];

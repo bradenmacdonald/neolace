@@ -1,10 +1,8 @@
-import { C, VNID, WrappedTransaction, Field } from "neolace/deps/vertex-framework.ts";
+import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
-
-
 
 /**
  * Data structure used when querying for property values on an entry, including those explicitly
@@ -14,56 +12,58 @@ import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
  */
 export type EntryPropertyValueSet = {
     property: {
-        id: VNID,
-        name: string,
-        importance: number,
+        id: VNID;
+        name: string;
+        importance: number;
         /** Default value. Only loaded from the database if no explicit value is set. */
-        default: string|null,
+        default: string | null;
         /** A markdown string with "{value}" placeholders, used to format the value, e.g. make it a link or italic. */
-        displayAs?: string,
-    },
+        displayAs?: string;
+    };
     facts: Array<{
-        factId: VNID,
-        valueExpression: string,
-        note: string,
-        rank: number,
-        slot?: string,
-        source: {from: "ThisEntry"}|{from: "AncestorEntry", entryId: VNID},
-    }>,
+        factId: VNID;
+        valueExpression: string;
+        note: string;
+        rank: number;
+        slot?: string;
+        source: { from: "ThisEntry" } | { from: "AncestorEntry"; entryId: VNID };
+    }>;
 };
-
 
 /**
  * Get all property values associated with an Entry.
  *
  * This includes inherited properties and will order the results by importance.
  */
-export async function getEntryProperties<TC extends true|undefined = undefined>(entryId: VNID, options: {
-    tx: WrappedTransaction,
-    maxImportance?: number,
-    skip?: number,
-    limit?: number,
+export async function getEntryProperties<TC extends true | undefined = undefined>(entryId: VNID, options: {
+    tx: WrappedTransaction;
+    maxImportance?: number;
+    skip?: number;
+    limit?: number;
     /** Should the total count of matching properties be included in the results? */
-    totalCount?: TC,
+    totalCount?: TC;
     /** Instead of fetching all properties, fetch just one (used by getEntryProperty()) */
-    specificPropertyId?: VNID,
-}): Promise<EntryPropertyValueSet[] & (TC extends true ? {totalCount: number} : unknown)> {
-
+    specificPropertyId?: VNID;
+}): Promise<EntryPropertyValueSet[] & (TC extends true ? { totalCount: number } : unknown)> {
     // Neo4j doesn't allow normal query variables to be used for skip/limit so we have to carefully ensure these values
     // are safe (are just plain numbers) then format them for interpolation in the query string as part of the cypher
     // expression (not as variables)
     const skipSafe = C(String(Number(options.skip ?? 0)));
     const limitSafe = C(String(Number(Number(options.limit ?? 100))));
 
-    const maxImportance = options.maxImportance ?? 100;  // Importance is in the range 0-99 so <= 100 will always match everything
+    const maxImportance = options.maxImportance ?? 100; // Importance is in the range 0-99 so <= 100 will always match everything
 
     if (options.specificPropertyId && options.totalCount) {
-        throw new Error(`Cannot request totalCount along with specific property ID - no need for wasting extra calculation when count is either 0 or 1.`);
+        throw new Error(
+            `Cannot request totalCount along with specific property ID - no need for wasting extra calculation when count is either 0 or 1.`,
+        );
     }
 
     // Start fetching the total count of matching properties asynchronously, if requested
     // TBD: is this really asynchronous, if it's part of the same transaction? Probably not.
-    const totalCountPromise: Promise<number|undefined> = !options.totalCount ? new Promise(resolve => resolve(undefined)) : options.tx.queryOne(C`
+    const totalCountPromise: Promise<number | undefined> = !options.totalCount
+        ? new Promise((resolve) => resolve(undefined))
+        : options.tx.queryOne(C`
         MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
 
         MATCH (prop:${Property})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
@@ -80,7 +80,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
                 )
 
         RETURN count(prop) AS totalCount
-    `.givesShape({totalCount: Field.Int})).then(r => r.totalCount);
+    `.givesShape({ totalCount: Field.Int })).then((r) => r.totalCount);
 
     const data = await options.tx.query(C`
         MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
@@ -163,7 +163,7 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
     }));
 
     // deno-lint-ignore no-explicit-any
-    const result: any = data.map(d => d.propertyData);
+    const result: any = data.map((d) => d.propertyData);
 
     // Add the total count onto the array, if requested.
     if (options.totalCount) {
@@ -179,7 +179,9 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
         // We do this at the end because it's more efficient to do once most irrelevant/inherited facts are stripped out,
         // and because it's a little tricky to do in the Cypher query due to its structure and use of collect()
         // deno-lint-ignore no-explicit-any
-        prop.facts.sort((pfA: any, pfB: any) => (pfA.slot.localeCompare(pfB.slot))*100_000_000 + (pfA.rank - pfB.rank));
+        prop.facts.sort((pfA: any, pfB: any) =>
+            (pfA.slot.localeCompare(pfB.slot)) * 100_000_000 + (pfA.rank - pfB.rank)
+        );
         // Remove "slot" property if it's empty
         // deno-lint-ignore no-explicit-any
         prop.facts.forEach((pf: any) => {
@@ -192,12 +194,12 @@ export async function getEntryProperties<TC extends true|undefined = undefined>(
     return result;
 }
 
-
 /**
  * Get the value[s] from a single property that are set on an entry (or inherited from an ancestor entry)
  */
- export async function getEntryProperty({entryId, propertyId, tx}: {entryId: VNID, propertyId: VNID, tx: WrappedTransaction}): Promise<EntryPropertyValueSet|undefined> {
-
+export async function getEntryProperty(
+    { entryId, propertyId, tx }: { entryId: VNID; propertyId: VNID; tx: WrappedTransaction },
+): Promise<EntryPropertyValueSet | undefined> {
     const results = await getEntryProperties(entryId, {
         limit: 1,
         specificPropertyId: propertyId,

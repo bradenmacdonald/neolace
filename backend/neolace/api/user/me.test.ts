@@ -1,13 +1,10 @@
-import { group, test, assertEquals, setTestIsolation, getClient, assertRejects, api } from "neolace/api/tests.ts";
+import { api, assertEquals, assertRejects, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
 
 group(import.meta, () => {
-
     group("Get information about my own account", () => {
-
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
 
         test("can check who is logged in", async () => {
-
             // Get an API client, logged in as a bot that belongs to Alex
             const client = await getClient(defaultData.users.admin);
             const result = await client.whoAmI();
@@ -20,7 +17,6 @@ group(import.meta, () => {
         });
 
         test("can report when not logged in", async () => {
-
             // Get an API client, not logged in
             const client = await getClient();
 
@@ -29,5 +25,5 @@ group(import.meta, () => {
                 api.NotAuthenticated,
             );
         });
-    })
+    });
 });

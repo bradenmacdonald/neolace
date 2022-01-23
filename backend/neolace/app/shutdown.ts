@@ -3,10 +3,12 @@
  * is being used as a web server, a worker process, an admin shell, for tests,
  * or anything else.
  */
- import * as log from "std/log/mod.ts";
+import * as log from "std/log/mod.ts";
 
 const _onShutDown: Array<() => Promise<unknown>> = [];
-export const onShutDown = (handler: () => Promise<unknown>): void => { _onShutDown.push(handler); }
+export const onShutDown = (handler: () => Promise<unknown>): void => {
+    _onShutDown.push(handler);
+};
 let shutdownCleanly = false;
 
 /**
@@ -29,7 +31,7 @@ async function prepareForShutdown(): Promise<void> {
 /** Do a clean, controlled shutdown. */
 export function shutdown(): void {
     prepareForShutdown().then(() => {
-        const openResources = Object.values(Deno.resources).filter(name => !name.startsWith("std"));
+        const openResources = Object.values(Deno.resources).filter((name) => !name.startsWith("std"));
         if (openResources.length) {
             log.error("some resources were not released; not a clean shutdown. Found: " + openResources.join(", "));
             Deno.exit(1);
@@ -47,10 +49,10 @@ const sigintWatcher = async () => {
 };
 Deno.addSignalListener("SIGINT", sigintWatcher);
 const sigtermWatcher = async () => {
-    log.info("Shutting down (SIGTERM)...")
+    log.info("Shutting down (SIGTERM)...");
     await prepareForShutdown();
     Deno.exit(0);
-}
+};
 Deno.addSignalListener("SIGTERM", sigtermWatcher);
 onShutDown(async () => {
     Deno.removeSignalListener("SIGINT", sigintWatcher);

@@ -2,10 +2,9 @@ import { C } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { LookupExpression } from "../expression.ts";
-import { LazyEntrySetValue, EntryValue, IntegerValue } from "../values.ts";
+import { EntryValue, IntegerValue, LazyEntrySetValue } from "../values.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupContext } from "../context.ts";
-
 
 const MAX_DEPTH = 50;
 
@@ -18,13 +17,12 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
     } else {
         throw new LookupEvaluationError("Unexpected data type for 'distance' while evaluating lookup expression.");
     }
-}
+};
 
 /**
  * ancestors(entry): returns the ancestors of the specified entry
  */
- export class Ancestors extends LookupExpression {
-
+export class Ancestors extends LookupExpression {
     // An expression that specifies what entry's ancestors we want to retrieve
     readonly entryExpr: LookupExpression;
 
@@ -36,7 +34,9 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
     public async getValue(context: LookupContext) {
         const startingEntry = await this.entryExpr.getValueAs(EntryValue, context);
 
-        return new LazyEntrySetValue(context, C`
+        return new LazyEntrySetValue(
+            context,
+            C`
             MATCH (entry:${Entry} {id: ${startingEntry.id}})
             MATCH path = (entry)-[:${Entry.rel.IS_A}*..${C(String(MAX_DEPTH))}]->(ancestor:${Entry})
             WHERE ancestor <> entry  // Never return the starting node as its own ancestor, if the graph is cyclic
@@ -45,7 +45,9 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
             ORDER BY distance, ancestor.name
 
             WITH ancestor AS entry, {distance: distance} AS annotations
-        `, {annotations: {distance: dbDistanceToValue}});
+        `,
+            { annotations: { distance: dbDistanceToValue } },
+        );
     }
 
     public toString(): string {
@@ -56,8 +58,7 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
 /**
  * andAncestors(entry): returns the ancestors of the specified entry AND the entry itself
  */
- export class AndAncestors extends LookupExpression {
-
+export class AndAncestors extends LookupExpression {
     // An expression that specifies what entry's ancestors we want to retrieve
     readonly entryExpr: LookupExpression;
 
@@ -69,14 +70,18 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
     public async getValue(context: LookupContext) {
         const startingEntry = await this.entryExpr.getValueAs(EntryValue, context);
 
-        return new LazyEntrySetValue(context, C`
+        return new LazyEntrySetValue(
+            context,
+            C`
             MATCH (entry:${Entry} {id: ${startingEntry.id}})
             MATCH path = (entry)-[:${Entry.rel.IS_A}*0..${C(String(MAX_DEPTH))}]->(ancestor:${Entry})
             WITH ancestor, min(length(path)) AS distance
             ORDER BY distance, ancestor.name
 
             WITH ancestor AS entry, {distance: distance} AS annotations
-        `, {annotations: {distance: dbDistanceToValue}});
+        `,
+            { annotations: { distance: dbDistanceToValue } },
+        );
     }
 
     public toString(): string {

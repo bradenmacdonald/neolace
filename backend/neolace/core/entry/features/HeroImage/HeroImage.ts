@@ -28,15 +28,14 @@ export const HeroImageFeature = EntryTypeFeature({
     dataClass: HeroImageData,
     updateFeatureSchema: Schema({}),
     async contributeToSchema(mutableSchema: SiteSchemaData, tx: WrappedTransaction, siteId: VNID) {
-
         const configuredOnThisSite = await tx.query(C`
             MATCH (et:${EntryType})-[:FOR_SITE]->(:${Site} {id: ${siteId}}),
                   (et)-[:${EntryType.rel.HAS_FEATURE}]->(config:${HeroImageFeatureEnabled})
             WITH et, config
             RETURN et.id AS entryTypeId, config.lookupExpression AS lookupExpression
-        `.givesShape({entryTypeId: Field.VNID, lookupExpression: Field.String}));
+        `.givesShape({ entryTypeId: Field.VNID, lookupExpression: Field.String }));
 
-        configuredOnThisSite.forEach(config => {
+        configuredOnThisSite.forEach((config) => {
             const entryTypeId: VNID = config.entryTypeId;
             if (!(entryTypeId in mutableSchema.entryTypes)) {
                 throw new Error("EntryType not in schema");
@@ -52,7 +51,7 @@ export const HeroImageFeature = EntryTypeFeature({
             MERGE (et)-[:${EntryType.rel.HAS_FEATURE}]->(feature:${HeroImageFeatureEnabled}:${C(EnabledFeature.label)})
             ON CREATE SET feature.id = ${VNID()}
             SET feature.lookupExpression = ${config.lookupExpression}
-        `.RETURN({"feature.id": Field.VNID}));
+        `.RETURN({ "feature.id": Field.VNID }));
 
         // We need to mark the HeroImageFeatureEnabled node as modified:
         markNodeAsModified(result["feature.id"]);
@@ -68,14 +67,13 @@ export const HeroImageFeature = EntryTypeFeature({
     /**
      * Load the details of this feature for a single entry.
      */
-    async loadData({tx, config, entryId, refCache}) {
-
+    async loadData({ tx, config, entryId, refCache }) {
         const siteId = await siteIdForEntryId(entryId);
-        const context: LookupContext = {tx, siteId, entryId, defaultPageSize: 1n};
+        const context: LookupContext = { tx, siteId, entryId, defaultPageSize: 1n };
 
         let value;
         try {
-            value = await parseLookupString(config.lookupExpression).getValue(context).then(v => v.makeConcrete());
+            value = await parseLookupString(config.lookupExpression).getValue(context).then((v) => v.makeConcrete());
         } catch (err: unknown) {
             if (err instanceof LookupError) {
                 log.error(err.message);
@@ -107,23 +105,29 @@ export const HeroImageFeature = EntryTypeFeature({
         } else if (value instanceof EntryValue) {
             imageEntryId = value.id;
         } else {
-            log.error(`Cannot display hero image for entry ${entryId} because the lookup expression resulted in ${JSON.stringify(value.toJSON())}`);
+            log.error(
+                `Cannot display hero image for entry ${entryId} because the lookup expression resulted in ${
+                    JSON.stringify(value.toJSON())
+                }`,
+            );
             return undefined;
         }
 
         if (caption === "") {
-            caption = (await tx.pullOne(Entry, e => e.name, {key: imageEntryId})).name;
+            caption = (await tx.pullOne(Entry, (e) => e.name, { key: imageEntryId })).name;
         }
 
-        const imageData = await getEntryFeatureData(imageEntryId, {featureType: "Image", tx});
+        const imageData = await getEntryFeatureData(imageEntryId, { featureType: "Image", tx });
         if (imageData === undefined) {
-            log.error(`Cannot display hero image for entry ${entryId} because the lookup expression resulted in entry ${imageEntryId} which is not an image.`);
+            log.error(
+                `Cannot display hero image for entry ${entryId} because the lookup expression resulted in entry ${imageEntryId} which is not an image.`,
+            );
             return undefined;
         }
 
         refCache?.addReferenceToEntryId(imageEntryId);
         if (caption) {
-            refCache?.extractMarkdownReferences(caption, {currentEntryId: imageEntryId});
+            refCache?.extractMarkdownReferences(caption, { currentEntryId: imageEntryId });
         }
 
         return {
@@ -134,5 +138,5 @@ export const HeroImageFeature = EntryTypeFeature({
             height: imageData.height,
             blurHash: imageData.blurHash,
         };
-    }
+    },
 });

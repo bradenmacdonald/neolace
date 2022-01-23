@@ -6,23 +6,28 @@ import { shutdown } from "neolace/app/shutdown.ts";
 import { graph } from "neolace/core/graph.ts";
 import { CreateGroup, PermissionGrant } from "neolace/core/Group.ts";
 import { CreateBot, CreateUser } from "neolace/core/User.ts";
-import { fixRelationshipIdsAfterRestoringSnapshot, testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
+import {
+    fixRelationshipIdsAfterRestoringSnapshot,
+    testDataFile,
+    TestSetupData,
+} from "neolace/lib/tests-default-data.ts";
 
-import {test as baseTest, group as baseGroup, afterAll, afterEach, beforeAll, beforeEach} from "neolace/deps/hooked.ts";
-
-// Exports:
-export * from "std/testing/asserts.ts";
-export {
+import {
     afterAll,
     afterEach,
     beforeAll,
     beforeEach,
-};
+    group as baseGroup,
+    test as baseTest,
+} from "neolace/deps/hooked.ts";
 
+// Exports:
+export * from "std/testing/asserts.ts";
+export { afterAll, afterEach, beforeAll, beforeEach };
 
 /**
  * Helper to create a nice name for the base test group in a test suite file.
- * 
+ *
  * Usage:
  *     group(import.meta, () => {
  *         group("UUIDv4", () => {
@@ -31,7 +36,7 @@ export {
  *
  * @param nameOrImportMeta A custom name for this group, or `import.meta` to auto-generate the name from the filename
  */
- export function group(nameOrImportMeta: {url: string}|string, tests: () => unknown) {
+export function group(nameOrImportMeta: { url: string } | string, tests: () => unknown) {
     if (typeof nameOrImportMeta === "string") {
         return baseGroup(nameOrImportMeta, tests);
     }
@@ -43,10 +48,11 @@ export {
     return baseGroup(url.substr(idx + 1), tests);
 }
 
-
 // Override the test() function to disable the ops/resources sanitizers by default, as our beforeTest/afterTest code
 // interferes with them.
-function badArgs(): never { throw new Error("Invalid test definition"); }
+function badArgs(): never {
+    throw new Error("Invalid test definition");
+}
 export function test(t: Deno.TestDefinition): void;
 export function test(name: string, fn: () => void | Promise<void>): void;
 export function test(
@@ -59,20 +65,20 @@ export function test(
         : (typeof testFn !== "undefined" ? { name: t, fn: testFn } : badArgs());
     opts.sanitizeOps = false;
     opts.sanitizeResources = false;
-    return baseTest({name, fn, ...opts});
+    return baseTest({ name, fn, ...opts });
 }
-
-
 
 let dataStr: string;
 try {
     dataStr = await Deno.readTextFile(testDataFile);
 } catch (err) {
     log.error(err);
-    log.info("Please run 'ENV_TYPE=test deno run --import-map=import_map.json --allow-write --allow-net --unstable --allow-env neolace/scripts/test-setup.ts'");
+    log.info(
+        "Please run 'ENV_TYPE=test deno run --import-map=import_map.json --allow-write --allow-net --unstable --allow-env neolace/scripts/test-setup.ts'",
+    );
     Deno.exit(1);
 }
-const {emptySnapshot, defaultDataSnapshot, data} = JSON.parse(dataStr) as TestSetupData;
+const { emptySnapshot, defaultDataSnapshot, data } = JSON.parse(dataStr) as TestSetupData;
 
 if (environment !== "test") {
     // TODO: is there a way to auto-detect when we're run via 'deno test'?
@@ -83,7 +89,7 @@ if (environment !== "test") {
 afterAll(async () => {
     // Leave the data in the database from whatever test ran last, which is helpful for debugging.
     await shutdown();
-})
+});
 
 enum TestIsolationLevels {
     /**
@@ -106,10 +112,9 @@ enum TestIsolationLevels {
     DEFAULT_ISOLATED,
 }
 
-type ReturnedData<T extends TestIsolationLevels> = 
-    T extends TestIsolationLevels.DEFAULT_ISOLATED ? typeof data :
-    T extends TestIsolationLevels.DEFAULT_NO_ISOLATION ? typeof data :
-    void;
+type ReturnedData<T extends TestIsolationLevels> = T extends TestIsolationLevels.DEFAULT_ISOLATED ? typeof data
+    : T extends TestIsolationLevels.DEFAULT_NO_ISOLATION ? typeof data
+    : void;
 
 export async function resetDBToBlankSnapshot() {
     await graph.resetDBToSnapshot(emptySnapshot);
@@ -126,15 +131,23 @@ export async function resetDBToPlantDBSnapshot() {
 export function setTestIsolation<Level extends TestIsolationLevels>(level: Level): ReturnedData<Level> {
     try {
         if (level === TestIsolationLevels.BLANK_NO_ISOLATION) {
-            beforeAll(async () => { await resetDBToBlankSnapshot(); });
+            beforeAll(async () => {
+                await resetDBToBlankSnapshot();
+            });
         } else if (level === TestIsolationLevels.BLANK_ISOLATED) {
-            beforeEach(async () => { await resetDBToBlankSnapshot(); });
+            beforeEach(async () => {
+                await resetDBToBlankSnapshot();
+            });
         } else if (level === TestIsolationLevels.DEFAULT_NO_ISOLATION) {
-            beforeAll(async () => { await resetDBToPlantDBSnapshot(); });
+            beforeAll(async () => {
+                await resetDBToPlantDBSnapshot();
+            });
             // deno-lint-ignore no-explicit-any
             return data as any;
         } else if (level === TestIsolationLevels.DEFAULT_ISOLATED) {
-            beforeEach(async () => { await resetDBToPlantDBSnapshot(); });
+            beforeEach(async () => {
+                await resetDBToPlantDBSnapshot();
+            });
             // deno-lint-ignore no-explicit-any
             return data as any;
         }
@@ -147,42 +160,41 @@ export function setTestIsolation<Level extends TestIsolationLevels>(level: Level
 }
 setTestIsolation.levels = TestIsolationLevels;
 
-
-
-let _userCounter = 0;  // A counter used by createUserWithPermissions
+let _userCounter = 0; // A counter used by createUserWithPermissions
 /**
  * Helper function to create a new user that has exactly the specified permissions, for test purposes.
- * @param permissions 
+ * @param permissions
  */
-export async function createUserWithPermissions(permissions: Set<PermissionGrant>): Promise<{userId: VNID, groupId: VNID, userData: {bot: {authToken: string}}}> {
-
+export async function createUserWithPermissions(
+    permissions: Set<PermissionGrant>,
+): Promise<{ userId: VNID; groupId: VNID; userData: { bot: { authToken: string } } }> {
     const userNumber = ++_userCounter;
     const username = `user${userNumber}`;
 
-    const {id: userId} = await graph.runAsSystem(CreateUser({
+    const { id: userId } = await graph.runAsSystem(CreateUser({
         email: `${username}@example.com`,
         fullName: `User${userNumber} Tester`,
         username,
     }));
 
-    const {authToken: botAuthToken} = await graph.runAsSystem(CreateBot({
+    const { authToken: botAuthToken } = await graph.runAsSystem(CreateBot({
         ownedByUser: userId,
         username: `user${userNumber}bot`,
         fullName: `User${userNumber} Tester's Bot`,
         inheritPermissions: true,
     }));
 
-    const {id: groupId} = await graph.runAsSystem(CreateGroup({
+    const { id: groupId } = await graph.runAsSystem(CreateGroup({
         name: `TestGroup${userNumber}`,
         belongsTo: data.site.id,
         addUsers: [userId],
-        administerSite:       permissions.has(PermissionGrant.administerSite),
-        administerGroups:     permissions.has(PermissionGrant.administerGroups),
-        approveEntryEdits:    permissions.has(PermissionGrant.approveEntryEdits),
+        administerSite: permissions.has(PermissionGrant.administerSite),
+        administerGroups: permissions.has(PermissionGrant.administerGroups),
+        approveEntryEdits: permissions.has(PermissionGrant.approveEntryEdits),
         approveSchemaChanges: permissions.has(PermissionGrant.approveSchemaChanges),
-        proposeEntryEdits:    permissions.has(PermissionGrant.proposeEntryEdits),
+        proposeEntryEdits: permissions.has(PermissionGrant.proposeEntryEdits),
         proposeSchemaChanges: permissions.has(PermissionGrant.proposeSchemaChanges),
     }));
 
-    return {userId, groupId, userData: {bot: {authToken: botAuthToken}}};
+    return { userId, groupId, userData: { bot: { authToken: botAuthToken } } };
 }

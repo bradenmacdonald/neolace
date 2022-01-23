@@ -1,18 +1,26 @@
-import { group, test, assertEquals, assert, setTestIsolation, assertThrows } from "neolace/lib/tests.ts";
+import { assert, assertEquals, assertThrows, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { AccessMode, Site, UpdateSite } from "neolace/core/Site.ts";
-import { AllOf, CanEditSiteSettings, CanViewEntries, Check, CheckContext, CheckSiteIsPublic, CheckSiteIsPublicContributions, CheckUserHasGrants, OneOf } from "neolace/core/permissions.ts";
+import {
+    AllOf,
+    CanEditSiteSettings,
+    CanViewEntries,
+    Check,
+    CheckContext,
+    CheckSiteIsPublic,
+    CheckSiteIsPublicContributions,
+    CheckUserHasGrants,
+    OneOf,
+} from "neolace/core/permissions.ts";
 import { VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { CreateBot } from "neolace/core/User.ts";
 import { PermissionGrant, UpdateGroup } from "neolace/core/Group.ts";
 
 group(import.meta, () => {
-
     group("basic permissions tests", () => {
-
         const TrueCheck: Check = () => true;
         const FalseCheck: Check = () => false;
-        const emptyContext: CheckContext = {tx: {/* fake transaction */} as WrappedTransaction};
+        const emptyContext: CheckContext = { tx: {/* fake transaction */} as WrappedTransaction };
 
         test(`OneOf is an OR check`, async () => {
             // should be true:
@@ -41,18 +49,15 @@ group(import.meta, () => {
     });
 
     group("Permissions tests using graph data", () => {
-
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
         const check = (check: Check, userId?: VNID): Promise<boolean> => {
-            return graph.read(async tx => await check({tx, siteId: defaultData.site.id, userId}));
+            return graph.read(async (tx) => await check({ tx, siteId: defaultData.site.id, userId }));
         };
 
-
         test(`site access mode checks`, async () => {
-
             const siteId = defaultData.site.id;
-            const initialSite = await graph.pullOne(Site, s => s.accessMode, {key: siteId});
+            const initialSite = await graph.pullOne(Site, (s) => s.accessMode, { key: siteId });
 
             ////////////////////////////////////////////////////////////////////////
             // The site is in "public contributions" mode:
@@ -60,23 +65,23 @@ group(import.meta, () => {
 
             assert(await check(CheckSiteIsPublic));
             assert(await check(CheckSiteIsPublicContributions));
-            assert(await check(CanViewEntries));  // An anonymous user should have permission to view entries
+            assert(await check(CanViewEntries)); // An anonymous user should have permission to view entries
 
             ////////////////////////////////////////////////////////////////////////
             // Change the site to "public read-only" mode:
-            await graph.runAsSystem(UpdateSite({key: siteId, accessMode: AccessMode.PublicReadOnly}));
+            await graph.runAsSystem(UpdateSite({ key: siteId, accessMode: AccessMode.PublicReadOnly }));
 
             assert(await check(CheckSiteIsPublic));
-            assert(!await check(CheckSiteIsPublicContributions));  // This is now false
-            assert(await check(CanViewEntries));  // An anonymous user should still have permission to view entries
+            assert(!await check(CheckSiteIsPublicContributions)); // This is now false
+            assert(await check(CanViewEntries)); // An anonymous user should still have permission to view entries
 
             ////////////////////////////////////////////////////////////////////////
             // Change the site to "private" mode:
-            await graph.runAsSystem(UpdateSite({key: siteId, accessMode: AccessMode.Private}));
+            await graph.runAsSystem(UpdateSite({ key: siteId, accessMode: AccessMode.Private }));
 
-            assert(!await check(CheckSiteIsPublic));  // This is now false
-            assert(!await check(CheckSiteIsPublicContributions));  // This is still false
-            assert(!await check(CanViewEntries));  // Now an anonymous user will not have permission to view entries
+            assert(!await check(CheckSiteIsPublic)); // This is now false
+            assert(!await check(CheckSiteIsPublicContributions)); // This is still false
+            assert(!await check(CanViewEntries)); // Now an anonymous user will not have permission to view entries
         });
 
         test(`check permissions granted via groups`, async () => {
@@ -117,6 +122,5 @@ group(import.meta, () => {
             }));
             assert(await check(CheckUserHasGrants(PermissionGrant.administerSite), regularBot.id));
         });
-
     });
 });

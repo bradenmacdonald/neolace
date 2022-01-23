@@ -12,12 +12,12 @@ import { Check, CheckContext, permissions } from "neolace/core/permissions.ts";
 import { siteCodeForSite, siteIdFromShortId } from "neolace/core/Site.ts";
 
 interface AuthenticatedUserData {
-    isBot: boolean,
-    id: VNID,
-    authnId: number|undefined,
-    username: string
-    email: string,
-    fullName: string|null,
+    isBot: boolean;
+    id: VNID;
+    authnId: number | undefined;
+    username: string;
+    email: string;
+    fullName: string | null;
 }
 
 export type NeolaceHttpRequest = Drash.Request & {
@@ -28,19 +28,24 @@ type JsonCompatibleValue = string | boolean | Record<string, unknown> | null | u
 
 /**
  * Base class for defining a Neolace API resource.
- * 
+ *
  * A resource has a path like "/user/profile" and can have one or more methods (like POST, GET, etc.)
  */
 export abstract class NeolaceHttpResource extends Drash.Resource {
-
     method<Response extends JsonCompatibleValue, RequestBody extends JsonCompatibleValue = undefined>(
         metadata: {
-            responseSchema: api.schemas.Validator<Response>,
-            requestBodySchema?: api.schemas.Validator<RequestBody>,
-            description?: string,
-            notes?: string,
+            responseSchema: api.schemas.Validator<Response>;
+            requestBodySchema?: api.schemas.Validator<RequestBody>;
+            description?: string;
+            notes?: string;
         },
-        fn: (args: {request: NeolaceHttpRequest, response: Drash.Response, bodyData: api.schemas.Type<api.schemas.Validator<RequestBody>>}) => Promise<api.schemas.Type<api.schemas.Validator<Response>>>
+        fn: (
+            args: {
+                request: NeolaceHttpRequest;
+                response: Drash.Response;
+                bodyData: api.schemas.Type<api.schemas.Validator<RequestBody>>;
+            },
+        ) => Promise<api.schemas.Type<api.schemas.Validator<Response>>>,
     ) {
         return async (request: Drash.Request, response: Drash.Response): Promise<void> => {
             try {
@@ -48,9 +53,13 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
                 const requestBodyValidated = this.validateRequestBody(request, metadata.requestBodySchema);
 
                 // Run the request:
-                const responseBodyValidated = metadata.responseSchema(await fn({request, response, bodyData: requestBodyValidated}));
+                const responseBodyValidated = metadata.responseSchema(
+                    await fn({ request, response, bodyData: requestBodyValidated }),
+                );
                 if (typeof responseBodyValidated !== "object" || responseBodyValidated === null) {
-                    throw new Error(`Expected API implementation to return an object, not ${typeof responseBodyValidated}`);
+                    throw new Error(
+                        `Expected API implementation to return an object, not ${typeof responseBodyValidated}`,
+                    );
                 }
                 response.json(responseBodyValidated);
             } catch (err: unknown) {
@@ -58,8 +67,8 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
                 if (err instanceof api.ApiError) {
                     response.status = err.statusCode;
                     const errorData: Record<string, unknown> = { message: err.message };
-                    if (err instanceof api.InvalidRequest) { errorData.reason = err.reason; }
-                    if (err instanceof api.InvalidFieldValue) { errorData.fieldErrors = err.fieldErrors; }
+                    if (err instanceof api.InvalidRequest) errorData.reason = err.reason;
+                    if (err instanceof api.InvalidFieldValue) errorData.fieldErrors = err.fieldErrors;
                     response.json(errorData);
                     log.warning(`Returned error response: ${err.message}`);
                 } else {
@@ -72,7 +81,10 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
         };
     }
 
-    private validateRequestBody<DataShape>(request: NeolaceHttpRequest, schema?: api.schemas.Validator<DataShape>): api.schemas.Type<api.schemas.Validator<DataShape>> {
+    private validateRequestBody<DataShape>(
+        request: NeolaceHttpRequest,
+        schema?: api.schemas.Validator<DataShape>,
+    ): api.schemas.Type<api.schemas.Validator<DataShape>> {
         if (schema === undefined) {
             // deno-lint-ignore no-explicit-any
             return undefined as any;
@@ -86,38 +98,40 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
             if (validationError instanceof Error && Array.isArray((validationError as any).errors)) {
                 // deno-lint-ignore no-explicit-any
                 const errors: PathError[] = (validationError as any).errors;
-                throw new api.InvalidFieldValue(errors.map(pe => ({
+                throw new api.InvalidFieldValue(errors.map((pe) => ({
                     fieldPath: pe.path.join("."),
                     message: pe.error.message,
                 })));
             }
-            log.error(`validateRequestBody got an unexpected error type - expected a ValidationError, got: ${validationError}`);
+            log.error(
+                `validateRequestBody got an unexpected error type - expected a ValidationError, got: ${validationError}`,
+            );
             throw validationError;
         }
     }
 
     /**
      * Get siteId and siteCode from the siteShortId parameter that's in the URL.
-     * 
+     *
      * Most of our REST API methods include a human-readable "shortId" for the Site in the URL, like this:
      * https://api.neolace.com/site/braden/entry/fr-joel
      *                              ^^^^^^ - shortId is "braden", and so the full slugId would be "site-braden"
      * This helper function looks up the Site based on this shortId and returns the siteId (VNID) and siteCode (the code
      * used to give Entries for the site a slugId namespace).
-     * 
+     *
      * This method will throw an exception if the site shortId is not in the URL or is not valid.
-     * 
+     *
      * @param request The current REST API request
-     * @returns 
+     * @returns
      */
-    protected async getSiteDetails(request: NeolaceHttpRequest): Promise<{siteId: VNID, siteCode: string}> {
+    protected async getSiteDetails(request: NeolaceHttpRequest): Promise<{ siteId: VNID; siteCode: string }> {
         const siteShortId = request.pathParam("siteShortId");
         if (typeof siteShortId !== "string") {
-            throw new Error("Expected the API endpoint URL to contain a siteShortId parameter.")
+            throw new Error("Expected the API endpoint URL to contain a siteShortId parameter.");
         }
         const siteId = await siteIdFromShortId(siteShortId);
         const siteCode = await siteCodeForSite(siteId);
-        return {siteId, siteCode};
+        return { siteId, siteCode };
     }
 
     protected requireUser(request: NeolaceHttpRequest): AuthenticatedUserData {
@@ -128,9 +142,13 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
         return user;
     }
 
-    protected async requirePermission(request: NeolaceHttpRequest, check: Check, ...otherChecks: Check[]): Promise<void> {
+    protected async requirePermission(
+        request: NeolaceHttpRequest,
+        check: Check,
+        ...otherChecks: Check[]
+    ): Promise<void> {
         const checksPassed = await this.hasPermission(request, check, ...otherChecks);
-    
+
         if (!checksPassed) {
             if (request.user?.id === undefined) {
                 // We don't know who this user is, so we don't know if they have permission or not.
@@ -142,27 +160,31 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
         }
     }
 
-    protected async hasPermission(request: NeolaceHttpRequest, check: Check, ...otherChecks: Check[]): Promise<boolean> {
+    protected async hasPermission(
+        request: NeolaceHttpRequest,
+        check: Check,
+        ...otherChecks: Check[]
+    ): Promise<boolean> {
         const siteId = request.pathParam("siteShortId") ? (await this.getSiteDetails(request)).siteId : undefined;
         const userId = request.user?.id ?? undefined;
-    
-        return await graph.read(async tx => {
-            const context: CheckContext = {tx, siteId, userId};
+
+        return await graph.read(async (tx) => {
+            const context: CheckContext = { tx, siteId, userId };
             for (const c of [check, ...otherChecks]) {
                 if (await c(context) !== true) {
-                    return false;  // This check was not passed
+                    return false; // This check was not passed
                 }
             }
-            return true;  // All checks passed
+            return true; // All checks passed
         });
     }
 
     /**
      * Parse the ?include=flag1,flag2,flag3 query parameter and return the set of included fields.
      * @param flagsEnum a string enum which contains all the valid fields (flags) that can be enabled.
-     * @returns 
+     * @returns
      */
-    protected getRequestFlags<T extends string>(request: NeolaceHttpRequest, flagsEnum: {[K: string]: T}): Set<T> {
+    protected getRequestFlags<T extends string>(request: NeolaceHttpRequest, flagsEnum: { [K: string]: T }): Set<T> {
         const include = request.queryParam("include");
         if (include === undefined) {
             return new Set();
@@ -179,22 +201,20 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
     }
 }
 
-
-
 interface ConvertErrorPathToField {
     // deno-lint-ignore no-explicit-any
-    (path: string, obj: any): string|undefined;
+    (path: string, obj: any): string | undefined;
 }
 
 /**
  * If 'err' is a computed_types ValidationError, return its PathError array, with detailed error messages.
  */
-function getPathErrorsIfPresent(err: unknown): PathError[]|undefined {
+function getPathErrorsIfPresent(err: unknown): PathError[] | undefined {
     // deno-lint-ignore no-explicit-any
     if (err instanceof Error && (err as any).errors && (err as any).errors.length > 1) {
         // deno-lint-ignore no-explicit-any
         const errors: any[] = (err as any).errors;
-        const result = errors.filter(e => e.path && Array.isArray(e.path) && e.error instanceof Error);
+        const result = errors.filter((e) => e.path && Array.isArray(e.path) && e.error instanceof Error);
         if (result) {
             // deno-lint-ignore no-explicit-any
             return result as any;
@@ -207,12 +227,11 @@ function getPathErrorsIfPresent(err: unknown): PathError[]|undefined {
  * Use this in a .catch() block after runAction() to catch any exceptions that may arise from trying to run
  * an action on the graph database, and convert those exceptions to REST API errors.
  */
-export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
+export function adaptErrors(...mapping: (string | ConvertErrorPathToField)[]) {
     // After an action is run on the graph database, but before it is committed, vertex framework will
     // validate all the fields of any changed models. If one of those fields is now invalid, we need to
     // map that error back to one of the request fields, if applicable.
-    return function(err: unknown) {
-
+    return function (err: unknown) {
         if (!(err instanceof Error)) {
             throw err;
         }
@@ -224,19 +243,19 @@ export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
         // as well as other generic errors from Vertex Framework's field validation
         if (!pathErrors && err instanceof FieldValidationError) {
             // convert this error from Vertex Framework's FieldValidationError to PathErrors:
-            pathErrors = [{ path: [err.field], error: new Error(err.innerMessage), }];
+            pathErrors = [{ path: [err.field], error: new Error(err.innerMessage) }];
         }
 
         if (pathErrors) {
-            const fieldErrors: {fieldPath: string; message: string}[] = [];
+            const fieldErrors: { fieldPath: string; message: string }[] = [];
             // Remap these errors from database model field names to request fields,
             // and convert from the computed_types "PathError" format to out string-based format.
-            pathErrors.forEach(pathError => {
+            pathErrors.forEach((pathError) => {
                 const fieldPath = pathError.path.join(".");
                 let found = false;
                 if (mapping.includes(fieldPath)) {
                     // The (POST) request contained a field that has exactly the same name as this model field; easy.
-                    fieldErrors.push({fieldPath, message: pathError.error.message});
+                    fieldErrors.push({ fieldPath, message: pathError.error.message });
                     found = true;
                 } else {
                     // If any of the values in "mapping" is a function mf(path, origObject) that returns a string
@@ -245,7 +264,7 @@ export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
                         if (typeof mf === "function") {
                             const requestField = mf(fieldPath, pathError.error);
                             if (requestField) {
-                                fieldErrors.push({fieldPath: requestField, message: pathError.error.message});
+                                fieldErrors.push({ fieldPath: requestField, message: pathError.error.message });
                                 found = true;
                                 break;
                             }
@@ -255,7 +274,11 @@ export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
                 if (!found) {
                     // We can't map this field into the request, so we have to raise a generic "Internal Server Error"
                     // instead of a "bad request fields" error.
-                    log.warning(`adaptErrors: Cannot map ValidationError back to request fields - unknown field has path "${fieldPath}" in error "${err}" (${JSON.stringify(err)})`);
+                    log.warning(
+                        `adaptErrors: Cannot map ValidationError back to request fields - unknown field has path "${fieldPath}" in error "${err}" (${
+                            JSON.stringify(err)
+                        })`,
+                    );
                     throw err;
                 }
             });
@@ -263,34 +286,34 @@ export function adaptErrors(...mapping: (string|ConvertErrorPathToField)[]) {
         }
 
         // We don't know what this error is - it will result in an "Internal Server Error"
-        log.warning(`Error of type ${err.name} cannot be converted to InvalidRequest by adaptErrors() - will result in Internal Server Error.`);
+        log.warning(
+            `Error of type ${err.name} cannot be converted to InvalidRequest by adaptErrors() - will result in Internal Server Error.`,
+        );
         throw err;
     };
 }
 /**
  * Simple helper function for adaptErrors.
- * 
+ *
  * Example:
  *     .catch(adaptErrors(..., adaptErrors.remap("slugId", "username")))
  * The above example means that any errors in validting the "slugId" field should be remapped to the "username" field,
  * and the API consumer will see a message that the "username" field was invalid.
  */
-adaptErrors.remap = (errorPath: string, requestPath: string) => (field: string) => field === errorPath ? requestPath : undefined;
+adaptErrors.remap = (errorPath: string, requestPath: string) =>
+    (field: string) => field === errorPath ? requestPath : undefined;
 
 function convertStandardErrors(err: Error): void {
     if (err.name === "Neo4jError") {
         if (err.message.match(/Node(.*) already exists with label `Human` and property `email`/)) {
-            throw new api.InvalidRequest(api.InvalidRequestReason.EmailAlreadyRegistered, "A user account is already registered with that email address.");
+            throw new api.InvalidRequest(
+                api.InvalidRequestReason.EmailAlreadyRegistered,
+                "A user account is already registered with that email address.",
+            );
         }
     } else if (err.message.match(/The username ".*" is already taken./)) {
         throw new api.InvalidRequest(api.InvalidRequestReason.UsernameAlreadyRegistered, err.message);
     }
 }
 
-export {
-    Drash,
-    graph,
-    api,
-    permissions,
-    log,
-};
+export { api, Drash, graph, log, permissions };

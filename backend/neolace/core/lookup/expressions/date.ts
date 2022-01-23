@@ -6,8 +6,7 @@ import { LookupContext } from "../context.ts";
 /**
  * date("YYYY-MM-DD"): parse a string into a date value
  */
- export class DateExpression extends LookupExpression {
-
+export class DateExpression extends LookupExpression {
     // An expression that evaluates to a string, giving the date
     readonly stringDateArg: LookupExpression;
 
@@ -32,7 +31,7 @@ import { LookupContext } from "../context.ts";
             if (String(BigInt(strValue)) !== strValue) {
                 throw new LookupEvaluationError("Date values should be in the format YYYY-MM-DD or YYYYMMDD");
             }
-            strValue = strValue.substring(0,4) + "-" + strValue.substring(4, 6) + "-" + strValue.substring(6, 8);
+            strValue = strValue.substring(0, 4) + "-" + strValue.substring(4, 6) + "-" + strValue.substring(6, 8);
         } else {
             throw new LookupEvaluationError(stdErrorMessage);
         }
@@ -43,7 +42,7 @@ import { LookupContext } from "../context.ts";
             // The Date constructor's parsing is messy, but passing an ISO8601 date string with no timezone
             // should always result in a UTC date object
             parsedDate = new Date(strValue);
-            if (isNaN(parsedDate.getUTCFullYear())) {  // If the date isn't valid, it may not throw an exception but all fields will return NaN
+            if (isNaN(parsedDate.getUTCFullYear())) { // If the date isn't valid, it may not throw an exception but all fields will return NaN
                 throw "invalid date";
             }
         } catch {
@@ -57,7 +56,7 @@ import { LookupContext } from "../context.ts";
             parsedDate.getUTCDate(),
         );
 
-        if (strValue !== newDateValue.asIsoString() && strValue !== newDateValue.asIsoString().replace('-', '')) {
+        if (strValue !== newDateValue.asIsoString() && strValue !== newDateValue.asIsoString().replace("-", "")) {
             // This is an invalid date like February 30, which has rolled over into March
             throw new LookupEvaluationError("Invalid date.");
         }

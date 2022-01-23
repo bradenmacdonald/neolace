@@ -12,27 +12,35 @@ import { Resize } from "https://deno.land/x/deno_image@v0.0.3/lib/resize/resize.
  */
 export function resizeImagePixels(
     imagePixels: Uint8Array,
-    options: {originalWidth: number, originalHeight: number, newMaxWidth: number, newMaxHeight: number}
+    options: { originalWidth: number; originalHeight: number; newMaxWidth: number; newMaxHeight: number },
 ): Promise<{
-    pixels: Uint8Array,
-    width: number,
-    height: number,
+    pixels: Uint8Array;
+    width: number;
+    height: number;
 }> {
     const { newWidth, newHeight } = getDimensions(options);
 
     return new Promise((resolve) => {
-        const resized = new Resize(options.originalWidth, options.originalHeight, newWidth, newHeight, true, true, false, (newPixels: Uint8Array) => {
-            resolve({
-                pixels: newPixels,
-                width: newWidth,
-                height: newHeight,
-            });
-        });
-            
+        const resized = new Resize(
+            options.originalWidth,
+            options.originalHeight,
+            newWidth,
+            newHeight,
+            true,
+            true,
+            false,
+            (newPixels: Uint8Array) => {
+                resolve({
+                    pixels: newPixels,
+                    width: newWidth,
+                    height: newHeight,
+                });
+            },
+        );
+
         resized.resize(imagePixels);
     });
 }
-
 
 /**
  * Get dimensions for resizing an image
@@ -40,24 +48,26 @@ export function resizeImagePixels(
  * - for landscape, width has priority
  * - for portrait, height has priority
  */
-function getDimensions(options: {originalWidth: number, originalHeight: number, newMaxWidth?: number, newMaxHeight?: number}): {newWidth: number, newHeight: number} {
-    const { 
-      originalWidth, 
-      originalHeight,
-      newMaxWidth,
-      newMaxHeight,
+function getDimensions(
+    options: { originalWidth: number; originalHeight: number; newMaxWidth?: number; newMaxHeight?: number },
+): { newWidth: number; newHeight: number } {
+    const {
+        originalWidth,
+        originalHeight,
+        newMaxWidth,
+        newMaxHeight,
     } = options || {};
 
     // Keep aspect ratio
     const _aspectRatio = originalWidth / originalHeight;
     let newWidth;
     let newHeight;
-    
+
     if (_aspectRatio > 1) { // landscape
         if (newMaxWidth) {
             newWidth = newMaxWidth;
             newHeight = Math.trunc(newMaxWidth / _aspectRatio);
-        } else if (!newMaxWidth && newMaxHeight){
+        } else if (!newMaxWidth && newMaxHeight) {
             newWidth = Math.trunc(newMaxHeight * _aspectRatio);
             newHeight = newMaxHeight;
         } else {
@@ -68,7 +78,7 @@ function getDimensions(options: {originalWidth: number, originalHeight: number, 
         if (newMaxHeight) {
             newWidth = Math.trunc(newMaxHeight * _aspectRatio);
             newHeight = newMaxHeight;
-        } else if(newMaxWidth && !newMaxHeight){
+        } else if (newMaxWidth && !newMaxHeight) {
             newWidth = newMaxWidth;
             newHeight = Math.trunc(newMaxWidth / _aspectRatio);
         } else {
@@ -76,6 +86,6 @@ function getDimensions(options: {originalWidth: number, originalHeight: number, 
             newHeight = 100;
         }
     }
-  
+
     return { newWidth, newHeight };
 }

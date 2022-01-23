@@ -17,32 +17,34 @@ export const ArticleFeature = EntryTypeFeature({
     configClass: ArticleEnabled,
     dataClass: ArticleData,
     updateFeatureSchema: UpdateEntryArticleSchema,
-    contributeToSchema:  async (mutableSchema: SiteSchemaData, tx: WrappedTransaction, siteId: VNID) => {
-
+    contributeToSchema: async (mutableSchema: SiteSchemaData, tx: WrappedTransaction, siteId: VNID) => {
         const configuredOnThisSite = await tx.query(C`
             MATCH (et:${EntryType})-[:FOR_SITE]->(:${Site} {id: ${siteId}}),
                   (et)-[:${EntryType.rel.HAS_FEATURE}]->(config:${ArticleEnabled})
             WITH et, config
             RETURN et.id AS entryTypeId
-        `.givesShape({entryTypeId: Field.VNID}));
+        `.givesShape({ entryTypeId: Field.VNID }));
 
-        configuredOnThisSite.forEach(config => {
+        configuredOnThisSite.forEach((config) => {
             const entryTypeId: VNID = config.entryTypeId;
             if (!(entryTypeId in mutableSchema.entryTypes)) {
                 throw new Error("EntryType not in schema");
             }
-            mutableSchema.entryTypes[entryTypeId].enabledFeatures[featureType] = {
-            };
+            mutableSchema.entryTypes[entryTypeId].enabledFeatures[featureType] = {};
         });
     },
-    updateConfiguration: async (entryTypeId: VNID, _config, tx: WrappedTransaction, markNodeAsModified: (vnid: VNID) => void) => {
+    updateConfiguration: async (
+        entryTypeId: VNID,
+        _config,
+        tx: WrappedTransaction,
+        markNodeAsModified: (vnid: VNID) => void,
+    ) => {
         const result = await tx.queryOne(C`
             MATCH (et:${EntryType} {id: ${entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site)
             MERGE (et)-[:${EntryType.rel.HAS_FEATURE}]->(feature:${ArticleEnabled}:${C(EnabledFeature.label)})
             ON CREATE SET feature.id = ${VNID()}
-        `.RETURN({"feature.id": Field.VNID}));
+        `.RETURN({ "feature.id": Field.VNID }));
         markNodeAsModified(result["feature.id"]);
-
     },
     async editFeature(entryId, editData, tx, markNodeAsModified) {
         const changes: Record<string, unknown> = {};
@@ -58,32 +60,31 @@ export const ArticleFeature = EntryTypeFeature({
                 propData.id = ${VNID()},
                 propData.articleMD = ""
             SET propData += ${changes}
-        `.RETURN({"propData.id": Field.VNID}));
+        `.RETURN({ "propData.id": Field.VNID }));
 
         markNodeAsModified(result["propData.id"]);
     },
     /**
      * Load the details of this feature for a single entry.
      */
-    async loadData({data, refCache, entryId}) {
-
+    async loadData({ data, refCache, entryId }) {
         const articleMD = data?.articleMD ?? "";
 
-        const headings: {id: string, title: string}[] = [];
+        const headings: { id: string; title: string }[] = [];
         // Parse the Markdown
         let parsed: MDT.RootNode;
         try {
             parsed = MDT.tokenizeMDT(articleMD);
         } catch (err: unknown) {
             log.error(`Markdown parsing error: ${err}`);
-            parsed = {type: "mdt-document", children: []};
+            parsed = { type: "mdt-document", children: [] };
         }
 
         // Extract the top-level headings from the document, so all API clients can display a consistent table of contents
         for (const node of parsed.children) {
             if (node.type === "heading" && node.level === 1) {
                 headings.push({
-                    title: node.children.map(c => MDT.renderInlineToPlainText(c)).join(""),
+                    title: node.children.map((c) => MDT.renderInlineToPlainText(c)).join(""),
                     id: node.slugId,
                 });
             }
@@ -92,12 +93,12 @@ export const ArticleFeature = EntryTypeFeature({
         if (articleMD) {
             // If this article contains links to other entries or lookup expressions, we need to cache them in the
             // reference cache so that lookups can be evaluated and the tooltip shown on hover will render instantly.
-            refCache?.extractMarkdownReferences(parsed, {currentEntryId: entryId});
+            refCache?.extractMarkdownReferences(parsed, { currentEntryId: entryId });
         }
 
         return {
             articleMD,
             headings,
         };
-    }
+    },
 });
