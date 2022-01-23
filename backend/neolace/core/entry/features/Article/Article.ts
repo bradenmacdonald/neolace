@@ -65,7 +65,6 @@ export const ArticleFeature = EntryTypeFeature({
     /**
      * Load the details of this feature for a single entry.
      */
-    // deno-lint-ignore require-await
     async loadData({data, refCache, entryId}) {
 
         const articleMD = data?.articleMD ?? "";

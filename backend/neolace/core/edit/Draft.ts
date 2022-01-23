@@ -45,7 +45,6 @@ export class DraftEdit extends VNodeType {
         data: dataFromJson,
     });
  
-    // deno-lint-ignore require-await
     static async validate(dbObject: RawVNode<typeof DraftEdit>, _tx: WrappedTransaction): Promise<void> {
         // Validate that "code", "changeType", and "data" are all consistent:
         const editType = getEditType(dbObject.code);

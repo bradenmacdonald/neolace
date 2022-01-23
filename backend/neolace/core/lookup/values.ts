@@ -1,4 +1,3 @@
-// deno-lint-ignore-file require-await
 import {
     C,
     CypherQuery,

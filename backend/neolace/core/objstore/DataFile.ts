@@ -50,7 +50,6 @@ export class DataFile extends VNodeType {
         metadata,
     });
 
-    // deno-lint-ignore require-await
     static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
         if (dbObject.metadataJSON !== null) {
             try {

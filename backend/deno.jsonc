@@ -1,0 +1,15 @@
+{
+    "lint": {
+        "rules": {
+            "exclude": [
+                "require-await"
+            ]
+        }
+    },
+    "fmt": {
+        "options": {
+            "indentWidth": 4,
+            "lineWidth": 120
+        }
+    }
+}
