@@ -14,8 +14,8 @@ let uniqueId = 0;
 export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
     const [tooltipId] = React.useState(() => `neo-tooltip${uniqueId++}`);
     const [isTooltipVisible, setTooltipVisibility] = React.useState(false);
-    const [referenceElement, setReferenceElement] = React.useState(null);
-    const [popperElement, setPopperElement] = React.useState(null);
+    const [referenceElement, setReferenceElement] = React.useState<HTMLElement|null>(null);
+    const [popperElement, setPopperElement] = React.useState<HTMLSpanElement|null>(null);
     const { styles, attributes } = usePopper(referenceElement, popperElement, {
         placement: "bottom-start",
         modifiers: [

@@ -13,7 +13,7 @@ import { LookupValue } from './LookupValue';
 const OptionalLink = (props: {children: React.ReactNode; href?: api.EntryValue|api.StringValue; mdtContext: MDTContext;}) => {
     if (props.href) {
         if (props.href.type === "Entry") {
-            const entry: undefined|api.EntryData["referenceCache"]["entries"]["entryId"] = props.mdtContext.refCache.entries[props.href.id];
+            const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) = props.mdtContext.refCache.entries[props.href.id];
             const url = "/entry/" + (entry?.friendlyId || props.href.id);
             return <a href={url}>{props.children}</a>;
         } else if (props.href.type === "String") {
@@ -62,7 +62,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
             <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 border-gray-400 md:ml-4 mb-2">
                 <RatioBox ratio={ratio}>
                     {/* A blurry representation of the image, shown while it is loading. */}
-                    <Blurhash hash={value.blurHash} width="100%" height="100%" />
+                    <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" />
                     {/* the image: */}
                     <OptionalLink href={value.link} mdtContext={props.mdtContext}>
                         <Image
@@ -85,7 +85,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
         return <div className="w-full md:w-1/3 lg:w-1/4 border-2 border-gray-400 md:ml-4 mb-2">
             <RatioBox ratio={ratio}>
                 {/* A blurry representation of the image, shown while it is loading. */}
-                <Blurhash hash={value.blurHash} width="100%" height="100%" />
+                <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" />
                 {/* the image: */}
                 <Image
                     src={value.imageUrl}

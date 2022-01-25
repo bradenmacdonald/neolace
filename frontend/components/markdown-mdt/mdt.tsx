@@ -99,7 +99,7 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode, context: 
         case "lookup_inline": {
             const lookupData = context.refCache.lookups.find(x => x.entryContext === context.entryId && x.lookupExpression === node.content);
             if (lookupData) {
-                return <LookupValue mdtContext={context} value={lookupData.value} />
+                return <LookupValue key={key} mdtContext={context} value={lookupData.value} />
             }
             return <code key={key} className="text-red-500">{'{'}{node.content}{'}'}</code>;
         }
@@ -145,7 +145,7 @@ export const RenderMDT: React.FunctionComponent<BlockProps> = (props) => {
     </>;
 };
 
-function nodeToComponent(node: MDT.Node, context: MDTContext) {
+function nodeToComponent(node: MDT.Node, context: MDTContext): React.ReactElement {
     if (!("block" in node)) {
         // This is an inline node:
         return inlineNodeToComponent(node, context);

@@ -54,7 +54,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         <li className="my-2 truncate"><a href={`#summary`}><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></li>
                         <li className={`my-2 truncate ${hasProps || "hidden"}`}><a href={`#properties`}><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></li>
                         {
-                            props.entry.features.Article?.headings.map(heading =>
+                            props.entry.features?.Article?.headings.map(heading =>
                                 <li key={heading.id} className="my-2 truncate"><a href={`#h-${heading.id}`}>{heading.title}</a></li>
                             )
                         }
@@ -71,7 +71,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                 <div className="-m-4 mb-4 relative h-[30vh] md:h-[50vh]">
                                     {/* A blurry representation of the image, shown while it is loading: */}
                                     <Blurhash
-                                        hash={props.entry.features.HeroImage.blurHash}
+                                        hash={props.entry.features.HeroImage.blurHash ?? ""}
                                         width="100%"
                                         height="100%"
                                     />
@@ -107,7 +107,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         <div className="neo-typography">
 
                             <h1 id="summary">{props.entry.name}</h1>
-                            <p id="description"><InlineMDT mdt={props.entry.description} context={mdtContext} /></p>
+                            <p id="description"><InlineMDT mdt={props.entry.description ?? ""} context={mdtContext} /></p>
 
                             <div className={`flex flex-wrap xl:flex-nowrap ${hasProps || "hidden"}`}>
                                 <div id="properties" className="flex-auto">
@@ -138,7 +138,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                             <div id="contents">
 
                                 {
-                                    props.entry.features.Article ?
+                                    props.entry.features?.Article ?
                                         /* Table of contents appears here, but only on mobile */
                                         <div className="md:hidden">
                                             <h2><FormattedMessage id="site.entry.tableOfContentsHeading" defaultMessage="Contents"/></h2>
@@ -165,7 +165,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
 
                                 {/* Article content, if any */}
                                 {
-                                    props.entry.features.Article ?
+                                    props.entry.features?.Article ?
                                         <RenderMDT mdt={props.entry.features.Article.articleMD} context={mdtContext.childContextWith({headingShift: 1})}/>
                                     : null
                                 }
@@ -193,11 +193,11 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
 
     // Look up the Neolace site by domain:
-    const site = await getSiteData(context.params.siteHost);
+    const site = await getSiteData(context.params!.siteHost);
     if (site === null) { return {notFound: true}; }
     let entry: api.EntryData;
     try {
-        entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [
+        entry = await client.getEntry(context.params!.entryLookup, {siteId: site.shortId, flags: [
             api.GetEntryFlags.IncludePropertiesSummary,
             api.GetEntryFlags.IncludeReferenceCache,
             api.GetEntryFlags.IncludeFeatures,
@@ -209,7 +209,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         throw err;
     }
 
-    if (entry.friendlyId !== context.params.entryLookup) {
+    if (entry.friendlyId !== context.params!.entryLookup) {
         // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
         return {
             redirect: {

@@ -70,7 +70,7 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
 
     // Look up the Neolace site by domain:
-    const site = await getSiteData(context.params.siteHost);
+    const site = await getSiteData(context.params!.siteHost);
     if (site === null) { return {notFound: true}; }
 
     const homePage = await client.getSiteHomePage({siteId: site.shortId});

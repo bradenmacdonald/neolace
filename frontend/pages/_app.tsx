@@ -1,3 +1,4 @@
+import type { AppProps } from 'next/app'
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -21,17 +22,17 @@ type ProviderProps = {children: React.ReactNode};
 //    translations).
 const DynamicIntlProviders = {
     en: (props: ProviderProps) => <IntlProvider locale="en" messages={{}}>{props.children}</IntlProvider>,
-    fr: dynamic(() => import("../content/compiled-locales/fr.json").then(data =>
+    fr: dynamic<ProviderProps>(() => import("../content/compiled-locales/fr.json").then(data =>
         (props: ProviderProps) => <IntlProvider locale="fr" messages={data.default}>{props.children}</IntlProvider>
     )),
 };
 
 
-export default function NeolaceApp({ Component, pageProps }) {
+export default function NeolaceApp({ Component, pageProps }: AppProps) {
 
     const { locale } = useRouter();
     // Dynamically load the IntlProvider for the currently active language:
-    const LoadIntlProvider = DynamicIntlProviders[locale];
+    const LoadIntlProvider = DynamicIntlProviders[locale as keyof typeof DynamicIntlProviders] ?? DynamicIntlProviders.en;
 
     return <UserProvider>
         <LoadIntlProvider>

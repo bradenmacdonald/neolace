@@ -30,12 +30,12 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
     // Look up the Neolace site by domain:
-    const site = await getSiteData(context.params.siteHost);
+    const site = await getSiteData(context.params!.siteHost);
     if (site === null) {
         return {notFound: true};
     }
 
-    const origPath = '/' + (context.params.origPath as string[]).slice(2).join("/");
+    const origPath = '/' + (context.params!.origPath as string[]).slice(2).join("/");
     const newPath = site.frontendConfig.redirects?.[origPath];
     if (newPath) {
         return {redirect: {
