@@ -71,7 +71,7 @@ export const UserProvider: React.FunctionComponent = (props) => {
                     setData({
                         status: UserStatus.LoggedIn,
                         username: userData.username,
-                        fullName: userData.fullName,
+                        fullName: userData.fullName ?? "",
                     });
                 }
             } catch (err) {

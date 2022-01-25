@@ -25,7 +25,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // const router = useRouter();
     // router.query.siteHost gives the site's domain
 
-    const themeColor = (name: string, defaultColor: [number, number, number])=> {
+    const themeColor = (name: keyof NonNullable<typeof props.site.frontendConfig.theme>, defaultColor: [number, number, number])=> {
         const color: [number, number, number] = props.site.frontendConfig.theme?.[name] ?? defaultColor;
         return color.join(", ");
     };

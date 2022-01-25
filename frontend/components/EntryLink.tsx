@@ -22,12 +22,9 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
     const siteContext = React.useContext(SiteContext);
 
     const refCache = props.mdtContext.refCache;
-    let entry: undefined|api.EntryData["referenceCache"]["entries"]["entryId"];
-    if (isVNID(props.entryKey)) {
-        entry = refCache.entries[props.entryKey];
-    } else {
-        entry = Object.values(refCache.entries).find(e => e.friendlyId === props.entryKey);
-    }
+    const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) =
+        isVNID(props.entryKey) ? refCache.entries[props.entryKey]
+        : Object.values(refCache.entries).find(e => e.friendlyId === props.entryKey);
     if (entry === undefined) {
         // This entry is not in the reference cache! It should have been though...
         // So we don't know its name and may not know its friendlyId either.

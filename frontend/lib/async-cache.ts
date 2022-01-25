@@ -30,7 +30,7 @@ export class AsyncCache<KeyType, ValueType> {
                     console.error(`Unable to refresh cached value with key ${key}:`, err);
                 });
             }
-            return this.cache.get(key);
+            return this.cache.get(key)!;
         } else {
             // This entry is not yet in the cache. Wait for it to be fetched and then return it.
             const newValue = await this.fetcher(key);

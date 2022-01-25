@@ -40,7 +40,7 @@ export const apiSessionPromise: Promise<void> = getSessionPromise();
 /**
  * Helper that defines how to make authenticated API calls to the Neolace API
  */
-async function getExtraHeadersForRequest() {
+async function getExtraHeadersForRequest(): Promise<Record<string, string>> {
     if (IN_BROWSER) {
         // Validate the API token if needed, then add it to the request:
         try {
