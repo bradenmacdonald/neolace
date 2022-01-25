@@ -6,14 +6,12 @@
 /* TechNotes color: 5ecbf5 */
 
 @layer utilities {
-    @variants responsive {
-        /* scroll padding is important for when user clicks on #anchor links so they don't disappear behind fixed headers */
-        .scroll-padding-none {
-            scroll-padding-top: 0;
-        }
-        .scroll-padding-45 {
-            scroll-padding-top: 45px;
-        }
+    /* scroll padding is important for when user clicks on #anchor links so they don't disappear behind fixed headers */
+    .scroll-padding-none {
+        scroll-padding-top: 0;
+    }
+    .scroll-padding-45 {
+        scroll-padding-top: 45px;
     }
 }
 

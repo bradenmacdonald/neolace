@@ -24,11 +24,7 @@ const themeColorFromRbgTupleVar = (runtimeCssVariableName) => ({ opacityVariable
 
 module.exports = {
     // Tell Tailwind how to check which styles are used and which can be removed in production:
-    purge: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
-    // Use just-in-time compilation + features
-    mode: 'jit',
-    // We don't support dark mode:
-    darkMode: false, // or 'media' or 'class'
+    content: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
     // Neolace theme:
     theme: {
         extend: {
@@ -45,9 +41,6 @@ module.exports = {
                 mono: ['"Roboto Mono"', "ui-monospace", "Menlo", "Monaco", "Consolas", "monospace", '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
             },
         },
-    },
-    variants: {
-        extend: {},
     },
     plugins: [],
 }

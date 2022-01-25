@@ -196,7 +196,7 @@ function nodeToComponent(node: MDT.Node, context: MDTContext): React.ReactElemen
             return React.createElement(node.type, props, node.children.map(child => nodeToComponent(child, context)));
         }
         case "blockquote": {
-            return <blockquote>{node.children.map(child => nodeToComponent(child, context))}</blockquote>
+            return <blockquote key={key}>{node.children.map(child => nodeToComponent(child, context))}</blockquote>
         }
         default:
             //deno-lint-ignore no-explicit-any
