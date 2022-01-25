@@ -30,7 +30,7 @@ Example:
 
 * A TechNotes Entry has "ID" of `t-wind-turbine-rotor-r4-spxt`
 * The site code for TechNotes is `TNDB0`
-* In the gaph database (vertex framework), it gets stored as slugId `TNDB0t-wind-turbine-rotor-r4-spxt`
+* In the graph database (vertex framework), it gets stored as slugId `TNDB0t-wind-turbine-rotor-r4-spxt`
 
 The site code cannot start with `z`, to allow for future expansion. With these restrictions, each Neolace Realm can support 61*62*62*62*62 = 901,356,496 Sites.
 

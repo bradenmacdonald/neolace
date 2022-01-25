@@ -21,8 +21,6 @@ Most VNodes are also identified by a `shortId`, which is a short slug-like strin
 
 For details on VNodes and Vertex Framework, see the Vertex Framework documentation.
 
-When a VNode is "deleted", its labels are changed, e.g. from `:Entry:VNode` to `:Entry:DeletedVNode`. This preserves data and relationships and makes code for un-deleting/restoring nodes simpler.
-
 ## Reading Data
 
 Any code in the application is welcome to read from the database at any time, and use any methods to query the nodes and relationships in the database.
