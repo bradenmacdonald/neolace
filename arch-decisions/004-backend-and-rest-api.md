@@ -2,17 +2,9 @@
 
 The "backend" is the application which reads and writes the [graph database](./002-graph-data.md) and provides a REST API for interacting with it.
 
-The backend is implemented as a Node.js application written in TypeScript.
+The backend is implemented as a Deno application written in TypeScript.
 
-* Node.js is stable, production-proven, and performant.
-* Deno was explored as an alternative but although its architecture seems better than Node, it's not proven and its ecosystem was way too immature (e.g. no Neo4j, no hapi, etc.)
-
-The backend uses [hapi](https://hapi.dev/) as its web framework.
-
-* hapi has a strong focus on secure, audited code and is the only leading node framework without any external dependencies.
-* hapi has minimal overhead.
-* hapi is mature and has been proven at enterprise scale.
-* hapi integrates well with [Joi](https://joi.dev/).
+The backend uses [Drash](https://drash.land/drash/v2.x/getting-started/introduction) as its web framework.
 
 The backend delegates authentication to the [AuthN microservice](https://keratin.tech/).
 
