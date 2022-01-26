@@ -1,7 +1,7 @@
 import { api, NeolaceHttpResource, permissions, realmConfig } from "neolace/plugins/api.ts";
 import { thisPlugin } from "./mod.ts";
 import { getSiteSpecificApiKey } from "./site-collection.ts";
-import { client } from "./typesense-client.ts";
+import { getTypeSenseClient } from "./typesense-client.ts";
 
 const ONE_HOUR = 60 * 60; // Number of seconds in an hour
 
@@ -22,6 +22,7 @@ export class SearchConnectionResource extends NeolaceHttpResource {
         if (!(await thisPlugin.isEnabledForSite(siteId))) {
             throw new api.NotFound("Search is not enabled for that site");
         }
+        const client = await getTypeSenseClient();
 
         // Retrieve the site-specific API key from the graph, or generate a new one if required.
         const siteSearchkey = await getSiteSpecificApiKey(siteId);

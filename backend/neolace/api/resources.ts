@@ -11,8 +11,9 @@ import { AcceptDraftResource } from "./site/{siteShortId}/draft/{draftId}/accept
 import { EntryResource } from "./site/{siteShortId}/entry/{entryId}/index.ts";
 import { UserIndexResource } from "./user/index.ts";
 import { UserMeResource } from "./user/me.ts";
+import { type NeolaceHttpResource } from "./mod.ts";
 
-export const allResources = [
+export const builtInRestApiResources: (typeof NeolaceHttpResource)[] = [
     HomePageResource,
     HealthCheckResource,
     RequestLoginResource,

@@ -29,7 +29,11 @@ export const UpdateSiteApiKey = defineAction({
         const result = await tx.queryOne(C`
             MATCH (site:${Site} {id: ${data.siteId}})
             MERGE (site)<-[:${SearchPluginIndexConfig.rel.FOR_SITE}]-(config:${SearchPluginIndexConfig})
-            SET config.searchApiKey = ${data.apiKey}
+            ON MATCH
+                SET config.searchApiKey = ${data.apiKey}
+            ON CREATE
+                SET config.id = ${VNID()}
+                SET config.searchApiKey = ${data.apiKey}
         `.RETURN({ "config.id": Field.VNID, "config.searchApiKey": Field.String }));
 
         return {

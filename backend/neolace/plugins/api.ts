@@ -4,7 +4,7 @@ export * as log from "std/log/mod.ts";
 export * as api from "neolace/deps/neolace-api.ts";
 
 export { config as realmConfig } from "neolace/app/config.ts";
-export { graph } from "neolace/core/graph.ts";
+export { getGraph } from "neolace/core/graph.ts";
 export { NeolaceHttpResource } from "neolace/api/mod.ts";
 export { type Check, type CheckContext, permissions } from "neolace/core/permissions.ts";
 

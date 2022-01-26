@@ -1,6 +1,6 @@
 import { C, EmptyResultError, Field, VNID } from "neolace/deps/vertex-framework.ts";
-import { graph, Site, siteCodeForSite, siteShortIdFromId } from "neolace/plugins/api.ts";
-import { client } from "./typesense-client.ts";
+import { getGraph, Site, siteCodeForSite, siteShortIdFromId } from "neolace/plugins/api.ts";
+import { getTypeSenseClient } from "./typesense-client.ts";
 import { SearchPluginIndexConfig, UpdateSiteApiKey } from "./SearchPluginIndexConfig.ts";
 
 /**
@@ -23,6 +23,8 @@ export async function getSiteCollectionAlias(siteId: VNID): Promise<string> {
  * with more limited permissions, which is what we send back to the user.
  */
 export async function getSiteSpecificApiKey(siteId: VNID): Promise<string> {
+    const graph = await getGraph();
+    const client = await getTypeSenseClient();
     try {
         const initialResult = await graph.read((tx) =>
             tx.queryOne(C`

@@ -31,7 +31,7 @@ type JsonCompatibleValue = string | boolean | Record<string, unknown> | null | u
  *
  * A resource has a path like "/user/profile" and can have one or more methods (like POST, GET, etc.)
  */
-export abstract class NeolaceHttpResource extends Drash.Resource {
+export class NeolaceHttpResource extends Drash.Resource {
     method<Response extends JsonCompatibleValue, RequestBody extends JsonCompatibleValue = undefined>(
         metadata: {
             responseSchema: api.schemas.Validator<Response>;

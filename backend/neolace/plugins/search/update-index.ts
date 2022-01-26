@@ -2,9 +2,9 @@ import * as log from "std/log/mod.ts";
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { TypeSense } from "neolace/deps/typesense.ts";
 
-import { Entry, EntryType, getEntry, GetEntryFlags, graph, Site } from "neolace/plugins/api.ts";
+import { Entry, EntryType, getEntry, GetEntryFlags, getGraph, Site } from "neolace/plugins/api.ts";
 
-import { client } from "./typesense-client.ts";
+import { getTypeSenseClient } from "./typesense-client.ts";
 import { getSiteCollectionAlias } from "./site-collection.ts";
 
 // TODO: store this in Redis, with an expiring key
@@ -33,6 +33,7 @@ export async function setCurrentReIndexJobForSite(siteId: VNID, collection: stri
  * @param siteId
  */
 async function _getCollectionToUpdate(siteId: VNID): Promise<string | undefined> {
+    const client = await getTypeSenseClient();
     const newCollection = await currentReIndexJobForSite(siteId);
     if (newCollection) {
         // We're in the middle of a re-index operation. Just write to the new index and leave the old one alone.
@@ -57,6 +58,7 @@ async function _getCollectionToUpdate(siteId: VNID): Promise<string | undefined>
  */
 async function entryToDocument(entryId: VNID, siteId: VNID) {
     // log.info(`Reindexing ${entryId} to ${collection}`);
+    const graph = await getGraph();
     const entryData = await graph.read((tx) =>
         getEntry(
             entryId,
@@ -75,6 +77,8 @@ async function entryToDocument(entryId: VNID, siteId: VNID) {
 }
 
 export async function reindexAllEntries(siteId: VNID) {
+    const graph = await getGraph();
+    const client = await getTypeSenseClient();
     if (await currentReIndexJobForSite(siteId)) {
         throw new Error("A re-index job is already in progress");
     }
