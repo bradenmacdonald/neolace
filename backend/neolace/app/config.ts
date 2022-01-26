@@ -38,10 +38,11 @@ export const config = (() => {
         neo4jUser: "neo4j",
         neo4jPassword: defaultTo("neolace", { production: "\u0000 setme!!" }),
         // Configuration of the TypeSense (search) server:
-        typeSenseHost: "localhost",
+        typeSenseHost: "search",
         typeSensePort: defaultTo(5556, { production: 8108 }),
         typeSenseProtocol: "http",
         typeSenseApiKey: "typesensedevkey",
+        typeSensePublicEndpoint: "http://localhost:5556",
         // Should debug logs be printed to stdout?
         debugLogging: defaultTo(true, { production: false }),
         // Public URL of the authentication microservice (Keratin AuthN)

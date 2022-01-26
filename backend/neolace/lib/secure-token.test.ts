@@ -1,7 +1,6 @@
 import { assertEquals } from "neolace/lib/tests.ts";
 import { createRandomToken } from "./secure-token.ts";
 
-
 Deno.test("createRandomToken", async (t) => {
     await t.step("it has a length of 64 characters by default", async () => {
         const token: string = await createRandomToken();

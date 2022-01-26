@@ -65,3 +65,11 @@ export type SiteDetailsData = Type<typeof SiteDetailsSchema>;
     referenceCache: ReferenceCacheSchema,
 });
 export type SiteHomePageData = Type<typeof SiteHomePageSchema>;
+
+/**
+ * Site search schema (returned by one of the search plugin's endpoints)
+ */
+export const SiteSearchConnectionSchema = Schema({
+    searchEndpoint: string,
+    apiKey: string,
+});
