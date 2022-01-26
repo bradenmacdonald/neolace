@@ -12,6 +12,7 @@ import {
     WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 import { authClient } from "neolace/core/authn-client.ts";
+import { createRandomToken } from "neolace/lib/secure-token.ts";
 
 export class User extends VNodeType {
     static label = "User";
@@ -202,11 +203,7 @@ export const CreateBot = defineAction({
  * @returns
  */
 async function createBotAuthToken(): Promise<string> {
-    const array = new Uint8Array(48); // 48 bytes
-    await crypto.getRandomValues(array);
-    const tokenB64 = btoa(String.fromCharCode.apply(null, Array.from(array)));
-    const token = tokenB64.replace(/\+/g, "a").replace(/\//g, "b").replace(/=/g, "");
-    return token;
+    return createRandomToken(48);
 }
 
 // Things that are internal but available to the test suite:

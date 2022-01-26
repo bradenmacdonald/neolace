@@ -174,6 +174,12 @@ VNodeTypeRef.resolve(SiteRef, Site);
 /** Cache to look up a siteId (Site VNID) from a site's shortId (slugId without the "site-" prefix) */
 export const siteIdFromShortId = makeCachedLookup((shortId: string) => graph.vnidForKey(`site-${shortId}`), 10_000);
 
+/** Cache to look up a site's shortId from its VNID */
+export const siteShortIdFromId = makeCachedLookup(
+    (siteId: VNID) => graph.pullOne(Site, (s) => s.shortId(), { key: siteId }).then((s) => s.shortId),
+    10_000,
+);
+
 /**
  * A derived property that provides the shortId of a Site.
  *
@@ -184,7 +190,7 @@ export function shortId(): DerivedProperty<string> {
     return DerivedProperty.make(
         Site,
         (s) => s.slugId,
-        (s) => s.slugId.substr(5), // Remove the "site-" prefix
+        (s) => s.slugId.substring(5), // Remove the "site-" prefix
     );
 }
 
