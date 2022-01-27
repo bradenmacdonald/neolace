@@ -3,15 +3,10 @@ import Link from 'next/link';
 
 import { connectInfiniteHits } from "react-instantsearch-dom";
 import { Hit, InfiniteHitsProvided } from "react-instantsearch-core";
-import { VNID } from 'neolace-api/types.ts';
+import { Doc } from './Doc';
+import { Highlight } from './Highlight';
 
-interface Doc {
-    id: VNID;
-    name: string;
-    type: string;
-    description: string;
-    articleText: string;
-}
+
 type HitsProps = InfiniteHitsProvided<Hit<Doc>>;
 
 const CustomInfiniteHits: React.FunctionComponent<HitsProps> = ({
@@ -30,7 +25,10 @@ const CustomInfiniteHits: React.FunctionComponent<HitsProps> = ({
         <ol>
             {hits.map(hit => (
                 <li key={hit.objectID} className="my-3 pl-3 border-l-4 border-l-gray-300">
-                    <Link href={`/entry/${hit.id}`}><a className="font-bold text-theme-link-color underline">{hit.name}</a></Link> ({hit.type})
+                    <div className="text-lg">
+                        <Link href={`/entry/${hit.id}`}><a className="font-bold text-theme-link-color underline"><Highlight hit={hit} attribute="name" /></a></Link> ({hit.type})
+                    </div>
+                    <p className="text-sm"><Highlight hit={hit} attribute="description" /></p>
                 </li>
             ))}
         </ol>

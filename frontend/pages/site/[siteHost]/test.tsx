@@ -35,8 +35,6 @@ const PluginTestPage: NextPage<PageProps> = function(props) {
             title={`Search ${props.site.name}`}
             site={props.site}
         >
-            <h1 className="text-3xl font-semibold">Plugin Test Page</h1>
-
             <PluginComponent/>
         </SitePage>
     );

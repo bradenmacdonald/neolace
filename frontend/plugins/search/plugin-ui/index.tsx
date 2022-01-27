@@ -53,7 +53,7 @@ const SiteSearchPage: React.FunctionComponent = function(props) {
     }
 
     return (<>
-        <p>This is the search plugin, searching {connectionData.searchEndpoint} collection "{connectionData.siteEntriesCollection}"</p>
+        <h1 className="text-3xl font-semibold">Search {site.name}</h1>
         <InstantSearch indexName={connectionData.siteEntriesCollection} searchClient={adapter.searchClient}>
             <SearchBox />
             <Hits />
