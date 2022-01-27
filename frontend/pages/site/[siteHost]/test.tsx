@@ -21,7 +21,7 @@ const PluginTestPage: NextPage<PageProps> = function(props) {
         () =>
           import(`../../../plugins/${pluginName}/index`),
         {
-          loading: () => <p>Loading...</p>,
+          loading: () => <p>Loading {pluginName} plugin...</p>,
         }
       );
 
@@ -31,8 +31,6 @@ const PluginTestPage: NextPage<PageProps> = function(props) {
             site={props.site}
         >
             <h1 className="text-3xl font-semibold">Plugin Test Page</h1>
-            
-            <p className="my-4">This will test plugins</p>
 
             <PluginComponent/>
         </SitePage>

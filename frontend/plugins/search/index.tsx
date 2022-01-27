@@ -1,18 +1,16 @@
 import React from 'react';
-import { NextPage } from 'next';
 
 import { SiteContext } from 'components/SiteContext';
 import { api, client } from 'lib/api-client';
+import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
+import { InstantSearch, SearchBox, Hits } from "react-instantsearch-dom";
+// import * as X from "react-instantsearch-dom";
 
-const SiteSearchPage: NextPage = function(props) {
+const SiteSearchPage: React.FunctionComponent = function(props) {
 
     const site = React.useContext(SiteContext);
 
-    const [connectionData, setConnectionData] = React.useState<api.SiteSearchConnectionData>({
-        apiKey: '',
-        searchEndpoint: '',
-        siteEntriesCollection: '',
-    });
+    const [connectionData, setConnectionData] = React.useState<api.SiteSearchConnectionData|undefined>();
 
     React.useEffect(() => {
         // Get the search connection:
@@ -27,17 +25,40 @@ const SiteSearchPage: NextPage = function(props) {
         };
     }, [site.shortId]);
 
-    return (
-        <>
-            <h1 className="text-3xl font-semibold">Search {site.name}</h1>
-            
-            <p className="my-4">This will let you search the site.</p>
+    const [adapter, setAdapter] = React.useState<TypesenseInstantSearchAdapter|undefined>();
+    React.useEffect(() => {
+        if (connectionData) {
+            const endpoint = new URL(connectionData.searchEndpoint);
+            setAdapter(
+                new TypesenseInstantSearchAdapter({
+                    server: {
+                        apiKey: connectionData.apiKey,  // This API key only allows searching based on the current site and current user's permissions
+                        nodes: [
+                            {host: endpoint.hostname, port: endpoint.port, protocol: endpoint.protocol === "http:" ? "http" : "https"},
+                        ],
+                    },
+                    cacheSearchResultsForSeconds: 2 * 60, // Cache search results from server. Defaults to 2 minutes. Set to 0 to disable caching.
+                    additionalSearchParameters: {
+                        queryBy: "name,description,articleText",
+                    },
+                  })
+            );
+        } else {
+            setAdapter(undefined);
+        }
+    }, [connectionData]);
 
-            {
-                connectionData.apiKey ? <p>We will use API key {connectionData.apiKey}</p> : <p>Loading...</p>
-            }
-        </>
-    );
+    if (!adapter || !connectionData) {
+        return <p>Loading search...</p>;
+    }
+
+    return (<>
+        <p>This is the search plugin, searching {connectionData.searchEndpoint} collection "{connectionData.siteEntriesCollection}"</p>
+        <InstantSearch indexName={connectionData.siteEntriesCollection} searchClient={adapter.searchClient}>
+            <SearchBox />
+            <Hits />
+        </InstantSearch>
+    </>);
 }
 
 export default SiteSearchPage;

@@ -24,6 +24,10 @@ export async function getSiteCollectionAlias(siteId: VNID): Promise<string> {
  */
 export async function getSiteSpecificApiKey(siteId: VNID): Promise<string> {
     const [graph, client] = await Promise.all([getGraph(), getTypeSenseClient()]);
+
+    // TODO: need a way to reset the key in case it stops working or is compromised.
+    // await graph.runAsSystem(UpdateSiteApiKey({ siteId, apiKey: "" }));
+
     try {
         const initialResult = await graph.read((tx) =>
             tx.queryOne(C`
@@ -31,7 +35,9 @@ export async function getSiteSpecificApiKey(siteId: VNID): Promise<string> {
             MATCH (site)<-[:${SearchPluginIndexConfig.rel.FOR_SITE}]-(config:${SearchPluginIndexConfig})
         `.RETURN({ "config.searchApiKey": Field.String }))
         );
-        return initialResult["config.searchApiKey"];
+        if (initialResult["config.searchApiKey"]) {
+            return initialResult["config.searchApiKey"];
+        }
     } catch (err) {
         if (err instanceof EmptyResultError) {
             // Ignore, that means we continue below to create a new API key

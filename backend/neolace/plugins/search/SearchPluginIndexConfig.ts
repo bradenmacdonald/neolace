@@ -37,7 +37,7 @@ export const UpdateSiteApiKey = defineAction({
         `.RETURN({ "config.id": Field.VNID, "config.searchApiKey": Field.String }));
 
         return {
-            description: ``,
+            description: `updated a site's search key`,
             modifiedNodes: [result["config.id"]],
             resultData: {},
         };

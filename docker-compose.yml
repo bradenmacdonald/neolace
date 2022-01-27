@@ -97,7 +97,7 @@ services:
     ports:
       - 5556:8108
     command: >
-     --data-dir /data --api-key=typesensedevkey
+     --data-dir /data --api-key=typesensedevkey --enable-cors
     volumes:
       - typesense-data:/data
 
