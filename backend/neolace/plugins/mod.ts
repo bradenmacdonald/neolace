@@ -18,7 +18,7 @@ export interface NeolacePluginDefinition {
  */
 export interface NeolacePlugin extends NeolacePluginDefinition {
     isEnabledForSite(siteId: VNID): Promise<boolean>;
-    [_isPluginSymbol]: true,
+    [_isPluginSymbol]: true;
 }
 
 export function definePlugin(definition: NeolacePluginDefinition): NeolacePlugin {

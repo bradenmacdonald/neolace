@@ -84,10 +84,13 @@ export class NeolaceHttpResource extends Drash.Resource {
 
     protected setCorsHeaders(request: Drash.Request, response: Drash.Response) {
         const allHttpMethods: string[] = ["GET", "POST", "PUT", "DELETE"];
-        response.headers.set("Access-Control-Allow-Methods", allHttpMethods.filter(m => m in this).join());
+        response.headers.set("Access-Control-Allow-Methods", allHttpMethods.filter((m) => m in this).join());
         // Neolace APIs are generally public and don't use cookies for authentication so we allow all origins
         response.headers.set("Access-Control-Allow-Origin", request.headers.get("Origin") ?? "");
-        response.headers.set("Access-Control-Allow-Headers", ["Accept", "Authorization", "Content-Type", "If-None-Match"].join(","));
+        response.headers.set(
+            "Access-Control-Allow-Headers",
+            ["Accept", "Authorization", "Content-Type", "If-None-Match"].join(","),
+        );
     }
 
     public OPTIONS(request: Drash.Request, response: Drash.Response) {
