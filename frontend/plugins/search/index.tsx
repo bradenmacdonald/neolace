@@ -16,9 +16,15 @@ const SiteSearchPage: NextPage = function(props) {
 
     React.useEffect(() => {
         // Get the search connection:
+        let cancelled = false;
         client.getSearchConnection({siteId: site.shortId}).then(sc => {
-            setConnectionData(sc);
+            if (!cancelled) {
+                setConnectionData(sc);
+            }
         });
+        return function cleanup() {
+            cancelled = true;
+        };
     }, [site.shortId]);
 
     return (

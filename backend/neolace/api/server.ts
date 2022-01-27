@@ -1,5 +1,5 @@
 import * as log from "std/log/mod.ts";
-import { CORSService, Drash } from "neolace/deps/drash.ts";
+import { Drash } from "neolace/deps/drash.ts";
 import { config } from "neolace/app/config.ts";
 import { NeolaceAuthService } from "neolace/api/auth-middleware.ts";
 import { builtInRestApiResources } from "neolace/api/resources.ts";
@@ -23,9 +23,6 @@ export const serverPromise = new Promise<void>((_resolve, _reject) => {
         resources: [...builtInRestApiResources, ...pluginResources],
         services: [
             new NeolaceAuthService(),
-            new CORSService({
-                allowHeaders: ["Accept", "Authorization", "Content-Type", "If-None-Match"],
-            }),
         ],
         hostname,
         port,
