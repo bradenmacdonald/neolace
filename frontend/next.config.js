@@ -62,6 +62,15 @@ module.exports = (phase, { defaultConfig }) => {
                 ],
             };
         },
+        webpack: (config, options) => {
+            // Tell webpack to prepare to dynamically load our configured plugins
+            // See https://www.grouparoo.com/blog/nextjs-plugins#hacking-the-nextjs-webpack-configuration
+            config.module.rules.push({
+                test: /plugins\/.*\.ts?|plugins\/.*.tsx?/,
+                use: [options.defaultLoaders.babel],
+            });
+            return config;
+        },
     };
 
     if (phase === PHASE_DEVELOPMENT_SERVER) {

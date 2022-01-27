@@ -74,3 +74,4 @@ export const SiteSearchConnectionSchema = Schema({
     siteEntriesCollection: string,
     apiKey: string,
 });
+export type SiteSearchConnectionData = Type<typeof SiteSearchConnectionSchema>;

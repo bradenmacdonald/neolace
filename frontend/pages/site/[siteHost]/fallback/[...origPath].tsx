@@ -12,6 +12,11 @@ interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
 }
 
+/**
+ * This page/route is used to implement site-specific redirects. If a given URL is not matched, this page is loaded as a
+ * fallback. It checks if the URL is configured as a site-specific redirect; if so, the user is redirected. If not, we
+ * throw a 404.
+ */
 const FallbackPage: NextPage<PageProps> = function(props) {
 
     return <p>This page is never seen directly. It either redirects or throws a 404.</p>;

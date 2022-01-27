@@ -1,0 +1,13 @@
+{
+    "name": "neolace-search-frontend",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {
+    },
+    "dependencies": {
+      "typesense": "1.1.2"
+    },
+    "devDependencies": {
+    }
+  }
+  
