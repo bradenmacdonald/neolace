@@ -71,5 +71,6 @@ export type SiteHomePageData = Type<typeof SiteHomePageSchema>;
  */
 export const SiteSearchConnectionSchema = Schema({
     searchEndpoint: string,
+    siteEntriesCollection: string,
     apiKey: string,
 });

@@ -1,6 +1,6 @@
 import { api, NeolaceHttpResource, permissions, realmConfig } from "neolace/plugins/api.ts";
 import { thisPlugin } from "./mod.ts";
-import { getSiteSpecificApiKey } from "./site-collection.ts";
+import { getSiteCollectionAlias, getSiteSpecificApiKey } from "./site-collection.ts";
 import { getTypeSenseClient } from "./typesense-client.ts";
 
 const ONE_HOUR = 60 * 60; // Number of seconds in an hour
@@ -22,10 +22,12 @@ export class SearchConnectionResource extends NeolaceHttpResource {
         if (!(await thisPlugin.isEnabledForSite(siteId))) {
             throw new api.NotFound("Search is not enabled for that site");
         }
-        const client = await getTypeSenseClient();
-
-        // Retrieve the site-specific API key from the graph, or generate a new one if required.
-        const siteSearchkey = await getSiteSpecificApiKey(siteId);
+        const [client, siteEntriesCollection, siteSearchkey] = await Promise.all([
+            getTypeSenseClient(),
+            getSiteCollectionAlias(siteId),
+            // Retrieve the site-specific API key from the graph, or generate a new one if required.
+            getSiteSpecificApiKey(siteId),
+        ]);
         // Now generate an even more restricted key that can only search for entries that the current user's groups are
         // allowed to see
         const restrictedApiKey = await client.keys().generateScopedSearchKey(siteSearchkey, {
@@ -39,6 +41,7 @@ export class SearchConnectionResource extends NeolaceHttpResource {
         return {
             // searchEndpoint: `${realmConfig.typeSenseProtocol}://${realmConfig.typeSenseHost}:${realmConfig.typeSensePort}`,
             searchEndpoint: realmConfig.typeSensePublicEndpoint,
+            siteEntriesCollection,
             apiKey: restrictedApiKey,
         };
     });

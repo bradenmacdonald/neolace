@@ -1,5 +1,5 @@
 import { C, EmptyResultError, Field, VNID } from "neolace/deps/vertex-framework.ts";
-import { getGraph, Site, siteCodeForSite, siteShortIdFromId } from "neolace/plugins/api.ts";
+import { getGraph, Site, siteShortIdFromId } from "neolace/plugins/api.ts";
 import { getTypeSenseClient } from "./typesense-client.ts";
 import { SearchPluginIndexConfig, UpdateSiteApiKey } from "./SearchPluginIndexConfig.ts";
 
@@ -10,8 +10,8 @@ import { SearchPluginIndexConfig, UpdateSiteApiKey } from "./SearchPluginIndexCo
  * should happen.
  */
 export async function getSiteCollectionAlias(siteId: VNID): Promise<string> {
-    const siteCode = await siteCodeForSite(siteId);
-    return `${siteCode}_entries`;
+    const siteShortId = await siteShortIdFromId(siteId);
+    return `${siteShortId}-entries`;
 }
 
 /**
@@ -23,8 +23,7 @@ export async function getSiteCollectionAlias(siteId: VNID): Promise<string> {
  * with more limited permissions, which is what we send back to the user.
  */
 export async function getSiteSpecificApiKey(siteId: VNID): Promise<string> {
-    const graph = await getGraph();
-    const client = await getTypeSenseClient();
+    const [graph, client] = await Promise.all([getGraph(), getTypeSenseClient()]);
     try {
         const initialResult = await graph.read((tx) =>
             tx.queryOne(C`
@@ -40,8 +39,7 @@ export async function getSiteSpecificApiKey(siteId: VNID): Promise<string> {
             throw err; // Something went wrong!
         }
     }
-    const shortId = await siteShortIdFromId(siteId);
-    const siteCollection = await getSiteCollectionAlias(siteId);
+    const [shortId, siteCollection] = await Promise.all([siteShortIdFromId(siteId), getSiteCollectionAlias(siteId)]);
 
     // Create a new API key and save it into the graph.
     const keyData = await client.keys().create({
