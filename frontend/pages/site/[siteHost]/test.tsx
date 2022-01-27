@@ -18,10 +18,15 @@ const PluginTestPage: NextPage<PageProps> = function(props) {
     const pluginName = `search`;
 
     const PluginComponent = dynamic(
+        // Note: it is very important that the pattern below does not match any files in each plugin's node_modules
+        // folder, even when the variables like ${pluginName} are substituted with full paths like "..". Otherwise, you
+        // will see webpack accounting for many different possible imports that we'll never use, and .next/server/ will
+        // be filled with unwanted webpack build files like "plugins_search_node_modules_react_index_js", which slows
+        // down the frontend build.
         () =>
-          import(`../../../plugins/${pluginName}/index`),
+            import(`../../../plugins/${pluginName}/plugin-ui/index`),
         {
-          loading: () => <p>Loading {pluginName} plugin...</p>,
+            loading: () => <p>Loading {pluginName} plugin...</p>,
         }
       );
 
