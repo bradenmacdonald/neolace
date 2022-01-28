@@ -4,12 +4,12 @@ import { FormattedMessage } from 'react-intl';
 
 import { connectInfiniteHits } from "react-instantsearch-dom";
 import { Hit, InfiniteHitsProvided } from "react-instantsearch-core";
-import { Doc } from './Doc';
 import { Highlight } from './Highlight';
 import { Button } from 'components/widgets/Button';
+import { api } from 'lib/api-client';
 
 
-type HitsProps = InfiniteHitsProvided<Hit<Doc>>;
+type HitsProps = InfiniteHitsProvided<Hit<api.EntryIndexDocument>>;
 
 const CustomInfiniteHits: React.FunctionComponent<HitsProps> = ({
     hits,

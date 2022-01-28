@@ -1,10 +1,10 @@
 import { connectHighlight } from 'react-instantsearch-dom';
 import { HighlightProps } from 'react-instantsearch-core';
-import { Doc } from './Doc';
+import { api } from 'lib/api-client';
 
 
 
-const CustomHighlight: React.FunctionComponent<HighlightProps<Doc>> = ({ highlight, attribute, hit }) => {
+const CustomHighlight: React.FunctionComponent<HighlightProps<api.EntryIndexDocument>> = ({ highlight, attribute, hit }) => {
     const parsedHit = highlight({
         highlightProperty: '_highlightResult',
         attribute,
