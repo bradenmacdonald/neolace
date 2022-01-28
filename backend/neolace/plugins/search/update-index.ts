@@ -74,7 +74,7 @@ export async function reindexAllEntries(siteId: VNID) {
             { name: "visibleToGroups", type: "string[]", facet: false },
             // For properties, we store all values as strings or string arrays
             // https://typesense.org/docs/0.22.1/api/documents.html#indexing-all-values-as-string
-            { "name": "prop_.*", "type": "string*" },
+            { "name": "prop_.*", "type": "string[]" },
         ],
     });
     await setCurrentReIndexJobForSite(siteId, newCollectionName);
@@ -94,7 +94,7 @@ export async function reindexAllEntries(siteId: VNID) {
                 `.givesShape({ "entry.id": Field.VNID }));
 
                 const documents = await Promise.all(
-                    entriesChunk.map((row) => entryToIndexDocument(row["entry.id"], siteId)),
+                    entriesChunk.map((row) => entryToIndexDocument(row["entry.id"])),
                 );
                 try {
                     await client.collections(newCollectionName).documents().import(documents, { action: "upsert" });
