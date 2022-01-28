@@ -4,6 +4,7 @@ import {
     tokenizeInlineMDT,
     tokenizeMDT,
     renderInlineToPlainText,
+    renderToPlainText,
     Node,
     RootNode,
 } from "./markdown-mdt.ts";
@@ -51,13 +52,6 @@ function lookupBlock(content: string): TopLevelNode {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// Tests
-
-Deno.test("MDT - renderInlineToPlainText() strips markdown formatting out", () => {
-    const mdtInlineToText = (text: string) => renderInlineToPlainText(tokenizeInlineMDT(text));
-    assertEquals(mdtInlineToText("Some text"), "Some text");
-    assertEquals(mdtInlineToText("Some **bold** text"), "Some bold text");
-    assertEquals(mdtInlineToText("Some [linked](https://www.technotes.org) text"), "Some linked text");
-});
 
 Deno.test("MDT - heading IDs", async (t) => {
 
@@ -216,5 +210,40 @@ Deno.test("MDT - parsing lookup block expressions", () => {
                 text(" text on same line"),
             )),
         ),
+    );
+});
+
+Deno.test("MDT - renderInlineToPlainText() strips markdown formatting out", () => {
+    const mdtInlineToText = (text: string) => renderInlineToPlainText(tokenizeInlineMDT(text));
+    assertEquals(mdtInlineToText("Some text"), "Some text");
+    assertEquals(mdtInlineToText("Some **bold** text"), "Some bold text");
+    assertEquals(mdtInlineToText("Some [linked](https://www.technotes.org) text"), "Some linked text");
+});
+
+Deno.test("MDT - renderInlineToPlainText() can evaluate lookup expressions", () => {
+    const parsed = tokenizeInlineMDT("The answer is {1 + 1}.")
+    assertEquals(renderInlineToPlainText(parsed), "The answer is 1 + 1."); // No evaluation by default
+    assertEquals(
+        renderInlineToPlainText(parsed, {lookupToText: (expr) => expr === "1 + 1" ? "2" : "??"}),
+        "The answer is 2.",
+    );
+});
+
+Deno.test("MDT - renderToPlainText() strips markdown formatting out", () => {
+    const mdtInlineToText = (text: string) => renderToPlainText(tokenizeMDT(text), {lookupToText: (_expr) => "computed value"});
+    assertEquals(
+        mdtInlineToText(`
+# Heading
+
+Here is some text with a {lookup expression}.
+
+* To **boldly** go
+  > where no blockquote has gone before.
+
+{
+    lookup block
+}`),
+        // Should equal:
+        "Heading\n\nHere is some text with a computed value.\n\nTo boldly go\n\nwhere no blockquote has gone before.\n\ncomputed value\n\n",
     );
 });

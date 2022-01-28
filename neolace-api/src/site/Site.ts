@@ -1,5 +1,6 @@
 import { Schema, Type, string, nullable, array, boolean, Record, number, } from "../api-schemas.ts";
 import { ReferenceCacheSchema } from "../content/Entry.ts";
+import { VNID } from "../types.ts";
 
 const rgbTuple = array.min(3).max(3).of(number).transform(x => x as [number, number, number]);
 
@@ -65,3 +66,25 @@ export type SiteDetailsData = Type<typeof SiteDetailsSchema>;
     referenceCache: ReferenceCacheSchema,
 });
 export type SiteHomePageData = Type<typeof SiteHomePageSchema>;
+
+/**
+ * Site search schema (returned by one of the search plugin's endpoints)
+ */
+export const SiteSearchConnectionSchema = Schema({
+    searchEndpoint: string,
+    siteEntriesCollection: string,
+    apiKey: string,
+});
+export type SiteSearchConnectionData = Type<typeof SiteSearchConnectionSchema>;
+
+/** A summary of an entry, suitable to store in a search index */
+export interface EntryIndexDocument {
+    id: VNID;
+    friendlyId: string;
+    name: string;
+    type: string;
+    description: string;
+    articleText: string;
+    visibleToGroups: string[];
+    [k: `prop${string}`]: string[];
+}

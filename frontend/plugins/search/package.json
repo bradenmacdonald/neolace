@@ -1,0 +1,13 @@
+{
+    "name": "neolace-search-frontend",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {},
+    "dependencies": {
+        "react-instantsearch-dom": "6.21.1",
+        "typesense-instantsearch-adapter": "^2.2.0"
+    },
+    "devDependencies": {
+        "@types/react-instantsearch-dom": "^6.12.2"
+    }
+}

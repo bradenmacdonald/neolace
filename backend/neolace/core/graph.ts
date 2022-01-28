@@ -1,9 +1,9 @@
 import { Vertex } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
 import { onShutDown } from "neolace/app/shutdown.ts";
-import { registerVNodeTypes } from "./graph-init.ts";
+import { registerPluginVNodeTypes, registerVNodeTypes } from "./graph-init.ts";
 
-export const graph = new Vertex({
+const _graph = new Vertex({
     neo4jUrl: config.neo4jUrl,
     neo4jUser: config.neo4jUser,
     neo4jPassword: config.neo4jPassword,
@@ -86,9 +86,24 @@ export const graph = new Vertex({
     },
 });
 
-registerVNodeTypes(graph);
+registerVNodeTypes(_graph);
+export const graphInitPromise = registerPluginVNodeTypes(_graph);
+
+/**
+ * The driver for the Neo4j database.
+ * @deprecated Use "await getGraph()" instead.
+ */
+export const graph = _graph;
+
+/**
+ * A Promise that returns the Neo4j driver and Vertex framework. Use this for accessing graph data.
+ */
+export async function getGraph(): Promise<Vertex> {
+    await graphInitPromise;
+    return _graph;
+}
 
 onShutDown(async () => {
     // When our application shuts down, we need to shut down our connections to the graph database:
-    await graph.shutdown();
+    await _graph.shutdown();
 });

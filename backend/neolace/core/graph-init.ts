@@ -17,6 +17,7 @@ import { DataFile } from "neolace/core/objstore/DataFile.ts";
 // core/schema
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Property } from "neolace/core/schema/Property.ts";
+import { getPlugins } from "neolace/plugins/loader.ts";
 
 export function registerVNodeTypes(graph: Vertex) {
     graph.registerVNodeTypes([
@@ -48,5 +49,14 @@ export function registerVNodeTypes(graph: Vertex) {
             feature.configClass,
             feature.dataClass,
         ]);
+    }
+}
+
+// And register VNodes belonging to any plugins:
+export async function registerPluginVNodeTypes(graph: Vertex) {
+    for (const plugin of await getPlugins()) {
+        if (plugin.dataVNodeClasses) {
+            graph.registerVNodeTypes(plugin.dataVNodeClasses);
+        }
     }
 }

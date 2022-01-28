@@ -21,8 +21,6 @@ function defaultTo<T>(value: T, { production, test }: { production?: T; test?: T
 export const config = (() => {
     // Default configuration:
     const config = {
-        // The REST API
-
         // Port to listen on
         port: defaultTo(5554, { test: 4444 }),
         // Full URL at which the REST API is available
@@ -37,6 +35,12 @@ export const config = (() => {
         neo4jUrl: defaultTo("bolt://localhost:7687", { test: "bolt://localhost:4687" }),
         neo4jUser: "neo4j",
         neo4jPassword: defaultTo("neolace", { production: "\u0000 setme!!" }),
+        // Configuration of the TypeSense (search) server:
+        typeSenseHost: "localhost",
+        typeSensePort: defaultTo(5556, { production: 8108 }),
+        typeSenseProtocol: "http",
+        typeSenseApiKey: "typesensedevkey",
+        typeSensePublicEndpoint: "http://localhost:5556",
         // Should debug logs be printed to stdout?
         debugLogging: defaultTo(true, { production: false }),
         // Public URL of the authentication microservice (Keratin AuthN)
@@ -57,6 +61,10 @@ export const config = (() => {
         objStorePublicUrlPrefix: defaultTo("http://localhost:9000/neolace-objects", {
             test: "http://localhost:9000/neolace-test-objects",
         }),
+
+        plugins: [
+            { mod: "search" },
+        ],
     };
     // Allow defaults to be overriden by environment variables:
     for (const key in config) {

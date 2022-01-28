@@ -7,7 +7,7 @@ import { FieldValidationError, VNID } from "neolace/deps/vertex-framework.ts";
 import * as api from "neolace/deps/neolace-api.ts";
 import { PathError } from "neolace/deps/computed-types.ts";
 
-import { graph } from "neolace/core/graph.ts";
+import { getGraph, graph } from "neolace/core/graph.ts";
 import { Check, CheckContext, permissions } from "neolace/core/permissions.ts";
 import { siteCodeForSite, siteIdFromShortId } from "neolace/core/Site.ts";
 
@@ -31,7 +31,7 @@ type JsonCompatibleValue = string | boolean | Record<string, unknown> | null | u
  *
  * A resource has a path like "/user/profile" and can have one or more methods (like POST, GET, etc.)
  */
-export abstract class NeolaceHttpResource extends Drash.Resource {
+export class NeolaceHttpResource extends Drash.Resource {
     method<Response extends JsonCompatibleValue, RequestBody extends JsonCompatibleValue = undefined>(
         metadata: {
             responseSchema: api.schemas.Validator<Response>;
@@ -48,6 +48,7 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
         ) => Promise<api.schemas.Type<api.schemas.Validator<Response>>>,
     ) {
         return async (request: Drash.Request, response: Drash.Response): Promise<void> => {
+            this.setCorsHeaders(request, response);
             try {
                 // Validate the request body, if any:
                 const requestBodyValidated = this.validateRequestBody(request, metadata.requestBodySchema);
@@ -79,6 +80,22 @@ export abstract class NeolaceHttpResource extends Drash.Resource {
                 }
             }
         };
+    }
+
+    protected setCorsHeaders(request: Drash.Request, response: Drash.Response) {
+        const allHttpMethods: string[] = ["GET", "POST", "PUT", "DELETE"];
+        response.headers.set("Access-Control-Allow-Methods", allHttpMethods.filter((m) => m in this).join());
+        // Neolace APIs are generally public and don't use cookies for authentication so we allow all origins
+        response.headers.set("Access-Control-Allow-Origin", request.headers.get("Origin") ?? "");
+        response.headers.set(
+            "Access-Control-Allow-Headers",
+            ["Accept", "Authorization", "Content-Type", "If-None-Match"].join(","),
+        );
+    }
+
+    public OPTIONS(request: Drash.Request, response: Drash.Response) {
+        this.setCorsHeaders(request, response);
+        response.status = 204;
     }
 
     private validateRequestBody<DataShape>(
@@ -316,4 +333,4 @@ function convertStandardErrors(err: Error): void {
     }
 }
 
-export { api, Drash, graph, log, permissions };
+export { api, Drash, getGraph, graph, log, permissions };

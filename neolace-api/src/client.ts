@@ -4,7 +4,7 @@ import * as errors from "./errors.ts";
 import { SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema } from "./edit/index.ts";
 import { EntryData, GetEntryFlags } from "./content/index.ts";
-import { SiteDetailsData, SiteHomePageData } from "./site/Site.ts";
+import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData } from "./site/Site.ts";
 import * as schemas from "./api-schemas.ts";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
@@ -207,6 +207,14 @@ export class NeolaceApiClient {
     public getEntry<Flags extends readonly GetEntryFlags[]>(key: string, options: {flags?: Flags, siteId?: string} = {}): Promise<ApplyFlags<typeof GetEntryFlags, Flags, EntryData>> {
         const siteId = this.getSiteId(options);
         return this.call(`/site/${siteId}/entry/${encodeURIComponent(key)}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""));
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Built-in plugin methods
+
+    public getSearchConnection(options?: {siteId?: string}): Promise<SiteSearchConnectionData> {
+        const siteId = this.getSiteId(options);
+        return this.call(`/site/${siteId}/search/connection`);
     }
 }
 

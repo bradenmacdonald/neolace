@@ -13,6 +13,7 @@ COPY neolace-api /neolace/neolace-api
 RUN apk add git
 RUN cd / && git clone https://github.com/neolace-dev/vertex-framework.git
 RUN deno cache --import-map=import_map.json --unstable neolace/api/server.ts
+RUN deno cache --import-map=import_map.json --unstable neolace/plugins/*/mod.ts
 
 # The backend runs on port 5554
 EXPOSE 5554

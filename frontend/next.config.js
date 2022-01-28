@@ -1,4 +1,5 @@
 const { PHASE_DEVELOPMENT_SERVER } = require('next/constants')
+const path = require("path");
 
 module.exports = (phase, { defaultConfig }) => {
 
@@ -61,6 +62,18 @@ module.exports = (phase, { defaultConfig }) => {
                     },
                 ],
             };
+        },
+        webpack: (config, options) => {
+            // Tell webpack to prepare to dynamically load our configured plugins
+            // See https://www.grouparoo.com/blog/nextjs-plugins#hacking-the-nextjs-webpack-configuration
+            // config.module.rules.push({
+            //     test: /plugins\/.*\.tsx?/,
+            //     use: [options.defaultLoaders.babel],
+            // });
+            // we want to ensure that the server project's version of react is used in all cases
+            config.resolve.alias["react"] = path.join(__dirname, "node_modules", "react");
+            config.resolve.alias["react-dom"] = path.resolve(__dirname, "node_modules", "react-dom");
+            return config;
         },
     };
 
