@@ -39,7 +39,7 @@ const SiteSearchPage: React.FunctionComponent = function(props) {
                     },
                     cacheSearchResultsForSeconds: 2 * 60, // Cache search results from server. Defaults to 2 minutes. Set to 0 to disable caching.
                     additionalSearchParameters: {
-                        queryBy: "name,description,articleText",
+                        queryBy: "name,description,friendlyId,articleText",
                     },
                   })
             );

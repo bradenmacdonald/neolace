@@ -1,10 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
+import { FormattedMessage } from 'react-intl';
 
 import { connectInfiniteHits } from "react-instantsearch-dom";
 import { Hit, InfiniteHitsProvided } from "react-instantsearch-core";
 import { Doc } from './Doc';
 import { Highlight } from './Highlight';
+import { Button } from 'components/widgets/Button';
 
 
 type HitsProps = InfiniteHitsProvided<Hit<Doc>>;
@@ -18,9 +20,12 @@ const CustomInfiniteHits: React.FunctionComponent<HitsProps> = ({
 }) => {
     return <div>
         {hasPrevious &&
-            <button onClick={refinePrevious}>
-                Show previous
-            </button>
+            <Button onClick={refinePrevious}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chevron-up inline-block mr-2 -mt-1" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z"/>
+                </svg>
+                <FormattedMessage id="plugin.search.showPreviousResults" defaultMessage="Show previous results"/>
+            </Button>
         }
         <ol>
             {hits.map(hit => (
@@ -32,9 +37,13 @@ const CustomInfiniteHits: React.FunctionComponent<HitsProps> = ({
                 </li>
             ))}
         </ol>
-        <button disabled={!hasMore} onClick={refineNext}>
-            Show more
-        </button>
+        <br/>
+        <Button disabled={!hasMore} onClick={refineNext}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chevron-down inline-block mr-2" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+            </svg>
+            <FormattedMessage id="plugin.search.showMoreResults" defaultMessage="Show more results"/>
+        </Button>
     </div>
 };
 
