@@ -3,8 +3,9 @@ import React from 'react';
 import { SiteContext } from 'components/SiteContext';
 import { api, client } from 'lib/api-client';
 import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
-import { InstantSearch, SearchBox } from "react-instantsearch-dom";
+import { InstantSearch } from "react-instantsearch-dom";
 import { Hits } from "../components/Hits";
+import { SearchBox } from '../components/SearchBox';
 
 const SiteSearchPage: React.FunctionComponent = function(props) {
 
