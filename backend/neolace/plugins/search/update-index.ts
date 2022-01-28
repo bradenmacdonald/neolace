@@ -2,7 +2,7 @@ import * as log from "std/log/mod.ts";
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { TypeSense } from "neolace/deps/typesense.ts";
 
-import { Entry, EntryType, getEntry, GetEntryFlags, getGraph, Site } from "neolace/plugins/api.ts";
+import { Entry, entryToIndexDocument, EntryType, getGraph, Site } from "neolace/plugins/api.ts";
 
 import { getTypeSenseClient } from "./typesense-client.ts";
 import { getSiteCollectionAlias } from "./site-collection.ts";
@@ -53,29 +53,6 @@ async function _getCollectionToUpdate(siteId: VNID): Promise<string | undefined>
     }
 }
 
-/**
- * Generate a TypeSense document for a given entry, so we can upsert it into the search index.
- */
-async function entryToDocument(entryId: VNID, siteId: VNID) {
-    // log.info(`Reindexing ${entryId} to ${collection}`);
-    const graph = await getGraph();
-    const entryData = await graph.read((tx) =>
-        getEntry(
-            entryId,
-            siteId,
-            tx,
-            new Set([GetEntryFlags.IncludeFeatures, GetEntryFlags.IncludePropertiesSummary]),
-        )
-    );
-    return {
-        id: entryId,
-        name: entryData.name,
-        type: entryData.entryType.name,
-        description: entryData.description,
-        articleText: entryData.features?.Article?.articleMD ?? "",
-    };
-}
-
 export async function reindexAllEntries(siteId: VNID) {
     const graph = await getGraph();
     const client = await getTypeSenseClient();
@@ -89,10 +66,12 @@ export async function reindexAllEntries(siteId: VNID) {
         name: newCollectionName,
         fields: [
             { name: "id", type: "string", facet: false },
+            { name: "friendlyId", type: "string", facet: false },
             { name: "name", type: "string", facet: false },
             { name: "type", type: "string", facet: true },
             { name: "description", type: "string", facet: false },
             { name: "articleText", type: "string", facet: false },
+            { name: "visibleToGroups", type: "string[]", facet: false },
             // For properties, we store all values as strings or string arrays
             // https://typesense.org/docs/0.22.1/api/documents.html#indexing-all-values-as-string
             { "name": "prop_.*", "type": "string*" },
@@ -115,7 +94,7 @@ export async function reindexAllEntries(siteId: VNID) {
                 `.givesShape({ "entry.id": Field.VNID }));
 
                 const documents = await Promise.all(
-                    entriesChunk.map((row) => entryToDocument(row["entry.id"], siteId)),
+                    entriesChunk.map((row) => entryToIndexDocument(row["entry.id"], siteId)),
                 );
                 try {
                     await client.collections(newCollectionName).documents().import(documents, { action: "upsert" });

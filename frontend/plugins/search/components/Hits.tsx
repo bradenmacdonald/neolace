@@ -26,7 +26,7 @@ const CustomInfiniteHits: React.FunctionComponent<HitsProps> = ({
             {hits.map(hit => (
                 <li key={hit.objectID} className="my-3 pl-3 border-l-4 border-l-gray-300">
                     <div className="text-lg">
-                        <Link href={`/entry/${hit.id}`}><a className="font-bold text-theme-link-color underline"><Highlight hit={hit} attribute="name" /></a></Link> ({hit.type})
+                        <Link href={`/entry/${hit.friendlyId}`}><a className="font-bold text-theme-link-color underline"><Highlight hit={hit} attribute="name" /></a></Link> ({hit.type})
                     </div>
                     <p className="text-sm"><Highlight hit={hit} attribute="description" /></p>
                 </li>

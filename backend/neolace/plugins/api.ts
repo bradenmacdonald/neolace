@@ -14,6 +14,7 @@ export { EntryType } from "neolace/core/schema/EntryType.ts";
 export { getEntry } from "neolace/api/site/{siteShortId}/entry/{entryId}/_helpers.ts";
 export { GetEntryFlags } from "neolace/deps/neolace-api.ts";
 export { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
+export { entryToIndexDocument } from "neolace/core/entry/entry-to-index-doc.ts";
 
 // Neolace lib functions
 export { createRandomToken } from "neolace/lib/secure-token.ts";
