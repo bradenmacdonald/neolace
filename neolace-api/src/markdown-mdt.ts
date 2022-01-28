@@ -242,7 +242,7 @@ export function renderInlineToHTML(inlineNode: Node): string {
  * @param inlineNode 
  * @returns a plain text string
  */
-export function renderInlineToPlainText(inlineNode: Node): string {
+export function renderInlineToPlainText(inlineNode: Node, {lookupToText = (lookup: string) => lookup} = {}): string {
     if (inlineNode.type !== "inline") {
         throw new Error(`renderInlineToPlainText() can only render inline nodes to plain text, not ${inlineNode}`);
     }
@@ -251,8 +251,11 @@ export function renderInlineToPlainText(inlineNode: Node): string {
         if (childNode.type === "text") {
             text += childNode.content;
             return;
-        } else if (childNode.type === "code_inline" || childNode.type === "lookup_inline") {
+        } else if (childNode.type === "code_inline") {
             text += childNode.content;
+            return;
+        } else if (childNode.type === "lookup_inline") {
+            text += lookupToText(childNode.content);
             return;
         } else if (childNode.type === "softbreak" || childNode.type === "hardbreak") {
             text += "\n";
@@ -266,13 +269,33 @@ export function renderInlineToPlainText(inlineNode: Node): string {
 }
 
 /**
+ * Render an MDT document to plain text, ignoring all formatting like bold, links, etc.
+ * @returns a plain text string
+ */
+export function renderToPlainText(node: RootNode, {lookupToText = (lookup: string) => lookup} = {}): string {
+    let text = "";
+    const renderNode = (node: Node): void => {
+        if (node.type === "inline") {
+            text += renderInlineToPlainText(node, {lookupToText});
+            text += "\n\n";
+        } else if (node.type === "lookup_block") {
+            text += lookupToText(node.content) + "\n\n";
+        } else if ("children" in node) {
+            node.children.forEach(renderNode);
+        }
+    };
+    node.children.forEach(renderNode);
+    return text;
+}
+
+/**
  * Render MDT to HTML, ignoring block-level elements.
  * @param mdt The MDT string to parse and convert to HTML
  */
-export function renderMDTInlineToHTML(mdt: string): string {
-    const document = tokenizeMDT(mdt, {inline: true});
-    return document.children.map(node => {
-        if (node.type !== "inline") { throw new Error(`Unexpected node type ${node.type} when parsing MDT as inline-only.`); }
-        return renderInlineToHTML(node);
-    }).join("");
-}
+// export function renderMDTInlineToHTML(mdt: string): string {
+//     const document = tokenizeMDT(mdt, {inline: true});
+//     return document.children.map(node => {
+//         if (node.type !== "inline") { throw new Error(`Unexpected node type ${node.type} when parsing MDT as inline-only.`); }
+//         return renderInlineToHTML(node);
+//     }).join("");
+// }
