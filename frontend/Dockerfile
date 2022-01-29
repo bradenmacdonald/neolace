@@ -22,6 +22,7 @@ COPY --from=transpile /build/neolace-api/ /neolace/neolace-api/
 # Dependencies
 RUN apk add --no-cache git
 RUN npm ci --also=dev
+RUN for plugdir in plugins/*/; do cd $plugdir && npm ci --also=dev; cd -; done
 RUN npm run compile:i18n
 
 # The frontend runs on port 5555
