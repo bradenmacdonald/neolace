@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.116.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.120.0/testing/asserts.ts";
 import { AnyInlineNode, InlineNode, TopLevelNode } from "./markdown-mdt-ast.ts";
 import {
     tokenizeInlineMDT,
