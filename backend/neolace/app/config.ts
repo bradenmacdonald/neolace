@@ -61,6 +61,14 @@ export const config = (() => {
         objStorePublicUrlPrefix: defaultTo("http://localhost:9000/neolace-objects", {
             test: "http://localhost:9000/neolace-test-objects",
         }),
+        // The system API key is very dangerous and allows a user to do ANYTHING with the REST API, such as delete
+        // entire sites. We store only the salted SHA-256 hash of the system API key. It defaults to
+        // "SYS_KEY_INSECURE_DEV_KEY" in development and by default is disabled in production. Go to
+        // (backend API URL)/auth/system-key to generate a ney key, e.g. http://localhost:5554/auth/system-key for
+        // development. Once it is generated, this config setting here must be updated.
+        systemApiKeyHash: defaultTo("96dee7f604222fed743cec02d8be06ca531b7187dc96adc3f7d4dcad011025fc", {
+            production: "disabled",
+        }),
 
         plugins: [
             { mod: "search" },

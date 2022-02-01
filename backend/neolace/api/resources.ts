@@ -2,6 +2,7 @@ import { HomePageResource } from "./index.ts";
 import { HealthCheckResource } from "./health.ts";
 import { RequestLoginResource } from "./auth/request-login.ts";
 import { PasswordlessLoginWebhookResource } from "./auth/hooks/passwordless-login.ts";
+import { SystemKeyResource } from "./auth/system-key.ts";
 import { SiteLookupResource } from "./site/lookup.ts";
 import { SiteHomeResource } from "./site/{siteShortId}/home.ts";
 import { SchemaIndexResource } from "./site/{siteShortId}/schema/index.ts";
@@ -18,6 +19,7 @@ export const builtInRestApiResources: (typeof NeolaceHttpResource)[] = [
     HealthCheckResource,
     RequestLoginResource,
     PasswordlessLoginWebhookResource,
+    SystemKeyResource,
     SiteLookupResource,
     SiteHomeResource,
     SchemaIndexResource,
