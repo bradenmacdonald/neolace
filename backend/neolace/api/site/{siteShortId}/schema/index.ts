@@ -1,5 +1,6 @@
-import { api, graph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
+import { ImportSchema } from "neolace/core/schema/import-schema.ts";
 
 export class SchemaIndexResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/schema"];
@@ -11,8 +12,25 @@ export class SchemaIndexResource extends NeolaceHttpResource {
         // Permissions and parameters:
         await this.requirePermission(request, permissions.CanViewSchema);
         const { siteId } = await this.getSiteDetails(request);
+        const graph = await getGraph();
 
         // Response:
         return await graph.read((tx) => getCurrentSchema(tx, siteId));
+    });
+
+    PUT = this.method({
+        responseSchema: api.schemas.Schema({}),
+        requestBodySchema: api.SiteSchemaSchema,
+        description: "Update the site's schema to match the provided schema",
+    }, async ({ request, bodyData }) => {
+        // Permissions and parameters:
+        const user = this.requireUser(request);
+        await this.requirePermission(request, permissions.CanApproveSchemaChanges);
+        const { siteId } = await this.getSiteDetails(request);
+        const graph = await getGraph();
+
+        await graph.runAs(user.id, ImportSchema({ siteId, schema: bodyData }));
+
+        return {}; // No response
     });
 }

@@ -170,6 +170,12 @@ export class NeolaceApiClient {
         return await this.call(`/site/${siteId}/schema`, {method: "GET"});
     }
 
+    /** Replace a site's schema with the provided schema */
+    public async replaceSiteSchema(schema: SiteSchemaData, options?: {siteId?: string}): Promise<void> {
+        const siteId = this.getSiteId(options);
+        await this.call(`/site/${siteId}/schema`, {method: "PUT", data: schema});
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Draft API Methods
 

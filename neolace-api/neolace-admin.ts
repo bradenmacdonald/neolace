@@ -12,7 +12,9 @@ import * as api from "./src/index.ts";
 import * as log from "https://deno.land/std@0.120.0/log/mod.ts";
 // import { parse as parseArgs } from "https://deno.land/std@0.120.0/flags/mod.ts";
 import { parse as parseYaml, stringify as stringifyYaml, } from "https://deno.land/std@0.120.0/encoding/yaml.ts";
+import { readAll } from "https://deno.land/std@0.120.0/streams/conversion.ts";
 import { VNID } from "https://raw.githubusercontent.com/neolace-dev/vertex-framework/f5e5a577518307d609ded1e16aa7f1fe1cb02b64/vertex/lib/types/vnid.ts";
+import { assertEquals } from "https://deno.land/std@0.120.0/testing/asserts.ts";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Usage instructions
@@ -27,6 +29,9 @@ Where command is one of:
     export all site_id [folder_name]
         Export all of a site's schema and content to the specified folder; if not specified, a folder in the current
         directory with the same name as the site ID will be used.
+    sync-schema site_id
+        Import a site schema from YAML (on stdin). This can be dangerous as it will erase any parts of the existing
+        schema that aren't part of the imported schema (in other words, it overwrites the schema).
 `);
     Deno.exit(code);
 }
@@ -140,20 +145,26 @@ function applyIdMap(map: Record<string, string>, schema: api.SiteSchemaData, {ge
     for (const entry of Object.values(schema.entryTypes)) {
         const newId = getMappedId(entry.id);
         const newEntryType = {...entry, id: newId as VNID };
-        if (newEntryType.enabledFeatures?.HeroImage?.lookupExpression) {
-            newEntryType.enabledFeatures.HeroImage.lookupExpression = replaceAllIds(newEntryType.enabledFeatures.HeroImage.lookupExpression);
+        if (newEntryType.enabledFeatures) {
+            newEntryType.enabledFeatures = {...newEntryType.enabledFeatures}; // Copy so we don't modify the original
+            if (newEntryType.enabledFeatures.HeroImage?.lookupExpression) {
+                newEntryType.enabledFeatures.HeroImage = {
+                    ...newEntryType.enabledFeatures.HeroImage,
+                    lookupExpression: replaceAllIds(newEntryType.enabledFeatures.HeroImage.lookupExpression),
+                };
+            }
         }
         newSchema.entryTypes[newId] = newEntryType;
     }
     for (const entry of Object.values(schema.properties)) {
         const newId = getMappedId(entry.id);
         const newProperty = {...entry, id: newId as VNID };
-        newProperty.appliesTo.forEach((appliesTo, idx) => {
-            newProperty.appliesTo[idx].entryType = getMappedId(appliesTo.entryType);
-        });
-        newProperty.isA?.forEach((isA, idx) => {
-            newProperty.isA![idx] = getMappedId(isA);
-        });
+        newProperty.appliesTo = newProperty.appliesTo.map(
+            (old) => ({...old, entryType: getMappedId(old.entryType)}),
+        );
+        if (newProperty.isA) {
+            newProperty.isA = newProperty.isA.map(oldId => getMappedId(oldId));
+        }
         if (newProperty.default) {
             newProperty.default = replaceAllIds(newProperty.default);
         }
@@ -166,22 +177,67 @@ function applyIdMap(map: Record<string, string>, schema: api.SiteSchemaData, {ge
     return {newSchema, newMap};
 }
 
+interface FriendlySchema {
+    entryTypes: api.EntryTypeData[],
+    properties: api.PropertyData[],
+    idMap: { comment: string, map: Record<string, string>;}
+}
+
 /**
- * Export a site's schema to std out or to a file.
- * @param siteId 
+ * Convert a site's schema to a human-readable YAML string.
+ * The "normal" schema format is already pretty human-readable, except for the VNIDs which are not. The main purpose of
+ * this function is to convert the VNIDs to a human-readable format.
  */
-async function exportSchema(siteId: string): Promise<string> {
-    const client = await getApiClient();
-    const schema = await client.getSiteSchema({siteId});
+function schemaToYaml(schema: api.SiteSchemaData): string {
     const idMap = buildIdMap(schema);
     const readableSchema = applyIdMap(invertMap(idMap), schema).newSchema; // Convert IDs to be human readable
-    const schemaReformatted = {
+    const schemaReformatted: FriendlySchema = {
         // Remove duplication of IDs (normally the ID is in both each key and each "id" property)
         entryTypes: Object.values(readableSchema.entryTypes),
         properties: Object.values(readableSchema.properties),
         idMap: { comment: "if you edit one of the IDs above, you should edit it below here too. You do not need to add IDs here for new entries.", map: idMap, },
     };
-    return stringifyYaml(schemaReformatted);
+    // deno-lint-ignore no-explicit-any
+    return stringifyYaml(schemaReformatted as any);
+}
+
+/**
+ * Convert a schema from a human-readable YAML string back to the "normal" schema format.
+ * This is the opposite of schemaToYaml()
+ */
+function yamlToSchema(yamlString: string): {idMap: Record<string, string>, schema: api.SiteSchemaData} {
+    const friendlySchema = parseYaml(yamlString) as FriendlySchema;
+    // Convert from format where entryTypes/properties are arrays to one where they're values in an object:
+    const tempSchema: api.SiteSchemaData = {entryTypes: {}, properties: {}};
+    for (const et of friendlySchema.entryTypes) {
+        tempSchema.entryTypes[et.id] = et;
+    }
+    for (const prop of friendlySchema.properties) {
+        tempSchema.properties[prop.id] = prop;
+    }
+    // Convert the friendly IDs back to 
+    const {newSchema, newMap} = applyIdMap(friendlySchema.idMap.map, tempSchema);
+    return {schema: newSchema, idMap: newMap};
+}
+
+async function exportSchema(siteId: string): Promise<string> {
+    const client = await getApiClient();
+    const schema = await client.getSiteSchema({siteId});
+    const yamlSchema = schemaToYaml(schema);
+    // Do a quick validation:
+    assertEquals(yamlToSchema(yamlSchema).schema, schema);
+    return yamlSchema
+}
+
+/**
+ * Import a site's schema from a human-readable YAML string. This will overwrite the site's current schema so use with
+ * caution.
+ */
+async function syncSchema(siteId: string, schemaString: string): Promise<{idMap: Record<string, string>}> {
+    const client = await getApiClient();
+    const {schema, idMap} = yamlToSchema(schemaString);
+    await client.replaceSiteSchema(schema, {siteId});
+    return {idMap};
 }
 
 /**
@@ -233,6 +289,16 @@ if (import.meta.main) {
     switch (Deno.args[0]) {
         case "export": {
             await exportCommand();
+            break;
+        }
+        case "sync-schema": {
+            const siteId = Deno.args[1];
+            if (!siteId) {
+                dieUsage();
+            }
+            const stdinContent = await readAll(Deno.stdin);
+            const schemaYaml = new TextDecoder().decode(stdinContent);
+            await syncSchema(siteId, schemaYaml);
             break;
         }
         default:
