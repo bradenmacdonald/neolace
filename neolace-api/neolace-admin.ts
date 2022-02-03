@@ -270,6 +270,7 @@ async function exportCommand() {
     if (shouldExportSchema) {
         const schemaYaml = await exportSchema(siteId);
         if (outFolder) {
+            log.info("Exporting schema");
             await Deno.writeTextFile(`${outFolder}/schema.yaml`, schemaYaml);
         } else {
             // Export the schema to stdout
@@ -278,7 +279,45 @@ async function exportCommand() {
     }
     // Export the content:
     if (shouldExportAll) {
-        // TODO: export the content
+        const client = await getApiClient();
+        const schema = await client.getSiteSchema({siteId});
+        const friendlyIds = invertMap(buildIdMap(schema));
+        for (const entryType of Object.values(schema.entryTypes)) {
+            const thisEntryTypeDir = outFolder + '/' + friendlyIds[entryType.id].substring(4).toLowerCase();
+            await Deno.mkdir(thisEntryTypeDir);
+            for await (const record of await client.getEntries({siteId, ofEntryType: entryType.id})) {
+                log.info(`Exporting ${entryType.name} ${record.friendlyId}`)
+                const metadata: Record<string, unknown> = {
+                    name: record.name,
+                    id: record.id,
+                };
+
+                const entryData = await client.getEntry(record.id, {siteId, flags: [api.GetEntryFlags.IncludeFeatures] as const});
+
+                if (entryData.description) {
+                    metadata.description = entryData.description;
+                }
+                if (entryType.enabledFeatures.Image && entryData.features?.Image) {
+                    const imgMeta = entryData.features.Image;
+                    const data = await (await fetch(imgMeta.imageUrl)).arrayBuffer();
+                    const ext = (
+                        imgMeta.contentType === "image/jpeg" ? "jpg" :
+                        imgMeta.contentType === "image/webp" ? "webp" :
+                        imgMeta.contentType === "image/png" ? "png" :
+                        "???"
+                    );
+                    const imgFilename = record.friendlyId + ".img." + ext; // The ".img" makes the filenames sort consistently with markdown first, then image file next. Otherwise JPG comes before MD but WEBP comes after.
+                    await Deno.writeFile(thisEntryTypeDir + '/' + imgFilename, new Uint8Array(data));
+                    metadata.image = imgFilename;
+                }
+
+                let markdown = `---\n${stringifyYaml(metadata)}---\n`;
+                if (entryType.enabledFeatures.Article !== undefined) {
+                    markdown += entryData.features?.Article?.articleMD;
+                }
+                await Deno.writeTextFile(thisEntryTypeDir + '/' + record.friendlyId + '.md', markdown);
+            }
+        }
     }
 }
 
