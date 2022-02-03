@@ -281,7 +281,14 @@ async function exportCommand() {
     if (shouldExportAll) {
         const client = await getApiClient();
         const schema = await client.getSiteSchema({siteId});
+        // Map from VNID to a friendlier entry/property ID used for export purposes only:
         const friendlyIds = invertMap(buildIdMap(schema));
+
+        // Add friendly IDs of all the entries too:
+        for await (const record of await client.getEntries({siteId})) {
+            friendlyIds[record.id] = record.friendlyId;
+        }
+
         for (const entryType of Object.values(schema.entryTypes)) {
             const thisEntryTypeDir = outFolder + '/' + friendlyIds[entryType.id].substring(4).toLowerCase();
             await Deno.mkdir(thisEntryTypeDir);
@@ -295,7 +302,7 @@ async function exportCommand() {
                 const entryData = await client.getEntry(record.id, {siteId, flags: [api.GetEntryFlags.IncludeFeatures, api.GetEntryFlags.IncludeRawProperties] as const});
 
                 if (entryData.description) {
-                    metadata.description = entryData.description;
+                    metadata.description = replaceIdsInMarkdownAndLookupExpressions(friendlyIds, entryData.description);
                 }
                 if (entryType.enabledFeatures.Image && entryData.features?.Image) {
                     const imgMeta = entryData.features.Image;
@@ -313,12 +320,15 @@ async function exportCommand() {
 
                 for (const prop of entryData.propertiesRaw!) {
                     if (prop.facts.length === 1 && !prop.facts[0].note && !prop.facts[0].slot) {
-                        metadata[friendlyIds[prop.propertyId]] = prop.facts[0].valueExpression;
+                        metadata[friendlyIds[prop.propertyId]] = replaceIdsInMarkdownAndLookupExpressions(friendlyIds, prop.facts[0].valueExpression);
                     } else {
                         const factsSimplified = prop.facts.map((origFact) => {
                             const simpleFact: Record<string, unknown> = {...origFact};
+                            simpleFact.valueExpression = replaceIdsInMarkdownAndLookupExpressions(friendlyIds, simpleFact.valueExpression as string);
                             if (!simpleFact.note) {
                                 delete simpleFact.note;
+                            } else {
+                                simpleFact.note = replaceIdsInMarkdownAndLookupExpressions(friendlyIds, simpleFact.note as string);
                             }
                             if (!simpleFact.slot) {
                                 delete simpleFact.slot;
@@ -332,12 +342,31 @@ async function exportCommand() {
 
                 let markdown = `---\n${stringifyYaml(metadata, {lineWidth: 120})}---\n`;
                 if (entryType.enabledFeatures.Article !== undefined) {
-                    markdown += entryData.features?.Article?.articleMD;
+                    const articleMd = replaceIdsInMarkdownAndLookupExpressions(friendlyIds, entryData.features?.Article?.articleMD!);
+                    markdown += articleMd + "\n";
                 }
                 await Deno.writeTextFile(thisEntryTypeDir + '/' + record.friendlyId + '.md', markdown);
             }
         }
     }
+}
+
+/**
+ * VNIDs are not very human-readable, and must be unique across all sites on a Neolace realm, so for export purposes we
+ * generally swap them out for human readable IDs wherever possible. We do still preserve the VNIDs in the export data
+ * though, so that if importing back to the same site, we can avoid changing the VNIDs.
+ */
+function replaceIdsInMarkdownAndLookupExpressions(idMap: Record<string, string>, markdownOrLookup: string) {
+    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]/mg, (_m, id) => {
+        return `[[/entry/${ idMap[id] ?? id }]]`;
+    });
+    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]/mg, (_m, id) => {
+        return `[[/prop/${ idMap[id] ?? id }]]`;
+    });
+    markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/(_[0-9A-Za-z]{1,22})\)/mg, (_m, id) => {
+        return `](/entry/${ idMap[id] ?? id })`;
+    });
+    return markdownOrLookup;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
