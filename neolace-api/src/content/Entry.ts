@@ -1,4 +1,4 @@
-import { Schema, Type, string, vnidString, nullable, array, number, object, Record } from "../api-schemas.ts";
+import { Schema, Type, string, vnidString, nullable, array, number, object, Record, Validator } from "../api-schemas.ts";
 import { PropertyType } from "../schema/SiteSchemaData.ts";
 import { AnyLookupValue } from "./lookup-value.ts";
 
@@ -121,3 +121,18 @@ export const EntrySchema = Schema({
     }).strictOptional(),
 });
 export type EntryData = Type<typeof EntrySchema>;
+
+export const PaginatedResult = <T>(itemSchema: Validator<T>) => Schema({
+    values: array.of(itemSchema),
+    totalCount: number.strictOptional(),
+    nextPageUrl: string.strictOptional(),
+});
+export type PaginatedResultData<T> = {values: T[], totalCount?: number, nextPageUrl?: string};
+
+export const EntrySummarySchema = Schema({
+    id: vnidString,
+    type: Schema({id: vnidString}),
+    name: string,
+    friendlyId: string,
+});
+export type EntrySummaryData = Type<typeof EntrySummarySchema>;

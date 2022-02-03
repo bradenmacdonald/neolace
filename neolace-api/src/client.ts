@@ -3,9 +3,10 @@ import { PasswordlessLoginResponse } from "./user.ts";
 import * as errors from "./errors.ts";
 import { SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema } from "./edit/index.ts";
-import { EntryData, GetEntryFlags } from "./content/index.ts";
+import { EntryData, EntrySummaryData, GetEntryFlags, PaginatedResultData } from "./content/index.ts";
 import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData } from "./site/Site.ts";
 import * as schemas from "./api-schemas.ts";
+import { VNID } from "./types.ts";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
 export interface Config {
@@ -213,6 +214,40 @@ export class NeolaceApiClient {
     public getEntry<Flags extends readonly GetEntryFlags[]>(key: string, options: {flags?: Flags, siteId?: string} = {}): Promise<ApplyFlags<typeof GetEntryFlags, Flags, EntryData>> {
         const siteId = this.getSiteId(options);
         return this.call(`/site/${siteId}/entry/${encodeURIComponent(key)}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""));
+    }
+
+    /**
+     * Get a basic list of all entries on the site that the current user can view, optionally filtered by type.
+     * 
+     * This is a very simple API, and for performance reasons results are ordered by ID, not by name. Use the search API
+     * via getSearchConnection for more flexible ways of retrieving the list of entries.
+     */
+    public async getEntries(options: {ofEntryType?: VNID, siteId?: string} = {}): Promise<{totalCount: number}&AsyncIterable<EntrySummaryData>> {
+        const siteId = this.getSiteId(options);
+        const firstPage: PaginatedResultData<EntrySummaryData> = await this.call(`/site/${siteId}/entry/` + (options.ofEntryType ? `?entryType=${options.ofEntryType}` : ""));
+        let currentPage = firstPage;
+        return {
+            totalCount: firstPage.totalCount!,  // The first page always includes the total count
+            [Symbol.asyncIterator]: () => ({
+                next: async (): Promise<IteratorResult<EntrySummaryData>> => {
+                    if (currentPage.values.length > 0) {
+                        return {
+                            done: false,
+                            value: currentPage.values.shift()!,
+                        };
+                    } else if (currentPage.nextPageUrl) {
+                        const nextUrl = new URL(currentPage.nextPageUrl);
+                        currentPage = await this.call(nextUrl.pathname + nextUrl.search);
+                        return {
+                            done: false,
+                            value: currentPage.values.shift()!,
+                        };
+                    } else {
+                        return {done: true, value: undefined};
+                    }
+                },
+            }),
+        };
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
