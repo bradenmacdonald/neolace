@@ -10,6 +10,11 @@ export enum GetEntryFlags {
      * Include special "features" of this entry, like the article text or the contained image.
      */
     IncludeFeatures = "features",
+    /**
+     * Include the unevaluated lookup expressions for every property that is directly set on this entry.
+     * This is useful for editing or exporting, but not really for viewing the entry.
+     */
+    IncludeRawProperties = "propertiesRaw",
 }
 
 
@@ -21,6 +26,16 @@ export const DisplayedPropertySchema = Schema({
     value: object.transform(obj => obj as AnyLookupValue),
 });
 export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
+
+export const RawPropertySchema = Schema({
+    propertyId: vnidString,
+    facts: array.of(Schema({
+        valueExpression: string,
+        note: string,
+        rank: number,
+        slot: string,
+    })),
+});
 
 
 export const EntryFeaturesSchema = Schema({
@@ -113,6 +128,8 @@ export const EntrySchema = Schema({
     referenceCache: ReferenceCacheSchema.strictOptional(),
 
     features: EntryFeaturesSchema.strictOptional(),
+
+    propertiesRaw: array.of(RawPropertySchema).strictOptional(),
 
     featuredImage: Schema({
         entryId: vnidString,

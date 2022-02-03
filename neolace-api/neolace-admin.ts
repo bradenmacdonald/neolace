@@ -292,7 +292,7 @@ async function exportCommand() {
                     id: record.id,
                 };
 
-                const entryData = await client.getEntry(record.id, {siteId, flags: [api.GetEntryFlags.IncludeFeatures] as const});
+                const entryData = await client.getEntry(record.id, {siteId, flags: [api.GetEntryFlags.IncludeFeatures, api.GetEntryFlags.IncludeRawProperties] as const});
 
                 if (entryData.description) {
                     metadata.description = entryData.description;
@@ -311,7 +311,26 @@ async function exportCommand() {
                     metadata.image = imgFilename;
                 }
 
-                let markdown = `---\n${stringifyYaml(metadata)}---\n`;
+                for (const prop of entryData.propertiesRaw!) {
+                    if (prop.facts.length === 1 && !prop.facts[0].note && !prop.facts[0].slot) {
+                        metadata[friendlyIds[prop.propertyId]] = prop.facts[0].valueExpression;
+                    } else {
+                        const factsSimplified = prop.facts.map((origFact) => {
+                            const simpleFact: Record<string, unknown> = {...origFact};
+                            if (!simpleFact.note) {
+                                delete simpleFact.note;
+                            }
+                            if (!simpleFact.slot) {
+                                delete simpleFact.slot;
+                            }
+                            delete simpleFact.rank; // Rank is implied by the ordering in the list so we don't need it
+                            return simpleFact;
+                        });
+                        metadata[friendlyIds[prop.propertyId]] = factsSimplified;
+                    }
+                }
+
+                let markdown = `---\n${stringifyYaml(metadata, {lineWidth: 120})}---\n`;
                 if (entryType.enabledFeatures.Article !== undefined) {
                     markdown += entryData.features?.Article?.articleMD;
                 }
