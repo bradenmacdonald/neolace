@@ -24,9 +24,9 @@ function dieUsage(code = 1): never {
 Usage: neolace-admin.ts [command] [args]
 
 Where command is one of:
-    export schema site_id
+    export-schema site_id
         Export a site's schema to a YAML (on stdout)
-    export all site_id [folder_name]
+    export site_id [folder_name]
         Export all of a site's schema and content to the specified folder; if not specified, a folder in the current
         directory with the same name as the site ID will be used.
     sync-schema site_id
@@ -242,21 +242,10 @@ async function syncSchema(siteId: string, schemaString: string): Promise<{idMap:
 
 /**
  * This function implements the export command, which can be invoked as
- *     neolace-admin.ts export schema
- *     neolace-admin.ts export all [folder_name]
+ *     neolace-admin.ts export-schema site_id
+ *     neolace-admin.ts export site_id [folder_name]
  */
-async function exportCommand() {
-    const scope = Deno.args[1];
-    if (!["schema", "all"].includes(scope)) {
-        dieUsage();
-    }
-    const siteId = Deno.args[2];
-    if (!siteId) {
-        dieUsage();
-    }
-    const shouldExportAll = scope === "all";
-    const shouldExportSchema = shouldExportAll || scope === "schema";
-    const outFolder = shouldExportAll ? (Deno.args[3] ?? siteId) : undefined;
+async function exportCommand({siteId, outFolder, ...options}: {siteId: string, exportSchema: boolean, exportContent: boolean, outFolder?: string}) {
     if (outFolder) {
         try {
             Deno.readDirSync(outFolder);
@@ -267,7 +256,7 @@ async function exportCommand() {
         }
     }
     // Export the schema:
-    if (shouldExportSchema) {
+    if (options.exportSchema) {
         const schemaYaml = await exportSchema(siteId);
         if (outFolder) {
             log.info("Exporting schema");
@@ -278,7 +267,7 @@ async function exportCommand() {
         }
     }
     // Export the content:
-    if (shouldExportAll) {
+    if (options.exportContent) {
         const client = await getApiClient();
         const schema = await client.getSiteSchema({siteId});
         // Map from VNID to a friendlier entry/property ID used for export purposes only:
@@ -374,8 +363,21 @@ function replaceIdsInMarkdownAndLookupExpressions(idMap: Record<string, string>,
 
 if (import.meta.main) {
     switch (Deno.args[0]) {
+        case "export-schema": {
+            const siteId = Deno.args[1];
+            if (!siteId) {
+                dieUsage();
+            }
+            await exportCommand({siteId, exportSchema: true, exportContent: false});
+            break;
+        }
         case "export": {
-            await exportCommand();
+            const siteId = Deno.args[1];
+            if (!siteId) {
+                dieUsage();
+            }
+            const outFolder = Deno.args[2] ?? siteId;
+            await exportCommand({siteId, exportSchema: true, exportContent: true, outFolder});
             break;
         }
         case "sync-schema": {
