@@ -371,6 +371,8 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
             (et) => Deno.statSync(et.folder).isDirectory
         );
 
+    // Iterate over the entries by reading the filesystem. We avoid reading all entries into memory at once in case
+    // that would use too much memory.
     async function *iterateEntries() {
         log.info("Scanning entries...");
         for (const {folder, entryType} of entryTypes) {
@@ -382,20 +384,44 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                 const fileParts = fileContents.split(/^---$/m, 3);
                 // deno-lint-ignore no-explicit-any
                 const metadata = parseYaml(fileParts[1]) as Record<string, any>;
-                const articleMd = fileParts[2];
-                yield {metadata, articleMd, entryType, friendlyId: file.name.substring(0, file.name.length - 3), folder};
+                const articleMD = fileParts[2];
+                yield {metadata, articleMD, entryType, friendlyId: file.name.substring(0, file.name.length - 3), folder};
             }
         }
     }
 
-    // First, create each entry with the minimal metadata (no properties)
+    // First, loop over all entries and add their IDs to the ID map, assigning new VNIDs where needed
+    for await (const {metadata, friendlyId} of iterateEntries()) {
+        const id = metadata.id ?? VNID();
+        if (friendlyId in idMap) {
+            log.error(`Duplicate friendlyId found: ${friendlyId}`);
+            Deno.exit(1);
+        }
+        idMap[friendlyId] = id;
+    }
+
+    // Then, validate that all VNIDs are unique:
     {
+        log.info("Checking VNID uniqueness...")
+        const allVnids = new Set(Object.values(idMap));
+        for (const id of Object.values(idMap)) {
+            if (!allVnids.delete(id)) {
+                log.error(`Duplicate VNID found: ${id}`);
+                Deno.exit(1);
+            }
+        }
+    }
+
+    // Next, create each entry with the minimal metadata (no properties)
+    {
+        log.info("Creating blank entries...");
         const edits: api.AnyContentEdit[] = [];
         for await (const {metadata, friendlyId, entryType} of iterateEntries()) {
+            const entryId = metadata.id ?? idMap[friendlyId];
             edits.push({
                 code: api.CreateEntry.code,
                 data: {
-                    id: metadata.id ?? VNID(),
+                    id: entryId,
                     type: entryType.id,
                     name: metadata.name,
                     description: replaceIdsInMarkdownAndLookupExpressions(idMap, metadata.description),
@@ -403,11 +429,39 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                 },
             });
         }
-        log.info("Creating blank entries");
         const {id: draftId} = await client.createDraft({title: "Import Part 1", description: "", edits}, {siteId});
         await client.acceptDraft(draftId, {siteId});
         log.info(`${edits.length} blank entries created`);
     }
+
+    // TODO: set properties
+
+    // Next, set the markdown article text:
+    {
+        log.info("Setting article text...");
+        const edits: api.AnyContentEdit[] = [];
+        for await (const {metadata, friendlyId, articleMD} of iterateEntries()) {
+            if (!articleMD.trim()) {
+                continue;
+            }
+            const entryId = metadata.id ?? idMap[friendlyId];
+            edits.push({
+                code: api.UpdateEntryFeature.code,
+                data: {
+                    entryId,
+                    feature: {
+                        featureType: "Article",
+                        articleMD: replaceIdsInMarkdownAndLookupExpressions(idMap, articleMD),
+                    },
+                },
+            });
+        }
+        const {id: draftId} = await client.createDraft({title: "Import Part 3", description: "", edits}, {siteId});
+        await client.acceptDraft(draftId, {siteId});
+        log.info(`${edits.length} articles updated`);
+    }
+
+    // TODO: Set other features
 }
 
 /**
@@ -416,13 +470,13 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
  * though, so that if importing back to the same site, we can avoid changing the VNIDs.
  */
 function replaceIdsInMarkdownAndLookupExpressions(idMap: Record<string, string>, markdownOrLookup: string) {
-    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/entry\/(_[0-9A-Za-z_]+)\]\]/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/entry\/([0-9A-Za-z_\-]+)\]\]/mg, (_m, id) => {
         return `[[/entry/${ idMap[id] ?? id }]]`;
     });
-    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/prop\/(_[0-9A-Za-z_]+)\]\]/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/prop\/([0-9A-Za-z_\-]+)\]\]/mg, (_m, id) => {
         return `[[/prop/${ idMap[id] ?? id }]]`;
     });
-    markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/(_[0-9A-Za-z_]+)\)/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/([0-9A-Za-z_\-]+)\)/mg, (_m, id) => {
         return `](/entry/${ idMap[id] ?? id })`;
     });
     return markdownOrLookup;
