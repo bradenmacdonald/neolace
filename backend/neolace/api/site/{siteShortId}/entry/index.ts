@@ -3,6 +3,7 @@ import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod
 import { Site, slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
+import { EraseEntries } from "neolace/core/entry/EraseEntriesAction.ts";
 
 export class EntryListResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/entry/"];
@@ -71,5 +72,28 @@ export class EntryListResource extends NeolaceHttpResource {
                 ? `${thisUrl.origin}${thisUrl.pathname}?${skipParamName}=${(skip + limit)}`
                 : undefined,
         };
+    });
+
+    DELETE = this.method({
+        responseSchema: api.schemas.Schema({}),
+        description: `
+            Erase all of this site's entries/content. This is dangerous and destructive. Only system administrators
+            may use this API method. You must pass ?confirm=danger for this method to succeed.`,
+    }, async ({ request }) => {
+        // Permissions and parameters:
+        await this.requirePermission(request, permissions.CanEraseAllSiteContent);
+        const { siteId } = await this.getSiteDetails(request);
+        const graph = await getGraph();
+        const user = this.requireUser(request);
+
+        if (request.queryParam("confirm") !== "danger") {
+            throw new api.InvalidRequest(
+                api.InvalidRequestReason.OtherReason,
+                "You must specify ?confirm=danger to erase all entries.",
+            );
+        }
+
+        await graph.runAs(user.id, EraseEntries({ siteId }));
+        return {};
     });
 }

@@ -3,7 +3,7 @@
  */
 import * as log from "std/log/mod.ts";
 import { Drash } from "neolace/deps/drash.ts";
-import { FieldValidationError, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
+import { EmptyResultError, FieldValidationError, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import * as api from "neolace/deps/neolace-api.ts";
 import { PathError } from "neolace/deps/computed-types.ts";
 
@@ -146,9 +146,17 @@ export class NeolaceHttpResource extends Drash.Resource {
         if (typeof siteShortId !== "string") {
             throw new Error("Expected the API endpoint URL to contain a siteShortId parameter.");
         }
-        const siteId = await siteIdFromShortId(siteShortId);
-        const siteCode = await siteCodeForSite(siteId);
-        return { siteId, siteCode };
+        try {
+            const siteId = await siteIdFromShortId(siteShortId);
+            const siteCode = await siteCodeForSite(siteId);
+            return { siteId, siteCode };
+        } catch (err) {
+            if (err instanceof EmptyResultError) {
+                throw new api.NotFound(`Site with short ID ${siteShortId} not found.`);
+            } else {
+                throw err;
+            }
+        }
     }
 
     protected requireUser(request: NeolaceHttpRequest): AuthenticatedUserData {

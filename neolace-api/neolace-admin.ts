@@ -32,6 +32,8 @@ Where command is one of:
     sync-schema site_id
         Import a site schema from YAML (on stdin). This can be dangerous as it will erase any parts of the existing
         schema that aren't part of the imported schema (in other words, it overwrites the schema).
+    erase-content site_id [--skip-prompt-and-dangerously-delete]
+        Erase all content on the specified site. This is dangerous!
 `);
     Deno.exit(code);
 }
@@ -388,6 +390,27 @@ if (import.meta.main) {
             const stdinContent = await readAll(Deno.stdin);
             const schemaYaml = new TextDecoder().decode(stdinContent);
             await syncSchema(siteId, schemaYaml);
+            break;
+        }
+        case "erase-content": {
+            const siteId = Deno.args[1];
+            if (!siteId) {
+                dieUsage();
+            }
+            if (Deno.args[2]) {
+                if (Deno.args[2] !== "--skip-prompt-and-dangerously-delete") {
+                    dieUsage();
+                }
+                // Skip the confirmation prompt
+            } else {
+                if (!confirm("Are you sure you want to delete all content on this site? This is very dangerous.")) {
+                    Deno.exit(0);
+                }
+            }
+            const client = await getApiClient();
+            log.warning("Deleting all entries");
+            await client.eraseAllEntriesDangerously({siteId, confirm: "danger"});
+            log.info("All entries deleted.");
             break;
         }
         default:

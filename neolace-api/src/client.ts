@@ -250,6 +250,14 @@ export class NeolaceApiClient {
         };
     }
 
+    /**
+     * Erase all entries on the site. This is dangerous! Mostly useful for development.
+     */
+    public async eraseAllEntriesDangerously(options: {confirm?: "danger", siteId?: string} = {}): Promise<void> {
+        const siteId = this.getSiteId(options);
+        await this.call(`/site/${siteId}/entry/?confirm=${options.confirm}`, {method: 'DELETE'});
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Built-in plugin methods
 

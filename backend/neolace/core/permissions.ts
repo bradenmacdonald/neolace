@@ -11,7 +11,7 @@
  * Users can be assigned to "Groups", and groups can be granted additional authorization Grants. If a user belongs to a
  * group with the "approveSchemaChanges" Grant, for example, then the user is authorized to approve schema changes.
  */
-import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { C, Field, SYSTEM_VNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Group, GroupMaxDepth, PermissionGrant } from "neolace/core/Group.ts";
 import { AccessMode, Site } from "neolace/core/Site.ts";
 import { BotUser, User } from "neolace/core/User.ts";
@@ -87,6 +87,14 @@ export const CheckSiteIsPublicContributions: Check = async (context) => {
  */
 export const CheckUserIsLoggedIn: Check = (context) => {
     return !!(context.userId);
+};
+
+/**
+ * Check if the user is the SYSTEM user that has permission to do anything (administer the realm)
+ * @returns true or false
+ */
+export const CheckUserIsRealmSuperAdmin: Check = (context) => {
+    return context.userId === SYSTEM_VNID;
 };
 
 export const CheckUserBelongsToAnyGroup: Check = async (context) => {
@@ -174,6 +182,7 @@ export const CanCreateDraft: Check = OneOf(CanProposeEntryEdits, CanProposeSchem
 export const CanCreateSite: Check = CheckUserIsLoggedIn; // For now, any logged in user can create new sites.
 export const CanEditSiteSettings: Check = CheckUserHasGrants(PermissionGrant.administerSite);
 export const CanEditSiteGroups: Check = CheckUserHasGrants(PermissionGrant.administerGroups);
+export const CanEraseAllSiteContent: Check = CheckUserIsRealmSuperAdmin;
 
 export const permissions = {
     CanViewEntries,
@@ -188,4 +197,5 @@ export const permissions = {
     CanCreateSite,
     CanEditSiteSettings,
     CanEditSiteGroups,
+    CanEraseAllSiteContent,
 };
