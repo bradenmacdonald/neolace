@@ -412,10 +412,22 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
         }
     }
 
+    let part = 1;
+    const _pushEdits = async (edits: api.AnyContentEdit[], force = false) => {
+        if (edits.length > 100 || force) {
+            const {id: draftId} = await client.createDraft({title: `Import Part ${part++}`, description: "", edits}, {siteId});
+            await client.acceptDraft(draftId, {siteId});
+            edits.length = 0;
+        }
+    }
+    const pushEdits = (edits: api.AnyContentEdit[]): Promise<void> => _pushEdits(edits, true);
+    const pushEditsIfNeeded = (edits: api.AnyContentEdit[]): Promise<void> => _pushEdits(edits);
+
     // Next, create each entry with the minimal metadata (no properties)
     {
         log.info("Creating blank entries...");
         const edits: api.AnyContentEdit[] = [];
+        let numEntries = 0;
         for await (const {metadata, friendlyId, entryType} of iterateEntries()) {
             const entryId = metadata.id ?? idMap[friendlyId];
             edits.push({
@@ -428,18 +440,53 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                     friendlyId: friendlyId,
                 },
             });
+            numEntries++;
+            await pushEditsIfNeeded(edits);
         }
-        const {id: draftId} = await client.createDraft({title: "Import Part 1", description: "", edits}, {siteId});
-        await client.acceptDraft(draftId, {siteId});
-        log.info(`${edits.length} blank entries created`);
+        await pushEdits(edits);
+        log.info(`${numEntries} blank entries created`);
     }
 
     // TODO: set properties
+    {
+        log.info("Setting properties...");
+        const edits: api.AnyContentEdit[] = [];
+        let numEntries = 0;
+        let numProperties = 0;
+        for await (const {metadata, friendlyId} of iterateEntries()) {
+            const entryId = metadata.id ?? idMap[friendlyId];
+            // Get the human-readable ID for each property actually used for this entry:
+            const propsUsed = Object.keys(metadata).filter((k) => k.startsWith("_PROP_"));
+            for (const humanKey of propsUsed) {
+                // Now we need to be able to handle either a list of property facts or a single string value:
+                const facts = typeof metadata[humanKey] === "string" ? [{valueExpression: metadata[humanKey]}] : metadata[humanKey];
+                for (const fact of facts) {
+                    edits.push({
+                        code: api.AddPropertyValue.code,
+                        data: {
+                            entry: entryId,
+                            property: idMap[humanKey] as VNID,
+                            propertyFactId: VNID(),
+                            valueExpression: replaceIdsInMarkdownAndLookupExpressions(idMap, fact.valueExpression),
+                            note: fact.note ?? "",
+                            slot: fact.slot,
+                        },
+                    });
+                }
+                numProperties++;
+            }
+            numEntries++;
+            await pushEditsIfNeeded(edits);
+        }
+        await pushEdits(edits);
+        log.info(`${numProperties} properties updated on ${numEntries} entries`);
+    }
 
     // Next, set the markdown article text:
     {
         log.info("Setting article text...");
         const edits: api.AnyContentEdit[] = [];
+        let numArticles = 0;
         for await (const {metadata, friendlyId, articleMD} of iterateEntries()) {
             if (!articleMD.trim()) {
                 continue;
@@ -455,10 +502,11 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                     },
                 },
             });
+            numArticles++;
+            await pushEditsIfNeeded(edits);
         }
-        const {id: draftId} = await client.createDraft({title: "Import Part 3", description: "", edits}, {siteId});
-        await client.acceptDraft(draftId, {siteId});
-        log.info(`${edits.length} articles updated`);
+        await pushEdits(edits);
+        log.info(`${numArticles} articles updated`);
     }
 
     // TODO: Set other features
