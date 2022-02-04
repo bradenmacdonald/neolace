@@ -32,6 +32,10 @@ Where command is one of:
     sync-schema site_id
         Import a site schema from YAML (on stdin). This can be dangerous as it will erase any parts of the existing
         schema that aren't part of the imported schema (in other words, it overwrites the schema).
+    import site_id [folder_name]
+        Import the schema and content from a folder into the site with the specified ID. The site must already exist but
+        should not have any entries. If a folder name is not given, it will be assumed to be a folder in the current
+        directory with the same name as the site ID.
     erase-content site_id [--skip-prompt-and-dangerously-delete]
         Erase all content on the specified site. This is dangerous!
 `);
@@ -235,11 +239,11 @@ async function exportSchema(siteId: string): Promise<string> {
  * Import a site's schema from a human-readable YAML string. This will overwrite the site's current schema so use with
  * caution.
  */
-async function syncSchema(siteId: string, schemaString: string): Promise<{idMap: Record<string, string>}> {
+async function syncSchema(siteId: string, schemaString: string): Promise<{idMap: Record<string, string>, schema: api.SiteSchemaData}> {
     const client = await getApiClient();
     const {schema, idMap} = yamlToSchema(schemaString);
     await client.replaceSiteSchema(schema, {siteId});
-    return {idMap};
+    return {schema, idMap};
 }
 
 /**
@@ -342,19 +346,83 @@ async function exportCommand({siteId, outFolder, ...options}: {siteId: string, e
     }
 }
 
+
+/**
+ * Import schema and content from a folder
+ */
+async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, sourceFolder: string}) {
+    const client = await getApiClient();
+    // First, sync the schema
+    const schemaYaml = await Deno.readTextFile(sourceFolder + "/schema.yaml").catch(() => {
+        log.error(`Required file "${sourceFolder}/schema.yaml" not found. Did you specify the wrong directory name?`);
+        Deno.exit(1);
+    });
+    const { schema, idMap } = await syncSchema(siteId, schemaYaml);
+    // The inverse map goes from VNID to human readable ID:
+    const inverseMap = invertMap(idMap);
+
+    // There should be one subfolder for each entry type, though some folders may not exist if there were no entries of
+    // that type.
+    const entryTypes = Object.values(schema.entryTypes)
+        .map(et => ({
+            folder: `${sourceFolder}/` + inverseMap[et.id].substring(4).toLowerCase(), // Convert the friendly name from "_ET_SOMETHING" to "something"
+            entryType: et,
+        })).filter(
+            (et) => Deno.statSync(et.folder).isDirectory
+        );
+
+    async function *iterateEntries() {
+        log.info("Scanning entries...");
+        for (const {folder, entryType} of entryTypes) {
+            for await (const file of Deno.readDir(folder)) {
+                if (!file.name.endsWith(".md")) {
+                    continue;
+                }
+                const fileContents = await Deno.readTextFile(`${folder}/${file.name}`);
+                const fileParts = fileContents.split(/^---$/m, 3);
+                // deno-lint-ignore no-explicit-any
+                const metadata = parseYaml(fileParts[1]) as Record<string, any>;
+                const articleMd = fileParts[2];
+                yield {metadata, articleMd, entryType, friendlyId: file.name.substring(0, file.name.length - 3), folder};
+            }
+        }
+    }
+
+    // First, create each entry with the minimal metadata (no properties)
+    {
+        const edits: api.AnyContentEdit[] = [];
+        for await (const {metadata, friendlyId, entryType} of iterateEntries()) {
+            edits.push({
+                code: api.CreateEntry.code,
+                data: {
+                    id: metadata.id ?? VNID(),
+                    type: entryType.id,
+                    name: metadata.name,
+                    description: replaceIdsInMarkdownAndLookupExpressions(idMap, metadata.description),
+                    friendlyId: friendlyId,
+                },
+            });
+        }
+        log.info("Creating blank entries");
+        const {id: draftId} = await client.createDraft({title: "Import Part 1", description: "", edits}, {siteId});
+        await client.acceptDraft(draftId, {siteId});
+        log.info(`${edits.length} blank entries created`);
+    }
+}
+
 /**
  * VNIDs are not very human-readable, and must be unique across all sites on a Neolace realm, so for export purposes we
  * generally swap them out for human readable IDs wherever possible. We do still preserve the VNIDs in the export data
  * though, so that if importing back to the same site, we can avoid changing the VNIDs.
  */
 function replaceIdsInMarkdownAndLookupExpressions(idMap: Record<string, string>, markdownOrLookup: string) {
-    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/entry\/(_[0-9A-Za-z_]+)\]\]/mg, (_m, id) => {
         return `[[/entry/${ idMap[id] ?? id }]]`;
     });
-    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/prop\/(_[0-9A-Za-z_]+)\]\]/mg, (_m, id) => {
         return `[[/prop/${ idMap[id] ?? id }]]`;
     });
-    markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/(_[0-9A-Za-z]{1,22})\)/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/(_[0-9A-Za-z_]+)\)/mg, (_m, id) => {
         return `](/entry/${ idMap[id] ?? id })`;
     });
     return markdownOrLookup;
@@ -390,6 +458,15 @@ if (import.meta.main) {
             const stdinContent = await readAll(Deno.stdin);
             const schemaYaml = new TextDecoder().decode(stdinContent);
             await syncSchema(siteId, schemaYaml);
+            break;
+        }
+        case "import": {
+            const siteId = Deno.args[1];
+            if (!siteId) {
+                dieUsage();
+            }
+            const sourceFolder = Deno.args[2] ?? siteId;
+            await importSchemaAndContent({siteId, sourceFolder});
             break;
         }
         case "erase-content": {

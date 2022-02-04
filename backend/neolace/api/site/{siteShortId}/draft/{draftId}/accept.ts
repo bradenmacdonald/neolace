@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { api, graph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
 import { AcceptDraft, Draft } from "neolace/core/edit/Draft.ts";
 
 export class AcceptDraftResource extends NeolaceHttpResource {
@@ -14,9 +14,12 @@ export class AcceptDraftResource extends NeolaceHttpResource {
         const userId = this.requireUser(request).id;
         const { siteId } = await this.getSiteDetails(request);
         const draftId = VNID(request.pathParam("draftId") ?? "");
+        const graph = await getGraph();
 
         // Some permissions depend on whether the draft contains schema changes or not:
-        const draft = await graph.pullOne(Draft, (d) => d.site((s) => s.id).hasSchemaChanges().hasContentChanges());
+        const draft = await graph.pullOne(Draft, (d) => d.site((s) => s.id).hasSchemaChanges().hasContentChanges(), {
+            key: draftId,
+        });
         if (draft.site?.id !== siteId) {
             throw new api.NotFound(`Draft not found`);
         }
