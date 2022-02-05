@@ -4,6 +4,7 @@ import { C, SYSTEM_VNID } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
 import { Drash, getGraph, NeolaceHttpRequest } from "./mod.ts";
 import { BotUser, HumanUser } from "neolace/core/User.ts";
+import { bin2hex } from "neolace/lib/bin2hex.ts";
 
 export class NeolaceAuthService extends Drash.Service {
     public async runBeforeResource(request: Drash.Request): Promise<void> {
@@ -104,8 +105,4 @@ async function sha256hmac(
         data instanceof Uint8Array ? data : enc.encode(data),
     );
     return new Uint8Array(signature);
-}
-
-function bin2hex(binary: Uint8Array): string {
-    return Array.from(binary).map((b) => b.toString(16).padStart(2, "0")).join("");
 }

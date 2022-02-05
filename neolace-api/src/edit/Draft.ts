@@ -40,3 +40,9 @@ export const DraftSchema = Schema({
     edits: array.of(DraftEditSchema).strictOptional(),
 });
 export type DraftData = Type<typeof DraftSchema>;
+
+/** Data returned when uploading a file to a draft. */
+export const DraftFileSchema = Schema({
+    draftFileId: vnidString,
+});
+export type DraftFileData = Type<typeof DraftFileSchema>;

@@ -178,6 +178,7 @@ export const CanProposeSchemaChanges: Check = AllOf(
 );
 export const CanApproveSchemaChanges: Check = CheckUserHasGrants(PermissionGrant.approveSchemaChanges);
 export const CanCreateDraft: Check = OneOf(CanProposeEntryEdits, CanProposeSchemaChanges);
+export const CanEditDraft = (_draftId: VNID) => CanCreateDraft; // TODO: change this to more specific logic about whether the user can edit the draft in question
 // General site admin:
 export const CanCreateSite: Check = CheckUserIsLoggedIn; // For now, any logged in user can create new sites.
 export const CanEditSiteSettings: Check = CheckUserHasGrants(PermissionGrant.administerSite);
@@ -194,6 +195,7 @@ export const permissions = {
     CanApproveSchemaChanges,
     CanViewDrafts,
     CanCreateDraft,
+    CanEditDraft,
     CanCreateSite,
     CanEditSiteSettings,
     CanEditSiteGroups,

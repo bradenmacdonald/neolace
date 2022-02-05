@@ -2,11 +2,13 @@
 import { PasswordlessLoginResponse } from "./user.ts";
 import * as errors from "./errors.ts";
 import { SiteSchemaData } from "./schema/index.ts";
-import { DraftData, CreateDraftSchema } from "./edit/index.ts";
+import { DraftData, CreateDraftSchema, DraftFileData } from "./edit/index.ts";
 import { EntryData, EntrySummaryData, GetEntryFlags, PaginatedResultData } from "./content/index.ts";
 import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData } from "./site/Site.ts";
 import * as schemas from "./api-schemas.ts";
 import { VNID } from "./types.ts";
+
+const bin2hex = (binary: Uint8Array) => Array.from(binary).map((b) => b.toString(16).padStart(2, "0")).join("");
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
 export interface Config {
@@ -27,7 +29,7 @@ interface RequestArgs {
     method?: HttpMethod;
     data?: any;
     body?: BodyInit | null;
-    headers?: Record<string, string>;
+    headers?: Headers;
     redirect?: RequestRedirect;
     noAuth?: boolean;  // If true, the "Authorization" header/token will never be sent for this request. Avoids 401 errors when getting a new token if current token is invalid.
 }
@@ -49,24 +51,28 @@ export class NeolaceApiClient {
 
     private async callRaw(path: string, _args: RequestArgs): Promise<Response> {
         const {data, ...args} = _args;
+        if (args.headers === undefined) {
+            args.headers = new Headers();
+        }
         if (data) {
             if ("body" in args) { throw new Error("Not allowed to pass both .data and .body to API client's callRaw()"); }
             args.body = JSON.stringify(data);
+            args.headers.set("Content-Type", "application/json");
         }
         if (args.method === undefined) {
             args.method = "GET";
         }
-        let extraHeaders: {[k: string]: string} = {};
         if (this.getExtraHeadersForRequest) {
-            extraHeaders = await this.getExtraHeadersForRequest({method: args.method, path});
+            for (const [key, value] of Object.entries(await this.getExtraHeadersForRequest({method: args.method, path}))) {
+                args.headers.set(key, value);
+            }
         }
         if (this.authToken) {
-            extraHeaders["Authorization"] = `Bearer ${this.authToken}`;
+            args.headers.set("Authorization", `Bearer ${this.authToken}`);
         }
         if (args.noAuth) {
-            delete extraHeaders["Authorization"];
+            args.headers.delete("Authorization");
         }
-        args.headers = {"Content-Type": "application/json", ...args.headers, ...extraHeaders};
         return this.fetchApi(this.basePath + path, args);
     }
 
@@ -201,6 +207,19 @@ export class NeolaceApiClient {
             edits: data.edits ?? [],
         }});
         return this._parseDraft(result);
+    }
+
+    public async uploadFileToDraft(fileData: Blob, options: {draftId: string, siteId?: string}): Promise<DraftFileData> {
+        const siteId = this.getSiteId(options);
+        const hash = await crypto.subtle.digest("SHA-256", await fileData.arrayBuffer());
+        const hashHex = bin2hex(new Uint8Array(hash));
+        const formData = new FormData();
+        formData.append('file', fileData);
+        const result = await this.call(`/site/${siteId}/draft/${options.draftId}/file?sha256Hash=${hashHex}`, {
+            method: "POST",
+            body: formData,
+        });
+        return result;
     }
 
     public async acceptDraft(draftId: string, options?: {siteId?: string}): Promise<void> {
