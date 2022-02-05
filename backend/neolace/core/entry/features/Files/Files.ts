@@ -9,6 +9,7 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { FilesData } from "./FilesData.ts";
 import { EntryFeatureData } from "../EntryFeatureData.ts";
 import { DataFile } from "neolace/core/objstore/DataFile.ts";
+import { Draft, DraftFile } from "neolace/core/edit/Draft.ts";
 
 const featureType = "Files" as const;
 
@@ -62,7 +63,7 @@ export const FilesFeature = EntryTypeFeature({
         if (editData.changeType === "addFile") {
             await tx.query(C`
                 MATCH (imageData:${FilesData} {id: ${filesDataId}})
-                MATCH (dataFile:${DataFile} {id: ${editData.dataFileId}})
+                MATCH (:${Draft})-[:${Draft.rel.HAS_FILE}]->(:${DraftFile} {id: ${editData.draftFileId}})-[:${DraftFile.rel.HAS_DATA}]->(dataFile:${DataFile})
                 MERGE (imageData)-[rel:${FilesData.rel.HAS_DATA}]->(dataFile)
                     SET rel.displayFilename = ${editData.filename}
                 WITH imageData, dataFile

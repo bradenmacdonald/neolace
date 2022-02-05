@@ -51,6 +51,7 @@ export interface EntryTypeFeature<
         editData: Type<UFS>,
         tx: WrappedTransaction,
         markNodeAsModified: (vnid: VNID) => void,
+        draftId?: VNID,
     ): Promise<void>;
 
     /**

@@ -30,6 +30,8 @@ export const ApplyEdits = defineAction({
     type: "ApplyEdits",
     parameters: {} as {
         siteId: VNID;
+        /** The ID of the draft whose edits we are applying. This is required if any of the edits need to access files uploaded to the draft. */
+        draftId?: VNID;
         edits: EditList;
     },
     resultData: {},
@@ -90,6 +92,7 @@ export const ApplyEdits = defineAction({
                         edit.data.feature as any,
                         tx,
                         (id) => modifiedNodes.add(id),
+                        data.draftId,
                     );
 
                     modifiedNodes.add(edit.data.entryId);

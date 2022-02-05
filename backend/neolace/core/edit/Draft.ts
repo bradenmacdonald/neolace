@@ -340,6 +340,7 @@ export const AcceptDraft = defineAction({
 
         const { modifiedNodes } = await ApplyEdits.apply(tx, {
             siteId: draft.site!.id,
+            draftId: data.id,
             // deno-lint-ignore no-explicit-any
             edits: draft.edits as any,
         });
