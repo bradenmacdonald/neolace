@@ -6,7 +6,12 @@ import { Site } from "neolace/core/Site.ts";
 /**
  * A helper function to get a draft
  */
-export async function getDraft(id: VNID, siteId: VNID, tx: WrappedTransaction): Promise<api.DraftData> {
+export async function getDraft(
+    id: VNID,
+    siteId: VNID,
+    tx: WrappedTransaction,
+    flags: Set<api.GetDraftFlags> = new Set(),
+): Promise<api.DraftData> {
     const draftData = await tx.pullOne(Draft, (d) =>
         d
             .title
@@ -17,6 +22,7 @@ export async function getDraft(id: VNID, siteId: VNID, tx: WrappedTransaction): 
             .if("edits", (d) => d.edits((e) => e.id.code.changeType.timestamp.if("editsData", (e) => e.data()))), {
         key: id,
         where: C`EXISTS { MATCH (@this)-[:${Draft.rel.FOR_SITE}]->(:${Site} {id: ${siteId}}) }`,
+        flags: Array.from(flags),
     });
 
     const author = draftData.author;

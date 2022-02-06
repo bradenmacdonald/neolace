@@ -25,7 +25,7 @@ export class DraftFileResource extends NeolaceHttpResource {
         await this.requirePermission(request, permissions.CanEditDraft(draftId));
         const graph = await getGraph();
         // Validate that the draft exists in the site:
-        const _draft = await graph.read((tx) => getDraft(draftId, siteId, tx)); // TODO: use a simpler method to get the draft without the edits
+        const _draft = await graph.read((tx) => getDraft(draftId, siteId, tx));
 
         // At this point, we know the draft is valid and the user has permission to upload files into it.
 

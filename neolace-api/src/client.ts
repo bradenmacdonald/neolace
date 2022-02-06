@@ -1,8 +1,8 @@
 // deno-lint-ignore-file no-explicit-any
 import { PasswordlessLoginResponse } from "./user.ts";
 import * as errors from "./errors.ts";
-import { SiteSchemaData } from "./schema/index.ts";
-import { DraftData, CreateDraftSchema, DraftFileData } from "./edit/index.ts";
+import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
+import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags } from "./edit/index.ts";
 import { EntryData, EntrySummaryData, GetEntryFlags, PaginatedResultData } from "./content/index.ts";
 import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData } from "./site/Site.ts";
 import * as schemas from "./api-schemas.ts";
@@ -194,9 +194,9 @@ export class NeolaceApiClient {
         return rawDraft;
     }
 
-    public async getDraft(draftId: string, options?: {siteId?: string}): Promise<DraftData> {
+    public async getDraft(draftId: string, options?: {flags: GetDraftFlags[], siteId?: string}): Promise<DraftData> {
         const siteId = this.getSiteId(options);
-        return this._parseDraft(await this.call(`/site/${siteId}/draft/${draftId}`, {method: "GET"}));
+        return this._parseDraft(await this.call(`/site/${siteId}/draft/${draftId}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""), {method: "GET"}));
     }
 
     public async createDraft(data: schemas.Type<typeof CreateDraftSchema>, options?: {siteId?: string}): Promise<DraftData> {
@@ -207,6 +207,11 @@ export class NeolaceApiClient {
             edits: data.edits ?? [],
         }});
         return this._parseDraft(result);
+    }
+
+    public async addEditToDraft(edit: AnySchemaEdit|AnyContentEdit, options: {draftId: string, siteId?: string}): Promise<void> {
+        const siteId = this.getSiteId(options);
+        await this.call(`/site/${siteId}/draft/${options.draftId}/edit`, {method: "POST", data: edit});
     }
 
     public async uploadFileToDraft(fileData: Blob, options: {draftId: string, siteId?: string}): Promise<DraftFileData> {

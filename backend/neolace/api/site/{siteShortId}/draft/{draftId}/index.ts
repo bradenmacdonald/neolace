@@ -14,8 +14,9 @@ export class DraftResource extends NeolaceHttpResource {
         const { siteId } = await this.getSiteDetails(request);
         const draftId = VNID(request.pathParam("draftId") ?? "");
         const graph = await getGraph();
+        const flags = this.getRequestFlags(request, api.GetDraftFlags);
 
         // Response:
-        return await graph.read((tx) => getDraft(draftId, siteId, tx));
+        return await graph.read((tx) => getDraft(draftId, siteId, tx, flags));
     });
 }

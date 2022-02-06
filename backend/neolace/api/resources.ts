@@ -8,6 +8,7 @@ import { SiteHomeResource } from "./site/{siteShortId}/home.ts";
 import { SchemaIndexResource } from "./site/{siteShortId}/schema/index.ts";
 import { DraftIndexResource } from "./site/{siteShortId}/draft/index.ts";
 import { DraftResource } from "./site/{siteShortId}/draft/{draftId}/index.ts";
+import { DraftEditsResource } from "./site/%7BsiteShortId%7D/draft/%7BdraftId%7D/edit/index.ts";
 import { DraftFileResource } from "./site/%7BsiteShortId%7D/draft/%7BdraftId%7D/file.ts";
 import { AcceptDraftResource } from "./site/{siteShortId}/draft/{draftId}/accept.ts";
 import { EntryListResource } from "./site/%7BsiteShortId%7D/entry/index.ts";
@@ -27,6 +28,7 @@ export const builtInRestApiResources: (typeof NeolaceHttpResource)[] = [
     SchemaIndexResource,
     DraftIndexResource,
     DraftResource,
+    DraftEditsResource,
     DraftFileResource,
     AcceptDraftResource,
     EntryListResource,
