@@ -246,6 +246,25 @@ async function syncSchema(siteId: string, schemaString: string): Promise<{idMap:
     return {schema, idMap};
 }
 
+const contentTypes: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/webp": "webp",
+    "image/png": "png",
+    "text/plain": "txt",
+};
+const extensionFromContentType = (contentType: string) => {
+    if (contentType in contentTypes) {
+        return contentTypes[contentType];
+    }
+    throw new Error(`Unknown content type "${contentType}"`);
+}
+const contentTypeFromExtension = (ext: string) => {
+    for (const [ct, e] of Object.entries(contentTypes)) {
+        if (e === ext) { return ct; }
+    }
+    throw new Error(`Unknown file extension "${ext}"`);
+}
+
 /**
  * This function implements the export command, which can be invoked as
  *     neolace-admin.ts export-schema site_id
@@ -302,12 +321,7 @@ async function exportCommand({siteId, outFolder, ...options}: {siteId: string, e
                 if (entryType.enabledFeatures.Image && entryData.features?.Image) {
                     const imgMeta = entryData.features.Image;
                     const data = await (await fetch(imgMeta.imageUrl)).arrayBuffer();
-                    const ext = (
-                        imgMeta.contentType === "image/jpeg" ? "jpg" :
-                        imgMeta.contentType === "image/webp" ? "webp" :
-                        imgMeta.contentType === "image/png" ? "png" :
-                        "???"
-                    );
+                    const ext = extensionFromContentType(imgMeta.contentType);
                     const imgFilename = record.friendlyId + ".img." + ext; // The ".img" makes the filenames sort consistently with markdown first, then image file next. Otherwise JPG comes before MD but WEBP comes after.
                     await Deno.writeFile(thisEntryTypeDir + '/' + imgFilename, new Uint8Array(data));
                     metadata.image = imgFilename;
@@ -447,7 +461,6 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
         log.info(`${numEntries} blank entries created`);
     }
 
-    // TODO: set properties
     {
         log.info("Setting properties...");
         const edits: api.AnyContentEdit[] = [];
@@ -509,7 +522,34 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
         log.info(`${numArticles} articles updated`);
     }
 
-    // TODO: Set other features
+    // Set images and other files
+    {
+        log.info("Setting entry files...");
+        const {id: draftId} = await client.createDraft({title: `Import Part ${part++}`, description: "", edits: []}, {siteId});
+        let numFiles = 0;
+        for await (const {metadata, friendlyId, folder} of iterateEntries()) {
+            if (metadata.image) {
+                const entryId = metadata.id ?? idMap[friendlyId];
+                const fileContents = await Deno.readFile(folder + "/" + metadata.image);
+                const extension = metadata.image.split(".").pop()
+                const fileBlob = new Blob([fileContents], {type: contentTypeFromExtension(extension)});
+                const draftFile = await client.uploadFileToDraft(fileBlob, {draftId, siteId});
+                await client.addEditToDraft({
+                    code: api.UpdateEntryFeature.code,
+                    data: {
+                        entryId,
+                        feature: {
+                            featureType: "Image",
+                            draftFileId: draftFile.draftFileId,
+                        },
+                    },
+                }, {draftId, siteId});
+            }
+            numFiles++;
+        }
+        await client.acceptDraft(draftId, {siteId});
+        log.info(`${numFiles} files updated`);
+    }
 }
 
 /**
