@@ -250,6 +250,7 @@ const contentTypes: Record<string, string> = {
     "image/jpeg": "jpg",
     "image/webp": "webp",
     "image/png": "png",
+    "application/pdf": "pdf",
     "text/plain": "txt",
 };
 const extensionFromContentType = (contentType: string) => {
@@ -325,6 +326,22 @@ async function exportCommand({siteId, outFolder, ...options}: {siteId: string, e
                     const imgFilename = record.friendlyId + ".img." + ext; // The ".img" makes the filenames sort consistently with markdown first, then image file next. Otherwise JPG comes before MD but WEBP comes after.
                     await Deno.writeFile(thisEntryTypeDir + '/' + imgFilename, new Uint8Array(data));
                     metadata.image = imgFilename;
+                }
+                if (entryType.enabledFeatures.Files && entryData.features?.Files) {
+                    const newFilesMeta: Record<string, number> = {};
+                    let fileIndex = 1;
+                    for (const file of entryData.features.Files.files) {
+                        const data = await (await fetch(file.url)).arrayBuffer();
+                        const ext = extensionFromContentType(file.contentType);
+                        if (ext !== file.filename.split(".").pop()) {
+                            throw new Error("Mismatch in content-type vs. extension");
+                        }
+                        const filename = record.friendlyId + `.${fileIndex}.` + ext;
+                        await Deno.writeFile(thisEntryTypeDir + '/' + filename, new Uint8Array(data));
+                        newFilesMeta[file.filename] = fileIndex;
+                        fileIndex++;
+                    }
+                    metadata.files = newFilesMeta;
                 }
 
                 for (const prop of entryData.propertiesRaw!) {
@@ -450,7 +467,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                     id: entryId,
                     type: entryType.id,
                     name: metadata.name,
-                    description: replaceIdsInMarkdownAndLookupExpressions(idMap, metadata.description),
+                    description: replaceIdsInMarkdownAndLookupExpressions(idMap, metadata.description ?? ""),
                     friendlyId: friendlyId,
                 },
             });
@@ -528,8 +545,8 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
         const {id: draftId} = await client.createDraft({title: `Import Part ${part++}`, description: "", edits: []}, {siteId});
         let numFiles = 0;
         for await (const {metadata, friendlyId, folder} of iterateEntries()) {
+            const entryId = metadata.id ?? idMap[friendlyId];
             if (metadata.image) {
-                const entryId = metadata.id ?? idMap[friendlyId];
                 const fileContents = await Deno.readFile(folder + "/" + metadata.image);
                 const extension = metadata.image.split(".").pop()
                 const fileBlob = new Blob([fileContents], {type: contentTypeFromExtension(extension)});
@@ -544,8 +561,29 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                         },
                     },
                 }, {draftId, siteId});
+                numFiles++;
             }
-            numFiles++;
+            if (metadata.files) {
+                for (const [filename, fileIndex] of Object.entries(metadata.files)) {
+                    const extension = filename.split(".").pop() as string;
+                    const fileContents = await Deno.readFile(folder + "/" + friendlyId + `.${fileIndex}.${extension}`);
+                    const fileBlob = new Blob([fileContents], {type: contentTypeFromExtension(extension)});
+                    const draftFile = await client.uploadFileToDraft(fileBlob, {draftId, siteId});
+                    await client.addEditToDraft({
+                        code: api.UpdateEntryFeature.code,
+                        data: {
+                            entryId,
+                            feature: {
+                                featureType: "Files",
+                                changeType: "addFile",
+                                filename,
+                                draftFileId: draftFile.draftFileId,
+                            },
+                        },
+                    }, {draftId, siteId});
+                    numFiles++;
+                }
+            }
         }
         await client.acceptDraft(draftId, {siteId});
         log.info(`${numFiles} files updated`);
