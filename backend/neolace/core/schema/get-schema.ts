@@ -230,13 +230,16 @@ export function diffSchema(
                 changes.appliesTo = newProp.appliesTo;
             }
 
+            if (!equal(newProp.isA, oldProp.isA)) {
+                changes.isA = newProp.isA;
+            }
+
             for (
                 const key of [
                     "name",
                     "descriptionMD",
                     "mode",
                     "valueConstraint",
-                    "isA",
                     "default",
                     "standardURL",
                     "importance",

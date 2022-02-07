@@ -1,4 +1,4 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
+import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -7,6 +7,7 @@ import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { getEntryFeaturesData } from "../get-feature-data.ts";
+import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
 
 group(import.meta, () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
@@ -131,21 +132,32 @@ group(import.meta, () => {
         const dataFileUrl = (await graph.pullOne(DataFile, (df) => df.publicUrl(), { key: dataFile.id })).publicUrl;
 
         // Now set the data file as this entry's image data:
-        await graph.runAsSystem(ApplyEdits({
+        const draft = await graph.runAsSystem(CreateDraft({
+            title: "Hero Image Test Draft",
+            description: "testing",
             siteId,
-            edits: [
+            authorId: SYSTEM_VNID,
+            edits: [],
+        }));
+        const { id: draftFileId } = await graph.runAsSystem(
+            AddFileToDraft({ draftId: draft.id, dataFileId: dataFile.id }),
+        );
+        await graph.runAsSystem(UpdateDraft({
+            key: draft.id,
+            addEdits: [
                 {
                     code: "UpdateEntryFeature",
                     data: {
                         entryId,
                         feature: {
                             featureType: "Image",
-                            dataFileId: dataFile.id,
+                            draftFileId,
                         },
                     },
                 },
             ],
         }));
+        await graph.runAsSystem(AcceptDraft({ id: draft.id }));
 
         ////////////////////////////////////////////////////////////////////////////
         // Now we should see the image on the entry:

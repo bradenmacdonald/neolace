@@ -17,6 +17,7 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { Site } from "neolace/core/Site.ts";
 import { User } from "neolace/core/User.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { DataFile } from "neolace/core/objstore/DataFile.ts";
 
 /**
  * A DraftEdit is a specific change within a Draft.
@@ -66,6 +67,35 @@ export function dataFromJson(): DerivedProperty<any> {
 }
 
 /**
+ * A DraftFile is a file attached to a draft, which can then be assigned to an entry (e.g. an image entry). The
+ * reference to this file is only valid while the draft is open, and cannot be used after the draft is accepted/closed.
+ */
+export class DraftFile extends VNodeType {
+    static readonly label = "DraftFile";
+
+    static readonly properties = {
+        ...VNodeType.properties,
+        timestamp: Field.DateTime,
+    };
+
+    static readonly rel = this.hasRelationshipsFromThisTo({
+        HAS_DATA: {
+            to: [DataFile],
+            properties: {},
+            cardinality: VNodeType.Rel.ToOneRequired,
+        },
+    });
+
+    static virtualProperties = this.hasVirtualProperties({
+        dataFile: {
+            type: VirtualPropType.OneRelationship,
+            query: C`(@this)-[:${this.rel.HAS_DATA}]->(@target:${DataFile})`,
+            target: DataFile,
+        },
+    });
+}
+
+/**
  * A Draft is a proposed set of edits to a site's content or schema.
  *
  * Most changes to a site's content happen via Drafts. A user can push a set of edits as a draft, and optionally wait
@@ -98,6 +128,11 @@ export class Draft extends VNodeType {
             properties: {},
             cardinality: VNodeType.Rel.ToManyUnique,
         },
+        HAS_FILE: {
+            to: [DraftFile],
+            properties: {},
+            cardinality: VNodeType.Rel.ToManyUnique,
+        },
         MODIFIES: {
             to: [Entry],
             properties: {},
@@ -115,6 +150,12 @@ export class Draft extends VNodeType {
             type: VirtualPropType.ManyRelationship,
             target: DraftEdit,
             query: C`(@this)-[:${this.rel.HAS_EDIT}]->(@target:${DraftEdit})`,
+            defaultOrderBy: `@this.timestamp`,
+        },
+        files: {
+            type: VirtualPropType.ManyRelationship,
+            target: DraftFile,
+            query: C`(@this)-[:${this.rel.HAS_FILE}]->(@target:${DraftFile})`,
             defaultOrderBy: `@this.timestamp`,
         },
         modifiesEntries: {
@@ -196,6 +237,43 @@ export const UpdateDraft = defaultUpdateFor(Draft, (d) => d.title.description, {
 });
 
 /**
+ * Add a file to a draft
+ */
+export const AddFileToDraft = defineAction({
+    type: "AddFileToDraft",
+    parameters: {} as {
+        draftId: VNID;
+        dataFileId: VNID;
+    },
+    resultData: {} as { id: VNID },
+    apply: async (tx, data) => {
+        const id = VNID();
+
+        await tx.queryOne(C`
+            MATCH (draft:${Draft} {id: ${data.draftId}})
+        `.RETURN({}));
+
+        await tx.queryOne(C`
+            MATCH (draft:${Draft} {id: ${data.draftId}})
+            MATCH (dataFile:${DataFile} {id: ${data.dataFileId}})
+        `.RETURN({}));
+
+        const result = await tx.queryOne(C`
+            MATCH (draft:${Draft} {id: ${data.draftId}})
+            MATCH (dataFile:${DataFile} {id: ${data.dataFileId}})
+            MERGE (draft)-[:${Draft.rel.HAS_FILE}]->(draftFile:${DraftFile})-[:${DraftFile.rel.HAS_DATA}]->(dataFile)
+                ON CREATE SET draftFile.timestamp = datetime.realtime(), draftFile.id = ${id}
+        `.RETURN({ "draftFile.id": Field.VNID }));
+
+        return {
+            resultData: { id: result["draftFile.id"] },
+            modifiedNodes: [data.draftId, result["draftFile.id"]],
+            description: `Added file to ${Draft.withId(id)}`,
+        };
+    },
+});
+
+/**
  * Create a draft
  */
 export const CreateDraft = defineAction({
@@ -262,6 +340,7 @@ export const AcceptDraft = defineAction({
 
         const { modifiedNodes } = await ApplyEdits.apply(tx, {
             siteId: draft.site!.id,
+            draftId: data.id,
             // deno-lint-ignore no-explicit-any
             edits: draft.edits as any,
         });

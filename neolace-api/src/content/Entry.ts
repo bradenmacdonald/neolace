@@ -1,4 +1,4 @@
-import { Schema, Type, string, vnidString, nullable, array, number, object, Record } from "../api-schemas.ts";
+import { Schema, Type, string, vnidString, nullable, array, number, object, Record, Validator } from "../api-schemas.ts";
 import { PropertyType } from "../schema/SiteSchemaData.ts";
 import { AnyLookupValue } from "./lookup-value.ts";
 
@@ -10,6 +10,11 @@ export enum GetEntryFlags {
      * Include special "features" of this entry, like the article text or the contained image.
      */
     IncludeFeatures = "features",
+    /**
+     * Include the unevaluated lookup expressions for every property that is directly set on this entry.
+     * This is useful for editing or exporting, but not really for viewing the entry.
+     */
+    IncludeRawProperties = "propertiesRaw",
 }
 
 
@@ -21,6 +26,16 @@ export const DisplayedPropertySchema = Schema({
     value: object.transform(obj => obj as AnyLookupValue),
 });
 export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
+
+export const RawPropertySchema = Schema({
+    propertyId: vnidString,
+    facts: array.of(Schema({
+        valueExpression: string,
+        note: string,
+        rank: number,
+        slot: string,
+    })),
+});
 
 
 export const EntryFeaturesSchema = Schema({
@@ -114,6 +129,8 @@ export const EntrySchema = Schema({
 
     features: EntryFeaturesSchema.strictOptional(),
 
+    propertiesRaw: array.of(RawPropertySchema).strictOptional(),
+
     featuredImage: Schema({
         entryId: vnidString,
         /** Markdown caption for this featured image */
@@ -121,3 +138,18 @@ export const EntrySchema = Schema({
     }).strictOptional(),
 });
 export type EntryData = Type<typeof EntrySchema>;
+
+export const PaginatedResult = <T>(itemSchema: Validator<T>) => Schema({
+    values: array.of(itemSchema),
+    totalCount: number.strictOptional(),
+    nextPageUrl: string.strictOptional(),
+});
+export type PaginatedResultData<T> = {values: T[], totalCount?: number, nextPageUrl?: string};
+
+export const EntrySummarySchema = Schema({
+    id: vnidString,
+    type: Schema({id: vnidString}),
+    name: string,
+    friendlyId: string,
+});
+export type EntrySummaryData = Type<typeof EntrySummarySchema>;

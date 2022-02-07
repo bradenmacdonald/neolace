@@ -3,7 +3,7 @@ import * as log from "std/log/mod.ts";
 import { C, Field, VertexTestDataSnapshot, VNID } from "neolace/deps/vertex-framework.ts";
 import { PropertyType } from "neolace/deps/neolace-api.ts";
 
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { CreateBot, CreateUser } from "../core/User.ts";
 import { AccessMode, CreateSite } from "neolace/core/Site.ts";
 import { CreateGroup } from "neolace/core/Group.ts";
@@ -17,6 +17,7 @@ import { dedent } from "neolace/lib/dedent.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { parseLookupExpressionToEntryId, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { Property } from "neolace/core/schema/Property.ts";
+import { createImages } from "../sample-data/plantdb/images.ts";
 
 // Data that gets created by default.
 // To access this, use the return value of setTestIsolation(setTestIsolation.levels.DEFAULT_...)
@@ -65,6 +66,7 @@ export const testDataFile = ".neolace-tests-data.json";
 
 export async function generateTestFixtures(): Promise<TestSetupData> {
     // Wipe out all existing Neo4j data
+    const graph = await getGraph();
     await graph.reverseAllMigrations();
     await graph.resetDBToSnapshot({ cypherSnapshot: "" });
     await graph.runMigrations();
@@ -162,6 +164,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
 
     // Create some initial entry data, specifically entries about plants.
     await graph.runAsSystem(ApplyEdits({ siteId: data.site.id, edits: makePlantDbContent }));
+    await createImages(data.site.id);
 
     const defaultDataSnapshot = await graph.snapshotDataForTesting();
 
@@ -176,6 +179,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
  * new relationship IDs.
  */
 export async function fixRelationshipIdsAfterRestoringSnapshot() {
+    const graph = await getGraph();
     await graph._restrictedAllowWritesWithoutAction(async () => {
         await graph._restrictedWrite(async (tx) => {
             await tx.query(C`

@@ -4,7 +4,7 @@ import { Group } from "neolace/core/Group.ts";
 import { Site } from "neolace/core/Site.ts";
 import { BotUser, HumanUser, User } from "neolace/core/User.ts";
 // core/edit
-import { Draft, DraftEdit } from "neolace/core/edit/Draft.ts";
+import { Draft, DraftEdit, DraftFile } from "neolace/core/edit/Draft.ts";
 // core/entry
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
@@ -29,6 +29,7 @@ export function registerVNodeTypes(graph: Vertex) {
         Site,
         // core/edit
         DraftEdit,
+        DraftFile,
         Draft,
         // core/entry
         Entry,

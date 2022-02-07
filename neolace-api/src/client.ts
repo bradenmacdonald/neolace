@@ -1,11 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
 import { PasswordlessLoginResponse } from "./user.ts";
 import * as errors from "./errors.ts";
-import { SiteSchemaData } from "./schema/index.ts";
-import { DraftData, CreateDraftSchema } from "./edit/index.ts";
-import { EntryData, GetEntryFlags } from "./content/index.ts";
+import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
+import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags } from "./edit/index.ts";
+import { EntryData, EntrySummaryData, GetEntryFlags, PaginatedResultData } from "./content/index.ts";
 import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData } from "./site/Site.ts";
 import * as schemas from "./api-schemas.ts";
+import { VNID } from "./types.ts";
+
+const bin2hex = (binary: Uint8Array) => Array.from(binary).map((b) => b.toString(16).padStart(2, "0")).join("");
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS" | "HEAD";
 export interface Config {
@@ -26,7 +29,7 @@ interface RequestArgs {
     method?: HttpMethod;
     data?: any;
     body?: BodyInit | null;
-    headers?: Record<string, string>;
+    headers?: Headers;
     redirect?: RequestRedirect;
     noAuth?: boolean;  // If true, the "Authorization" header/token will never be sent for this request. Avoids 401 errors when getting a new token if current token is invalid.
 }
@@ -48,24 +51,28 @@ export class NeolaceApiClient {
 
     private async callRaw(path: string, _args: RequestArgs): Promise<Response> {
         const {data, ...args} = _args;
+        if (args.headers === undefined) {
+            args.headers = new Headers();
+        }
         if (data) {
             if ("body" in args) { throw new Error("Not allowed to pass both .data and .body to API client's callRaw()"); }
             args.body = JSON.stringify(data);
+            args.headers.set("Content-Type", "application/json");
         }
         if (args.method === undefined) {
             args.method = "GET";
         }
-        let extraHeaders: {[k: string]: string} = {};
         if (this.getExtraHeadersForRequest) {
-            extraHeaders = await this.getExtraHeadersForRequest({method: args.method, path});
+            for (const [key, value] of Object.entries(await this.getExtraHeadersForRequest({method: args.method, path}))) {
+                args.headers.set(key, value);
+            }
         }
         if (this.authToken) {
-            extraHeaders["Authorization"] = `Bearer ${this.authToken}`;
+            args.headers.set("Authorization", `Bearer ${this.authToken}`);
         }
         if (args.noAuth) {
-            delete extraHeaders["Authorization"];
+            args.headers.delete("Authorization");
         }
-        args.headers = {"Content-Type": "application/json", ...args.headers, ...extraHeaders};
         return this.fetchApi(this.basePath + path, args);
     }
 
@@ -170,6 +177,12 @@ export class NeolaceApiClient {
         return await this.call(`/site/${siteId}/schema`, {method: "GET"});
     }
 
+    /** Replace a site's schema with the provided schema */
+    public async replaceSiteSchema(schema: SiteSchemaData, options?: {siteId?: string}): Promise<void> {
+        const siteId = this.getSiteId(options);
+        await this.call(`/site/${siteId}/schema`, {method: "PUT", data: schema});
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Draft API Methods
 
@@ -181,9 +194,9 @@ export class NeolaceApiClient {
         return rawDraft;
     }
 
-    public async getDraft(draftId: string, options?: {siteId?: string}): Promise<DraftData> {
+    public async getDraft(draftId: string, options?: {flags: GetDraftFlags[], siteId?: string}): Promise<DraftData> {
         const siteId = this.getSiteId(options);
-        return this._parseDraft(await this.call(`/site/${siteId}/draft/${draftId}`, {method: "GET"}));
+        return this._parseDraft(await this.call(`/site/${siteId}/draft/${draftId}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""), {method: "GET"}));
     }
 
     public async createDraft(data: schemas.Type<typeof CreateDraftSchema>, options?: {siteId?: string}): Promise<DraftData> {
@@ -194,6 +207,24 @@ export class NeolaceApiClient {
             edits: data.edits ?? [],
         }});
         return this._parseDraft(result);
+    }
+
+    public async addEditToDraft(edit: AnySchemaEdit|AnyContentEdit, options: {draftId: string, siteId?: string}): Promise<void> {
+        const siteId = this.getSiteId(options);
+        await this.call(`/site/${siteId}/draft/${options.draftId}/edit`, {method: "POST", data: edit});
+    }
+
+    public async uploadFileToDraft(fileData: Blob, options: {draftId: string, siteId?: string}): Promise<DraftFileData> {
+        const siteId = this.getSiteId(options);
+        const hash = await crypto.subtle.digest("SHA-256", await fileData.arrayBuffer());
+        const hashHex = bin2hex(new Uint8Array(hash));
+        const formData = new FormData();
+        formData.append('file', fileData);
+        const result = await this.call(`/site/${siteId}/draft/${options.draftId}/file?sha256Hash=${hashHex}`, {
+            method: "POST",
+            body: formData,
+        });
+        return result;
     }
 
     public async acceptDraft(draftId: string, options?: {siteId?: string}): Promise<void> {
@@ -207,6 +238,48 @@ export class NeolaceApiClient {
     public getEntry<Flags extends readonly GetEntryFlags[]>(key: string, options: {flags?: Flags, siteId?: string} = {}): Promise<ApplyFlags<typeof GetEntryFlags, Flags, EntryData>> {
         const siteId = this.getSiteId(options);
         return this.call(`/site/${siteId}/entry/${encodeURIComponent(key)}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""));
+    }
+
+    /**
+     * Get a basic list of all entries on the site that the current user can view, optionally filtered by type.
+     * 
+     * This is a very simple API, and for performance reasons results are ordered by ID, not by name. Use the search API
+     * via getSearchConnection for more flexible ways of retrieving the list of entries.
+     */
+    public async getEntries(options: {ofEntryType?: VNID, siteId?: string} = {}): Promise<{totalCount: number}&AsyncIterable<EntrySummaryData>> {
+        const siteId = this.getSiteId(options);
+        const firstPage: PaginatedResultData<EntrySummaryData> = await this.call(`/site/${siteId}/entry/` + (options.ofEntryType ? `?entryType=${options.ofEntryType}` : ""));
+        let currentPage = firstPage;
+        return {
+            totalCount: firstPage.totalCount!,  // The first page always includes the total count
+            [Symbol.asyncIterator]: () => ({
+                next: async (): Promise<IteratorResult<EntrySummaryData>> => {
+                    if (currentPage.values.length > 0) {
+                        return {
+                            done: false,
+                            value: currentPage.values.shift()!,
+                        };
+                    } else if (currentPage.nextPageUrl) {
+                        const nextUrl = new URL(currentPage.nextPageUrl);
+                        currentPage = await this.call(nextUrl.pathname + nextUrl.search);
+                        return {
+                            done: false,
+                            value: currentPage.values.shift()!,
+                        };
+                    } else {
+                        return {done: true, value: undefined};
+                    }
+                },
+            }),
+        };
+    }
+
+    /**
+     * Erase all entries on the site. This is dangerous! Mostly useful for development.
+     */
+    public async eraseAllEntriesDangerously(options: {confirm?: "danger", siteId?: string} = {}): Promise<void> {
+        const siteId = this.getSiteId(options);
+        await this.call(`/site/${siteId}/entry/?confirm=${options.confirm}`, {method: 'DELETE'});
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

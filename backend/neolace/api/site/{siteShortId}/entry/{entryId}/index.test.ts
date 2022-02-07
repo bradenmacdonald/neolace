@@ -495,6 +495,41 @@ group(import.meta, () => {
             ]});
         });*/
 
+        test("Can fetch all raw properties directly set on a given entry (e.g. for editing or export purposes", async () => {
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+            const result = await client.getEntry(ponderosaPine.id, {
+                flags: [api.GetEntryFlags.IncludeRawProperties] as const,
+            });
+
+            const propFactDefaults = { rank: 1, slot: "", note: "" };
+            assertEquals(result.propertiesRaw, [
+                {
+                    propertyId: defaultData.schema.properties._parentGenus.id,
+                    facts: [{
+                        valueExpression: `[[/entry/${defaultData.entries.genusPinus.id}]]`,
+                        ...propFactDefaults,
+                    }],
+                },
+                {
+                    propertyId: defaultData.schema.properties._propScientificName.id,
+                    facts: [{ valueExpression: `"Pinus ponderosa"`, ...propFactDefaults }],
+                },
+                {
+                    propertyId: defaultData.schema.properties._propWikidataQID.id,
+                    facts: [{ valueExpression: `"Q460523"`, ...propFactDefaults }],
+                },
+                {
+                    propertyId: defaultData.schema.properties._hasHeroImage.id,
+                    facts: [{
+                        valueExpression: `[[/entry/${defaultData.entries.imgPonderosaTrunk.id}]]`,
+                        ...propFactDefaults,
+                        note: "a ponderosa pine trunk in Lassen Volcanic National Park",
+                    }],
+                },
+            ]);
+        });
+
         test("Can look up an entry by friendlyId or VNID", async () => {
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 

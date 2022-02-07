@@ -21,3 +21,15 @@ export async function getClient(
         siteId: siteShortId,
     });
 }
+
+/**
+ * Return an API client that is authenticated as the system user, so it can run realm adminsitration tasks.
+ */
+export async function getSystemClient(): Promise<api.NeolaceApiClient> {
+    await serverPromise;
+    return new api.NeolaceApiClient({
+        basePath: config.apiUrl,
+        fetchApi: fetch,
+        authToken: "SYS_KEY_INSECURE_DEV_KEY",
+    });
+}

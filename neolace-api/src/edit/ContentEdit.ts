@@ -37,12 +37,12 @@ export const UpdateEntryFilesSchema = Schema({
      */
     filename: string,
     /** When adding a new file, specify its upload ID here. */
-    dataFileId: vnidString.strictOptional(),
+    draftFileId: vnidString.strictOptional(),
 });
 
 export const UpdateEntryImageSchema = Schema({
     /** Change which actual image file this entry "holds" */
-    dataFileId: vnidString.strictOptional(),
+    draftFileId: vnidString.strictOptional(),
 });
 
 /** Change details of how this entry is used as a property for other entries */

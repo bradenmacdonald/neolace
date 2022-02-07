@@ -1,4 +1,4 @@
-import { api, graph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
 import { getDraft } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 
@@ -13,8 +13,10 @@ export class DraftResource extends NeolaceHttpResource {
         await this.requirePermission(request, permissions.CanViewDrafts);
         const { siteId } = await this.getSiteDetails(request);
         const draftId = VNID(request.pathParam("draftId") ?? "");
+        const graph = await getGraph();
+        const flags = this.getRequestFlags(request, api.GetDraftFlags);
 
         // Response:
-        return await graph.read((tx) => getDraft(draftId, siteId, tx));
+        return await graph.read((tx) => getDraft(draftId, siteId, tx, flags));
     });
 }

@@ -1,5 +1,5 @@
 import { api } from "neolace/api/mod.ts";
-import { EmptyResultError, isVNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { C, EmptyResultError, Field, isVNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
 import { CachedLookupContext } from "neolace/core/lookup/context.ts";
@@ -17,6 +17,7 @@ import {
 import { EntryPropertyValueSet, getEntryProperties } from "neolace/core/entry/properties.ts";
 import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-data.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
+import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 
 /**
  * Helper function to wrap an async function so that it only runs at most once. If you don't need/call it, it won't run
@@ -157,6 +158,29 @@ export async function getEntry(
             refCache?.addReferenceToPropertyId(property.id);
             refCache?.extractLookupReferences(serializedValue, { currentEntryId: entryData.id });
         }
+    }
+
+    if (flags.has(api.GetEntryFlags.IncludeRawProperties)) {
+        // Include a complete list of all property values directly set on this entry
+        const allProps = await tx.query(C`
+            MATCH (entry:${Entry} {id: ${entryData.id}})
+            MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
+            WITH prop, pf
+            ORDER BY prop.importance, prop.name, pf.rank
+            WITH prop, collect(pf { .valueExpression, .note, .rank, .slot }) AS facts
+        `.RETURN({
+            "prop.id": Field.VNID,
+            "facts": Field.List(Field.Record({
+                "valueExpression": Field.String,
+                "note": Field.String,
+                "rank": Field.Int,
+                "slot": Field.String,
+            })),
+        }));
+        result.propertiesRaw = allProps.map((row) => ({
+            propertyId: row["prop.id"],
+            facts: row["facts"],
+        }));
     }
 
     if (flags.has(api.GetEntryFlags.IncludeFeatures)) {

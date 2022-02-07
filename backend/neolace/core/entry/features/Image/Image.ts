@@ -9,6 +9,7 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { ImageData } from "./ImageData.ts";
 import { EntryFeatureData } from "../EntryFeatureData.ts";
 import { DataFile } from "neolace/core/objstore/DataFile.ts";
+import { Draft, DraftFile } from "neolace/core/edit/Draft.ts";
 
 const featureType = "Image" as const;
 
@@ -60,10 +61,10 @@ export const ImageFeature = EntryTypeFeature({
         `.RETURN({ "imageData.id": Field.VNID }));
         const imageDataId = result["imageData.id"];
         // Associate the ImageData with the DataFile that holds the actual image contents
-        if (editData.dataFileId !== undefined) {
+        if (editData.draftFileId !== undefined) {
             await tx.query(C`
                 MATCH (imageData:${ImageData} {id: ${imageDataId}})
-                MATCH (dataFile:${DataFile} {id: ${editData.dataFileId}})
+                MATCH (:${Draft})-[:${Draft.rel.HAS_FILE}]->(:${DraftFile} {id: ${editData.draftFileId}})-[:${DraftFile.rel.HAS_DATA}]->(dataFile:${DataFile})
                 MERGE (imageData)-[:${ImageData.rel.HAS_DATA}]->(dataFile)
                 WITH imageData, dataFile
                 MATCH (imageData)-[:${ImageData.rel.HAS_DATA}]->(oldFile)

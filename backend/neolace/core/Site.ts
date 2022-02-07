@@ -213,7 +213,7 @@ export const siteCodeForSite = makeCachedLookup(
 
 /** Convert an entry's slugId (with siteCode prefix) into a "friendlyId" */
 export function slugIdToFriendlyId(slugId: string): string {
-    return slugId.substr(5);
+    return slugId.substring(5);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

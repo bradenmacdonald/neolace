@@ -7,6 +7,13 @@ export enum DraftStatus {
     Cancelled = 2,
 }
 
+export enum GetDraftFlags {
+    IncludeEdits = "edits",
+    IncludeEditsData = "editsData",
+}
+
+export const CreateEditSchema = Schema({code: string, data: object});
+
 /**
  * Parameters used when creating a new draft.
  * 
@@ -16,7 +23,7 @@ export enum DraftStatus {
 export const CreateDraftSchema = Schema({
     title: string,
     description: nullable(string),
-    edits: array.of(Schema({code: string, data: object})),
+    edits: array.of(CreateEditSchema),
 });
 export type CreateDraftData = Type<typeof CreateDraftSchema>;
 
@@ -40,3 +47,9 @@ export const DraftSchema = Schema({
     edits: array.of(DraftEditSchema).strictOptional(),
 });
 export type DraftData = Type<typeof DraftSchema>;
+
+/** Data returned when uploading a file to a draft. */
+export const DraftFileSchema = Schema({
+    draftFileId: vnidString,
+});
+export type DraftFileData = Type<typeof DraftFileSchema>;

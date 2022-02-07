@@ -6,8 +6,7 @@ import { crypto } from "std/crypto/mod.ts";
 
 import { config } from "neolace/app/config.ts";
 import { detectImageMetadata, FileMetadata } from "neolace/core/objstore/detect-metadata.ts";
-
-const bin2hex = (binary: Uint8Array) => Array.from(binary).map((b) => b.toString(16).padStart(2, "0")).join("");
+import { bin2hex } from "neolace/lib/bin2hex.ts";
 
 const endpointParsed = new URL(config.objStoreEndpointURL);
 const objStoreClient = new S3Client({
@@ -27,7 +26,7 @@ const objStoreClient = new S3Client({
 export const __forScriptsOnly = { objStoreClient, bucket: config.objStoreBucketName };
 
 export async function uploadFileToObjStore(
-    fileStream: Deno.Reader,
+    fileStream: ReadableStream<Uint8Array> | Deno.Reader,
     options: { contentType: string; id?: VNID },
 ): Promise<{
     id: VNID;
@@ -45,7 +44,9 @@ export async function uploadFileToObjStore(
     const buf = new Buffer(); // If the file is small enough, store it in memory so we can calculate metadata
     const bufSizeLimit = 24 * 1024 * 1024; // Only store the first 24MB in memory
 
-    const fileStreamReader = readableStreamFromReader(fileStream, { autoClose: false });
+    const fileStreamReader = fileStream instanceof ReadableStream
+        ? fileStream
+        : readableStreamFromReader(fileStream, { autoClose: false });
     // Split ("tee") the file stream into two separate streams:
     // ourStream, which we use to hash the contents and analyze the file type, image dimensions, etc.
     // uploadStream, which uploads the file to the object storage endpoint (e.g. MinIO, S3)

@@ -1,4 +1,4 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
+import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { assertEquals, assertRejects, beforeAll, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { EntryValue, FileValue, IntegerValue, PageValue } from "../values.ts";
@@ -8,6 +8,7 @@ import { LookupEvaluationError } from "../errors.ts";
 import { LookupExpression } from "../expression.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { CreateDataFile, DataFile } from "../../objstore/DataFile.ts";
+import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
 
 group(import.meta, () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
@@ -68,9 +69,19 @@ group(import.meta, () => {
                 const url = (await graph.pullOne(DataFile, (df) => df.publicUrl(), { key: dataFile.id })).publicUrl;
 
                 // Now set the data file as this entry's attached file:
-                await graph.runAsSystem(ApplyEdits({
+                const draft = await graph.runAsSystem(CreateDraft({
+                    title: "Files Test Draft",
+                    description: "testing",
                     siteId,
-                    edits: [
+                    authorId: SYSTEM_VNID,
+                    edits: [],
+                }));
+                const { id: draftFileId } = await graph.runAsSystem(
+                    AddFileToDraft({ draftId: draft.id, dataFileId: dataFile.id }),
+                );
+                await graph.runAsSystem(UpdateDraft({
+                    key: draft.id,
+                    addEdits: [
                         {
                             code: "UpdateEntryFeature",
                             data: {
@@ -79,12 +90,13 @@ group(import.meta, () => {
                                     featureType: "Files",
                                     changeType: "addFile",
                                     filename: args.filename,
-                                    dataFileId: dataFile.id,
+                                    draftFileId,
                                 },
                             },
                         },
                     ],
                 }));
+                await graph.runAsSystem(AcceptDraft({ id: draft.id }));
                 return { url, ...args };
             };
 
