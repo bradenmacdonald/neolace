@@ -9,16 +9,28 @@ import { Button } from 'components/widgets/Button';
 import { api } from 'lib/api-client';
 
 
-type HitsProps = InfiniteHitsProvided<Hit<api.EntryIndexDocument>>;
+interface HitsProps extends InfiniteHitsProvided<Hit<api.EntryIndexDocument>> {
+    currentQuery: string;
+}
 
 const CustomInfiniteHits: React.FunctionComponent<HitsProps> = ({
+    currentQuery,
     hits,
     hasPrevious,
     hasMore,
     refinePrevious,
     refineNext,
 }) => {
-    return <div>
+    if (currentQuery === "") {
+        return <div className="min-h-[50vh] text-gray-500">
+            <p><FormattedMessage id="plugin.search.enterSearchTerm" defaultMessage="Enter a search term above to see results."/></p>
+        </div>
+    } else if (hits.length === 0) {
+        return <div className="min-h-[50vh]">
+            <p><FormattedMessage id="plugin.search.noResults" defaultMessage='No entries were found matching the query "{query}".' values={{query: currentQuery}}/></p>
+        </div>
+    }
+    return <div className="min-h-[50vh]">
         {hasPrevious &&
             <div className="my-4">
                 <Button onClick={refinePrevious} icon="chevron-up">

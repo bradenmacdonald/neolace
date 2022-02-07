@@ -12,7 +12,7 @@ const CustomSearchBox: React.FunctionComponent<SearchBoxProvided> = ({ currentRe
         <TextInput
             type="search"
             icon="search"
-            className="w-[600px] max-w-full"
+            className="w-[600px] max-w-full my-4"
             value={currentRefinement}
             onChange={event => refine(event.currentTarget.value)}
             placeholder={intl.formatMessage({id: "plugin.search.searchBoxPlaceholder", defaultMessage: "Enter a search term"})}
