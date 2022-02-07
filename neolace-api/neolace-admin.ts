@@ -398,7 +398,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                 const fileParts = fileContents.split(/^---$/m, 3);
                 // deno-lint-ignore no-explicit-any
                 const metadata = parseYaml(fileParts[1]) as Record<string, any>;
-                const articleMD = fileParts[2];
+                const articleMD = fileParts[2].trim();
                 yield {metadata, articleMD, entryType, friendlyId: file.name.substring(0, file.name.length - 3), folder};
             }
         }
@@ -501,7 +501,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
         const edits: api.AnyContentEdit[] = [];
         let numArticles = 0;
         for await (const {metadata, friendlyId, articleMD} of iterateEntries()) {
-            if (!articleMD.trim()) {
+            if (!articleMD) {
                 continue;
             }
             const entryId = metadata.id ?? idMap[friendlyId];
