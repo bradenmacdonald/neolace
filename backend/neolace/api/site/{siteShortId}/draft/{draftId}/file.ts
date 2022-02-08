@@ -33,7 +33,7 @@ export class DraftFileResource extends NeolaceHttpResource {
         //  const contentType = request.headers.get("Content-Type");
         //  const bodyStream = request.body;
         // So do this instead:
-        const formFile = request.bodyParam<{ content: string; type: string; size: number }>("file");
+        const formFile = request.bodyParam<{ content: Uint8Array; type: string; size: number }>("file");
         if (!formFile) {
             throw new api.InvalidRequest(
                 api.InvalidRequestReason.OtherReason,
@@ -41,7 +41,7 @@ export class DraftFileResource extends NeolaceHttpResource {
             );
         }
         const contentType = formFile.type;
-        const bodyStream = readableStreamFromIterable([new TextEncoder().encode(formFile.content)]);
+        const bodyStream = readableStreamFromIterable([formFile.content]);
 
         if (contentType === null || bodyStream === null) {
             throw new api.InvalidRequest(
