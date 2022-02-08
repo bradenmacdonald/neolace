@@ -115,11 +115,11 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                     <table>
                                         <tbody>
                                             {props.entry.propertiesSummary?.map(p => 
-                                                <tr key={p.propertyId}>
-                                                    <th className="block md:table-cell text-xs md:text-base -mb-1 md:mb-0 pr-2 align-top text-left font-normal text-gray-500 md:text-gray-700 min-w-[120px]">
+                                                <tr key={p.propertyId} className="even:bg-gray-50 hover:bg-blue-50">
+                                                    <th className="block md:table-cell text-xs md:text-base -mb-1 md:mb-0 pt-1 md:py-1 pr-2 align-top text-left font-normal text-gray-500 md:text-gray-700 min-w-[120px]">
                                                         <LookupValue value={{type: "Property", id: p.propertyId}} mdtContext={mdtContext} />
                                                     </th>
-                                                    <td className="block md:table-cell pr-2 pb-1 md:pb-0 text-sm md:text-base">
+                                                    <td className="block md:table-cell pr-2 pb-1 md:py-1 text-sm md:text-base">
                                                         <LookupValue value={p.value} mdtContext={mdtContext} />
                                                     </td>
                                                 </tr>
