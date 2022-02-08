@@ -1,7 +1,5 @@
-// deno-lint-ignore-file
 /* tslint:disable */
 /* eslint-disable */
-export function __wasm_init_memory(): void;
 export function decode(a: number, b: number, c: number): void;
 export function __wbg_wbg_rayon_poolbuilder_free(a: number): void;
 export function wbg_rayon_poolbuilder_mainJS(a: number): number;
