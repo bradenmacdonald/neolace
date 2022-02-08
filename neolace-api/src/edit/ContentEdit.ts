@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { vnidString, } from "../api-schemas.ts";
+import { ImageSizingMode } from "../content/Entry.ts";
 import { number, Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "./Edit.ts";
 
@@ -43,6 +44,8 @@ export const UpdateEntryFilesSchema = Schema({
 export const UpdateEntryImageSchema = Schema({
     /** Change which actual image file this entry "holds" */
     draftFileId: vnidString.strictOptional(),
+    /** Set the sizing mode */
+    setSizing: Schema.enum(ImageSizingMode).strictOptional(),
 });
 
 /** Change details of how this entry is used as a property for other entries */

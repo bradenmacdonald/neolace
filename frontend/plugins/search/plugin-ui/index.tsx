@@ -49,15 +49,17 @@ const SiteSearchPage: React.FunctionComponent = function(props) {
         }
     }, [connectionData]);
 
+    const [currentQuery, setCurrentQuery] = React.useState("");
+
     if (!adapter || !connectionData) {
         return <p>Loading search...</p>;
     }
 
     return (<>
         <h1 className="text-3xl font-semibold">Search {site.name}</h1>
-        <InstantSearch indexName={connectionData.siteEntriesCollection} searchClient={adapter.searchClient}>
+        <InstantSearch indexName={connectionData.siteEntriesCollection} searchClient={adapter.searchClient} onSearchStateChange={({query}) => { setCurrentQuery(query); }}>
             <SearchBox />
-            <Hits />
+            <Hits currentQuery={currentQuery} />
         </InstantSearch>
     </>);
 }

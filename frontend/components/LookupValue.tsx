@@ -7,6 +7,7 @@ import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { EntryLink } from './EntryLink';
 import { LookupImage } from './LookupImage';
 import { FormattedFileSize } from './widgets/FormattedFileSize';
+import { SiteContext } from './SiteContext';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -19,6 +20,8 @@ interface LookupValueProps {
  */
 export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) => {
 
+    const siteContext = React.useContext(SiteContext);
+
     const {value} = props;
     if (typeof value !== "object" || value === null || !("type" in value)) {
         return <p>[ERROR INVALID VALUE, NO TYPE INFORMATION]</p>;  // Doesn't need i18n, internal error message shouldn't be seen
@@ -30,6 +33,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             const listValues = value.values.map((v, idx) => 
                 <LookupValue key={idx} value={v} mdtContext={props.mdtContext} />
             );
+            
             if (listValues.length < value.totalCount) {
                 listValues.push(
                     <FormattedMessage
@@ -40,6 +44,21 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                         description="How many more items there are (at the end of a list)"
                     />
                 );
+            }
+
+            // Temporary hack - FIXME
+            if (siteContext.shortId === "cams" && listValues.length > 2) {
+                const firstValue = value.values[0];
+                if (firstValue.type === "Annotated") {
+                    const innerValue = firstValue.value;
+                    if (innerValue.type === "Entry") {
+                        if (props.mdtContext.refCache.entries[innerValue.id]?.entryType.id === "_42oypp3JCf4wpJRru0El17") {
+                            return <ul>
+                                {listValues.map((v, idx) => <li key={idx}>{v}</li>)}
+                            </ul>;
+                        }
+                    }
+                }
             }
 
             return <span className="neo-lookup-paged-values">

@@ -37,6 +37,12 @@ export const RawPropertySchema = Schema({
     })),
 });
 
+export enum ImageSizingMode {
+    /** The image should never be cropped when scaled to fit in a container */
+    Contain = "contain",
+    /* When scaling this image to fit in a container, it can be cropped to match the container's aspect ratio */
+    Cover = "cover",
+}
 
 export const EntryFeaturesSchema = Schema({
     Article: Schema({
@@ -57,6 +63,7 @@ export const EntryFeaturesSchema = Schema({
         imageUrl: string,
         contentType: string,
         size: number,
+        sizing: Schema.enum(ImageSizingMode),
         width: number.strictOptional(),
         height: number.strictOptional(),
         blurHash: string.strictOptional(),
@@ -66,6 +73,7 @@ export const EntryFeaturesSchema = Schema({
         entryId: vnidString,
         imageUrl: string,
         caption: string,
+        sizing: Schema.enum(ImageSizingMode),
         width: number.strictOptional(),
         height: number.strictOptional(),
         blurHash: string.strictOptional(),

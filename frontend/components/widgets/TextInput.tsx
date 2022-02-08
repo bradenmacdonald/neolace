@@ -3,11 +3,12 @@ import { Icon, IconId } from './Icon';
 
 interface Props extends React.InputHTMLAttributes<HTMLInputElement> {
     icon?: IconId;
+    inputRef?: React.Ref<HTMLInputElement>
 }
 
 export const TextInput: React.FunctionComponent<Props> = (props) => {
 
-    const {icon, className: customClass, ...overrideInputProps} = props;
+    const {icon, inputRef, className: customClass, ...overrideInputProps} = props;
 
     const inputProps = {type: "text", ...overrideInputProps};
 
@@ -20,6 +21,6 @@ export const TextInput: React.FunctionComponent<Props> = (props) => {
                 <Icon icon={icon} />
             </div>
         }
-        <input {...inputProps} className="outline-none border-none px-2 py-1 flex-auto" />
+        <input {...inputProps} className="outline-none border-none px-2 py-1 flex-auto" ref={inputRef} />
     </div>
 }

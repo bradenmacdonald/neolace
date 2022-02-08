@@ -134,6 +134,7 @@ export const HeroImageFeature = EntryTypeFeature({
             caption,
             entryId: imageEntryId,
             imageUrl: imageData.imageUrl,
+            sizing: imageData.sizing,
             width: imageData.width,
             height: imageData.height,
             blurHash: imageData.blurHash,

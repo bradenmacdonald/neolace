@@ -1,4 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
+import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
 import { assert, assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { EntryValue, ImageValue, IntegerValue, NullValue, PropertyValue, StringValue } from "../values.ts";
@@ -37,6 +38,7 @@ group(import.meta, () => {
                 imageUrl: result.data.imageUrl,
                 blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
                 size: 1581898,
+                sizing: ImageSizingMode.Contain,
                 width: 3504,
                 height: 2336,
                 link: new EntryValue(defaultData.entries.imgPonderosaTrunk.id),

@@ -1,4 +1,5 @@
 import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
+import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
 
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
@@ -166,6 +167,7 @@ group(import.meta, () => {
             imageUrl: dataFileUrl,
             contentType: dataFile.contentType,
             size: dataFile.size,
+            sizing: ImageSizingMode.Contain,
             width: 100,
             height: 50,
             blurHash: "LEHV6nWB2yk8pyo0adR*.7kCMdnj",
