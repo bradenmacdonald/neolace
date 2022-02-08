@@ -38,7 +38,7 @@ group(import.meta, () => {
                 imageUrl: result.data.imageUrl,
                 blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
                 size: 1581898,
-                sizing: ImageSizingMode.Contain,
+                sizing: ImageSizingMode.Cover,
                 width: 3504,
                 height: 2336,
                 link: new EntryValue(defaultData.entries.imgPonderosaTrunk.id),

@@ -5,6 +5,7 @@ import { files } from "./datafiles.ts";
 import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { entryData } from "./content.ts";
+import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
 
 export async function createImages(siteId: VNID) {
     const graph = await getGraph();
@@ -37,7 +38,7 @@ export async function createImages(siteId: VNID) {
                 code: "UpdateEntryFeature",
                 data: {
                     entryId: entryData.imgPonderosaTrunk.id,
-                    feature: { featureType: "Image", draftFileId },
+                    feature: { featureType: "Image", draftFileId, setSizing: ImageSizingMode.Cover },
                 },
             },
             // This image relates to the ponderosa pine:
