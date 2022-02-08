@@ -41,10 +41,10 @@ const EntryPage: NextPage<PageProps> = function(props) {
 
             {/* Container that wraps the left nav column (on desktop) and the article text/content */}
             {/* items-start is necessary on mobile to keep the top nav panel at the top when scrolling on long articles */}
-            <div className="absolute top-0 bottom-0 left-0 right-0 flex flex-row overflow-y-auto items-start scroll-padding-45 md:scroll-padding-none">
+            <div className="absolute top-0 bottom-0 left-0 right-0 flex flex-row overflow-y-auto items-start scroll-padding-45 md:scroll-padding-none bg-gray-200">
 
                 {/* Left column, which shows table of contents, but only on desktop */}
-                <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-xs bg-gray-200 flex-initial border-gray-300 border-r p-4 overflow-y-scroll flex-col sticky top-0 self-stretch">
+                <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-[280px] bg-gray-300 xl:border-r border-r-gray-100 flex-initial p-4 overflow-y-scroll flex-col sticky top-0 self-stretch">
                     <h1 className="font-bold text-base">{props.entry.name}</h1>
                     <span id="entry-type-name" className="font-light">{props.entry.entryType.name}</span>
                     <br/>
@@ -62,13 +62,13 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 </div>
 
                 {/* The main content of this entry */}
-                <article id="entry-content" className="w-1/2 bg-white flex-auto p-4 z-0">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
+                <article id="entry-content" className="w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] mx-auto shadow-md xl:my-6">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                     {/* Push the footer down to the bottom if the article is very short */}
                     <div className="md:min-h-[calc(100vh-11.5rem)]">
                         {/* Hero image, if any */}
                         {
                             props.entry.features?.HeroImage ?
-                                <div className="-m-4 mb-4 relative h-[30vh] md:h-[50vh]">
+                                <div className="-m-6 mb-7 relative h-[30vh] md:h-[50vh]">
                                     {/* A blurry representation of the image, shown while it is loading: */}
                                     <Blurhash
                                         hash={props.entry.features.HeroImage.blurHash ?? ""}
