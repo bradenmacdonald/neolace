@@ -326,6 +326,7 @@ async function exportCommand({siteId, outFolder, ...options}: {siteId: string, e
                     const imgFilename = record.friendlyId + ".img." + ext; // The ".img" makes the filenames sort consistently with markdown first, then image file next. Otherwise JPG comes before MD but WEBP comes after.
                     await Deno.writeFile(thisEntryTypeDir + '/' + imgFilename, new Uint8Array(data));
                     metadata.image = imgFilename;
+                    metadata.imageSizing = imgMeta.sizing;
                 }
                 if (entryType.enabledFeatures.Files && entryData.features?.Files) {
                     const newFilesMeta: Record<string, number> = {};
@@ -558,6 +559,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                         feature: {
                             featureType: "Image",
                             draftFileId: draftFile.draftFileId,
+                            ...(metadata.imageSizing ? {setSizing: metadata.imageSizing} : {}),
                         },
                     },
                 }, {draftId, siteId});

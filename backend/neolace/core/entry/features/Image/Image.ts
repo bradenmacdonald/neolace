@@ -1,4 +1,4 @@
-import { SiteSchemaData, UpdateEntryImageSchema } from "neolace/deps/neolace-api.ts";
+import { ImageSizingMode, SiteSchemaData, UpdateEntryImageSchema } from "neolace/deps/neolace-api.ts";
 import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { EntryTypeFeature } from "../feature.ts";
@@ -57,7 +57,10 @@ export const ImageFeature = EntryTypeFeature({
             // Note that the code that calls this has already verified that this feature is enabled for this entry type.
             MERGE (e)-[:${Entry.rel.HAS_FEATURE_DATA}]->(imageData:${ImageData}:${C(EntryFeatureData.label)})
             ON CREATE SET
-                imageData.id = ${VNID()}
+                imageData.id = ${VNID()},
+                imageData.sizing = ${editData.setSizing ?? ImageSizingMode.Contain}
+            WITH imageData
+                SET imageData += ${editData.setSizing ? { sizing: editData.setSizing } : {}}
         `.RETURN({ "imageData.id": Field.VNID }));
         const imageDataId = result["imageData.id"];
         // Associate the ImageData with the DataFile that holds the actual image contents
@@ -95,6 +98,7 @@ export const ImageFeature = EntryTypeFeature({
             imageUrl: dataFile.publicUrl,
             contentType: dataFile.contentType,
             size: Number(dataFile.size),
+            sizing: (data.sizing ?? ImageSizingMode.Contain) as ImageSizingMode,
             width: "width" in dataFile.metadata ? dataFile.metadata.width : undefined,
             height: "height" in dataFile.metadata ? dataFile.metadata.height : undefined,
             blurHash: "blurHash" in dataFile.metadata ? dataFile.metadata.blurHash : undefined,
