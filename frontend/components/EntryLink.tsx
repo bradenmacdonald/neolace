@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { api, isVNID } from 'lib/api-client';
+import { api } from 'lib/api-client';
 import { DEVELOPMENT_MODE } from 'lib/config';
 import { FormattedListParts, FormattedMessage } from 'react-intl';
 import { Tooltip } from 'components/widgets/tooltip';
@@ -23,7 +23,7 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
 
     const refCache = props.mdtContext.refCache;
     const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) =
-        isVNID(props.entryKey) ? refCache.entries[props.entryKey]
+        api.isVNID(props.entryKey) ? refCache.entries[props.entryKey]
         : Object.values(refCache.entries).find(e => e.friendlyId === props.entryKey);
     if (entry === undefined) {
         // This entry is not in the reference cache! It should have been though...

@@ -244,6 +244,7 @@ export function diffSchema(
                     "standardURL",
                     "importance",
                     "editNoteMD",
+                    "displayAs",
                 ] as const
             ) {
                 if (newProp[key] !== oldProp[key]) {
