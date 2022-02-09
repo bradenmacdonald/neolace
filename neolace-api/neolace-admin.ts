@@ -222,7 +222,7 @@ function yamlToSchema(yamlString: string): {idMap: Record<string, string>, schem
         tempSchema.properties[prop.id] = prop;
     }
     // Convert the friendly IDs back to 
-    const {newSchema, newMap} = applyIdMap(friendlySchema.idMap.map, tempSchema);
+    const {newSchema, newMap} = applyIdMap(friendlySchema.idMap.map, tempSchema, {generateNewIds: true});
     return {schema: newSchema, idMap: newMap};
 }
 
