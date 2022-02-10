@@ -79,11 +79,20 @@ export async function reindexAllEntries(siteId: VNID) {
     });
     await setCurrentReIndexJobForSite(siteId, newCollectionName);
 
+    const totalCount = await graph.read(async (tx) =>
+        tx.queryOne(C`
+        MATCH (site:${Site} {id: ${siteId}})
+        MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+    `.RETURN({ "count(entry)": Field.Int }))
+    );
+
+    const startTime = performance.now();
+
     try {
         // For each entry, reindex the entry
         await graph.read(async (tx) => {
-            // Iterate over entries in chunks of 500
-            const pageSize = 500;
+            // Iterate over entries in chunks of 25
+            const pageSize = 25;
             let offset = 0;
             while (true) {
                 const entriesChunk = await tx.query(C`
@@ -105,7 +114,12 @@ export async function reindexAllEntries(siteId: VNID) {
                     throw err;
                 }
 
-                log.info(`Re-indexed ${entriesChunk.length} entries...`);
+                const totalTime = performance.now();
+                log.info(
+                    `Re-indexed ${offset + entriesChunk.length} of ~${totalCount["count(entry)"]} entries (${
+                        ((totalTime - startTime) / 1000).toFixed(1)
+                    }s elapsed)...`,
+                );
                 if (entriesChunk.length < pageSize) {
                     break;
                 } else {
@@ -124,6 +138,6 @@ export async function reindexAllEntries(siteId: VNID) {
         throw err;
     }
     // Reindex complete! Update the alias to point to the new collection.
-    client.aliases().upsert(siteAliasCollection, { collection_name: newCollectionName });
+    await client.aliases().upsert(siteAliasCollection, { collection_name: newCollectionName });
     log.info(`Completed reindex for site ${siteId}, using new collection ${newCollectionName}`);
 }
