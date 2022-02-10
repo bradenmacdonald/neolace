@@ -446,7 +446,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
 
     let part = 1;
     const _pushEdits = async (edits: api.AnyContentEdit[], force = false) => {
-        if (edits.length > 100 || force) {
+        if (edits.length > 20 || force) {
             const {id: draftId} = await client.createDraft({title: `Import Part ${part++}`, description: "", edits}, {siteId});
             await client.acceptDraft(draftId, {siteId});
             edits.length = 0;
