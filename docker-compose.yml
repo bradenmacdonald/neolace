@@ -93,7 +93,7 @@ services:
   # TypeSense (search server)
   ################################################################
   search:
-    image: typesense/typesense:0.22.1
+    image: typesense/typesense:0.22.2
     ports:
       - 5556:8108
     command: >

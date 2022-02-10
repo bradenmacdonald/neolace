@@ -16,22 +16,18 @@ import { siteShortIdFromId } from "neolace/core/Site.ts";
 export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryIndexDocument> {
     // log.info(`Reindexing ${entryId} to ${collection}`);
     const graph = await getGraph();
-    const [entryData, properties, features] = await Promise.all([
-        // entryData:
-        graph.read((tx) =>
-            tx.pullOne(Entry, (e) =>
-                e
-                    .id
-                    .name
-                    .description
-                    .friendlyId()
-                    .type((et) => et.id.name.site((s) => s.id)), { key: entryId })
-        ),
-        // properties:
-        graph.read((tx) => getEntryProperties(entryId, { tx, limit: 1_000 })),
+    const { entryData, properties, features } = await graph.read(async (tx) => ({
+        entryData: await tx.pullOne(Entry, (e) =>
+            e
+                .id
+                .name
+                .description
+                .friendlyId()
+                .type((et) => et.id.name.site((s) => s.id)), { key: entryId }),
+        properties: await getEntryProperties(entryId, { tx, limit: 1_000 }),
         // features (e.g. article text):
-        graph.read((tx) => getEntryFeaturesData(entryId, { tx })),
-    ]);
+        features: await getEntryFeaturesData(entryId, { tx }),
+    }));
 
     const siteId = entryData.type!.site!.id;
     const maxValuesPerProp = 100;
