@@ -86,9 +86,46 @@ export async function getEntryProperties<TC extends true | undefined = undefined
         MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
 
         CALL {
-            // Fetch all property values attached to this entry or its ancestors (for properties that allow inheritance)
+            ///////////////////////////////////////////////////////////////////////////////////
+            // PART 1: Fetch all non-slot property values attached to this entry or its ancestors (for properties that allow inheritance)
+            ///////////////////////////////////////////////////////////////////////////////////
             WITH entry, entryType
-            MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop),
+
+            // See query below (MATCH in Part 2) to understand this path:
+            MATCH path = allShortestPaths((entry)-[:${Entry.rel.IS_A}|${Entry.rel.PROP_FACT}|${PropertyFact.rel.FOR_PROP}*1..50]->(prop {enableSlots: false})),
+                (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+                ${options.specificPropertyId ? C`WHERE prop.id = ${options.specificPropertyId}` : C``}
+            WITH entry, path, prop
+            WHERE
+                // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
+                (length(path) = 2 OR prop.inheritable = true)
+            AND
+                (prop.importance <= ${maxImportance})
+            
+            WITH prop, length(path) AS distance, nodes(path)[length(path) - 2] AS ancestor, nodes(path)[length(path) - 1] AS pf
+
+            RETURN {
+                property: prop {.id, .name, .importance, default: null, .displayAs},
+                facts: collect({
+                    factId: pf.id,
+                    valueExpression: pf.valueExpression,
+                    note: pf.note,
+                    rank: pf.rank,
+                    slot: pf.slot,
+                    source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
+                })
+            } AS propertyData
+
+            
+            ///////////////////////////////////////////////////////////////////////////////////
+            // PART 2: Fetch all slot-enabled property values attached to this entry or its ancestors (for properties that allow inheritance)
+            ///////////////////////////////////////////////////////////////////////////////////
+
+            // This query is very slow, so it's only used for properties that strictly require slots.
+            
+            UNION ALL // ALL because it's presumably faster than DISTINCT and we have no overlap here
+            WITH entry, entryType
+            MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop {enableSlots: true}),
                 (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
                 ${options.specificPropertyId ? C`WHERE prop.id = ${options.specificPropertyId}` : C``}
             WITH entry, path, ancestor, pf, prop
@@ -101,7 +138,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
             // We use minDistance below so that for each inherited property, we only get the
             // values set by the closest ancestor. e.g. if grandparent->parent->child each
             // have birthDate, child's birthDate will take priority and grandparent/parent's won't be returned
-            WITH entry, prop, CASE WHEN prop.enableSlots THEN pf.slot ELSE null END AS slot, min(length(path)) AS minDistance, collect({pf: pf, ancestor: ancestor, distance: length(path)}) AS facts
+            WITH entry, prop, pf.slot AS slot, min(length(path)) AS minDistance, collect({pf: pf, ancestor: ancestor, distance: length(path)}) AS facts
             // Now filter to only have values from the closest ancestor:
             WITH entry, prop, minDistance, facts
             UNWIND facts as f
@@ -119,10 +156,12 @@ export async function getEntryProperties<TC extends true | undefined = undefined
                     source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
                 })
             } AS propertyData
-
+            
+            ///////////////////////////////////////////////////////////////////////////////////
+            // PART 3: Find any properties which aren't explicitly set on the entry but which have default values.
+            ///////////////////////////////////////////////////////////////////////////////////
+            
             UNION ALL // ALL because it's presumably faster than DISTINCT and we have no overlap here
-
-            // Also find any properties which aren't explicitly set on the entry but which have default values.
             WITH entry, entryType
 
             MATCH (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
