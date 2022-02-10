@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import * as log from "std/log/mod.ts";
 import {
     AddPropertyValue,
     CreateEntry,
@@ -44,8 +43,6 @@ export const ApplyEdits = defineAction({
             const editTypeDefinition = getEditType(edit.code);
             const description = editTypeDefinition.describe(edit.data);
             descriptions.push(description);
-
-            log.info(`Applying Draft (${edit.code}): ${description}`);
 
             switch (edit.code) {
                 case CreateEntry.code: { // Create a new Entry of a specific EntryType

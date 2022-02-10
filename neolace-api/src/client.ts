@@ -84,17 +84,13 @@ export class NeolaceApiClient {
         if (response.status < 200 || response.status >= 300) {
             // See if we can decode the error details (JSON):
             let errorData: any = {};
-            let errorDataFormatted = "(invalid response - not JSON)";
             try {
                 errorData = await response.json();
-                errorDataFormatted = JSON.stringify(errorData);
             } catch {/* couldn't parse this as JSON... */}
 
             if (!errorData.message) {
                 errorData = {message: typeof errorData === "string" ? errorData : response.statusText};
             }
-
-            console.error(`${path} API call failed (${response.status} ${response.statusText}). Response from server: \n${errorDataFormatted}`);
 
             if (response.status === 401) {
                 throw new errors.NotAuthenticated();
