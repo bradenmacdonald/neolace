@@ -224,6 +224,7 @@ group(import.meta, () => {
             width: 100,
             height: 50,
             blurHash: "LEHV6nWB2yk8pyo0adR*.7kCMdnj",
+            borderColor: undefined,
         });
     });
 });

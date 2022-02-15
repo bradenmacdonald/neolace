@@ -67,6 +67,8 @@ export const EntryFeaturesSchema = Schema({
         width: number.strictOptional(),
         height: number.strictOptional(),
         blurHash: string.strictOptional(),
+        /** RGBA array of values from 0-255 */
+        borderColor: array.of(number).strictOptional(),
     }).strictOptional(),
 
     HeroImage: Schema({
@@ -77,6 +79,8 @@ export const EntryFeaturesSchema = Schema({
         width: number.strictOptional(),
         height: number.strictOptional(),
         blurHash: string.strictOptional(),
+        /** RGBA array of values from 0-255 */
+        borderColor: array.of(number).strictOptional(),
     }).strictOptional(),
 });
 export type EntryFeaturesData = Type<typeof EntryFeaturesSchema>;

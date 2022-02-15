@@ -11,6 +11,7 @@ const thisFolder: string = (() => {
 
 export const files = Object.freeze({
     ponderosaPineImg: { id: VNID("_buzaxyrAoq6yEFvu0zX2J"), path: "images/img-lassen-ponderosa.webp" },
+    leafOnWhite: { id: VNID("_69fvlItXM0uyIvfnmolVqB"), path: "images/leaf-on-white.png" },
 });
 
 export function getFullPath(path: string) {

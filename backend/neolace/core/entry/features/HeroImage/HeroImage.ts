@@ -138,6 +138,7 @@ export const HeroImageFeature = EntryTypeFeature({
             width: imageData.width,
             height: imageData.height,
             blurHash: imageData.blurHash,
+            borderColor: imageData.borderColor,
         };
     },
 });

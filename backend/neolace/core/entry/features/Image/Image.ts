@@ -102,6 +102,14 @@ export const ImageFeature = EntryTypeFeature({
             width: "width" in dataFile.metadata ? dataFile.metadata.width : undefined,
             height: "height" in dataFile.metadata ? dataFile.metadata.height : undefined,
             blurHash: "blurHash" in dataFile.metadata ? dataFile.metadata.blurHash : undefined,
+            borderColor: "borderColor" in dataFile.metadata && dataFile.metadata.borderColor !== undefined
+                ? [
+                    dataFile.metadata.borderColor & 0xff,
+                    (dataFile.metadata.borderColor >> 8) & 0xff,
+                    (dataFile.metadata.borderColor >> 16) & 0xff,
+                    (dataFile.metadata.borderColor >> 24) & 0xff,
+                ]
+                : undefined,
         };
     },
 });

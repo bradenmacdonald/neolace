@@ -8,6 +8,8 @@ export const ImageMetadataSchema = Schema({
     width: number,
     height: number,
     blurHash: string,
+    /** Border color as an RGBA 32-bit integer */
+    borderColor: number.strictOptional(),
 });
 export type ImageMetadata = Type<typeof ImageMetadataSchema>;
 
@@ -34,6 +36,7 @@ export async function detectImageMetadata(encodedImageData: Uint8Array): Promise
         4,
         3,
     );
+    const borderColor = detectBorderColor(imageData.data, imageData.width, imageData.height);
     return {
         type: "image",
         width: imageData.width,
@@ -41,5 +44,44 @@ export async function detectImageMetadata(encodedImageData: Uint8Array): Promise
         // A blurHash is a a short string that allows clients to render a blurry placeholder for the image.
         // See https://blurha.sh/ . We use a blurhash with 4x3 components.
         blurHash,
+        borderColor,
     };
+}
+
+/**
+ * Detect if all of the outer pixels of the image are the same color, and if so return that color as a 32-bit RGBA value
+ * @param rgbaData Decoded image pixels, as an array of 32-bit RGBA values
+ * @param width Width of the image in pixels
+ * @param height Height of the image in pixels
+ * @returns
+ */
+function detectBorderColor(rgbaData: Uint8Array, width: number, height: number): number | undefined {
+    // Convert the array to a 32-bit view of the array so we can easily compare one pixel at a time instead of one byte at a time.
+    const array32 = new Uint32Array(rgbaData.buffer);
+    const firstColor = array32[0];
+    // Scan along the top row:
+    for (let x = 0, y = 0; x < width; x++) {
+        if (array32[x + width * y] !== firstColor) {
+            return undefined;
+        }
+    }
+    // Scan along the left side:
+    for (let x = 0, y = 0; y < height; y++) {
+        if (array32[x + width * y] !== firstColor) {
+            return undefined;
+        }
+    }
+    // Scan along the right side:
+    for (let x = width - 1, y = 0; y < height; y++) {
+        if (array32[x + width * y] !== firstColor) {
+            return undefined;
+        }
+    }
+    // Scan along the bottom row:
+    for (let x = height - 1, y = 0; x < width; x++) {
+        if (array32[x + width * y] !== firstColor) {
+            return undefined;
+        }
+    }
+    return firstColor;
 }

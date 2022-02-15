@@ -16,4 +16,14 @@ group(import.meta, () => {
         assertEquals(metadata.type, "image");
         assertEquals(metadata.blurHash, "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7");
     });
+    test("it can detect the border color of an an image", async () => {
+        // This image has different colors of pixels along its border
+        const metadata1 = await detectImageMetadata(await Deno.readFile(getFullPath(files.ponderosaPineImg.path)));
+        assertEquals(metadata1.type, "image");
+        assertEquals(metadata1.borderColor, undefined);
+        // This image has white pixels all the way around:
+        const metadata2 = await detectImageMetadata(await Deno.readFile(getFullPath(files.leafOnWhite.path)));
+        assertEquals(metadata2.type, "image");
+        assertEquals(metadata2.borderColor, 0xffffffff);
+    });
 });
