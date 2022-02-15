@@ -37,6 +37,7 @@ group(import.meta, () => {
                 format: "thumb", // default format
                 imageUrl: result.data.imageUrl,
                 blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
+                borderColor: undefined,
                 size: 1581898,
                 sizing: ImageSizingMode.Cover,
                 width: 3504,

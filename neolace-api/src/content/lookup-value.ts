@@ -54,6 +54,7 @@ export interface ImageValue extends LookupValue {
     width?: number;
     height?: number;
     blurHash?: string;
+    borderColor?: [R: number, G: number, B: number, A: number];
     // Should this image be a link?
     link?: EntryValue|StringValue;
     // How the image should be displayed:

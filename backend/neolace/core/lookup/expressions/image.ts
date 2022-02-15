@@ -98,8 +98,19 @@ export class Image extends LookupExpression {
         if (this.maxWidthExpr) {
             maxWidth = Number((await this.maxWidthExpr.getValueAs(IntegerValue, context)).value);
         }
+        // Tell TypeScript that the border color is a 4-tuple, not just number[]
+        const borderColor = imageData.borderColor as [number, number, number, number] | undefined;
 
-        return new ImageValue({ ...imageData, format, entryId: entry.id, altText, caption, link, maxWidth });
+        return new ImageValue({
+            ...imageData,
+            borderColor,
+            format,
+            entryId: entry.id,
+            altText,
+            caption,
+            link,
+            maxWidth,
+        });
     }
 
     public toString(): string {

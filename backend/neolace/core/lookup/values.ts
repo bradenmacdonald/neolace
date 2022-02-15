@@ -547,6 +547,7 @@ interface ImageData {
     width?: number;
     height?: number;
     blurHash?: string;
+    borderColor?: [R: number, G: number, B: number, A: number];
     // Should this image be a link?
     link?: EntryValue | StringValue;
     // How the image should be displayed:
@@ -581,6 +582,7 @@ export class ImageValue extends ConcreteValue {
             width: this.data.width,
             height: this.data.height,
             blurHash: this.data.blurHash,
+            borderColor: this.data.borderColor,
             format: this.data.format,
             link: this.data.link?.toJSON() as api.StringValue | api.EntryValue | undefined,
             maxWidth: this.data.maxWidth,
