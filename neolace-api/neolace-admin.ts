@@ -400,7 +400,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
             folder: `${sourceFolder}/` + inverseMap[et.id].substring(4).toLowerCase(), // Convert the friendly name from "_ET_SOMETHING" to "something"
             entryType: et,
         })).filter(
-            (et) => Deno.statSync(et.folder).isDirectory
+            (et) => { try { return Deno.statSync(et.folder).isDirectory; } catch { return false; } }
         );
 
     // Iterate over the entries by reading the filesystem. We avoid reading all entries into memory at once in case
