@@ -97,3 +97,12 @@ export async function uploadFileToObjStore(
         metadata,
     };
 }
+
+export async function getSignedDownloadUrl(filename: string, displayFilename?: string): Promise<string> {
+    return objStoreClient.presignedGetObject(
+        filename,
+        displayFilename
+            ? { responseParams: { "response-content-disposition": `inline; filename=${displayFilename}` } }
+            : {},
+    );
+}

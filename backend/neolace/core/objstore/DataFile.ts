@@ -12,6 +12,7 @@ import {
 } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
 import { FileMetadata, FileMetadataSchema } from "./detect-metadata.ts";
+import { getSignedDownloadUrl } from "./objstore.ts";
 
 /**
  * A data file uploaded to Neolace, such as an image, PDF, CSV file, etc.
@@ -103,7 +104,7 @@ export function publicUrl(): DerivedProperty<string> {
         DataFile,
         (df) => df.filename,
         (data) => {
-            return `${config.objStorePublicUrlPrefix}/${data.filename}`; // This is duplicated in lookup/expressions/files.ts until we can refactor vertex framework
+            return `${config.objStorePublicUrlPrefix}/${data.filename}`; // This doesn't use publicUrlForDataFile below because this is synchronous.
         },
     );
 }
@@ -119,4 +120,17 @@ export function metadata(): DerivedProperty<FileMetadata> {
             return JSON.parse(data.metadataJSON ?? "{}");
         },
     );
+}
+
+/**
+ * Get the public URL to download a file from object storage.
+ * @param filename The underlying filename of the DataFile object
+ * @param displayFilename The friendly filename that users should see if they save the file
+ */
+export async function publicUrlForDataFile(filename: string, displayFilename?: string): Promise<string> {
+    if (!displayFilename) {
+        return `${config.objStorePublicUrlPrefix}/${filename}`;
+    } else {
+        return getSignedDownloadUrl(filename, displayFilename);
+    }
 }

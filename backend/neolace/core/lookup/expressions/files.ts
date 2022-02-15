@@ -5,8 +5,7 @@ import { LookupEvaluationError } from "../errors.ts";
 import { LookupContext } from "../context.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { FilesData } from "neolace/core/entry/features/Files/FilesData.ts";
-import { DataFile } from "neolace/core/objstore/DataFile.ts";
-import { config } from "neolace/app/config.ts";
+import { DataFile, publicUrlForDataFile } from "neolace/core/objstore/DataFile.ts";
 
 /**
  * files([entry or entries])
@@ -55,22 +54,18 @@ export class Files extends LookupExpression {
                 "contentType": Field.String,
             }));
 
-            return records.map((r) =>
-                new FileValue(
-                    r.displayFilename,
-                    // TODO: this logic should be centralized; it's shared here and in DataFile.ts
-                    // Content-Disposition is only working with MinIO (and seems to be required?) but not with BackBlaze
-                    `${config.objStorePublicUrlPrefix}/${r.objstoreFilename}${
-                        config.objStorePublicUrlPrefix.includes("backblazeb2")
-                            ? ""
-                            : `?response-content-disposition=${
-                                encodeURIComponent(`inline; filename=${r.displayFilename}`)
-                            }`
-                    }`,
-                    r.contentType,
-                    r.size,
-                )
-            );
+            const result: FileValue[] = [];
+            for (const r of records) {
+                result.push(
+                    new FileValue(
+                        r.displayFilename,
+                        await publicUrlForDataFile(r.objstoreFilename, r.displayFilename),
+                        r.contentType,
+                        r.size,
+                    ),
+                );
+            }
+            return result;
         });
     }
 

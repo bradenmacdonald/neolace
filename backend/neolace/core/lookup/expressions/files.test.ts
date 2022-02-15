@@ -1,5 +1,5 @@
 import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
-import { assertEquals, assertRejects, beforeAll, group, setTestIsolation, test } from "neolace/lib/tests.ts";
+import { assert, assertEquals, assertRejects, beforeAll, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { EntryValue, FileValue, IntegerValue, PageValue } from "../values.ts";
 import { Files } from "./files.ts";
@@ -111,20 +111,21 @@ group(import.meta, () => {
 
             const result = await evalExpression(expression);
 
+            assert(result instanceof PageValue);
+            assert(result.values[0].url.startsWith(firstPdf.url));
+            assert(result.values[1].url.startsWith(secondPdf.url));
             assertEquals(
                 result,
                 new PageValue([
                     new FileValue(
                         "first.pdf",
-                        firstPdf.url +
-                            `?response-content-disposition=${encodeURIComponent(`inline; filename=first.pdf`)}`,
+                        result.values[0].url,
                         "application/pdf",
                         firstPdf.size,
                     ),
                     new FileValue(
                         "second.pdf",
-                        secondPdf.url +
-                            `?response-content-disposition=${encodeURIComponent(`inline; filename=second.pdf`)}`,
+                        result.values[1].url,
                         "application/pdf",
                         secondPdf.size,
                     ),
