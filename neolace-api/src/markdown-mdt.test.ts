@@ -88,7 +88,7 @@ Deno.test("MDT - heading IDs", async (t) => {
 Deno.test("Subscript/superscript", () => {
 
     assertEquals(
-        tokenizeInlineMDT(`H<sub>2</sub>O`),
+        tokenizeInlineMDT(`H~2~O`),
         inline(
             text("H"),
             {type: "sub", children: [text("2")]},
@@ -97,7 +97,7 @@ Deno.test("Subscript/superscript", () => {
     );
 
     assertEquals(
-        tokenizeInlineMDT(`E = mc<sup>2</sup>`),
+        tokenizeInlineMDT(`E = mc^2^`),
         inline(
             text("E = mc"),
             {type: "sup", children: [text("2")]},
@@ -106,9 +106,9 @@ Deno.test("Subscript/superscript", () => {
 
     // Mismatched tags don't get parsed
     assertEquals(
-        tokenizeInlineMDT(`These are <sub>mismatched</sup>`),
+        tokenizeInlineMDT(`These are ~mismatched^`),
         inline(
-            text("These are <sub>mismatched</sup>"),
+            text("These are ~mismatched^"),
         ),
     );
 
