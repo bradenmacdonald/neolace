@@ -412,12 +412,17 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                 if (!file.name.endsWith(".md")) {
                     continue;
                 }
-                const fileContents = await Deno.readTextFile(`${folder}/${file.name}`);
-                const fileParts = fileContents.split(/^---$/m, 3);
-                // deno-lint-ignore no-explicit-any
-                const metadata = parseYaml(fileParts[1]) as Record<string, any>;
-                const articleMD = fileParts[2].trim();
-                yield {metadata, articleMD, entryType, friendlyId: file.name.substring(0, file.name.length - 3), folder};
+                try {
+                    const fileContents = await Deno.readTextFile(`${folder}/${file.name}`);
+                    const fileParts = fileContents.split(/^---$/m, 3);
+                    // deno-lint-ignore no-explicit-any
+                    const metadata = parseYaml(fileParts[1]) as Record<string, any>;
+                    const articleMD = fileParts[2].trim();
+                    yield {metadata, articleMD, entryType, friendlyId: file.name.substring(0, file.name.length - 3), folder};
+                } catch (err) {
+                    log.error(`Error while trying to parse file ${folder}/${file.name}`);
+                    throw err;
+                }
             }
         }
     }
@@ -598,13 +603,13 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
  * though, so that if importing back to the same site, we can avoid changing the VNIDs.
  */
 function replaceIdsInMarkdownAndLookupExpressions(idMap: Record<string, string>, markdownOrLookup: string) {
-    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/entry\/([0-9A-Za-z_\-]+)\]\]/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/entry\/([0-9A-Za-z_ñ\-]+)\]\]/mg, (_m, id) => {
         return `[[/entry/${ idMap[id] ?? id }]]`;
     });
-    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/prop\/([0-9A-Za-z_\-]+)\]\]/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/prop\/([0-9A-Za-z_ñ\-]+)\]\]/mg, (_m, id) => {
         return `[[/prop/${ idMap[id] ?? id }]]`;
     });
-    markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/([0-9A-Za-z_\-]+)\)/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/([0-9A-Za-z_ñ\-]+)\)/mg, (_m, id) => {
         return `](/entry/${ idMap[id] ?? id })`;
     });
     return markdownOrLookup;
