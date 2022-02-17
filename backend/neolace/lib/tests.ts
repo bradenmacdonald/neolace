@@ -74,7 +74,7 @@ try {
 } catch (err) {
     log.error(err);
     log.info(
-        "Please run 'ENV_TYPE=test deno run --import-map=import_map.json --allow-write --allow-net --unstable --allow-env neolace/scripts/test-setup.ts'",
+        "Please run 'ENV_TYPE=test deno run --import-map=import_map.json --allow-write --allow-net --allow-env neolace/scripts/test-setup.ts'",
     );
     Deno.exit(1);
 }
