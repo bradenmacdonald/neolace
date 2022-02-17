@@ -26,11 +26,15 @@ const parser = markdown("commonmark", {
 
 export interface Options {
     inline?: boolean;
+    /** If collectFootnotes is disabled, only inline footnotes like ^[this] are supported */
+    collectFootnotes?: boolean;
 }
 
 
 export function tokenizeMDT(mdtString: string, options: Options = {}): RootNode {
-    const env = {};
+    const env = {
+        collectFootnotes: options.collectFootnotes ?? (!options.inline),
+    };
     const tokens = options.inline ? parser.parseInline(mdtString, env) : parser.parse(mdtString, env);
 
     return buildAST(tokens);

@@ -63,7 +63,7 @@ interface SoftBreakNode {
 interface HardBreakNode {
     type: "hardbreak";
 }
-/** A reference to a footnote */
+/** A reference to a footnote, when collectFootnotes is enabled */
 interface FootnoteRefNode {
     type: "footnote_ref";
     /** The displayed text for this reference, e.g. [1] */
@@ -71,6 +71,11 @@ interface FootnoteRefNode {
     footnoteId: number;
     /** The ID of this reference to the footnote. If there are multiple references to the same footnote, they'll have different anchorIds. */
     anchorId: string;
+}
+/** An inline footnote; only used when collectFootnotes is NOT enabled */
+interface InlineFootnoteNode {
+    type: "footnote_inline";
+    children: AnyInlineNode[];
 }
 
 
@@ -87,6 +92,7 @@ export type AnyInlineNode = (
     | HardBreakNode
     | StrikeThroughNode
     | FootnoteRefNode
+    | InlineFootnoteNode
 );
 
 ///////// Block Nodes
@@ -138,7 +144,11 @@ interface ListItemNode extends BlockNode {
 interface HorizontalRuleNode extends BlockNode {
     type: "hr";
 }
-interface FootnoteNode extends BlockNode {
+/**
+ * When in block mode with collectFootnotes = true, the resulting
+ * document.footnotes will be an array of these nodes.
+ */
+export interface FootnoteNode extends BlockNode {
     type: "footnote";
     id: number;
     label?: string;

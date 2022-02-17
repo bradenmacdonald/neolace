@@ -5,6 +5,7 @@ import { EntryLink } from 'components/EntryLink';
 import { MDT } from 'neolace-api';
 import { VNID } from 'neolace-api/types.ts';
 import { LookupValue } from 'components/LookupValue';
+import { Tooltip } from 'components/widgets/tooltip';
 
 
 /**
@@ -117,6 +118,14 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode, context: 
             return <sub key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</sub>;
         case "sup":
             return <sup key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</sup>;
+        case "footnote_ref":
+            return <sup key={key}><a href={`#footnote-${node.footnoteId}`}>{node.referenceText}</a></sup>;
+        case "footnote_inline":
+            return <Tooltip key={key} tooltipContent={<>
+                <p className="text-sm">{node.children.map(child => inlineNodeToComponent(child, context))}</p>
+            </>}>
+                {attribs => <>{' '}<a href="#" {...attribs}><sup>(*)</sup></a></>}
+            </Tooltip>
         default:
             return <React.Fragment key={key}> [Unknown MDT Node] </React.Fragment>;
     }

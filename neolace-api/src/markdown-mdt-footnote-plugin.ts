@@ -20,6 +20,7 @@ export function FootnotePlugin(md: MarkdownIt): void {
 
     // Process footnote block definition
     const footnote_def: ParserBlock.RuleBlock = (state, startLine, endLine, silent) => {
+        if (!state.env.collectFootnotes) return false;  // Only inline footnotes are allowed, not these references that would be moved to the end of the document.
         const start = state.bMarks[startLine] + state.tShift[startLine];
         const max = state.eMarks[startLine];
 
@@ -134,13 +135,25 @@ export function FootnotePlugin(md: MarkdownIt): void {
                 tokens,
             );
 
-            const token = state.push("footnote_ref", "", 0);
-            token.meta = { id: footnoteId };
+            if (state.env.collectFootnotes) {
+                // Just put a "footnote_ref" token, which refers to the footnote contents.
+                // We put the footnote contents into state.env.footnotes.list, and the footnote_tail
+                // rule will add them to the end of the document.
+                const token = state.push("footnote_ref", "", 0);
+                token.meta = { id: footnoteId };
 
-            state.env.footnotes.list[footnoteId] = {
-                content: state.src.slice(labelStart, labelEnd),
-                tokens: tokens,
-            };
+                state.env.footnotes.list[footnoteId] = {
+                    content: state.src.slice(labelStart, labelEnd),
+                    tokens: tokens,
+                };
+            } else {
+                // We're in an inline context where it doesn't make sense to number footnotes and collect them at
+                // the end of the document. So just summarize this footnote right here.
+                state.push("footnote_inline_open", "", 1);
+                state.tokens.push(...tokens);
+                state.push("footnote_inline_close", "", -1);
+            }
+
         }
 
         state.pos = labelEnd + 1;
@@ -150,6 +163,8 @@ export function FootnotePlugin(md: MarkdownIt): void {
 
     /** Process footnote references ([^...])  */
     const footnote_ref: ParserInline.RuleInline = (state, silent) => {
+        if (!state.env.collectFootnotes) return false;  // Only inline footnotes are allowed, not these references that would be moved to the end of the document.
+
         const max = state.posMax;
         const start = state.pos;
 
@@ -207,6 +222,7 @@ export function FootnotePlugin(md: MarkdownIt): void {
         let insideRef = false;
         const refTokens: Record<string, Token[]> = {};
 
+        if (!state.env.collectFootnotes) return;  // Only inline footnotes are allowed, not moved to the end of the document.
         if (!state.env.footnotes) return;
 
         state.tokens = state.tokens.filter(function (tok: Token) {
