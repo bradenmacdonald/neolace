@@ -101,8 +101,9 @@ function buildAST(tokens: Token[]): RootNode {
             }
             currNode = poppedNode;
         } else if (token.type === "footnote_anchor") {
-            // We move footnote anchors to the parent "footnote" node.
-            const footnoteNode = stack[stack.length - 1];
+            // We move footnote anchors to the parent "footnote" node, which is either the parent of the current paragraph
+            // node, or sometimes the direct parent, in the case of an ordered list in a footnote.
+            const footnoteNode = currNode.type === "footnote" ? currNode : stack[stack.length - 1];
             if (footnoteNode.type !== "footnote") {
                 throw new Error(`Internal error placing footnote node, found ${footnoteNode.type}`);
             }
