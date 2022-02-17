@@ -1,4 +1,4 @@
-import React, { OlHTMLAttributes } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { api } from 'lib/api-client';
 import { EntryLink } from 'components/EntryLink';
@@ -6,6 +6,7 @@ import { MDT } from 'neolace-api';
 import { VNID } from 'neolace-api/types.ts';
 import { LookupValue } from 'components/LookupValue';
 import { Tooltip } from 'components/widgets/tooltip';
+import { FormattedMessage } from 'react-intl';
 
 
 /**
@@ -151,6 +152,16 @@ export const RenderMDT: React.FunctionComponent<BlockProps> = (props) => {
 
     return <>
         {document.children.map(node => nodeToComponent(node, props.context))}
+        {document.footnotes?
+            <div className="hidden print:block text-sm">
+                {React.createElement(`h${1 + props.context.headingShift}`, {id: `footnotes`}, <>
+                    <FormattedMessage id="component.markdown.footnotes" defaultMessage="Footnotes"/>
+                </>)}
+                <ol>
+                    {document.footnotes.map(node => nodeToComponent(node, props.context))}
+                </ol>
+            </div>
+        : null}
     </>;
 };
 
@@ -206,6 +217,11 @@ function nodeToComponent(node: MDT.Node, context: MDTContext): React.ReactElemen
         }
         case "blockquote": {
             return <blockquote key={key}>{node.children.map(child => nodeToComponent(child, context))}</blockquote>
+        }
+        case "footnote": {
+            return <li key={key} value={node.id + 1}>
+                {node.children.map(child => nodeToComponent(child, context))}
+            </li>
         }
         default:
             //deno-lint-ignore no-explicit-any

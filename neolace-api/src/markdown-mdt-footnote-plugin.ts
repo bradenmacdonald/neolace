@@ -252,6 +252,7 @@ export function FootnotePlugin(md: MarkdownIt): void {
         let tokens: Token[] = [];
         for (let i = 0, l = list.length; i < l; i++) {
             const openToken = new state.Token("footnote_open", "", 1);
+            openToken.block = true;
             openToken.meta = { id: i, label: list[i].label };
             state.tokens.push(openToken);
 

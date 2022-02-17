@@ -291,10 +291,10 @@ This mentions the same footnote again[^ref1].
                     )),
                 ],
                 footnotes: [
-                    {type: "footnote", id: 0, anchors: ["0"], children: [
+                    {type: "footnote", id: 0, anchors: ["0"], block: true, children: [
                         paragraph(inlineText("here is the footnote message")),
                     ]},
-                    {type: "footnote", id: 1, label: "ref1", anchors: ["1", "1.1"], children: [
+                    {type: "footnote", id: 1, label: "ref1", anchors: ["1", "1.1"], block: true, children: [
                         paragraph(inlineText("Here is the block contents of ref1.")),
                         paragraph(inlineText("Including a second paragraph.")),
                     ]},
@@ -344,6 +344,7 @@ This mentions the same footnote again[^ref1].
                 footnotes: [
                     {
                         type: "footnote",
+                        block: true,
                         id: 0,
                         anchors: ["0"],
                         children: [paragraph(inlineText("inline footnote"))],
