@@ -2,12 +2,13 @@ import React from 'react';
 import { api } from 'lib/api-client';
 import { FormattedListParts, FormattedMessage } from 'react-intl';
 
-import { Tooltip } from 'components/widgets/tooltip';
+import { Tooltip } from 'components/widgets/Tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { EntryLink } from './EntryLink';
 import { LookupImage } from './LookupImage';
 import { FormattedFileSize } from './widgets/FormattedFileSize';
 import { SiteContext } from './SiteContext';
+import { HoverClickNote } from './widgets/HoverClickNote';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -118,11 +119,9 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             if (value.annotations.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
                 return <>
                     <LookupValue value={value.value} mdtContext={props.mdtContext} />
-                    <Tooltip tooltipContent={<>
+                    <HoverClickNote>
                         <p className="text-sm"><InlineMDT mdt={value.annotations.note.value} context={props.mdtContext} /></p>
-                    </>}>
-                        {attribs => <>{' '}<span {...attribs}>(*)</span></>}
-                    </Tooltip>
+                    </HoverClickNote>
                 </>;
             }
             return <LookupValue value={value.value} mdtContext={props.mdtContext} />
