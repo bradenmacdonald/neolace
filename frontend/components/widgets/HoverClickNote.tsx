@@ -31,6 +31,6 @@ export const HoverClickNote: React.FunctionComponent<Props> = (props) => {
     );
 
     return <Tooltip tooltipContent={props.children} forceVisible={isClickedOpen} onClickOutsideTooltip={handleClickOutside}>
-        {attribs => <a href="#" tabIndex={0} {...attribs} className="ml-[3px]" style={isClickedOpen ? {color: "inherit", textDecoration: "none", cursor: "default"} : {}} onClick={handleClick}>{superscript ? <sup>{displayText}</sup> : displayText}</a>}
+        {attribs => <a href="#" {...attribs} className="ml-[3px]" style={isClickedOpen ? {color: "inherit", textDecoration: "none", cursor: "default"} : {}} onClick={handleClick}>{superscript ? <sup>{displayText}</sup> : displayText}</a>}
     </Tooltip>
 };
