@@ -6,6 +6,7 @@ export type { Node, InlineNode, RootNode, AnyInlineNode, AnyBlockNode }
 import { HeadingIdPlugin } from "./markdown-mdt-heading-id-plugin.ts";
 import { LookupExpressionPlugin } from "./markdown-mdt-lookup-plugin.ts";
 import { SubPlugin } from "./markdown-mdt-sub-plugin.ts";
+import { FootnotePlugin } from "./markdown-mdt-footnote-plugin.ts";
 
 const parser = markdown("commonmark", {
     breaks: false,  // Don't convert \n in paragraphs into <br>
@@ -19,16 +20,21 @@ const parser = markdown("commonmark", {
 .enable("table") // Enable tables (GitHub-style)
 .use(HeadingIdPlugin) // Give each heading an ID
 .use(LookupExpressionPlugin) // Parse { lookup expressions }
-.use(SubPlugin); // Allow use of <sub> and <sup> tags
+.use(SubPlugin) // Allow use of <sub> and <sup> tags
+.use(FootnotePlugin); // Allow footnotes of various forms
 
 
 export interface Options {
     inline?: boolean;
+    /** If collectFootnotes is disabled, only inline footnotes like ^[this] are supported */
+    collectFootnotes?: boolean;
 }
 
 
 export function tokenizeMDT(mdtString: string, options: Options = {}): RootNode {
-    const env = {};
+    const env = {
+        collectFootnotes: options.collectFootnotes ?? (!options.inline),
+    };
     const tokens = options.inline ? parser.parseInline(mdtString, env) : parser.parse(mdtString, env);
 
     return buildAST(tokens);
@@ -59,10 +65,19 @@ function buildAST(tokens: Token[]): RootNode {
     const stack: Node[] = [];
 
     const addChild = (node: Node): void => {
+        // Special case handling for footnotes, which live outside of the document:
+        if ((node as any).type === "footnotes") {  
+            root.footnotes = root.footnotes ?? [];
+            return;
+        } else if (node.type === "footnote") {
+            root.footnotes?.push(node);
+            return;
+        }
+        // Normal handling, to add a node to the current node:
         if ((currNode as any).children === undefined) {
             throw new Error(`Tried to add child ${JSON.stringify(node)} to node ${JSON.stringify(currNode)} which is missing .children = []`);
         }
-        (currNode as any).children?.push(node);
+        (currNode as any).children.push(node);
     }
 
     const pushTokens = (token: Token): void => {
@@ -85,6 +100,14 @@ function buildAST(tokens: Token[]): RootNode {
                 throw new Error("AST stack underflow.");
             }
             currNode = poppedNode;
+        } else if (token.type === "footnote_anchor") {
+            // We move footnote anchors to the parent "footnote" node.
+            const footnoteNode = stack[stack.length - 1];
+            if (footnoteNode.type !== "footnote") {
+                throw new Error(`Internal error placing footnote node, found ${footnoteNode.type}`);
+            }
+            const anchorId = token.meta.subId ? `${token.meta.id}.${token.meta.subId}` : String(token.meta.id);
+            footnoteNode.anchors.push(anchorId);
         } else if (token.nesting == 1) {
             const child = tokenToNode(token);
             addChild(child);
@@ -159,7 +182,7 @@ function tokenToNode(token: Token): Node {
             }
         }
         // Create "children" attribute for this node:
-        if (type !== "softbreak" && type !== "hardbreak" && type !== "hr") {
+        if (type !== "softbreak" && type !== "hardbreak" && type !== "hr" && type !== "footnote_ref") {
             node.children = [];
         }
     }
@@ -184,6 +207,16 @@ function tokenToNode(token: Token): Node {
         } else if (style === "text-align:center") {
             node.align = "center";
         }
+    } else if (type === "footnote_ref") {
+        node.footnoteId = token.meta.id;
+        node.referenceText = `[${node.footnoteId + 1}]`;
+        node.anchorId = token.meta.subId ? `${token.meta.id}.${token.meta.subId}` : String(token.meta.id);
+    } else if (type === "footnote") {
+        node.id = token.meta.id;
+        if (token.meta.label) {
+            node.label = token.meta.label;
+        }
+        node.anchors = [];
     }
 
     return node as Node;
@@ -209,6 +242,9 @@ export function renderInlineToHTML(inlineNode: Node): string {
             return;
         } else if (childNode.type === "lookup_inline") {
             html += "<code>" + parser.utils.escapeHtml(childNode.content) + "</code>";
+            return;
+        } else if (childNode.type === "footnote_ref") {
+            html += "*"; // TODO: better handling of footnote references
             return;
         }
         let start = "", end = "";
@@ -259,6 +295,9 @@ export function renderInlineToPlainText(inlineNode: Node, {lookupToText = (looku
             return;
         } else if (childNode.type === "softbreak" || childNode.type === "hardbreak") {
             text += "\n";
+            return;
+        } else if (childNode.type === "footnote_ref") {
+            text += "*"; // TODO: better handling of footnote references
             return;
         }
         // If we get here, this is a strong, em, sup, sub, s, or link; just render its text

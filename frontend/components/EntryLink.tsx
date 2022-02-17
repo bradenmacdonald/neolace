@@ -2,8 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { api } from 'lib/api-client';
 import { DEVELOPMENT_MODE } from 'lib/config';
-import { FormattedListParts, FormattedMessage } from 'react-intl';
-import { Tooltip } from 'components/widgets/tooltip';
+import { Tooltip } from 'components/widgets/Tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { SiteContext } from './SiteContext';
 

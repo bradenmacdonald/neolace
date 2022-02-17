@@ -1,11 +1,15 @@
-import React, { OlHTMLAttributes } from 'react';
+// deno-lint-ignore-file no-explicit-any
+import React from 'react';
 import Link from 'next/link';
 import { api } from 'lib/api-client';
 import { EntryLink } from 'components/EntryLink';
 import { MDT } from 'neolace-api';
 import { VNID } from 'neolace-api/types.ts';
 import { LookupValue } from 'components/LookupValue';
+import { FormattedMessage } from 'react-intl';
+import { HoverClickNote } from 'components/widgets/HoverClickNote';
 
+const footnotes = Symbol("footnotes");
 
 /**
  * Context data for rendering all the MDT (markdown) on a page.
@@ -19,19 +23,23 @@ export class MDTContext {
     readonly refCache: api.ReferenceCacheData;
     /** Decrease the size of the headings by this number (1 means <h1> becomes <h2>, etc.) */
     readonly headingShift: number;
+    readonly [footnotes]?: MDT.RootNode["footnotes"];
 
-    constructor(args: {entryId: VNID|undefined, refCache?: api.ReferenceCacheData, headingShift?: number}) {
+    constructor(args: {entryId: VNID|undefined, refCache?: api.ReferenceCacheData, headingShift?: number, [footnotes]?: MDT.RootNode["footnotes"]}) {
         this.entryId = args.entryId;
         // If no reference cache is available, create an empty one for consistency.
         this.refCache = args.refCache ?? {entries: {}, entryTypes: {}, properties: {}, lookups: []};
         this.headingShift = args.headingShift ?? 0;
+        this[footnotes] = args[footnotes];
     }
 
-    public childContextWith(args: {entryId?: VNID|undefined, headingShift?: number}) {
+    public childContextWith(args: {entryId?: VNID|undefined, headingShift?: number, [footnotes]?: MDT.RootNode["footnotes"]}) {
+        const entryId = 'entryId' in args ? args.entryId : this.entryId;
         return new MDTContext({
-            entryId: 'entryId' in args ? args.entryId : this.entryId,
+            entryId,
             refCache: this.refCache,
             headingShift: this.headingShift + (args.headingShift ?? 0),
+            [footnotes]: args[footnotes] ?? (entryId === this.entryId ? this[footnotes] : undefined),
         });
     }
 }
@@ -117,6 +125,16 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode, context: 
             return <sub key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</sub>;
         case "sup":
             return <sup key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</sup>;
+        case "footnote_ref": {
+            const footnoteParagraph = (context[footnotes] as any)[node.footnoteId].children[0];
+            return <HoverClickNote key={key} displayText={node.referenceText}>
+                <p className="text-sm">{footnoteParagraph.children.map((child: any) => inlineNodeToComponent(child, context))}</p>
+            </HoverClickNote>
+        }
+        case "footnote_inline":
+            return <HoverClickNote key={key}>
+                <p className="text-sm">{node.children.map(child => inlineNodeToComponent(child, context))}</p>
+            </HoverClickNote>
         default:
             return <React.Fragment key={key}> [Unknown MDT Node] </React.Fragment>;
     }
@@ -141,7 +159,18 @@ export const RenderMDT: React.FunctionComponent<BlockProps> = (props) => {
     ), [props.mdt]);
 
     return <>
-        {document.children.map(node => nodeToComponent(node, props.context))}
+        {document.children.map(node => nodeToComponent(node, props.context.childContextWith({[footnotes]: document.footnotes})))}
+        {document.footnotes?
+            // When viewing this document in print mode, display all the footnotes:
+            <div className="hidden print:block text-sm">
+                {React.createElement(`h${1 + props.context.headingShift}`, {id: `footnotes`}, <>
+                    <FormattedMessage id="component.markdown.footnotes" defaultMessage="Footnotes"/>
+                </>)}
+                <ol>
+                    {document.footnotes.map(node => nodeToComponent(node, props.context))}
+                </ol>
+            </div>
+        : null}
     </>;
 };
 
@@ -198,8 +227,12 @@ function nodeToComponent(node: MDT.Node, context: MDTContext): React.ReactElemen
         case "blockquote": {
             return <blockquote key={key}>{node.children.map(child => nodeToComponent(child, context))}</blockquote>
         }
+        case "footnote": {
+            return <li key={key} value={node.id + 1}>
+                {node.children.map(child => nodeToComponent(child, context))}
+            </li>
+        }
         default:
-            //deno-lint-ignore no-explicit-any
             return <React.Fragment key={key}>[ Unimplemented MDT node type: {(node as any).type} ]</React.Fragment>;
     }
 }

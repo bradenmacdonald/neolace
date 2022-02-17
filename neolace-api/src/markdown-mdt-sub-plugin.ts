@@ -1,99 +1,124 @@
 // deno-lint-ignore-file no-explicit-any
+// Subscript and Superscript plugins for markdown-it
+// Adapted from:
+// https://github.com/markdown-it/markdown-it-sub/
+// https://github.com/markdown-it/markdown-it-sup/
+// Both Copyright (c) 2014-2015 Vitaly Puzrin, Alex Kocharin. MIT Licensed.
+
 type MarkdownIt = any;
 import type { ParserInline } from "./deps/markdown-it/ParserInline.ts";
-import type { Token } from "./deps/markdown-it/Token.ts";
 
-// Character codes
-const enum CharCode {
-    LessThan = 0x3c,     // <
-    GreaterThan = 0x3e,  // >
-    Slash = 0x2f,        // /
-    B     = 0x42,
-    b     = 0x62,
-    P     = 0x50,
-    p     = 0x70,
-    S     = 0x53,
-    s     = 0x73,
-    U     = 0x55,
-    u     = 0x75,
-}
-const enum TokenType {
-    StartSup = "sup_open",
-    StartSub = "sub_open",
-    EndSup = "sup_close",
-    EndSub = "sub_close",
-}
+// same as UNESCAPE_MD_RE plus a space
+const UNESCAPE_RE = /\\([ \\!"#$%&'()*+,.\/:;<=>?@[\]^_`{|}~-])/g;
 
 /**
- * markdown-it plugin that allows <sub> and <sup> tags in the Markdown
+ * markdown-it plugin that allows ~subscript~ and ^superscript^ tags in the Markdown
  */
 export function SubPlugin(md: MarkdownIt): void {
+    const subscript: ParserInline.RuleInline = (state, silent) => {
+        const max = state.posMax;
+        const start = state.pos;
 
-    const tokenize: ParserInline.RuleInline = (state, silent) => {
-        const {pos, posMax} = state;
-        // Is this the start of an HTML <tag> ?
-        if (state.src.charCodeAt(pos) !== CharCode.LessThan) {
-            return false;
-        }
-        // Is this a <sub> or <sup> opening tag or a </sub> or </sup> closing tag?
-        const isClosing = (state.src.charCodeAt(pos + 1) === CharCode.Slash); // Note this may be out of bounds but that's OK
-        const tagLength = isClosing ? 6 : 5;  // Length of "<su_>" or "</su_>" that we may be parsing
-        // Is there enough room for the <sub>, </sub>, <sup>, or </sup> that we may be parsing now?
-        if (pos + tagLength > posMax) {
-            return false;
-        }
-        // Index of the 's' in <sub>,<sup>,</sup>,</sub>
-        const sPos = pos + (isClosing ? 2 : 1);
-        // Check that the next few chars are "sub>" or "sup>"
-        if (state.src.charCodeAt(sPos) !== CharCode.s && state.src.charCodeAt(sPos) !== CharCode.S) { return false; }
-        if (state.src.charCodeAt(sPos+1) !== CharCode.u && state.src.charCodeAt(sPos+1) !== CharCode.U) { return false; }
-        const isSub = (state.src.charCodeAt(sPos+2) === CharCode.b || state.src.charCodeAt(sPos+2) === CharCode.B);
-        const isSup = (state.src.charCodeAt(sPos+2) === CharCode.p || state.src.charCodeAt(sPos+2) === CharCode.P);
-        if (!isSub && !isSup) { return false; }
-        if (state.src.charCodeAt(sPos+3) !== CharCode.GreaterThan) { return false; }
+        if (state.src.charCodeAt(start) !== 0x7E /* ~ */) return false;
+        if (silent) return false; // don't run any pairs in validation mode
+        if (start + 2 >= max) return false;
 
-        // Validate that we're not already in a <sub> or <sup>, or that we are if isClosing
-        const tag = isSub ? "sub" : "sup";
-        const startType = isSub ? TokenType.StartSub : TokenType.StartSup;
-        const endType = isSub ? TokenType.EndSub : TokenType.EndSup;
-        let lastToken: Token|undefined;
-        for (let i = state.tokens.length - 1; i > 0; i--) {
-            if (
-                state.tokens[i].type === TokenType.StartSup ||
-                state.tokens[i].type === TokenType.StartSub ||
-                state.tokens[i].type === TokenType.EndSup ||
-                state.tokens[i].type === TokenType.EndSub
-            ) {
-                lastToken = state.tokens[i];
+        state.pos = start + 1;
+
+        let found = false;
+        while (state.pos < max) {
+            if (state.src.charCodeAt(state.pos) === 0x7E /* ~ */) {
+                found = true;
                 break;
             }
-        }
-        if (isClosing) {
-            // If this is a closing tag, it must have a matching start tag
-            if (lastToken === undefined || lastToken.type !== startType) {
-                return false;
-            }
-        } else {
-            // If this is an opening tag, the last tag must not be a start tag
-            if (lastToken !== undefined && (lastToken.type === TokenType.StartSup || lastToken.type === TokenType.StartSub)) {
-                return false;
-            }
-            // And we must look ahead to ensure there's a closing tag.
-            if (state.src.slice(sPos, posMax).search(new RegExp(`[^\\\\]</${tag}>`, "i")) === -1) {
-                return false;
-            }
+
+            state.md.inline.skipToken(state);
         }
 
-        if (!silent) {
-            if (isClosing) {
-                state.push(endType, tag, -1);
-            } else {
-                state.push(startType, tag, 1);
-            }
+        if (!found || start + 1 === state.pos) {
+            state.pos = start;
+            return false;
         }
-        state.pos += tagLength;
+
+        const content = state.src.slice(start + 1, state.pos);
+
+        // don't allow unescaped spaces/newlines inside
+        if (content.match(/(^|[^\\])(\\\\)*\s/)) {
+            state.pos = start;
+            return false;
+        }
+
+        // found!
+        state.posMax = state.pos;
+        state.pos = start + 1;
+
+        // Earlier we checked !silent, but this implementation does not need it
+        let token = state.push("sub_open", "sub", 1);
+        token.markup = "~";
+
+        token = state.push("text", "", 0);
+        token.content = content.replace(UNESCAPE_RE, "$1");
+
+        token = state.push("sub_close", "sub", -1);
+        token.markup = "~";
+
+        state.pos = state.posMax + 1;
+        state.posMax = max;
         return true;
-    }
+    };
 
-    md.inline.ruler.push("subsup", tokenize);
+    const superscript: ParserInline.RuleInline = (state, silent) => {
+        const max = state.posMax;
+        const start = state.pos;
+
+        if (state.src.charCodeAt(start) !== 0x5E /* ^ */) return false;
+        if (silent) return false; // don't run any pairs in validation mode
+        if (start + 2 >= max) return false;
+
+        state.pos = start + 1;
+
+        let found = false;
+        while (state.pos < max) {
+            if (state.src.charCodeAt(state.pos) === 0x5E /* ^ */) {
+                found = true;
+                break;
+            }
+
+            state.md.inline.skipToken(state);
+        }
+
+        if (!found || start + 1 === state.pos) {
+            state.pos = start;
+            return false;
+        }
+
+        const content = state.src.slice(start + 1, state.pos);
+
+        // don't allow unescaped spaces/newlines inside
+        if (content.match(/(^|[^\\])(\\\\)*\s/)) {
+            state.pos = start;
+            return false;
+        }
+
+        // found!
+        state.posMax = state.pos;
+        state.pos = start + 1;
+
+        // Earlier we checked !silent, but this implementation does not need it
+        let token = state.push("sup_open", "sup", 1);
+        token.markup = "^";
+
+        token = state.push("text", "", 0);
+        token.content = content.replace(UNESCAPE_RE, "$1");
+
+        token = state.push("sup_close", "sup", -1);
+        token.markup = "^";
+
+        state.pos = state.posMax + 1;
+        state.posMax = max;
+        return true;
+    };
+
+    md.inline.ruler.after("emphasis", "sub", subscript);
+    md.inline.ruler.after("emphasis", "sup", superscript);
 }
