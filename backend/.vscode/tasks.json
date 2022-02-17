@@ -19,7 +19,6 @@
                 "--allow-read",
                 "--allow-env",
                 "--allow-write",
-                "--unstable",
                 "neolace/scripts/test-setup.ts"
             ],
             "problemMatcher": []
@@ -38,8 +37,7 @@
                 "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-env",
-                "--allow-read",
-                "--unstable"
+                "--allow-read"
             ],
             "problemMatcher": []
         },
@@ -50,7 +48,6 @@
             // We can make this stable once "Deno.addSignalListener" and "--watch" are stabilized.
             "args": [
                 "run",
-                "--unstable",
                 "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-env",
@@ -68,7 +65,6 @@
             // We can make this stable once "Deno.addSignalListener" and "--watch" are stabilized.
             "args": [
                 "run",
-                "--unstable",
                 "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-env",
@@ -98,7 +94,6 @@
                 "--allow-net",
                 "--allow-read",
                 "--allow-env",
-                "--unstable",
                 "neolace/scripts/reset-dev-data-create-plantdb.ts"
             ],
             "problemMatcher": []
@@ -119,7 +114,6 @@
                 "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-env",
-                "--unstable",
                 "neolace/scripts/migrate.ts"
             ],
             "problemMatcher": []
