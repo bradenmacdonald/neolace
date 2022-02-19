@@ -1,7 +1,11 @@
 import * as KeratinAuthN from 'keratin-authn';
-import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
-import { NeolaceApiClient, NotFound, SiteDetailsData } from 'neolace-api';
+import useSWR from 'swr';
 import { AsyncCache } from './async-cache';
+import { useRouter } from 'next/router';
+import { NeolaceApiClient, NotFound, SiteDetailsData } from 'neolace-api';
+
+import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
+import { ApiError } from 'next/dist/server/api-utils';
 
 export * as api from 'neolace-api';
 
@@ -77,4 +81,29 @@ export async function getSiteData(domain: string): Promise<SiteDetailsData|null>
 if (IN_BROWSER) {
     // deno-lint-ignore no-explicit-any
     (window as any).client = client;
+}
+
+/**
+ * React hook to get basic data about the current site.
+ * @returns 
+ */
+export function useSiteData(): {site: SiteData, siteError: ApiError} {
+    const router = useRouter();
+    // router.query.siteHost gives the site's domain name because of how we have the Next.js URL rewriting configured.
+    const domain = router.query.siteHost as string;
+    const { data, error } = useSWR(`site:${domain}`, async () => {
+        return await client.getSite({domain});
+    }, {
+        fallbackData: {
+            name: "━━━━━━━━━━━━━━",
+            description: "",
+            domain: "━━━━━━━━━━━━━━",
+            footerMD: "━━━━━━━━━━━━━━",
+            shortId: "----",
+            frontendConfig: {},
+        },
+        refreshInterval: 10 * 60_000,  // Reload the site data every 10 minutes in case anything was changed.
+    });
+    if (data === undefined) { throw "fallbackError"; }  // Tell TypeScript data is always defined due to the fallback above.
+    return {site: data, siteError: error};
 }
