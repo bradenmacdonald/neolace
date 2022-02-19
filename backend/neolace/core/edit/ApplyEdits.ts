@@ -118,16 +118,14 @@ export const ApplyEdits = defineAction({
                         baseData = await tx.queryOne(C`
                             MATCH (site:${Site} {id: ${siteId}})
                             MATCH (entry:${Entry} {id: ${edit.data.entry}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-                            MATCH (property:${Property} {id: ${edit.data.property}})-[:${Property.rel.FOR_SITE}]->(site)
                             // Ensure that the property (still) applies to this entry type:
-                            MATCH (property)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+                            MATCH (property:${Property} {id: ${edit.data.property}})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
                             // Set the rank automatically by default:
                             OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(existingPf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
                             WITH entry, property, max(existingPf.rank) AS maxCurrentRank
                             // Create the new property fact:
-                            CREATE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {
-                                id: ${edit.data.propertyFactId}
-                            })-[:${PropertyFact.rel.FOR_PROP}]->(property)
+                            CREATE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {id: ${edit.data.propertyFactId}})
+                            CREATE (pf)-[:${PropertyFact.rel.FOR_PROP}]->(property)
                             SET pf.rank = CASE WHEN maxCurrentRank IS NULL THEN 1 ELSE maxCurrentRank + 1 END
                             SET pf += ${updatedPropertyFactFields}
                         `.RETURN({
@@ -172,12 +170,10 @@ export const ApplyEdits = defineAction({
                         // We also need to create/update a direct (Entry)-[rel]->(Entry) relationship on the graph.
                         await tx.query(C`
                             MATCH (entry:${Entry} {id: ${edit.data.entry}})
-                            MATCH (toEntry:${Entry} {id: ${toEntryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            // Match the target entry and make sure it's part of the same site:
+                            MATCH (toEntry:${Entry} {id: ${toEntryId}})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
                             MATCH (pf:${PropertyFact} {id: ${edit.data.propertyFactId}})
-                            OPTIONAL MATCH (entry)-[rel]->(:${Entry}) WHERE id(rel) = pf.directRelNeo4jId AND endNode(rel) <> toEntry
-                            DELETE rel
-                            WITH entry, pf, toEntry
-                            MERGE (entry)-[rel:${directRelType}]->(toEntry)
+                            MERGE (entry)-[rel:${directRelType}]->(toEntry)  // Note that this may already exist if multiple separate properties of the same relationship type point to the same node
                             SET pf.directRelNeo4jId = id(rel)
 
                         `.RETURN({ "pf.directRelNeo4jId": Field.BigInt }));

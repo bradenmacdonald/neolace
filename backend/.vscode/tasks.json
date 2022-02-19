@@ -87,6 +87,7 @@
                 "--allow-net",
                 "--allow-read",
                 "--allow-env",
+                "--no-check",
                 "neolace/scripts/reset-dev-data-create-plantdb.ts"
             ],
             "problemMatcher": []
