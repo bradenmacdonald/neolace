@@ -92,14 +92,18 @@ export function useSiteData(): {site: SiteData, siteError: ApiError} {
     // router.query.siteHost gives the site's domain name because of how we have the Next.js URL rewriting configured.
     const domain = router.query.siteHost as string;
     const { data, error } = useSWR(`site:${domain}`, async () => {
-        return await client.getSite({domain});
+        if (domain) {
+            return await client.getSite({domain});
+        } else {
+            throw new Error("Can't load site yet because domain is unknown.");
+        }
     }, {
         fallbackData: {
             name: "━━━━━━━━━━━━━━",
             description: "",
-            domain: "━━━━━━━━━━━━━━",
+            domain: "",
             footerMD: "━━━━━━━━━━━━━━",
-            shortId: "----",
+            shortId: "",
             frontendConfig: {},
         },
         refreshInterval: 10 * 60_000,  // Reload the site data every 10 minutes in case anything was changed.
