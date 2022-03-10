@@ -1,6 +1,7 @@
 import React from 'react';
 import Head from 'next/head'
 import Link from 'next/link';
+import { SWRConfig } from 'swr';
 
 import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData, useSiteData, api } from 'lib/api-client';
@@ -25,6 +26,16 @@ interface Props {
     leftNavTopSlot?: UISlotWidget[];
     leftNavBottomSlot?: UISlotWidget[];
     footerSlot?: UISlotWidget[];
+    /**
+     * For a better user experience with no flash of unstyled content etc, use getStaticProps to preload the site data
+     * and pass it in here.
+     * 
+     * However, if getStaticProps is not possible or doesn't make sense for a particular page, this can be set null and
+     * the site details will be loaded on the client side.
+     * 
+     * See comments below in SitePage ("fallback") about looking for a better way to do this.
+     */
+    sitePreloaded: api.SiteDetailsData | null;
 }
 
 /**
@@ -32,7 +43,7 @@ interface Props {
  */
 export const SitePage: React.FunctionComponent<Props> = (props) => {
     const user = React.useContext(UserContext);
-    const {site, siteError} = useSiteData();
+    let {site, siteError} = useSiteData(props.sitePreloaded ? {fallback: props.sitePreloaded} : {});
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour/>;
@@ -43,12 +54,20 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         return color.join(", ");
     };
 
+    // If getStaticProps has preloaded data about the current site, pass it in to SWR so it'll be immediately used
+    // everywhere that we need site data. See https://swr.vercel.app/docs/with-nextjs
+    // TODO: Ideally the logic to load this shouldn't need to be duplicated in each separate page. Follow
+    //       https://github.com/vercel/next.js/discussions/10949 for updates on a better way to handle this.
+    // Note that this fallback/SWRConfig only applies to child components, not _this_ SitePage component, which is why
+    // we also pass "fallback" in to the useSiteData hook above.
+    const fallback = props.sitePreloaded ? {[`site:${props.sitePreloaded.domain}`]: props.sitePreloaded} : {};
+
     const systemLinks = <UISlot<SystemLink> slotId="leftNavTop" defaultContents={[
         //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
         {id: "login", priority: 60, content: {url: "/login", label: <FormattedMessage id="systemLink.login" defaultMessage="Login" />, icon: "person-fill"}},
     ]} renderWidget={(link: UISlotWidget<SystemLink>) => <Link key={link.id} href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link>} />;
 
-    return <div>
+    return <SWRConfig value={{ fallback }}><div>
         <Head>
             <title>{props.title === DefaultSiteTitle ? site.name : `${props.title} - ${site.name}`}</title>
             <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
@@ -129,5 +148,5 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 </article>
             </div>
         </main>
-    </div>;
+    </div></SWRConfig>;
 };

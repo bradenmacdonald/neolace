@@ -87,7 +87,7 @@ if (IN_BROWSER) {
  * React hook to get basic data about the current site.
  * @returns 
  */
-export function useSiteData(): {site: SiteData, siteError: ApiError} {
+export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteData, siteError: ApiError} {
     const router = useRouter();
     // router.query.siteHost gives the site's domain name because of how we have the Next.js URL rewriting configured.
     const domain = router.query.siteHost as string;
@@ -98,10 +98,10 @@ export function useSiteData(): {site: SiteData, siteError: ApiError} {
             throw new Error("Can't load site yet because domain is unknown.");
         }
     }, {
-        fallbackData: {
+        fallbackData: (options.fallback && options.fallback.domain === domain) ? options.fallback : {
             name: "━━━━━━━━━━━━━━",
             description: "",
-            domain: "",
+            domain,
             footerMD: "━━━━━━━━━━━━━━",
             shortId: "",
             frontendConfig: {},

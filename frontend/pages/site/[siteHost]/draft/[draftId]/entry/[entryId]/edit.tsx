@@ -44,6 +44,7 @@ const DraftEntryEditPage: NextPage<PageProps> = function(props) {
     return (
         <SitePage
             title={`Edit`}
+            sitePreloaded={null}
             leftNavTopSlot={[
                 {
                     id: "entryName",

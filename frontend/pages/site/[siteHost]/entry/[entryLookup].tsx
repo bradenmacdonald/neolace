@@ -15,6 +15,7 @@ import { EntryLink } from 'components/EntryLink';
 
 interface PageProps {
     entry: api.EntryData;
+    sitePreloaded: api.SiteDetailsData;
 }
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -32,6 +33,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
 
     return (
         <SitePage
+            sitePreloaded={props.sitePreloaded}
             leftNavTopSlot={[
                 {id: "entryName", priority: 20, content: <>
                     <h1 className="font-bold text-base">{props.entry.name}</h1>
@@ -206,6 +208,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     return {
         props: {
             entry,
+            sitePreloaded: site,
         },
     };
 }
