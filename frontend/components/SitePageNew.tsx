@@ -3,9 +3,8 @@ import Head from 'next/head'
 import Link from 'next/link';
 import { SWRConfig } from 'swr';
 
-import { UserContext, UserStatus } from 'components/user/UserContext';
+import { UserContext } from 'components/user/UserContext';
 import { SiteData, useSiteData, api } from 'lib/api-client';
-import { SiteFooter } from './SiteFooter';
 import { UISlot, UISlotWidget, defaultRender } from './widgets/UISlot';
 import FourOhFour from 'pages/404';
 import { MDTContext, RenderMDT } from './markdown-mdt/mdt';
@@ -35,7 +34,7 @@ interface Props {
      * 
      * See comments below in SitePage ("fallback") about looking for a better way to do this.
      */
-    sitePreloaded: api.SiteDetailsData | null;
+    sitePreloaded: SiteData | null;
 }
 
 /**
@@ -44,6 +43,21 @@ interface Props {
 export const SitePage: React.FunctionComponent<Props> = (props) => {
     const user = React.useContext(UserContext);
     let {site, siteError} = useSiteData(props.sitePreloaded ? {fallback: props.sitePreloaded} : {});
+
+    // On mobile, we use JavaScript to show the menu when the user taps on the "Menu" button
+    const [mobileMenuVisible, showMobileMenu] = React.useState(false);
+    const toggleMobileMenu = React.useCallback(() => { showMobileMenu(!mobileMenuVisible); }, [mobileMenuVisible]);
+
+    // On mobile, we need to hide the menu when a link is clicked, or when the user taps the screen elsewhere (not on the menu)
+    const handleLeftPanelClick = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        if (mobileMenuVisible && event.target instanceof HTMLAnchorElement) {
+            showMobileMenu(false);
+        }
+    }, [mobileMenuVisible, showMobileMenu]);
+    // Likewise, hide the mobile menu if it's visible but the user taps off of it, on the article area
+    const handleArticleClick = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        if (mobileMenuVisible) { showMobileMenu(false); }
+    }, [mobileMenuVisible, showMobileMenu]);
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour/>;
@@ -117,36 +131,41 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             </div>
         </header>
 
-        <main role="main" className="absolute top-8 md:top-24 p-2 w-full bottom-0 overflow-y-auto">
-            {/* Container that wraps the left nav column (on desktop) and the article text/content */}
-            {/* items-start is necessary on mobile to keep the top nav panel at the top when scrolling on long articles */}
-            <div className="absolute top-0 bottom-0 left-0 right-0 flex flex-row overflow-y-auto items-start scroll-padding-45 md:scroll-padding-none bg-gray-200">
+        {/* Container that wraps the left nav column (on desktop) and the article text/content */}
+        <main role="main" className="absolute top-8 md:top-24 w-full bottom-8 md:bottom-0 overflow-y-auto flex flex-row bg-gray-200 items-start">
 
-                {/* Left column, which shows table of contents, but only on desktop */}
-                <div id="left-toc-col" className="hidden md:flex w-1/4 max-w-[280px] bg-gray-300 xl:border-r border-r-gray-100 flex-initial p-4 overflow-y-auto flex-col sticky top-0 self-stretch">
-                    <UISlot slotId="leftNavTop" defaultContents={props.leftNavTopSlot} renderWidget={defaultRender} />
-                    <div className="flex-auto">{/* This is a spacer that pushes the "bottom" content to the end */}</div>
-                    <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavBottomSlot ?? []), {
-                        id: "systemLinks",
-                        priority: 80,
-                        content: systemLinks,
-                    }]} renderWidget={defaultRender} />
-                </div>
-
-                {/* The main content of this entry */}
-                <article id="content" className="w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] mx-auto shadow-md xl:my-6 neo-typography">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
-                    <div className="md:min-h-[calc(100vh-11.5rem)]"> {/* Push the footer down to the bottom if the page content is very short */}
-                        {props.children}
-                    </div>
-                    <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 clear-both">
-                        <UISlot slotId="footer" defaultContents={[...(props.footerSlot ?? []), {
-                            id: "siteFooter",
-                            priority: 80,
-                            content: <RenderMDT mdt={site.footerMD} context={new MDTContext({entryId: undefined})} />,
-                        }]} renderWidget={defaultRender} />
-                    </footer>
-                </article>
+            {/* Left column, which shows various links and the current page's table of contents. On mobile it's hidden until the user clicks "Menu". */}
+            <div id="left-panel" className={`${mobileMenuVisible ? `translate-x-0 visible` : `-translate-x-[100%] invisible`} z-[100] transition-visibility-transform md:visible md:translate-x-0 fixed md:sticky flex top-8 md:top-0 bottom-8 md:bottom-0 w-[80vw] md:w-1/4 md:max-w-[280px] bg-gray-300 xl:border-r border-r-gray-100 flex-initial p-4 overflow-y-auto flex-col self-stretch`} onClick={handleLeftPanelClick}>
+                <UISlot slotId="leftNavTop" defaultContents={props.leftNavTopSlot} renderWidget={defaultRender} />
+                <div className="flex-auto">{/* This is a spacer that pushes the "bottom" content to the end */}</div>
+                <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavBottomSlot ?? []), {
+                    id: "systemLinks",
+                    priority: 80,
+                    content: systemLinks,
+                }]} renderWidget={defaultRender} />
             </div>
+
+            {/* The main content of this entry */}
+            <article id="content" className="w-full left-0 top-0 md:w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] mx-auto shadow-md xl:my-6 neo-typography" onClick={handleArticleClick}>{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
+                <div className="md:min-h-[calc(100vh-11.5rem)]"> {/* Push the footer down to the bottom if the page content is very short */}
+                    {props.children}
+                </div>
+                <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 clear-both">
+                    <UISlot slotId="footer" defaultContents={[...(props.footerSlot ?? []), {
+                        id: "siteFooter",
+                        priority: 80,
+                        content: <RenderMDT mdt={site.footerMD} context={new MDTContext({entryId: undefined})} />,
+                    }]} renderWidget={defaultRender} />
+                </footer>
+                <div className='h-8 md:h-0'>{/* Padding on mobile that goes behind the bottom footer */}</div>
+            </article>
         </main>
+        {/* The "floating" footer on mobile that can be used to bring up the menu */}
+        <div className="fixed md:hidden bg-header-color text-white bottom-0 h-8 left-0 right-0">
+            <button className="h-8 px-3" onClick={toggleMobileMenu}>
+                <Icon icon="list" />{" "}
+                <FormattedMessage id="mobileFooter.menuButton" defaultMessage="Menu" />
+            </button>
+        </div>
     </div></SWRConfig>;
 };

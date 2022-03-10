@@ -86,16 +86,6 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 : null
             }
 
-            {/* On mobile devices, some navigation appears here since the left bar / table of contents is hidden */}
-            <nav className="md:hidden sticky top-0 -mx-4 py-1 -mt-2 pb-2 -mb-2 bg-white bg-opacity-90 backdrop-blur-sm text-gray-600">
-                <ul className="mx-auto text-center">
-                    <li className="inline-block p-1 mx-2 text-sm"><a href="#summary">Summary</a></li>
-                    <li className={`inline-block p-1 mx-2 text-sm ${hasProps || "hidden"}`}><a href="#properties">Properties</a></li>
-                    <li className="inline-block p-1 mx-2 text-sm"><a href="#contents">Contents</a></li>
-                    <li className="inline-block p-1 mx-2 text-sm"><a href="#tools">Tools</a></li>
-                </ul>
-            </nav>
-
             <h1 id="summary">{props.entry.name}</h1>
             <p id="description"><InlineMDT mdt={props.entry.description ?? ""} context={mdtContext} /></p>
 
@@ -126,24 +116,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 */}
             </div>
 
-            <div id="contents">
-
-                {
-                    props.entry.features?.Article ?
-                        /* Table of contents appears here, but only on mobile */
-                        <div className="md:hidden">
-                            <h2><FormattedMessage id="site.entry.tableOfContentsHeading" defaultMessage="Contents"/></h2>
-
-                            <ol id="mobile-toc-headings" className="list-decimal list-inside">
-                                {
-                                    props.entry.features.Article?.headings.map(heading =>
-                                        <li key={heading.id} className="my-1 truncate"><a href={`#h-${heading.id}`}>{heading.title}</a></li>
-                                    )
-                                }
-                            </ol>
-                        </div>
-                    : null
-                }
+            <div id="entry-contents">
 
                 {
                     props.entry.features?.Image ?

@@ -3,8 +3,6 @@
 @tailwind utilities;
 
 
-/* TechNotes color: 5ecbf5 */
-
 @layer utilities {
     /* scroll padding is important for when user clicks on #anchor links so they don't disappear behind fixed headers */
     .scroll-padding-none {
@@ -67,5 +65,9 @@
     .neo-typography ol li:lang(zh_HANT) { list-style-type: trad-chinese-informal; }
     .neo-typography ol li::marker {
         @apply text-sm;
+    }
+    /* Animation that animates an element's 'transform' and also its visibility property, hiding/showing it before/after the transform */
+    .transition-visibility-transform {
+        transition: visibility cubic-bezier(0.4, 0, 0.2, 1) 150ms, transform cubic-bezier(0.4, 0, 0.2, 1) 150ms;
     }
 }
