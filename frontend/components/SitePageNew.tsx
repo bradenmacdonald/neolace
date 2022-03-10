@@ -115,9 +115,11 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 </div>
 
                 {/* The main content of this entry */}
-                <article id="entry-content" className="w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] mx-auto shadow-md xl:my-6">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
-                    {props.children}
-                    <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 neo-typography clear-both">
+                <article id="content" className="w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] mx-auto shadow-md xl:my-6 neo-typography">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
+                    <div className="md:min-h-[calc(100vh-11.5rem)]"> {/* Push the footer down to the bottom if the page content is very short */}
+                        {props.children}
+                    </div>
+                    <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 clear-both">
                         <UISlot slotId="footer" defaultContents={[...(props.footerSlot ?? []), {
                             id: "siteFooter",
                             priority: 80,
