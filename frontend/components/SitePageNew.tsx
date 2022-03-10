@@ -7,15 +7,25 @@ import { SiteData, useSiteData, api } from 'lib/api-client';
 import { SiteFooter } from './SiteFooter';
 import { UISlot, UISlotWidget, defaultRender } from './widgets/UISlot';
 import FourOhFour from 'pages/404';
+import { MDTContext, RenderMDT } from './markdown-mdt/mdt';
+import { Icon, IconId } from './widgets/Icon';
+import { FormattedMessage } from 'react-intl';
 
 export const DefaultSiteTitle = Symbol("DefaultSiteTitle");
+
+export interface SystemLink {
+    /** The label of the link. Should be a FormattedMessage. */
+    label: React.ReactElement;
+    icon?: IconId;
+    url: string;
+}
 
 interface Props {
     title: string | typeof DefaultSiteTitle;
     leftNavTopSlot?: UISlotWidget[];
     leftNavBottomSlot?: UISlotWidget[];
+    footerSlot?: UISlotWidget[];
 }
-
 
 /**
  * Template for a "regular" Neolace page, for a specific site (e.g. foo.neolace.com), as opposed to the Neolace Admin UI
@@ -32,6 +42,11 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         const color: [number, number, number] = site.frontendConfig.theme?.[name] ?? defaultColor;
         return color.join(", ");
     };
+
+    const systemLinks = <UISlot<SystemLink> slotId="leftNavTop" defaultContents={[
+        //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
+        {id: "login", priority: 60, content: {url: "/login", label: <FormattedMessage id="systemLink.login" defaultMessage="Login" />, icon: "person-fill"}},
+    ]} renderWidget={(link: UISlotWidget<SystemLink>) => <Link key={link.id} href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link>} />;
 
     return <div>
         <Head>
@@ -93,16 +108,22 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     <UISlot slotId="leftNavTop" defaultContents={props.leftNavTopSlot} renderWidget={defaultRender} />
                     <div className="flex-auto">{/* This is a spacer that pushes the "bottom" content to the end */}</div>
                     <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavBottomSlot ?? []), {
-                        id: "loginStatus",
+                        id: "systemLinks",
                         priority: 80,
-                        content: <a href="">Login</a>,
+                        content: systemLinks,
                     }]} renderWidget={defaultRender} />
                 </div>
 
                 {/* The main content of this entry */}
                 <article id="entry-content" className="w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] mx-auto shadow-md xl:my-6">{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                     {props.children}
-                    <SiteFooter site={site} />
+                    <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 neo-typography clear-both">
+                        <UISlot slotId="footer" defaultContents={[...(props.footerSlot ?? []), {
+                            id: "siteFooter",
+                            priority: 80,
+                            content: <RenderMDT mdt={site.footerMD} context={new MDTContext({entryId: undefined})} />,
+                        }]} renderWidget={defaultRender} />
+                    </footer>
                 </article>
             </div>
         </main>

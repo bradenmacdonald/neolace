@@ -25,7 +25,7 @@ export const defaultRender = (widget: UISlotWidget<React.ReactElement>) => <Reac
  * A UI slot is a placeholder in the user interface that can be filled with various content/widgets, and in particular
  * which plugins can modify.
  */
-export const UISlot = <ContentType extends React.ReactElement>(props: Props<ContentType>) => {
+export const UISlot = function<ContentType = React.ReactElement>(props: Props<ContentType>) {
 
     // TODO: allow plugins to modify the default contents. And/or allow placement to be "before", "after", "innerBefore", "innerAfter" an existing slot widget?
 
