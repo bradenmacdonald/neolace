@@ -36,20 +36,19 @@ const EntryPage: NextPage<PageProps> = function(props) {
             sitePreloaded={props.sitePreloaded}
             leftNavTopSlot={[
                 {id: "entryName", priority: 20, content: <>
-                    <h1 className="font-bold text-base">{props.entry.name}</h1>
-                    <span id="entry-type-name" className="font-light">{props.entry.entryType.name}</span>
                     <br/>
+                    <strong>{props.entry.name}</strong>
                 </>},
                 {id: "entryId", priority: 21, content: <>
                     <code id="entry-id" data-entry-id={props.entry.id} className="font-mono font-light hidden">{props.entry.friendlyId}</code>
                 </>},
                 {id: "tableOfContents", priority: 50, content: <>
-                    <ul id="left-toc-headings" className="font-normal">
-                        <li className="my-2 truncate"><a href={`#summary`}><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></li>
-                        <li className={`my-2 truncate ${hasProps || "hidden"}`}><a href={`#properties`}><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></li>
+                    <ul id="left-toc-headings">
+                        <li><a href={`#summary`}><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></li>
+                        <li className={`${hasProps || "hidden"}`}><a href={`#properties`}><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></li>
                         {
                             props.entry.features?.Article?.headings.map(heading =>
-                                <li key={heading.id} className="my-2 truncate"><a href={`#h-${heading.id}`}>{heading.title}</a></li>
+                                <li key={heading.id}><a href={`#h-${heading.id}`}>{heading.title}</a></li>
                             )
                         }
                     </ul>

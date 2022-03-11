@@ -70,4 +70,12 @@
     .transition-visibility-transform {
         transition: visibility cubic-bezier(0.4, 0, 0.2, 1) 150ms, transform cubic-bezier(0.4, 0, 0.2, 1) 150ms;
     }
+
+    /* Styles for the left panel */
+    #left-panel ul li {
+        @apply -mx-4 px-4 py-1 truncate;
+    }
+    #left-panel ul li a {
+        @apply inline-block py-1 pt-[6px] -my-2 -mx-4 px-4 w-full box-content hover:bg-slate-200 truncate;
+    }
 }

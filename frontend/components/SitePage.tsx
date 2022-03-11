@@ -76,10 +76,10 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // we also pass "fallback" in to the useSiteData hook above.
     const fallback = props.sitePreloaded ? {[`site:${props.sitePreloaded.domain}`]: props.sitePreloaded} : {};
 
-    const systemLinks = <UISlot<SystemLink> slotId="leftNavTop" defaultContents={[
+    const systemLinks = <ul><UISlot<SystemLink> slotId="leftNavTop" defaultContents={[
         //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
         {id: "login", priority: 60, content: {url: "/login", label: <FormattedMessage id="systemLink.login" defaultMessage="Login" />, icon: "person-fill"}},
-    ]} renderWidget={(link: UISlotWidget<SystemLink>) => <Link key={link.id} href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link>} />;
+    ]} renderWidget={(link: UISlotWidget<SystemLink>) => <li key={link.id}><Link href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link></li>} /></ul>;
 
     return <SWRConfig value={{ fallback }}><div>
         <Head>
@@ -132,11 +132,22 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         </header>
 
         {/* Container that wraps the left nav column (on desktop) and the article text/content */}
-        <main role="main" className="absolute top-8 md:top-24 w-full bottom-8 md:bottom-0 overflow-y-auto flex flex-row bg-gray-200 items-start">
+        <div className="absolute top-8 md:top-24 w-full bottom-8 md:bottom-0 overflow-y-auto flex flex-row bg-gray-200 items-start">
 
             {/* Left column, which shows various links and the current page's table of contents. On mobile it's hidden until the user clicks "Menu". */}
             <div id="left-panel" className={`${mobileMenuVisible ? `translate-x-0 visible` : `-translate-x-[100%] invisible`} z-[100] transition-visibility-transform md:visible md:translate-x-0 fixed md:sticky flex top-8 md:top-0 bottom-8 md:bottom-0 w-[80vw] md:w-1/4 md:max-w-[280px] bg-gray-300 xl:border-r border-r-gray-100 flex-initial p-4 overflow-y-auto flex-col self-stretch`} onClick={handleLeftPanelClick}>
-                <UISlot slotId="leftNavTop" defaultContents={props.leftNavTopSlot} renderWidget={defaultRender} />
+                <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavTopSlot ?? []), {
+                    id: "siteLinks",
+                    priority: 15,
+                    content: <>
+                        <strong>{site.name}</strong>
+                        <ul>
+                            {site.frontendConfig.headerLinks?.map(link => 
+                                <li key={link.href}><Link href={link.href}>{link.text}</Link></li>
+                            )}
+                        </ul>
+                    </>,
+                }]} renderWidget={defaultRender} />
                 <div className="flex-auto">{/* This is a spacer that pushes the "bottom" content to the end */}</div>
                 <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavBottomSlot ?? []), {
                     id: "systemLinks",
@@ -146,7 +157,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             </div>
 
             {/* The main content of this entry */}
-            <article id="content" className="w-full left-0 top-0 md:w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] mx-auto shadow-md xl:my-6 neo-typography" onClick={handleArticleClick}>{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
+            <main role="main" id="content" className="w-full left-0 top-0 md:w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] mx-auto shadow-md xl:my-6 neo-typography" onClick={handleArticleClick}>{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                 <div className="md:min-h-[calc(100vh-11.5rem)]"> {/* Push the footer down to the bottom if the page content is very short */}
                     {props.children}
                 </div>
@@ -158,8 +169,8 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     }]} renderWidget={defaultRender} />
                 </footer>
                 <div className='h-8 md:h-0'>{/* Padding on mobile that goes behind the bottom footer */}</div>
-            </article>
-        </main>
+            </main>
+        </div>
         {/* The "floating" footer on mobile that can be used to bring up the menu */}
         <div className="fixed md:hidden bg-header-color text-white bottom-0 h-8 left-0 right-0">
             <button className="h-8 px-3" onClick={toggleMobileMenu}>
