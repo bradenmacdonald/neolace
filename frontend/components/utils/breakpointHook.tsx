@@ -36,9 +36,9 @@ export const useBreakpoint = () => {
                 setBreakpoint(newBreakpoint);
             }
         };
-        window.addEventListener('resize', listener);
+        addEventListener('resize', listener);
         // Cleanup when we don't need to monitor the breakpoint anymore:
-        return () => window.removeEventListener('resize', listener);
+        return () => removeEventListener('resize', listener);
     }, []);
   
     return breakpoint;

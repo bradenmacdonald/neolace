@@ -5,10 +5,7 @@ import { api, useSiteData } from 'lib/api-client';
 import { SitePage } from 'components/SitePage';
 import FourOhFour from 'pages/404';
 
-interface PageProps {
-}
-
-const DraftEntryEditPage: NextPage<PageProps> = function(props) {
+const DraftEntryEditPage: NextPage = function(_props) {
 
     // Look up the Neolace site by domain:
     const {site, siteError} = useSiteData();

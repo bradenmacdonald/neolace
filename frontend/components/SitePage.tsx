@@ -42,7 +42,7 @@ interface Props {
  */
 export const SitePage: React.FunctionComponent<Props> = (props) => {
     const user = React.useContext(UserContext);
-    let {site, siteError} = useSiteData(props.sitePreloaded ? {fallback: props.sitePreloaded} : {});
+    const {site, siteError} = useSiteData(props.sitePreloaded ? {fallback: props.sitePreloaded} : {});
 
     // On mobile, we use JavaScript to show the menu when the user taps on the "Menu" button
     const [mobileMenuVisible, showMobileMenu] = React.useState(false);
