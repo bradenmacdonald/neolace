@@ -1,10 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
-import { api } from 'lib/api-client';
+import { api, useSiteData } from 'lib/api-client';
 import { DEVELOPMENT_MODE } from 'lib/config';
 import { Tooltip } from 'components/widgets/Tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
-import { SiteContext } from './SiteContext';
 
 interface Props {
     /** VNID or friendlyId */
@@ -17,8 +16,7 @@ interface Props {
  * A link to an entry (on the same site)
  */
 export const EntryLink: React.FunctionComponent<Props> = (props) => {
-
-    const siteContext = React.useContext(SiteContext);
+    const {site} = useSiteData();
 
     const refCache = props.mdtContext.refCache;
     const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) =
@@ -32,7 +30,7 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
         return <Link href={`/entry/${props.entryKey}`}><a className={textColorClass}>{props.children}</a></Link>
     }
 
-    if (siteContext.frontendConfig.features?.hoverPreview?.enabled) {
+    if (site.frontendConfig.features?.hoverPreview?.enabled) {
         return <Tooltip tooltipContent={<>
             <strong>{entry.name}</strong> ({refCache.entryTypes[entry.entryType.id]?.name})<br/>
             <p className="text-sm"><InlineMDT mdt={entry.description} context={props.mdtContext.childContextWith({entryId: entry.id})} /></p>

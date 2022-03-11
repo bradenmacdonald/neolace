@@ -49,8 +49,8 @@ const LoginPage: NextPage<PageProps> = function(props) {
 
     return (
         <SitePage
-            title="Log in to TechNotes"
-            site={props.site}
+            title="Log in"
+            sitePreloaded={props.site}
         >
             <h1 className="text-3xl font-semibold">
                 <FormattedMessage id="site.login.title" defaultMessage="Log in to {siteName}" values={{siteName: props.site.name}}/>

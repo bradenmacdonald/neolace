@@ -2,7 +2,7 @@ import React from 'react';
 import { NextPage } from 'next';
 import { api, useSiteData } from 'lib/api-client';
 
-import { SitePage } from 'components/SitePageNew';
+import { SitePage } from 'components/SitePage';
 import FourOhFour from 'pages/404';
 
 interface PageProps {

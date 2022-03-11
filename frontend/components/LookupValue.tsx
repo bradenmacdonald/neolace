@@ -1,5 +1,5 @@
 import React from 'react';
-import { api } from 'lib/api-client';
+import { api, useSiteData } from 'lib/api-client';
 import { FormattedListParts, FormattedMessage } from 'react-intl';
 
 import { Tooltip } from 'components/widgets/Tooltip';
@@ -7,7 +7,6 @@ import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { EntryLink } from './EntryLink';
 import { LookupImage } from './LookupImage';
 import { FormattedFileSize } from './widgets/FormattedFileSize';
-import { SiteContext } from './SiteContext';
 import { HoverClickNote } from './widgets/HoverClickNote';
 
 interface LookupValueProps {
@@ -20,8 +19,7 @@ interface LookupValueProps {
  * Render a Lookup Value (computed/query value, such as all the "properties" shown on an entry's page)
  */
 export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) => {
-
-    const siteContext = React.useContext(SiteContext);
+    const {site} = useSiteData();
 
     const {value} = props;
     if (typeof value !== "object" || value === null || !("type" in value)) {
@@ -48,7 +46,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             }
 
             // Temporary hack - FIXME
-            if (siteContext.shortId === "cams" && listValues.length > 2) {
+            if (site.shortId === "cams" && listValues.length > 2) {
                 const firstValue = value.values[0];
                 if (firstValue.type === "Annotated") {
                     const innerValue = firstValue.value;

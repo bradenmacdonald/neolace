@@ -86,7 +86,7 @@ const PasswordlessLoginPage: NextPage<PageProps>= function(props) {
     return (
         <SitePage
             title={`Log in to ${props.site.name}`}
-            site={props.site}
+            sitePreloaded={props.site}
         >
             <h1 className="text-3xl font-semibold">Log in to {props.site.name}</h1>
             

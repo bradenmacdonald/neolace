@@ -7,7 +7,7 @@ import { ParsedUrlQuery } from 'querystring';
 import { Blurhash } from "react-blurhash";
 import { client, api, getSiteData, SiteData } from 'lib/api-client';
 
-import { SitePage } from 'components/SitePageNew';
+import { SitePage } from 'components/SitePage';
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 import { LookupValue } from 'components/LookupValue';
 import { EntryLink } from 'components/EntryLink';
