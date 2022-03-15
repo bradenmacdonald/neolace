@@ -10,6 +10,16 @@ export class ApiError extends Error {
 }
 
 /**
+ * The underlying fetch request failed, likely due to a network problem.
+ */
+export class ConnectionError extends ApiError {
+    constructor(message: string) {
+        super(message, 0);
+        this.name = "ConnectionError";
+    }
+}
+
+/**
  * Neolace doesn't know who you are.
  * 
  * Note that the HTTP status code for this is "401 Unauthorized", which

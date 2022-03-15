@@ -31,7 +31,7 @@ const HomePage: NextPage<PageProps> = function(props) {
     return (
         <SitePage
             title={props.site.name}
-            site={props.site}
+            sitePreloaded={props.site}
         >
             {/* Below, 100vh-11.6rem pushes the footer down to the bottom of the screen but prevents scrolling if there's only a single line in the footer */}
             <div className="max-w-6xl mx-auto neo-typography md:min-h-[calc(100vh-11.6rem)]">

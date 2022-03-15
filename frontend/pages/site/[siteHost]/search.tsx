@@ -32,8 +32,8 @@ const PluginTestPage: NextPage<PageProps> = function(props) {
 
     return (
         <SitePage
-            title={`Search ${props.site.name}`}
-            site={props.site}
+            title="Search"
+            sitePreloaded={props.site}
         >
             <PluginComponent/>
         </SitePage>

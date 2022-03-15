@@ -1,7 +1,6 @@
 import React from 'react';
 
-import { SiteContext } from 'components/SiteContext';
-import { api, client } from 'lib/api-client';
+import { api, client, useSiteData } from 'lib/api-client';
 import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
 import { InstantSearch } from "react-instantsearch-dom";
 import { Hits } from "../components/Hits";
@@ -9,11 +8,14 @@ import { SearchBox } from '../components/SearchBox';
 
 const SiteSearchPage: React.FunctionComponent = function(props) {
 
-    const site = React.useContext(SiteContext);
+    const {site} = useSiteData();
 
     const [connectionData, setConnectionData] = React.useState<api.SiteSearchConnectionData|undefined>();
 
     React.useEffect(() => {
+        if (!site.shortId) {
+            return;  // This effect needs to wait until we have the site data.
+        }
         // Get the search connection:
         let cancelled = false;
         client.getSearchConnection({siteId: site.shortId}).then(sc => {

@@ -80,7 +80,12 @@ export class NeolaceApiClient {
      * Make a call to the Neolace API and return the (JSON decoded) response
      */
     private async call(path: string, args?: RequestArgs): Promise<any> {
-        const response = await this.callRaw(path, args ?? {});
+        let response;
+        try {
+            response = await this.callRaw(path, args ?? {});
+        } catch (err) {
+            throw new errors.ConnectionError(err.message);
+        }
         if (response.status < 200 || response.status >= 300) {
             // See if we can decode the error details (JSON):
             let errorData: any = {};
