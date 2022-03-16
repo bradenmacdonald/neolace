@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { ParsedUrlQuery } from 'querystring';
 
-import { Page } from 'components/Page';
+// import { Page } from 'components/Page';
 import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageProps {

@@ -86,10 +86,6 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             <title>{props.title === DefaultSiteTitle ? site.name : `${props.title} - ${site.name}`}</title>
             <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
             <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico"/>
-            {/* Load "Inter Var" from rsms.me, which is served by CloudFlare CDN */}
-            <link href="https://rsms.me/inter/inter.css" rel="stylesheet"/>
-            {/* Load "Roboto Mono" as a variable font (:wght@100..700) from Google Fonts */}
-            <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@100..700&amp;display=swap" rel="stylesheet"/>
             <style>{`
                 :root {
                     --site-primary-color: 0, 255, 0;
