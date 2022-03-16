@@ -53,7 +53,7 @@ async function getExtraHeadersForRequest(): Promise<Record<string, string>> {
 
 export const client = new NeolaceApiClient({
     basePath: API_SERVER_URL,
-    fetchApi: IN_BROWSER ? window.fetch.bind(window) : require('node-fetch'),
+    fetchApi: globalThis.fetch.bind(globalThis),
     getExtraHeadersForRequest,
 });
 
