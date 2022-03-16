@@ -1,7 +1,7 @@
 import React from 'react';
 import { NextPage } from 'next'
 
-import { Page } from 'components/Page';
+import { SitePage } from 'components/SitePage';
 import { UserContext } from 'components/user/UserContext';
 import { Redirect } from 'components/utils/Redirect';
 
@@ -15,10 +15,11 @@ const LogoutPage: NextPage = function() {
     }, []);
 
     return (
-        <Page
-            title="Log out of TechNotes"
+        <SitePage
+            title="Log out"
+            sitePreloaded={null}
         >
-            <h1>Log out of TechNotes</h1>
+            <h1>Log out</h1>
             {
                 isLoggedOut ?
                     <Redirect to="/" replace={true}>
@@ -27,7 +28,7 @@ const LogoutPage: NextPage = function() {
                 :
                     <p>Logging out...</p>
             }
-        </Page>
+        </SitePage>
     );
 }
 
