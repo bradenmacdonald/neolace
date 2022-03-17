@@ -17,6 +17,7 @@
 		"editor.rulers": [
 			120,
 		],
+		// Allow adding the workspace root folder to the project (can cause some other weird issues though)
 		"files.exclude": {
 			"backend/": true,
 			"frontend/": true,
@@ -28,7 +29,6 @@
 			"https://deno.land": false,
 			"https://raw.githubusercontent.com": false
 		},
-		"deno.unstable": true,
-		"deno.importMap": "./import_map.json"
+		"deno.unstable": false
 	}
 }

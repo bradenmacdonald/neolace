@@ -14,7 +14,6 @@
             },
             "args": [
                 "run",
-                "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-read",
                 "--allow-env",
@@ -34,7 +33,6 @@
             },
             "args": [
                 "test",
-                "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-env",
                 "--allow-read"
@@ -45,10 +43,8 @@
             "label": "Run backend (watch mode)",
             "type": "shell",
             "command": "deno",
-            // We can make this stable once "Deno.addSignalListener" and "--watch" are stabilized.
             "args": [
                 "run",
-                "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-env",
                 "--allow-read",
@@ -62,10 +58,8 @@
             "label": "Run backend (with type checks)",
             "type": "shell",
             "command": "deno",
-            // We can make this stable once "Deno.addSignalListener" and "--watch" are stabilized.
             "args": [
                 "run",
-                "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-env",
                 "--allow-read",
@@ -90,7 +84,6 @@
             "command": "deno",
             "args": [
                 "run",
-                "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-read",
                 "--allow-env",
@@ -111,7 +104,6 @@
             "command": "deno",
             "args": [
                 "run",
-                "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-env",
                 "neolace/scripts/migrate.ts"
