@@ -134,6 +134,7 @@ export const PropertySchema = Schema({
      * e.g. use `[{value}](https://www.wikidata.org/wiki/{value})` to format a Wikidata Q ID as a link.
      */
     displayAs: string.strictOptional(),
+    // TODO: get rid of "displayAs", replace it with "transformEachForDisplay" and "transformAllForDisplay"
     /** Text shown to users when they go to edit this property value. */
     editNoteMD: string.strictOptional(),
     // TODO: hasSlot, hasWeight, hasSource

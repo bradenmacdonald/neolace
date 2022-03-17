@@ -45,7 +45,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 );
             }
 
-            // Temporary hack - FIXME
+            // FIXME: Temporary hack, replace with transform+annotate to give display hint https://app.clickup.com/t/23uvf0q
             if (site.shortId === "cams" && listValues.length > 2) {
                 const firstValue = value.values[0];
                 if (firstValue.type === "Annotated") {
