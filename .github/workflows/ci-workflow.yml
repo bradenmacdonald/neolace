@@ -11,7 +11,7 @@ on:
     branches: [main]
 
 env:
-  deno-version: ">=1.19.0 <1.20.0"
+  deno-version: ">=1.20.1 <1.21.0"
   docker-registry: ghcr.io
 
 jobs:
