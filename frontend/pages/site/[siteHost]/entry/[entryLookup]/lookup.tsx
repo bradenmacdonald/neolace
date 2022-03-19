@@ -2,13 +2,12 @@ import React from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ParsedUrlQuery } from 'querystring';
-import { Blurhash } from "react-blurhash";
 import { client, api, getSiteData, SiteData } from 'lib/api-client';
 
 import { SitePage } from 'components/SitePage';
 import { LookupExpressionInput } from 'components/widgets/LookupExpressionInput';
+import { useRouter } from 'next/router';
 
 interface PageProps {
     entry: api.EntryData;
@@ -22,8 +21,17 @@ interface PageUrlQuery extends ParsedUrlQuery {
 const QueryPage: NextPage<PageProps> = function(props) {
 
     const intl = useIntl();
-    const [queryExpression, setQueryExpression] = React.useState("");
-    const handleLookupExpressionChange = React.useCallback((value: string) => setQueryExpression(value), [setQueryExpression]);
+    const router = useRouter();
+
+    // The lookup expression that we're currently displaying, if any - comes from the URL or if the user types in a new one and presses ENTER
+    const activeLookupExpression: string = Array.isArray(router.query.e) ? router.query.e[0] : (router.query.e ?? "");
+
+    const [editingLookupExpression, setEditingLookupExpression] = React.useState(activeLookupExpression);
+    const handleLookupExpressionChange = React.useCallback((value: string) => setEditingLookupExpression(value), [setEditingLookupExpression]);
+    const handleFinishedChangingLookupExpression = React.useCallback(() => {
+        const newPath = location.pathname + `?e=${encodeURIComponent(editingLookupExpression)}`;
+        router.replace(newPath);
+    }, [editingLookupExpression, router]);
 
     const hasProps = props.entry.propertiesSummary?.length ?? 0 > 0;
 
@@ -54,10 +62,10 @@ const QueryPage: NextPage<PageProps> = function(props) {
         >
             <h1>{props.entry.name}</h1>
 
-            <LookupExpressionInput value={queryExpression} onChange={handleLookupExpressionChange} placeholder={intl.formatMessage({id: "site.entry.queryInputPlaceholder", defaultMessage: "Enter a lookup expression..."})}/>
+            <LookupExpressionInput value={editingLookupExpression} onChange={handleLookupExpressionChange} onFinishedEdits={handleFinishedChangingLookupExpression} placeholder={intl.formatMessage({id: "site.entry.queryInputPlaceholder", defaultMessage: "Enter a lookup expression..."})}/>
 
             <p><FormattedMessage id="site.entry.queryResult" defaultMessage="Result:" /></p>
-            <p>Here would be the result for the query <small>{queryExpression}</small></p>
+            <p>Here would be the result for the query <small>{activeLookupExpression}</small></p>
         </SitePage>
     );
 }

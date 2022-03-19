@@ -1,6 +1,6 @@
 import React from 'react';
 import { createEditor, type Descendant } from 'slate'
-import { Editable, RenderLeafProps, Slate, withReact } from 'slate-react';
+import { Editable, ReactEditor, RenderLeafProps, Slate, withReact } from 'slate-react';
 import { withHistory } from 'slate-history';
 import 'components/utils/slate';
 
@@ -8,11 +8,13 @@ import 'components/utils/slate';
 interface Props {
     value: string;
     onChange: (newValue: string) => void;
+    /** Optional event handler, called when the user has made changes and then pressed ENTER or blurred this input. */
+    onFinishedEdits?: () => void;
     placeholder?: string;
 }
 
 /**
- * A lookup expression input. Normally a single-line, but if the user enters newlines it will become multi-line.
+ * A lookup expression input. Normally a single-line, but if the user enters newlines (with shift-enter) it will become multi-line.
  */
 export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => {
 
@@ -31,10 +33,29 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
         props.onChange(slateDocToStringValue(newValue));
     }, [props.onChange, slateDocToStringValue]);
 
+    const onKeyDown = React.useCallback((event: React.KeyboardEvent) => {
+        if (event.key === "Enter") {
+            if (!event.shiftKey) {
+                event.preventDefault();
+                // We now "accept" this edit and blur the input
+                ReactEditor.blur(editor);
+            } else {
+                // For shift-enter, use the editor's default behavior of adding a new paragraph/block element.
+            }
+        }
+    }, [editor]);
+
     return <Slate editor={editor} value={parsedValue} onChange={onChange}>
         <div className="border-2 border-gray-500 rounded-md inline-flex items-center focus-within:outline outline-2 outline-theme-link-color overflow-hidden m-[3px] w-full md:w-auto">
             {/* toolbar and custom buttons etc. can go here. within the box. */}
-            <Editable /* decorate={decorate}*/ className="outline-none border-none px-2 py-1 w-full md:w-auto md:min-w-[300px] font-mono" renderLeaf={renderLeaf} placeholder={props.placeholder} />
+            <Editable
+                className="outline-none border-none px-2 py-1 w-full md:w-auto md:min-w-[300px] font-mono"
+                onKeyDown={onKeyDown}
+                onBlur={props.onFinishedEdits}
+                /* decorate={decorate}*/
+                renderLeaf={renderLeaf}
+                placeholder={props.placeholder}
+            />
         </div>
   </Slate>
 }
