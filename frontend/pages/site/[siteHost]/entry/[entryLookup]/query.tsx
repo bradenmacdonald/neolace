@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -21,7 +21,8 @@ interface PageUrlQuery extends ParsedUrlQuery {
 
 const QueryPage: NextPage<PageProps> = function(props) {
 
-    const [queryExpression, setQueryExpression] = React.useState("this.get([[/property/foo]])");
+    const intl = useIntl();
+    const [queryExpression, setQueryExpression] = React.useState("");
     const handleLookupExpressionChange = React.useCallback((value: string) => setQueryExpression(value), [setQueryExpression]);
 
     const hasProps = props.entry.propertiesSummary?.length ?? 0 > 0;
@@ -53,8 +54,7 @@ const QueryPage: NextPage<PageProps> = function(props) {
         >
             <h1>{props.entry.name}</h1>
 
-            <p><label htmlFor="queryInput"><FormattedMessage id="site.entry.queryInputlabel" defaultMessage="Enter a lookup expression:" /></label></p>
-            <LookupExpressionInput value={queryExpression} onChange={handleLookupExpressionChange}/>
+            <LookupExpressionInput value={queryExpression} onChange={handleLookupExpressionChange} placeholder={intl.formatMessage({id: "site.entry.queryInputPlaceholder", defaultMessage: "Enter a lookup expression..."})}/>
 
             <p><FormattedMessage id="site.entry.queryResult" defaultMessage="Result:" /></p>
             <p>Here would be the result for the query <small>{queryExpression}</small></p>
