@@ -82,7 +82,7 @@ Some types can be referenced as literals:
 In each example, `_2uDtUtOWJCL33X7zTAK8dK` is the ID of the object in question.
 
 * Entries: `[[/entry/_2uDtUtOWJCL33X7zTAK8dK]]`
-* Properties: `[[/property/_2uDtUtOWJCL33X7zTAK8dK]]`
+* Properties: `[[/prop/_2uDtUtOWJCL33X7zTAK8dK]]`
 * Entry Type: `[[/type/_2uDtUtOWJCL33X7zTAK8dK]]`
 
 ## Transform Expressions and Conditionals

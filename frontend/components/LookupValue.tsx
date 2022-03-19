@@ -8,10 +8,16 @@ import { EntryLink } from './EntryLink';
 import { LookupImage } from './LookupImage';
 import { FormattedFileSize } from './widgets/FormattedFileSize';
 import { HoverClickNote } from './widgets/HoverClickNote';
+import Link from 'next/link';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
     mdtContext: MDTContext;
+    /**
+     * The original lookup expression that resulted in this value; used to link to "see more results" in case we only
+     * show a partial value.
+     */
+    originalExpression?: string;
     children?: never;
 }
 
@@ -34,15 +40,18 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             );
             
             if (listValues.length < value.totalCount) {
-                listValues.push(
-                    <FormattedMessage
-                        key="more"
-                        id="common.list.xmore"
-                        defaultMessage="{extraCount, plural, one {# more…} other {# more…}}"
-                        values={{extraCount: value.totalCount - listValues.length}}
-                        description="How many more items there are (at the end of a list)"
-                    />
-                );
+                let moreLink = <FormattedMessage
+                    key="more"
+                    id="common.list.xmore"
+                    defaultMessage="{extraCount, plural, one {# more…} other {# more…}}"
+                    values={{extraCount: value.totalCount - listValues.length}}
+                    description="How many more items there are (at the end of a list)"
+                />;
+                if (props.originalExpression && props.mdtContext.entryId) {
+                    const entryKey = props.mdtContext.refCache.entries[props.mdtContext.entryId]?.friendlyId ?? props.mdtContext.entryId;
+                    moreLink = <Link key="more" href={`/entry/${entryKey}/query?q=${encodeURIComponent(props.originalExpression)}`}><a>{moreLink}</a></Link>;
+                }
+                listValues.push(moreLink);
             }
 
             // FIXME: Temporary hack, replace with transform+annotate to give display hint https://app.clickup.com/t/23uvf0q
@@ -116,13 +125,13 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Annotated":
             if (value.annotations.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
                 return <>
-                    <LookupValue value={value.value} mdtContext={props.mdtContext} />
+                    <LookupValue value={value.value} mdtContext={props.mdtContext} originalExpression={props.originalExpression} />
                     <HoverClickNote>
                         <p className="text-sm"><InlineMDT mdt={value.annotations.note.value} context={props.mdtContext} /></p>
                     </HoverClickNote>
                 </>;
             }
-            return <LookupValue value={value.value} mdtContext={props.mdtContext} />
+            return <LookupValue value={value.value} mdtContext={props.mdtContext} originalExpression={props.originalExpression} />
         case "Null":
             return <></>;
         default: {
