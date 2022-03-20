@@ -8,6 +8,8 @@ import { client, api, getSiteData, SiteData } from 'lib/api-client';
 import { SitePage } from 'components/SitePage';
 import { LookupExpressionInput } from 'components/widgets/LookupExpressionInput';
 import { useRouter } from 'next/router';
+import { LookupEvaluator } from 'components/LookupEvaluator';
+import { MDTContext } from 'components/markdown-mdt/mdt';
 
 interface PageProps {
     entry: api.EntryData;
@@ -34,6 +36,11 @@ const QueryPage: NextPage<PageProps> = function(props) {
     }, [editingLookupExpression, router]);
 
     const hasProps = props.entry.propertiesSummary?.length ?? 0 > 0;
+
+    const mdtContext = React.useMemo(() => new MDTContext({
+        entryId: props.entry.id,
+        refCache: props.entry.referenceCache,
+    }), [props.entry.id, props.entry.referenceCache]);
 
     return (
         <SitePage
@@ -64,8 +71,13 @@ const QueryPage: NextPage<PageProps> = function(props) {
 
             <LookupExpressionInput value={editingLookupExpression} onChange={handleLookupExpressionChange} onFinishedEdits={handleFinishedChangingLookupExpression} placeholder={intl.formatMessage({id: "site.entry.queryInputPlaceholder", defaultMessage: "Enter a lookup expression..."})}/>
 
-            <p><FormattedMessage id="site.entry.queryResult" defaultMessage="Result:" /></p>
-            <p>Here would be the result for the query <small>{activeLookupExpression}</small></p>
+            <p><FormattedMessage id="site.entry.lookupResultHeading" defaultMessage="Result:" /></p>
+            {
+                activeLookupExpression ?
+                    <LookupEvaluator expr={activeLookupExpression} mdtContext={mdtContext} />
+                :
+                    <FormattedMessage id="site.entry.lookupExpressionMissing" defaultMessage="Enter a lookup expression above to see the result." />
+            }
         </SitePage>
     );
 }
