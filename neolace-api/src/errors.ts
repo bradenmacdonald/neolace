@@ -84,6 +84,8 @@ export class InvalidFieldValue extends InvalidRequest {
 export const enum InvalidRequestReason {
     /** One or more of the fields you provided is invalid, e.g. blank, too short, too long, invalid character, etc. */
     InvalidFieldValue = "400_INVALID_FIELD",
+    /** The provided lookup expression could not be parsed */
+    LookupExpressionParseError = "400_LOOKUP_PARSE_ERROR",
     /** Tried to register a user account, but another account already exists with the same email */
     EmailAlreadyRegistered = "400_EMAIL_EXISTS",
     /** Tried to register a user account, but another account already exists with the same username */

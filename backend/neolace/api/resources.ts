@@ -5,6 +5,7 @@ import { PasswordlessLoginWebhookResource } from "./auth/hooks/passwordless-logi
 import { SystemKeyResource } from "./auth/system-key.ts";
 import { SiteLookupResource } from "./site/lookup.ts";
 import { SiteHomeResource } from "./site/{siteShortId}/home.ts";
+import { EvaluateLookupResource } from "./site/{siteShortId}/lookup.ts";
 import { SchemaIndexResource } from "./site/{siteShortId}/schema/index.ts";
 import { DraftIndexResource } from "./site/{siteShortId}/draft/index.ts";
 import { DraftResource } from "./site/{siteShortId}/draft/{draftId}/index.ts";
@@ -25,6 +26,7 @@ export const builtInRestApiResources: (typeof NeolaceHttpResource)[] = [
     SystemKeyResource,
     SiteLookupResource,
     SiteHomeResource,
+    EvaluateLookupResource,
     SchemaIndexResource,
     DraftIndexResource,
     DraftResource,

@@ -1,6 +1,6 @@
-import { Schema, Type, string, vnidString, nullable, array, number, object, Record, Validator } from "../api-schemas.ts";
+import { Schema, Type, string, vnidString, nullable, array, number, Record, Validator } from "../api-schemas.ts";
 import { PropertyType } from "../schema/SiteSchemaData.ts";
-import { AnyLookupValue } from "./lookup-value.ts";
+import { LookupValueSchema } from "./lookup-value.ts";
 
 
 export enum GetEntryFlags {
@@ -23,7 +23,7 @@ export enum GetEntryFlags {
  */
 export const DisplayedPropertySchema = Schema({
     propertyId: vnidString,
-    value: object.transform(obj => obj as AnyLookupValue),
+    value: LookupValueSchema,
 });
 export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
 
@@ -113,7 +113,7 @@ export const ReferenceCacheSchema = Schema({
     lookups: array.of(Schema({
         entryContext: vnidString.strictOptional(),  // VNID of the entry where the lookup expression was referenced, if applicable.
         lookupExpression: string,  // The lookup expression as parsed by the MDT library in the Neolace API
-        value: object.transform(x => x as AnyLookupValue),
+        value: LookupValueSchema,
     })),
 });
 
