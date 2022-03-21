@@ -2,7 +2,7 @@ import * as KeratinAuthN from 'keratin-authn';
 import useSWR from 'swr';
 import { AsyncCache } from './async-cache';
 import { useRouter } from 'next/router';
-import { NeolaceApiClient, NotFound, SiteDetailsData } from 'neolace-api';
+import { EvaluateLookupData, NeolaceApiClient, NotFound, SiteDetailsData, VNID } from 'neolace-api';
 
 import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
 import { ApiError } from 'next/dist/server/api-utils';
@@ -110,4 +110,32 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
     });
     if (data === undefined) { throw "fallbackError"; }  // Tell TypeScript data is always defined due to the fallback above.
     return {site: data, siteError: error};
+}
+
+
+/**
+ * React hook to evaluate a lookup expression
+ * @returns 
+ */
+ export function useLookupExpression(expr: string, options: {entryId?: VNID} = {}): {result: EvaluateLookupData|undefined, error: ApiError} {
+    const {site} = useSiteData();
+    // TODO: include an entry revision number in this ID
+    const key = `lookup:${site.shortId}:${options.entryId ?? 'none'}:no-draft:${expr}`;
+    const { data, error } = useSWR(key, async () => {
+        if (expr.trim() === "") {
+            // If there is no expression, don't bother hitting the API:
+            return {
+                expressionNormalized: "",
+                resultValue: {type: "Null" as const},
+                entryContext: options.entryId,
+            };
+        } if (site.shortId) {
+            return await client.evaluateLookupExpression(expr, {entryKey: options.entryId, siteId: site.shortId});
+        } else {
+            return undefined;
+        }
+    }, {
+        // refreshInterval: 10 * 60_000,
+    });
+    return {result: data, error};
 }

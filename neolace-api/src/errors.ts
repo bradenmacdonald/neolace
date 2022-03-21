@@ -81,7 +81,7 @@ export class InvalidFieldValue extends InvalidRequest {
 }
 
 // This is a const enum so that it has minimal overhead
-export const enum InvalidRequestReason {
+export enum InvalidRequestReason {
     /** One or more of the fields you provided is invalid, e.g. blank, too short, too long, invalid character, etc. */
     InvalidFieldValue = "400_INVALID_FIELD",
     /** The provided lookup expression could not be parsed */
