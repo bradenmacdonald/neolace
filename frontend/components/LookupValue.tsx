@@ -9,6 +9,7 @@ import { LookupImage } from './LookupImage';
 import { FormattedFileSize } from './widgets/FormattedFileSize';
 import { HoverClickNote } from './widgets/HoverClickNote';
 import Link from 'next/link';
+import { ErrorMessage } from './widgets/ErrorMessage';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -115,13 +116,13 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Date":
             return <>{value.value}</>;
         case "Error":
-            return <span className="neo-lookup-error text-sm text-red-900">
+            return <ErrorMessage>
                 <FormattedMessage 
                     id="common.lookup-expression.error"
                     defaultMessage="Error ({errorType}): {errorMessage}"
                     values={{errorType: value.errorClass, errorMessage: value.message}}
                 />
-            </span>
+            </ErrorMessage>
         case "Annotated":
             if (value.annotations.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
                 return <>

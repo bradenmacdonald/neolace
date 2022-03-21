@@ -150,5 +150,5 @@ export function parseLookupString(lookup: string): LookupExpression {
         return new List(parts.map((part) => parseLookupString(part)));
     }
 
-    throw new LookupParseError(`Simple/fake parser is unable to parse the lookup expression "${lookup}"`);
+    throw new LookupParseError(`Unable to parse the lookup expression "${lookup}"`);
 }
