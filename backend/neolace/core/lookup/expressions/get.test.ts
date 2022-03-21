@@ -30,6 +30,7 @@ group(import.meta, () => {
     );
     const partIsAPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._partIsAPart.id));
     const hasPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._hasPart.id));
+    const genusSpecies = new LiteralExpression(new PropertyValue(defaultData.schema.properties._genusSpecies.id));
 
     // When retrieving the entry values from a relationship property, they are "annotated" with data like this:
     const defaultAnnotations = {
@@ -61,6 +62,19 @@ group(import.meta, () => {
 
     group("get() - value property, multiple entries", () => {
         // TODO
+    });
+
+    group("get() - auto property", () => {
+        test(`Can retrieve an automatically-computed reverse relationship property value`, async () => {
+            const expression = new GetProperty(new This(), { propertyExpr: genusSpecies });
+            const value = await evalExpression(expression, defaultData.entries.genusThuja.id);
+            assertEquals(
+                value,
+                new PageValue([
+                    MakeAnnotatedEntryValue(defaultData.entries.westernRedcedar.id, { ...defaultAnnotations }),
+                ], { pageSize: 10n, startedAt: 0n, totalCount: 1n }),
+            );
+        });
     });
 
     group("get() - relationship property", () => {
