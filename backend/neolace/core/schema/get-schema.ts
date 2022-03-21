@@ -197,6 +197,7 @@ export function diffSchema(
         // Delete any removed Properties:
         const deletedPropertyIds = difference(oldPropertyIds, newPropertyIds);
         if (deletedPropertyIds.size > 0) {
+            console.error(`Trying to delete property with ID ${deletedPropertyIds.values().next().value}`); // Temporary until deleting properties is implemented
             throw new Error("Deleting Properties from the schema is not implemented.");
         }
 

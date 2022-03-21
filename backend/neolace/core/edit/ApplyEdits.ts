@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+import * as log from "std/log/mod.ts";
 import {
     AddPropertyValue,
     CreateEntry,
@@ -134,6 +135,7 @@ export const ApplyEdits = defineAction({
                         }));
                     } catch (err) {
                         if (err instanceof EmptyResultError) {
+                            log.info(`Failed to find property with ID ${edit.data.property}`);
                             throw new Error("Property not found on the site or doesn't apply to that entry type.");
                         } else {
                             throw err;
