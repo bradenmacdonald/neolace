@@ -33,11 +33,11 @@ export class MDTContext {
         this[footnotes] = args[footnotes];
     }
 
-    public childContextWith(args: {entryId?: VNID|undefined, headingShift?: number, [footnotes]?: MDT.RootNode["footnotes"]}) {
+    public childContextWith(args: {entryId?: VNID|undefined, refCache?: api.ReferenceCacheData, headingShift?: number, [footnotes]?: MDT.RootNode["footnotes"]}) {
         const entryId = 'entryId' in args ? args.entryId : this.entryId;
         return new MDTContext({
             entryId,
-            refCache: this.refCache,
+            refCache: args.refCache ?? this.refCache,
             headingShift: this.headingShift + (args.headingShift ?? 0),
             [footnotes]: args[footnotes] ?? (entryId === this.entryId ? this[footnotes] : undefined),
         });

@@ -284,7 +284,7 @@ export const schema = ValidateSiteSchema({
             appliesTo: [{ entryType: VNID("_ETPLANTPART") }],
             mode: PropertyMode.Auto,
             default: `this.andDescendants().reverse(prop=[[/prop/_hasPart]])`,
-            descriptionMD: `This plant is found in these species/genera/etc.`,
+            descriptionMD: `This plant part is found in these species/genera/etc.`,
             importance: 10,
         },
         // Plant part is a type of plant part

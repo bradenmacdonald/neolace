@@ -27,6 +27,41 @@ group(import.meta, () => {
         );
     });
 
+    test("It can evaluate an AUTO relationship property and return a reference cache with details of each entry", async () => {
+        const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+        const result = await client.evaluateLookupExpression(
+            `this.get(prop=[[/prop/${defaultData.schema.properties._relImages.id}]])`,
+            { entryKey: defaultData.entries.ponderosaPine.friendlyId },
+        );
+
+        assertEquals(result.resultValue, {
+            type: "Page",
+            startedAt: 0,
+            pageSize: 20,
+            totalCount: 1,
+            values: [
+                {
+                    type: "Annotated",
+                    annotations: {
+                        note: { type: "InlineMarkdownString", value: "" },
+                        rank: { type: "Integer", value: "1" },
+                        slot: { type: "Null" },
+                    },
+                    value: { type: "Entry", id: defaultData.entries.imgPonderosaTrunk.id },
+                },
+            ],
+        });
+        assertEquals(
+            result.expressionNormalized,
+            `get(this, prop=[[/prop/${defaultData.schema.properties._relImages.id}]])`,
+        );
+        assertEquals(
+            result.referenceCache.entries[defaultData.entries.imgPonderosaTrunk.id]?.name,
+            defaultData.entries.imgPonderosaTrunk.name,
+        );
+    });
+
     test("It gives a parse error when the expression cannot be parsed", async () => {
         const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 

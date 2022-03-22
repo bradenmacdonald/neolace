@@ -18,6 +18,9 @@ interface Props {
  */
 export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
     const {result, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId});
+
+    const mdtContext = React.useMemo(() => props.mdtContext.childContextWith({refCache: result?.referenceCache}), [result?.referenceCache, props.mdtContext])
+
     if (error) {
         if (error instanceof api.InvalidRequest && error.reason === api.InvalidRequestReason.LookupExpressionParseError) {
             return <ErrorMessage>
@@ -43,5 +46,5 @@ export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
     } else if (result === undefined) {
         return <Spinner />;
     }
-    return <LookupValue value={result.resultValue} mdtContext={props.mdtContext} originalExpression={props.expr} />;
+    return <LookupValue value={result.resultValue} mdtContext={mdtContext} originalExpression={props.expr} />;
 };

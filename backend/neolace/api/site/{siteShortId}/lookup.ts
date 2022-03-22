@@ -1,10 +1,11 @@
+import { VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
 import { CachedLookupContext } from "neolace/core/lookup/context.ts";
 import { parseLookupString } from "neolace/core/lookup/parse.ts";
 import { LookupParseError } from "neolace/core/lookup/errors.ts";
 import { LookupExpression } from "neolace/core/lookup/expression.ts";
 import { getEntry } from "./entry/{entryId}/_helpers.ts";
-import { VNID } from "neolace/deps/vertex-framework.ts";
+import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 
 export class EvaluateLookupResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/lookup"];
@@ -44,18 +45,25 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
             throw err;
         }
 
-        const resultValue = await graph.read(async (tx) => {
+        const { resultValue, refCacheData } = await graph.read(async (tx) => {
             const defaultPageSize = 20n;
             const context = new CachedLookupContext(tx, siteId, entry?.id, defaultPageSize);
             // Evaluate the expression. On LookupEvaluationError, this will return an ErrorValue.
             const value = await context.evaluateExpr(parsedExpression);
             // TODO: set a timeout to rollback/abort the transaction if it's taking too long.
-            return (await value.makeConcrete()).toJSON();
+            const resultValue = (await value.makeConcrete()).toJSON();
+
+            const refCache = new ReferenceCache({ siteId });
+            refCache.extractLookupReferences(resultValue, { currentEntryId: entry?.id });
+            const refCacheData = await refCache.getData(tx, context);
+
+            return { resultValue, refCacheData };
         });
 
         return {
             expressionNormalized: parsedExpression.toString(),
             resultValue,
+            referenceCache: refCacheData,
         };
     });
 }
