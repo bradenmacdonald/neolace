@@ -93,7 +93,7 @@ export class GetProperty extends LookupExpression {
         this.propertyExpr = extraParams.propertyExpr;
     }
 
-    public async getValue(context: LookupContext) {
+    public async getValue(context: LookupContext): Promise<LookupValue> {
         // TODO: if this.fromEntriesExpr is a Transform Expression, return a special placeholder value?
 
         // First, look up the property we are retrieving:
@@ -155,7 +155,11 @@ export class GetProperty extends LookupExpression {
                 WITH entry, annotations
                 ORDER BY annotations.rank, entry.name
             `,
-                { annotations: { rank: dbRankToValue, note: dbNoteToValue, slot: dbSlotToValue } },
+                {
+                    annotations: { rank: dbRankToValue, note: dbNoteToValue, slot: dbSlotToValue },
+                    sourceExpression: this,
+                    sourceExpressionEntryId: context.entryId,
+                },
             );
         } else {
             // This is a value property. Are we retieving it for one entry or many?

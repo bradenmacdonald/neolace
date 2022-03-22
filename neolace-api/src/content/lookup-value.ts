@@ -12,6 +12,7 @@ export interface PageValue extends LookupValue {
     startedAt: number;
     pageSize: number;
     totalCount: number;
+    source?: {expr: string; entryId?: VNID; };
 }
 
 export interface ListValue extends LookupValue {

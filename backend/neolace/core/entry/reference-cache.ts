@@ -167,6 +167,9 @@ export class ReferenceCache {
         switch (value.type) {
             case "Page": {
                 value.values.forEach((v) => this.extractLookupReferences(v, args));
+                if (value.source?.entryId) {
+                    this._entryIdsUsed.add(value.source.entryId);
+                }
                 return;
             }
             case "Annotated": {

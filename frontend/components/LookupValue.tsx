@@ -14,11 +14,6 @@ import { ErrorMessage } from './widgets/ErrorMessage';
 interface LookupValueProps {
     value: api.AnyLookupValue;
     mdtContext: MDTContext;
-    /**
-     * The original lookup expression that resulted in this value; used to link to "see more results" in case we only
-     * show a partial value.
-     */
-    originalExpression?: string;
     children?: never;
 }
 
@@ -48,9 +43,9 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                     values={{extraCount: value.totalCount - listValues.length}}
                     description="How many more items there are (at the end of a list)"
                 />;
-                if (props.originalExpression && props.mdtContext.entryId) {
-                    const entryKey = props.mdtContext.refCache.entries[props.mdtContext.entryId]?.friendlyId ?? props.mdtContext.entryId;
-                    moreLink = <Link key="more" href={`/entry/${entryKey}/lookup?e=${encodeURIComponent(props.originalExpression)}`}><a>{moreLink}</a></Link>;
+                if (value.source && value.source.entryId) {
+                    const entryKey = props.mdtContext.refCache.entries[value.source.entryId]?.friendlyId ?? props.mdtContext.entryId;
+                    moreLink = <Link key="more" href={`/entry/${entryKey}/lookup?e=${encodeURIComponent(value.source.expr)}`}><a>{moreLink}</a></Link>;
                 }
                 listValues.push(moreLink);
             }
@@ -126,13 +121,13 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Annotated":
             if (value.annotations.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
                 return <>
-                    <LookupValue value={value.value} mdtContext={props.mdtContext} originalExpression={props.originalExpression} />
+                    <LookupValue value={value.value} mdtContext={props.mdtContext} />
                     <HoverClickNote>
                         <p className="text-sm"><InlineMDT mdt={value.annotations.note.value} context={props.mdtContext} /></p>
                     </HoverClickNote>
                 </>;
             }
-            return <LookupValue value={value.value} mdtContext={props.mdtContext} originalExpression={props.originalExpression} />
+            return <LookupValue value={value.value} mdtContext={props.mdtContext} />
         case "Null":
             return <></>;
         default: {

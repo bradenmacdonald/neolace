@@ -51,6 +51,10 @@ group(import.meta, () => {
                     value: { type: "Entry", id: defaultData.entries.imgPonderosaTrunk.id },
                 },
             ],
+            source: {
+                expr: `reverse(andDescendants(this), prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                entryId: defaultData.entries.ponderosaPine.id,
+            },
         });
         assertEquals(
             result.expressionNormalized,

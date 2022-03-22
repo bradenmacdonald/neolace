@@ -14,6 +14,7 @@ import { GetProperty } from "./get.ts";
 import { LookupExpression } from "../expression.ts";
 import { This } from "./this.ts";
 import { LiteralExpression } from "./literal-expr.ts";
+import { ReverseProperty } from "./reverse.ts";
 
 group(import.meta, () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
@@ -31,6 +32,7 @@ group(import.meta, () => {
     const partIsAPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._partIsAPart.id));
     const hasPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._hasPart.id));
     const genusSpecies = new LiteralExpression(new PropertyValue(defaultData.schema.properties._genusSpecies.id));
+    const parentGenus = new LiteralExpression(new PropertyValue(defaultData.schema.properties._parentGenus.id));
 
     // When retrieving the entry values from a relationship property, they are "annotated" with data like this:
     const defaultAnnotations = {
@@ -72,7 +74,15 @@ group(import.meta, () => {
                 value,
                 new PageValue([
                     MakeAnnotatedEntryValue(defaultData.entries.westernRedcedar.id, { ...defaultAnnotations }),
-                ], { pageSize: 10n, startedAt: 0n, totalCount: 1n }),
+                ], {
+                    pageSize: 10n,
+                    startedAt: 0n,
+                    totalCount: 1n,
+                    // Note that in this case, sourceExpression is not this.get(prop=...), but rather this.reverse(...)
+                    // since that's the "real" lookup expression being used here.
+                    sourceExpression: new ReverseProperty(new This(), { propertyExpr: parentGenus }),
+                    sourceExpressionEntryId: defaultData.entries.genusThuja.id,
+                }),
             );
         });
     });
@@ -86,7 +96,13 @@ group(import.meta, () => {
                 value,
                 new PageValue([
                     MakeAnnotatedEntryValue(cone, { ...defaultAnnotations }),
-                ], { pageSize: 10n, startedAt: 0n, totalCount: 1n }),
+                ], {
+                    pageSize: 10n,
+                    startedAt: 0n,
+                    totalCount: 1n,
+                    sourceExpression: expression,
+                    sourceExpressionEntryId: defaultData.entries.seedCone.id,
+                }),
             );
         });
 
@@ -106,7 +122,13 @@ group(import.meta, () => {
                         slot: new StringValue("seed-cone"),
                         rank: new IntegerValue(2n),
                     }),
-                ], { pageSize: 10n, startedAt: 0n, totalCount: 2n }),
+                ], {
+                    pageSize: 10n,
+                    startedAt: 0n,
+                    totalCount: 2n,
+                    sourceExpression: expression,
+                    sourceExpressionEntryId: defaultData.entries.classPinopsida.id,
+                }),
             );
         });
     });

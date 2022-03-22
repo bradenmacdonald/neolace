@@ -5,6 +5,7 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 
 import type { LookupContext } from "./context.ts";
+import type { LookupExpression } from "./expression.ts";
 import { LookupError, LookupEvaluationError } from "./errors.ts";
 
 // deno-lint-ignore no-explicit-any
@@ -598,16 +599,28 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
     readonly startedAt: bigint; // Also called "skip"
     readonly pageSize: bigint; // Also called "limit"
     readonly totalCount: bigint;
+    /** The source expression can be used along with slice() to retrieve additional pages of the result. */
+    readonly sourceExpression?: LookupExpression;
+    /** The entry used for any "this" expressions in the sourceExpression. This could be removed if we could erase "this" expressions. */
+    readonly sourceExpressionEntryId?: VNID;
 
     constructor(
         values: ReadonlyArray<T>,
-        { startedAt, pageSize, totalCount }: { startedAt: bigint; pageSize: bigint; totalCount: bigint },
+        { startedAt, pageSize, totalCount, sourceExpression, sourceExpressionEntryId }: {
+            startedAt: bigint;
+            pageSize: bigint;
+            totalCount: bigint;
+            sourceExpression?: LookupExpression;
+            sourceExpressionEntryId?: VNID;
+        },
     ) {
         super();
         this.values = values;
         this.startedAt = startedAt;
         this.pageSize = pageSize;
         this.totalCount = totalCount;
+        this.sourceExpression = sourceExpression;
+        this.sourceExpressionEntryId = sourceExpressionEntryId;
     }
 
     public override asLiteral() {
@@ -615,12 +628,19 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
     }
 
     protected serialize() {
-        return {
+        const v: Omit<api.PageValue, "type"> = {
             values: this.values.map((v) => v.toJSON()),
             startedAt: Number(this.startedAt),
             pageSize: Number(this.pageSize),
             totalCount: Number(this.totalCount),
         };
+        if (this.sourceExpression) {
+            v.source = { expr: this.sourceExpression.toString() };
+            if (this.sourceExpressionEntryId) {
+                v.source.entryId = this.sourceExpressionEntryId;
+            }
+        }
+        return v;
     }
 
     /** Helper method to quickly make a "Page" value from a fixed array of values */
@@ -706,16 +726,21 @@ abstract class LazyValue extends LookupValue {
 abstract class AbstractLazyCypherQueryValue extends LazyValue implements ICountableValue, IIterableValue {
     public readonly hasCount = true;
     public readonly isIterable = true;
-    /**
-     * The first part of the Cypher query, without a RETURN statement or SKIP, LIMIT, etc.
-     */
-    readonly cypherQuery: CypherQuery;
     private defaultPageSize: bigint;
 
-    constructor(context: LookupContext, cypherQuery: CypherQuery) {
+    constructor(
+        context: LookupContext,
+        /**
+         * The first part of the Cypher query, without a RETURN statement or SKIP, LIMIT, etc.
+         */
+        public readonly cypherQuery: CypherQuery,
+        /** The lookup expression that evaluates to this query */
+        public readonly sourceExpression?: LookupExpression,
+        /** The entry used for any "this" expressions in the sourceExpression. This could be removed if we could erase "this" expressions. */
+        public readonly sourceExpressionEntryId?: VNID,
+    ) {
         super(context);
         this.defaultPageSize = context.defaultPageSize;
-        this.cypherQuery = cypherQuery;
     }
 
     protected getSkipLimitClause(skip: bigint, limit: bigint) {
@@ -738,7 +763,13 @@ abstract class AbstractLazyCypherQueryValue extends LazyValue implements ICounta
 
         const concreteValues = await Promise.all(firstPageValues.map((v) => v.makeConcrete()));
 
-        return new PageValue<ConcreteValue>(concreteValues, { startedAt: 0n, pageSize, totalCount });
+        return new PageValue<ConcreteValue>(concreteValues, {
+            startedAt: 0n,
+            pageSize,
+            totalCount,
+            sourceExpression: this.sourceExpression,
+            sourceExpressionEntryId: this.sourceExpressionEntryId,
+        });
     }
 
     public abstract getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]>;
@@ -761,9 +792,13 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
     constructor(
         context: LookupContext,
         cypherQuery: CypherQuery,
-        options: { annotations?: Record<string, AnnotationReviver> } = {},
+        options: {
+            annotations?: Record<string, AnnotationReviver>;
+            sourceExpression?: LookupExpression;
+            sourceExpressionEntryId?: VNID;
+        } = {},
     ) {
-        super(context, cypherQuery);
+        super(context, cypherQuery, options.sourceExpression, options.sourceExpressionEntryId);
         this.annotations = options.annotations;
     }
 

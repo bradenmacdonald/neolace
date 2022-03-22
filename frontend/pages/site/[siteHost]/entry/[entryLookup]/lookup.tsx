@@ -131,7 +131,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
         return {
             redirect: {
-                destination: `/entry/${entry.friendlyId}/query`,
+                destination: `/entry/${entry.friendlyId}/lookup`,
                 permanent: true,
             },
         };

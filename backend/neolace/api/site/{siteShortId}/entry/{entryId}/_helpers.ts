@@ -12,12 +12,14 @@ import {
     IntegerValue,
     NullValue,
     PageValue,
+    PropertyValue,
     StringValue,
 } from "neolace/core/lookup/values.ts";
 import { EntryPropertyValueSet, getEntryProperties } from "neolace/core/entry/properties.ts";
 import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-data.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
+import { GetProperty, LiteralExpression, This } from "neolace/core/lookup/expressions/index.ts";
 
 /**
  * Helper function to wrap an async function so that it only runs at most once. If you don't need/call it, it won't run
@@ -130,7 +132,17 @@ export async function getEntry(
                     // There are two or more values. Show up to five.
                     value = new PageValue<AnnotatedValue>(
                         await Promise.all(facts.slice(0, maxValuesPerProp).map((f) => factToValue(f, property))),
-                        { startedAt: 0n, pageSize: BigInt(maxValuesPerProp), totalCount: BigInt(facts.length) },
+                        {
+                            startedAt: 0n,
+                            pageSize: BigInt(maxValuesPerProp),
+                            totalCount: BigInt(facts.length),
+                            // Also pass along the lookup expression that can be used to retrieve the rest of the values from this property:
+                            // this.get(prop=[[/prop/_id]])
+                            sourceExpression: new GetProperty(new This(), {
+                                propertyExpr: new LiteralExpression(new PropertyValue(property.id)),
+                            }),
+                            sourceExpressionEntryId: entryData.id,
+                        },
                     );
                 }
             } catch (err: unknown) {

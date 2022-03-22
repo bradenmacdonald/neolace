@@ -46,5 +46,5 @@ export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
     } else if (result === undefined) {
         return <Spinner />;
     }
-    return <LookupValue value={result.resultValue} mdtContext={mdtContext} originalExpression={props.expr} />;
+    return <LookupValue value={result.resultValue} mdtContext={mdtContext} />;
 };

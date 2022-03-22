@@ -100,7 +100,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                                         <LookupValue value={{type: "Property", id: p.propertyId}} mdtContext={mdtContext} />
                                     </th>
                                     <td className="block md:table-cell pr-2 pb-1 md:py-1 text-sm md:text-base">
-                                        <LookupValue value={p.value} mdtContext={mdtContext} originalExpression={`this.get(prop=[[/prop/${p.propertyId}]])`} />
+                                        <LookupValue value={p.value} mdtContext={mdtContext} />
                                     </td>
                                 </tr>
                             )}
