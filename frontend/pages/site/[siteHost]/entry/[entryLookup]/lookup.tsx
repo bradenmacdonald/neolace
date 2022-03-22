@@ -85,12 +85,14 @@ const EvaluateLookupPage: NextPage<PageProps> = function(props) {
             />
 
             <p><FormattedMessage id="site.entry.lookupResultHeading" defaultMessage="Result:" /></p>
-            {
-                activeLookupExpression ?
-                    <LookupEvaluator expr={activeLookupExpression} mdtContext={mdtContext} />
-                :
-                    <FormattedMessage id="site.entry.lookupExpressionMissing" defaultMessage="Enter a lookup expression above to see the result." />
-            }
+            <div className={activeLookupExpression !== editingLookupExpression ? `opacity-50` : ``}>
+                {
+                    activeLookupExpression ?
+                        <LookupEvaluator expr={activeLookupExpression} mdtContext={mdtContext} />
+                    :
+                        <FormattedMessage id="site.entry.lookupExpressionMissing" defaultMessage="Enter a lookup expression above to see the result." />
+                }
+            </div>
         </SitePage>
     );
 }
