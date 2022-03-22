@@ -20,7 +20,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
     entryLookup: string;
 }
 
-const QueryPage: NextPage<PageProps> = function(props) {
+const EvaluateLookupPage: NextPage<PageProps> = function(props) {
 
     const intl = useIntl();
     const router = useRouter();
@@ -28,12 +28,10 @@ const QueryPage: NextPage<PageProps> = function(props) {
     // The lookup expression that we're currently displaying, if any - comes from the URL or if the user types in a new one and presses ENTER
     const activeLookupExpression: string = Array.isArray(router.query.e) ? router.query.e[0] : (router.query.e ?? "");
 
-    const [editingLookupExpression, setEditingLookupExpression] = React.useState(activeLookupExpression);
-    const handleLookupExpressionChange = React.useCallback((value: string) => setEditingLookupExpression(value), [setEditingLookupExpression]);
-    const handleFinishedChangingLookupExpression = React.useCallback(() => {
-        const newPath = location.pathname + `?e=${encodeURIComponent(editingLookupExpression)}`;
+    const handleFinishedChangingLookupExpression = React.useCallback((value: string) => {
+        const newPath = location.pathname + `?e=${encodeURIComponent(value)}`;
         router.replace(newPath);
-    }, [editingLookupExpression, router]);
+    }, [router]);
 
     const hasProps = props.entry.propertiesSummary?.length ?? 0 > 0;
 
@@ -69,7 +67,12 @@ const QueryPage: NextPage<PageProps> = function(props) {
         >
             <h1>{props.entry.name}</h1>
 
-            <LookupExpressionInput value={editingLookupExpression} onChange={handleLookupExpressionChange} onFinishedEdits={handleFinishedChangingLookupExpression} placeholder={intl.formatMessage({id: "site.entry.queryInputPlaceholder", defaultMessage: "Enter a lookup expression..."})}/>
+            <LookupExpressionInput
+                initialValue={activeLookupExpression}
+                key={activeLookupExpression}
+                onFinishedEdits={handleFinishedChangingLookupExpression}
+                placeholder={intl.formatMessage({id: "site.entry.queryInputPlaceholder", defaultMessage: "Enter a lookup expression..."})}
+            />
 
             <p><FormattedMessage id="site.entry.lookupResultHeading" defaultMessage="Result:" /></p>
             {
@@ -82,7 +85,7 @@ const QueryPage: NextPage<PageProps> = function(props) {
     );
 }
 
-export default QueryPage;
+export default EvaluateLookupPage;
 
 export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
     return await {
