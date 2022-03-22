@@ -128,13 +128,15 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
                 expressionNormalized: "",
                 resultValue: {type: "Null" as const},
                 entryContext: options.entryId,
+                referenceCache: { entries: {}, entryTypes: {}, lookups: [], properties: {} },
             };
-        } if (site.shortId) {
+        } else if (site.shortId) {
             return await client.evaluateLookupExpression(expr, {entryKey: options.entryId, siteId: site.shortId});
         } else {
             return undefined;
         }
     }, {
+
         // refreshInterval: 10 * 60_000,
     });
     return {result: data, error};
