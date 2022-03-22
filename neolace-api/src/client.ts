@@ -165,7 +165,7 @@ export class NeolaceApiClient {
     // Site API Methods
 
     public async getSite(criteria: {domain: string}): Promise<SiteDetailsData> {
-        return await this.call(`/site/lookup?domain=${encodeURIComponent(criteria.domain)}`, {method: "GET"});
+        return await this.call(`/site/find?domain=${encodeURIComponent(criteria.domain)}`, {method: "GET"});
     }
 
     public async getSiteHomePage(options?: {siteId?: string}): Promise<SiteHomePageData> {
