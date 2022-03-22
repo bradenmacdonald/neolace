@@ -28,10 +28,20 @@ const EvaluateLookupPage: NextPage<PageProps> = function(props) {
     // The lookup expression that we're currently displaying, if any - comes from the URL or if the user types in a new one and presses ENTER
     const activeLookupExpression: string = Array.isArray(router.query.e) ? router.query.e[0] : (router.query.e ?? "");
 
+    const [editingLookupExpression, setEditingLookupExpression] = React.useState(activeLookupExpression);
+    const handleLookupExpressionChange = React.useCallback((value: string) => setEditingLookupExpression(value), [setEditingLookupExpression]);
     const handleFinishedChangingLookupExpression = React.useCallback((value: string) => {
         const newPath = location.pathname + `?e=${encodeURIComponent(value)}`;
         router.replace(newPath);
     }, [router]);
+
+    // When the router first loads (on a full page load), it won't have the query.
+    // Once it has been initialized we may need to change editingLookupExpression
+    React.useEffect(() => {
+        if (router.isReady) {
+            setEditingLookupExpression(activeLookupExpression);
+        }
+    }, [router.isReady]);
 
     const hasProps = props.entry.propertiesSummary?.length ?? 0 > 0;
 
@@ -68,8 +78,8 @@ const EvaluateLookupPage: NextPage<PageProps> = function(props) {
             <h1>{props.entry.name}</h1>
 
             <LookupExpressionInput
-                initialValue={activeLookupExpression}
-                key={activeLookupExpression}
+                value={editingLookupExpression}
+                onChange={handleLookupExpressionChange}
                 onFinishedEdits={handleFinishedChangingLookupExpression}
                 placeholder={intl.formatMessage({id: "site.entry.queryInputPlaceholder", defaultMessage: "Enter a lookup expression..."})}
             />

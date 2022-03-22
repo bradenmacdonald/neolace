@@ -6,10 +6,10 @@ import 'components/utils/slate';
 
 
 interface Props {
-    /** Initial value. You should probably set key={} this value as well if you want the editor to be reset when the initialValue is changed. */
-    initialValue: string;
-    /** Optional event handler, called on any change at all. Generally not recommended; use onFinishedEdits instead. */
-    onChange?: (newValue: string) => void;
+    /** The lookup value that is currently being edited */
+    value: string;
+    /** Event handler, called on any change at all. */
+    onChange: (newValue: string) => void;
     /** Event handler, called when the user has made changes and then pressed ENTER or blurred this input. */
     onFinishedEdits?: (newValue: string) => void;
     placeholder?: string;
@@ -24,16 +24,27 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
     // We need to use "useState" on the next line instead of "useMemo" due to https://github.com/ianstormtaylor/slate/issues/4081
     const [editor] = React.useState(() => withHistory(withReact(createEditor())));
 
+    const [currentLookupValue, setCurrentLookupValue] = React.useState(props.value);
     const parsedValue: Descendant[] = React.useMemo(() => {
-        return props.initialValue.split("\n").map(line => ({
+        return props.value.split("\n").map(line => ({
             type: "paragraph",
             children: [ { text: line } ],
         }));
-    }, [props.initialValue]);
+    }, [props.value]);
+    React.useEffect(() => {
+        // This function should force the editor to update its contents IF "props.value" is changed externally, but
+        // should also ignore updates that match the current value that the editor has.
+        if (props.value !== currentLookupValue) {
+            setCurrentLookupValue(props.value);
+            editor.children = parsedValue;
+        }
+    }, [props.value, currentLookupValue, setCurrentLookupValue]);
 
     const handleChange = React.useCallback((newValue: Descendant[]) => {
         if (props.onChange) {
-            props.onChange(slateDocToStringValue(newValue));
+            const newLookupValue = slateDocToStringValue(newValue);
+            props.onChange(newLookupValue);
+            setCurrentLookupValue(newLookupValue);  // Mark this as an internal change, not coming from outside this component.
         }
     }, [props.onChange, slateDocToStringValue]);
 
