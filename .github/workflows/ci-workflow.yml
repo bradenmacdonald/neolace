@@ -12,7 +12,7 @@ on:
 
 env:
   # temporarily pinned low since 1.21.2 is not on Docker Hub yet.
-  deno-version: ">=1.20.1 <1.21.2"
+  deno-version: ">=1.20.1 <1.20.2"
   docker-registry: ghcr.io
 
 jobs:
