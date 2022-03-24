@@ -14,3 +14,4 @@ export { LiteralExpression } from "./literal-expr.ts";
 export { Markdown } from "./markdown.ts";
 export { ReverseProperty } from "./reverse.ts";
 export { This } from "./this.ts";
+export { Slice } from "./slice.ts";

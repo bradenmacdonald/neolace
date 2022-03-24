@@ -16,6 +16,7 @@ import {
     LiteralExpression,
     Markdown,
     ReverseProperty,
+    Slice,
     This,
 } from "./expressions/index.ts";
 import * as V from "./values.ts";
@@ -126,6 +127,21 @@ export function parseLookupString(lookup: string): LookupExpression {
             /^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*)\)$/,
             (m) =>
                 new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), { formatExpr: parseLookupString(m[2]) }),
+        ],
+
+        // slice(expr, start=x)
+        [
+            /^slice\((.*), start=(.*)\)$/,
+            (m) => new Slice(parseLookupString(m[1]), { startIndexExpr: parseLookupString(m[2]) }),
+        ],
+        // slice(expr, start=x, size=y)
+        [
+            /^slice\((.*), start=(.*), size=(.*)\)$/,
+            (m) =>
+                new Slice(parseLookupString(m[1]), {
+                    startIndexExpr: parseLookupString(m[2]),
+                    sizeExpr: parseLookupString(m[3]),
+                }),
         ],
 
         // markdown("*string*")
