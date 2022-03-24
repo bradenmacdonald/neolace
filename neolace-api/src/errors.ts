@@ -1,3 +1,6 @@
+import type { AnyContentEdit } from "./edit/ContentEdit.ts";
+import type { AnySchemaEdit } from "./schema/SchemaEdit.ts";
+
 /** Base class for any error that can occur when using the Neolace API */
 export class ApiError extends Error {
     readonly statusCode: number;
@@ -80,10 +83,28 @@ export class InvalidFieldValue extends InvalidRequest {
     }
 }
 
+/**
+ * An edit that you tried to apply to an entry/entries or to the schema was invalid or could not be applied.
+ */
+export class InvalidEdit extends InvalidRequest {
+    constructor(
+        // The code string identifying the edit that failed:
+        public readonly editCode: AnySchemaEdit["code"]|AnyContentEdit["code"],
+        // entryId or any other information useful to locating which edit failed:
+        public readonly context: Record<string, unknown>,
+        public readonly message: string,
+    ) {
+        super(InvalidRequestReason.InvalidEdit, message);
+        this.name = "InvalidFieldValue";
+    }
+}
+
 // This is a const enum so that it has minimal overhead
 export enum InvalidRequestReason {
     /** One or more of the fields you provided is invalid, e.g. blank, too short, too long, invalid character, etc. */
     InvalidFieldValue = "400_INVALID_FIELD",
+    /** An edit that you tried to apply to an entry/entries or to the schema was invalid or could not be applied. */
+    InvalidEdit = "400_INVALID_EDIT",
     /** The provided lookup expression could not be parsed */
     LookupExpressionParseError = "400_LOOKUP_PARSE_ERROR",
     /** Tried to register a user account, but another account already exists with the same email */
