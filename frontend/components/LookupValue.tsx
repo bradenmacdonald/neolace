@@ -8,10 +8,21 @@ import { EntryLink } from './EntryLink';
 import { LookupImage } from './LookupImage';
 import { FormattedFileSize } from './widgets/FormattedFileSize';
 import { HoverClickNote } from './widgets/HoverClickNote';
+import Link from 'next/link';
+import { ErrorMessage } from './widgets/ErrorMessage';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
     mdtContext: MDTContext;
+    /**
+     * By default, for any paginated values, we'll show the first few values and link to a results page where more
+     * values can be seen. To disable that "show more" link (e.g. because a parent component is handling pagination),
+     * set this to true. Usually it should be false.
+     * 
+     * This value will not be applied child values, only to this value itself (though if this is an AnnotatedValue, it
+     * does apply to the inner value.)
+     */
+    hideShowMoreLink?: boolean;
     children?: never;
 }
 
@@ -33,19 +44,23 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 <LookupValue key={idx} value={v} mdtContext={props.mdtContext} />
             );
             
-            if (listValues.length < value.totalCount) {
-                listValues.push(
-                    <FormattedMessage
-                        key="more"
-                        id="common.list.xmore"
-                        defaultMessage="{extraCount, plural, one {# more…} other {# more…}}"
-                        values={{extraCount: value.totalCount - listValues.length}}
-                        description="How many more items there are (at the end of a list)"
-                    />
-                );
+            const numRemaining = value.totalCount - value.startedAt - value.values.length;
+            if (numRemaining > 0 && !props.hideShowMoreLink) {
+                let moreLink = <FormattedMessage
+                    key="more"
+                    id="common.list.xmore"
+                    defaultMessage="{extraCount, plural, one {# more…} other {# more…}}"
+                    values={{extraCount: numRemaining}}
+                    description="How many more items there are (at the end of a list)"
+                />;
+                if (value.source && value.source.entryId) {
+                    const entryKey = props.mdtContext.refCache.entries[value.source.entryId]?.friendlyId ?? props.mdtContext.entryId;
+                    moreLink = <Link key="more" href={`/entry/${entryKey}/lookup?e=${encodeURIComponent(value.source.expr)}`}><a>{moreLink}</a></Link>;
+                }
+                listValues.push(moreLink);
             }
 
-            // Temporary hack - FIXME
+            // FIXME: Temporary hack, replace with transform+annotate to give display hint https://app.clickup.com/t/23uvf0q
             if (site.shortId === "cams" && listValues.length > 2) {
                 const firstValue = value.values[0];
                 if (firstValue.type === "Annotated") {
@@ -106,13 +121,13 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Date":
             return <>{value.value}</>;
         case "Error":
-            return <span className="neo-lookup-error text-sm text-red-900">
+            return <ErrorMessage>
                 <FormattedMessage 
                     id="common.lookup-expression.error"
                     defaultMessage="Error ({errorType}): {errorMessage}"
                     values={{errorType: value.errorClass, errorMessage: value.message}}
                 />
-            </span>
+            </ErrorMessage>
         case "Annotated":
             if (value.annotations.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
                 return <>
@@ -122,7 +137,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                     </HoverClickNote>
                 </>;
             }
-            return <LookupValue value={value.value} mdtContext={props.mdtContext} />
+            return <LookupValue value={value.value} mdtContext={props.mdtContext} hideShowMoreLink={props.hideShowMoreLink} />
         case "Null":
             return <></>;
         default: {

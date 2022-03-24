@@ -3,7 +3,7 @@ import { PasswordlessLoginResponse } from "./user.ts";
 import * as errors from "./errors.ts";
 import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags } from "./edit/index.ts";
-import { EntryData, EntrySummaryData, GetEntryFlags, PaginatedResultData } from "./content/index.ts";
+import { EntryData, EntrySummaryData, EvaluateLookupData, GetEntryFlags, PaginatedResultData } from "./content/index.ts";
 import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData } from "./site/Site.ts";
 import * as schemas from "./api-schemas.ts";
 import { VNID } from "./types.ts";
@@ -165,7 +165,7 @@ export class NeolaceApiClient {
     // Site API Methods
 
     public async getSite(criteria: {domain: string}): Promise<SiteDetailsData> {
-        return await this.call(`/site/lookup?domain=${encodeURIComponent(criteria.domain)}`, {method: "GET"});
+        return await this.call(`/site/find?domain=${encodeURIComponent(criteria.domain)}`, {method: "GET"});
     }
 
     public async getSiteHomePage(options?: {siteId?: string}): Promise<SiteHomePageData> {
@@ -182,6 +182,18 @@ export class NeolaceApiClient {
     public async replaceSiteSchema(schema: SiteSchemaData, options?: {siteId?: string}): Promise<void> {
         const siteId = this.getSiteId(options);
         await this.call(`/site/${siteId}/schema`, {method: "PUT", data: schema});
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Lookup API Methods
+
+    public evaluateLookupExpression(expression: string, options: {entryKey?: VNID|string, siteId?: string} = {}): Promise<EvaluateLookupData> {
+        const siteId = this.getSiteId(options);
+        const query = new URLSearchParams({expression,});
+        if (options.entryKey) {
+            query.set("entryKey", options.entryKey);
+        }
+        return this.call(`/site/${siteId}/lookup?${query.toString()}`);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

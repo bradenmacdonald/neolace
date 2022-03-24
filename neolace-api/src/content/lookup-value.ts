@@ -1,3 +1,4 @@
+import { object } from "../api-schemas.ts";
 import { VNID } from "../types.ts";
 
 /** A "lookup value" / query result / computed fact that has been serialized to JSON */
@@ -11,6 +12,7 @@ export interface PageValue extends LookupValue {
     startedAt: number;
     pageSize: number;
     totalCount: number;
+    source?: {expr: string; entryId?: VNID; };
 }
 
 export interface ListValue extends LookupValue {
@@ -115,3 +117,5 @@ export type AnyLookupValue = (
     | NullValue
     | ErrorValue
 );
+
+export const LookupValueSchema = object.transform(v => v as AnyLookupValue);

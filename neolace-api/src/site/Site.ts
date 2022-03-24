@@ -1,5 +1,5 @@
 import { Schema, Type, string, nullable, array, boolean, Record, number, } from "../api-schemas.ts";
-import { ReferenceCacheSchema } from "../content/Entry.ts";
+import { ReferenceCacheSchema } from "../content/reference-cache.ts";
 import { VNID } from "../types.ts";
 
 const rgbTuple = array.min(3).max(3).of(number).transform(x => x as [number, number, number]);

@@ -46,6 +46,8 @@ group(import.meta, () => {
                         pageSize: 10n,
                         startedAt: 0n,
                         totalCount: 5n,
+                        sourceExpression: expression,
+                        sourceExpressionEntryId: ponderosaPine.id,
                     },
                 ),
             );
@@ -99,6 +101,8 @@ group(import.meta, () => {
                         pageSize: 10n,
                         startedAt: 0n,
                         totalCount: 6n,
+                        sourceExpression: expression,
+                        sourceExpressionEntryId: ponderosaPine.id,
                     },
                 ),
             );
@@ -151,20 +155,34 @@ group(import.meta, () => {
 
         const checkAncestors = async (entryId: VNID, expected: AnnotatedValue[]) => {
             // with ancestors():
+            const expr1 = new Ancestors(new This());
             assertEquals(
-                await evalExpr(new Ancestors(new This()), entryId),
+                await evalExpr(expr1, entryId),
                 new PageValue([
                     ...expected,
-                ], { pageSize: 10n, startedAt: 0n, totalCount: BigInt(expected.length) }),
+                ], {
+                    pageSize: 10n,
+                    startedAt: 0n,
+                    totalCount: BigInt(expected.length),
+                    sourceExpression: expr1,
+                    sourceExpressionEntryId: entryId,
+                }),
             );
 
             // And with andAncestors():
+            const expr2 = new AndAncestors(new This());
             assertEquals(
-                await evalExpr(new AndAncestors(new This()), entryId),
+                await evalExpr(expr2, entryId),
                 new PageValue([
                     MakeAnnotatedEntryValue(entryId, { distance: new IntegerValue(0n) }),
                     ...expected,
-                ], { pageSize: 10n, startedAt: 0n, totalCount: BigInt(expected.length + 1) }),
+                ], {
+                    pageSize: 10n,
+                    startedAt: 0n,
+                    totalCount: BigInt(expected.length + 1),
+                    sourceExpression: expr2,
+                    sourceExpressionEntryId: entryId,
+                }),
             );
         };
 

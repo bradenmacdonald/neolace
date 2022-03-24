@@ -1,5 +1,4 @@
 // deno-lint-ignore-file no-explicit-any
-import * as log from "std/log/mod.ts";
 import {
     AddPropertyValue,
     CreateEntry,
@@ -7,6 +6,7 @@ import {
     CreateProperty,
     EditList,
     getEditType,
+    InvalidEdit,
     PropertyMode,
     PropertyType,
     UpdateEntryFeature,
@@ -135,8 +135,25 @@ export const ApplyEdits = defineAction({
                         }));
                     } catch (err) {
                         if (err instanceof EmptyResultError) {
-                            log.info(`Failed to find property with ID ${edit.data.property}`);
-                            throw new Error("Property not found on the site or doesn't apply to that entry type.");
+                            // Was the property not found, or does it not apply to that entry type?
+                            const checkProperties = await tx.query(C`
+                                MATCH (property:${Property} {id: ${edit.data.property}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            `.RETURN({ "property.name": Field.String }));
+                            if (checkProperties.length === 0) {
+                                throw new InvalidEdit(
+                                    AddPropertyValue.code,
+                                    { propertyId: edit.data.property },
+                                    `Property with ID ${edit.data.property} was not found in the site's schema.`,
+                                );
+                            } else {
+                                // If we get there, the property exists but doesn't apply to that entry type.
+                                const propertyName = checkProperties[0]["property.name"];
+                                throw new InvalidEdit(
+                                    AddPropertyValue.code,
+                                    { propertyId: edit.data.property, propertyName, entryId: edit.data.entry },
+                                    `The "${propertyName}" property does not apply to entries of that type.`,
+                                );
+                            }
                         } else {
                             throw err;
                         }

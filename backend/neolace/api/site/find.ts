@@ -1,14 +1,14 @@
 import { C, EmptyResultError } from "neolace/deps/vertex-framework.ts";
-import { api, graph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { Site } from "neolace/core/Site.ts";
 import { CanViewHomePage } from "../../core/permissions.ts";
 
-export class SiteLookupResource extends NeolaceHttpResource {
-    public paths = ["/site/lookup"];
+export class SiteFindByDomainResource extends NeolaceHttpResource {
+    public paths = ["/site/find"];
 
     GET = this.method({
         responseSchema: api.SiteDetailsSchema,
-        description: "Lookup a site by domain name.",
+        description: "Get a site by domain name.",
     }, async ({ request }) => {
         // Permissions and parameters:
         const domain = request.queryParam("domain");
@@ -22,6 +22,7 @@ export class SiteLookupResource extends NeolaceHttpResource {
         // (knows its domain).
 
         // Load the site or throw a 404 error:
+        const graph = await getGraph();
         const site = await graph.pullOne(Site, (s) => s.name.description.domain.footerMD.shortId().frontendConfig(), {
             where: C`@this.domain = ${domain}`,
         }).catch((err) => {

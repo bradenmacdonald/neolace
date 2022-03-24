@@ -16,6 +16,7 @@ import {
     LiteralExpression,
     Markdown,
     ReverseProperty,
+    Slice,
     This,
 } from "./expressions/index.ts";
 import * as V from "./values.ts";
@@ -128,6 +129,21 @@ export function parseLookupString(lookup: string): LookupExpression {
                 new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), { formatExpr: parseLookupString(m[2]) }),
         ],
 
+        // slice(expr, start=x, size=y)
+        [
+            /^slice\((.*), start=(.*), size=(.*)\)$/,
+            (m) =>
+                new Slice(parseLookupString(m[1]), {
+                    startIndexExpr: parseLookupString(m[2]),
+                    sizeExpr: parseLookupString(m[3]),
+                }),
+        ],
+        // slice(expr, start=x)
+        [
+            /^slice\((.*), start=(.*)\)$/,
+            (m) => new Slice(parseLookupString(m[1]), { startIndexExpr: parseLookupString(m[2]) }),
+        ],
+
         // markdown("*string*")
         [/^markdown\((.*)\)$/, (m) => new Markdown(parseLookupString(m[1]))],
         // date("*string*")
@@ -146,9 +162,9 @@ export function parseLookupString(lookup: string): LookupExpression {
         if (lookup.length === 2) {
             return new List([]);
         }
-        const parts = lookup.substr(1, lookup.length - 2).split(",").map((part) => part.trim());
+        const parts = lookup.substring(1, lookup.length - 1).split(",").map((part) => part.trim());
         return new List(parts.map((part) => parseLookupString(part)));
     }
 
-    throw new LookupParseError(`Simple/fake parser is unable to parse the lookup expression "${lookup}"`);
+    throw new LookupParseError(`Unable to parse the lookup expression "${lookup}"`);
 }

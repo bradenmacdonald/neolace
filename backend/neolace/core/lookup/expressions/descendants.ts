@@ -2,7 +2,7 @@ import { C } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { LookupExpression } from "../expression.ts";
-import { EntryValue, IntegerValue, LazyEntrySetValue } from "../values.ts";
+import { EntryValue, IntegerValue, LazyEntrySetValue, LookupValue } from "../values.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupContext } from "../context.ts";
 
@@ -31,7 +31,7 @@ export class Descendants extends LookupExpression {
         this.entryExpr = entryExpr;
     }
 
-    public async getValue(context: LookupContext) {
+    public async getValue(context: LookupContext): Promise<LookupValue> {
         const startingEntry = await this.entryExpr.getValueAs(EntryValue, context);
 
         return new LazyEntrySetValue(
@@ -46,7 +46,11 @@ export class Descendants extends LookupExpression {
 
             WITH descendant AS entry, {distance: distance} AS annotations
         `,
-            { annotations: { distance: dbDistanceToValue } },
+            {
+                annotations: { distance: dbDistanceToValue },
+                sourceExpression: this,
+                sourceExpressionEntryId: context.entryId,
+            },
         );
     }
 
@@ -67,7 +71,7 @@ export class AndDescendants extends LookupExpression {
         this.entryExpr = entryExpr;
     }
 
-    public async getValue(context: LookupContext) {
+    public async getValue(context: LookupContext): Promise<LookupValue> {
         const startingEntry = await this.entryExpr.getValueAs(EntryValue, context);
 
         return new LazyEntrySetValue(
@@ -80,7 +84,11 @@ export class AndDescendants extends LookupExpression {
 
             WITH descendant AS entry, {distance: distance} AS annotations
         `,
-            { annotations: { distance: dbDistanceToValue } },
+            {
+                annotations: { distance: dbDistanceToValue },
+                sourceExpression: this,
+                sourceExpressionEntryId: context.entryId,
+            },
         );
     }
 

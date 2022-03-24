@@ -3,8 +3,9 @@ import { HealthCheckResource } from "./health.ts";
 import { RequestLoginResource } from "./auth/request-login.ts";
 import { PasswordlessLoginWebhookResource } from "./auth/hooks/passwordless-login.ts";
 import { SystemKeyResource } from "./auth/system-key.ts";
-import { SiteLookupResource } from "./site/lookup.ts";
+import { SiteFindByDomainResource } from "./site/find.ts";
 import { SiteHomeResource } from "./site/{siteShortId}/home.ts";
+import { EvaluateLookupResource } from "./site/{siteShortId}/lookup.ts";
 import { SchemaIndexResource } from "./site/{siteShortId}/schema/index.ts";
 import { DraftIndexResource } from "./site/{siteShortId}/draft/index.ts";
 import { DraftResource } from "./site/{siteShortId}/draft/{draftId}/index.ts";
@@ -23,8 +24,9 @@ export const builtInRestApiResources: (typeof NeolaceHttpResource)[] = [
     RequestLoginResource,
     PasswordlessLoginWebhookResource,
     SystemKeyResource,
-    SiteLookupResource,
+    SiteFindByDomainResource,
     SiteHomeResource,
+    EvaluateLookupResource,
     SchemaIndexResource,
     DraftIndexResource,
     DraftResource,

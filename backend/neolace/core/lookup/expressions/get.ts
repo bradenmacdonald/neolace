@@ -1,5 +1,5 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { PropertyType } from "neolace/deps/neolace-api.ts";
+import { PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
 
 import { Site } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
@@ -93,8 +93,8 @@ export class GetProperty extends LookupExpression {
         this.propertyExpr = extraParams.propertyExpr;
     }
 
-    public async getValue(context: LookupContext) {
-        // TODO: if this.fromEntriesExpr is a Placeholder (X), return a special placeholder value.
+    public async getValue(context: LookupContext): Promise<LookupValue> {
+        // TODO: if this.fromEntriesExpr is a Transform Expression, return a special placeholder value?
 
         // First, look up the property we are retrieving:
         const propValue = await this.propertyExpr.getValueAs(PropertyValue, context);
@@ -102,7 +102,7 @@ export class GetProperty extends LookupExpression {
         try {
             propertyData = await context.tx.queryOne(C`
                 MATCH (prop:${Property} {id: ${propValue.id}})-[:${Property.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
-            `.RETURN({ "prop.type": Field.String }));
+            `.RETURN({ "prop.type": Field.String, "prop.mode": Field.String, "prop.default": Field.String }));
         } catch (err) {
             if (err instanceof EmptyResultError) {
                 throw new LookupEvaluationError("Property not found / invalid property ID");
@@ -110,8 +110,12 @@ export class GetProperty extends LookupExpression {
             throw err;
         }
         const propType = propertyData["prop.type"] as PropertyType;
+        const propMode = propertyData["prop.mode"] as PropertyMode;
 
-        if (propType === PropertyType.RelIsA || propType === PropertyType.RelOther) {
+        if (propMode === PropertyMode.Auto) {
+            // This is an "auto" property, which means its value is determined by evaluating another lookup expression:
+            return await expressionStringToValue(propertyData["prop.default"] ?? "null", context);
+        } else if (propType === PropertyType.RelIsA || propType === PropertyType.RelOther) {
             // This is a relationship property.
             const startingEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
             // Using a simplified version of our "get property value" code, we are finding all the entries that are
@@ -151,7 +155,11 @@ export class GetProperty extends LookupExpression {
                 WITH entry, annotations
                 ORDER BY annotations.rank, entry.name
             `,
-                { annotations: { rank: dbRankToValue, note: dbNoteToValue, slot: dbSlotToValue } },
+                {
+                    annotations: { rank: dbRankToValue, note: dbNoteToValue, slot: dbSlotToValue },
+                    sourceExpression: this,
+                    sourceExpressionEntryId: context.entryId,
+                },
             );
         } else {
             // This is a value property. Are we retieving it for one entry or many?

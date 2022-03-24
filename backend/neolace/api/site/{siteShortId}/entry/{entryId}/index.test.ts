@@ -132,6 +132,7 @@ group(import.meta, () => {
                                         annotations: { distance: { type: "Integer", value: "5" } },
                                     },
                                 ],
+                                source: { expr: "ancestors(this)", entryId: ponderosaPine.id },
                             },
                             annotations: {
                                 // This value came from the default on the entry type, not the specific entry itself.
@@ -174,6 +175,10 @@ group(import.meta, () => {
                                     },
                                 },
                             ],
+                            source: {
+                                expr: `get(this, prop=[[/prop/${defaultData.schema.properties._hasPart.id}]])`,
+                                entryId: ponderosaPine.id,
+                            },
                         },
                     },
                     // Entries of Species type have "related images":
@@ -200,6 +205,11 @@ group(import.meta, () => {
                                         },
                                     },
                                 ],
+                                source: {
+                                    expr:
+                                        `reverse(andDescendants(this), prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                                    entryId: ponderosaPine.id,
+                                },
                             },
                             annotations: {
                                 source: { type: "String", value: "Default" },

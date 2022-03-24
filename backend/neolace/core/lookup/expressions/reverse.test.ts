@@ -44,7 +44,13 @@ group(import.meta, () => {
                 new PageValue([
                     MakeAnnotatedEntryValue(pollenCone, { ...defaultAnnotations }),
                     MakeAnnotatedEntryValue(seedCone, { ...defaultAnnotations }),
-                ], { pageSize: 10n, startedAt: 0n, totalCount: 2n }),
+                ], {
+                    pageSize: 10n,
+                    startedAt: 0n,
+                    totalCount: 2n,
+                    sourceExpression: expression,
+                    sourceExpressionEntryId: cone,
+                }),
             );
         });
     });

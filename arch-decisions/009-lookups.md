@@ -67,37 +67,39 @@ expressions) are of the following types:
 2. Quantity, a float with an optional unit (e.g. "350.2 g m^2 / s^3") (preserves number of decimal places)
 3. Boolean
 4. Null
-5. String
+5. String, which `"can contain {interpolated} {values} or \{not}"`
 6. Date, DateTime (TBD: do we want year or fuzzydate?)
 7. Entry, EntryType, Property, PropertyValue
 8. Page (like a list but may only be a subset of a list; some values may be missing. The total size is always known.)
 9. Range (For Integer, Quantity, Date/DateTime values of the same type and units, this holds up to three values: a min, main, and/or max value, which can be used to express things like tolerances e.g. "typ 3.55mm max 4.00mm", uncertainy e.g. "1940-1943?", confidence intervals, or spans e.g. "sold from 2014-2018", or for aerospace "NET 2012-07-15")
-10. X Expression
+10. Transform Expression
 11. Type
 
 ## Literals
 
 Some types can be referenced as literals:
 
-In each example, `_2uDtUtOWJCL33X7zTAK8dK` is the ID of the boject in question.
+In each example, `_2uDtUtOWJCL33X7zTAK8dK` is the ID of the object in question.
 
 * Entries: `[[/entry/_2uDtUtOWJCL33X7zTAK8dK]]`
-* Properties: `[[/property/_2uDtUtOWJCL33X7zTAK8dK]]`
+* Properties: `[[/prop/_2uDtUtOWJCL33X7zTAK8dK]]`
 * Entry Type: `[[/type/_2uDtUtOWJCL33X7zTAK8dK]]`
 
-## X Expressions and Conditionals
+## Transform Expressions and Conditionals
 
-An "x expression" is an expression that accepts a value and returns another
-value, i.e. is an anonymous function.
+An "transform expression" is an expression that accepts a value and returns a
+new value based on the original value, i.e. is an anonymous function.
 
-A simple x expression would be `x.type()` which means "given any value x, return
-its type".
+A simple transform expression would be `(x -> x.type())` which means "given any
+value x, return its type".
 
-Simple x expressions - examples:
- * `x.type()` (given any value x, return its type)
- * `x = 1` (is x exactly equal to 1?)
- * `x ≈ 1` (is x approximately equal to 1?)
- * `x > 1` (is x more than 1?)
- * `x ≥ 0 && x < 10` (is x greater than or equal to zero but less than 10?)
- * `x = "yes" || x = "no"` (is x equal to "yes" or "no" ?)
- * `x in ["a1", "b2", "c3"]` (is x one of the specified strings?)
+Simple transform expressions - examples:
+ * `(x -> x.type())` (given any value x, return its type)
+ * `(x -> x = 1)` (is x exactly equal to 1?)
+ * `(x -> x > 1)` (is x more than 1?)
+ * `(x -> x ≥ 0 && x < 10)` (is x greater than or equal to zero but less than 10?)
+ * `(x -> x = "yes" or x = "no")` (is x equal to "yes" or "no" ?)
+ * `(x -> x in ["a1", "b2", "c3"])` (is x one of the specified strings?)
+
+An example of tarnsforming a value for display:
+    `(value -> markdown("[{value}](https://www.wikidata.org/wiki/{value})"))`

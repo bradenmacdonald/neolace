@@ -30,7 +30,7 @@ export class AcceptDraftResource extends NeolaceHttpResource {
             await this.requirePermission(request, permissions.CanApproveSchemaChanges);
         }
         if (!(draft.hasContentChanges) && !(draft.hasSchemaChanges)) {
-            throw new api.InvalidRequest(api.InvalidRequestReason.DraftIsEmpty, "Draft is emptyy");
+            throw new api.InvalidRequest(api.InvalidRequestReason.DraftIsEmpty, "Draft is empty");
         }
 
         await graph.runAs(userId, AcceptDraft({ id: draftId }));
