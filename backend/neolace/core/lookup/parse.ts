@@ -129,11 +129,6 @@ export function parseLookupString(lookup: string): LookupExpression {
                 new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), { formatExpr: parseLookupString(m[2]) }),
         ],
 
-        // slice(expr, start=x)
-        [
-            /^slice\((.*), start=(.*)\)$/,
-            (m) => new Slice(parseLookupString(m[1]), { startIndexExpr: parseLookupString(m[2]) }),
-        ],
         // slice(expr, start=x, size=y)
         [
             /^slice\((.*), start=(.*), size=(.*)\)$/,
@@ -142,6 +137,11 @@ export function parseLookupString(lookup: string): LookupExpression {
                     startIndexExpr: parseLookupString(m[2]),
                     sizeExpr: parseLookupString(m[3]),
                 }),
+        ],
+        // slice(expr, start=x)
+        [
+            /^slice\((.*), start=(.*)\)$/,
+            (m) => new Slice(parseLookupString(m[1]), { startIndexExpr: parseLookupString(m[2]) }),
         ],
 
         // markdown("*string*")
@@ -162,7 +162,7 @@ export function parseLookupString(lookup: string): LookupExpression {
         if (lookup.length === 2) {
             return new List([]);
         }
-        const parts = lookup.substr(1, lookup.length - 2).split(",").map((part) => part.trim());
+        const parts = lookup.substring(1, lookup.length - 1).split(",").map((part) => part.trim());
         return new List(parts.map((part) => parseLookupString(part)));
     }
 

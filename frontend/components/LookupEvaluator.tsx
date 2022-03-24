@@ -6,10 +6,12 @@ import { MDTContext } from './markdown-mdt/mdt';
 import { LookupValue } from './LookupValue';
 import { Spinner } from './widgets/Spinner';
 import { ErrorMessage } from './widgets/ErrorMessage';
+import { Button } from './widgets/Button';
 
 interface Props {
     expr: string;
     mdtContext: MDTContext;
+    hideShowMoreLink?: boolean;
     children?: never;
 }
 
@@ -46,5 +48,64 @@ export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
     } else if (result === undefined) {
         return <Spinner />;
     }
-    return <LookupValue value={result.resultValue} mdtContext={mdtContext} />;
+    return <LookupValue value={result.resultValue} mdtContext={mdtContext} hideShowMoreLink={props.hideShowMoreLink} />;
+};
+
+interface PropsWithPagination extends Props {
+    numValuesPerPage?: number;
+}
+
+/**
+ * Evaluate a Lookup Expression and display the resulting value, with pagination / infinite scroll
+ */
+export const LookupEvaluatorWithPagination: React.FunctionComponent<PropsWithPagination> = (props) => {
+    const [numPagesDisplayed, setNumPages] = React.useState(1);
+    React.useEffect(() => {
+        // Reset to showing only one page if the expression changes.
+        setNumPages(1);
+    }, [props.expr, setNumPages]);
+    // Evaluate the expression now to get basic information about it, like whether or not it's a paged value.
+    // SWR will ensure that the inner <LookupEvaluator> doesn't send additional API requests for the same lookup expression.
+    const {result, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId});
+
+    const pageData = (
+        result?.resultValue.type === "Page" ? result.resultValue :
+        result?.resultValue.type === "Annotated" && result.resultValue.value.type === "Page" ? result.resultValue.value :
+        undefined
+    );
+
+    if (pageData) {
+        const numValuesPerPage = pageData.pageSize;
+        const numPagesTotal = Math.ceil(pageData.totalCount / numValuesPerPage);
+        const pages = [];
+        for (let i = 0; i < numPagesDisplayed; i++) {
+            const expr = i === 0 ? props.expr : `slice(${props.expr}, start=${i * numValuesPerPage}, size=${numValuesPerPage})`;
+            pages.push(<LookupEvaluator key={expr} expr={expr} mdtContext={props.mdtContext} hideShowMoreLink={true} />);
+        }
+        return <>
+            {pages}
+            {
+                numPagesDisplayed < numPagesTotal &&
+                    <Button icon="plus-lg" bold={true} onClick={() => { setNumPages(numPagesDisplayed + 1); }}>
+                        <FormattedMessage
+                            id="lookup.showMoreResults"
+                            defaultMessage="Show more results"
+                        />
+                    </Button>
+            }
+            <p className="text-sm">
+                <FormattedMessage
+                    id="lookup.resultsCount"
+                    defaultMessage="Showing {numShowing, plural, one {# result} other {# results}} out of {numTotal} total."
+                    values={{
+                        numShowing: Math.min(numPagesDisplayed * numValuesPerPage, pageData.totalCount),
+                        numTotal: pageData.totalCount,
+                    }}
+                    description="How many more items there are (at the end of a list)"
+                />
+            </p>
+        </>;
+    } else {
+        return <LookupEvaluator expr={props.expr} mdtContext={props.mdtContext} />
+    }
 };

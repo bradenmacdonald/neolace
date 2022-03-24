@@ -8,7 +8,7 @@ import { client, api, getSiteData, SiteData } from 'lib/api-client';
 import { SitePage } from 'components/SitePage';
 import { LookupExpressionInput } from 'components/widgets/LookupExpressionInput';
 import { useRouter } from 'next/router';
-import { LookupEvaluator } from 'components/LookupEvaluator';
+import { LookupEvaluatorWithPagination } from 'components/LookupEvaluator';
 import { MDTContext } from 'components/markdown-mdt/mdt';
 
 interface PageProps {
@@ -88,7 +88,7 @@ const EvaluateLookupPage: NextPage<PageProps> = function(props) {
             <div className={activeLookupExpression !== editingLookupExpression ? `opacity-50` : ``}>
                 {
                     activeLookupExpression ?
-                        <LookupEvaluator expr={activeLookupExpression} mdtContext={mdtContext} />
+                        <LookupEvaluatorWithPagination expr={activeLookupExpression} mdtContext={mdtContext} />
                     :
                         <FormattedMessage id="site.entry.lookupExpressionMissing" defaultMessage="Enter a lookup expression above to see the result." />
                 }

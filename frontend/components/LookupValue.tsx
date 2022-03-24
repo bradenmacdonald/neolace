@@ -14,6 +14,15 @@ import { ErrorMessage } from './widgets/ErrorMessage';
 interface LookupValueProps {
     value: api.AnyLookupValue;
     mdtContext: MDTContext;
+    /**
+     * By default, for any paginated values, we'll show the first few values and link to a results page where more
+     * values can be seen. To disable that "show more" link (e.g. because a parent component is handling pagination),
+     * set this to true. Usually it should be false.
+     * 
+     * This value will not be applied child values, only to this value itself (though if this is an AnnotatedValue, it
+     * does apply to the inner value.)
+     */
+    hideShowMoreLink?: boolean;
     children?: never;
 }
 
@@ -35,12 +44,13 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 <LookupValue key={idx} value={v} mdtContext={props.mdtContext} />
             );
             
-            if (listValues.length < value.totalCount) {
+            const numRemaining = value.totalCount - value.startedAt - value.values.length;
+            if (numRemaining > 0 && !props.hideShowMoreLink) {
                 let moreLink = <FormattedMessage
                     key="more"
                     id="common.list.xmore"
                     defaultMessage="{extraCount, plural, one {# more…} other {# more…}}"
-                    values={{extraCount: value.totalCount - listValues.length}}
+                    values={{extraCount: numRemaining}}
                     description="How many more items there are (at the end of a list)"
                 />;
                 if (value.source && value.source.entryId) {
@@ -127,7 +137,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                     </HoverClickNote>
                 </>;
             }
-            return <LookupValue value={value.value} mdtContext={props.mdtContext} />
+            return <LookupValue value={value.value} mdtContext={props.mdtContext} hideShowMoreLink={props.hideShowMoreLink} />
         case "Null":
             return <></>;
         default: {
