@@ -42,13 +42,19 @@ group(import.meta, () => {
             totalCount: 1,
             values: [
                 {
-                    type: "Annotated",
-                    annotations: {
-                        note: { type: "InlineMarkdownString", value: "" },
-                        rank: { type: "Integer", value: "1" },
-                        slot: { type: "Null" },
-                    },
-                    value: { type: "Entry", id: defaultData.entries.imgPonderosaTrunk.id },
+                    type: "Image",
+                    format: "thumb",
+                    entryId: defaultData.entries.imgPonderosaTrunk.id,
+                    altText: defaultData.entries.imgPonderosaTrunk.name,
+                    blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
+                    contentType: "image/webp",
+                    link: { type: "Entry", id: defaultData.entries.imgPonderosaTrunk.id },
+                    // deno-lint-ignore no-explicit-any
+                    imageUrl: (result.resultValue as any).values[0].imageUrl,
+                    size: 1581898,
+                    sizing: "cover",
+                    width: 3504,
+                    height: 2336,
                 },
             ],
             source: {

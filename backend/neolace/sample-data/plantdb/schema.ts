@@ -234,7 +234,7 @@ export const schema = ValidateSiteSchema({
                 { entryType: VNID("_ETSPECIES") },
             ],
             mode: PropertyMode.Auto,
-            default: `this.andDescendants().reverse(prop=[[/prop/_imgRelTo]])`,
+            default: `this.andDescendants().reverse(prop=[[/prop/_imgRelTo]]).image(format="thumb")`,
             descriptionMD: `Images related to this entry.`,
             importance: 10,
         },

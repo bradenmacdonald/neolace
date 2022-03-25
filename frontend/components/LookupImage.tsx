@@ -82,18 +82,18 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
         </>
     } else {
         // Thumbnail:
-        return <div className="w-full md:w-1/3 lg:w-1/4 border-2 border-gray-400 md:ml-4 mb-2">
-            <RatioBox ratio={ratio}>
-                {/* A blurry representation of the image, shown while it is loading. */}
-                <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" />
-                {/* the image: */}
+        return <div className="inline-block h-20 w-20 border-2 border-gray-500 rounded-md relative">
+            {/* A blurry representation of the image, shown while it is loading. */}
+            <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" className="opacity-30" />
+            {/* the image: */}
+            <OptionalLink href={value.link} mdtContext={props.mdtContext}>
                 <Image
                     src={value.imageUrl}
                     alt={value.altText}
                     layout="fill"
-                    objectFit="contain"
+                    objectFit={value.sizing}
                 />
-            </RatioBox>
+            </OptionalLink>
         </div>
     }
 };

@@ -99,34 +99,41 @@ export function parseLookupString(lookup: string): LookupExpression {
         // [[/entry/...]].image(format="...")
 
         [
-            /^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*), link=(.*), maxWidth=(.*)\)$/,
+            /^(.*)\.image\(format=(.*), link=(.*), maxWidth=(.*)\)$/,
             (m) =>
-                new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {
+                new Image(parseLookupString(m[1]), {
                     formatExpr: parseLookupString(m[2]),
                     linkExpr: parseLookupString(m[3]),
                     maxWidthExpr: parseLookupString(m[4]),
                 }),
         ],
         [
-            /^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*), link=(.*)\)$/,
+            /^(.*)\.image\(format=(.*), link=(.*)\)$/,
             (m) =>
-                new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {
+                new Image(parseLookupString(m[1]), {
                     formatExpr: parseLookupString(m[2]),
                     linkExpr: parseLookupString(m[3]),
                 }),
         ],
         [
-            /^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*), caption=(.*)\)$/,
+            /^(.*)\.image\(format=(.*), caption=(.*)\)$/,
             (m) =>
-                new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), {
+                new Image(parseLookupString(m[1]), {
                     formatExpr: parseLookupString(m[2]),
                     captionExpr: parseLookupString(m[3]),
                 }),
         ],
+
+        // ....image(format="...")
         [
-            /^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]\.image\(format=(.*)\)$/,
-            (m) =>
-                new Image(new LiteralExpression(new V.EntryValue(VNID(m[1]))), { formatExpr: parseLookupString(m[2]) }),
+            /^(.*)\.image\(format=(.*)\)$/,
+            (m) => new Image(parseLookupString(m[1]), { formatExpr: parseLookupString(m[2]) }),
+        ],
+
+        // image(..., format="...")
+        [
+            /^image\((.*), format=(.*)\)$/,
+            (m) => new Image(parseLookupString(m[1]), { formatExpr: parseLookupString(m[2]) }),
         ],
 
         // slice(expr, start=x, size=y)
@@ -153,7 +160,16 @@ export function parseLookupString(lookup: string): LookupExpression {
     for (const [re, fn] of otherTemplates) {
         const matchResult = lookup.match(re);
         if (matchResult) {
-            return fn(matchResult);
+            try {
+                return fn(matchResult);
+            } catch (err) {
+                if (err instanceof LookupParseError) {
+                    // console.error(`Failed to parse: ${err}`);
+                    continue;
+                } else {
+                    throw err;
+                }
+            }
         }
     }
 
