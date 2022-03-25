@@ -59,7 +59,14 @@ const EntryPage: NextPage<PageProps> = function(props) {
             {/* Hero image, if any */}
             {
                 props.entry.features?.HeroImage ?
-                    <div className="-m-6 mb-7 relative h-[30vh] md:h-[50vh]">
+                    <div className="-m-6 mb-7 relative h-[30vh] md:h-[50vh]" style={(
+                        /*
+                            If the image is landscape (significantly wider than it is tall), make it as wide as the page and adjust the height to match.
+                            Otherwise (if square-ish or vertical), use a fixed aspect ratio container and either display the image centered or stretch the
+                            image to "cover" the area, depending on the image contents.
+                        */
+                        props.entry.features.HeroImage.width && (props.entry.features.HeroImage.width > props.entry.features.HeroImage.height! * 1.4) ? {aspectRatio: `${props.entry.features.HeroImage.width} / ${props.entry.features.HeroImage.height}`, height: "auto", minHeight: "20vh" /* for old safari that doesn't support aspect-ratio */} : {}
+                    )}>
                         {/* A blurry representation of the image, shown while it is loading: */}
                         <Blurhash
                             hash={props.entry.features.HeroImage.blurHash ?? ""}
