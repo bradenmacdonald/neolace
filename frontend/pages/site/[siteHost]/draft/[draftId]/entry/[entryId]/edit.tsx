@@ -4,6 +4,7 @@ import { api, useSiteData } from 'lib/api-client';
 
 import { SitePage } from 'components/SitePage';
 import FourOhFour from 'pages/404';
+import { ErrorMessage } from 'components/widgets/ErrorMessage';
 
 const DraftEntryEditPage: NextPage = function(_props) {
 
@@ -36,42 +37,18 @@ const DraftEntryEditPage: NextPage = function(_props) {
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour/>;
-    }
+    } else if (siteError) { return <ErrorMessage>{siteError}</ErrorMessage> }
 
     return (
         <SitePage
             title={`Edit`}
             sitePreloaded={null}
-            leftNavTopSlot={[
-                {
-                    id: "entryName",
-                    priority: 10,
-                    content: <>
-                        <h1 className="font-bold text-base">Entry Name</h1>
-                        <span id="entry-type-name" className="font-light">Entry Type Name</span>
-                    </>
-                },
-
-                {
-                    id: "entryFoo",
-                    priority: 1,
-                    content: <>
-                        <h1 className="font-bold text-base">Priority 1</h1>
-                        <span id="entry-type-name" className="font-light">Entry Type Name</span>
-                    </>
-                },
-                {
-                    id: "entryNames",
-                    priority: 10,
-                    content: <>
-                        <h1 className="font-bold text-base">Last</h1>
-                        <span id="entry-type-name" className="font-light">Entry Type Name</span>
-                    </>
-                },
-            ]}
+            leftNavTopSlot={[]}
         >
 
-            This is the edit page.
+            Draft &gt; New Draft &gt; Entry Name (Entry Type)
+
+            Tabs: Edit | Preview
         </SitePage>
     );
 }

@@ -16,6 +16,7 @@ const iconSvg = icons({
 });
 
 export type IconId = keyof typeof iconSvg;
+export const _allIcons = Object.keys(iconSvg) as IconId[];
 
 interface Props {
     icon?: IconId;
@@ -26,7 +27,7 @@ interface Props {
  * To keep our project's size small, only the icons we are are currently enabled.
  */
 export const Icon: React.FunctionComponent<Props> = (props: Props) => {
-    return <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="w-[1rem] h-[1rem] inline-block align-[-.125em]" viewBox="0 0 16 16">
+    return <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="w-[1em] h-[1em] inline-block align-[-.125em]" viewBox="0 0 16 16">
         {iconSvg[props.icon ?? "blank"]}
     </svg>;
 }
