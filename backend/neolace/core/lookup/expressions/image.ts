@@ -4,11 +4,13 @@ import { getEntryFeatureData } from "neolace/core/entry/features/get-feature-dat
 
 import { LookupExpression } from "../expression.ts";
 import {
+    AnnotatedValue,
     EntryValue,
     ImageValue,
     InlineMarkdownStringValue,
     IntegerValue,
     LazyEntrySetValue,
+    LazyIterableValue,
     NullValue,
     StringValue,
 } from "../values.ts";
@@ -54,7 +56,7 @@ export class Image extends LookupExpression {
         this.maxWidthExpr = extraParams.maxWidthExpr;
     }
 
-    public async getValue(context: LookupContext) {
+    public async getValue(context: LookupContext): Promise<ImageValue | NullValue | LazyIterableValue> {
         const formatArgValue = await this.formatExpr.getValueAs(StringValue, context);
         const format: ImageDisplayFormat = (
             formatArgValue.value === "right"
@@ -63,54 +65,71 @@ export class Image extends LookupExpression {
                 ? ImageDisplayFormat.PlainLogo
                 : ImageDisplayFormat.Thumbnail
         );
-        let entry = await (await this.entriesExpr.getValue(context)).castTo(EntryValue, context);
-        if (entry === undefined) {
-            // We were given an entry set, not an entry - so just take the first one:
-            const entrySet = await this.entriesExpr.getValueAs(LazyEntrySetValue, context);
-            const slice = await entrySet.getSlice(0n, 1n); // Get the first value from the set
-            if (slice.length === 0) {
+
+        const entryToImageValue = async (entry: EntryValue) => {
+            const imageData = await getEntryFeatureData(entry.id, { featureType: "Image", tx: context.tx });
+            if (imageData === undefined) {
                 return new NullValue();
             }
-            entry = await slice[0].castTo(EntryValue, context);
-        }
-        if (entry === undefined) {
-            throw new LookupEvaluationError(
-                `The expression "${this.entriesExpr.toDebugString()}" cannot be used with image().`,
-            );
-        }
-        const imageData = await getEntryFeatureData(entry.id, { featureType: "Image", tx: context.tx });
-        if (imageData === undefined) {
-            return new NullValue();
-        }
 
-        const altText = (await context.tx.pullOne(Entry, (e) => e.name, { key: entry.id })).name;
+            const altText = (await context.tx.pullOne(Entry, (e) => e.name, { key: entry.id })).name;
 
-        // Optional parameters:
-        let caption = undefined;
-        if (this.captionExpr) {
-            caption = await this.captionExpr.getValueAsOneOf([InlineMarkdownStringValue, StringValue], context);
-        }
-        let link: EntryValue | StringValue = entry;
-        if (format === ImageDisplayFormat.PlainLogo && this.linkExpr) {
-            link = await this.linkExpr.getValueAsOneOf([EntryValue, StringValue], context);
-        }
-        let maxWidth = undefined;
-        if (this.maxWidthExpr) {
-            maxWidth = Number((await this.maxWidthExpr.getValueAs(IntegerValue, context)).value);
-        }
-        // Tell TypeScript that the border color is a 4-tuple, not just number[]
-        const borderColor = imageData.borderColor as [number, number, number, number] | undefined;
+            // Optional parameters:
+            let caption = undefined;
+            if (this.captionExpr) {
+                caption = await this.captionExpr.getValueAsOneOf([InlineMarkdownStringValue, StringValue], context);
+            }
+            let link: EntryValue | StringValue = entry;
+            if (format === ImageDisplayFormat.PlainLogo && this.linkExpr) {
+                link = await this.linkExpr.getValueAsOneOf([EntryValue, StringValue], context);
+            }
+            let maxWidth = undefined;
+            if (this.maxWidthExpr) {
+                maxWidth = Number((await this.maxWidthExpr.getValueAs(IntegerValue, context)).value);
+            }
+            // Tell TypeScript that the border color is a 4-tuple, not just number[]
+            const borderColor = imageData.borderColor as [number, number, number, number] | undefined;
 
-        return new ImageValue({
-            ...imageData,
-            borderColor,
-            format,
-            entryId: entry.id,
-            altText,
-            caption,
-            link,
-            maxWidth,
-        });
+            return new ImageValue({
+                ...imageData,
+                borderColor,
+                format,
+                entryId: entry.id,
+                altText,
+                caption,
+                link,
+                maxWidth,
+            });
+        };
+
+        const singleEntry = await (await this.entriesExpr.getValue(context)).castTo(EntryValue, context);
+        if (singleEntry) {
+            // This is a single entry, which we'll return as an image:
+            return await entryToImageValue(singleEntry);
+        } else {
+            // Were we given a set of entries?
+            const entrySet = await this.entriesExpr.getValueAs(LazyEntrySetValue, context);
+            if (entrySet) {
+                return new LazyIterableValue({
+                    context,
+                    getCount: () => entrySet.getCount(),
+                    getSlice: async (offset, numItems) => {
+                        const entries = await entrySet.getSlice(offset, numItems);
+                        return Promise.all(
+                            entries.map((entry) =>
+                                entryToImageValue(entry instanceof AnnotatedValue ? entry.value as EntryValue : entry)
+                            ),
+                        );
+                    },
+                    sourceExpression: this.entriesExpr,
+                    sourceExpressionEntryId: context.entryId,
+                });
+            } else {
+                throw new LookupEvaluationError(
+                    `The expression "${this.entriesExpr.toDebugString()}" cannot be used with image().`,
+                );
+            }
+        }
     }
 
     public toString(): string {

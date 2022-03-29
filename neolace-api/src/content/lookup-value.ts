@@ -1,5 +1,6 @@
 import { object } from "../api-schemas.ts";
 import { VNID } from "../types.ts";
+import { ImageSizingMode } from "./Entry.ts";
 
 /** A "lookup value" / query result / computed fact that has been serialized to JSON */
 export interface LookupValue {
@@ -63,6 +64,7 @@ export interface ImageValue extends LookupValue {
     format: ImageDisplayFormat;
     caption?: InlineMarkdownString|StringValue;
     maxWidth?: number;  // maximum width in pixels (CSS reference pixel at 96dpi), for "logo" format only
+    sizing: ImageSizingMode,
 }
 
 export interface AnnotatedValue extends LookupValue {

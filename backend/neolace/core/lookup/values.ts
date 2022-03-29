@@ -555,6 +555,7 @@ interface ImageData {
     format: api.ImageDisplayFormat;
     caption?: InlineMarkdownStringValue | StringValue;
     maxWidth?: number;
+    sizing: api.ImageSizingMode;
 }
 
 /**
@@ -587,6 +588,7 @@ export class ImageValue extends ConcreteValue {
             format: this.data.format,
             link: this.data.link?.toJSON() as api.StringValue | api.EntryValue | undefined,
             maxWidth: this.data.maxWidth,
+            sizing: this.data.sizing,
         };
     }
 }
@@ -846,16 +848,22 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
     public readonly isIterable = true;
     public getCount?: () => Promise<bigint>;
     public getSlice: (offset: bigint, numItems: bigint) => Promise<LookupValue[]>;
+    public readonly sourceExpression?: LookupExpression;
+    public readonly sourceExpressionEntryId?: VNID;
 
-    constructor({ context, getCount, getSlice }: {
+    constructor({ context, getCount, getSlice, ...misc }: {
         context: LookupContext;
         getCount?: () => Promise<bigint>;
         getSlice: (offset: bigint, numItems: bigint) => Promise<LookupValue[]>;
+        sourceExpression?: LookupExpression;
+        sourceExpressionEntryId?: VNID;
     }) {
         super(context);
         this.hasCount = getCount !== undefined;
         this.getCount = getCount;
         this.getSlice = getSlice;
+        this.sourceExpression = misc.sourceExpression;
+        this.sourceExpressionEntryId = misc.sourceExpressionEntryId;
     }
 
     public override async toDefaultConcreteValue(): Promise<PageValue<ConcreteValue>> {
@@ -884,7 +892,13 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
         for (const value of slicedValues) {
             concreteValues.push(await value.makeConcrete());
         }
-        return new PageValue(concreteValues, { pageSize, startedAt: 0n, totalCount });
+        return new PageValue(concreteValues, {
+            pageSize,
+            startedAt: 0n,
+            totalCount,
+            sourceExpression: this.sourceExpression,
+            sourceExpressionEntryId: this.sourceExpressionEntryId,
+        });
     }
 }
 

@@ -193,16 +193,24 @@ group(import.meta, () => {
                                 type: "Page",
                                 values: [
                                     {
-                                        type: "Annotated",
-                                        value: {
+                                        type: "Image",
+                                        format: "thumb",
+                                        entryId: defaultData.entries.imgPonderosaTrunk.id,
+                                        altText: defaultData.entries.imgPonderosaTrunk.name,
+                                        blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
+                                        contentType: "image/webp",
+                                        imageUrl: (result.propertiesSummary?.find((x) =>
+                                            x.propertyId === defaultData.schema.properties._relImages.id
+                                            // deno-lint-ignore no-explicit-any
+                                        )?.value as any).value.values[0].imageUrl,
+                                        link: {
                                             type: "Entry",
                                             id: defaultData.entries.imgPonderosaTrunk.id,
                                         },
-                                        annotations: {
-                                            note: defaultAnnotations.note,
-                                            rank: defaultAnnotations.rank,
-                                            slot: defaultAnnotations.slot,
-                                        },
+                                        size: 1581898,
+                                        sizing: "cover",
+                                        width: 3504,
+                                        height: 2336,
                                     },
                                 ],
                                 source: {

@@ -1,18 +1,25 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
 import { assert, assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
-import { EntryValue, ImageValue, IntegerValue, NullValue, PropertyValue, StringValue } from "../values.ts";
+import { getGraph } from "neolace/core/graph.ts";
+import { EntryValue, ImageValue, IntegerValue, NullValue, PageValue, PropertyValue, StringValue } from "../values.ts";
 import { Image } from "./image.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupExpression } from "../expression.ts";
 import { GetProperty } from "./get.ts";
+import { First } from "./first.ts";
+import { parseLookupString } from "../parse.ts";
+import { ReverseProperty } from "./reverse.ts";
 
 group(import.meta, () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        graph.read((tx) => expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n })).then((v) => v.makeConcrete());
+        getGraph().then((graph) =>
+            graph.read((tx) =>
+                expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
+            )
+        );
     const siteId = defaultData.site.id;
 
     group("image()", () => {
@@ -49,15 +56,17 @@ group(import.meta, () => {
 
         test(`It gives data about the image retrieved from an entry's property which is a lookup expression`, async () => {
             const expression = new Image(
-                new GetProperty(
-                    // Instead of a literal referencing the photo of a ponderosa pine,
-                    // lookup the "hero image" property of the "Ponderosa Pine (Species)" entry
-                    new LiteralExpression(new EntryValue(defaultData.entries.ponderosaPine.id)),
-                    {
-                        propertyExpr: new LiteralExpression(
-                            new PropertyValue(defaultData.schema.properties._hasHeroImage.id),
-                        ),
-                    },
+                new First(
+                    new GetProperty(
+                        // Instead of a literal referencing the photo of a ponderosa pine,
+                        // lookup the "hero image" property of the "Ponderosa Pine (Species)" entry
+                        new LiteralExpression(new EntryValue(defaultData.entries.ponderosaPine.id)),
+                        {
+                            propertyExpr: new LiteralExpression(
+                                new PropertyValue(defaultData.schema.properties._hasHeroImage.id),
+                            ),
+                        },
+                    ),
                 ),
                 { formatExpr: new LiteralExpression(new StringValue("right")) },
             );
@@ -74,6 +83,23 @@ group(import.meta, () => {
             );
             const result2 = await evalExpression(equivalentExpression);
             assertEquals(result, result2);
+        });
+
+        test(`It works with multiple entry values`, async () => {
+            const expression = new Image(
+                parseLookupString(
+                    `this.andDescendants().reverse(prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                ),
+                { formatExpr: new LiteralExpression(new StringValue("thumb")) },
+            );
+
+            const result = await evalExpression(expression, defaultData.entries.ponderosaPine.id);
+
+            assert(result instanceof PageValue);
+            assert(result.values[0] instanceof ImageValue);
+            assertEquals(result.values[0].data.entryId, defaultData.entries.imgPonderosaTrunk.id);
+            assert(result.sourceExpression instanceof ReverseProperty);
+            assertEquals(result.sourceExpressionEntryId, defaultData.entries.ponderosaPine.id);
         });
 
         test(`It gives a null value when used with non-image entries`, async () => {
