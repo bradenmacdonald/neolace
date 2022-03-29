@@ -11,8 +11,7 @@ on:
     branches: [main]
 
 env:
-  # temporarily pinned low since 1.21.2 is not on Docker Hub yet.
-  deno-version: ">=1.20.1 <1.20.2"
+  deno-version: ">=1.20.1 <1.21.0"
   docker-registry: ghcr.io
 
 jobs:
@@ -166,7 +165,35 @@ jobs:
           # registry with too many random branch builds.
           if_false: ghcr.io/neolace-dev/neolace-${{ matrix.component }}:${{ steps.branch-name.outputs.current_branch }}
 
-      - name: Build and push ${{ matrix.component }} Docker image
+      - name: Build ${{ matrix.component }} Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          file: ${{ matrix.component }}/Dockerfile
+          context: .
+          push: false
+          tags: ${{ steps.tag-condition.outputs.value }}
+          build-args:
+            DENO_IMAGE_VERSION=alpine-${{ steps.deno-version.outputs.deno-version }}
+          labels: |
+            org.opencontainers.image.title=${{ matrix.title }}
+            org.opencontainers.image.description=${{ matrix.title }}
+            org.opencontainers.image.url=https://www.neolace.com
+            org.opencontainers.image.source=https://github.com/neolace-dev/neolace-app
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Test frontend image
+        if: matrix.component == 'frontend'
+        run: |
+          docker run --rm \
+          -e NEXT_PUBLIC_API_SERVER_INTERNAL_URL=http://host.docker.internal:5554 \
+          -e NEXT_PUBLIC_API_SERVER_URL=http://localhost:5554 \
+          -e NEXT_PUBLIC_AUTHN_URL=http://localhost:5552 \
+          ghcr.io/neolace-dev/neolace-frontend:latest \
+          npm run build
+
+      - name: Push ${{ matrix.component }} Docker image
+        # For now we are only pushing if this is built on main, but we always build to test that the build works.
+        if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           file: ${{ matrix.component }}/Dockerfile
