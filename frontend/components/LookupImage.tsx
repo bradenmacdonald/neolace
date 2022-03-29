@@ -9,18 +9,20 @@ import Image from 'next/image';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { RatioBox } from './widgets/ratio-box';
 import { LookupValue } from './LookupValue';
- 
-const OptionalLink = (props: {children: React.ReactNode; href?: api.EntryValue|api.StringValue; mdtContext: MDTContext;}) => {
+import Link from 'next/link';
+
+/** Renders either an <a> or a <span> with the given class. */
+const OptionalLink = (props: {children: React.ReactNode; href?: api.EntryValue|api.StringValue; mdtContext: MDTContext; className: string;}) => {
     if (props.href) {
         if (props.href.type === "Entry") {
             const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) = props.mdtContext.refCache.entries[props.href.id];
             const url = "/entry/" + (entry?.friendlyId || props.href.id);
-            return <a href={url}>{props.children}</a>;
+            return <Link href={url}><a className={props.className}>{props.children}</a></Link>;
         } else if (props.href.type === "String") {
-            return <a href={props.href.value}>{props.children}</a>;
+            return <Link href={props.href.value}><a className={props.className}>{props.children}</a></Link>;
         }
     }
-    return <>{props.children}</>;
+    return <span className={props.className}>{props.children}</span>;
 };
 
 interface ImageProps {
@@ -46,7 +48,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
 
     if (value.format === api.ImageDisplayFormat.PlainLogo) {
         return <div className="w-full mt-2 mb-1" style={{maxWidth: `${value.maxWidth ?? 400}px`}}>
-            <OptionalLink href={value.link} mdtContext={props.mdtContext}>
+            <OptionalLink href={value.link} mdtContext={props.mdtContext} className="">
                 <Image
                     src={value.imageUrl}
                     width={value.width}
@@ -61,14 +63,12 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
             <div className="md:clear-right"></div> {/* TODO: make this way of clearing text+images optional?, just have md:clear-right applied to the div below */}
             <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 border-gray-400 md:ml-4 mb-2">
                 <RatioBox ratio={ratio}>
-                    {/* A blurry representation of the image, shown while it is loading. */}
-                    <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" />
-                    {/* the image: */}
-                    <OptionalLink href={value.link} mdtContext={props.mdtContext}>
+                    <OptionalLink href={value.link} mdtContext={props.mdtContext} className="relative left-0 top-0 w-full h-full block">
+                        {/* A blurry representation of the image, shown while it is loading. */}
+                        <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" />
+                        {/* the image: */}
                         <Image
                             src={value.imageUrl}
-                            width={value.width}
-                            height={value.height}
                             alt={value.altText}
                             sizes={"250px" /* We're displaying these images never wider than 250px, so use a smaller image source */}
                             layout="fill"
@@ -85,22 +85,18 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
         </>
     } else {
         // Thumbnail:
-        return <div className="inline-block h-20 w-20 border-2 border-gray-500 rounded-md relative">
+        return <OptionalLink href={value.link} mdtContext={props.mdtContext} className="inline-block h-20 w-20 border-2 border-gray-500 rounded-md relative">
             {/* A blurry representation of the image, shown while it is loading. */}
             <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" className="opacity-30" />
             {/* the image: */}
-            <OptionalLink href={value.link} mdtContext={props.mdtContext}>
-                <Image
-                    src={value.imageUrl}
-                    width={value.width}
-                    height={value.height}
-                    alt={value.altText}
-                    layout="fill"
-                    sizes={"100px" /* We're displaying these small thumbnails at only < 100px wide, so use a small image */}
-                    objectFit={value.sizing}
-                />
-            </OptionalLink>
-        </div>
+            <Image
+                src={value.imageUrl}
+                alt={value.altText}
+                layout="fill"
+                sizes={"100px" /* We're displaying these small thumbnails at only < 100px wide, so use a small image */}
+                objectFit={value.sizing}
+            />
+        </OptionalLink>;
     }
 };
  
