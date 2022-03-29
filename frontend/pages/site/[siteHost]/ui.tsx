@@ -11,6 +11,7 @@ import { LookupExpressionInput } from 'components/widgets/LookupExpressionInput'
 import { Spinner } from 'components/widgets/Spinner';
 import { Tooltip } from 'components/widgets/Tooltip';
 import { ErrorMessage } from 'components/widgets/ErrorMessage';
+import { Breadcrumb, Breadcrumbs } from 'components/widgets/Breadcrumbs';
 
 // interface PageProps {
 // }
@@ -89,6 +90,14 @@ const UiDemoPage: NextPage = function(props) {
 
             <table>
                 <tbody>
+                    <UIDemo label="Breadcrumbs">
+                        <Breadcrumbs>
+                            <Breadcrumb href={"/"}>Home</Breadcrumb>
+                            <Breadcrumb href={"/"}>Section</Breadcrumb>
+                            <Breadcrumb href={"/"}>Sub-Section</Breadcrumb>
+                            <Breadcrumb>This Entry</Breadcrumb>
+                        </Breadcrumbs>
+                    </UIDemo>
                     <UIDemo label="Spinner"><Spinner/></UIDemo>
                     <UIDemo label="Button"><Button>I'm a button</Button></UIDemo>
                     <UIDemo label="Tooltip">
