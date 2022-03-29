@@ -67,7 +67,10 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                     <OptionalLink href={value.link} mdtContext={props.mdtContext}>
                         <Image
                             src={value.imageUrl}
+                            width={value.width}
+                            height={value.height}
                             alt={value.altText}
+                            sizes={"250px" /* We're displaying these images never wider than 250px, so use a smaller image source */}
                             layout="fill"
                             objectFit="contain"
                         />
@@ -89,8 +92,11 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
             <OptionalLink href={value.link} mdtContext={props.mdtContext}>
                 <Image
                     src={value.imageUrl}
+                    width={value.width}
+                    height={value.height}
                     alt={value.altText}
                     layout="fill"
+                    sizes={"100px" /* We're displaying these small thumbnails at only < 100px wide, so use a small image */}
                     objectFit={value.sizing}
                 />
             </OptionalLink>
