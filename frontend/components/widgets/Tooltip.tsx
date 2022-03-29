@@ -14,6 +14,7 @@ let uniqueId = 0;
  * Display a tooltip that contains HTML
  */
 export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
+    // TODO: change this to useId() hook in React 18 : https://reactjs.org/docs/hooks-reference.html#useid
     const [tooltipId] = React.useState(() => `neo-tooltip${uniqueId++}`);
     const [isElementHovered, setElementHovered] = React.useState(false);
     const [referenceElement, setReferenceElement] = React.useState<HTMLElement|null>(null);

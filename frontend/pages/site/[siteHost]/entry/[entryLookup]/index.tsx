@@ -44,8 +44,8 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 </>},
                 {id: "tableOfContents", priority: 50, content: <>
                     <ul id="left-toc-headings">
-                        <li><Link  href={`/entry/${props.entry.friendlyId}#summary`}><a><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></Link></li>
-                        <li className={`${hasProps || "hidden"}`}><Link href={`#properties`}><a><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></Link></li>
+                        <li><Link href={`/entry/${props.entry.friendlyId}#summary`}><a><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></Link></li>
+                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><a><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></Link></li>
                         {
                             props.entry.features?.Article?.headings.map(heading =>
                                 <li key={heading.id}><Link href={`/entry/${props.entry.friendlyId}#h-${heading.id}`}><a>{heading.title}</a></Link></li>
