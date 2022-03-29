@@ -3,7 +3,7 @@ import React from 'react';
 import { useIntl } from 'react-intl';
 import { Icon, IconId } from './Icon';
 
-interface BreadcrumbProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface BreadcrumbProps {
     href?: string;
     children: React.ReactNode;
 }
@@ -20,7 +20,7 @@ export const Breadcrumb: React.FunctionComponent<BreadcrumbProps> = (props) => {
         }
   </li>;
 }
-interface BreadcrumbsProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface BreadcrumbsProps {
     children: React.ReactElement<BreadcrumbProps, typeof Breadcrumb>[];
 }
 

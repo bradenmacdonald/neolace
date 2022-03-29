@@ -12,14 +12,15 @@ import { Spinner } from 'components/widgets/Spinner';
 import { Tooltip } from 'components/widgets/Tooltip';
 import { ErrorMessage } from 'components/widgets/ErrorMessage';
 import { Breadcrumb, Breadcrumbs } from 'components/widgets/Breadcrumbs';
+import { Control, Form } from 'components/widgets/Form';
 
 // interface PageProps {
 // }
 
 const UIDemo = (props: {label: string, children: React.ReactNode}) => {
     return <tr>
-        <th className="pr-4 pb-4 align-top">{props.label}</th>
-        <td className="align-top">{props.children}</td>
+        <th className="pb-4 align-top pr-4 text-left">{props.label}</th>
+        <td className="pb-4 align-top">{props.children}</td>
     </tr>;
 };
 
@@ -44,11 +45,32 @@ const UiDemoPage: NextPage = function(props) {
 
             <p>This page (for development only) provides a demo of the various Neolace UI components.</p>
 
+            <h2>Form</h2>
+
+            <p>Here is an example of our form component.</p>
+
+            <Form>
+                <Control id="form-email" label={{id: "ui.demo.form.email", defaultMessage: "Your Email"}}>
+                    <TextInput />
+                </Control>
+                <Control
+                    id="form-lookup-expr"
+                    label={{id: "ui.demo.form.lookup", defaultMessage: "Lookup Expression"}}
+                    hint={{id: "ui.demo.form.lookupHint", defaultMessage: "Try using SHIFT-ENTER to create multiple lines, or entering a long string to see the box expand."}}
+                >
+                    <LookupExpressionInput
+                        value={lookupDemoText}
+                        onChange={setLookupDemoText}
+                        placeholder={"Enter a lookup expression"}
+                    />
+                </Control>
+            </Form>
+
             <h2>Icons</h2>
 
             <div className="flex flex-wrap">
                 {
-                    _allIcons.map(id => <div className="inline-block w-32 h-32 border-2 m-2 text-center text-4xl pt-6 hover:border-theme-link-color" onClick={() => setSelectedIcon(id)}>
+                    _allIcons.map(id => <div key={id} className="inline-block w-32 h-32 border-2 m-2 text-center text-4xl pt-6 hover:border-theme-link-color" onClick={() => setSelectedIcon(id)}>
                         <Icon key={id} icon={id} /><code className="block text-xs pt-5">{id}</code>
                     </div>)
                 }
@@ -60,31 +82,6 @@ const UiDemoPage: NextPage = function(props) {
             <p>See more: <a href={`https://icons.getbootstrap.com/icons/${selectedIcon}/`}>"{selectedIcon}" at Bootstrap Icons</a>.</p>
 
             <br/>
-
-            <h2>Text Inputs</h2>
-
-            <TextInput
-                className="w-[600px] max-w-full"
-                value={textDemoText}
-                onChange={event => setTextDemoText(event.currentTarget.value)}
-                placeholder={"Example of a regular input"}
-            />
-
-            <TextInput
-                type="search"
-                icon="search"
-                className="w-[600px] max-w-full"
-                value={searchDemoText}
-                onChange={event => setSearchDemoText(event.currentTarget.value)}
-                placeholder={"Example of a search input"}
-            />
-
-            <br />{/* TODO: shouldn't need a <br/> here? */}
-            <LookupExpressionInput
-                value={lookupDemoText}
-                onChange={setLookupDemoText}
-                placeholder={"Enter a lookup expression"}
-            />
 
             <h2>More stuff</h2>
 
@@ -104,6 +101,16 @@ const UiDemoPage: NextPage = function(props) {
                         <Tooltip tooltipContent={<><strong>Hello</strong> from the tooltip</>}>{(attrs) => <span {...attrs}>hover me.</span>}</Tooltip>
                     </UIDemo>
                     <UIDemo label="Error"><ErrorMessage>Something went wrong.</ErrorMessage></UIDemo>
+                    <UIDemo label="Search">
+                        <TextInput
+                            type="search"
+                            icon="search"
+                            className="w-[600px] max-w-full"
+                            value={searchDemoText}
+                            onChange={event => setSearchDemoText(event.currentTarget.value)}
+                            placeholder={"Example of a search input"}
+                        />
+                    </UIDemo>
                 </tbody>
             </table>
 
