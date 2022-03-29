@@ -1,3 +1,4 @@
+import { Portal } from 'components/utils/Portal';
 import React from 'react';
 import { usePopper } from 'react-popper';
 
@@ -61,17 +62,19 @@ export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
                 "aria-describedby": tooltipId,
             }) : null}
 
-            <span
-                role="tooltip"
-                id={tooltipId}
-                ref={setPopperElement}
-                style={styles.popper}
-                {...attributes.popper}
-                className={`max-w-[400px] border p-1 rounded border-gray-800 shadow bg-blue-50 text-sm ${showTooltip ? "visible opacity-100" : "invisible opacity-0"} transition-opacity duration-500 font-normal z-10`}
-                aria-hidden={!showTooltip}
-            >
-                {showTooltip ? props.tooltipContent : null}
-            </span>
+            <Portal>
+                <span
+                    role="tooltip"
+                    id={tooltipId}
+                    ref={setPopperElement}
+                    style={styles.popper}
+                    {...attributes.popper}
+                    className={`max-w-[400px] border p-1 rounded border-gray-800 shadow bg-blue-50 text-sm ${showTooltip ? "visible opacity-100" : "invisible opacity-0"} transition-opacity duration-500 font-normal z-10`}
+                    aria-hidden={!showTooltip}
+                >
+                    {showTooltip ? props.tooltipContent : null}
+                </span>
+            </Portal>
         </>
     );
 };
