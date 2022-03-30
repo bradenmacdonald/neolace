@@ -246,6 +246,8 @@ export function diffSchema(
                     "importance",
                     "editNoteMD",
                     "displayAs",
+                    "inheritable",
+                    "enableSlots",
                 ] as const
             ) {
                 if (newProp[key] !== oldProp[key]) {
