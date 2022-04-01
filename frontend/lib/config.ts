@@ -1,3 +1,4 @@
+import type { ImageLoader } from 'next/image';
 /** Are we currently running in development mode or production? */
 export const DEVELOPMENT_MODE = process.env.NODE_ENV === "development";
 /** Are we currently running in a browser? (if not, we're prerendering on the server in Node.js) */
@@ -17,4 +18,24 @@ if (IN_BROWSER) {
 
 if (typeof API_SERVER_URL !== "string") {
     throw new Error("Environment variables are not set properly.");
+}
+
+// Are we using imgproxy and a CDN to cache image thumbnails? Or using Next.js's built-in image resizing.
+const imgProxyEnabled = process.env.NEXT_PUBLIC_IMGPROXY_ENABLED;
+
+/**
+ * A Next.js image loader that works with imgproxy and any CDN to serve thumbnails in production
+ * 
+ * Requires that imgproxy is running and the backend is configured to work with it.
+ */
+export const imgThumbnailLoader: ImageLoader = ({ src, width, quality }) => {
+    if (imgProxyEnabled) {
+        return src + `?width=${width}`
+    }
+    // Use the default Next.js built-in image resizer:
+    const params = new URLSearchParams();
+    params.set('url', src);
+    params.set('w', width.toString());
+    params.set('q', quality?.toString() ?? "85");
+    return `/_next/image?${params.toString()}`;
 }

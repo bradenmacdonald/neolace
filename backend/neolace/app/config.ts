@@ -61,6 +61,8 @@ export const config = (() => {
         objStorePublicUrlPrefix: defaultTo("http://localhost:9000/neolace-objects", {
             test: "http://localhost:9000/neolace-test-objects",
         }),
+        // If set, this prefix will be used for images, instead of objStorePublicUrlPrefix. Useful for CDN+imgproxy.
+        objStorePublicUrlPrefixForImages: "",
         // In production, 'imgproxy' can be used together with a CDN for fast image thumbnailing. See backend/neolace/api/imgproxy/index.ts
         imgProxyPrefix: defaultTo("http://localhost:5557", { production: "" }),
         imgProxySecretKey: defaultTo("neolace123", { production: "\u0000 setme!!" }),

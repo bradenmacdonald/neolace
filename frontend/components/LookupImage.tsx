@@ -10,6 +10,7 @@ import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
 import { RatioBox } from './widgets/ratio-box';
 import { LookupValue } from './LookupValue';
 import Link from 'next/link';
+import { imgThumbnailLoader } from 'lib/config';
 
 /** Renders either an <a> or a <span> with the given class. */
 const OptionalLink = (props: {children: React.ReactNode; href?: api.EntryValue|api.StringValue; mdtContext: MDTContext; className: string;}) => {
@@ -51,6 +52,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
             <OptionalLink href={value.link} mdtContext={props.mdtContext} className="">
                 <Image
                     src={value.imageUrl}
+                    loader={imgThumbnailLoader}
                     width={value.width}
                     height={value.height}
                     alt={value.altText}
@@ -69,6 +71,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                         {/* the image: */}
                         <Image
                             src={value.imageUrl}
+                            loader={imgThumbnailLoader}
                             alt={value.altText}
                             sizes={"250px" /* We're displaying these images never wider than 250px, so use a smaller image source */}
                             layout="fill"
@@ -91,6 +94,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
             {/* the image: */}
             <Image
                 src={value.imageUrl}
+                loader={imgThumbnailLoader}
                 alt={value.altText}
                 layout="fill"
                 sizes={"100px" /* We're displaying these small thumbnails at only < 100px wide, so use a small image */}
