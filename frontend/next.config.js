@@ -10,13 +10,15 @@ module.exports = (phase, { defaultConfig }) => {
         ...defaultConfig,
         reactStrictMode: true,
         images: {
-            // Cut down on the number of different images sizes we have to deal with:
-            deviceSizes: [640, 1080, 1920, 3840],
+            // Cut down on the number of different images sizes we have to deal with.
+            // One size (2000px) should be exactly double the width of "hero images" on entry pages.
+            imageSizes: [256],
+            deviceSizes: [640, 1000, 2000, 4000],
             domains: ["s3.us-west-000.backblazeb2.com"],
         },
         env: {
             // Should match images.deviceSizes:
-            imageSizesAttr: "640px, 1080px, 1920px, 3840px",
+            imageSizesAttr: "640px, 1000px, 2000px, 4000px",
         },
         i18n: {
             locales: ["en", "fr"],

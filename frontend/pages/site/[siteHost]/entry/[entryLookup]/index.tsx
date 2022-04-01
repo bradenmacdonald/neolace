@@ -78,6 +78,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                             alt=""
                             layout="fill"
                             objectFit={props.entry.features.HeroImage.sizing ?? "contain"}
+                            sizes="1000px"
                             priority
                         />
 
