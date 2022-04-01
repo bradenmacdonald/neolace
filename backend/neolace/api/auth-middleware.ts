@@ -5,6 +5,7 @@ import { config } from "neolace/app/config.ts";
 import { Drash, getGraph, NeolaceHttpRequest } from "./mod.ts";
 import { BotUser, HumanUser } from "neolace/core/User.ts";
 import { bin2hex } from "neolace/lib/bin2hex.ts";
+import { sha256hmac } from "neolace/lib/sha256hmac.ts";
 
 export class NeolaceAuthService extends Drash.Service {
     public async runBeforeResource(request: Drash.Request): Promise<void> {
@@ -85,24 +86,4 @@ async function getSystemKeySalt(): Promise<Uint8Array> {
 export async function hashSystemKey(key: string): Promise<string> {
     const salt: Uint8Array = await getSystemKeySalt();
     return bin2hex(await sha256hmac(salt, key));
-}
-
-async function sha256hmac(
-    secretKey: Uint8Array | string,
-    data: Uint8Array | string,
-): Promise<Uint8Array> {
-    const enc = new TextEncoder();
-    const keyObject = await crypto.subtle.importKey(
-        "raw", // raw format of the key - should be Uint8Array
-        secretKey instanceof Uint8Array ? secretKey : enc.encode(secretKey),
-        { name: "HMAC", hash: { name: "SHA-256" } }, // algorithm
-        false, // export = false
-        ["sign", "verify"], // what this key can do
-    );
-    const signature = await crypto.subtle.sign(
-        "HMAC",
-        keyObject,
-        data instanceof Uint8Array ? data : enc.encode(data),
-    );
-    return new Uint8Array(signature);
 }

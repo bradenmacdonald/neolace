@@ -116,7 +116,7 @@ services:
       MINIO_REGION_NAME: dev-region
     ports:
       - 9000:9000
-      #- 5555:5555  # For the frontend, see note in "frontend" service definition
+      - 5557:5557  # For the imgproxy, if being used. See note in "imgproxy" service definition
     volumes:
       - objstore-data:/data/
 
@@ -135,45 +135,20 @@ services:
       "
 
   ################################################################
-  # Deno container for the backend (dev mode)
+  # Image Proxy (run this via docker-compose.override.yml) if you
+  # want to test prod-like image thumbnailing + CDN
   ################################################################
-  # backend:
-  #   build:
-  #     context: backend/
-  #     dockerfile: dev.Dockerfile
-  #   depends_on:
-  #     - neo4j
-  #     - redis
-  #     - authn
-  #     - objstore
-  #   stdin_open: true
-  #   tty: true
-  #   volumes:
-  #     - ./backend/:/app/
-  #     - ./neolace-api/:/neolace-api/
-  #     # External repos that must be cloned to the parent directory:
-  #     - ../vertex-framework/:/dependencies/vertex-framework/:ro
-  #     - ../technotes-mdt/:/dependencies/technotes-mdt/:ro
-  #   ports:
-  #     - 5553:5553  # NodeJS debugger
-  #     - 5554:5554  # The Backend server (HTTP)
 
-  ################################################################
-  # NodeJS container for the frontend (dev mode)
-  ################################################################
-  # frontend:
-  #   build:
-  #     context: frontend/
-  #     dockerfile: dev.Dockerfile
-  #   stdin_open: true
-  #   tty: true
-  #   volumes:
-  #     - ./frontend/:/app/
-  #     # External repos that must be cloned to the parent directory:
-  #     - ../technotes-mdt/:/local-dependencies/technotes-mdt/
-  #   # Run the frontend on the same network as objstore, so that frontend can resolve "localhost:9000" URLs without us
-  #   # having to sometimes use "objstore:9000" and other times use "localhost:9000" depending on whether the end user's
-  #   # browser or the Node.js server is handling the request.
+  # imgproxy:
+  #   image: darthsim/imgproxy:v3.3.3
+  #   environment:
+  #     IMGPROXY_BIND: ":5557"
+  #     IMGPROXY_KEY: 6E656F6C616365313233  # "neolace123" is the secret key (imgproxy needs it hex encoded)
+  #     IMGPROXY_SALT: 6E656F73616C74  # "neosalt" is the salt
+  #     IMGPROXY_MAX_SRC_RESOLUTION: 30  # Don't give errors on medium-sized files, only super huge ones.
+  #   # Run imgproxy on the same network as objstore, so that it can resolve "localhost:9000" URLs without us
+  #   # having to sometimes use "objstore:9000" and other times use "localhost:9000" depending on whether
+  #   # the end user's browser or imgproxy is handling the request.
   #   network_mode: "service:objstore"
 
 volumes:
