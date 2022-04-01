@@ -120,13 +120,22 @@ export const UpdatePropertyValue = ContentEditType({
     describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value`,
 });
 
-// TODO: Delete property value
+export const DeletePropertyValue = ContentEditType({
+    changeType: EditChangeType.Content,
+    code: "DeletePropertyValue",
+    dataSchema: Schema({
+        /** The ID of the property fact to change */
+        propertyFactId: vnidString,
+    }),
+    describe: (data) => `Deleted \`PropertyFact ${data.propertyFactId}\` property value`,
+});
 
 export const _allContentEditTypes = {
     CreateEntry,
     UpdateEntryFeature,
     AddPropertyValue,
     UpdatePropertyValue,
+    DeletePropertyValue,
 };
 
 export type AnyContentEdit = (
@@ -134,4 +143,5 @@ export type AnyContentEdit = (
     | Edit<typeof UpdateEntryFeature>
     | Edit<typeof AddPropertyValue>
     | Edit<typeof UpdatePropertyValue>
+    | Edit<typeof DeletePropertyValue>
 );
