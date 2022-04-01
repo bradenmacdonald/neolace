@@ -1,8 +1,13 @@
 import { encode as encodeBase64UrlSafe } from "std/encoding/base64url.ts";
+import { decode as decodeHex } from "std/encoding/hex.ts";
 
 import { Drash } from "neolace/api/mod.ts";
 import { config } from "neolace/app/config.ts";
 import { sha256hmac } from "neolace/lib/sha256hmac.ts";
+
+const hex2str = (hex: string) => new TextDecoder().decode(decodeHex(new TextEncoder().encode(hex)));
+const imgProxySalt = hex2str(config.imgProxySaltHex);
+const imgProxySecretKey = hex2str(config.imgProxySecretKeyHex);
 
 /**
  * The image proxy API is used for simple and efficient generation of image thumbnails.
@@ -57,7 +62,7 @@ export class ImageProxyResource extends Drash.Resource {
         // Build the request for imgproxy:
         const imgProxyRequest = `/rs:fit:${maxWidthPx}/q:90/plain/${imageSourceUrl}@${thumbnailImageFormat}`;
 
-        const hmac = await sha256hmac(config.imgProxySecretKey, config.imgProxySalt + imgProxyRequest);
+        const hmac = await sha256hmac(imgProxySecretKey, imgProxySalt + imgProxyRequest);
         const signature = encodeBase64UrlSafe(hmac);
 
         response.status = 301;
