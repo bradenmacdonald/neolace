@@ -102,8 +102,11 @@ export const CreateDataFile = defineAction({
 export function publicUrl(): DerivedProperty<string> {
     return DerivedProperty.make(
         DataFile,
-        (df) => df.filename,
+        (df) => df.filename.contentType,
         (data) => {
+            if (config.objStorePublicUrlPrefixForImages && data.contentType.startsWith("image/")) {
+                return `${config.objStorePublicUrlPrefixForImages}/${data.filename}`;
+            }
             return `${config.objStorePublicUrlPrefix}/${data.filename}`; // This doesn't use publicUrlForDataFile below because this is synchronous.
         },
     );

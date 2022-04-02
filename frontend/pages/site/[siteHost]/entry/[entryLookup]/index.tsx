@@ -11,6 +11,7 @@ import { SitePage } from 'components/SitePage';
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 import { LookupValue } from 'components/LookupValue';
 import { EntryLink } from 'components/EntryLink';
+import { imgThumbnailLoader } from 'lib/config';
 //import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageProps {
@@ -75,9 +76,11 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         />
                         <Image
                             src={props.entry.features.HeroImage.imageUrl}
+                            loader={imgThumbnailLoader}
                             alt=""
                             layout="fill"
                             objectFit={props.entry.features.HeroImage.sizing ?? "contain"}
+                            sizes="1000px"
                             priority
                         />
 

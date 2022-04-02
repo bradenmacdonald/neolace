@@ -16,9 +16,10 @@ import { EntryListResource } from "./site/%7BsiteShortId%7D/entry/index.ts";
 import { EntryResource } from "./site/{siteShortId}/entry/{entryId}/index.ts";
 import { UserIndexResource } from "./user/index.ts";
 import { UserMeResource } from "./user/me.ts";
-import { type NeolaceHttpResource } from "./mod.ts";
+import { ImageProxyResource } from "./imgproxy/index.ts";
+import { type Drash } from "./mod.ts";
 
-export const builtInRestApiResources: (typeof NeolaceHttpResource)[] = [
+export const builtInRestApiResources: (typeof Drash.Resource)[] = [
     HomePageResource,
     HealthCheckResource,
     RequestLoginResource,
@@ -37,4 +38,5 @@ export const builtInRestApiResources: (typeof NeolaceHttpResource)[] = [
     EntryResource,
     UserIndexResource,
     UserMeResource,
+    ImageProxyResource,
 ];
