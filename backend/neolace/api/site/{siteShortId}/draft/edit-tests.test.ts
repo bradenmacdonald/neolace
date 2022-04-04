@@ -1,4 +1,14 @@
-import { api, assert, assertEquals, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
+import {
+    api,
+    assert,
+    assertEquals,
+    assertRejects,
+    getClient,
+    group,
+    setTestIsolation,
+    test,
+} from "neolace/api/tests.ts";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 
 group(import.meta, () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
@@ -20,6 +30,7 @@ group(import.meta, () => {
             assert(propertyFact?.value.value.type === "Entry");
             assertEquals(propertyFact?.value.value.id, defaultData.entries.familyCupressaceae.id);
 
+            // now delete the property
             const result = await client.createDraft({
                 title: "A Test Draft",
                 description: null,
@@ -48,6 +59,31 @@ group(import.meta, () => {
             // rels from parent)
 
             assertEquals(modifiedEntry.propertiesSummary?.length, originalEntry.propertiesSummary!.length - 3);
+        });
+
+        test("When we delete non-existent relationship, raises an error.", async () => {
+            // Get an API client, logged in as a bot that belongs to an admin
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            // make new id which is SUPPOSEDLY not used by any property, or so we are told
+            const newVNID = VNID();
+
+            // now delete the property fact that does not exist
+            const result = await client.createDraft({
+                title: "A Test Draft",
+                description: null,
+                edits: [
+                    {
+                        code: api.DeletePropertyValue.code,
+                        data: { propertyFactId: (newVNID) },
+                    },
+                ],
+            });
+
+            await assertRejects(
+                () => client.acceptDraft(result.id),
+                api.InvalidEdit,
+                `Property ${newVNID} does not exist on this site.`,
+            );
         });
     });
 });
