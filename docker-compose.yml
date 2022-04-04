@@ -117,6 +117,7 @@ services:
     ports:
       - 9000:9000
       - 5557:5557  # For the imgproxy, if being used. See note in "imgproxy" service definition
+      - 5558:5558  # For the imgproxy-gateway, if being used.
     volumes:
       - objstore-data:/data/
 
@@ -146,10 +147,21 @@ services:
   #     IMGPROXY_KEY: 6E656F6C616365313233  # "neolace123" is the secret key (imgproxy needs it hex encoded)
   #     IMGPROXY_SALT: 6E656F73616C74  # "neosalt" is the salt
   #     IMGPROXY_MAX_SRC_RESOLUTION: 30  # Don't give errors on medium-sized files, only super huge ones.
+  #     IMGPROXY_CACHE_CONTROL_PASSTHROUGH: "true"  # Pass through our "immutable" cache-control headers; don't use the 1 hour default
   #   # Run imgproxy on the same network as objstore, so that it can resolve "localhost:9000" URLs without us
   #   # having to sometimes use "objstore:9000" and other times use "localhost:9000" depending on whether
   #   # the end user's browser or imgproxy is handling the request.
   #   network_mode: "service:objstore"
+
+  # imgproxy-gateway:
+  #   image: ghcr.io/neolace-dev/improxy-gateway:build-docker-img
+  #   environment:
+  #     IMGPROXY_KEY: 6E656F6C616365313233
+  #     IMGPROXY_SALT: 6E656F73616C74
+  #     # IMGPROXY_GATEWAY_ALLOWED_WIDTHS: "[256, 640, 1000, 2000, 4000]"
+  #     # IMGPROXY_GATEWAY_IMGPROXY_URL: http://localhost:5557
+  #     # IMGPROXY_GATEWAY_OBJSTORE_PUBLIC_URL_PREFIX: http://localhost:9000/neolace-objects
+  #   network_mode: "service:objstore"  # Run imgproxy gateway on the same network as objstore, for same reason as imgproxy
 
 volumes:
   neo4j-data:
