@@ -1,4 +1,13 @@
-import { api, assertEquals, assertRejects, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
+import {
+    api,
+    assertEquals,
+    assertObjectMatch,
+    assertRejects,
+    getClient,
+    group,
+    setTestIsolation,
+    test,
+} from "neolace/api/tests.ts";
 
 group(import.meta, () => {
     group("Get entry API", () => {
@@ -45,13 +54,14 @@ group(import.meta, () => {
 
             const defaultAnnotations = {
                 // Default annotations on the value of a "normal" property value:
+                factId: { type: "String" },
                 note: { type: "InlineMarkdownString", value: "" },
                 rank: { type: "Integer", value: "1" },
                 slot: { type: "Null" },
                 source: { type: "String", value: "ThisEntry" },
             };
 
-            assertEquals(result, {
+            assertObjectMatch(result, {
                 ...basicResultExpected,
                 propertiesSummary: [
                     // The parent Genus of this species:

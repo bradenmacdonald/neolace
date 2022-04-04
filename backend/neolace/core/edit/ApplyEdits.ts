@@ -4,6 +4,7 @@ import {
     CreateEntry,
     CreateEntryType,
     CreateProperty,
+    DeletePropertyValue,
     EditList,
     getEditType,
     InvalidEdit,
@@ -187,6 +188,35 @@ export const ApplyEdits = defineAction({
 
                 case UpdatePropertyValue.code: {
                     throw new Error("UpdatePropertyValue is not yet implemented.");
+                }
+
+                case DeletePropertyValue.code: {
+                    const propertyFactId = edit.data.propertyFactId;
+                    let modifiedEntry;
+                    try {
+                        modifiedEntry = await tx.queryOne(C`
+                            MATCH (pf:${PropertyFact} {id: ${propertyFactId}})-[:${PropertyFact.rel.FOR_PROP}]->(property:${Property})
+                            MATCH (pf)<-[:${Entry.rel.PROP_FACT}]-(e:${Entry})
+                            MATCH (e)-[:${Entry.rel.IS_OF_TYPE}]->(et)-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            MATCH (e)-[rel]->(e2) WHERE pf.directRelNeo4jId = id(rel)
+                            DETACH DELETE pf, rel   
+                        `.RETURN({ "e.id": Field.VNID }));
+                    } catch (err: unknown) {
+                        if (err instanceof EmptyResultError) {
+                            throw new InvalidEdit(
+                                DeletePropertyValue.code,
+                                { propertyFactId: propertyFactId },
+                                `Property ${propertyFactId} does not exist on this site.`,
+                            );
+                        } else {
+                            throw err;
+                        }
+                    }
+
+                    modifiedNodes.add(propertyFactId);
+                    modifiedNodes.add(modifiedEntry["e.id"]);
+
+                    break;
                 }
 
                 case CreateEntryType.code: { // Create a new EntryType

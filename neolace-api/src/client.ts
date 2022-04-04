@@ -104,6 +104,8 @@ export class NeolaceApiClient {
             } else if (response.status === 400) {
                 if (errorData.reason === errors.InvalidRequestReason.InvalidFieldValue && errorData.fieldErrors) {
                     throw new errors.InvalidFieldValue(errorData.fieldErrors);
+                } else if (errorData.reason === errors.InvalidRequestReason.InvalidEdit) {
+                    throw new errors.InvalidEdit(errorData.editCode, errorData.context, errorData.message);
                 } else {
                     throw new errors.InvalidRequest(errorData.reason ?? errors.InvalidRequestReason.OtherReason, errorData.message);
                 }
