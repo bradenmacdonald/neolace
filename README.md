@@ -24,5 +24,5 @@ useful:
 
 1. Copy the imgproxy settings from `docker-compose.yml` to `docker-compose.override.yml` and uncomment them.
 1. In `frontend/.env.local`, set `NEXT_PUBLIC_IMGPROXY_ENABLED=true`
-1. In , set `objStorePublicUrlPrefixForImages` to `http://localhost:5554/imgproxy`
+1. In `backend/neolace/app/config.ts`, set `objStorePublicUrlPrefixForImages` to `http://localhost:5558`
 1. Restart the database servers (docker) and the frontend.

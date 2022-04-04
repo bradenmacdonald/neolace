@@ -63,13 +63,6 @@ export const config = (() => {
         }),
         // If set, this prefix will be used for images, instead of objStorePublicUrlPrefix. Useful for CDN+imgproxy.
         objStorePublicUrlPrefixForImages: "",
-        // In production, 'imgproxy' can be used together with a CDN for fast image thumbnailing. See backend/neolace/api/imgproxy/index.ts
-        imgProxyPrefix: defaultTo("http://localhost:5557", { production: "" }),
-        // Hex encoded secret key for the imgproxy server. Hex encoded so the configuration is consistent with imgproxy itself.
-        imgProxySecretKeyHex: "6E656F6C616365313233", // This is "neolace123". Change in production if using imgproxy!
-        imgProxySaltHex: "6E656F73616C74", // This is "neosalt". Change in production if using imgproxy!
-        // What image widths (in pixels) are allowed
-        imgProxyAllowedWidthsPx: [256, 640, 1000, 2000, 4000],
         // The system API key is very dangerous and allows a user to do ANYTHING with the REST API, such as delete
         // entire sites. We store only the salted SHA-256 hash of the system API key. It defaults to
         // "SYS_KEY_INSECURE_DEV_KEY" in development and by default is disabled in production. Go to
