@@ -250,7 +250,7 @@ export class NeolaceApiClient {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Entry API Methods
 
-    public getEntry<Flags extends readonly GetEntryFlags[]>(key: string, options: {flags?: Flags, siteId?: string} = {}): Promise<ApplyFlags<typeof GetEntryFlags, Flags, EntryData>> {
+    public getEntry<Flags extends readonly GetEntryFlags[]|undefined = undefined>(key: string, options: {flags?: Flags, siteId?: string} = {}): Promise<ApplyFlags<typeof GetEntryFlags, Flags, EntryData>> {
         const siteId = this.getSiteId(options);
         return this.call(`/site/${siteId}/entry/${encodeURIComponent(key)}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""));
     }
@@ -306,64 +306,41 @@ export class NeolaceApiClient {
     }
 }
 
-
 /**
  * Helper to apply "flags" to conditional properties in a data type.
  *
  * This allows us to provide detailed typing for API responses that contain conditional fields (where certain fields in
  * the response may or may not be included based on whether or not certain "flags" were set when the request was made.)
  * 
- * Examples:
- * 
- * const response = await client.getTechDbEntry({key, flags: [TechDbEntryFlags.relatedImages, TechDbEntryFlags.numRelatedImages]});
- * // response.numRelatedImages: number, response.relatedImages: {...}[]
- *
- * const response = await client.getTechDbEntry({key, flags: [TechDbEntryFlags.numRelatedImages]});
- * // response.numRelatedImages: number, response.relatedImages: never
- *
- * const response = await client.getTechDbEntry({key});
- * // response.numRelatedImages?: undefined, response.relatedImages?: undefined
- * 
- * const flags: TechDbEntryFlags[] = getFlags();  // Known only at runtime
- * const response = await client.getTechDbEntry({key, flags});
- * // response.numRelatedImages?: number|undefined, response.relatedImages?: {...}[]|undefined
+ * See getEntry() and the test cases for details.
  */
-export type ApplyFlags<AllFlags extends Record<string, string>, EnabledFlags extends readonly string[]|undefined, DataType> = (
+export type ApplyFlags<
+    // The Enum type containing all the available flags
+    AllFlags extends Record<string, string>,
+    // An array that contains the flags that the user has requested for the current request
+    EnabledFlags extends readonly string[]|undefined,
+    // The overall data type that we'll return, where some fields may or may not be included based on whether the flag
+    // (whose enum _value_ matches the field name) is enabled or not.
+    DataType
+> = (
 
-    undefined extends EnabledFlags ?
-        // No flags are set, mark the conditional (flagged) fields as "never" type .
-        {
-            [Key in keyof DataType]: Key extends EnumValues<AllFlags> ? never : DataType[Key];
-        } :
-    XFlag extends ElementType<EnabledFlags> ?
-        // The exact flags passed are not known - we just have the generic flags type like string[] instead of a
-        // specific set of flag types, like ["includeDetails", "includeLinks"]. So leave DataType as-is, with some
-        // fields being "optional?:"
+    EnabledFlags extends ArrayInnerType<EnabledFlags>[] ?
+        // We don't know which flags are enabled until runtime.
         DataType
-    :
-        // In this case, we know at compile time exactly which flags were set, so we can convert properties from
-        // optional to defined:
+    : 
+        // We know now (at compile time) which flags are enabled and which aren't:
         {
-            [Key in keyof DataType]: Key extends EnumValues<AllFlags> ? 
-                // Check if this specific flag is enabled:
-                (Key extends ToStringUnion<EnabledFlags> ? Defined<DataType[Key]> : never)
-            : DataType[Key];
+            // Unconditionally include all the normal properties that aren't controlled by flags
+            [Key in keyof DataType as (Key extends EnumValues<AllFlags> ? never : Key)]: DataType[Key]
+        } & {
+            // But conditionally include the fields that _are_ controlled by flags:
+            [Key in keyof DataType as Key extends EnumValues<AllFlags> ? Key : never]-?:
+                Key extends ToStringUnion<EnabledFlags> ? DataType[Key] : `requires the ${Key&string} flag`
         }
 );
 
-/** XFlag is not actually used, but helps us write typescript checks for when flags are specified exactly or not. */
-type XFlag = "x";
-
-/** Helper to get a union of the value types of an array, if known at compile time */
-type ElementType < T extends ReadonlyArray<unknown>|undefined > = (
-    T extends ReadonlyArray<infer ElementType> ? ElementType
-    : never
-);
-
+type ArrayInnerType <T> = T extends ((infer V)[]) ? V : never;
 type ToStringUnion <T> = T extends readonly [infer Type1, ...infer Rest] ? (Type1 extends string ? `${Type1}` : never)|ToStringUnion<Rest> : never;
 
-/** Helper type to remove "undefined" from a type */
-type Defined<T> = T extends undefined ? never : T;
-
-/** Helper to get the values of an enum as a combined string type, like "Value1"|"Value2" */
-type EnumValues<Enum extends Record<string, string>> = keyof {[K in keyof Enum as `${Enum[K]}`]: undefined};
+/** Helper to get the *values* of a string enum as a combined string type, like "Value1"|"Value2" */
+type EnumValues<Enum> = Enum extends Record<string, string> ? `${Enum[keyof Enum]}` : never;
