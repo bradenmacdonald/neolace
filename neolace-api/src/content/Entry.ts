@@ -36,6 +36,7 @@ export const RawPropertySchema = Schema({
         slot: string,
     })),
 });
+export type RawPropertyData = Type<typeof RawPropertySchema>;
 
 export enum ImageSizingMode {
     /** The image should never be cropped when scaled to fit in a container */
@@ -108,12 +109,6 @@ export const EntrySchema = Schema({
     features: EntryFeaturesSchema.strictOptional(),
 
     propertiesRaw: array.of(RawPropertySchema).strictOptional(),
-
-    featuredImage: Schema({
-        entryId: vnidString,
-        /** Markdown caption for this featured image */
-        note: string.strictOptional(),
-    }).strictOptional(),
 });
 export type EntryData = Type<typeof EntrySchema>;
 

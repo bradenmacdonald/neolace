@@ -13,6 +13,8 @@ interface Props {
     /** Event handler, called when the user has made changes and then pressed ENTER or blurred this input. */
     onFinishedEdits?: (newValue: string) => void;
     placeholder?: string;
+    /** ID for the underlying textarea, used to focus on it with a label */
+    id?: string;
 }
 
 /**
@@ -69,9 +71,10 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
 
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={parsedValue} onChange={handleChange}>
-        <div className="border-2 border-gray-500 rounded-md inline-flex items-center focus-within:outline outline-2 outline-theme-link-color overflow-hidden m-[3px] w-full md:w-auto">
+        <div className="border-2 border-gray-500 rounded-md inline-flex items-center focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full md:w-auto md:min-w-[600px] max-w-full">
             {/* toolbar and custom buttons etc. can go here. within the box. */}
             <Editable
+                id={props.id}
                 className="outline-none border-none px-2 py-1 w-full md:w-auto md:min-w-[300px] font-mono"
                 onKeyDown={handleKeyDown}
                 onBlur={handleBlur}

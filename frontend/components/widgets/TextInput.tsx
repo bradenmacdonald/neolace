@@ -13,7 +13,7 @@ export const TextInput: React.FunctionComponent<Props> = (props) => {
     const inputProps = {type: "text", ...overrideInputProps};
 
     return <div
-        className={`border-2 border-gray-500 rounded-md inline-flex items-center focus-within:outline outline-2 outline-theme-link-color overflow-hidden m-[3px] ${customClass}`}
+        className={`border-2 border-gray-500 rounded-md inline-flex items-center focus-within:ring-2 ring-theme-link-color overflow-hidden my-[3px] w-[600px] max-w-full ${customClass}`}
         onClick={(ev) => ev.currentTarget.querySelector("input")?.focus()}
     >
         {
