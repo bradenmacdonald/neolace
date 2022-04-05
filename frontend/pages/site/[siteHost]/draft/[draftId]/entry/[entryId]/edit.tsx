@@ -5,6 +5,7 @@ import { api, useSiteData } from 'lib/api-client';
 import { SitePage } from 'components/SitePage';
 import FourOhFour from 'pages/404';
 import { ErrorMessage } from 'components/widgets/ErrorMessage';
+import { Breadcrumb, Breadcrumbs } from 'components/widgets/Breadcrumbs';
 
 const DraftEntryEditPage: NextPage = function(_props) {
 
@@ -37,7 +38,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour/>;
-    } else if (siteError) { return <ErrorMessage>{siteError}</ErrorMessage> }
+    } else if (siteError) { return <ErrorMessage>{String(siteError)}</ErrorMessage> }
 
     return (
         <SitePage
@@ -46,7 +47,11 @@ const DraftEntryEditPage: NextPage = function(_props) {
             leftNavTopSlot={[]}
         >
 
-            Draft &gt; New Draft &gt; Entry Name (Entry Type)
+            <Breadcrumbs>
+                <Breadcrumb href={"/"}>New Draft</Breadcrumb>
+                <Breadcrumb href={"/"}>Entry</Breadcrumb>
+                <Breadcrumb>Edit</Breadcrumb>
+            </Breadcrumbs>
 
             Tabs: Edit | Preview
         </SitePage>
