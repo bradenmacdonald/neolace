@@ -38,3 +38,33 @@ export const Control: React.FunctionComponent<ControlProps> = (props) => {
         {props.hint? <span className="block text-sm text-gray-600"><FormattedMessage {...props.hint}/></span> : null}
     </div>;
 }
+
+interface AutoControlProps<ValueType> extends ControlProps {
+    initialValue: ValueType;
+    onChange?: (newValue?: ValueType) => void;
+}
+
+/**
+ * An auto-control is a control that has its own internal state with the "current" value, and which only notifies
+ * the parent's 'onChange' function when the user 'accepts' the edit by blurring off of the element.
+ * @param props 
+ * @returns 
+ */
+export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
+    const [currentValue, setCurrentValue] = React.useState<ValueType>(props.initialValue);
+    React.useEffect(() => {
+        // If the initial value changes, override the current value
+        setCurrentValue(props.initialValue);
+    }, [props.initialValue])
+
+    // deno-lint-ignore no-explicit-any
+    const handleChange: React.ChangeEventHandler = React.useCallback((e: React.ChangeEvent<any>) => {
+        setCurrentValue(e.target.value);
+    }, [setCurrentValue]);
+
+    const childInput = React.cloneElement(props.children, {value: currentValue, onChange: handleChange});
+
+    return <Control id={props.id} label={props.label} hint={props.hint}>
+        {childInput}
+    </Control>
+}
