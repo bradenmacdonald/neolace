@@ -2,8 +2,9 @@ import React from 'react';
 import { useIntl } from 'react-intl';
 import { type Descendant } from 'slate'
 import { Editable, RenderLeafProps, Slate } from 'slate-react';
-import { emptyDocument, slateDocToStringValue, stringValueToSlateDoc, useNeolaceSlateEditor } from 'components/utils/slate';
+import { emptyDocument, parseMdtStringToSlateDoc, slateDocToStringValue, stringValueToSlateDoc, useNeolaceSlateEditor } from 'components/utils/slate';
 import { ToolbarButton } from './Button';
+import { renderElement } from 'components/utils/slate-mdt';
 
 
 interface Props {
@@ -43,9 +44,9 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
 
     React.useEffect(() => {
         if (value !== lastValueInternallySet || sourceMode !== lastSourceMode) {
-            // props.value has changed externally (not via changes within the Slate editor).
+            // props.value has changed externally (not via changes within the Slate editor), or source mode has changed.
             // Update the editor:
-            editor.children = sourceMode ? stringValueToSlateDoc(value) : stringValueToSlateDoc("error: visual mode not supported yet.");
+            editor.children = sourceMode ? stringValueToSlateDoc(value) : parseMdtStringToSlateDoc(value, props.inlineOnly);
             updateLastValueInternallySet(value);
             updateLastSourceMode(sourceMode);
         }
@@ -56,6 +57,8 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             const newValue = slateDocToStringValue(newEditorState);
             updateLastValueInternallySet(newValue);  // Mark this as an internal change, not coming from outside this component.
             props.onChange(newValue);
+        } else {
+            console.log(`editor state changes to `, newEditorState);
         }
     }, [props.onChange, sourceMode]);
 
@@ -81,10 +84,11 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             {/* The Slate.js Editor textarea */}
             <Editable
                 id={props.id}
-                className="outline-none border-none px-2 py-1 w-full md:w-auto md:min-w-[300px] font-mono text-sm"
+                className={`outline-none border-none px-2 py-1 w-full md:w-auto md:min-w-[300px] ${sourceMode ? "font-mono text-sm" : ""}`}
                 onBlur={handleBlur}
                 /* decorate={decorate}*/
                 renderLeaf={renderLeaf}
+                renderElement={renderElement}
                 placeholder={props.placeholder}
             />
         </div>
@@ -92,6 +96,6 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
 }
 
 const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
+    console.log(`Rendering `, {attributes, children, leaf})
     return <span {...attributes} className="">{children}</span>;
 }
-

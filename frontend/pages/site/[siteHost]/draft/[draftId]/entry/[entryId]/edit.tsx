@@ -96,7 +96,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     id="description"
                     label={{id: "draft.entry.edit.description.label", defaultMessage: "Description"}}
                 >
-                    <MDTEditor />
+                    <MDTEditor inlineOnly={true} />
                 </AutoControl>
             </Form>
         </SitePage>

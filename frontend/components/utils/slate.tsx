@@ -1,7 +1,7 @@
 import React from "react";
 import { api } from "lib/api-client";
 import { BaseEditor, createEditor } from "slate";
-import { ReactEditor, withReact } from "slate-react";
+import { ReactEditor, RenderElementProps, withReact } from "slate-react";
 import { HistoryEditor, withHistory } from 'slate-history'
 
 export type NeolaceSlateEditor = BaseEditor & ReactEditor & HistoryEditor;
@@ -25,6 +25,23 @@ export function createNeolaceSlateEditor(): NeolaceSlateEditor {
 export function useNeolaceSlateEditor(): NeolaceSlateEditor {
     // We need to use "useState" on the next line instead of "useMemo" due to https://github.com/ianstormtaylor/slate/issues/4081
     const [editor] = React.useState(() => createNeolaceSlateEditor());
+
+    editor.isInline = (element) => {
+        if (element.type !== "text" && "block" in element) {
+            return false;
+        }
+        return true;
+    };
+
+    editor.isVoid = (element) => {
+        switch (element.type) {
+            case "lookup_inline":
+                return true;
+            default:
+                return false;
+        }
+    }
+
     return editor;
 }
 
@@ -86,4 +103,41 @@ export function slateDocToStringValue(node: NeolaceSlateElement[]): string {
         }
     }
     return result;
+}
+
+/**
+ * Slate.js has somewhat different requirements for its tree structure than our MDT AST (parsed Markdown tree
+ * structure), so this function converts from our MDT tree to a Slate.js document tree. Note that Slate.js itself
+ * might modify the tree even more, e.g. to insert 'text' nodes before/after/between inline elements.
+ */
+function cleanMdtNodeForSlate(node: api.MDT.Node): api.MDT.Node[] {
+    if (node.type === "softbreak") {
+        // Softbreaks don't appear in the visual editor.
+        return [{type: "text", text: " "}];
+    }
+    if ("children" in node) {
+        const originalChildren = node.children;
+        const newChildren = [];
+        for (const child of originalChildren) {
+            newChildren.push(...cleanMdtNodeForSlate(child));
+        }
+        if (node.type === "inline") {
+            // Slate.js doesn't really need the "inline" node itself, so just remove it from the tree.
+            return newChildren;
+        }
+        node.children = newChildren;
+    }
+    return [node];
+}
+
+export function parseMdtStringToSlateDoc(mdt: string, inline?: boolean): NeolaceSlateElement[] {
+    if (inline) {
+        return [{
+            type: "paragraph",
+            block: true,
+            children: cleanMdtNodeForSlate(api.MDT.tokenizeInlineMDT(mdt)),
+        }];
+    } else {
+        throw new Error("Block-level MDT editing is not yet supported.");
+    }
 }
