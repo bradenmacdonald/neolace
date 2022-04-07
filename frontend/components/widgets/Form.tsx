@@ -57,9 +57,9 @@ export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
         setCurrentValue(props.initialValue);
     }, [props.initialValue])
 
-    // deno-lint-ignore no-explicit-any
     const handleChange: React.ChangeEventHandler = React.useCallback((eventOrValue: ValueType|React.ChangeEvent) => {
         if (typeof eventOrValue === "object" && (eventOrValue as React.ChangeEvent).target) {
+            // deno-lint-ignore no-explicit-any
             setCurrentValue((eventOrValue as React.ChangeEvent<any>).target.value);
         } else {
             setCurrentValue(eventOrValue as ValueType);
