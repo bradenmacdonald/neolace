@@ -1,8 +1,7 @@
 import React from 'react';
-import { createEditor, type Descendant } from 'slate'
-import { Editable, ReactEditor, RenderLeafProps, Slate, withReact } from 'slate-react';
-import { withHistory } from 'slate-history';
-import 'components/utils/slate';
+import { type Descendant } from 'slate'
+import { Editable, ReactEditor, RenderLeafProps, Slate } from 'slate-react';
+import { useNeolaceSlateEditor } from 'components/utils/slate';
 
 
 interface Props {
@@ -23,8 +22,7 @@ interface Props {
 export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => {
 
     const renderLeaf = React.useCallback(props => <Leaf {...props} />, []);
-    // We need to use "useState" on the next line instead of "useMemo" due to https://github.com/ianstormtaylor/slate/issues/4081
-    const [editor] = React.useState(() => withHistory(withReact(createEditor())));
+    const editor = useNeolaceSlateEditor();
 
     const [currentLookupValue, setCurrentLookupValue] = React.useState(props.value);
     const parsedValue: Descendant[] = React.useMemo(() => {
@@ -58,7 +56,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
                 // We now "accept" this edit and blur the input
                 ReactEditor.blur(editor);
             } else {
-                // For shift-enter, use the editor's default behavior of adding a new paragraph/block element.
+                // For shift-enter, use the editor's default behavior of adding a soft break.
             }
         }
     }, [editor]);
