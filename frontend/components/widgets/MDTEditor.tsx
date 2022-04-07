@@ -1,7 +1,9 @@
 import React from 'react';
+import { useIntl } from 'react-intl';
 import { type Descendant } from 'slate'
-import { Editable, ReactEditor, RenderLeafProps, Slate } from 'slate-react';
+import { Editable, RenderLeafProps, Slate } from 'slate-react';
 import { emptyDocument, slateDocToStringValue, stringValueToSlateDoc, useNeolaceSlateEditor } from 'components/utils/slate';
+import { ToolbarButton } from './Button';
 
 
 interface Props {
@@ -30,28 +32,29 @@ interface Props {
  * In either "source mode" or "visual mode", onFinishedEdits will be called as the user blurs off of the element.
  */
 export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}) => {
-
+    const intl = useIntl();
     const renderLeaf = React.useCallback(props => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
     const [sourceMode, setSourceMode] = React.useState(true);
+    const toggleSourceMode = React.useCallback(() => setSourceMode(!sourceMode), [sourceMode, setSourceMode]);
     const [lastSourceMode, updateLastSourceMode] = React.useState(sourceMode);
 
-    const [lastValueExternallySet, updateLastValueExternallySet] = React.useState<string|undefined>(undefined);
+    const [lastValueInternallySet, updateLastValueInternallySet] = React.useState<string|undefined>(undefined);
 
     React.useEffect(() => {
-        if (value !== lastValueExternallySet || sourceMode !== lastSourceMode) {
+        if (value !== lastValueInternallySet || sourceMode !== lastSourceMode) {
             // props.value has changed externally (not via changes within the Slate editor).
             // Update the editor:
             editor.children = sourceMode ? stringValueToSlateDoc(value) : stringValueToSlateDoc("error: visual mode not supported yet.");
-            updateLastValueExternallySet(value);
+            updateLastValueInternallySet(value);
             updateLastSourceMode(sourceMode);
         }
-    }, [value, sourceMode, lastValueExternallySet, lastSourceMode, updateLastValueExternallySet, updateLastSourceMode]);
+    }, [value, sourceMode, lastValueInternallySet, lastSourceMode, updateLastValueInternallySet, updateLastSourceMode]);
 
     const handleChange = React.useCallback((newEditorState: Descendant[]) => {
         if (sourceMode && props.onChange) {
             const newValue = slateDocToStringValue(newEditorState);
-            updateLastValueExternallySet(newValue);  // Mark this as an internal change, not coming from outside this component.
+            updateLastValueInternallySet(newValue);  // Mark this as an internal change, not coming from outside this component.
             props.onChange(newValue);
         }
     }, [props.onChange, sourceMode]);
@@ -66,7 +69,16 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={emptyDocument} onChange={handleChange}>
         <div className="border-2 border-gray-500 rounded-md focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full">
-            <div className="block w-full border-b-2 border-gray-500 bg-gray-100">This is the toolbar. Edit mode is {sourceMode ? 'source': "visual"}.</div>
+            {/* The Toolbar */}
+            <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
+                <ToolbarButton
+                    enabled={sourceMode}
+                    onClick={toggleSourceMode}
+                    title={intl.formatMessage({id: "ui.component.mdtEditor.toolbar.sourceMode", defaultMessage: "Source mode"})}
+                    icon="braces-asterisk"
+                />
+            </div>
+            {/* The Slate.js Editor textarea */}
             <Editable
                 id={props.id}
                 className="outline-none border-none px-2 py-1 w-full md:w-auto md:min-w-[300px] font-mono text-sm"
