@@ -71,7 +71,7 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode, context: 
         case "inline":
             return <React.Fragment key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</React.Fragment>;
         case "text":
-            return <React.Fragment key={key}>{node.content}</React.Fragment>;
+            return <React.Fragment key={key}>{node.text}</React.Fragment>;
         case "link":
             if (node.href.startsWith("#")) {
                 return <a href={node.href} key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</a>;
@@ -103,13 +103,14 @@ function inlineNodeToComponent(node: MDT.InlineNode|MDT.AnyInlineNode, context: 
                 return <React.Fragment key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</React.Fragment>;
             }
         case "code_inline":
-            return <code key={key}>{node.content}</code>;
+            return <code key={key}>{node.children[0].text}</code>;
         case "lookup_inline": {
-            const lookupData = context.refCache.lookups.find(x => x.entryContext === context.entryId && x.lookupExpression === node.content);
+            const lookupExpression = node.children[0].text;
+            const lookupData = context.refCache.lookups.find(x => x.entryContext === context.entryId && x.lookupExpression === lookupExpression);
             if (lookupData) {
                 return <LookupValue key={key} mdtContext={context} value={lookupData.value} />
             }
-            return <code key={key} className="text-red-500">{'{'}{node.content}{'}'}</code>;
+            return <code key={key} className="text-red-500">{'{'}{lookupExpression}{'}'}</code>;
         }
         case "strong":
             return <strong key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</strong>;
@@ -200,15 +201,16 @@ function nodeToComponent(node: MDT.Node, context: MDTContext): React.ReactElemen
         }
         case "hr":
             return <hr key={key} />;
+        case "code_block":
+            return <code key={key}><pre>{node.children[0].text}</pre></code>;
         case "lookup_block": {
-            const lookupData = context.refCache.lookups.find(x => x.entryContext === context.entryId && x.lookupExpression === node.content);
+            const lookupExpression = node.children[0].text;
+            const lookupData = context.refCache.lookups.find(x => x.entryContext === context.entryId && x.lookupExpression === lookupExpression);
             if (lookupData) {
                 return <LookupValue key={key} mdtContext={context} value={lookupData.value} />
             }
-            return <code key={key} className="text-red-500"><pre>{'{'}{node.content}{'}'}</pre></code>;
+            return <code key={key} className="text-red-500"><pre>{'{'}{lookupExpression}{'}'}</pre></code>;
         }
-        case "code_block":
-            return <code key={key}><pre>{node.content}</pre></code>;
         case "table":
         case "thead":
         case "tbody":

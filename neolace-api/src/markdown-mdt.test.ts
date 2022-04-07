@@ -30,8 +30,8 @@ function inline(...nodes: AnyInlineNode[]): InlineNode {
     return {type: "inline", children: nodes};
 }
 /** Helper method to generate a text node, in the parsed Markdown tree */
-function text(content: string): AnyInlineNode {
-    return {type: "text", content};
+function text(text: string): AnyInlineNode {
+    return {type: "text", text};
 }
 /** Helper method to generate an inline node containing text, in the parsed Markdown tree */
 function inlineText(content: string): InlineNode {
@@ -43,11 +43,11 @@ function paragraph(...children: InlineNode[]): TopLevelNode {
 }
 /** Helper method to generate a lookup node, in the parsed Markdown tree */
 function lookup(content: string): AnyInlineNode {
-    return {type: "lookup_inline", content};
+    return {type: "lookup_inline", children: [{type: "text", text: content}]};
 }
 /** Helper method to generate a lookup block node, in the parsed Markdown tree */
 function lookupBlock(content: string): TopLevelNode {
-    return {type: "lookup_block", content, block: true};
+    return {type: "lookup_block", children: [{type: "text", text: content}], block: true};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

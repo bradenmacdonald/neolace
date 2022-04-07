@@ -30,7 +30,8 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
     const parsedValue: Descendant[] = React.useMemo(() => {
         return props.value.split("\n").map(line => ({
             type: "paragraph",
-            children: [ { text: line } ],
+            block: true,
+            children: [ { type: "text", text: line } ],
         }));
     }, [props.value]);
     React.useEffect(() => {
