@@ -1,5 +1,6 @@
 import React from 'react';
 import { NextPage } from 'next';
+import { useIntl } from 'react-intl';
 import { api, useEditableEntry, useSiteData, useSiteSchema } from 'lib/api-client';
 
 import { SitePage } from 'components/SitePage';
@@ -20,7 +21,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
 }
 
 const DraftEntryEditPage: NextPage = function(_props) {
-
+    const intl = useIntl();
     // Look up the Neolace site by domain:
     const {site, siteError} = useSiteData();
     const [schema] = useSiteSchema();
@@ -71,7 +72,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     initialValue={entryType?.name ?? ""}
                     id="entryType"
                     label={{id: "draft.entry.edit.type.label", defaultMessage: "Entry Type"}}
-                    hint={{id: "draft.entry.edit.type.hint", defaultMessage: "Cannot be changed."}}
+                    hint={intl.formatMessage({id: "draft.entry.edit.type.hint", defaultMessage: "Cannot be changed."})}
                 >
                     <TextInput readOnly={true} />
                 </AutoControl>
@@ -80,14 +81,15 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     initialValue={baseEntry?.friendlyId ?? ""}
                     id="id"
                     label={{id: "draft.entry.edit.id.label", defaultMessage: "ID"}}
-                    hint={{id: "draft.entry.edit.id.hint", defaultMessage: "Shown in the URL. Must be unique. You cannot re-use an ID that was previously used for a different entry."}}
+                    hint={
+                        intl.formatMessage({id: "draft.entry.edit.id.hint1", defaultMessage: "Shown in the URL."}) + " " +
+                        (entryType?.friendlyIdPrefix ? intl.formatMessage({id: "draft.entry.edit.id.hint2", defaultMessage: "Must start with \"{prefix}\"."}, {prefix: entryType.friendlyIdPrefix}) : "") + " " +
+                        intl.formatMessage({id: "draft.entry.edit.id.hint3", defaultMessage: "Must be unique."}) + " " +
+                        intl.formatMessage({id: "draft.entry.edit.id.hint4", defaultMessage: "You cannot re-use an ID that was previously used for a different entry."})
+                    }
                 >
                     <TextInput />
                 </AutoControl>
-
-                <p>{entryType?.friendlyIdPrefix ? `Must start with ${entryType.friendlyIdPrefix}` : ""}</p>
-                <br/><br/>
-
 
                 <AutoControl
                     initialValue={baseEntry?.description ?? ""}

@@ -21,7 +21,7 @@ export const Form: React.FunctionComponent<FormProps> = (props) => {
 interface ControlProps {
     id: string,
     label: MessageDescriptor,
-    hint?: MessageDescriptor,
+    hint?: string,
     children: React.ReactElement;
 }
 
@@ -35,7 +35,7 @@ export const Control: React.FunctionComponent<ControlProps> = (props) => {
             <FormattedMessage {...props.label}/>
         </label>
         {childInput}
-        {props.hint? <span className="block text-sm text-gray-600"><FormattedMessage {...props.hint}/></span> : null}
+        {props.hint? <span className="block text-sm text-gray-600">{props.hint}</span> : null}
     </div>;
 }
 
