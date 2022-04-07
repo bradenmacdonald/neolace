@@ -58,8 +58,12 @@ export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
     }, [props.initialValue])
 
     // deno-lint-ignore no-explicit-any
-    const handleChange: React.ChangeEventHandler = React.useCallback((e: React.ChangeEvent<any>) => {
-        setCurrentValue(e.target.value);
+    const handleChange: React.ChangeEventHandler = React.useCallback((eventOrValue: ValueType|React.ChangeEvent) => {
+        if (typeof eventOrValue === "object" && (eventOrValue as React.ChangeEvent).target) {
+            setCurrentValue((eventOrValue as React.ChangeEvent<any>).target.value);
+        } else {
+            setCurrentValue(eventOrValue as ValueType);
+        }
     }, [setCurrentValue]);
 
     const childInput = React.cloneElement(props.children, {value: currentValue, onChange: handleChange});

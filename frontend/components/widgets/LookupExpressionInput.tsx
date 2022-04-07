@@ -1,7 +1,7 @@
 import React from 'react';
 import { type Descendant } from 'slate'
 import { Editable, ReactEditor, RenderLeafProps, Slate } from 'slate-react';
-import { useForceUpdate, useNeolaceSlateEditor } from 'components/utils/slate';
+import { slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor } from 'components/utils/slate';
 
 
 interface Props {
@@ -26,13 +26,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
 
     const forceUpdate = useForceUpdate();
 
-    const parsedValue: Descendant[] = React.useMemo(() => {
-        return props.value.split("\n").map(line => ({
-            type: "paragraph",
-            block: true,
-            children: [ { type: "text", text: line } ],
-        }));
-    }, [props.value]);
+    const parsedValue: Descendant[] = React.useMemo(() => stringValueToSlateDoc(props.value), [props.value]);
 
     React.useEffect(() => {
         // This function should force the editor to update its contents IF "props.value" is changed externally, but
@@ -48,7 +42,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
             const newLookupValue = slateDocToStringValue(newValue);
             props.onChange(newLookupValue);
         }
-    }, [props.onChange, slateDocToStringValue]);
+    }, [props.onChange]);
 
     const handleKeyDown = React.useCallback((event: React.KeyboardEvent) => {
         if (event.key === "Enter") {
@@ -88,19 +82,4 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
 
 const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
     return <span {...attributes} className="">{children}</span>;
-}
-
-function slateDocToStringValue(node: Descendant[]) {
-    let result = "";
-    for (const n of node) {
-        if ("text" in n) {
-            result += n.text;
-        } else if (n.type === "paragraph") {
-            if (result.length > 0) {
-                result += "\n";
-            }
-            result += slateDocToStringValue(n.children);
-        }
-    }
-    return result;
 }

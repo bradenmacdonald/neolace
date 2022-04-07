@@ -43,10 +43,47 @@ export type PlainText = { text: string };
 
 export type NeolaceSlateText = PlainText;
 
+/** A generic empty Slate document using our Node types. */
+export const emptyDocument: NeolaceSlateElement[] = [{"type":"paragraph","block":true,"children":[{"type":"text","text":""}]}];
+
 declare module "slate" {
     interface CustomTypes {
         Editor: NeolaceSlateEditor;
         Element: NeolaceSlateElement;
         Text: api.MDT.TextNode;
     }
+}
+
+/**
+ * When using slate to edit plain text, such as the source code of Markdown or a lookup expression, use this to
+ * convert the string to an editable Slate document
+ */
+ export function stringValueToSlateDoc(value: string): NeolaceSlateElement[] {
+    return value.split("\n").map(line => ({
+        type: "paragraph",
+        block: true,
+        children: [ { type: "text", text: line } ],
+    }));
+}
+
+/**
+ * When using slate to edit plain text, such as the source code of Markdown or a lookup expression, use this to
+ * convert from the Slate document tree back to the plain text string.
+ */
+export function slateDocToStringValue(node: NeolaceSlateElement[]): string {
+    let result = "";
+    for (const n of node) {
+        if ("text" in n) {
+            result += n.text;
+        } else if (n.type === "paragraph") {
+            if (result.length > 0) {
+                result += "\n";
+            }
+            result += slateDocToStringValue(n.children);
+        } else {
+            // deno-lint-ignore no-explicit-any
+            console.error(`sdtv: unexpected node in slate doc: ${(node as any).type}`);
+        }
+    }
+    return result;
 }

@@ -11,6 +11,7 @@ import { ParsedUrlQuery } from 'querystring';
 import { Form, AutoControl } from 'components/widgets/Form';
 import { TextInput } from 'components/widgets/TextInput';
 import Link from 'next/link';
+import { MDTEditor } from 'components/widgets/MDTEditor';
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -50,7 +51,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
             leftNavTopSlot={[]}
         >
 
-            <Link href="./preview"><a className="float-right text-sm">Preview</a></Link>
+            <Link href={`/draft/${query.draftId}/entry/${query.entryId}/preview`}><a className="float-right text-sm">Preview</a></Link>
             <Breadcrumbs>
                 <Breadcrumb href={"/"}>New Draft</Breadcrumb>
                 <Breadcrumb href={baseEntry ? `/entry/${baseEntry.friendlyId}` : undefined}>{baseEntry?.name ?? "Entry"}</Breadcrumb>
@@ -93,7 +94,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     id="description"
                     label={{id: "draft.entry.edit.description.label", defaultMessage: "Description"}}
                 >
-                    <textarea className="w-full border-2 min-h-[100px]" />
+                    <MDTEditor />
                 </AutoControl>
             </Form>
         </SitePage>
