@@ -1,7 +1,7 @@
 import React from 'react';
 import { type Descendant } from 'slate'
 import { Editable, ReactEditor, RenderLeafProps, Slate } from 'slate-react';
-import { useNeolaceSlateEditor } from 'components/utils/slate';
+import { useForceUpdate, useNeolaceSlateEditor } from 'components/utils/slate';
 
 
 interface Props {
@@ -24,7 +24,8 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
     const renderLeaf = React.useCallback(props => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
 
-    const [currentLookupValue, setCurrentLookupValue] = React.useState(props.value);
+    const forceUpdate = useForceUpdate();
+
     const parsedValue: Descendant[] = React.useMemo(() => {
         return props.value.split("\n").map(line => ({
             type: "paragraph",
@@ -32,20 +33,20 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
             children: [ { type: "text", text: line } ],
         }));
     }, [props.value]);
+
     React.useEffect(() => {
         // This function should force the editor to update its contents IF "props.value" is changed externally, but
         // should also ignore updates that match the current value that the editor has.
-        if (props.value !== currentLookupValue) {
-            setCurrentLookupValue(props.value);
+        if (props.value !== slateDocToStringValue(editor.children)) {
             editor.children = parsedValue;
+            forceUpdate();  // Without this, sometimes React won't update and the UI won't reflect the new state.
         }
-    }, [props.value, currentLookupValue, setCurrentLookupValue]);
+    }, [props.value]);
 
     const handleChange = React.useCallback((newValue: Descendant[]) => {
         if (props.onChange) {
             const newLookupValue = slateDocToStringValue(newValue);
             props.onChange(newLookupValue);
-            setCurrentLookupValue(newLookupValue);  // Mark this as an internal change, not coming from outside this component.
         }
     }, [props.onChange, slateDocToStringValue]);
 

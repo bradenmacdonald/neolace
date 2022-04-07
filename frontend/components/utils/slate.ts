@@ -28,6 +28,15 @@ export function useNeolaceSlateEditor(): NeolaceSlateEditor {
     return editor;
 }
 
+/**
+ * React hook to force an update, sometimes required after manually changing 'editor.children'
+ * @returns 
+ */
+export function useForceUpdate(){
+    const [value, setValue] = React.useState(0); // integer state
+    return () => setValue(value => value + 1); // update the state to force render
+}
+
 export type NeolaceSlateElement = api.MDT.Node;
 
 export type PlainText = { text: string };
