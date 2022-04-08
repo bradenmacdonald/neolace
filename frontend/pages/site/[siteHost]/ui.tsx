@@ -1,5 +1,6 @@
 import React from 'react';
 import { NextPage } from 'next';
+import { useIntl } from 'react-intl';
 
 
 import { SitePage } from 'components/SitePage';
@@ -26,6 +27,7 @@ const UIDemo = (props: {label: string, children: React.ReactNode}) => {
 
 const UiDemoPage: NextPage = function(props) {
 
+    const intl = useIntl();
     const [selectedIcon, setSelectedIcon] = React.useState<IconId>("search");
     const [textDemoText, setTextDemoText] = React.useState("");
     const [searchDemoText, setSearchDemoText] = React.useState("");
@@ -56,7 +58,7 @@ const UiDemoPage: NextPage = function(props) {
                 <Control
                     id="form-lookup-expr"
                     label={{id: "ui.demo.form.lookup", defaultMessage: "Lookup Expression"}}
-                    hint={{id: "ui.demo.form.lookupHint", defaultMessage: "Try using SHIFT-ENTER to create multiple lines, or entering a long string to see the box expand."}}
+                    hint={intl.formatMessage({id: "ui.demo.form.lookupHint", defaultMessage: "Try using SHIFT-ENTER to create multiple lines, or entering a long string to see the box expand."})}
                 >
                     <LookupExpressionInput
                         value={lookupDemoText}

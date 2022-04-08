@@ -231,9 +231,10 @@ export class ReferenceCache {
                 }
             }
         } else if (node.type === "lookup_inline" || node.type === "lookup_block") {
-            this.addLookupExpression({ entryContext: args.currentEntryId, lookupExpression: node.content });
+            const lookupExpression = node.children[0].text;
+            this.addLookupExpression({ entryContext: args.currentEntryId, lookupExpression });
         }
-        if ("children" in node) {
+        if ("children" in node && node.children) {
             for (const child of node.children) {
                 this.extractMarkdownReferences(child, args);
             }

@@ -90,7 +90,7 @@ export type EntryFeaturesData = Type<typeof EntryFeaturesSchema>;
 
 
 
-export const EntrySchema = Schema({
+export const BaseEntrySchema = Schema({
     id: vnidString,
     name: string,
     description: nullable(string),
@@ -99,7 +99,8 @@ export const EntrySchema = Schema({
         id: vnidString,
         name: string,
     }),
-
+});
+export const EntrySchema = Schema.merge(BaseEntrySchema, {
     /** Summary of properties for this entry (up to 20 properties, with importance < 20) */
     propertiesSummary: array.of(DisplayedPropertySchema).strictOptional(),
 
@@ -111,6 +112,10 @@ export const EntrySchema = Schema({
     propertiesRaw: array.of(RawPropertySchema).strictOptional(),
 });
 export type EntryData = Type<typeof EntrySchema>;
+export type EditableEntryData = Type<typeof BaseEntrySchema> & {
+    features: NonNullable<EntryData["features"]>,
+    propertiesRaw: NonNullable<EntryData["propertiesRaw"]>,
+};
 
 export const PaginatedResult = <T>(itemSchema: Validator<T>) => Schema({
     values: array.of(itemSchema),

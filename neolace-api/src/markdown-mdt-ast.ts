@@ -10,20 +10,23 @@ export interface InlineNode {
     children: AnyInlineNode[];
 }
 
-interface TextNode {
+export interface TextNode {
     type: "text";
     /** UNESCAPED text content - may contain HTML. You must escape this before rendering. */
-    content: string;
+    text: string;
 }
 interface InlineCodeNode {
     type: "code_inline";
-    /** UNESCAPED text content - may contain HTML. You must escape this before rendering. */
-    content: string;
+    /**
+     * Always contains a single child node, of type TextNode.
+     * We do this instead of a direct .text/.content property because this way is more compatible with Slate.js
+     */
+    children: [TextNode];
 }
 export interface InlineLookupNode {
     type: "lookup_inline";
-    /** The lookup expression. If rendering "raw" to HTML, you must escape this first. */
-    content: string;
+    /** The lookup expression, within a single child node, of type TextNode */
+    children: [TextNode];
 }
 interface LinkNode {
     type: "link";
@@ -77,6 +80,15 @@ interface InlineFootnoteNode {
     type: "footnote_inline";
     children: AnyInlineNode[];
 }
+/**
+ * A node type that isn't natively used by MDT but which allows applications to extend the use of MDT AST for other
+ * purposes, e.g. to support functionality in WYSIWYG editors.
+ */
+export interface CustomInlineNode {
+    type: `custom-${string}`;
+    block?: never;
+    children?: AnyInlineNode[];
+}
 
 
 export type AnyInlineNode = (
@@ -93,15 +105,16 @@ export type AnyInlineNode = (
     | StrikeThroughNode
     | FootnoteRefNode
     | InlineFootnoteNode
+    | CustomInlineNode
 );
 
 ///////// Block Nodes
 
-interface BlockNode {
+export interface BlockNode {
     block: true,
 }
 
-interface ParagraphNode extends BlockNode {
+export interface ParagraphNode extends BlockNode {
     type: "paragraph";
     children: Node[];
 }
@@ -119,13 +132,13 @@ interface BlockquoteNode extends BlockNode {
 }
 interface CodeBlockNode extends BlockNode {
     type: "code_block";
-    /** UNESCAPED text content - may contain HTML. You must escape this before rendering. */
-    content: string;
+    /** Always contains a single child node, of type TextNode */
+    children: [TextNode];
 }
 interface LookupBlockNode extends BlockNode {
     type: "lookup_block";
-    /** The lookup expression. If rendering "raw" to HTML, you must escape this first. */
-    content: string;
+    /** The lookup expression, within a single child node, of type TextNode */
+    children: [TextNode];
 }
 interface BulletListNode extends BlockNode {
     type: "bullet_list";
@@ -156,6 +169,10 @@ export interface FootnoteNode extends BlockNode {
     anchors: string[],
     children: Node[];
 }
+export interface CustomBlockNode {
+    type: `custom-${string}`;
+    children?: AnyInlineNode[];
+}
 
 // Tables:
 
@@ -182,6 +199,7 @@ export type AnyBlockNode = (
     | TableRowNode<TableDataNode|TableHeadingNode>
     | TableDataNode
     | TableHeadingNode
+    | CustomBlockNode
 );
 
 // All node types:

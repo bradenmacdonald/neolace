@@ -21,7 +21,7 @@ export const Form: React.FunctionComponent<FormProps> = (props) => {
 interface ControlProps {
     id: string,
     label: MessageDescriptor,
-    hint?: MessageDescriptor,
+    hint?: string,
     children: React.ReactElement;
 }
 
@@ -35,6 +35,40 @@ export const Control: React.FunctionComponent<ControlProps> = (props) => {
             <FormattedMessage {...props.label}/>
         </label>
         {childInput}
-        {props.hint? <span className="block text-sm text-gray-600"><FormattedMessage {...props.hint}/></span> : null}
+        {props.hint? <span className="block text-sm text-gray-600">{props.hint}</span> : null}
     </div>;
+}
+
+interface AutoControlProps<ValueType> extends ControlProps {
+    initialValue: ValueType;
+    onChange?: (newValue?: ValueType) => void;
+}
+
+/**
+ * An auto-control is a control that has its own internal state with the "current" value, and which only notifies
+ * the parent's 'onChange' function when the user 'accepts' the edit by blurring off of the element.
+ * @param props 
+ * @returns 
+ */
+export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
+    const [currentValue, setCurrentValue] = React.useState<ValueType>(props.initialValue);
+    React.useEffect(() => {
+        // If the initial value changes, override the current value
+        setCurrentValue(props.initialValue);
+    }, [props.initialValue])
+
+    const handleChange: React.ChangeEventHandler = React.useCallback((eventOrValue: ValueType|React.ChangeEvent) => {
+        if (typeof eventOrValue === "object" && (eventOrValue as React.ChangeEvent).target) {
+            // deno-lint-ignore no-explicit-any
+            setCurrentValue((eventOrValue as React.ChangeEvent<any>).target.value);
+        } else {
+            setCurrentValue(eventOrValue as ValueType);
+        }
+    }, [setCurrentValue]);
+
+    const childInput = React.cloneElement(props.children, {value: currentValue, onChange: handleChange});
+
+    return <Control id={props.id} label={props.label} hint={props.hint}>
+        {childInput}
+    </Control>
 }
