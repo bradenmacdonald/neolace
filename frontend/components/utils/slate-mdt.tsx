@@ -11,7 +11,7 @@ export function renderElement({element, children, attributes}: RenderElementProp
         //     return <code key={key}>{node.children[0].text}</code>;
         case "lookup_inline": {
             return <div className="inline-block" contentEditable={false}>
-                <LookupExpressionInput value={element.children[0].text} onChange={() => {}} />
+                <LookupExpressionInput value={element.children[0].text} onChange={() => {}} className="inline-block w-auto min-w-[100px] md:min-w-[100px] border-none outline-blue-700 text-blue-800 before:content-['{'] after:content-['}'] before:opacity-50 after:opacity-50" />
             </div>
         }
         case "strong":
@@ -22,10 +22,10 @@ export function renderElement({element, children, attributes}: RenderElementProp
             return <s {...attributes}>{children}</s>;
         // case "hardbreak":
         //     return <br key={key} />;
-        // case "sub":
-        //     return <sub key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</sub>;
-        // case "sup":
-        //     return <sup key={key}>{node.children.map(child => inlineNodeToComponent(child, context))}</sup>;
+        case "sub":
+            return <sub {...attributes}>{children}</sub>;
+        case "sup":
+            return <sup {...attributes}>{children}</sup>;
         // case "footnote_ref": {
         //     const footnoteParagraph = (context[footnotes] as any)[node.footnoteId].children[0];
         //     return <HoverClickNote key={key} displayText={node.referenceText}>
@@ -36,7 +36,9 @@ export function renderElement({element, children, attributes}: RenderElementProp
         //     return <HoverClickNote key={key}>
         //         <p className="text-sm">{node.children.map(child => inlineNodeToComponent(child, context))}</p>
         //     </HoverClickNote>
+
         // Block elements:
+
         case "paragraph":
             return <p {...attributes}>{children}</p>;
         default:
