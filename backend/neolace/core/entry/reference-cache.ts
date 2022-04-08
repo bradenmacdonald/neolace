@@ -234,7 +234,7 @@ export class ReferenceCache {
             const lookupExpression = node.children[0].text;
             this.addLookupExpression({ entryContext: args.currentEntryId, lookupExpression });
         }
-        if ("children" in node) {
+        if ("children" in node && node.children) {
             for (const child of node.children) {
                 this.extractMarkdownReferences(child, args);
             }

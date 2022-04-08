@@ -1,7 +1,8 @@
 import React from 'react';
 import { type Descendant } from 'slate'
-import { Editable, ReactEditor, RenderLeafProps, Slate } from 'slate-react';
-import { slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor } from 'components/utils/slate';
+import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate } from 'slate-react';
+import { slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor, VoidPropNode } from 'components/utils/slate';
+import { PropertyVoid } from 'components/utils/slate-mdt';
 
 
 interface Props {
@@ -76,6 +77,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
                 onBlur={handleBlur}
                 /* decorate={decorate}*/
                 renderLeaf={renderLeaf}
+                renderElement={renderElement}
                 placeholder={props.placeholder}
             />
         </div>
@@ -84,4 +86,12 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
 
 const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
     return <span {...attributes} className="">{children}</span>;
+}
+
+export function renderElement({element, children, attributes}: RenderElementProps): JSX.Element {
+    if (element.type === "custom-void-property") {
+        return <PropertyVoid propertyId={(element as VoidPropNode).propertyId} attributes={attributes}>{children}</PropertyVoid>
+    } else {
+        return <span {...attributes}>{children}</span>
+    }
 }

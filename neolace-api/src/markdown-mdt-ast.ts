@@ -80,6 +80,15 @@ interface InlineFootnoteNode {
     type: "footnote_inline";
     children: AnyInlineNode[];
 }
+/**
+ * A node type that isn't natively used by MDT but which allows applications to extend the use of MDT AST for other
+ * purposes, e.g. to support functionality in WYSIWYG editors.
+ */
+export interface CustomInlineNode {
+    type: `custom-${string}`;
+    block?: never;
+    children?: AnyInlineNode[];
+}
 
 
 export type AnyInlineNode = (
@@ -96,6 +105,7 @@ export type AnyInlineNode = (
     | StrikeThroughNode
     | FootnoteRefNode
     | InlineFootnoteNode
+    | CustomInlineNode
 );
 
 ///////// Block Nodes
@@ -159,6 +169,10 @@ export interface FootnoteNode extends BlockNode {
     anchors: string[],
     children: Node[];
 }
+export interface CustomBlockNode {
+    type: `custom-${string}`;
+    children?: AnyInlineNode[];
+}
 
 // Tables:
 
@@ -185,6 +199,7 @@ export type AnyBlockNode = (
     | TableRowNode<TableDataNode|TableHeadingNode>
     | TableDataNode
     | TableHeadingNode
+    | CustomBlockNode
 );
 
 // All node types:

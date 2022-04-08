@@ -1,8 +1,30 @@
 // deno-lint-ignore-file no-explicit-any
 import markdown from "./deps/markdown-it.min.js";
 import type { Token } from "./deps/markdown-it/Token.ts";
-import { Node, InlineNode, RootNode, AnyInlineNode, AnyBlockNode, TextNode, ParagraphNode, InlineLookupNode } from "./markdown-mdt-ast.ts";
-export type { Node, InlineNode, RootNode, AnyInlineNode, AnyBlockNode, TextNode, ParagraphNode, InlineLookupNode }
+import {
+    Node,
+    InlineNode,
+    RootNode,
+    AnyInlineNode,
+    AnyBlockNode,
+    TextNode,
+    ParagraphNode,
+    InlineLookupNode,
+    CustomInlineNode,
+    CustomBlockNode,
+} from "./markdown-mdt-ast.ts";
+export type {
+    Node,
+    InlineNode,
+    RootNode,
+    AnyInlineNode,
+    AnyBlockNode,
+    TextNode,
+    ParagraphNode,
+    InlineLookupNode,
+    CustomInlineNode,
+    CustomBlockNode,
+}
 import { HeadingIdPlugin } from "./markdown-mdt-heading-id-plugin.ts";
 import { LookupExpressionPlugin } from "./markdown-mdt-lookup-plugin.ts";
 import { SubPlugin } from "./markdown-mdt-sub-plugin.ts";
@@ -22,6 +44,9 @@ const parser = markdown("commonmark", {
 .use(LookupExpressionPlugin) // Parse { lookup expressions }
 .use(SubPlugin) // Allow use of <sub> and <sup> tags
 .use(FootnotePlugin); // Allow footnotes of various forms
+
+const isCustomInlineNode = (node: Node): node is CustomInlineNode => node.type.startsWith("custom-") && !("block" in node);
+const isCustomBlockNode = (node: Node): node is CustomBlockNode => node.type.startsWith("custom-") && ("block" in node && node.block === true);
 
 
 export interface Options {
@@ -249,6 +274,8 @@ export function renderInlineToHTML(inlineNode: Node): string {
         } else if (childNode.type === "footnote_ref") {
             html += "*"; // TODO: better handling of footnote references
             return;
+        } else if (isCustomInlineNode(childNode)) {
+            throw new Error(`renderInlineToHTML doesn't support custom nodes - remove them first.`);
         }
         let start = "", end = "";
         switch (childNode.type) {
@@ -299,6 +326,8 @@ export function renderInlineToPlainText(inlineNode: Node, {lookupToText = (looku
         } else if (childNode.type === "footnote_ref") {
             text += "*"; // TODO: better handling of footnote references
             return;
+        } else if (isCustomInlineNode(childNode)) {
+            throw new Error(`renderInlineToPlainText doesn't support custom nodes - remove them first.`);
         }
         // If we get here, this is a core, strong, em, sup, sub, s, or link; just render its text
         childNode.children.forEach(renderNode);
@@ -319,6 +348,8 @@ export function renderToPlainText(node: RootNode, {lookupToText = (lookup: strin
             text += "\n\n";
         } else if (node.type === "lookup_block") {
             text += lookupToText(node.children[0].text) + "\n\n";
+        } else if (isCustomBlockNode(node) || isCustomInlineNode(node)) {
+            throw new Error("renderToPlainText does not support custom node types.");
         } else if ("children" in node) {
             node.children.forEach(renderNode);
         }

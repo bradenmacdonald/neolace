@@ -1,10 +1,38 @@
 import React from "react";
 import { api } from "lib/api-client";
 import { BaseEditor, createEditor } from "slate";
-import { ReactEditor, RenderElementProps, withReact } from "slate-react";
+import { ReactEditor, withReact } from "slate-react";
 import { HistoryEditor, withHistory } from 'slate-history'
 
 export type NeolaceSlateEditor = BaseEditor & ReactEditor & HistoryEditor;
+
+/**
+ * This node is not part of MDT or lookup expressoins but is used in our editor as a placeholder for a
+ * '[[/prop/_VNID]]' property identifier, so that we aren't displaying the (unhelpful) VNID to the user, and we can
+ * instead display a nice friendly property name.
+ */
+export interface VoidPropNode extends api.MDT.CustomInlineNode {
+    type: "custom-void-property";
+    propertyId: api.VNID;
+    children: [{type: "text", text: ""}];
+}
+
+export type NeolaceSlateElement = api.MDT.Node | VoidPropNode;
+
+export type PlainText = { text: string };
+
+export type NeolaceSlateText = PlainText;
+
+/** A generic empty Slate document using our Node types. */
+export const emptyDocument: NeolaceSlateElement[] = [{"type":"paragraph","block":true,"children":[{"type":"text","text":""}]}];
+
+declare module "slate" {
+    interface CustomTypes {
+        Editor: NeolaceSlateEditor;
+        Element: NeolaceSlateElement;
+        Text: api.MDT.TextNode;
+    }
+}
 
 /**
  * Create a new instance of a Neolace Slate Editor, which can do WYSIWYG editing of MDT (Markdown) and/or Lookup
@@ -33,12 +61,16 @@ export function useNeolaceSlateEditor(): NeolaceSlateEditor {
         return true;
     };
 
+    const {isVoid} = editor;
     editor.isVoid = (element) => {
+        if (element.type.startsWith("custom-void-")) {
+            return true;
+        }
         switch (element.type) {
             case "lookup_inline":
                 return true;
             default:
-                return false;
+                return isVoid(element);
         }
     }
 
@@ -54,33 +86,33 @@ export function useForceUpdate(){
     return () => setValue(value => value + 1); // update the state to force render
 }
 
-export type NeolaceSlateElement = api.MDT.Node;
-
-export type PlainText = { text: string };
-
-export type NeolaceSlateText = PlainText;
-
-/** A generic empty Slate document using our Node types. */
-export const emptyDocument: NeolaceSlateElement[] = [{"type":"paragraph","block":true,"children":[{"type":"text","text":""}]}];
-
-declare module "slate" {
-    interface CustomTypes {
-        Editor: NeolaceSlateEditor;
-        Element: NeolaceSlateElement;
-        Text: api.MDT.TextNode;
-    }
-}
-
 /**
  * When using slate to edit plain text, such as the source code of Markdown or a lookup expression, use this to
  * convert the string to an editable Slate document
  */
  export function stringValueToSlateDoc(value: string): NeolaceSlateElement[] {
-    return value.split("\n").map(line => ({
-        type: "paragraph",
-        block: true,
-        children: [ { type: "text", text: line } ],
-    }));
+    return value.split("\n").map(line => {
+        const parts: (api.MDT.TextNode|VoidPropNode)[] = [];
+        // Search the string and replace all '[[/prop/_VNID]]' occurrences with a 'custom-void-property' element.
+        while (true) {
+            const nextProp = line.match(/\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]/m);
+            if (nextProp === null || !nextProp.index) {
+                parts.push({ type: "text", text: line });
+                break;
+            } else {
+                if (nextProp.index > 0) {
+                    parts.push({ type: "text", text: line.substring(0, nextProp.index) });
+                }
+                parts.push({type: "custom-void-property", propertyId: nextProp[1] as api.VNID, children: [{type: "text", text: ""}]});
+                line = line.substring(nextProp.index + nextProp[0].length);
+            }
+        }
+        return {
+            type: "paragraph",
+            block: true,
+            children: parts,
+        }
+    });
 }
 
 /**
@@ -97,6 +129,8 @@ export function slateDocToStringValue(node: NeolaceSlateElement[]): string {
                 result += "\n";
             }
             result += slateDocToStringValue(n.children);
+        } else if (n.type === "custom-void-property") {
+            result += `[[/prop/${(n as VoidPropNode).propertyId}]]`;
         } else {
             // deno-lint-ignore no-explicit-any
             console.error(`sdtv: unexpected node in slate doc: ${(node as any).type}`);
@@ -115,7 +149,7 @@ function cleanMdtNodeForSlate(node: api.MDT.Node): api.MDT.Node[] {
         // Softbreaks don't appear in the visual editor.
         return [{type: "text", text: " "}];
     }
-    if ("children" in node) {
+    if ("children" in node && node.children) {
         const originalChildren = node.children;
         const newChildren = [];
         for (const child of originalChildren) {

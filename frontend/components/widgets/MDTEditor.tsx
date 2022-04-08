@@ -96,6 +96,5 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
 }
 
 const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
-    console.log(`Rendering `, {attributes, children, leaf})
     return <span {...attributes} className="">{children}</span>;
 }
