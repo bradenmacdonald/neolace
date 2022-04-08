@@ -47,6 +47,23 @@ export interface FileValue extends LookupValue {
     size: number;
 }
 
+export interface GraphValue extends LookupValue {
+    type: "Graph";
+    entries: {
+        entryId: VNID;
+        name: string;
+        entryType: VNID;
+        data: Record<string, unknown>;
+    }[],
+    rels: {
+        relId: VNID;
+        relType: VNID;
+        fromEntryId: VNID;
+        toEntryId: VNID;
+        data: Record<string, unknown>;
+    }[],
+}
+
 export interface ImageValue extends LookupValue {
     type: "Image";
     entryId: VNID;

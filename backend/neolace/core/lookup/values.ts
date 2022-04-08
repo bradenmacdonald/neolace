@@ -902,6 +902,40 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
     }
 }
 
+/**
+ * A graph value, contains the data required to visualize one or more entries on a graph
+ */
+ export class GraphValue extends ConcreteValue {
+    constructor(
+        public readonly entries: {
+            entryId: VNID;
+            name: string;
+            entryType: VNID;
+            data: Record<string, unknown>;
+        }[],
+        public readonly rels: {
+            relId: VNID;
+            relType: VNID;
+            fromEntryId: VNID;
+            toEntryId: VNID;
+            data: Record<string, unknown>;
+        }[],
+    ) {
+        super();
+    }
+
+    public override asLiteral() {
+        return undefined; // There is no literal expression for a graph
+    }
+
+    protected serialize(): Omit<api.GraphValue, "type"> {
+        return {
+            entries: this.entries,
+            rels: this.rels,
+        };
+    }
+}
+
 /** A helper function to create an annotated entry value */
 export function MakeAnnotatedEntryValue(entryId: VNID, annotations: Record<string, ConcreteValue>) {
     return new AnnotatedValue(new EntryValue(entryId), annotations);
