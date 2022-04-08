@@ -169,15 +169,30 @@ export const ApplyEdits = defineAction({
                         const toEntryId = valueExpression.slice(9, -2);
 
                         // We also need to create/update a direct (Entry)-[rel]->(Entry) relationship on the graph.
-                        await tx.query(C`
-                            MATCH (entry:${Entry} {id: ${edit.data.entry}})
-                            // Match the target entry and make sure it's part of the same site:
-                            MATCH (toEntry:${Entry} {id: ${toEntryId}})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
-                            MATCH (pf:${PropertyFact} {id: ${edit.data.propertyFactId}})
-                            MERGE (entry)-[rel:${directRelType}]->(toEntry)  // Note that this may already exist if multiple separate properties of the same relationship type point to the same node
-                            SET pf.directRelNeo4jId = id(rel)
-
-                        `.RETURN({ "pf.directRelNeo4jId": Field.BigInt }));
+                        try {
+                            await tx.queryOne(C`
+                                MATCH (entry:${Entry} {id: ${edit.data.entry}})
+                                // Match the target entry and make sure it's part of the same site:
+                                MATCH (toEntry:${Entry} {id: ${toEntryId}})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
+                                MATCH (pf:${PropertyFact} {id: ${edit.data.propertyFactId}})
+                                MERGE (entry)-[rel:${directRelType}]->(toEntry)  // Note that this may already exist if multiple separate properties of the same relationship type point to the same node
+                                SET pf.directRelNeo4jId = id(rel)
+                            `.RETURN({ "pf.directRelNeo4jId": Field.BigInt }));
+                        } catch (err) {
+                            if (err instanceof EmptyResultError) {
+                                throw new InvalidEdit(
+                                    AddPropertyValue.code,
+                                    {
+                                        propertyId: edit.data.property,
+                                        toEntryId: toEntryId,
+                                        fromEntryId: edit.data.entry,
+                                    },
+                                    `Entry with ID ${toEntryId} not found - cannot set property ${edit.data.property} on entry ${edit.data.entry} to that value.`,
+                                );
+                            } else {
+                                throw err; // Other unknown internal error.
+                            }
+                        }
                     }
 
                     // Changing a property value always counts as modifying the entry:
