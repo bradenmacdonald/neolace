@@ -13,6 +13,41 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 group(import.meta, () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
+    group("Setting a property value", () => {
+        test("When we create a relationship to a non-existent entry, we get a relevant error message.", async () => {
+            // Get an API client, logged in as a bot that belongs to an admin
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+            const entry = defaultData.entries.ponderosaPine.id;
+            const property = defaultData.schema.properties._hasPart.id;
+
+            // now delete the property fact that does not exist
+            const result = await client.createDraft({
+                title: "A Test Draft",
+                description: null,
+                edits: [
+                    {
+                        code: api.AddPropertyValue.code,
+                        data: {
+                            entry,
+                            property,
+                            propertyFactId: VNID(),
+                            /** Value expression: a lookup expression giving the value */
+                            valueExpression: "[[/entry/_FOOBAR]]",
+                            note: "",
+                        },
+                    },
+                ],
+            });
+
+            await assertRejects(
+                () => client.acceptDraft(result.id),
+                api.InvalidEdit,
+                `Entry with ID _FOOBAR not found - cannot set property ${property} on entry ${entry} to that value.`,
+            );
+        });
+    });
+
     group("Deleting properties", () => {
         test("We can delete a property on an entry", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
