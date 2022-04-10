@@ -43,14 +43,34 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
     const [lastValueInternallySet, updateLastValueInternallySet] = React.useState<string|undefined>(undefined);
 
     React.useEffect(() => {
-        if (value !== lastValueInternallySet || sourceMode !== lastSourceMode) {
-            // props.value has changed externally (not via changes within the Slate editor), or source mode has changed.
+        if (value !== lastValueInternallySet) {
+            // props.value has changed externally (not via changes within the Slate editor).
             // Update the editor:
             editor.children = sourceMode ? stringValueToSlateDoc(value) : parseMdtStringToSlateDoc(value, props.inlineOnly);
             updateLastValueInternallySet(value);
+        }
+    }, [value, lastValueInternallySet, sourceMode, updateLastValueInternallySet]);
+
+
+    React.useEffect(() => {
+        if (sourceMode !== lastSourceMode) {
+            if (sourceMode) {
+                // We have turned source mode on; update the source based on the current state of the visual editor.
+                // FIRST update value based on the visual editor's tree.
+                const newValue = slateDocToStringValue(editor.children);
+                // THEN:
+                editor.children = stringValueToSlateDoc(newValue);
+                updateLastValueInternallySet(newValue);
+                if (props.onChange) {
+                    props.onChange(newValue);
+                }
+            } else {
+                // We have turned source mode off; update the visual editor's document accordingly.
+                editor.children = parseMdtStringToSlateDoc(value, props.inlineOnly);
+            }
             updateLastSourceMode(sourceMode);
         }
-    }, [value, sourceMode, lastValueInternallySet, lastSourceMode, updateLastValueInternallySet, updateLastSourceMode]);
+    }, [sourceMode, lastSourceMode, value, props.onChange, updateLastSourceMode, updateLastValueInternallySet]);
 
     const handleChange = React.useCallback((newEditorState: Descendant[]) => {
         if (sourceMode && props.onChange) {
@@ -58,16 +78,23 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             updateLastValueInternallySet(newValue);  // Mark this as an internal change, not coming from outside this component.
             props.onChange(newValue);
         } else {
-            console.log(`editor state changes to `, newEditorState);
+            // The user has made changes in visual edit mode. We won't notify the 'onChange'
+            // handler until they blur off of this editor or go back to source mode, because
+            // the visual editor's data model is richer than the simple 'value' prop and we
+            // don't want the onChange handler to change the value prop now and reset the
+            // editor state in the middle of editing.
         }
     }, [props.onChange, sourceMode]);
 
     const handleBlur = React.useCallback(() => {
+        const newValue = slateDocToStringValue(editor.children);
+        if (props.onChange) {
+            props.onChange(newValue);
+        }
         if (props.onFinishedEdits) {
-            const newValue = slateDocToStringValue(editor.children);
             props.onFinishedEdits(newValue);
         }
-    }, [editor, props.onFinishedEdits]);
+    }, [editor, props.onFinishedEdits, updateLastValueInternallySet]);
 
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={emptyDocument} onChange={handleChange}>

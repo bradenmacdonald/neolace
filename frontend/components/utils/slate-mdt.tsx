@@ -3,7 +3,7 @@ import { LookupExpressionInput } from "components/widgets/LookupExpressionInput"
 import { api, useSiteSchema } from "lib/api-client";
 import { RenderElementProps } from "slate-react";
 import { type VoidPropNode } from "./slate";
-import './slate.tsx';
+import './slate.ts';
 
 /**
  * In any of our editors (lookup expression editor, markdown source editor, markdown visual editor), this is a

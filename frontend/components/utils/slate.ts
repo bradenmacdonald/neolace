@@ -116,8 +116,9 @@ export function useForceUpdate(){
 }
 
 /**
- * When using slate to edit plain text, such as the source code of Markdown or a lookup expression, use this to
- * convert from the Slate document tree back to the plain text string.
+ * Convert a Slate document back to MDT/lookup expression.
+ * This works for documents being edited visually as well as for when using
+ * the editor to edit plain text code with only text elements and paragraphs.
  */
 export function slateDocToStringValue(node: NeolaceSlateElement[]): string {
     let result = "";
@@ -129,11 +130,18 @@ export function slateDocToStringValue(node: NeolaceSlateElement[]): string {
                 result += "\n";
             }
             result += slateDocToStringValue(n.children);
+        } else if (n.type === "link") {
+            result += `[` + slateDocToStringValue(n.children) + `](${n.href})`;
+        } else if (n.type === "strong") {
+            result += `**` + slateDocToStringValue(n.children) + `**`;
+        } else if (n.type === "em") {
+            result += `_` + slateDocToStringValue(n.children) + `_`;
+        } else if (n.type === "lookup_inline") {
+            result += `{ ` + slateDocToStringValue(n.children) + ` }`;
         } else if (n.type === "custom-void-property") {
             result += `[[/prop/${(n as VoidPropNode).propertyId}]]`;
         } else {
-            // deno-lint-ignore no-explicit-any
-            console.error(`sdtv: unexpected node in slate doc: ${(node as any).type}`);
+            throw new Error(`sdtv: unexpected node in slate doc: ${n.type}`);
         }
     }
     return result;
@@ -166,10 +174,15 @@ function cleanMdtNodeForSlate(node: api.MDT.Node): api.MDT.Node[] {
 
 export function parseMdtStringToSlateDoc(mdt: string, inline?: boolean): NeolaceSlateElement[] {
     if (inline) {
+        let children = cleanMdtNodeForSlate(api.MDT.tokenizeInlineMDT(mdt));
+        if (children.length === 0) {
+            // We always have to have at least one text child:
+            children = [{type: "text", text: ""}];
+        }
         return [{
             type: "paragraph",
             block: true,
-            children: cleanMdtNodeForSlate(api.MDT.tokenizeInlineMDT(mdt)),
+            children,
         }];
     } else {
         throw new Error("Block-level MDT editing is not yet supported.");
