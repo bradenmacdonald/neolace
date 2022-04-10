@@ -27,7 +27,7 @@ export function renderElement({element, children, attributes}: RenderElementProp
         //     return <code key={key}>{node.children[0].text}</code>;
         case "lookup_inline": {
             return <div className="inline-block" contentEditable={false}>
-                <LookupExpressionInput value={element.children[0].text} onChange={() => {}} className="inline-block w-auto min-w-[100px] md:min-w-[100px] border-none outline-blue-700 text-blue-800 before:content-['{'] after:content-['}'] before:opacity-50 after:opacity-50" />
+                <LookupExpressionInput value={element.children[0].text} onChange={() => {}} className="inline-block w-auto !min-w-[100px] md:!min-w-[100px] border-none outline-blue-700 text-blue-800 before:content-['{'] after:content-['}'] before:opacity-50 after:opacity-50" />
             </div>
         }
         case "strong":
