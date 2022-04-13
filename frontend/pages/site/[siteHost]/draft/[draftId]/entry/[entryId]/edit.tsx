@@ -61,7 +61,8 @@ const DraftEntryEditPage: NextPage = function(_props) {
 
             <Form>
                 <AutoControl
-                    initialValue={baseEntry?.name ?? ""}
+                    value={entry?.name ?? ""}
+                    onChangeFinished={updateEntryName}
                     id="title"
                     label={{id: "draft.entry.edit.title.label", defaultMessage: "Title"}}
                 >
@@ -69,7 +70,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
                 </AutoControl>
 
                 <AutoControl
-                    initialValue={entryType?.name ?? ""}
+                    value={entryType?.name ?? ""}
                     id="entryType"
                     label={{id: "draft.entry.edit.type.label", defaultMessage: "Entry Type"}}
                     hint={intl.formatMessage({id: "draft.entry.edit.type.hint", defaultMessage: "Cannot be changed."})}
@@ -78,7 +79,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
                 </AutoControl>
 
                 <AutoControl
-                    initialValue={baseEntry?.friendlyId ?? ""}
+                    value={entry?.friendlyId ?? ""}
                     id="id"
                     label={{id: "draft.entry.edit.id.label", defaultMessage: "ID"}}
                     hint={
@@ -92,7 +93,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
                 </AutoControl>
 
                 <AutoControl
-                    initialValue={baseEntry?.description ?? ""}
+                    value={entry?.description ?? ""}
                     id="description"
                     label={{id: "draft.entry.edit.description.label", defaultMessage: "Description"}}
                 >

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useIntl } from 'react-intl';
-import { type Descendant } from 'slate'
+import { Editor, Transforms, type Descendant } from 'slate'
 import { Editable, RenderLeafProps, Slate } from 'slate-react';
 import { emptyDocument, parseMdtStringToSlateDoc, slateDocToStringValue, stringValueToSlateDoc, useNeolaceSlateEditor } from 'components/utils/slate';
 import { ToolbarButton } from './Button';
@@ -19,6 +19,10 @@ interface Props {
     placeholder?: string;
     /** ID for the underlying textarea, used to focus on it with a label */
     id?: string;
+
+    // Optional event handlers:
+    onFocus?: () => void;
+    onBlur?: () => void;
 }
 
 /**
@@ -41,13 +45,22 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
     const [lastSourceMode, updateLastSourceMode] = React.useState(sourceMode);
 
     const [lastValueInternallySet, updateLastValueInternallySet] = React.useState<string|undefined>(undefined);
+    const rootDiv = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
         if (value !== lastValueInternallySet) {
             // props.value has changed externally (not via changes within the Slate editor).
+            // So now we need to replace the contents of the editor with the new value.
+
+            // Before we change the value within the editor, we may need to move the selection, or else if the new text
+            // is shorter, slate may give an error when trying to keep the cursor in the same position which no longer
+            // exists:
+            Transforms.deselect(editor);  // Just de-select, otherwise we may trap focus in this element if we're handling a blur at the moment.
+
             // Update the editor:
             editor.children = sourceMode ? stringValueToSlateDoc(value) : parseMdtStringToSlateDoc(value, props.inlineOnly);
             updateLastValueInternallySet(value);
+            console.log("MDT Editor: value changed externally to", value);
         }
     }, [value, lastValueInternallySet, sourceMode, updateLastValueInternallySet]);
 
@@ -86,19 +99,43 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
         }
     }, [props.onChange, sourceMode]);
 
-    const handleBlur = React.useCallback(() => {
-        const newValue = slateDocToStringValue(editor.children);
-        if (props.onChange) {
-            props.onChange(newValue);
+    /** Handle a blur of the main editor text area; focus may still be on our toolbar or some other part of this widget though. */
+    const handleEditorBlur = React.useCallback(() => {
+        
+    }, [editor, props.onChange, updateLastValueInternallySet]);
+
+    // Track whether or not the user is actively using this overall editor widget.
+    // When in "visual mode" (not source mode), we don't notify the parent element about changes until they blur off of
+    // this editor to some other part of the document.
+    const [wasActive, setWasActive] = React.useState(false);
+    const isActive = useSmartFocusAwareness(rootDiv.current);
+    React.useEffect(() => {
+        if (isActive !== wasActive) {
+            if (isActive && props.onFocus) {
+                props.onFocus();
+            } else if (!isActive) {
+                const newValue = slateDocToStringValue(editor.children);
+                if (!sourceMode) {
+                    updateLastValueInternallySet(newValue);
+                }
+                console.log("MDT Editor handleBlur, new value is", newValue);
+                if (props.onChange) {
+                    props.onChange(newValue);
+                }
+                if (props.onBlur) {
+                    props.onBlur();
+                }
+            }
+            setWasActive(isActive);
         }
-        if (props.onFinishedEdits) {
-            props.onFinishedEdits(newValue);
-        }
-    }, [editor, props.onFinishedEdits, updateLastValueInternallySet]);
+    }, [isActive, wasActive, setWasActive, props.onFocus, props.onBlur]);
 
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={emptyDocument} onChange={handleChange}>
-        <div className="border-2 border-gray-500 rounded-md focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full">
+        <div
+            className="border-2 border-gray-500 rounded-md focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full"
+            ref={rootDiv}
+        >
             {/* The Toolbar */}
             <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
                 <ToolbarButton
@@ -112,7 +149,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             <Editable
                 id={props.id}
                 className={`outline-none border-none px-2 py-1 w-full md:w-auto md:min-w-[300px] ${sourceMode ? "font-mono text-sm" : ""}`}
-                onBlur={handleBlur}
+                onBlur={handleEditorBlur}
                 /* decorate={decorate}*/
                 renderLeaf={renderLeaf}
                 renderElement={renderElement}
@@ -124,4 +161,56 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
 
 const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
     return <span {...attributes} className="">{children}</span>;
+}
+
+
+
+/**
+ * Given the complex UI of MDTEditor, the concept of whether or not the user is actively "focused" on the editor is a
+ * little vague, so this attempts to clarify it.
+ * 
+ * Trying naively to use focus/blur to test whether the focused element is within the editor's overall DIV does not work
+ * for example, because if you are currently editing text in the editor and then click a button on the toolbar, we want
+ * to think of that as one continuous editing workflow (you're not blurring focus entirely out of the editor), but the
+ * browser will actually send events to say (1) you've blurred the editor, (2) the active focus is the body (none), then
+ * (3) the active focus is the toolbar button. When (2) happens we don't want to send an "onBlur" event to our parent
+ * because the user's focus never intentionally left the overall editor.
+ */
+function useSmartFocusAwareness(rootElement: HTMLDivElement|null) {
+
+    const [isActive, setIsActive] = React.useState(false);
+
+    const handleClick = React.useCallback((event: MouseEvent) => {
+        // The user has clicked somewhere. If the click was inside the element, we are active.
+        // If the click was outside, we are definitely inactive.
+        setIsActive(rootElement ? rootElement.contains(event.target as Node) : false);
+    }, [rootElement, setIsActive]);
+
+    React.useEffect(() => {
+        document.addEventListener("mousedown", handleClick);
+        return () => {
+            // Unbind the event listener on clean up
+            document.removeEventListener("mousedown", handleClick);
+        };
+    }, [handleClick]);
+
+
+    const handleFocus = React.useCallback((event: FocusEvent) => {
+        // The user has focused on something. If it's document.body or NULL, we may still be "active" but if it's an
+        // actual element and it's outside this element, we are no longer active.
+        if (document.activeElement === null || document.activeElement === document.body) {
+            return; // Inconclusive
+        }
+        setIsActive(rootElement?.contains(document.activeElement) ?? false);
+    }, [rootElement, setIsActive]);
+
+    React.useEffect(() => {
+        document.addEventListener("focusin", handleFocus);
+        return () => {
+            // Unbind the event listener on clean up
+            document.removeEventListener("focusin", handleFocus);
+        };
+    }, [handleFocus]);
+
+    return isActive;
 }
