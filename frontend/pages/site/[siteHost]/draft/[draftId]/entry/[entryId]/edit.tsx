@@ -24,16 +24,37 @@ const DraftEntryEditPage: NextPage = function(_props) {
     const intl = useIntl();
     // Look up the Neolace site by domain:
     const {site, siteError} = useSiteData();
-    const [schema] = useSiteSchema();
+    const [baseSchema] = useSiteSchema();
     const router = useRouter();
     const query = router.query as PageUrlQuery;
     // The "base entry" is the unmodified entry, as published on the site, without any edits applied.
     const [baseEntry, entryError] = useEditableEntry(query.entryId as api.VNID);
 
     // edits = useState getDraftEdits();
-    // entryResult = applyEdits(entry, edits)
+    const [unsavedEdits, setUnsavedEdits] = React.useState<api.AnyContentEdit[]>([]);
+    const addUnsavedEdit = React.useCallback((newEdit: api.AnyContentEdit) => {
+        setUnsavedEdits([...unsavedEdits, newEdit]);
+    }, [unsavedEdits, setUnsavedEdits]);
 
-    const entryType = schema?.entryTypes?.[baseEntry?.entryType.id ?? ""];
+    const entry = React.useMemo(() => {
+        return baseEntry && baseSchema ? api.applyEditsToEntry(baseEntry, baseSchema, unsavedEdits) : undefined;
+    }, [baseEntry, baseSchema, unsavedEdits]);
+    const schema = React.useMemo(() => baseSchema ? api.applyEditsToSchema(baseSchema, unsavedEdits) : undefined, [baseSchema, unsavedEdits]);
+
+    const entryType = schema?.entryTypes?.[entry?.entryType.id ?? ""];
+
+    const updateEntryName = React.useCallback((name: string) => {
+        if (!baseEntry) {
+            return;
+        }
+        addUnsavedEdit({
+            code: api.SetEntryName.code,
+            data: {
+                entryId: baseEntry?.id,
+                name,
+            },
+        });
+    }, [baseEntry, addUnsavedEdit])
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour/>;
@@ -55,7 +76,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
             <Link href={`/draft/${query.draftId}/entry/${query.entryId}/preview`}><a className="float-right text-sm">Preview</a></Link>
             <Breadcrumbs>
                 <Breadcrumb href={"/"}>New Draft</Breadcrumb>
-                <Breadcrumb href={baseEntry ? `/entry/${baseEntry.friendlyId}` : undefined}>{baseEntry?.name ?? "Entry"}</Breadcrumb>
+                <Breadcrumb href={entry ? `/entry/${entry.friendlyId}` : undefined}>{entry?.name ?? "Entry"}</Breadcrumb>
                 <Breadcrumb>Edit</Breadcrumb>
             </Breadcrumbs>
 
@@ -100,6 +121,18 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     <MDTEditor inlineOnly={true} />
                 </AutoControl>
             </Form>
+
+            <h2>New Changes</h2>
+            {
+                unsavedEdits.length > 0 ?
+                    <ul>
+                        {unsavedEdits.map((e, idx) => 
+                            <li key={idx}>{api.getEditType(e.code).describe(e.data)}</li>
+                        )}
+                    </ul>
+                :
+                    <p>No new changes yet.</p>
+            }
         </SitePage>
     );
 }
