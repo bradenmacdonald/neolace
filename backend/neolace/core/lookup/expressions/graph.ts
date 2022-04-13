@@ -1,9 +1,7 @@
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { LookupExpression } from "../expression.ts";
-import {
-    GraphValue, LazyEntrySetValue,
-} from "../values.ts";
+import { GraphValue, LazyEntrySetValue } from "../values.ts";
 import { LookupContext } from "../context.ts";
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 
@@ -35,9 +33,9 @@ export class Graph extends LookupExpression {
             RETURN rels, entries
         `.givesShape(
             {
-                rels: Field.List(Field.Record({start: Field.VNID, end: Field.VNID})),
+                rels: Field.List(Field.Record({ start: Field.VNID, end: Field.VNID })),
                 entries: Field.List(Field.VNode(Entry)),
-            }
+            },
         ));
 
         const entries = graphData.entries.map((entry) => {
@@ -46,8 +44,8 @@ export class Graph extends LookupExpression {
                 name: entry.name,
                 entryType: VNID(),
                 data: {},
-            }
-        })
+            };
+        });
 
         const relationships = graphData.rels.map((rel) => {
             return {
@@ -56,12 +54,10 @@ export class Graph extends LookupExpression {
                 fromEntryId: rel.start,
                 toEntryId: rel.end,
                 data: {},
-            }
-        })
+            };
+        });
 
         return new GraphValue(entries, relationships);
-
-
     }
 
     public toString(): string {

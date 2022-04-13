@@ -905,7 +905,7 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
 /**
  * A graph value, contains the data required to visualize one or more entries on a graph
  */
- export class GraphValue extends ConcreteValue {
+export class GraphValue extends ConcreteValue {
     constructor(
         public readonly entries: {
             entryId: VNID;
