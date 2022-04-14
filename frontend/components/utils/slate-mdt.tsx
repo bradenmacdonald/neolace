@@ -26,7 +26,7 @@ export const PropertyVoid = ({ propertyId, attributes, children }: {propertyId: 
  * In "visual mode" for editing an MDT (Markdown) document, this is how an inline lookup expression is rendered.
  * The lookup expression can be edited.
  */
-export const InlineLookupEditableElement = ({element, attributes}: {element: InlineLookupNode, attributes: RenderElementProps["attributes"]}) => {
+export const InlineLookupEditableElement = ({element, attributes, children}: {element: InlineLookupNode, attributes: RenderElementProps["attributes"], children: React.ReactNode}) => {
     const editor = useSlate();
 
     const handleChange = React.useCallback((newValue: string) => {
@@ -38,8 +38,9 @@ export const InlineLookupEditableElement = ({element, attributes}: {element: Inl
         Transforms.insertText(editor, newValue, {at: [...path, 0], voids: true});
     }, [editor, element]);
 
-    return <div className="inline-block" contentEditable={false}>
+    return <div className="inline-block select-none" contentEditable={false}>
         <LookupExpressionInput value={element.children[0].text} onChange={handleChange} className="inline-block w-auto !min-w-[100px] md:!min-w-[100px] border-none outline-blue-700 text-blue-800 before:content-['{'] after:content-['}'] before:opacity-50 after:opacity-50" />
+        {children}
     </div>
 };
 
@@ -50,7 +51,7 @@ export function renderElement({element, children, attributes}: RenderElementProp
         // case "code_inline":
         //     return <code key={key}>{node.children[0].text}</code>;
         case "lookup_inline": {
-            return <InlineLookupEditableElement element={element} attributes={attributes} />;
+            return <InlineLookupEditableElement element={element} attributes={attributes} children={children} />;
         }
         case "strong":
             return <strong {...attributes}>{children}</strong>;
