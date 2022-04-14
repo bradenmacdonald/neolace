@@ -115,29 +115,43 @@ export function useForceUpdate(){
     });
 }
 
+export enum EscapeMode {
+    // When editing plain text like markdown source code or inline expressions, no escaping is required
+    PlainText = 0,
+    // When editing Markdown in the visual editor, we have to escape any markdown formatting
+    MDT = 1,
+}
+
 /**
  * Convert a Slate document back to MDT/lookup expression.
  * This works for documents being edited visually as well as for when using
  * the editor to edit plain text code with only text elements and paragraphs.
+ * 
+ * If using this to edit plain text (MDT/markdown, lookup expressions, etc.)
+ * set escape to "no-escape"; otherwise set it false so that text will be escaped correctly.
  */
-export function slateDocToStringValue(node: NeolaceSlateElement[]): string {
+export function slateDocToStringValue(node: NeolaceSlateElement[], escape: EscapeMode): string {
     let result = "";
     for (const n of node) {
         if ("text" in n) {
-            result += n.text;
+            if (escape === EscapeMode.MDT) {
+                result += api.MDT.escape(n.text);
+            } else {
+                result += n.text;
+            }
         } else if (n.type === "paragraph") {
             if (result.length > 0) {
                 result += "\n";
             }
-            result += slateDocToStringValue(n.children);
+            result += slateDocToStringValue(n.children, escape);
         } else if (n.type === "link") {
-            result += `[` + slateDocToStringValue(n.children) + `](${n.href})`;
+            result += `[` + slateDocToStringValue(n.children, escape) + `](${n.href})`;
         } else if (n.type === "strong") {
-            result += `**` + slateDocToStringValue(n.children) + `**`;
+            result += `**` + slateDocToStringValue(n.children, escape) + `**`;
         } else if (n.type === "em") {
-            result += `_` + slateDocToStringValue(n.children) + `_`;
+            result += `_` + slateDocToStringValue(n.children, escape) + `_`;
         } else if (n.type === "lookup_inline") {
-            result += `{ ` + slateDocToStringValue(n.children) + ` }`;
+            result += `{ ` + slateDocToStringValue(n.children, EscapeMode.PlainText) + ` }`;
         } else if (n.type === "custom-void-property") {
             result += `[[/prop/${(n as VoidPropNode).propertyId}]]`;
         } else {

@@ -2,7 +2,7 @@ import React from 'react';
 import { useIntl } from 'react-intl';
 import { Editor, Transforms, type Descendant } from 'slate'
 import { Editable, RenderLeafProps, Slate } from 'slate-react';
-import { emptyDocument, parseMdtStringToSlateDoc, slateDocToStringValue, stringValueToSlateDoc, useNeolaceSlateEditor } from 'components/utils/slate';
+import { emptyDocument, EscapeMode, parseMdtStringToSlateDoc, slateDocToStringValue, stringValueToSlateDoc, useNeolaceSlateEditor } from 'components/utils/slate';
 import { ToolbarButton } from './Button';
 import { renderElement } from 'components/utils/slate-mdt';
 
@@ -61,7 +61,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             editor.children = sourceMode ? stringValueToSlateDoc(value) : parseMdtStringToSlateDoc(value, props.inlineOnly);
             updateLastValueInternallySet(value);
         }
-    }, [value, lastValueInternallySet, sourceMode, updateLastValueInternallySet]);
+    }, [value, lastValueInternallySet, sourceMode]);
 
 
     React.useEffect(() => {
@@ -69,7 +69,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             if (sourceMode) {
                 // We have turned source mode on; update the source based on the current state of the visual editor.
                 // FIRST update value based on the visual editor's tree.
-                const newValue = slateDocToStringValue(editor.children);
+                const newValue = slateDocToStringValue(editor.children, EscapeMode.MDT);
                 // THEN:
                 editor.children = stringValueToSlateDoc(newValue);
                 updateLastValueInternallySet(newValue);
@@ -82,11 +82,11 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             }
             updateLastSourceMode(sourceMode);
         }
-    }, [sourceMode, lastSourceMode, value, props.onChange, updateLastSourceMode, updateLastValueInternallySet]);
+    }, [sourceMode, lastSourceMode, value, props.onChange]);
 
     const handleChange = React.useCallback((newEditorState: Descendant[]) => {
         if (sourceMode && props.onChange) {
-            const newValue = slateDocToStringValue(newEditorState);
+            const newValue = slateDocToStringValue(newEditorState, EscapeMode.PlainText);
             updateLastValueInternallySet(newValue);  // Mark this as an internal change, not coming from outside this component.
             props.onChange(newValue);
         } else {
@@ -98,11 +98,6 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
         }
     }, [props.onChange, sourceMode]);
 
-    /** Handle a blur of the main editor text area; focus may still be on our toolbar or some other part of this widget though. */
-    const handleEditorBlur = React.useCallback(() => {
-        
-    }, [editor, props.onChange, updateLastValueInternallySet]);
-
     // Track whether or not the user is actively using this overall editor widget.
     // When in "visual mode" (not source mode), we don't notify the parent element about changes until they blur off of
     // this editor to some other part of the document.
@@ -113,7 +108,8 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             if (isActive && props.onFocus) {
                 props.onFocus();
             } else if (!isActive) {
-                const newValue = slateDocToStringValue(editor.children);
+                // The user has blurred this editor. Notify our parent if it is interested.
+                const newValue = slateDocToStringValue(editor.children, EscapeMode.MDT);
                 if (!sourceMode) {
                     updateLastValueInternallySet(newValue);
                 }
@@ -147,7 +143,6 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             <Editable
                 id={props.id}
                 className={`outline-none border-none px-2 py-1 w-full md:w-auto md:min-w-[300px] ${sourceMode ? "font-mono text-sm" : ""}`}
-                onBlur={handleEditorBlur}
                 /* decorate={decorate}*/
                 renderLeaf={renderLeaf}
                 renderElement={renderElement}

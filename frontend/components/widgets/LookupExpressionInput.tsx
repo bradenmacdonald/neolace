@@ -1,7 +1,7 @@
 import React from 'react';
 import { type Descendant } from 'slate'
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate } from 'slate-react';
-import { slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor, VoidPropNode } from 'components/utils/slate';
+import { EscapeMode, slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor, VoidPropNode } from 'components/utils/slate';
 import { PropertyVoid } from 'components/utils/slate-mdt';
 
 
@@ -34,7 +34,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
     React.useEffect(() => {
         // This function should force the editor to update its contents IF "props.value" is changed externally, but
         // should also ignore updates that match the current value that the editor has.
-        if (props.value !== slateDocToStringValue(editor.children)) {
+        if (props.value !== slateDocToStringValue(editor.children, EscapeMode.PlainText)) {
             editor.children = parsedValue;
             forceUpdate();  // Without this, sometimes React won't update and the UI won't reflect the new state.
         }
@@ -42,7 +42,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
 
     const handleChange = React.useCallback((newValue: Descendant[]) => {
         if (props.onChange) {
-            const newLookupValue = slateDocToStringValue(newValue);
+            const newLookupValue = slateDocToStringValue(newValue, EscapeMode.PlainText);
             props.onChange(newLookupValue);
         }
     }, [props.onChange]);
@@ -61,7 +61,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
 
     const handleBlur = React.useCallback(() => {
         if (props.onFinishedEdits) {
-            const newValue = slateDocToStringValue(editor.children);
+            const newValue = slateDocToStringValue(editor.children, EscapeMode.PlainText);
             props.onFinishedEdits(newValue);
         }
     }, [editor, props.onFinishedEdits]);
