@@ -1,3 +1,4 @@
+import { useStateRef } from 'components/utils/stateRefHook';
 import React from 'react';
 import { FormattedMessage, MessageDescriptor, useIntl } from 'react-intl';
 
@@ -40,22 +41,26 @@ export const Control: React.FunctionComponent<ControlProps> = (props) => {
 }
 
 interface AutoControlProps<ValueType> extends ControlProps {
-    initialValue: ValueType;
-    onChange?: (newValue?: ValueType) => void;
+    value: ValueType;
+    onChangeFinished?: (newValue: ValueType) => void;
 }
 
 /**
  * An auto-control is a control that has its own internal state with the "current" value, and which only notifies
- * the parent's 'onChange' function when the user 'accepts' the edit by blurring off of the element.
+ * the parent's 'onChangeFinished' function when the user 'accepts' the edit by blurring off of the element.
  * @param props 
  * @returns 
  */
 export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
-    const [currentValue, setCurrentValue] = React.useState<ValueType>(props.initialValue);
+    // While the user is actively making edits, we track the value in state:
+    const [currentValue, setCurrentValue, currentValueRef] = useStateRef<ValueType>(props.value);
+    const [isCurrentlyEditing, setCurrentlyEditing] = React.useState(false);
+
     React.useEffect(() => {
-        // If the initial value changes, override the current value
-        setCurrentValue(props.initialValue);
-    }, [props.initialValue])
+        // Whenever 'props.value' is changed externally or when we finish editing and blur off, we need to reset our
+        // internal "current" value to match the props.value.
+        setCurrentValue(props.value);
+    }, [props.value, isCurrentlyEditing]);
 
     const handleChange: React.ChangeEventHandler = React.useCallback((eventOrValue: ValueType|React.ChangeEvent) => {
         if (typeof eventOrValue === "object" && (eventOrValue as React.ChangeEvent).target) {
@@ -64,11 +69,28 @@ export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
         } else {
             setCurrentValue(eventOrValue as ValueType);
         }
-    }, [setCurrentValue]);
+    }, []);
 
-    const childInput = React.cloneElement(props.children, {value: currentValue, onChange: handleChange});
+    const handleFocus: React.ChangeEventHandler = React.useCallback(() => {
+        setCurrentlyEditing(true);
+    }, []);
+
+    const handleBlur: React.ChangeEventHandler = React.useCallback(() => {
+        const value = currentValueRef.current;
+        if (props.onChangeFinished && value !== props.value) {
+            props.onChangeFinished(value);
+        }
+        setCurrentlyEditing(false);
+    }, [props.onChangeFinished, currentValueRef]);
+
+    const childInput = React.cloneElement(props.children, {
+        value: isCurrentlyEditing ? currentValue : props.value,
+        onChange: handleChange,
+        onFocus: handleFocus,
+        onBlur: handleBlur,
+    });
 
     return <Control id={props.id} label={props.label} hint={props.hint}>
         {childInput}
-    </Control>
+    </Control>;
 }

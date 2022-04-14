@@ -358,14 +358,26 @@ export function renderToPlainText(node: RootNode, {lookupToText = (lookup: strin
     return text;
 }
 
+
+const escapeData: [bad: string|RegExp, good: string][]  = [
+    ["*", "\\*"],
+    ["[", "\\["],  // Escape possible links and footnotes
+    ["]", "\\]"],
+    ["{", "\\{"],
+    ["}", "\\}"],
+    ["_", "\\_"],
+    ["~", "\\~"], // Subscript
+    ["^", "\\^"], // Superscript
+    [/^#/g, "\\#"],
+    [/^>/g, "\\>"],
+];
+
 /**
- * Render MDT to HTML, ignoring block-level elements.
- * @param mdt The MDT string to parse and convert to HTML
+ * Given some plain text, escape it so that it can be used in an MDT document.
  */
-// export function renderMDTInlineToHTML(mdt: string): string {
-//     const document = tokenizeMDT(mdt, {inline: true});
-//     return document.children.map(node => {
-//         if (node.type !== "inline") { throw new Error(`Unexpected node type ${node.type} when parsing MDT as inline-only.`); }
-//         return renderInlineToHTML(node);
-//     }).join("");
-// }
+export function escapeText(text: string): string {
+    for (const [bad, good] of escapeData) {
+        text = text.replaceAll(bad, good);
+    }
+    return text;
+}

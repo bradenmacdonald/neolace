@@ -1,9 +1,12 @@
+import React from "react";
 import { Icon } from "components/widgets/Icon";
 import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
 import { api, useSiteSchema } from "lib/api-client";
-import { RenderElementProps } from "slate-react";
+import { type InlineLookupNode } from "neolace-api/markdown-mdt-ast.ts";
+import { Transforms } from "slate";
+import { RenderElementProps, useSlate, ReactEditor } from "slate-react";
 import { type VoidPropNode } from "./slate";
-import './slate.tsx';
+import './slate.ts';
 
 /**
  * In any of our editors (lookup expression editor, markdown source editor, markdown visual editor), this is a
@@ -19,6 +22,28 @@ export const PropertyVoid = ({ propertyId, attributes, children }: {propertyId: 
     </span>;
 }
 
+/**
+ * In "visual mode" for editing an MDT (Markdown) document, this is how an inline lookup expression is rendered.
+ * The lookup expression can be edited.
+ */
+export const InlineLookupEditableElement = ({element, attributes, children}: {element: InlineLookupNode, attributes: RenderElementProps["attributes"], children: React.ReactNode}) => {
+    const editor = useSlate();
+
+    const handleChange = React.useCallback((newValue: string) => {
+        // We need to replace the text child node of the inline_lookup node, to reflect the new value.
+        const path = ReactEditor.findPath(editor, element);  // Path to the "lookup_inline" node
+        // "if you specify a Path location, it will expand to a range that covers the entire node at that path.
+        //  Then, using the range-based behavior it will delete all of the content of the node, and replace it with
+        //  your text. So to replace the text of an entire node with a new string you can do:"
+        Transforms.insertText(editor, newValue, {at: [...path, 0], voids: true});
+    }, [editor, element]);
+
+    return <div className="inline-block select-none" contentEditable={false}>
+        <LookupExpressionInput value={element.children[0].text} onChange={handleChange} className="inline-block w-auto !min-w-[100px] md:!min-w-[100px] border-none outline-blue-700 text-blue-800 before:content-['{'] after:content-['}'] before:opacity-50 after:opacity-50" />
+        {children}
+    </div>
+};
+
 export function renderElement({element, children, attributes}: RenderElementProps): JSX.Element {
     switch (element.type) {
         case "link":
@@ -26,9 +51,7 @@ export function renderElement({element, children, attributes}: RenderElementProp
         // case "code_inline":
         //     return <code key={key}>{node.children[0].text}</code>;
         case "lookup_inline": {
-            return <div className="inline-block" contentEditable={false}>
-                <LookupExpressionInput value={element.children[0].text} onChange={() => {}} className="inline-block w-auto min-w-[100px] md:min-w-[100px] border-none outline-blue-700 text-blue-800 before:content-['{'] after:content-['}'] before:opacity-50 after:opacity-50" />
-            </div>
+            return <InlineLookupEditableElement element={element} attributes={attributes} children={children} />;
         }
         case "strong":
             return <strong {...attributes}>{children}</strong>;

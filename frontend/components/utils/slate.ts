@@ -1,6 +1,6 @@
 import React from "react";
 import { api } from "lib/api-client";
-import { BaseEditor, createEditor } from "slate";
+import { BaseEditor, createEditor, Element, Node, Transforms } from "slate";
 import { ReactEditor, withReact } from "slate-react";
 import { HistoryEditor, withHistory } from 'slate-history'
 
@@ -54,13 +54,19 @@ export function useNeolaceSlateEditor(): NeolaceSlateEditor {
     // We need to use "useState" on the next line instead of "useMemo" due to https://github.com/ianstormtaylor/slate/issues/4081
     const [editor] = React.useState(() => createNeolaceSlateEditor());
 
+    // Teach the editor how we recognize inline vs. block elements
     editor.isInline = (element) => {
-        if (element.type !== "text" && "block" in element) {
+        if (element.type === "text") {
+            throw new Error("text is neither inline nor not.");
+        }
+        if ("block" in element) {
             return false;
         }
         return true;
     };
 
+    // Teach the editor which of our node types are "voids" (contain non-editable HTML,
+    // or use a special editor-within-an-editor as in the case of lookup values)
     const {isVoid} = editor;
     editor.isVoid = (element) => {
         if (element.type.startsWith("custom-void-")) {
@@ -72,6 +78,42 @@ export function useNeolaceSlateEditor(): NeolaceSlateEditor {
             default:
                 return isVoid(element);
         }
+    }
+
+    // Teach the editor how to normalize our tree to comply with Slate's rules
+    // https://docs.slatejs.org/concepts/11-normalizing
+    const { normalizeNode } = editor;
+    editor.normalizeNode = (entry) => {
+        const [node, path] = entry;
+    
+        // If the element has children, ensure that there is a text element before and after every inline
+        if (Element.isElement(node) && "children" in node && node.children) {
+            for (let i = 0; i < node.children.length; i++) {
+                const thisChild: Node = node.children[i];
+                if (thisChild.type === "text") {
+                    continue;
+                }
+                if (editor.isInline(thisChild)) {
+                    const prevChild: Node|undefined = node.children[i - 1];
+                    if (prevChild === undefined || prevChild.type !== "text") {
+                        // We need an empty text element to occur before this child
+                        // Because inlines are not allowed to be first nor adjacent to another inline
+                        Transforms.insertNodes(editor, {type: "text", text: ""}, { at: [...path, i] });
+                        return;  // We've made a fix; restart the whole normalization process (multi-pass normalization)
+                    }
+                    const nextChild: Node|undefined = node.children[i + 1];
+                    if (nextChild === undefined || nextChild.type !== "text") {
+                        // We need an empty text element to occur after this child
+                        // Because inlines are not allowed to be first nor adjacent to another inline
+                        Transforms.insertNodes(editor, {type: "text", text: ""}, { at: [...path, i + 1] });
+                        return;  // We've made a fix; restart the whole normalization process (multi-pass normalization)
+                    }
+                }
+            }
+        }
+    
+        // Fall back to the original `normalizeNode` to enforce other constraints.
+        normalizeNode(entry);
     }
 
     return editor;
@@ -115,25 +157,47 @@ export function useForceUpdate(){
     });
 }
 
+export enum EscapeMode {
+    // When editing plain text like markdown source code or inline expressions, no escaping is required
+    PlainText = 0,
+    // When editing Markdown in the visual editor, we have to escape any markdown formatting
+    MDT = 1,
+}
+
 /**
- * When using slate to edit plain text, such as the source code of Markdown or a lookup expression, use this to
- * convert from the Slate document tree back to the plain text string.
+ * Convert a Slate document back to MDT/lookup expression.
+ * This works for documents being edited visually as well as for when using
+ * the editor to edit plain text code with only text elements and paragraphs.
+ * 
+ * If using this to edit plain text (MDT/markdown, lookup expressions, etc.)
+ * set escape to "no-escape"; otherwise set it false so that text will be escaped correctly.
  */
-export function slateDocToStringValue(node: NeolaceSlateElement[]): string {
+export function slateDocToStringValue(node: NeolaceSlateElement[], escape: EscapeMode): string {
     let result = "";
     for (const n of node) {
         if ("text" in n) {
-            result += n.text;
+            if (escape === EscapeMode.MDT) {
+                result += api.MDT.escapeText(n.text);
+            } else {
+                result += n.text;
+            }
         } else if (n.type === "paragraph") {
             if (result.length > 0) {
                 result += "\n";
             }
-            result += slateDocToStringValue(n.children);
+            result += slateDocToStringValue(n.children, escape);
+        } else if (n.type === "link") {
+            result += `[` + slateDocToStringValue(n.children, escape) + `](${n.href})`;
+        } else if (n.type === "strong") {
+            result += `**` + slateDocToStringValue(n.children, escape) + `**`;
+        } else if (n.type === "em") {
+            result += `_` + slateDocToStringValue(n.children, escape) + `_`;
+        } else if (n.type === "lookup_inline") {
+            result += `{ ` + slateDocToStringValue(n.children, EscapeMode.PlainText) + ` }`;
         } else if (n.type === "custom-void-property") {
             result += `[[/prop/${(n as VoidPropNode).propertyId}]]`;
         } else {
-            // deno-lint-ignore no-explicit-any
-            console.error(`sdtv: unexpected node in slate doc: ${(node as any).type}`);
+            throw new Error(`sdtv: unexpected node in slate doc: ${n.type}`);
         }
     }
     return result;
@@ -166,10 +230,15 @@ function cleanMdtNodeForSlate(node: api.MDT.Node): api.MDT.Node[] {
 
 export function parseMdtStringToSlateDoc(mdt: string, inline?: boolean): NeolaceSlateElement[] {
     if (inline) {
+        let children = cleanMdtNodeForSlate(api.MDT.tokenizeInlineMDT(mdt));
+        if (children.length === 0) {
+            // We always have to have at least one text child:
+            children = [{type: "text", text: ""}];
+        }
         return [{
             type: "paragraph",
             block: true,
-            children: cleanMdtNodeForSlate(api.MDT.tokenizeInlineMDT(mdt)),
+            children,
         }];
     } else {
         throw new Error("Block-level MDT editing is not yet supported.");

@@ -118,7 +118,7 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
  * React hook to evaluate a lookup expression
  * @returns 
  */
- export function useLookupExpression(expr: string, options: {entryId?: VNID} = {}): {result: EvaluateLookupData|undefined, error: ApiError} {
+export function useLookupExpression(expr: string, options: {entryId?: VNID} = {}): {result: EvaluateLookupData|undefined, error: ApiError} {
     const {site} = useSiteData();
     // TODO: include an entry revision number in this ID
     const key = `lookup:${site.shortId}:${options.entryId ?? 'none'}:no-draft:${expr}`;
@@ -147,7 +147,7 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
  * React hook to get the current site's schema
  * @returns 
  */
- export function useSiteSchema(): [data: api.SiteSchemaData|undefined, error: ApiError|undefined] {
+export function useSiteSchema(): [data: api.SiteSchemaData|undefined, error: ApiError|undefined] {
     const {site, siteError} = useSiteData();
 
     const key = `siteSchema:${site.shortId}:no-draft`;
@@ -170,7 +170,7 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
  * React hook to get the currently published version of an entry, to use as a basis for making edits.
  * @returns 
  */
- export function useEditableEntry(entryId: VNID): [data: api.EditableEntryData|undefined, error: ApiError|undefined, mutate: KeyedMutator<api.EditableEntryData|undefined>] {
+export function useEditableEntry(entryId: VNID): [data: api.EditableEntryData|undefined, error: ApiError|undefined, mutate: KeyedMutator<api.EditableEntryData|undefined>] {
     const {site, siteError} = useSiteData();
 
     const key = `entry:${site.shortId}:no-draft:${entryId}`;
