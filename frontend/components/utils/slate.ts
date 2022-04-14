@@ -1,4 +1,4 @@
-import React, { Children } from "react";
+import React from "react";
 import { api } from "lib/api-client";
 import { BaseEditor, createEditor, Element, Node, Transforms } from "slate";
 import { ReactEditor, withReact } from "slate-react";

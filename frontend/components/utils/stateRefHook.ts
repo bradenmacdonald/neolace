@@ -14,7 +14,7 @@ export function useStateRef<ValueType>(initialValue: ValueType): readonly [Value
   
     const ref = React.useRef(value);
   
-    // deno-lint-ignore-lint no-explicit-any
+    // deno-lint-ignore no-explicit-any
     const setValue: React.Dispatch<React.SetStateAction<ValueType>> = React.useCallback((newValue: any) => {
         if (typeof newValue === "function") {
             const oldValue = ref.current;
