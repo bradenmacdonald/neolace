@@ -40,7 +40,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
     const intl = useIntl();
     const renderLeaf = React.useCallback(props => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
-    const [sourceMode, setSourceMode] = React.useState(true);
+    const [sourceMode, setSourceMode] = React.useState(false);
     const toggleSourceMode = React.useCallback(() => setSourceMode(prevMode => !prevMode), []);
     const [lastSourceMode, updateLastSourceMode] = React.useState(sourceMode);
 
@@ -127,6 +127,13 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
         }
     }, [isActive, wasActive, sourceMode, props.onFocus, props.onBlur]);
 
+    // Edit commands:
+    const insertLookupExpression = React.useCallback(() => {
+        const selectedText = editor.selection ? Editor.string(editor, editor.selection) : "";
+        const newNode: Descendant = sourceMode ? {type: "text", text: `{ ${selectedText} }`} : { type: "lookup_inline", children: [{ type: "text", text: selectedText }] };
+        Transforms.insertNodes(editor, newNode);
+    }, [editor, sourceMode]);
+
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={emptyDocument} onChange={handleChange}>
         <div
@@ -136,10 +143,15 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             {/* The Toolbar */}
             <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
                 <ToolbarButton
+                    onClick={insertLookupExpression}
+                    title={intl.formatMessage({id: "ui.component.mdtEditor.toolbar.insertLookup", defaultMessage: "Insert lookup expression"})}
+                    icon="braces-asterisk"
+                />
+                <ToolbarButton
                     enabled={sourceMode}
                     onClick={toggleSourceMode}
-                    title={intl.formatMessage({id: "ui.component.mdtEditor.toolbar.sourceMode", defaultMessage: "Source mode"})}
-                    icon="braces-asterisk"
+                    title={intl.formatMessage({id: "ui.component.mdtEditor.toolbar.sourceMode", defaultMessage: "Edit source"})}
+                    icon="code"
                 />
             </div>
             {/* The Slate.js Editor textarea */}
