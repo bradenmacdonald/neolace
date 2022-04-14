@@ -110,6 +110,22 @@ jobs:
         if: always()
         run: docker-compose -f "docker-compose.yml" down
 
+  test-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: ${{ env.deno-version }}
+
+      - name: Run tests (neolace-api)
+        run: deno test
+        working-directory: ./neolace-api
+
   ######################################################################################################################
   ## Build & Publish Docker Images
   ######################################################################################################################

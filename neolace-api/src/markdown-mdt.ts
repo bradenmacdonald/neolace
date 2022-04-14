@@ -359,19 +359,15 @@ export function renderToPlainText(node: RootNode, {lookupToText = (lookup: strin
 }
 
 
-const inlineEscapeData: [bad: string|RegExp, good: string][]  = [
+const escapeData: [bad: string|RegExp, good: string][]  = [
     ["*", "\\*"],
-    // ["#", "\\#"],
-    ["/", "\\/"],
-    ["(", "\\("],
-    [")", "\\)"],
-    ["[", "\\["],
+    ["[", "\\["],  // Escape possible links and footnotes
     ["]", "\\]"],
     ["{", "\\{"],
     ["}", "\\}"],
     ["_", "\\_"],
-];
-const blockEscapeData: [bad: string|RegExp, good: string][] = [
+    ["~", "\\~"], // Subscript
+    ["^", "\\^"], // Superscript
     [/^#/g, "\\#"],
     [/^>/g, "\\>"],
 ];
@@ -379,14 +375,9 @@ const blockEscapeData: [bad: string|RegExp, good: string][] = [
 /**
  * Given some plain text, escape it so that it can be used in an MDT document.
  */
-export function escape(text: string, inlineOnly = false): string {
-    for (const [bad, good] of inlineEscapeData) {
+export function escapeText(text: string): string {
+    for (const [bad, good] of escapeData) {
         text = text.replaceAll(bad, good);
-    }
-    if (!inlineOnly) {
-        for (const [bad, good] of blockEscapeData) {
-            text = text.replaceAll(bad, good);
-        }
     }
     return text;
 }

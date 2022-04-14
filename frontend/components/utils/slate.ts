@@ -135,7 +135,7 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
     for (const n of node) {
         if ("text" in n) {
             if (escape === EscapeMode.MDT) {
-                result += api.MDT.escape(n.text);
+                result += api.MDT.escapeText(n.text);
             } else {
                 result += n.text;
             }
