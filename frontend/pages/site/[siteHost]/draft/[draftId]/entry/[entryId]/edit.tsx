@@ -44,17 +44,14 @@ const DraftEntryEditPage: NextPage = function(_props) {
     const entryType = schema?.entryTypes?.[entry?.entryType.id ?? ""];
 
     const updateEntryName = React.useCallback((name: string) => {
-        if (!baseEntry) {
-            return;
-        }
-        addUnsavedEdit({
-            code: api.SetEntryName.code,
-            data: {
-                entryId: baseEntry?.id,
-                name,
-            },
-        });
-    }, [baseEntry, addUnsavedEdit])
+        if (!baseEntry) { return; }
+        addUnsavedEdit({ code: api.SetEntryName.code, data: { entryId: baseEntry.id, name } });
+    }, [baseEntry, addUnsavedEdit]);
+
+    const updateEntryDescription = React.useCallback((description: string) => {
+        if (!baseEntry) { return; }
+        addUnsavedEdit({ code: api.SetEntryDescription.code, data: { entryId: baseEntry.id, description } });
+    }, [baseEntry, addUnsavedEdit]);
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour/>;
@@ -73,7 +70,9 @@ const DraftEntryEditPage: NextPage = function(_props) {
             leftNavTopSlot={[]}
         >
 
-            <Link href={`/draft/${query.draftId}/entry/${query.entryId}/preview`}><a className="float-right text-sm">Preview</a></Link>
+            {/*
+                <Link href={`/draft/${query.draftId}/entry/${query.entryId}/preview`}><a className="float-right text-sm">Preview</a></Link>
+            */}
             <Breadcrumbs>
                 <Breadcrumb href={"/"}>New Draft</Breadcrumb>
                 <Breadcrumb href={entry ? `/entry/${entry.friendlyId}` : undefined}>{entry?.name ?? "Entry"}</Breadcrumb>
@@ -115,6 +114,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
 
                 <AutoControl
                     value={entry?.description ?? ""}
+                    onChangeFinished={updateEntryDescription}
                     id="description"
                     label={{id: "draft.entry.edit.description.label", defaultMessage: "Description"}}
                 >

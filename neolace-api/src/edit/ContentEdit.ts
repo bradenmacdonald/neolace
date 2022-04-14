@@ -55,6 +55,20 @@ export const SetEntryName = ContentEditType({
     describe: (data) => `Renamed \`Entry ${data.entryId}\` to "${data.name}"`,
 });
 
+export const SetEntryDescription = ContentEditType({
+    changeType: EditChangeType.Content,
+    code: "SetEntryDescription",
+    dataSchema: Schema({ entryId: vnidString, description: string, }),
+    apply: (baseEntry, data) => {
+        const updatedEntry = {...baseEntry}
+        if (baseEntry.id === data.entryId) {
+            updatedEntry.description = data.description;
+        }
+        return updatedEntry;
+    },
+    describe: (data) => `Edited description of \`Entry ${data.entryId}\``,
+});
+
 export const UpdateEntryArticleSchema = Schema({
     /** Replace the entire article text with this new text */
     articleMD: string.strictOptional(),
@@ -175,6 +189,7 @@ export const DeletePropertyValue = ContentEditType({
 export const _allContentEditTypes = {
     CreateEntry,
     SetEntryName,
+    SetEntryDescription,
     UpdateEntryFeature,
     AddPropertyValue,
     UpdatePropertyValue,
@@ -184,6 +199,7 @@ export const _allContentEditTypes = {
 export type AnyContentEdit = (
     | Edit<typeof CreateEntry>
     | Edit<typeof SetEntryName>
+    | Edit<typeof SetEntryDescription>
     | Edit<typeof UpdateEntryFeature>
     | Edit<typeof AddPropertyValue>
     | Edit<typeof UpdatePropertyValue>

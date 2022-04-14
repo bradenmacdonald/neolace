@@ -41,7 +41,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
     const renderLeaf = React.useCallback(props => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
     const [sourceMode, setSourceMode] = React.useState(true);
-    const toggleSourceMode = React.useCallback(() => setSourceMode(!sourceMode), [sourceMode, setSourceMode]);
+    const toggleSourceMode = React.useCallback(() => setSourceMode(prevMode => !prevMode), []);
     const [lastSourceMode, updateLastSourceMode] = React.useState(sourceMode);
 
     const [lastValueInternallySet, updateLastValueInternallySet] = React.useState<string|undefined>(undefined);
@@ -60,7 +60,6 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             // Update the editor:
             editor.children = sourceMode ? stringValueToSlateDoc(value) : parseMdtStringToSlateDoc(value, props.inlineOnly);
             updateLastValueInternallySet(value);
-            console.log("MDT Editor: value changed externally to", value);
         }
     }, [value, lastValueInternallySet, sourceMode, updateLastValueInternallySet]);
 
@@ -118,7 +117,6 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
                 if (!sourceMode) {
                     updateLastValueInternallySet(newValue);
                 }
-                console.log("MDT Editor handleBlur, new value is", newValue);
                 if (props.onChange) {
                     props.onChange(newValue);
                 }
@@ -128,7 +126,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             }
             setWasActive(isActive);
         }
-    }, [isActive, wasActive, setWasActive, props.onFocus, props.onBlur]);
+    }, [isActive, wasActive, props.onFocus, props.onBlur]);
 
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={emptyDocument} onChange={handleChange}>

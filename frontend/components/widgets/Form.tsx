@@ -1,3 +1,4 @@
+import { useStateRef } from 'components/utils/stateRefHook';
 import React from 'react';
 import { FormattedMessage, MessageDescriptor, useIntl } from 'react-intl';
 
@@ -52,14 +53,14 @@ interface AutoControlProps<ValueType> extends ControlProps {
  */
 export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
     // While the user is actively making edits, we track the value in state:
-    const [currentValue, setCurrentValue] = React.useState<ValueType>(props.value);
+    const [currentValue, setCurrentValue, currentValueRef] = useStateRef<ValueType>(props.value);
     const [isCurrentlyEditing, setCurrentlyEditing] = React.useState(false);
 
     React.useEffect(() => {
         // Whenever 'props.value' is changed externally or when we finish editing and blur off, we need to reset our
         // internal "current" value to match the props.value.
         setCurrentValue(props.value);
-    }, [props.value, isCurrentlyEditing, setCurrentValue]);
+    }, [props.value, isCurrentlyEditing]);
 
     const handleChange: React.ChangeEventHandler = React.useCallback((eventOrValue: ValueType|React.ChangeEvent) => {
         if (typeof eventOrValue === "object" && (eventOrValue as React.ChangeEvent).target) {
@@ -68,18 +69,19 @@ export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
         } else {
             setCurrentValue(eventOrValue as ValueType);
         }
-    }, [setCurrentValue]);
+    }, []);
 
     const handleFocus: React.ChangeEventHandler = React.useCallback(() => {
         setCurrentlyEditing(true);
-    }, [setCurrentlyEditing]);
+    }, []);
 
     const handleBlur: React.ChangeEventHandler = React.useCallback(() => {
-        if (props.onChangeFinished && currentValue !== props.value) {
-            props.onChangeFinished(currentValue);
+        const value = currentValueRef.current;
+        if (props.onChangeFinished && value !== props.value) {
+            props.onChangeFinished(value);
         }
         setCurrentlyEditing(false);
-    }, [props.onChangeFinished, currentValue, setCurrentlyEditing]);
+    }, [props.onChangeFinished, currentValueRef]);
 
     const childInput = React.cloneElement(props.children, {
         value: isCurrentlyEditing ? currentValue : props.value,
