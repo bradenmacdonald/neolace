@@ -1,6 +1,6 @@
-import React from "react";
+import React, { Children } from "react";
 import { api } from "lib/api-client";
-import { BaseEditor, createEditor } from "slate";
+import { BaseEditor, createEditor, Element, Node, Transforms } from "slate";
 import { ReactEditor, withReact } from "slate-react";
 import { HistoryEditor, withHistory } from 'slate-history'
 
@@ -54,13 +54,19 @@ export function useNeolaceSlateEditor(): NeolaceSlateEditor {
     // We need to use "useState" on the next line instead of "useMemo" due to https://github.com/ianstormtaylor/slate/issues/4081
     const [editor] = React.useState(() => createNeolaceSlateEditor());
 
+    // Teach the editor how we recognize inline vs. block elements
     editor.isInline = (element) => {
-        if (element.type !== "text" && "block" in element) {
+        if (element.type === "text") {
+            throw new Error("text is neither inline nor not.");
+        }
+        if ("block" in element) {
             return false;
         }
         return true;
     };
 
+    // Teach the editor which of our node types are "voids" (contain non-editable HTML,
+    // or use a special editor-within-an-editor as in the case of lookup values)
     const {isVoid} = editor;
     editor.isVoid = (element) => {
         if (element.type.startsWith("custom-void-")) {
@@ -72,6 +78,42 @@ export function useNeolaceSlateEditor(): NeolaceSlateEditor {
             default:
                 return isVoid(element);
         }
+    }
+
+    // Teach the editor how to normalize our tree to comply with Slate's rules
+    // https://docs.slatejs.org/concepts/11-normalizing
+    const { normalizeNode } = editor;
+    editor.normalizeNode = (entry) => {
+        const [node, path] = entry;
+    
+        // If the element has children, ensure that there is a text element before and after every inline
+        if (Element.isElement(node) && "children" in node && node.children) {
+            for (let i = 0; i < node.children.length; i++) {
+                const thisChild: Node = node.children[i];
+                if (thisChild.type === "text") {
+                    continue;
+                }
+                if (editor.isInline(thisChild)) {
+                    const prevChild: Node|undefined = node.children[i - 1];
+                    if (prevChild === undefined || prevChild.type !== "text") {
+                        // We need an empty text element to occur before this child
+                        // Because inlines are not allowed to be first nor adjacent to another inline
+                        Transforms.insertNodes(editor, {type: "text", text: ""}, { at: [...path, i] });
+                        return;  // We've made a fix; restart the whole normalization process (multi-pass normalization)
+                    }
+                    const nextChild: Node|undefined = node.children[i + 1];
+                    if (nextChild === undefined || nextChild.type !== "text") {
+                        // We need an empty text element to occur after this child
+                        // Because inlines are not allowed to be first nor adjacent to another inline
+                        Transforms.insertNodes(editor, {type: "text", text: ""}, { at: [...path, i + 1] });
+                        return;  // We've made a fix; restart the whole normalization process (multi-pass normalization)
+                    }
+                }
+            }
+        }
+    
+        // Fall back to the original `normalizeNode` to enforce other constraints.
+        normalizeNode(entry);
     }
 
     return editor;

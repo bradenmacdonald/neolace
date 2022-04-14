@@ -47,6 +47,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
     const [lastValueInternallySet, updateLastValueInternallySet] = React.useState<string|undefined>(undefined);
     const rootDiv = React.useRef<HTMLDivElement>(null);
 
+    // This effect is used to handle the situation where our parent element changes props.value.
     React.useEffect(() => {
         if (value !== lastValueInternallySet) {
             // props.value has changed externally (not via changes within the Slate editor).
@@ -63,7 +64,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
         }
     }, [value, lastValueInternallySet, sourceMode]);
 
-
+    // This effect is used to handle toggling between "visual mode" (WYSIWYG) and "source mode" (edit the plain MDT/markdown)
     React.useEffect(() => {
         if (sourceMode !== lastSourceMode) {
             if (sourceMode) {
@@ -79,6 +80,8 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             } else {
                 // We have turned source mode off; update the visual editor's document accordingly.
                 editor.children = parseMdtStringToSlateDoc(value, props.inlineOnly);
+                // To avoid editing issues, we need to normalize the tree according to Slate rules:
+                Editor.normalize(editor, {force: true});
             }
             updateLastSourceMode(sourceMode);
         }
@@ -109,7 +112,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
                 props.onFocus();
             } else if (!isActive) {
                 // The user has blurred this editor. Notify our parent if it is interested.
-                const newValue = slateDocToStringValue(editor.children, EscapeMode.MDT);
+                const newValue = slateDocToStringValue(editor.children, sourceMode ? EscapeMode.PlainText : EscapeMode.MDT);
                 if (!sourceMode) {
                     updateLastValueInternallySet(newValue);
                 }
@@ -122,7 +125,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             }
             setWasActive(isActive);
         }
-    }, [isActive, wasActive, props.onFocus, props.onBlur]);
+    }, [isActive, wasActive, sourceMode, props.onFocus, props.onBlur]);
 
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={emptyDocument} onChange={handleChange}>
@@ -177,7 +180,7 @@ function useSmartFocusAwareness(rootElement: HTMLDivElement|null) {
         // The user has clicked somewhere. If the click was inside the element, we are active.
         // If the click was outside, we are definitely inactive.
         setIsActive(rootElement ? rootElement.contains(event.target as Node) : false);
-    }, [rootElement, setIsActive]);
+    }, [rootElement]);
 
     React.useEffect(() => {
         document.addEventListener("mousedown", handleClick);
@@ -195,7 +198,7 @@ function useSmartFocusAwareness(rootElement: HTMLDivElement|null) {
             return; // Inconclusive
         }
         setIsActive(rootElement?.contains(document.activeElement) ?? false);
-    }, [rootElement, setIsActive]);
+    }, [rootElement]);
 
     React.useEffect(() => {
         document.addEventListener("focusin", handleFocus);
