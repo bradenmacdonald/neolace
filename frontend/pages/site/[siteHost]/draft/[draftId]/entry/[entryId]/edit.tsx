@@ -3,7 +3,7 @@ import { NextPage } from 'next';
 import { useIntl } from 'react-intl';
 import { api, useEditableEntry, useSiteData, useSiteSchema } from 'lib/api-client';
 
-import { SitePage } from 'components/SitePage';
+import { DefaultSiteTitle, SitePage } from 'components/SitePage';
 import FourOhFour from 'pages/404';
 import { ErrorMessage } from 'components/widgets/ErrorMessage';
 import { Breadcrumb, Breadcrumbs } from 'components/widgets/Breadcrumbs';
@@ -60,7 +60,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
     } else if (entryError instanceof api.NotFound) {
         return <FourOhFour/>
     } else if (entryError) {
-        return <ErrorMessage>{String(siteError)}</ErrorMessage>;
+        return <SitePage title={DefaultSiteTitle} sitePreloaded={null}><ErrorMessage>{String(entryError)}</ErrorMessage></SitePage>;
     }
 
     return (
