@@ -9,12 +9,12 @@
  * it is recommended that you create a wrapper script for each realm that you administer.
  */
 import * as api from "./src/index.ts";
-import * as log from "https://deno.land/std@0.120.0/log/mod.ts";
-// import { parse as parseArgs } from "https://deno.land/std@0.120.0/flags/mod.ts";
-import { parse as parseYaml, stringify as stringifyYaml, } from "https://deno.land/std@0.120.0/encoding/yaml.ts";
-import { readAll } from "https://deno.land/std@0.120.0/streams/conversion.ts";
+import * as log from "https://deno.land/std@0.135.0/log/mod.ts";
+// import { parse as parseArgs } from "https://deno.land/std@0.135.0/flags/mod.ts";
+import { parse as parseYaml, stringify as stringifyYaml, } from "https://deno.land/std@0.135.0/encoding/yaml.ts";
+import { readAll } from "https://deno.land/std@0.135.0/streams/conversion.ts";
 import { VNID } from "https://raw.githubusercontent.com/neolace-dev/vertex-framework/f5e5a577518307d609ded1e16aa7f1fe1cb02b64/vertex/lib/types/vnid.ts";
-import { assertEquals } from "https://deno.land/std@0.120.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.135.0/testing/asserts.ts";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Usage instructions
