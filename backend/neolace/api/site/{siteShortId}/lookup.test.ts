@@ -1,7 +1,7 @@
 import {
     api,
-    assert,
     assertEquals,
+    assertInstanceOf,
     assertRejects,
     getClient,
     group,
@@ -78,7 +78,7 @@ group(import.meta, () => {
         await assertRejects(async () => {
             await client.evaluateLookupExpression("this won't parse.");
         }, (err: unknown) => {
-            assert(err instanceof api.InvalidRequest);
+            assertInstanceOf(err, api.InvalidRequest);
             assertEquals(err.reason, api.InvalidRequestReason.LookupExpressionParseError);
         });
     });

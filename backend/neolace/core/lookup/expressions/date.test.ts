@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { assert, assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
+import { assertEquals, assertInstanceOf, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { graph } from "neolace/core/graph.ts";
 import { DateValue, StringValue } from "../values.ts";
 import { DateExpression } from "./date.ts";
@@ -18,7 +18,7 @@ group(import.meta, () => {
             async function checkString(dateStr: string, expected?: string) {
                 const expr = new DateExpression(new LiteralExpression(new StringValue(dateStr)));
                 const value = await evalExpression(expr);
-                assert(value instanceof DateValue);
+                assertInstanceOf(value, DateValue);
                 assertEquals(value.asIsoString(), expected ?? dateStr);
             }
 

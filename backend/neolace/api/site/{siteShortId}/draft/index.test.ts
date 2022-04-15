@@ -3,6 +3,7 @@ import {
     api,
     assert,
     assertEquals,
+    assertInstanceOf,
     assertRejects,
     createUserWithPermissions,
     getClient,
@@ -105,7 +106,7 @@ group(import.meta, () => {
                 await assertRejects(
                     () => client.createDraft({ title: "", description: null, edits: [] }),
                     (err: Error) => {
-                        assert(err instanceof api.InvalidFieldValue);
+                        assertInstanceOf(err, api.InvalidFieldValue);
                         assertEquals(err.fieldErrors[0].fieldPath, "title");
                     },
                 );
@@ -127,7 +128,7 @@ group(import.meta, () => {
                             ],
                         }),
                     (err: Error) => {
-                        assert(err instanceof api.InvalidFieldValue);
+                        assertInstanceOf(err, api.InvalidFieldValue);
                         assertEquals(err.fieldErrors[0].fieldPath, "edits.0.code");
                     },
                 );
@@ -145,7 +146,7 @@ group(import.meta, () => {
                             ],
                         }),
                     (err: Error) => {
-                        assert(err instanceof api.InvalidFieldValue);
+                        assertInstanceOf(err, api.InvalidFieldValue);
                         assertEquals(err.fieldErrors[0].fieldPath, "edits.0.data");
                     },
                 );

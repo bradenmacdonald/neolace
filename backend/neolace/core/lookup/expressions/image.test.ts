@@ -1,6 +1,6 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
-import { assert, assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
+import { assertEquals, assertInstanceOf, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { EntryValue, ImageValue, IntegerValue, NullValue, PageValue, PropertyValue, StringValue } from "../values.ts";
 import { Image } from "./image.ts";
@@ -35,7 +35,7 @@ group(import.meta, () => {
 
             const result = await evalExpression(expression);
 
-            assert(result instanceof ImageValue);
+            assertInstanceOf(result, ImageValue);
             assertEquals(result.data, {
                 entryId: defaultData.entries.imgPonderosaTrunk.id,
                 altText: defaultData.entries.imgPonderosaTrunk.name,
@@ -95,10 +95,10 @@ group(import.meta, () => {
 
             const result = await evalExpression(expression, defaultData.entries.ponderosaPine.id);
 
-            assert(result instanceof PageValue);
-            assert(result.values[0] instanceof ImageValue);
+            assertInstanceOf(result, PageValue);
+            assertInstanceOf(result.values[0], ImageValue);
             assertEquals(result.values[0].data.entryId, defaultData.entries.imgPonderosaTrunk.id);
-            assert(result.sourceExpression instanceof ReverseProperty);
+            assertInstanceOf(result.sourceExpression, ReverseProperty);
             assertEquals(result.sourceExpressionEntryId, defaultData.entries.ponderosaPine.id);
         });
 
