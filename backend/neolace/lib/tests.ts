@@ -24,14 +24,18 @@ let level = 0;
  */
 export function group(name: string, tests: () => unknown) {
     if (level === 0) {
-        describe(name, () => {
-            afterAll(async () => {
-                await stopGraphDatabaseConnection();
-            });
-            level++;
-            tests();
-            level--;
-        });
+        describe(
+            name,
+            { sanitizeOps: false }, // TODO: leaving this enabled causes some occasional flaky sanitizer test failures. Is the Neo4j driver not properly closing the websocket every time?
+            () => {
+                afterAll(async () => {
+                    await stopGraphDatabaseConnection();
+                });
+                level++;
+                tests();
+                level--;
+            },
+        );
     } else {
         describe(name, { sanitizeOps: false, sanitizeResources: false }, () => {
             level++;
