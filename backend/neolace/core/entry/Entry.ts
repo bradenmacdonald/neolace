@@ -15,7 +15,7 @@ import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { PropertyFact } from "./PropertyFact.ts";
 
 /**
@@ -134,6 +134,7 @@ export function friendlyId(): DerivedProperty<string> {
 
 /** Cached helper function to look up an entry's siteId (Site VNID) */
 export const siteIdForEntryId = makeCachedLookup(async (entryId: VNID) => {
+    const graph = await getGraph();
     const result = (await graph.pullOne(Entry, (e) => e.type((et) => et.site((s) => s.id)), { key: entryId })).type
         ?.site?.id;
     if (!result) {

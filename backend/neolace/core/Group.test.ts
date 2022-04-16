@@ -1,14 +1,15 @@
 import { assertEquals, assertRejects, assertStrictEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { CreateGroup, Group, GroupMaxDepth, UpdateGroup } from "neolace/core/Group.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { VNodeKey } from "neolace/deps/vertex-framework.ts";
 
-group(import.meta, () => {
+group("Group.ts", () => {
     group("CreateGroup", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
         test(`Cannot create a group that doesn't belong to a site`, async () => {
+            const graph = await getGraph();
             await assertRejects(
                 () =>
                     graph.runAs(
@@ -24,6 +25,7 @@ group(import.meta, () => {
         });
 
         test(`Can create nested groups up to ${GroupMaxDepth} levels deep, but no more`, async () => {
+            const graph = await getGraph();
             assertEquals(GroupMaxDepth, 4);
 
             // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -96,6 +98,7 @@ group(import.meta, () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
         test(`Cannot move a group from one site to another`, async () => {
+            const graph = await getGraph();
             // Create a second site:
             const site2details = await graph.runAs(
                 defaultData.users.admin.id,

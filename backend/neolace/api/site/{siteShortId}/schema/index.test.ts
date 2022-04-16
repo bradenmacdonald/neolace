@@ -1,9 +1,9 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
 import { api, assertEquals, assertRejects, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
 
-group(import.meta, () => {
+group("schema/index.ts", () => {
     group("Site Schema API", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
@@ -20,6 +20,7 @@ group(import.meta, () => {
         });
 
         test("permissions for getting a site's schema", async () => {
+            const graph = await getGraph();
             // Get an API client as different users
             const adminClient = await getClient(defaultData.users.admin, defaultData.site.shortId);
             //const userClient = await getClient(defaultData.users.regularUser, defaultData.site.shortId);

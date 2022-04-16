@@ -1,7 +1,7 @@
 import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
@@ -9,13 +9,14 @@ import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { getEntryFeaturesData } from "../get-feature-data.ts";
 import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
 
-group(import.meta, () => {
+group("Files.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
     // Entry Type ID:
     const entryType = VNID();
 
     test("Can be added to schema, shows up on schema, can be removed from schema", async () => {
+        const graph = await getGraph();
         // Create a site and entry type:
         const { id: siteId } = await graph.runAsSystem(
             CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1" }),
@@ -80,6 +81,7 @@ group(import.meta, () => {
     });
 
     test("Can be set on an entry and loaded using getEntryFeaturesData()", async () => {
+        const graph = await getGraph();
         const entryId = VNID();
         // Create a site with an image entry type:
         const { id: siteId } = await graph.runAsSystem(

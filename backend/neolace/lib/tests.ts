@@ -2,8 +2,7 @@ import * as log from "std/log/mod.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 
 import { environment } from "neolace/app/config.ts";
-import { shutdown } from "neolace/app/shutdown.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph, stopGraphDatabaseConnection } from "neolace/core/graph.ts";
 import { CreateGroup, PermissionGrant } from "neolace/core/Group.ts";
 import { CreateBot, CreateUser } from "neolace/core/User.ts";
 import {
@@ -12,40 +11,38 @@ import {
     TestSetupData,
 } from "neolace/lib/tests-default-data.ts";
 
-import {
-    afterAll,
-    afterEach,
-    beforeAll,
-    beforeEach,
-    group as baseGroup,
-    test as baseTest,
-} from "neolace/deps/hooked.ts";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, it, ItDefinition } from "std/testing/bdd.ts";
 
 // Exports:
 export * from "std/testing/asserts.ts";
 export { afterAll, afterEach, beforeAll, beforeEach };
 
+let level = 0;
 /**
- * Helper to create a nice name for the base test group in a test suite file.
- *
- * Usage:
- *     group(import.meta, () => {
- *         group("UUIDv4", () => {
- *             test("parse and format a UUIDv4", () => {
- *                 // test code
- *
- * @param nameOrImportMeta A custom name for this group, or `import.meta` to auto-generate the name from the filename
+ * Helper to group all of the tests in a file. Will clean up the database handle
+ * after the tests are done, if needed, to avoid warnings about leaking websockets.
  */
-export function group(nameOrImportMeta: { url: string } | string, tests: () => unknown) {
-    if (typeof nameOrImportMeta === "string") {
-        return baseGroup(nameOrImportMeta, tests);
+export function group(name: string, tests: () => unknown) {
+    if (level === 0) {
+        describe(
+            name,
+            { sanitizeOps: false }, // TODO: leaving this enabled causes some occasional flaky sanitizer test failures. Is the Neo4j driver not properly closing the websocket every time?
+            () => {
+                afterAll(async () => {
+                    await stopGraphDatabaseConnection();
+                });
+                level++;
+                tests();
+                level--;
+            },
+        );
+    } else {
+        describe(name, { sanitizeOps: false, sanitizeResources: false }, () => {
+            level++;
+            tests();
+            level--;
+        });
     }
-    const url = nameOrImportMeta.url;
-    const idx = url.indexOf("/neolace/");
-    if (idx === -1) {
-        return baseGroup(url, tests);
-    }
-    return baseGroup(url.substr(idx + 1), tests);
 }
 
 // Override the test() function to disable the ops/resources sanitizers by default, as our beforeTest/afterTest code
@@ -53,10 +50,12 @@ export function group(nameOrImportMeta: { url: string } | string, tests: () => u
 function badArgs(): never {
     throw new Error("Invalid test definition");
 }
-export function test(t: Deno.TestDefinition): void;
+// deno-lint-ignore no-explicit-any
+export function test(t: ItDefinition<any>): void;
 export function test(name: string, fn: () => void | Promise<void>): void;
 export function test(
-    t: Deno.TestDefinition | string,
+    // deno-lint-ignore no-explicit-any
+    t: ItDefinition<any> | string,
     testFn?: () => void | Promise<void>,
 ): void {
     // Extract args
@@ -65,7 +64,7 @@ export function test(
         : (typeof testFn !== "undefined" ? { name: t, fn: testFn } : badArgs());
     opts.sanitizeOps = false;
     opts.sanitizeResources = false;
-    return baseTest({ name, fn, ...opts });
+    return it({ name, fn, ...opts });
 }
 
 let dataStr: string;
@@ -74,7 +73,7 @@ try {
 } catch (err) {
     log.error(err);
     log.info(
-        "Please run 'ENV_TYPE=test deno run --import-map=import_map.json --allow-write --allow-net --allow-env neolace/scripts/test-setup.ts'",
+        "Please run 'ENV_TYPE=test deno run --allow-write --allow-net --allow-env neolace/scripts/test-setup.ts'",
     );
     Deno.exit(1);
 }
@@ -85,11 +84,6 @@ if (environment !== "test") {
     log.error("Please run tests using ENV_TYPE=test");
     Deno.exit(1);
 }
-
-afterAll(async () => {
-    // Leave the data in the database from whatever test ran last, which is helpful for debugging.
-    await shutdown();
-});
 
 enum TestIsolationLevels {
     /**
@@ -117,11 +111,11 @@ type ReturnedData<T extends TestIsolationLevels> = T extends TestIsolationLevels
     : void;
 
 export async function resetDBToBlankSnapshot() {
-    await graph.resetDBToSnapshot(emptySnapshot);
+    await (await getGraph()).resetDBToSnapshot(emptySnapshot);
 }
 
 export async function resetDBToPlantDBSnapshot() {
-    await graph.resetDBToSnapshot(defaultDataSnapshot);
+    await (await getGraph()).resetDBToSnapshot(defaultDataSnapshot);
     // Unfortunately restoring the snapshot does not restore relationship IDs, which
     // we rely on as the only way to uniquely identify relationships.
     // Fix those now using this hack:
@@ -168,6 +162,7 @@ let _userCounter = 0; // A counter used by createUserWithPermissions
 export async function createUserWithPermissions(
     permissions: Set<PermissionGrant>,
 ): Promise<{ userId: VNID; groupId: VNID; userData: { bot: { authToken: string } } }> {
+    const graph = await getGraph();
     const userNumber = ++_userCounter;
     const username = `user${userNumber}`;
 

@@ -1,17 +1,19 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
 
-group(import.meta, () => {
+group("schema.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
-    const getSchema = (): Promise<SiteSchemaData> => graph.read((tx) => getCurrentSchema(tx, defaultData.site.id));
+    const getSchema = (): Promise<SiteSchemaData> =>
+        getGraph().then((graph) => graph.read((tx) => getCurrentSchema(tx, defaultData.site.id)));
 
     group("Schema Changes", () => {
         test("can add a new entry type.", async () => {
+            const graph = await getGraph();
             // First make sure the schema is empty
             assertEquals(await getSchema(), defaultData.schema);
 
@@ -42,6 +44,7 @@ group(import.meta, () => {
         });
 
         test("cannot add an entry type with the same ID as already exists for another site", async () => {
+            const graph = await getGraph();
             // Create another site:
             const site2 = await graph.runAsSystem(
                 CreateSite({ name: "Other Site", slugId: "site-other", domain: "other.neolace.net" }),

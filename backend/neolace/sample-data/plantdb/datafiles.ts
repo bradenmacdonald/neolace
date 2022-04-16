@@ -1,7 +1,7 @@
 import { EmptyResultError, VNID } from "neolace/deps/vertex-framework.ts";
 import { uploadFileToObjStore } from "neolace/core/objstore/objstore.ts";
 import { dirname, join as joinPath } from "std/path/mod.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 
 const thisFolder: string = (() => {
@@ -19,6 +19,7 @@ export function getFullPath(path: string) {
 }
 
 export async function ensureFilesExist() {
+    const graph = await getGraph();
     for (const f of Object.values(files)) {
         try {
             await graph.pullOne(DataFile, (df) => df.id, { key: f.id });

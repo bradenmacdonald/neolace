@@ -1,8 +1,8 @@
 import {
     api,
-    assert,
     assertArrayIncludes,
     assertEquals,
+    assertInstanceOf,
     assertRejects,
     getClient,
     group,
@@ -10,7 +10,7 @@ import {
     test,
 } from "neolace/api/tests.ts";
 
-group(import.meta, () => {
+group("index.ts", () => {
     group("Create a user account", () => {
         setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
@@ -49,7 +49,7 @@ group(import.meta, () => {
             await assertRejects(
                 () => client.registerHumanUser({ email: "jamie456@example.com" }),
                 (err: Error) => {
-                    assert(err instanceof api.InvalidRequest);
+                    assertInstanceOf(err, api.InvalidRequest);
                     assertEquals(err.message, "A user account is already registered with that email address.");
                     assertEquals(err.reason, api.InvalidRequestReason.EmailAlreadyRegistered);
                 },
@@ -63,7 +63,7 @@ group(import.meta, () => {
             await assertRejects(
                 () => client.registerHumanUser({ email: "jamie456@example.com", username: "jamie" }),
                 (err: Error) => {
-                    assert(err instanceof api.InvalidRequest);
+                    assertInstanceOf(err, api.InvalidRequest);
                     assertEquals(err.message, `The username "jamie" is already taken.`);
                     assertEquals(err.reason, api.InvalidRequestReason.UsernameAlreadyRegistered);
                 },
@@ -77,7 +77,7 @@ group(import.meta, () => {
                 // deno-lint-ignore no-explicit-any
                 () => client.registerHumanUser({ email: 1234 as any }),
                 (err: Error) => {
-                    assert(err instanceof api.InvalidFieldValue);
+                    assertInstanceOf(err, api.InvalidFieldValue);
                     assertEquals(err.fieldErrors, [{
                         fieldPath: "email",
                         message: `Expect value to be "string"`,
@@ -94,7 +94,7 @@ group(import.meta, () => {
             await assertRejects(
                 () => client.registerHumanUser({ email: "foobar" }),
                 (err: Error) => {
-                    assert(err instanceof api.InvalidFieldValue);
+                    assertInstanceOf(err, api.InvalidFieldValue);
                     assertEquals(err.fieldErrors, [{
                         fieldPath: "email",
                         message: `"foobar" is not a valid email address.`,
@@ -114,7 +114,7 @@ group(import.meta, () => {
                         username: " @LEX ",
                     }),
                 (err: Error) => {
-                    assert(err instanceof api.InvalidFieldValue);
+                    assertInstanceOf(err, api.InvalidFieldValue);
                     assertArrayIncludes(err.fieldErrors, [
                         /*
                         {

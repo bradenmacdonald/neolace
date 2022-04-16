@@ -1,7 +1,7 @@
 import { assertEquals, assertStrictEquals, group, test } from "neolace/lib/tests.ts";
 import { LruCache } from "neolace/lib/lru-cache.ts";
 
-group(import.meta, () => {
+group("lru-cache.ts", () => {
     test("Basic LRU cache test", () => {
         const cache = new LruCache<number, string>(3);
         [1, 2, 3, 4, 5].forEach((v) => cache.set(v, `v:${v}`));

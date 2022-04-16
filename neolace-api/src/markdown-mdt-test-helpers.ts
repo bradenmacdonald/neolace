@@ -1,4 +1,4 @@
-export { assertEquals } from "https://deno.land/std@0.120.0/testing/asserts.ts";
+export { assertEquals } from "https://deno.land/std@0.135.0/testing/asserts.ts";
 import type { AnyInlineNode, InlineNode, TopLevelNode } from "./markdown-mdt-ast.ts";
 import type { Node, RootNode } from "./markdown-mdt.ts";
 

@@ -1,6 +1,6 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import {
     InlineMarkdownStringValue,
     IntegerValue,
@@ -14,14 +14,18 @@ import { LookupExpression } from "../expression.ts";
 import { This } from "./this.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 
-group(import.meta, () => {
+group("reverse.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const siteId = defaultData.site.id;
     const cone = defaultData.entries.cone.id;
     const seedCone = defaultData.entries.seedCone.id;
     const pollenCone = defaultData.entries.pollenCone.id;
     const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        graph.read((tx) => expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete()));
+        getGraph().then((graph) =>
+            graph.read((tx) =>
+                expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
+            )
+        );
 
     // Literal expressions referencing some properties in the default PlantDB data set:
     const partIsAPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._partIsAPart.id));

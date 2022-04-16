@@ -7,7 +7,7 @@ import { EmptyResultError, FieldValidationError, SYSTEM_VNID, VNID } from "neola
 import * as api from "neolace/deps/neolace-api.ts";
 import { PathError } from "neolace/deps/computed-types.ts";
 
-import { getGraph, graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { Check, CheckContext, permissions } from "neolace/core/permissions.ts";
 import { siteCodeForSite, siteIdFromShortId } from "neolace/core/Site.ts";
 
@@ -345,4 +345,4 @@ function convertStandardErrors(err: Error): void {
     }
 }
 
-export { api, Drash, getGraph, graph, log, permissions };
+export { api, Drash, getGraph, log, permissions };

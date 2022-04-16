@@ -1,6 +1,6 @@
 import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
-import { assert, assertEquals, assertRejects, beforeAll, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { assert, assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { EntryValue, FileValue, IntegerValue, PageValue } from "../values.ts";
 import { Files } from "./files.ts";
 import { LiteralExpression } from "./literal-expr.ts";
@@ -10,17 +10,19 @@ import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { CreateDataFile, DataFile } from "../../objstore/DataFile.ts";
 import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
 
-group(import.meta, () => {
+group("files.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        graph.read((tx) => expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete()));
     const siteId = defaultData.site.id;
-
-    beforeAll(async () => {
-    });
+    const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
+        getGraph().then((graph) =>
+            graph.read((tx) =>
+                expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
+            )
+        );
 
     group("files()", () => {
         test(`It gives data about the files associated with an entry`, async () => {
+            const graph = await getGraph();
             ////////////////////////////////////////////////////////////////////////////
             // Create an entry to use for this test:
             const entryType = VNID();

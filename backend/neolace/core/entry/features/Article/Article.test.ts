@@ -2,19 +2,20 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 
 import { dedent } from "neolace/lib/dedent.ts";
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { getEntryFeatureData } from "../get-feature-data.ts";
 
-group(import.meta, () => {
+group("Article.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
     // Entry Type IDs:
     const entryType = VNID();
 
     test("Can be added to schema, shows up on schema, can be removed from schema", async () => {
+        const graph = await getGraph();
         // Create a site with one entry type:
         const { id: siteId } = await graph.runAsSystem(
             CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1" }),
@@ -79,6 +80,7 @@ group(import.meta, () => {
     });
 
     test("Can be set on an entry and loaded using getEntryFeatureData()", async () => {
+        const graph = await getGraph();
         const entryId = VNID();
         // Create a site with an entry type that has the article feature::
         const { id: siteId } = await graph.runAsSystem(

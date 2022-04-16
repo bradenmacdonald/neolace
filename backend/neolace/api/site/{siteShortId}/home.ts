@@ -1,4 +1,4 @@
-import { api, graph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
 import { Site } from "neolace/core/Site.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 import { CachedLookupContext } from "neolace/core/lookup/context.ts";
@@ -10,6 +10,7 @@ export class SiteHomeResource extends NeolaceHttpResource {
         responseSchema: api.SiteHomePageSchema,
         description: "Get the home page content for the specified site",
     }, async ({ request }) => {
+        const graph = await getGraph();
         // Permissions and parameters:
         await this.requirePermission(request, permissions.CanViewHomePage);
         const { siteId } = await this.getSiteDetails(request);
