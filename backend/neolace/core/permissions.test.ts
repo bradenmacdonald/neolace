@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertThrows, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { AccessMode, Site, UpdateSite } from "neolace/core/Site.ts";
 import {
     AllOf,
@@ -16,7 +16,7 @@ import { VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { CreateBot } from "neolace/core/User.ts";
 import { PermissionGrant, UpdateGroup } from "neolace/core/Group.ts";
 
-group(import.meta, () => {
+group("Site.ts", () => {
     group("basic permissions tests", () => {
         const TrueCheck: Check = () => true;
         const FalseCheck: Check = () => false;
@@ -52,10 +52,13 @@ group(import.meta, () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
         const check = (check: Check, userId?: VNID): Promise<boolean> => {
-            return graph.read(async (tx) => await check({ tx, siteId: defaultData.site.id, userId }));
+            return getGraph().then((graph) =>
+                graph.read(async (tx) => await check({ tx, siteId: defaultData.site.id, userId }))
+            );
         };
 
         test(`site access mode checks`, async () => {
+            const graph = await getGraph();
             const siteId = defaultData.site.id;
             const initialSite = await graph.pullOne(Site, (s) => s.accessMode, { key: siteId });
 
@@ -93,6 +96,7 @@ group(import.meta, () => {
 
         test(`bot user permissions - inheriting from owner user`, async () => {
             // A bot user can optionally inherit permissions from its owner
+            const graph = await getGraph();
 
             const inheritingBot = await graph.runAsSystem(CreateBot({
                 ownedByUser: defaultData.users.admin.id,

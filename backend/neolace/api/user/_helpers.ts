@@ -1,4 +1,4 @@
-import { api, Drash, graph, log } from "neolace/api/mod.ts";
+import { api, Drash, getGraph, log } from "neolace/api/mod.ts";
 import { BotUser, HumanUser, User } from "neolace/core/User.ts";
 import { isVNID, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 
@@ -19,6 +19,7 @@ export async function getPublicUserData(
         };
     }
 
+    const graph = await getGraph();
     const key = isVNID(usernameOrVNID) ? usernameOrVNID : User.slugIdPrefix + usernameOrVNID; // The user's VNID or slugId
 
     // TODO: Create a Vertex Framework Proxy object that allows loading either a Human or a Bot

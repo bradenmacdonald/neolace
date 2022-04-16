@@ -8,11 +8,11 @@ import {
     setTestIsolation,
     test,
 } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite, Site, testExports } from "neolace/core/Site.ts";
 import { CreateUser } from "neolace/core/User.ts";
 
-group(import.meta, () => {
+group("Site.ts", () => {
     group("site codes - siteCodeFromNumber", () => {
         const { siteCodeFromNumber, siteCodesMaxCount } = testExports;
 
@@ -51,6 +51,7 @@ group(import.meta, () => {
         // for things that are easier to test at this level (like specific site code tests)
 
         test("Can create a Site with a specific values, including site code", async () => {
+            const graph = await getGraph();
             const result = await graph.runAsSystem(
                 CreateSite({ name: "Test Site", siteCode: "ABC10", slugId: "site-test1", domain: "test.neolace.net" }),
             );
@@ -62,6 +63,7 @@ group(import.meta, () => {
         });
 
         test("Cannot create two sites with the same site code", async () => {
+            const graph = await getGraph();
             const result = await graph.runAsSystem(
                 CreateSite({ name: "Test Site", siteCode: "ABC10", slugId: "site-test1", domain: "test.neolace.net" }),
             );
@@ -82,6 +84,7 @@ group(import.meta, () => {
         });
 
         test("Can create Sites with auto-generated random site code", async () => {
+            const graph = await getGraph();
             const result1 = await graph.runAsSystem(
                 CreateSite({ name: "Test Site 1", slugId: "site-test1", domain: "test1.neolace.net" }),
             );
@@ -111,6 +114,7 @@ group(import.meta, () => {
         });
 
         test("Can create Sites with a default administrators group", async () => {
+            const graph = await getGraph();
             // Create a user:
             const jamie = await graph.runAsSystem(CreateUser({
                 email: "jamie@neolace.net",

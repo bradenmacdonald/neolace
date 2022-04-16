@@ -9,7 +9,7 @@ import {
     test,
 } from "neolace/api/tests.ts";
 
-group(import.meta, () => {
+group("lookup.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
 
     test("It can evaluate a lookup of a simple property", async () => {

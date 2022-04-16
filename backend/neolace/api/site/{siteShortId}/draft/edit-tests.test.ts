@@ -10,7 +10,7 @@ import {
 } from "neolace/api/tests.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 
-group(import.meta, () => {
+group("edit tests", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
     group("Setting a property value", () => {

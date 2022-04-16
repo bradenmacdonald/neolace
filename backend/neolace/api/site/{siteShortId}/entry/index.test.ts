@@ -9,7 +9,7 @@ import {
     test,
 } from "neolace/api/tests.ts";
 
-group(import.meta, () => {
+group("entry/index.ts", () => {
     group("Get entries list API", () => {
         // These tests are read-only so don't need isolation, but do use the default plantDB example data:
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);

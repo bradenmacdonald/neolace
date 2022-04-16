@@ -12,7 +12,7 @@ import { First } from "./first.ts";
 import { parseLookupString } from "../parse.ts";
 import { ReverseProperty } from "./reverse.ts";
 
-group(import.meta, () => {
+group("image.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
         getGraph().then((graph) =>

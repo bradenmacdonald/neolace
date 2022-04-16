@@ -15,7 +15,7 @@ import {
 import * as V from "./values.ts";
 import { parseLookupString } from "./parse.ts";
 
-group(import.meta, () => {
+group("parse.ts", () => {
     // These tests just test parsing, so they don't use the database at all.
     setTestIsolation(setTestIsolation.levels.BLANK_NO_ISOLATION);
 

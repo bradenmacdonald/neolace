@@ -7,7 +7,7 @@ import { List } from "./list-expr.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { LookupExpression } from "../expression.ts";
 
-group(import.meta, () => {
+group("slice.ts", () => {
     // These tests are read-only so don't need isolation, but do use the default plantDB example data:
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const siteId = defaultData.site.id;

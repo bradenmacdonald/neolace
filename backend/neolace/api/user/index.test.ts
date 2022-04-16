@@ -10,7 +10,7 @@ import {
     test,
 } from "neolace/api/tests.ts";
 
-group(import.meta, () => {
+group("index.ts", () => {
     group("Create a user account", () => {
         setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 

@@ -10,7 +10,7 @@ import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { getEntryFeatureData } from "../get-feature-data.ts";
 import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
 
-group(import.meta, () => {
+group("HeroImage.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
     // Entry Type IDs:

@@ -1,4 +1,4 @@
-import { adaptErrors, api, graph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { adaptErrors, api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
 import { CreateDraft } from "neolace/core/edit/Draft.ts";
 import { getDraft } from "./_helpers.ts";
 
@@ -10,6 +10,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
         responseSchema: api.DraftSchema,
         description: "Create a new draft",
     }, async ({ request, bodyData }) => {
+        const graph = await getGraph();
         // Permissions and parameters:
         await this.requirePermission(request, permissions.CanCreateDraft);
         const { siteId } = await this.getSiteDetails(request);

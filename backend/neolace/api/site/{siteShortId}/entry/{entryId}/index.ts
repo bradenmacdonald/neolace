@@ -1,4 +1,4 @@
-import { api, graph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
 import { getEntry } from "neolace/api/site/{siteShortId}/entry/{entryId}/_helpers.ts";
 
 export class EntryResource extends NeolaceHttpResource {
@@ -8,6 +8,7 @@ export class EntryResource extends NeolaceHttpResource {
         responseSchema: api.EntrySchema,
         description: "Get an entry",
     }, async ({ request }) => {
+        const graph = await getGraph();
         // Permissions and parameters:
         await this.requirePermission(request, permissions.CanViewEntries);
         const { siteId } = await this.getSiteDetails(request);
