@@ -5,10 +5,18 @@ import { Tooltip } from './Tooltip';
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     icon?: IconId;
     bold?: boolean;
+    onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-export const Button: React.FunctionComponent<Props> = (props) => {
-    return <button {...props} className={`border-2 border-gray-500 rounded-md px-2 py-1 hover:shadow-sm hover:shadow-theme-link-color active:shadow-none m-[3px] active:ml-[4px] active:mt-[4px] active:mr-[2px] active:mb-[2px] disabled:text-gray-300 disabled:border-gray-200 disabled:hover:shadow-none disabled:cursor-not-allowed align-top ${props.bold && "font-semibold"}`}>
+export const Button: React.FunctionComponent<Props> = ({onClick, ...props}) => {
+    const handleClick = React.useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        if (onClick) {
+            onClick(event);
+        }
+    }, [onClick]);
+
+    return <button onClick={handleClick} {...props} className={`border-2 border-gray-500 rounded-md px-2 py-1 hover:shadow-sm hover:shadow-theme-link-color active:shadow-none m-[3px] active:ml-[4px] active:mt-[4px] active:mr-[2px] active:mb-[2px] disabled:text-gray-300 disabled:border-gray-200 disabled:hover:shadow-none disabled:cursor-not-allowed align-top ${props.bold && "font-semibold"}`}>
         {props.icon && <Icon icon={props.icon}/>}
         {props.icon && " "}
         {props.children}
