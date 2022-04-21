@@ -9,7 +9,6 @@ export enum DraftStatus {
 
 export enum GetDraftFlags {
     IncludeEdits = "edits",
-    IncludeEditsData = "editsData",
 }
 
 export const CreateEditSchema = Schema({code: string, data: object});

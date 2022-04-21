@@ -10,6 +10,10 @@ import { ApiError } from 'next/dist/server/api-utils';
 import * as api from 'neolace-api';
 export * as api from 'neolace-api';
 
+/** Use this in URLs in lieu of an ID if there is no ID yet. It's neither a valid VNID nor friendlyId. */
+export const NEW = "_";
+export type NEW = typeof NEW;
+
 export type SiteData = SiteDetailsData;
 
 /** Refresh the session token if needed */
@@ -166,6 +170,44 @@ export function useSiteSchema(): [data: api.SiteSchemaData|undefined, error: Api
     return [data, error];
 }
 
+type DraftDataWithEdits = Required<api.DraftData>;
+
+/**
+ * React hook to get the currently published version of an entry, to use as a basis for making edits.
+ * @returns 
+ */
+export function useDraft(draftId: VNID|"_"): [data: DraftDataWithEdits|undefined, error: ApiError|undefined, mutate: KeyedMutator<DraftDataWithEdits|undefined>] {
+    const {site, siteError} = useSiteData();
+
+    const key = `draft:${site.shortId}:${draftId}`;
+    const { data, error, mutate } = useSWR(key, async (): Promise<DraftDataWithEdits|undefined> => {
+        if (siteError) {
+            throw new ApiError(500, "Site Error");
+        }
+        if (draftId === NEW) {
+            return undefined;
+        }
+        if (!isVNID(draftId)) {
+            throw new ApiError(500, "Not a valid VNID");
+        }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the draft
+        }
+        try {
+            const data = await client.getDraft(draftId, {flags: [
+                api.GetDraftFlags.IncludeEdits,
+            ] as const, siteId: site.shortId});
+            return data;
+        } catch (err) {
+            throw err;
+        }
+    }, {
+        // refreshInterval: 10 * 60_000,
+    });
+    return [data, error, mutate];
+}
+
+
 /**
  * React hook to get the currently published version of an entry, to use as a basis for making edits.
  * @returns 
@@ -173,6 +215,7 @@ export function useSiteSchema(): [data: api.SiteSchemaData|undefined, error: Api
 export function useEditableEntry(entryId: VNID): [data: api.EditableEntryData|undefined, error: ApiError|undefined, mutate: KeyedMutator<api.EditableEntryData|undefined>] {
     const {site, siteError} = useSiteData();
 
+    // TODO: Change "no-draft" below to the ID of the current draft, if any, from a <DraftContext> provider.
     const key = `entry:${site.shortId}:no-draft:${entryId}`;
     const { data, error, mutate } = useSWR(key, async () => {
         if (siteError) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { NextPage } from 'next';
-import { useIntl } from 'react-intl';
-import { api, useEditableEntry, useSiteData, useSiteSchema } from 'lib/api-client';
+import { FormattedMessage, useIntl } from 'react-intl';
+import { api, client, NEW, useDraft, useEditableEntry, useSiteData, useSiteSchema } from 'lib/api-client';
 
 import { DefaultSiteTitle, SitePage } from 'components/SitePage';
 import FourOhFour from 'pages/404';
@@ -9,10 +9,10 @@ import { ErrorMessage } from 'components/widgets/ErrorMessage';
 import { Breadcrumb, Breadcrumbs } from 'components/widgets/Breadcrumbs';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { Form, AutoControl } from 'components/widgets/Form';
+import { Form, AutoControl, Control } from 'components/widgets/Form';
 import { TextInput } from 'components/widgets/TextInput';
-import Link from 'next/link';
 import { MDTEditor } from 'components/widgets/MDTEditor';
+import { Button } from 'components/widgets/Button';
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -27,18 +27,26 @@ const DraftEntryEditPage: NextPage = function(_props) {
     const [baseSchema] = useSiteSchema();
     const router = useRouter();
     const query = router.query as PageUrlQuery;
+    const draftId = query.draftId as api.VNID|NEW;
+    const [draft, draftError] = useDraft(draftId);
     // The "base entry" is the unmodified entry, as published on the site, without any edits applied.
     const [baseEntry, entryError] = useEditableEntry(query.entryId as api.VNID);
 
-    // edits = useState getDraftEdits();
+    // Any edits that have previously been saved into the draft that we're editing, if any:
+    const draftEdits = (draft?.edits ?? []) as api.AnyEdit[];
+    // Any edits that the user has made on this page now, but hasn't yet saved to a draft:
     const [unsavedEdits, setUnsavedEdits] = React.useState<api.AnyContentEdit[]>([]);
     const addUnsavedEdit = React.useCallback((newEdit: api.AnyContentEdit) => {
         setUnsavedEdits((existingEdits) => [...existingEdits, newEdit]);
     }, []);
 
     const entry = React.useMemo(() => {
-        return baseEntry && baseSchema ? api.applyEditsToEntry(baseEntry, baseSchema, unsavedEdits) : undefined;
-    }, [baseEntry, baseSchema, unsavedEdits]);
+        // What the user is currently editing and should see on the screen is:
+        // The previously published version of the entry (if any),
+        // PLUS any edits previously made to it in the current draft (if any),
+        // PLUS any edits currently made on this page now, but not yet saved to the draft (if any)
+        return baseEntry && baseSchema ? api.applyEditsToEntry(baseEntry, baseSchema, [...draftEdits, ...unsavedEdits]) : undefined;
+    }, [baseEntry, baseSchema, draftEdits, unsavedEdits]);
     const schema = React.useMemo(() => baseSchema ? api.applyEditsToSchema(baseSchema, unsavedEdits) : undefined, [baseSchema, unsavedEdits]);
 
     const entryType = schema?.entryTypes?.[entry?.entryType.id ?? ""];
@@ -53,38 +61,73 @@ const DraftEntryEditPage: NextPage = function(_props) {
         addUnsavedEdit({ code: api.SetEntryDescription.code, data: { entryId: baseEntry.id, description } });
     }, [baseEntry, addUnsavedEdit]);
 
+    // If we'll be creating a new draft when the user saves these changes, this is the title for that new draft:
+    const [newDraftTitle, setNewDraftTitle] = React.useState("");
+    const [isSaving, setIsSaving] = React.useState(false);
+    const saveChangesToDraft = React.useCallback(async () => {
+        if (draftError) {
+            // This shouldn't happen because if there's a draft error, the save button won't be shown. But just in case:
+            return alert("Inconsistent state: cannot save changes to a draft with errors.");
+        }
+        setIsSaving(true);
+        if (draftId === NEW) {
+            // We're creating a new draft:
+            await client.createDraft({
+                title: newDraftTitle.trim() || intl.formatMessage({id: "draft.edit.newDraftTitle", defaultMessage: `Edited ${baseEntry?.name}`}),
+                description: "",
+                edits: unsavedEdits,
+            }, {siteId: site.shortId,}).then(
+                (newDraft) => { // If successful:
+                    // Redirect to let the user view/edit the new draft:
+                    router.push(`/draft/${newDraft.id}`);
+                },
+                (error) => {
+                    setIsSaving(false);
+                    console.error(error);
+                    alert(intl.formatMessage({id: "draft.entry.edit.errorSaving", defaultMessage: `Failed to save draft: {error}`}, {error: String(error?.message ?? error)}));
+                },
+            );
+        } else {
+            // We're updating an existing draft
+            alert("Updating an existing draft is not yet implemented.");
+        }
+    }, [draftId, baseEntry?.name, unsavedEdits, newDraftTitle, draftError]);
+
     if (siteError instanceof api.NotFound) {
         return <FourOhFour/>;
     } else if (siteError) {
         return <ErrorMessage>{String(siteError)}</ErrorMessage>;
-    } else if (entryError instanceof api.NotFound) {
-        return <FourOhFour/>
-    } else if (entryError) {
-        return <SitePage title={DefaultSiteTitle} sitePreloaded={null}><ErrorMessage>{String(entryError)}</ErrorMessage></SitePage>;
     }
 
-    return (
-        <SitePage
-            title={`Edit`}
-            sitePreloaded={null}
-            leftNavTopSlot={[]}
-        >
-
+    let content: JSX.Element;
+    // Are there any other errors?
+    if (entryError instanceof api.NotFound) {
+        content = <FourOhFour/>;
+    } else if (draftError) {
+        content = <ErrorMessage>{String(draftError)}</ErrorMessage>;
+    } else if (entryError) {
+        content = <ErrorMessage>{String(entryError)}</ErrorMessage>;
+    } else {
+        content = <>
             {/*
                 <Link href={`/draft/${query.draftId}/entry/${query.entryId}/preview`}><a className="float-right text-sm">Preview</a></Link>
             */}
             <Breadcrumbs>
-                <Breadcrumb href={"/"}>New Draft</Breadcrumb>
+                <Breadcrumb href={draft ? `/draft/${draft.id}` : undefined}>
+                    { draft ? draft.title : <FormattedMessage id="draft.new" defaultMessage="New Draft" /> }
+                </Breadcrumb>
                 <Breadcrumb href={entry ? `/entry/${entry.friendlyId}` : undefined}>{entry?.name ?? "Entry"}</Breadcrumb>
                 <Breadcrumb>Edit</Breadcrumb>
             </Breadcrumbs>
+
+            <br/>
 
             <Form>
                 <AutoControl
                     value={entry?.name ?? ""}
                     onChangeFinished={updateEntryName}
                     id="title"
-                    label={{id: "draft.entry.edit.title.label", defaultMessage: "Title"}}
+                    label={{id: "draft.entry.edit.name.label", defaultMessage: "Name / Title"}}
                 >
                     <TextInput />
                 </AutoControl>
@@ -122,7 +165,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
                 </AutoControl>
             </Form>
 
-            <h2>New Changes</h2>
+            <h2><FormattedMessage id="draft.entry.edit.newChanges" defaultMessage={"New changes"} /></h2>
             {
                 unsavedEdits.length > 0 ?
                     <ul>
@@ -131,8 +174,31 @@ const DraftEntryEditPage: NextPage = function(_props) {
                         )}
                     </ul>
                 :
-                    <p>No new changes yet.</p>
+                    <p><FormattedMessage id="draft.entry.edit.noChangesYet" defaultMessage={"You haven't made any changes yet. Make some changes above and you'll be able to save the changes here."} /></p>
             }
+            <h3><FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save changes"} /></h3>
+            <Form>
+                <Control id="draft-desc" label={{id: "draft.entry.edit.draft-title-instructions", defaultMessage: "Provide a brief description of what you changed:"}}>
+                    <TextInput />
+                </Control>
+                <Button icon="file-earmark-diff" disabled={unsavedEdits.length === 0 || isSaving} onClick={saveChangesToDraft}>
+                    <FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save these changes (as draft)"} />
+                </Button>
+            </Form>
+        </>;
+    }
+
+    return (
+        <SitePage
+            title={entry ?
+                intl.formatMessage({id: "draft.entry.edit.title", defaultMessage: `Edit "{name}"`}, {name: entry.name})
+            :
+                intl.formatMessage({id: "draft.entry.edit.titleNoEntry", defaultMessage: `Edit`},)
+            }
+            sitePreloaded={null}
+            leftNavTopSlot={[]}
+        >
+            {content}
         </SitePage>
     );
 }
