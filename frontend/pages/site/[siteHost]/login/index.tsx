@@ -1,12 +1,16 @@
 import React from 'react';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import { ParsedUrlQuery } from 'querystring';
-import Router from 'next/router';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 import { getSiteData, SiteData } from 'lib/api-client';
 import { SitePage } from 'components/SitePage';
 import { UserContext, UserStatus, requestPasswordlessLogin } from 'components/user/UserContext';
+import { Control, Form } from 'components/widgets/Form';
+import { TextInput } from 'components/widgets/TextInput';
+import { Button } from 'components/widgets/Button';
+import { Redirect } from 'components/utils/Redirect';
+import Link from 'next/link';
 
 interface PageProps {
     site: SiteData;
@@ -17,14 +21,8 @@ interface PageUrlQuery extends ParsedUrlQuery {
 
 const LoginPage: NextPage<PageProps> = function(props) {
 
+    const intl = useIntl();
     const user = React.useContext(UserContext);
-
-    // If the user is already logged in, redirect them to the homepage.
-    React.useEffect(() => { 
-        if (user.status === UserStatus.LoggedIn) {
-            Router.push('/');
-        }  
-    }, [user.status]);
 
     const [userEmail, setUserEmail] = React.useState("");
     const userEmailChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,31 +39,39 @@ const LoginPage: NextPage<PageProps> = function(props) {
         }
     }, [userEmail]);
 
-
-
     if (user.status === UserStatus.LoggedIn) {
-        return <>Redirecting you to the home page...</>;
+        return <Redirect to="/" />;
     }
 
+    const title = intl.formatMessage({id: "site.login.title", defaultMessage: "Log in to {siteName}"}, {siteName: props.site.name});
+
     return (
-        <SitePage
-            title="Log in"
-            sitePreloaded={props.site}
-        >
-            <h1 className="text-3xl font-semibold">
-                <FormattedMessage id="site.login.title" defaultMessage="Log in to {siteName}" values={{siteName: props.site.name}}/>
-            </h1>
+        <SitePage title={title} sitePreloaded={props.site} >
+            <h1 className="text-3xl font-semibold">{title}</h1>
 
-            <p className="my-4">Account registration is not available yet. If you already have an account though, you can log in here.</p>
+            <Form>
+                <Control
+                    id="login-email"
+                    label={{id: "site.login.email", defaultMessage: "Email Address"}}
+                    hint={intl.formatMessage({id: "site.login.email.hint", defaultMessage: "We'll email you a link. Just click it and you'll be logged in."})}
+                >
+                    <TextInput value={userEmail} onChange={userEmailChange} />
+                </Control>
+                <Button onClick={handleLogin} disabled={userEmail === ""} className="font-bold">
+                    <FormattedMessage id="site.login.submit" defaultMessage="Log in" />
+                </Button>
+            </Form>
 
-            <form>
-                <div>
-                    <label htmlFor="neo-login-email" className="block">Email address</label>
-                    <input value={userEmail} onChange={userEmailChange} type="email" className="rounded p-2 my-2 border border-gray-700 hover:border-blue-300 shadow" id="neo-login-email" aria-describedby="neo-login-email-help"/>
-                    <small id="neo-login-email-help" className="block opacity-80">We'll email you a link. Just click it and you'll be logged in!</small>
-                </div>
-                <button type="submit" className="rounded p-2 my-2 border border-gray-700 hover:bg-blue-300 shadow disabled:text-gray-500 disabled:border-gray-400 disabled:shadow-none" onClick={handleLogin} disabled={userEmail === ""}>Log me in</button>
-            </form>
+            <p className="!mt-[100px]">
+                <FormattedMessage
+                    id="site.login.howToCreateAccount"
+                    defaultMessage="Don't have an account? <link>Create an account.</link>"
+                    values={{
+                        link: (str: string) => <Link href="/account/create"><a>{str}</a></Link>,
+                    }}
+                />
+            </p>
+
         </SitePage>
     );
 }
