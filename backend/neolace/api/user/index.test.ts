@@ -56,6 +56,20 @@ group("index.ts", () => {
             );
         });
 
+        test("cannot create two accounts with the same email address that differs only by case", async () => {
+            const client = await getClient();
+
+            await client.registerHumanUser({ email: "jamie456@example.com" });
+            await assertRejects(
+                () => client.registerHumanUser({ email: "JAMIE456@example.com" }),
+                (err: Error) => {
+                    assertInstanceOf(err, api.InvalidRequest);
+                    assertEquals(err.message, "A user account is already registered with that email address.");
+                    assertEquals(err.reason, api.InvalidRequestReason.EmailAlreadyRegistered);
+                },
+            );
+        });
+
         test("cannot create two accounts with the same username", async () => {
             const client = await getClient();
 

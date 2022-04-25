@@ -11,7 +11,6 @@ import {
     VNodeType,
     WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
-import { authClient } from "neolace/core/authn-client.ts";
 import { createRandomToken } from "neolace/lib/secure-token.ts";
 
 export class User extends VNodeType {
@@ -47,7 +46,7 @@ export class HumanUser extends User {
         // Account ID in the authentication microservice. Only set for human users. Should not be exposed to users.
         authnId: Field.Int,
         // Email address. TODO: allow multiple email addresses
-        email: Field.String.Check(Field.validators.email),
+        email: Field.String.Check((value) => Field.validators.email(value).toLowerCase()),
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({});
@@ -108,20 +107,20 @@ async function isUsernameTaken(tx: WrappedTransaction, username: string): Promis
 export const CreateUser = defineAction({
     type: "CreateUser",
     parameters: {} as {
+        // The new user's VNID
+        id: VNID;
         // The user's email must already be verified.
         email: string;
         // Username. Optional. If not specified, one will be auto-generated.
         username?: string;
         fullName?: string;
-        // Temp: allow working around the lack of authn service in prod for now
-        fakeAuthn?: boolean;
+        /** The user's ID in the authn service. Required for them to be able to login. */
+        authnId: number;
     },
     resultData: {} as {
         id: VNID;
     },
     apply: async (tx, data) => {
-        const vnid = VNID();
-
         // Find a username that's not taken
         let username = data.username; // TODO: make sure 'data' is read-only
         if (!username) {
@@ -140,22 +139,19 @@ export const CreateUser = defineAction({
             throw new Error(`The username "${username}" is already taken.`);
         }
 
-        // Create a user in the auth service
-        const authnData = data.fakeAuthn ? { accountId: 123 } : await authClient.createUser({ username: vnid });
-
         await tx.queryOne(C`
             CREATE (u:Human:User:VNode {
-                id: ${vnid},
-                authnId: ${authnData.accountId},
+                id: ${data.id},
+                authnId: ${data.authnId},
                 email: ${data.email},
                 slugId: ${User.slugIdPrefix + username},
                 fullName: ${data.fullName || null}
             })
         `.RETURN({}));
         return {
-            resultData: { id: vnid },
-            modifiedNodes: [vnid],
-            description: `Created ${HumanUser.withId(vnid)}`,
+            resultData: { id: data.id },
+            modifiedNodes: [data.id],
+            description: `Created ${HumanUser.withId(data.id)}`,
         };
     },
 });

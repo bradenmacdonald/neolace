@@ -24,10 +24,10 @@ import { createImages } from "../sample-data/plantdb/images.ts";
 const data = {
     users: {
         admin: {
+            id: VNID("_alex"),
             email: "alex@example.com",
             fullName: "Alex Admin",
             username: "alex",
-            id: undefined as any as VNID, // will be set once created.
             bot: {
                 username: "alex-bot",
                 fullName: "Alex Bot 1",
@@ -36,10 +36,10 @@ const data = {
             },
         },
         regularUser: {
+            id: VNID("_jamie"),
             email: "jamie@example.com",
             fullName: "Jamie User",
             username: "jamie",
-            id: undefined as any as VNID, // will be set once created.
         },
     },
     // A Site, with Alex as the admin and Jamie as a regular user
@@ -90,13 +90,13 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
 
     log.info(`Generating default data for tests...`);
 
-    const action = CreateUser({
+    await graph.runAsSystem(CreateUser({
+        id: data.users.admin.id,
         email: data.users.admin.email,
         fullName: data.users.admin.fullName,
         username: data.users.admin.username,
-    });
-
-    await graph.runAsSystem(action).then((result) => data.users.admin.id = result.id);
+        authnId: -1,
+    }));
 
     await graph.runAsSystem(CreateBot({
         ownedByUser: data.users.admin.id,
@@ -109,10 +109,12 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     });
 
     await graph.runAsSystem(CreateUser({
+        id: data.users.regularUser.id,
         email: data.users.regularUser.email,
         fullName: data.users.regularUser.fullName,
         username: data.users.regularUser.username,
-    })).then((result) => data.users.regularUser.id = result.id);
+        authnId: -2,
+    }));
 
     await graph.runAsSystem(CreateSite({
         name: data.site.name,

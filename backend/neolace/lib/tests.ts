@@ -168,11 +168,14 @@ export async function createUserWithPermissions(
     const graph = await getGraph();
     const userNumber = ++_userCounter;
     const username = `user${userNumber}`;
+    const userId = VNID();
 
-    const { id: userId } = await graph.runAsSystem(CreateUser({
+    await graph.runAsSystem(CreateUser({
+        id: userId,
         email: `${username}@example.com`,
         fullName: `User${userNumber} Tester`,
         username,
+        authnId: -100 - userNumber, // We use negative numbers for fake authn IDs that aren't actually registered in the authn microservice.
     }));
 
     const { authToken: botAuthToken } = await graph.runAsSystem(CreateBot({
