@@ -16,6 +16,7 @@ import { EntryListResource } from "./site/%7BsiteShortId%7D/entry/index.ts";
 import { EntryResource } from "./site/{siteShortId}/entry/{entryId}/index.ts";
 import { UserIndexResource } from "./user/index.ts";
 import { UserMeResource } from "./user/me.ts";
+import { VerifyUserEmailResource } from "./user/verify-email.ts";
 import { type Drash } from "./mod.ts";
 
 export const builtInRestApiResources: (typeof Drash.Resource)[] = [
@@ -37,4 +38,5 @@ export const builtInRestApiResources: (typeof Drash.Resource)[] = [
     EntryResource,
     UserIndexResource,
     UserMeResource,
+    VerifyUserEmailResource,
 ];

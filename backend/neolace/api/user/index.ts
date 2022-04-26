@@ -11,8 +11,8 @@ export class UserIndexResource extends NeolaceHttpResource {
     public paths = ["/user"];
 
     POST = this.method({
-        responseSchema: api.schemas.UserDataResponse,
-        requestBodySchema: api.schemas.CreateHumanUser,
+        responseSchema: api.UserDataResponse,
+        requestBodySchema: api.CreateHumanUser,
         description: "Create a user account",
         notes:
             "This is only for human users; bots should use the bot API. Every human should have one account; creating multiple accounts is discouraged.",

@@ -109,6 +109,8 @@ export enum InvalidRequestReason {
     LookupExpressionParseError = "400_LOOKUP_PARSE_ERROR",
     /** Tried to register a user account, but another account already exists with the same email */
     EmailAlreadyRegistered = "400_EMAIL_EXISTS",
+    /** The email validation link/token is either expired or invalid. Try again. */
+    ValidationTokenInvalid = "400_VAL_TOKEN_INVALID",
     /** Tried to register a user account, but another account already exists with the same username */
     UsernameAlreadyRegistered = "400_USERNAME_EXISTS",
     /** Tried to accept a draft that contains no edits */

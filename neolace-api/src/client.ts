@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { PasswordlessLoginResponse } from "./user.ts";
+import { PasswordlessLoginResponse, UserDataResponse, VerifyEmailRequest } from "./user.ts";
 import * as errors from "./errors.ts";
 import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags } from "./edit/index.ts";
@@ -145,14 +145,33 @@ export class NeolaceApiClient {
      *
      * Will throw a NotAuthenticated error if the user is not authenticated.
      */
-    public async whoAmI(): Promise<schemas.Type<typeof schemas.UserDataResponse>> {
+    public async whoAmI(): Promise<schemas.Type<typeof UserDataResponse>> {
         return await this.call("/user/me");
+    }
+
+    /**
+     * Send a validation email to an email address. Required before it can be used to register.
+     * You can pass additional data like fullName which you can later retrieve from the token
+     * that gets emailed to the user.
+     * 
+     * returnUrl needs to include "{token}", which will get replaced with a secure token. Then
+     * that updated link will be emailed to the user.
+     */
+    public async requestEmailVerification(options: {email: string, returnUrl: string, data: Record<string, unknown>, siteId?: string}): Promise<void> {
+        const data: schemas.Type<typeof VerifyEmailRequest> = {
+            email: options.email,
+            data: options.data,
+            returnUrl: options.returnUrl,
+            // siteId is optional for this API call:
+            siteId: options.siteId ?? this.siteId ?? undefined,
+        };
+        await this.call("/user/verify-email", {method: "POST", data});
     }
 
     /**
      * Register a new user account (human user)
      */
-    public async registerHumanUser(data: {email: string, fullName?: string, username?: string}): Promise<schemas.Type<typeof schemas.UserDataResponse>> {
+    public async registerHumanUser(data: {email: string, fullName?: string, username?: string}): Promise<schemas.Type<typeof UserDataResponse>> {
         return await this.call("/user", {method: "POST", data});
     }
 

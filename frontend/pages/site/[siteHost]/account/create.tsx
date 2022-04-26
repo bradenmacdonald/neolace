@@ -3,7 +3,7 @@ import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { getSiteData, SiteData } from 'lib/api-client';
+import { client, getSiteData, SiteData } from 'lib/api-client';
 import { SitePage } from 'components/SitePage';
 import { UserContext, UserStatus, requestPasswordlessLogin } from 'components/user/UserContext';
 import { Control, Form } from 'components/widgets/Form';
@@ -33,10 +33,18 @@ const LoginPage: NextPage<PageProps> = function(props) {
         setUserEmail(event.target.value);
     }, []);
 
-    // Handler for when user enters their email and clicks "log in"
+    // Handler for when user enters their email and clicks "Create Account"
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
     const handleRegister = React.useCallback(async (event: React.MouseEvent) => {
         event.preventDefault();
-        // TODO
+        setIsSubmitting(true);
+        await client.requestEmailVerification({
+            email: userEmail,
+            data: { fullName: userFullName },
+            siteId: props.site.shortId,
+            returnUrl: new URL("/account/confirm", location.href).toString() + "/{token}/",
+        }),
+        setIsSubmitting(false);
     }, [userFullName, userEmail]);
 
     if (user.status === UserStatus.LoggedIn) {

@@ -38,25 +38,3 @@ export const HealthCheckResponse = Schema({
     reachable: boolean,
     databaseWorking: boolean,
 });
-
-// TODO: move these to "User" file/namespace
-
-export const CreateHumanUser = Schema({
-    email: normalString,
-    fullName: normalString.strictOptional(),
-    username: normalString.strictOptional(),
-});
-
-export const UserDataResponse = Schema.either(
-    {
-        isBot: boolean.equals(false),
-        username: normalString,
-        fullName: nullable(normalString),
-    },
-    {
-        isBot: boolean.equals(true),
-        ownedByUsername: string,
-        username: normalString,
-        fullName: nullable(normalString),
-    }
-);
