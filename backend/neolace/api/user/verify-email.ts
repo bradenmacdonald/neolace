@@ -95,4 +95,29 @@ export class VerifyUserEmailResource extends NeolaceHttpResource {
 
         return {};
     });
+
+    GET = this.method({
+        responseSchema: api.EmailTokenResponse,
+        description: "Check if a verification token is [still] valid and get the associated data.",
+    }, async ({ request }) => {
+        if (request.user) {
+            throw new api.NotAuthorized("You cannot use this API if you are already logged in.");
+        }
+        const token = request.queryParam("token");
+        if (!token) {
+            throw new api.InvalidFieldValue([{ fieldPath: "token", message: "No token was provided." }]);
+        }
+
+        const key = redisKeyPrefix + token;
+        const redis = await getRedis();
+        const value = await redis.get(key);
+        if (!value) {
+            throw new api.NotFound("Invalid or expired token.");
+        }
+        const valueObj = JSON.parse(value);
+        return {
+            email: valueObj.email,
+            data: valueObj.data,
+        };
+    });
 }

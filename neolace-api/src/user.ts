@@ -49,3 +49,12 @@ export const VerifyEmailRequest = Schema({
      */
     data: object,
 });
+
+/**
+ * If you request verification of an email, a token gets email to that user.
+ * If you use the API to check if that token is valid, this is the data you get back.
+ */
+export const EmailTokenResponse = Schema({
+    email: normalString,
+    data: object,
+});

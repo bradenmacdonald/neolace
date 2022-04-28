@@ -10,6 +10,8 @@ import { Control, Form } from 'components/widgets/Form';
 import { TextInput } from 'components/widgets/TextInput';
 import { Button } from 'components/widgets/Button';
 import { Redirect } from 'components/utils/Redirect';
+import { Spinner } from 'components/widgets/Spinner';
+import { SuccessMessage } from 'components/widgets/SuccessMessage';
 
 interface PageProps {
     site: SiteData;
@@ -35,16 +37,23 @@ const LoginPage: NextPage<PageProps> = function(props) {
 
     // Handler for when user enters their email and clicks "Create Account"
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [isSubmittedSuccessfully, setSubmittedSuccessfully] = React.useState(false);
     const handleRegister = React.useCallback(async (event: React.MouseEvent) => {
         event.preventDefault();
         setIsSubmitting(true);
-        await client.requestEmailVerification({
-            email: userEmail,
-            data: { fullName: userFullName },
-            siteId: props.site.shortId,
-            returnUrl: new URL("/account/confirm", location.href).toString() + "/{token}/",
-        }),
-        setIsSubmitting(false);
+        try {
+            await client.requestEmailVerification({
+                email: userEmail,
+                data: { fullName: userFullName },
+                siteId: props.site.shortId,
+                returnUrl: new URL("/account/confirm", location.href).toString() + "/{token}/",
+            });
+            setSubmittedSuccessfully(true);
+        } catch (err) {
+            throw err;
+        } finally {
+            setIsSubmitting(false);
+        }
     }, [userFullName, userEmail]);
 
     if (user.status === UserStatus.LoggedIn) {
@@ -80,10 +89,20 @@ const LoginPage: NextPage<PageProps> = function(props) {
 
                 <Button
                     onClick={handleRegister}
-                    disabled={userFullName === "" || userEmail === ""}
+                    disabled={userFullName === "" || userEmail === "" || isSubmitting || isSubmittedSuccessfully}
                 >
                     🚀 <FormattedMessage id="site.register.submit" defaultMessage="Create my account" />
                 </Button>
+
+                <br/>
+                <br/>
+
+                {isSubmitting && <Spinner/>}
+                {isSubmittedSuccessfully &&
+                    <SuccessMessage>
+                        <FormattedMessage id="site.register.submitted" defaultMessage="Please check your email and click the link we sent you to activate your account." />
+                    </SuccessMessage>
+                }
             </Form>
 
         </SitePage>

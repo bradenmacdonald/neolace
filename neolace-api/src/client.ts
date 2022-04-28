@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { PasswordlessLoginResponse, UserDataResponse, VerifyEmailRequest } from "./user.ts";
+import { PasswordlessLoginResponse, UserDataResponse, VerifyEmailRequest, EmailTokenResponse } from "./user.ts";
 import * as errors from "./errors.ts";
 import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags } from "./edit/index.ts";
@@ -153,7 +153,7 @@ export class NeolaceApiClient {
      * Send a validation email to an email address. Required before it can be used to register.
      * You can pass additional data like fullName which you can later retrieve from the token
      * that gets emailed to the user.
-     * 
+     *
      * returnUrl needs to include "{token}", which will get replaced with a secure token. Then
      * that updated link will be emailed to the user.
      */
@@ -166,6 +166,15 @@ export class NeolaceApiClient {
             siteId: options.siteId ?? this.siteId ?? undefined,
         };
         await this.call("/user/verify-email", {method: "POST", data});
+    }
+
+    /**
+     * After requestEmailVerification() is used, a token will be emailed to the user.
+     * This API can then be used to check if that token is valid, and retrieve whatever
+     * data was passed when creating the token.
+     */
+    public async checkVerificationToken(token: string): Promise<schemas.Type<typeof EmailTokenResponse>> {
+        return await this.call(`/user/verify-email?token=${token}`, {method: "GET"});
     }
 
     /**
