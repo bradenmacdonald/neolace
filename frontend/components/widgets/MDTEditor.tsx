@@ -104,28 +104,26 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
     // Track whether or not the user is actively using this overall editor widget.
     // When in "visual mode" (not source mode), we don't notify the parent element about changes until they blur off of
     // this editor to some other part of the document.
-    const [wasActive, setWasActive] = React.useState(false);
-    const isActive = useSmartFocusAwareness(rootDiv.current);
-    React.useEffect(() => {
-        if (isActive !== wasActive) {
-            if (isActive && props.onFocus) {
+    const handleFocusChange = React.useCallback((isFocused) => {
+        if (isFocused) {
+            if (props.onFocus) {
                 props.onFocus();
-            } else if (!isActive) {
-                // The user has blurred this editor. Notify our parent if it is interested.
-                const newValue = slateDocToStringValue(editor.children, sourceMode ? EscapeMode.PlainText : EscapeMode.MDT);
-                if (!sourceMode) {
-                    updateLastValueInternallySet(newValue);
-                }
-                if (props.onChange) {
-                    props.onChange(newValue);
-                }
-                if (props.onBlur) {
-                    props.onBlur();
-                }
             }
-            setWasActive(isActive);
+        } else {
+            // The user has blurred this editor. Notify our parent if it is interested.
+            const newValue = slateDocToStringValue(editor.children, sourceMode ? EscapeMode.PlainText : EscapeMode.MDT);
+            if (!sourceMode) {
+                updateLastValueInternallySet(newValue);
+            }
+            if (props.onChange) {
+                props.onChange(newValue);
+            }
+            if (props.onBlur) {
+                props.onBlur();
+            }
         }
-    }, [isActive, wasActive, sourceMode, props.onFocus, props.onBlur]);
+    }, [sourceMode, editor.children, props.onFocus, props.onChange, props.onBlur]);
+    useSmartFocusAwareness(rootDiv.current, handleFocusChange);
 
     // Edit commands:
     const insertLookupExpression = React.useCallback(() => {
@@ -184,15 +182,30 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
  * (3) the active focus is the toolbar button. When (2) happens we don't want to send an "onBlur" event to our parent
  * because the user's focus never intentionally left the overall editor.
  */
-function useSmartFocusAwareness(rootElement: HTMLDivElement|null) {
+function useSmartFocusAwareness(rootElement: HTMLDivElement|null, onFocusChange?: (isFocused: boolean) => void) {
 
-    const [isActive, setIsActive] = React.useState(false);
+    const [isFocused, setIsFocusedInternal] = React.useState(false);
+
+    // This seems to be the most reliable way to be able to send onFocusChange events without causing unecessary state
+    // changes and weird bugs in Firefox when used with Slate.js
+    const setIsFocused = React.useCallback((newValue: boolean) => {
+        let changed = false;
+        setIsFocusedInternal((oldValue) => {
+            if (oldValue !== newValue) {
+                changed = true;
+            }
+            return newValue;
+        });
+        if (changed && onFocusChange) {
+            onFocusChange(newValue);
+        }
+    }, [onFocusChange]);
 
     const handleClick = React.useCallback((event: MouseEvent) => {
         // The user has clicked somewhere. If the click was inside the element, we are active.
         // If the click was outside, we are definitely inactive.
-        setIsActive(rootElement ? rootElement.contains(event.target as Node) : false);
-    }, [rootElement]);
+        setIsFocused(rootElement ? rootElement.contains(event.target as Node) : false);
+    }, [rootElement, setIsFocused]);
 
     React.useEffect(() => {
         document.addEventListener("mousedown", handleClick);
@@ -209,8 +222,8 @@ function useSmartFocusAwareness(rootElement: HTMLDivElement|null) {
         if (document.activeElement === null || document.activeElement === document.body) {
             return; // Inconclusive
         }
-        setIsActive(rootElement?.contains(document.activeElement) ?? false);
-    }, [rootElement]);
+        setIsFocused(rootElement?.contains(document.activeElement) ?? false);
+    }, [rootElement, setIsFocused]);
 
     React.useEffect(() => {
         document.addEventListener("focusin", handleFocus);
@@ -220,5 +233,5 @@ function useSmartFocusAwareness(rootElement: HTMLDivElement|null) {
         };
     }, [handleFocus]);
 
-    return isActive;
+    return isFocused;
 }
