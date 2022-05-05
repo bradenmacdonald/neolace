@@ -28,7 +28,7 @@ const CustomSearchBox: React.FunctionComponent<SearchBoxProvided> = ({ currentRe
             inputRef={inputEl}
         />
         {/*<button onClick={() => refine('')}>Reset query</button>*/}
-        {isSearchStalled && <div>
+        {isSearchStalled && currentRefinement && <div>
             <FormattedMessage id="plugin.search.stalledWarning" defaultMessage="Search has stalled or an error occurred."/>
         </div>}
     </form>;
