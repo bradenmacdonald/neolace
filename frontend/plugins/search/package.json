@@ -4,10 +4,10 @@
     "private": true,
     "scripts": {},
     "dependencies": {
-        "react-instantsearch-dom": "6.21.1",
-        "typesense-instantsearch-adapter": "^2.2.0"
+        "react-instantsearch-dom": "6.24.2",
+        "typesense-instantsearch-adapter": "2.4.0"
     },
     "devDependencies": {
-        "@types/react-instantsearch-dom": "^6.12.2"
+        "@types/react-instantsearch-dom": "6.12.3"
     }
 }
