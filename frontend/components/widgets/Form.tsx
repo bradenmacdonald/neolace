@@ -81,7 +81,7 @@ export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
             props.onChangeFinished(value);
         }
         setCurrentlyEditing(false);
-    }, [props.onChangeFinished, currentValueRef]);
+    }, [props.value, props.onChangeFinished, currentValueRef]);
 
     const childInput = React.cloneElement(props.children, {
         value: isCurrentlyEditing ? currentValue : props.value,

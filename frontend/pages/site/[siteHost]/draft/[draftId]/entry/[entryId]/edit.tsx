@@ -33,8 +33,8 @@ const DraftEntryEditPage: NextPage = function(_props) {
     // edits = useState getDraftEdits();
     const [unsavedEdits, setUnsavedEdits] = React.useState<api.AnyContentEdit[]>([]);
     const addUnsavedEdit = React.useCallback((newEdit: api.AnyContentEdit) => {
-        setUnsavedEdits([...unsavedEdits, newEdit]);
-    }, [unsavedEdits, setUnsavedEdits]);
+        setUnsavedEdits((existingEdits) => [...existingEdits, newEdit]);
+    }, []);
 
     const entry = React.useMemo(() => {
         return baseEntry && baseSchema ? api.applyEditsToEntry(baseEntry, baseSchema, unsavedEdits) : undefined;
