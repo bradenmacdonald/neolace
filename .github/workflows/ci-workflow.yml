@@ -11,7 +11,8 @@ on:
     branches: [main]
 
 env:
-  deno-version: ">=1.21.0 <1.22.0"
+  # deno-version: ">=1.21.0 <1.22.0" - disabling this because often the docker images are published days after the release, causing a build error
+  deno-version: "1.21.1"
   docker-registry: ghcr.io
 
 jobs:
