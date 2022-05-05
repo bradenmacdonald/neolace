@@ -5,6 +5,7 @@ import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
 import { InstantSearch } from "react-instantsearch-dom";
 import { Hits } from "../components/Hits";
 import { SearchBox } from '../components/SearchBox';
+import { Spinner } from 'components/widgets/Spinner';
 
 const SiteSearchPage: React.FunctionComponent = function(props) {
 
@@ -54,7 +55,7 @@ const SiteSearchPage: React.FunctionComponent = function(props) {
     const [currentQuery, setCurrentQuery] = React.useState("");
 
     if (!adapter || !connectionData) {
-        return <p>Loading search...</p>;
+        return <Spinner/>;
     }
 
     return (<>
