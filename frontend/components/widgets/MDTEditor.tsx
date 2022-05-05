@@ -38,7 +38,7 @@ interface Props {
  */
 export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}) => {
     const intl = useIntl();
-    const renderLeaf = React.useCallback(props => <Leaf {...props} />, []);
+    const renderLeaf = React.useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
     const [sourceMode, setSourceMode] = React.useState(false);
     const toggleSourceMode = React.useCallback(() => setSourceMode(prevMode => !prevMode), []);
@@ -104,7 +104,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
     // Track whether or not the user is actively using this overall editor widget.
     // When in "visual mode" (not source mode), we don't notify the parent element about changes until they blur off of
     // this editor to some other part of the document.
-    const handleFocusChange = React.useCallback((isFocused) => {
+    const handleFocusChange = React.useCallback((isFocused: boolean) => {
         if (isFocused) {
             if (props.onFocus) {
                 props.onFocus();

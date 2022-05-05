@@ -35,6 +35,7 @@ interface Props {
      * See comments below in SitePage ("fallback") about looking for a better way to do this.
      */
     sitePreloaded: SiteData | null;
+    children: React.ReactNode;
 }
 
 /**

@@ -24,7 +24,7 @@ interface Props {
  */
 export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => {
 
-    const renderLeaf = React.useCallback(props => <Leaf {...props} />, []);
+    const renderLeaf = React.useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
 
     const forceUpdate = useForceUpdate();
