@@ -2,7 +2,8 @@ import { _allSchemaEditTypes, AnySchemaEdit, SchemaEditType } from "../schema/Sc
 import { _allContentEditTypes, AnyContentEdit, ContentEditType } from "./ContentEdit.ts";
 import { EditType } from "./Edit.ts";
 
-export type EditList = (AnySchemaEdit|AnyContentEdit)[];
+export type AnyEdit = AnySchemaEdit|AnyContentEdit;
+export type EditList = AnyEdit[];
 
 export function getEditType(code: string): ContentEditType|SchemaEditType {
     // deno-lint-ignore no-explicit-any

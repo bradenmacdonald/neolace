@@ -32,7 +32,7 @@ export const Control: React.FunctionComponent<ControlProps> = (props) => {
     const childInput = React.cloneElement(props.children, {id: props.id});
 
     return <div className={`mb-6`}>
-        <label htmlFor={props.id} className="block mb-1 text-sm font-semibold text-gray-800">
+        <label htmlFor={props.id} className="block w-max mb-1 text-sm font-semibold text-gray-800">
             <FormattedMessage {...props.label}/>
         </label>
         {childInput}

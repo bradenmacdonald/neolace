@@ -48,6 +48,13 @@ export const ApplyEdits = defineAction({
 
             switch (edit.code) {
                 case CreateEntry.code: { // Create a new Entry of a specific EntryType
+                    if (edit.data.friendlyId.length > 55) {
+                        throw new InvalidEdit(
+                            CreateEntry.code,
+                            { entryId: edit.data.id },
+                            `The friendlyId "${edit.data.friendlyId}" is too long.`,
+                        );
+                    }
                     await tx.queryOne(C`
                         MATCH (et:${EntryType} {id: ${edit.data.type}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         CREATE (e:${Entry} {id: ${edit.data.id}})
@@ -68,7 +75,11 @@ export const ApplyEdits = defineAction({
                     // Load details of the feature that we're editing:
                     const feature = features.find((f) => f.featureType === edit.data.feature.featureType);
                     if (feature === undefined) {
-                        throw new Error(`Unknown feature type ${edit.data.feature.featureType}`);
+                        throw new InvalidEdit(
+                            UpdateEntryFeature.code,
+                            { featureType: edit.data.feature.featureType },
+                            `Unknown feature type ${edit.data.feature.featureType}`,
+                        );
                     }
 
                     // Validate that the entry exists, is part of the correct site, and that its type has this feature enabled:
@@ -79,7 +90,9 @@ export const ApplyEdits = defineAction({
                         `.RETURN({})); // If this returns a single result, we're good; otherwise it will throw an error.
                     } catch (err: unknown) {
                         if (err instanceof EmptyResultError) {
-                            throw new Error(
+                            throw new InvalidEdit(
+                                UpdateEntryFeature.code,
+                                { featureType: edit.data.feature.featureType, entryId: edit.data.entryId },
                                 "Cannot set feature data for that entry - either the feature is not enabled or the entry ID is invalid.",
                             );
                         }

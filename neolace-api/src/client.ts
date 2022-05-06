@@ -209,9 +209,9 @@ export class NeolaceApiClient {
         return rawDraft;
     }
 
-    public async getDraft(draftId: string, options?: {flags: GetDraftFlags[], siteId?: string}): Promise<DraftData> {
+    public async getDraft<Flags extends readonly GetDraftFlags[]|undefined = undefined>(draftId: string, options?: {flags: Flags, siteId?: string}): Promise<ApplyFlags<typeof GetDraftFlags, Flags, DraftData>> {
         const siteId = this.getSiteId(options);
-        return this._parseDraft(await this.call(`/site/${siteId}/draft/${draftId}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""), {method: "GET"}));
+        return this._parseDraft(await this.call(`/site/${siteId}/draft/${draftId}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""), {method: "GET"})) as any;
     }
 
     public async createDraft(data: schemas.Type<typeof CreateDraftSchema>, options?: {siteId?: string}): Promise<DraftData> {
