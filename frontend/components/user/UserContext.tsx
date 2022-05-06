@@ -39,7 +39,7 @@ export const UserContext = React.createContext<UserContextData>({
     logout: async () => {},
 });
 
-export const UserProvider: React.FunctionComponent = (props) => {
+export const UserProvider: React.FunctionComponent<{children?: React.ReactNode | undefined}> = (props) => {
     const [data, setData] = React.useState<UserData>({
         // This is the data used when the page is loading, or when it's rendered on the server side.
         status: UserStatus.Unknown,

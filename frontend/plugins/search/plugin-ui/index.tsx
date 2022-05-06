@@ -5,6 +5,7 @@ import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
 import { InstantSearch } from "react-instantsearch-dom";
 import { Hits } from "../components/Hits";
 import { SearchBox } from '../components/SearchBox';
+import { Spinner } from 'components/widgets/Spinner';
 
 const SiteSearchPage: React.FunctionComponent = function(props) {
 
@@ -37,12 +38,11 @@ const SiteSearchPage: React.FunctionComponent = function(props) {
                     server: {
                         apiKey: connectionData.apiKey,  // This API key only allows searching based on the current site and current user's permissions
                         nodes: [
-                            {host: endpoint.hostname, port: endpoint.port, protocol: endpoint.protocol === "http:" ? "http" : "https"},
+                            {host: endpoint.hostname, port: Number(endpoint.port), protocol: endpoint.protocol === "http:" ? "http" : "https"},
                         ],
                     },
-                    cacheSearchResultsForSeconds: 2 * 60, // Cache search results from server. Defaults to 2 minutes. Set to 0 to disable caching.
                     additionalSearchParameters: {
-                        queryBy: "name,description,friendlyId,articleText",
+                        query_by: "name,description,friendlyId,articleText",
                     },
                   })
             );
@@ -54,7 +54,7 @@ const SiteSearchPage: React.FunctionComponent = function(props) {
     const [currentQuery, setCurrentQuery] = React.useState("");
 
     if (!adapter || !connectionData) {
-        return <p>Loading search...</p>;
+        return <Spinner/>;
     }
 
     return (<>

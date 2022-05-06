@@ -6,7 +6,7 @@ interface TooltipProps {
     tooltipContent: React.ReactNode;
     forceVisible?: boolean;
     onClickOutsideTooltip?: () => void;
-    children?: (attribsForElement: Record<string, React.ReactNode>) => React.ReactNode;
+    children?: (attribsForElement: Record<string, unknown>) => React.ReactNode;
 }
 
 let uniqueId = 0;
