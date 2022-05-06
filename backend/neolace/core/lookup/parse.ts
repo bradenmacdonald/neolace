@@ -1,6 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { LookupParseError } from "./errors.ts";
 import { LookupExpression } from "./expression.ts";
+import { Graph } from "./expressions/graph.ts";
 import {
     Ancestors,
     AndAncestors,
@@ -134,6 +135,12 @@ export function parseLookupString(lookup: string): LookupExpression {
         [
             /^image\((.*), format=(.*)\)$/,
             (m) => new Image(parseLookupString(m[1]), { formatExpr: parseLookupString(m[2]) }),
+        ],
+
+        // ....graph()
+        [
+            /^(.*)\.graph\(\)$/,
+            (m) => new Graph(parseLookupString(m[1])),
         ],
 
         // slice(expr, start=x, size=y)

@@ -30,10 +30,10 @@ export class Graph extends LookupExpression {
         const graphData = await context.tx.queryOne(C`
             ${entrySetQuery.cypherQuery}
             WITH collect(entry) AS entries
-            MATCH (e1:${Entry})-[rel:${Entry.rel.RELATES_TO}|${Entry.rel.IS_A}]->(e2:${Entry}) WHERE e1 IN entries AND e2 IN entries
+            OPTIONAL MATCH (e1:${Entry})-[rel:${Entry.rel.RELATES_TO}|${Entry.rel.IS_A}]->(e2:${Entry}) WHERE e1 IN entries AND e2 IN entries
             // Now we have the relationships between the entries, but key data about each relationship is stored
             // on the corresponding PropertyFact and Property nodes, not on the relationship itself, so fetch those too:
-            MATCH (pf:${PropertyFact} {directRelNeo4jId: id(rel)})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
+            OPTIONAL MATCH (pf:${PropertyFact} {directRelNeo4jId: id(rel)})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
             WITH collect(rel {start: startNode(rel).id, end: endNode(rel).id, relId: pf.id, relType: prop.id}) AS rels, entries
             WITH rels, entries
             // Add the entry type information to the entries we are returning:

@@ -127,6 +127,7 @@ export type AnyLookupValue = (
     | EntryValue
     | FileValue
     | PropertyValue
+    | GraphValue
     | ImageValue
     | AnnotatedValue
     | IntegerValue

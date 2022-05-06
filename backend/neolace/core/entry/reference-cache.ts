@@ -192,6 +192,12 @@ export class ReferenceCache {
                 this.extractMarkdownReferences(api.MDT.tokenizeMDT(value.value, { inline: true }), args);
                 return;
             }
+            case "Graph": {
+                for (const entry of value.entries) {
+                    this._entryIdsUsed.add(entry.entryId);
+                }
+                return;
+            }
             case "Integer":
             case "String":
             case "Date":
