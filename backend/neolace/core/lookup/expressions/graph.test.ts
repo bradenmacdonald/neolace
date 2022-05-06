@@ -4,6 +4,9 @@ import { AndAncestors } from "./ancestors.ts";
 import { GraphValue } from "../values.ts";
 import { This } from "./this.ts";
 import { Graph } from "./graph.ts";
+import { ApplyEdits } from "../../edit/ApplyEdits.ts";
+import { PropertyType } from "../../../deps/neolace-api.ts";
+import { VNID } from "../../../deps/vertex-framework.ts";
 
 group(import.meta, () => {
     group("graph()", () => {
@@ -11,6 +14,12 @@ group(import.meta, () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
         const siteId = defaultData.site.id;
         const ponderosaPine = defaultData.entries.ponderosaPine;
+
+        const entryType = VNID(), entryIsA = VNID();
+        const A = VNID(),
+            B = VNID(),
+            C = VNID(),
+            D = VNID();
 
         test("It can graph all the ancestors of the ponderosa pine", async () => {
             // this is the same as this.ancestors().graph()
@@ -99,6 +108,174 @@ group(import.meta, () => {
                             relId: (value as GraphValue).rels[4]?.relId,
                             relType: defaultData.schema.properties._parentGenus.id,
                             toEntryId: defaultData.entries.genusPinus.id,
+                        },
+                    ],
+                ),
+            );
+        });
+
+        test("Works despite cyclic relationships", async () => {
+            // Create this entry tree:
+            //     A
+            //    / \
+            //   B   C
+            //    \ /
+            //     D
+            //      \
+            //       A (same A as above)
+            const graph = await getGraph();
+
+            await graph.runAsSystem(ApplyEdits({
+                siteId,
+                edits: [
+                    { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                    {
+                        code: "CreateProperty",
+                        data: { id: entryIsA, type: PropertyType.RelIsA, name: "is a", appliesTo: [{ entryType }] },
+                    },
+                    {
+                        code: "CreateEntry",
+                        data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                    },
+                    {
+                        code: "CreateEntry",
+                        data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                    },
+                    {
+                        code: "CreateEntry",
+                        data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                    },
+                    {
+                        code: "CreateEntry",
+                        data: { id: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
+                    },
+                    // B is a A
+                    {
+                        code: "AddPropertyValue",
+                        data: {
+                            entry: B,
+                            valueExpression: `[[/entry/${A}]]`,
+                            property: entryIsA,
+                            propertyFactId: VNID(),
+                            note: "",
+                        },
+                    },
+                    // C is a A
+                    {
+                        code: "AddPropertyValue",
+                        data: {
+                            entry: C,
+                            valueExpression: `[[/entry/${A}]]`,
+                            property: entryIsA,
+                            propertyFactId: VNID(),
+                            note: "",
+                        },
+                    },
+                    // D is a B
+                    {
+                        code: "AddPropertyValue",
+                        data: {
+                            entry: D,
+                            valueExpression: `[[/entry/${B}]]`,
+                            property: entryIsA,
+                            propertyFactId: VNID(),
+                            note: "",
+                        },
+                    },
+                    // D is a C
+                    {
+                        code: "AddPropertyValue",
+                        data: {
+                            entry: D,
+                            valueExpression: `[[/entry/${C}]]`,
+                            property: entryIsA,
+                            propertyFactId: VNID(),
+                            note: "",
+                        },
+                    },
+                    // A is a D
+                    {
+                        code: "AddPropertyValue",
+                        data: {
+                            entry: A,
+                            valueExpression: `[[/entry/${D}]]`,
+                            property: entryIsA,
+                            propertyFactId: VNID(),
+                            note: "",
+                        },
+                    },
+                ],
+            }));
+
+            const expression = new Graph(new AndAncestors(new This()));
+            const value = await graph.read((tx) =>
+                expression.getValue({ tx, siteId, entryId: A, defaultPageSize: 10n }).then((v) => v.makeConcrete())
+            );
+
+            assertEquals(
+                value,
+                new GraphValue(
+                    [
+                        {
+                            data: {},
+                            entryId: A,
+                            entryType: entryType,
+                            name: "Entry A",
+                        },
+                        {
+                            data: {},
+                            entryId: D,
+                            entryType: entryType,
+                            name: "Entry D",
+                        },
+                        {
+                            data: {},
+                            entryId: B,
+                            entryType: entryType,
+                            name: "Entry B",
+                        },
+                        {
+                            data: {},
+                            entryId: C,
+                            entryType: entryType,
+                            name: "Entry C",
+                        },
+                    ],
+                    [
+                        {
+                            data: {},
+                            fromEntryId: A,
+                            relId: (value as GraphValue).rels[0]?.relId,
+                            relType: entryIsA,
+                            toEntryId: D,
+                        },
+                        {
+                            data: {},
+                            fromEntryId: B,
+                            relId: (value as GraphValue).rels[1]?.relId,
+                            relType: entryIsA,
+                            toEntryId: A,
+                        },
+                        {
+                            data: {},
+                            fromEntryId: C,
+                            relId: (value as GraphValue).rels[2]?.relId,
+                            relType: entryIsA,
+                            toEntryId: A,
+                        },
+                        {
+                            data: {},
+                            fromEntryId: D,
+                            relId: (value as GraphValue).rels[3]?.relId,
+                            relType: entryIsA,
+                            toEntryId: C,
+                        },
+                        {
+                            data: {},
+                            fromEntryId: D,
+                            relId: (value as GraphValue).rels[4]?.relId,
+                            relType: entryIsA,
+                            toEntryId: B,
                         },
                     ],
                 ),
