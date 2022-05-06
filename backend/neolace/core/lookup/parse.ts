@@ -166,6 +166,9 @@ export function parseLookupString(lookup: string): LookupExpression {
                 if (err instanceof LookupParseError) {
                     // console.error(`Failed to parse: ${err}`);
                     continue;
+                } else if (err instanceof SyntaxError) {
+                    // This is triggered by the JSON parser that we use to parse string values;
+                    continue;
                 } else {
                     throw err;
                 }

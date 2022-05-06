@@ -1,16 +1,20 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { IntegerValue, NullValue, PageValue } from "../values.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { List } from "./list-expr.ts";
 import { LookupExpression } from "../expression.ts";
 import { Count } from "./count.ts";
 
-group(import.meta, () => {
+group("list-expr.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        graph.read((tx) => expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete()));
+        getGraph().then((graph) =>
+            graph.read((tx) =>
+                expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
+            )
+        );
     const siteId = defaultData.site.id;
 
     const Int = (x: number) => new LiteralExpression(new IntegerValue(x));

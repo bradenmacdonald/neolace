@@ -48,6 +48,13 @@ export const ApplyEdits = defineAction({
 
             switch (edit.code) {
                 case CreateEntry.code: { // Create a new Entry of a specific EntryType
+                    if (edit.data.friendlyId.length > 55) {
+                        throw new InvalidEdit(
+                            CreateEntry.code,
+                            { entryId: edit.data.id },
+                            `The friendlyId "${edit.data.friendlyId}" is too long.`,
+                        );
+                    }
                     await tx.queryOne(C`
                         MATCH (et:${EntryType} {id: ${edit.data.type}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         CREATE (e:${Entry} {id: ${edit.data.id}})
@@ -68,7 +75,11 @@ export const ApplyEdits = defineAction({
                     // Load details of the feature that we're editing:
                     const feature = features.find((f) => f.featureType === edit.data.feature.featureType);
                     if (feature === undefined) {
-                        throw new Error(`Unknown feature type ${edit.data.feature.featureType}`);
+                        throw new InvalidEdit(
+                            UpdateEntryFeature.code,
+                            { featureType: edit.data.feature.featureType },
+                            `Unknown feature type ${edit.data.feature.featureType}`,
+                        );
                     }
 
                     // Validate that the entry exists, is part of the correct site, and that its type has this feature enabled:
@@ -79,7 +90,9 @@ export const ApplyEdits = defineAction({
                         `.RETURN({})); // If this returns a single result, we're good; otherwise it will throw an error.
                     } catch (err: unknown) {
                         if (err instanceof EmptyResultError) {
-                            throw new Error(
+                            throw new InvalidEdit(
+                                UpdateEntryFeature.code,
+                                { featureType: edit.data.feature.featureType, entryId: edit.data.entryId },
                                 "Cannot set feature data for that entry - either the feature is not enabled or the entry ID is invalid.",
                             );
                         }
@@ -169,15 +182,30 @@ export const ApplyEdits = defineAction({
                         const toEntryId = valueExpression.slice(9, -2);
 
                         // We also need to create/update a direct (Entry)-[rel]->(Entry) relationship on the graph.
-                        await tx.query(C`
-                            MATCH (entry:${Entry} {id: ${edit.data.entry}})
-                            // Match the target entry and make sure it's part of the same site:
-                            MATCH (toEntry:${Entry} {id: ${toEntryId}})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
-                            MATCH (pf:${PropertyFact} {id: ${edit.data.propertyFactId}})
-                            MERGE (entry)-[rel:${directRelType}]->(toEntry)  // Note that this may already exist if multiple separate properties of the same relationship type point to the same node
-                            SET pf.directRelNeo4jId = id(rel)
-
-                        `.RETURN({ "pf.directRelNeo4jId": Field.BigInt }));
+                        try {
+                            await tx.queryOne(C`
+                                MATCH (entry:${Entry} {id: ${edit.data.entry}})
+                                // Match the target entry and make sure it's part of the same site:
+                                MATCH (toEntry:${Entry} {id: ${toEntryId}})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
+                                MATCH (pf:${PropertyFact} {id: ${edit.data.propertyFactId}})
+                                MERGE (entry)-[rel:${directRelType}]->(toEntry)  // Note that this may already exist if multiple separate properties of the same relationship type point to the same node
+                                SET pf.directRelNeo4jId = id(rel)
+                            `.RETURN({ "pf.directRelNeo4jId": Field.BigInt }));
+                        } catch (err) {
+                            if (err instanceof EmptyResultError) {
+                                throw new InvalidEdit(
+                                    AddPropertyValue.code,
+                                    {
+                                        propertyId: edit.data.property,
+                                        toEntryId: toEntryId,
+                                        fromEntryId: edit.data.entry,
+                                    },
+                                    `Entry with ID ${toEntryId} not found - cannot set property ${edit.data.property} on entry ${edit.data.entry} to that value.`,
+                                );
+                            } else {
+                                throw err; // Other unknown internal error.
+                            }
+                        }
                     }
 
                     // Changing a property value always counts as modifying the entry:

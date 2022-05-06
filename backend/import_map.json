@@ -1,6 +1,6 @@
 {
     "imports": {
         "neolace/": "./neolace/",
-        "std/": "https://deno.land/std@0.120.0/"
+        "std/": "https://deno.land/std@0.135.0/"
     }
 }

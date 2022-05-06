@@ -95,7 +95,7 @@ export class InvalidEdit extends InvalidRequest {
         public readonly message: string,
     ) {
         super(InvalidRequestReason.InvalidEdit, message);
-        this.name = "InvalidFieldValue";
+        this.name = "InvalidEdit";
     }
 }
 

@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { api, assertEquals, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
 
-group(import.meta, () => {
+group("index.ts", () => {
     group("DraftEditsResource.POST - Add an edit to a draft", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 

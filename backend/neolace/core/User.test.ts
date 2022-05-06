@@ -1,7 +1,7 @@
 import { assert, group, test } from "neolace/lib/tests.ts";
 import { testExports } from "neolace/core/User.ts";
 
-group(import.meta, () => {
+group("User.ts", () => {
     group("createBotAuthToken", () => {
         const { createBotAuthToken } = testExports;
 

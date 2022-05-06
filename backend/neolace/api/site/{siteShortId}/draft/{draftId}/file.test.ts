@@ -12,7 +12,7 @@ import {
 import { getGraph } from "neolace/core/graph.ts";
 import { DraftFile } from "neolace/core/edit/Draft.ts";
 
-group(import.meta, () => {
+group("file.ts", () => {
     group("DraftFileResource.POST - Upload a file to a draft", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 

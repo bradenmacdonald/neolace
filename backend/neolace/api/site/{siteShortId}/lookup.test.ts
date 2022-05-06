@@ -1,7 +1,7 @@
 import {
     api,
-    assert,
     assertEquals,
+    assertInstanceOf,
     assertRejects,
     getClient,
     group,
@@ -9,7 +9,7 @@ import {
     test,
 } from "neolace/api/tests.ts";
 
-group(import.meta, () => {
+group("lookup.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
 
     test("It can evaluate a lookup of a simple property", async () => {
@@ -78,7 +78,7 @@ group(import.meta, () => {
         await assertRejects(async () => {
             await client.evaluateLookupExpression("this won't parse.");
         }, (err: unknown) => {
-            assert(err instanceof api.InvalidRequest);
+            assertInstanceOf(err, api.InvalidRequest);
             assertEquals(err.reason, api.InvalidRequestReason.LookupExpressionParseError);
         });
     });

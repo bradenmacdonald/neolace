@@ -1,16 +1,20 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { assert, assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { assertEquals, assertInstanceOf, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { DateValue, StringValue } from "../values.ts";
 import { DateExpression } from "./date.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupExpression } from "../expression.ts";
 
-group(import.meta, () => {
+group("date.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        graph.read((tx) => expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n })).then((v) => v.makeConcrete());
+        getGraph().then((graph) =>
+            graph.read((tx) => expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n })).then((v) =>
+                v.makeConcrete()
+            )
+        );
     const siteId = defaultData.site.id;
 
     group("date()", () => {
@@ -18,7 +22,7 @@ group(import.meta, () => {
             async function checkString(dateStr: string, expected?: string) {
                 const expr = new DateExpression(new LiteralExpression(new StringValue(dateStr)));
                 const value = await evalExpression(expr);
-                assert(value instanceof DateValue);
+                assertInstanceOf(value, DateValue);
                 assertEquals(value.asIsoString(), expected ?? dateStr);
             }
 

@@ -1,11 +1,13 @@
 // deno-lint-ignore-file no-explicit-any
 import { vnidString, } from "../api-schemas.ts";
-import { ImageSizingMode } from "../content/Entry.ts";
-import { number, Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
+import { EditableEntryData, ImageSizingMode } from "../content/Entry.ts";
+import { number, Schema, SchemaValidatorFunction, string, Type } from "../deps/computed-types.ts";
+import { type SiteSchemaData } from "../schema/SiteSchemaData.ts";
 import { Edit, EditChangeType, EditType } from "./Edit.ts";
 
-interface ContentEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
+export interface ContentEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Content;
+    apply: (currentEntry: Readonly<EditableEntryData>, data: Type<DataSchema>, currentSchema: SiteSchemaData) => EditableEntryData;
 }
 
 function ContentEditType<Code extends string, DataSchema extends SchemaValidatorFunction<any>>(args: ContentEditType<Code, DataSchema>): ContentEditType<Code, DataSchema> {
@@ -22,7 +24,49 @@ export const CreateEntry = ContentEditType({
         type: vnidString,
         description: string,
     }),
+    apply: (baseEntry, data, currentSchema) => {
+        if (baseEntry.id === data.id) {
+            return {
+                ...baseEntry,
+                name: data.name,
+                friendlyId: data.friendlyId,
+                description: data.description,
+                entryType: { id: data.type, name: currentSchema.entryTypes[data.type]?.name ?? "Unknown Entry Type" },
+                features: {},
+                propertiesRaw: [],
+            };
+        }
+        return baseEntry;
+    },
     describe: (data) => `Created \`Entry ${data.id}\``,
+});
+
+export const SetEntryName = ContentEditType({
+    changeType: EditChangeType.Content,
+    code: "SetEntryName",
+    dataSchema: Schema({ entryId: vnidString, name: string, }),
+    apply: (baseEntry, data) => {
+        const updatedEntry = {...baseEntry}
+        if (baseEntry.id === data.entryId) {
+            updatedEntry.name = data.name;
+        }
+        return updatedEntry;
+    },
+    describe: (data) => `Renamed \`Entry ${data.entryId}\` to "${data.name}"`,
+});
+
+export const SetEntryDescription = ContentEditType({
+    changeType: EditChangeType.Content,
+    code: "SetEntryDescription",
+    dataSchema: Schema({ entryId: vnidString, description: string, }),
+    apply: (baseEntry, data) => {
+        const updatedEntry = {...baseEntry}
+        if (baseEntry.id === data.entryId) {
+            updatedEntry.description = data.description;
+        }
+        return updatedEntry;
+    },
+    describe: (data) => `Edited description of \`Entry ${data.entryId}\``,
 });
 
 export const UpdateEntryArticleSchema = Schema({
@@ -71,6 +115,9 @@ export const UpdateEntryFeature = ContentEditType({
             // the hero image is calculated for each entry, usually based on a relationship or property
         ),
     }),
+    apply: () => {
+        throw new Error("This edit type is not implemented yet.");
+    },
     describe: (data) => `Updated ${data.feature.featureType} Feature of \`Entry ${data.entryId}\``,
 });
 
@@ -96,6 +143,9 @@ export const AddPropertyValue = ContentEditType({
          */
         slot: string.strictOptional(),
     }),
+    apply: () => {
+        throw new Error("This edit type is not implemented yet.");
+    },
     describe: (data) => `Added value for \`Property ${data.property}\` property on \`Entry ${data.entry}\``,
 });
 
@@ -117,6 +167,9 @@ export const UpdatePropertyValue = ContentEditType({
          */
         slot: string.strictOptional(),
     }),
+    apply: () => {
+        throw new Error("This edit type is not implemented yet.");
+    },
     describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value`,
 });
 
@@ -127,11 +180,16 @@ export const DeletePropertyValue = ContentEditType({
         /** The ID of the property fact to change */
         propertyFactId: vnidString,
     }),
+    apply: () => {
+        throw new Error("This edit type is not implemented yet.");
+    },
     describe: (data) => `Deleted \`PropertyFact ${data.propertyFactId}\` property value`,
 });
 
 export const _allContentEditTypes = {
     CreateEntry,
+    SetEntryName,
+    SetEntryDescription,
     UpdateEntryFeature,
     AddPropertyValue,
     UpdatePropertyValue,
@@ -140,6 +198,8 @@ export const _allContentEditTypes = {
 
 export type AnyContentEdit = (
     | Edit<typeof CreateEntry>
+    | Edit<typeof SetEntryName>
+    | Edit<typeof SetEntryDescription>
     | Edit<typeof UpdateEntryFeature>
     | Edit<typeof AddPropertyValue>
     | Edit<typeof UpdatePropertyValue>

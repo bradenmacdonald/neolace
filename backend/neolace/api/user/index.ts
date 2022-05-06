@@ -1,4 +1,4 @@
-import { adaptErrors, api, graph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { CreateUser } from "../../core/User.ts";
 import { getPublicUserData } from "./_helpers.ts";
 
@@ -12,6 +12,7 @@ export class UserIndexResource extends NeolaceHttpResource {
         notes:
             "This is only for human users; bots should use the bot API. Every human should have one account; creating multiple accounts is discouraged.",
     }, async ({ bodyData }) => {
+        const graph = await getGraph();
         const result = await graph.runAsSystem(CreateUser(bodyData)).catch(
             adaptErrors("email", "fullName", adaptErrors.remap("slugId", "username")),
         ); // An error in the "slugId" property gets remapped into the "username" field

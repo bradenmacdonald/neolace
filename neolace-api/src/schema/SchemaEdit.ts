@@ -4,7 +4,7 @@ import { boolean, SchemaValidatorFunction } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
 import { SiteSchemaData, PropertyType, PropertyMode } from "./SiteSchemaData.ts";
 
-interface SchemaEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
+export interface SchemaEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Schema;
     apply: (currentSchema: Readonly<SiteSchemaData>, data: Type<DataSchema>) => SiteSchemaData;
 }

@@ -11,7 +11,8 @@ on:
     branches: [main]
 
 env:
-  deno-version: ">=1.20.1 <1.21.0"
+  # deno-version: ">=1.21.0 <1.22.0" - disabling this because often the docker images are published days after the release, causing a build error
+  deno-version: "1.21.1"
   docker-registry: ghcr.io
 
 jobs:
@@ -60,20 +61,20 @@ jobs:
         with:
           deno-version: ${{ env.deno-version }}
 
-      - name: Check types and cache dependencies (backend)
-        run: deno cache --import-map=import_map.json neolace/api/server.ts
+      - name: Type check backend
+        run: deno check neolace/api/server.ts
         working-directory: ./backend
 
       # Type checking the test suite is very slow we do it asynchronously now too, while the actual tests themselves run in a separate job
 
       - name: Type check test suite setup
-        run: deno cache --import-map=import_map.json neolace/scripts/test-setup.ts
+        run: deno check neolace/scripts/test-setup.ts
         working-directory: ./backend
 
       - name: Type check tests
         env:
           ENV_TYPE: test
-        run: deno test --import-map=import_map.json --no-run
+        run: deno test --no-run
         working-directory: ./backend
 
   test-backend:
@@ -97,18 +98,34 @@ jobs:
       - name: Test Suite setup (backend)
         env:
           ENV_TYPE: test
-        run: deno run --import-map=import_map.json --allow-net --allow-read --allow-env --allow-write --no-check neolace/scripts/test-setup.ts
+        run: deno run --allow-net --allow-read --allow-env --allow-write --no-check neolace/scripts/test-setup.ts
         working-directory: ./backend
 
       - name: Run tests (backend)
         env:
           ENV_TYPE: test
-        run: deno test --import-map=import_map.json --allow-net --allow-env --allow-read --no-check
+        run: deno test --allow-net --allow-env --allow-read --no-check
         working-directory: ./backend
 
       - name: Stop containers
         if: always()
         run: docker-compose -f "docker-compose.yml" down
+
+  test-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1.1.0
+        with:
+          deno-version: ${{ env.deno-version }}
+
+      - name: Run tests (neolace-api)
+        run: deno test
+        working-directory: ./neolace-api
 
   ######################################################################################################################
   ## Build & Publish Docker Images

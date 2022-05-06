@@ -1,8 +1,8 @@
 
 // TODO: in the future this could be replaced with https://github.com/denoland/dnt
 
-import { ensureDir } from "https://deno.land/std@0.120.0/fs/ensure_dir.ts";
-import { dirname } from "https://deno.land/std@0.120.0/path/mod.ts";
+import { ensureDir } from "https://deno.land/std@0.135.0/fs/ensure_dir.ts";
+import { dirname } from "https://deno.land/std@0.135.0/path/mod.ts";
 
 const distDir = "dist/";
 

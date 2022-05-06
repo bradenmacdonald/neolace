@@ -2,7 +2,7 @@ import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { EditList, PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
 
 import { assertEquals, beforeAll, group, resetDBToBlankSnapshot, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
@@ -10,11 +10,12 @@ import { Property } from "neolace/core/schema/Property.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { EntryPropertyValueSet, getEntryProperties, getEntryProperty } from "neolace/core/entry/properties.ts";
 
-group(import.meta, () => {
+group("properties.ts", () => {
     group("set property values", () => {
         const entryType = VNID();
         const siteId = VNID();
         beforeAll(async () => {
+            const graph = await getGraph();
             await resetDBToBlankSnapshot();
             // Create a site and an entry type:
             await graph.runAsSystem(CreateSite({
@@ -32,6 +33,7 @@ group(import.meta, () => {
         });
 
         test("Define a new value property and set it on an entry", async () => {
+            const graph = await getGraph();
             const entryId = VNID();
             const propertyId = VNID();
             await graph.runAsSystem(ApplyEdits({
@@ -80,6 +82,7 @@ group(import.meta, () => {
         });
 
         test("Define a new relationship property and set it on an entry", async () => {
+            const graph = await getGraph();
             const entryA = VNID(), entryB = VNID();
             const propertyId = VNID();
             await graph.runAsSystem(ApplyEdits({
@@ -171,6 +174,7 @@ group(import.meta, () => {
 
         group("blank entry and single property entry", () => {
             beforeAll(async () => {
+                const graph = await getGraph();
                 await resetDBToBlankSnapshot();
                 // Create a site with:
                 //   Entry A has no properties
@@ -215,6 +219,7 @@ group(import.meta, () => {
             });
 
             test("Returns no properties for a blank entry", async () => {
+                const graph = await getGraph();
                 // Get the properties of A
                 assertEquals(await graph.read((tx) => getEntryProperties(A, { tx })), [
                     // No properties
@@ -222,6 +227,7 @@ group(import.meta, () => {
             });
 
             test("Returns no properties for a blank entry (getting specific property)", async () => {
+                const graph = await getGraph();
                 // Get the properties of A
                 assertEquals(
                     await graph.read((tx) => getEntryProperty({ entryId: A, propertyId: prop1, tx })),
@@ -230,6 +236,7 @@ group(import.meta, () => {
             });
 
             test("returns a basic property for an entry with a property", async () => {
+                const graph = await getGraph();
                 // Get the properties of B
                 assertEquals(await graph.read((tx) => getEntryProperties(B, { tx })), [
                     {
@@ -253,6 +260,7 @@ group(import.meta, () => {
             });
 
             test("getEntryProperty() by ID", async () => {
+                const graph = await getGraph();
                 const allProps = await graph.read((tx) => getEntryProperties(B, { tx }));
                 assertEquals(allProps.length, 1);
                 const expected = allProps[0];
@@ -270,6 +278,7 @@ group(import.meta, () => {
 
         group("default values", () => {
             test("Automatic reverse properties can be implemented using default values", async () => {
+                const graph = await getGraph();
                 // Create a site where B is an A, but A has an automatic reverse property
                 await resetDBToBlankSnapshot();
                 const pfBisA = VNID();
@@ -345,6 +354,7 @@ group(import.meta, () => {
 
         group("inheritance", () => {
             test("Returns inherited properties from parent entries, if the property is marked as inheritable", async () => {
+                const graph = await getGraph();
                 await resetDBToBlankSnapshot();
                 // Create a site with:
                 //   Entry A has prop1 = A1, prop2 = A2, prop3 = A3
@@ -568,6 +578,7 @@ group(import.meta, () => {
 
         group("multiple property values", () => {
             test("test multiple values for a single property", async () => {
+                const graph = await getGraph();
                 await resetDBToBlankSnapshot();
                 // Create a site with:
                 //   Entry A has one property with one value
@@ -732,6 +743,7 @@ group(import.meta, () => {
             });
 
             test("property rank can be used to explicitly order properties", async () => {
+                const graph = await getGraph();
                 await resetDBToBlankSnapshot();
                 // Create a site with:
                 //   Entry A has one property with three values in a specific order
@@ -841,6 +853,7 @@ group(import.meta, () => {
                 pfElectricCarIsCar = VNID(),
                 pfElectricCarHasMotor = VNID();
             beforeAll(async () => {
+                const graph = await getGraph();
                 await resetDBToBlankSnapshot();
                 // Create a site with:
                 //   Entries "Steering Wheel", "Combustion Engine", "Electric Motor"
@@ -973,6 +986,7 @@ group(import.meta, () => {
                 }));
             });
             test("'slots' allow partial inheritance where _some_ inherited values get overwritten, others don't.", async () => {
+                const graph = await getGraph();
                 // Car is normal, has two parts:
                 assertEquals(
                     await graph.read((tx) => getEntryProperty({ entryId: car, propertyId: entryHasPart, tx })),
@@ -1028,6 +1042,7 @@ group(import.meta, () => {
                 );
             });
             test("slots can be disabled, even after slot values were set", async () => {
+                const graph = await getGraph();
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
                     edits: [
@@ -1063,6 +1078,7 @@ group(import.meta, () => {
         });
 
         test("Can paginate, filter, and provide total count of properties", async () => {
+            const graph = await getGraph();
             await resetDBToBlankSnapshot();
             // Create a site with:
             //   Entry A has 10 properties [and 5 non-editable Auto values that all entries of that type have]

@@ -1,6 +1,6 @@
 import { api, assertEquals, assertRejects, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
 
-group(import.meta, () => {
+group("me.ts", () => {
     group("Get information about my own account", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
 

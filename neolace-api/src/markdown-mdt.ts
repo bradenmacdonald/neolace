@@ -1,8 +1,30 @@
 // deno-lint-ignore-file no-explicit-any
 import markdown from "./deps/markdown-it.min.js";
 import type { Token } from "./deps/markdown-it/Token.ts";
-import { Node, InlineNode, RootNode, AnyInlineNode, AnyBlockNode } from "./markdown-mdt-ast.ts";
-export type { Node, InlineNode, RootNode, AnyInlineNode, AnyBlockNode }
+import {
+    Node,
+    InlineNode,
+    RootNode,
+    AnyInlineNode,
+    AnyBlockNode,
+    TextNode,
+    ParagraphNode,
+    InlineLookupNode,
+    CustomInlineNode,
+    CustomBlockNode,
+} from "./markdown-mdt-ast.ts";
+export type {
+    Node,
+    InlineNode,
+    RootNode,
+    AnyInlineNode,
+    AnyBlockNode,
+    TextNode,
+    ParagraphNode,
+    InlineLookupNode,
+    CustomInlineNode,
+    CustomBlockNode,
+}
 import { HeadingIdPlugin } from "./markdown-mdt-heading-id-plugin.ts";
 import { LookupExpressionPlugin } from "./markdown-mdt-lookup-plugin.ts";
 import { SubPlugin } from "./markdown-mdt-sub-plugin.ts";
@@ -22,6 +44,9 @@ const parser = markdown("commonmark", {
 .use(LookupExpressionPlugin) // Parse { lookup expressions }
 .use(SubPlugin) // Allow use of <sub> and <sup> tags
 .use(FootnotePlugin); // Allow footnotes of various forms
+
+const isCustomInlineNode = (node: Node): node is CustomInlineNode => node.type.startsWith("custom-") && !("block" in node);
+const isCustomBlockNode = (node: Node): node is CustomBlockNode => node.type.startsWith("custom-") && ("block" in node && node.block === true);
 
 
 export interface Options {
@@ -169,9 +194,11 @@ function tokenToNode(token: Token): Node {
     }
 
     // Content/children attributes:
-    if (type === "text" || type === "code_inline" || type === "code_block" || type === "lookup_inline" || type === "lookup_block") {
+    if (type === "text") {
         // This node contains text content:
-        node.content = token.content;
+        node.text = token.content;
+    } else if (type === "code_inline" || type === "code_block" || type === "lookup_inline" || type === "lookup_block") {
+        node.children = [{type: "text", text: token.content}];
     } else {
         // Otherwise it might contain child nodes:
         if (token.content) {
@@ -230,10 +257,10 @@ export function renderInlineToHTML(inlineNode: Node): string {
     let html = "";
     const renderNode = (childNode: typeof inlineNode["children"][0]): void => {
         if (childNode.type === "text") {
-            html += parser.utils.escapeHtml(childNode.content);
+            html += parser.utils.escapeHtml(childNode.text);
             return;
         } else if (childNode.type === "code_inline") {
-            html += "<code>" + parser.utils.escapeHtml(childNode.content) + "</code>";
+            html += "<code>" + parser.utils.escapeHtml(childNode.children[0].text) + "</code>";
             return;
         } else if (childNode.type === "softbreak") {
             html += "\n";
@@ -242,11 +269,13 @@ export function renderInlineToHTML(inlineNode: Node): string {
             html += "<br>";
             return;
         } else if (childNode.type === "lookup_inline") {
-            html += "<code>" + parser.utils.escapeHtml(childNode.content) + "</code>";
+            html += "<code>" + parser.utils.escapeHtml(childNode.children[0].text) + "</code>";
             return;
         } else if (childNode.type === "footnote_ref") {
             html += "*"; // TODO: better handling of footnote references
             return;
+        } else if (isCustomInlineNode(childNode)) {
+            throw new Error(`renderInlineToHTML doesn't support custom nodes - remove them first.`);
         }
         let start = "", end = "";
         switch (childNode.type) {
@@ -286,13 +315,10 @@ export function renderInlineToPlainText(inlineNode: Node, {lookupToText = (looku
     let text = "";
     const renderNode = (childNode: typeof inlineNode["children"][0]): void => {
         if (childNode.type === "text") {
-            text += childNode.content;
-            return;
-        } else if (childNode.type === "code_inline") {
-            text += childNode.content;
+            text += childNode.text;
             return;
         } else if (childNode.type === "lookup_inline") {
-            text += lookupToText(childNode.content);
+            text += lookupToText(childNode.children[0].text);
             return;
         } else if (childNode.type === "softbreak" || childNode.type === "hardbreak") {
             text += "\n";
@@ -300,8 +326,10 @@ export function renderInlineToPlainText(inlineNode: Node, {lookupToText = (looku
         } else if (childNode.type === "footnote_ref") {
             text += "*"; // TODO: better handling of footnote references
             return;
+        } else if (isCustomInlineNode(childNode)) {
+            throw new Error(`renderInlineToPlainText doesn't support custom nodes - remove them first.`);
         }
-        // If we get here, this is a strong, em, sup, sub, s, or link; just render its text
+        // If we get here, this is a core, strong, em, sup, sub, s, or link; just render its text
         childNode.children.forEach(renderNode);
     };
     inlineNode.children.forEach(renderNode);
@@ -319,7 +347,9 @@ export function renderToPlainText(node: RootNode, {lookupToText = (lookup: strin
             text += renderInlineToPlainText(node, {lookupToText});
             text += "\n\n";
         } else if (node.type === "lookup_block") {
-            text += lookupToText(node.content) + "\n\n";
+            text += lookupToText(node.children[0].text) + "\n\n";
+        } else if (isCustomBlockNode(node) || isCustomInlineNode(node)) {
+            throw new Error("renderToPlainText does not support custom node types.");
         } else if ("children" in node) {
             node.children.forEach(renderNode);
         }
@@ -328,14 +358,26 @@ export function renderToPlainText(node: RootNode, {lookupToText = (lookup: strin
     return text;
 }
 
+
+const escapeData: [bad: string|RegExp, good: string][]  = [
+    ["*", "\\*"],
+    ["[", "\\["],  // Escape possible links and footnotes
+    ["]", "\\]"],
+    ["{", "\\{"],
+    ["}", "\\}"],
+    ["_", "\\_"],
+    ["~", "\\~"], // Subscript
+    ["^", "\\^"], // Superscript
+    [/^#/g, "\\#"],
+    [/^>/g, "\\>"],
+];
+
 /**
- * Render MDT to HTML, ignoring block-level elements.
- * @param mdt The MDT string to parse and convert to HTML
+ * Given some plain text, escape it so that it can be used in an MDT document.
  */
-// export function renderMDTInlineToHTML(mdt: string): string {
-//     const document = tokenizeMDT(mdt, {inline: true});
-//     return document.children.map(node => {
-//         if (node.type !== "inline") { throw new Error(`Unexpected node type ${node.type} when parsing MDT as inline-only.`); }
-//         return renderInlineToHTML(node);
-//     }).join("");
-// }
+export function escapeText(text: string): string {
+    for (const [bad, good] of escapeData) {
+        text = text.replaceAll(bad, good);
+    }
+    return text;
+}

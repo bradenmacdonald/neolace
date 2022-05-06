@@ -15,7 +15,7 @@ import {
     VNodeTypeRef,
 } from "neolace/deps/vertex-framework.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 
 // Forward reference
 export const SiteRef: typeof Site = VNodeTypeRef();
@@ -172,11 +172,15 @@ VNodeTypeRef.resolve(SiteRef, Site);
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /** Cache to look up a siteId (Site VNID) from a site's shortId (slugId without the "site-" prefix) */
-export const siteIdFromShortId = makeCachedLookup((shortId: string) => graph.vnidForKey(`site-${shortId}`), 10_000);
+export const siteIdFromShortId = makeCachedLookup(
+    async (shortId: string) => (await getGraph()).vnidForKey(`site-${shortId}`),
+    10_000,
+);
 
 /** Cache to look up a site's shortId from its VNID */
 export const siteShortIdFromId = makeCachedLookup(
-    (siteId: VNID) => graph.pullOne(Site, (s) => s.shortId(), { key: siteId }).then((s) => s.shortId),
+    async (siteId: VNID) =>
+        (await getGraph()).pullOne(Site, (s) => s.shortId(), { key: siteId }).then((s) => s.shortId),
     10_000,
 );
 
@@ -207,7 +211,8 @@ export function frontendConfig(): DerivedProperty<FrontendConfigData> {
 
 /** Cache to look up a Site's siteCode from its VNID */
 export const siteCodeForSite = makeCachedLookup(
-    (siteId: VNID) => graph.pullOne(Site, (s) => s.siteCode, { key: siteId }).then((s) => s.siteCode),
+    async (siteId: VNID) =>
+        (await getGraph()).pullOne(Site, (s) => s.siteCode, { key: siteId }).then((s) => s.siteCode),
     10_000,
 );
 

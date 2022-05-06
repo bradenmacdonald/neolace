@@ -1,12 +1,12 @@
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
 import { schema as plantDbSchema } from "neolace/sample-data/plantdb/schema.ts";
 import { ImportSchema } from "./import-schema.ts";
 
-group(import.meta, () => {
+group("import-schema.ts", () => {
     // Note: importSchema() is used for the test fixtures so is also tested by all the tests in
     // neolace/api/site/{siteShortId}/schema/index.test.ts
 
@@ -14,6 +14,7 @@ group(import.meta, () => {
 
     group("Import a schema", () => {
         test("can import the example PlantDB schema", async () => {
+            const graph = await getGraph();
             const site = await graph.runAsSystem(CreateSite({
                 name: "Test Site",
                 domain: "test.neolace.com",

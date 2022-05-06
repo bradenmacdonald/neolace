@@ -1,13 +1,18 @@
 import * as KeratinAuthN from 'keratin-authn';
-import useSWR from 'swr';
+import useSWR, { KeyedMutator } from 'swr';
 import { AsyncCache } from './async-cache';
 import { useRouter } from 'next/router';
-import { EvaluateLookupData, NeolaceApiClient, NotFound, SiteDetailsData, VNID } from 'neolace-api';
+import { EvaluateLookupData, isVNID, NeolaceApiClient, NotFound, SiteDetailsData, VNID } from 'neolace-api';
 
 import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
 import { ApiError } from 'next/dist/server/api-utils';
 
+import * as api from 'neolace-api';
 export * as api from 'neolace-api';
+
+/** Use this in URLs in lieu of an ID if there is no ID yet. It's neither a valid VNID nor friendlyId. */
+export const NEW = "_";
+export type NEW = typeof NEW;
 
 export type SiteData = SiteDetailsData;
 
@@ -117,7 +122,7 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
  * React hook to evaluate a lookup expression
  * @returns 
  */
- export function useLookupExpression(expr: string, options: {entryId?: VNID} = {}): {result: EvaluateLookupData|undefined, error: ApiError} {
+export function useLookupExpression(expr: string, options: {entryId?: VNID} = {}): {result: EvaluateLookupData|undefined, error: ApiError} {
     const {site} = useSiteData();
     // TODO: include an entry revision number in this ID
     const key = `lookup:${site.shortId}:${options.entryId ?? 'none'}:no-draft:${expr}`;
@@ -140,4 +145,113 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
         // refreshInterval: 10 * 60_000,
     });
     return {result: data, error};
+}
+
+/**
+ * React hook to get the current site's schema
+ * @returns 
+ */
+export function useSiteSchema(): [data: api.SiteSchemaData|undefined, error: ApiError|undefined] {
+    const {site, siteError} = useSiteData();
+
+    const key = `siteSchema:${site.shortId}:no-draft`;
+    const { data, error } = useSWR(key, async () => {
+        if (siteError) {
+            throw new ApiError(500, "Site Error");
+        }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the entry
+        }
+        return await client.getSiteSchema({siteId: site.shortId});
+    }, {
+
+        // refreshInterval: 10 * 60_000,
+    });
+    return [data, error];
+}
+
+type DraftDataWithEdits = Required<api.DraftData>;
+
+/**
+ * React hook to get the currently published version of an entry, to use as a basis for making edits.
+ * @returns 
+ */
+export function useDraft(draftId: VNID|"_"): [data: DraftDataWithEdits|undefined, error: ApiError|undefined, mutate: KeyedMutator<DraftDataWithEdits|undefined>] {
+    const {site, siteError} = useSiteData();
+
+    const key = `draft:${site.shortId}:${draftId}`;
+    const { data, error, mutate } = useSWR(key, async (): Promise<DraftDataWithEdits|undefined> => {
+        if (siteError) {
+            throw new ApiError(500, "Site Error");
+        }
+        if (draftId === NEW) {
+            return undefined;
+        }
+        if (!isVNID(draftId)) {
+            throw new ApiError(500, "Not a valid VNID");
+        }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the draft
+        }
+        try {
+            const data = await client.getDraft(draftId, {flags: [
+                api.GetDraftFlags.IncludeEdits,
+            ] as const, siteId: site.shortId});
+            return data;
+        } catch (err) {
+            throw err;
+        }
+    }, {
+        // refreshInterval: 10 * 60_000,
+    });
+    return [data, error, mutate];
+}
+
+
+/**
+ * React hook to get the currently published version of an entry, to use as a basis for making edits.
+ * @returns 
+ */
+export function useEditableEntry(entryId: VNID): [data: api.EditableEntryData|undefined, error: ApiError|undefined, mutate: KeyedMutator<api.EditableEntryData|undefined>] {
+    const {site, siteError} = useSiteData();
+
+    // TODO: Change "no-draft" below to the ID of the current draft, if any, from a <DraftContext> provider.
+    const key = `entry:${site.shortId}:no-draft:${entryId}`;
+    const { data, error, mutate } = useSWR(key, async () => {
+        if (siteError) {
+            throw new ApiError(500, "Site Error");
+        }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the entry
+        }
+        if (!isVNID(entryId)) {
+            throw new ApiError(500, "Not a valid VNID");
+        }
+        try {
+            const data: api.EditableEntryData = await client.getEntry(entryId, {flags: [
+                api.GetEntryFlags.IncludeFeatures,
+                api.GetEntryFlags.IncludeRawProperties,
+            ] as const, siteId: site.shortId});
+            return data;
+        } catch (err) {
+            if (err instanceof api.NotFound) {
+                const blankEntry: api.EditableEntryData = {
+                    id: entryId,
+                    friendlyId: "",
+                    name: "",
+                    description: "",
+                    entryType: {id: "" as VNID, name: ""},
+                    features: {},
+                    propertiesRaw: [],
+                };
+                return blankEntry;
+            } else {
+                throw err;
+            }
+        }
+    }, {
+
+        // refreshInterval: 10 * 60_000,
+    });
+    return [data, error, mutate];
 }

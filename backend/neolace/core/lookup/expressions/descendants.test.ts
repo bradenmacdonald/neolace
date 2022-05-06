@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { PropertyType } from "neolace/deps/neolace-api.ts";
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { AnnotatedValue, IntegerValue, MakeAnnotatedEntryValue, PageValue } from "../values.ts";
@@ -10,7 +10,7 @@ import { Count } from "./count.ts";
 import { LookupExpression } from "../expression.ts";
 import { AndDescendants, Descendants } from "./descendants.ts";
 
-group(import.meta, () => {
+group("descendants.ts", () => {
     group("descendants()", () => {
         // These tests are read-only so don't need isolation, but do use the default plantDB example data:
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
@@ -18,6 +18,7 @@ group(import.meta, () => {
         const familyPinaceae = defaultData.entries.familyPinaceae;
 
         test("It can give all the descendants of the family Pinaceae", async () => {
+            const graph = await getGraph();
             const expression = new Descendants(new This());
 
             const value = await graph.read((tx) =>
@@ -55,6 +56,7 @@ group(import.meta, () => {
         test("It is compatible with count()", async () => {
             const expression = new Count(new Descendants(new This()));
 
+            const graph = await getGraph();
             const value = await graph.read((tx) =>
                 expression.getValue({ tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 10n })
             );
@@ -70,6 +72,7 @@ group(import.meta, () => {
         const familyPinaceae = defaultData.entries.familyPinaceae;
 
         test("It can give all the descendants of the ponderosa pine", async () => {
+            const graph = await getGraph();
             const expression = new AndDescendants(new This());
             const value = await graph.read((tx) =>
                 expression.getValue({ tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 5n }).then((v) =>
@@ -105,6 +108,7 @@ group(import.meta, () => {
         });
 
         test("It is compatible with count()", async () => {
+            const graph = await getGraph();
             const expression = new Count(new AndDescendants(new This()));
 
             const value = await graph.read((tx) =>
@@ -145,8 +149,10 @@ group(import.meta, () => {
             I = VNID();
 
         const evalExpr = async (expr: LookupExpression, entryId: VNID) =>
-            await graph.read((tx) =>
-                expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
+            await getGraph().then((graph) =>
+                graph.read((tx) =>
+                    expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
+                )
             );
 
         const checkDescendants = async (entryId: VNID, expected: AnnotatedValue[]) => {
@@ -192,6 +198,7 @@ group(import.meta, () => {
             //      \ /    | /
             //       H     I
 
+            const graph = await getGraph();
             await graph.runAsSystem(
                 CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
             );
@@ -388,6 +395,7 @@ group(import.meta, () => {
             //      \
             //       A (same A as above)
 
+            const graph = await getGraph();
             await graph.runAsSystem(
                 CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
             );

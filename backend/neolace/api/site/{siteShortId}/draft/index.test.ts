@@ -3,6 +3,7 @@ import {
     api,
     assert,
     assertEquals,
+    assertInstanceOf,
     assertRejects,
     createUserWithPermissions,
     getClient,
@@ -11,10 +12,10 @@ import {
     test,
 } from "neolace/api/tests.ts";
 import { PermissionGrant } from "neolace/core/Group.ts";
-import { graph } from "neolace/core/graph.ts";
+import { getGraph } from "neolace/core/graph.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
 
-group(import.meta, () => {
+group("index.ts", () => {
     group("Creating a draft", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
@@ -34,6 +35,7 @@ group(import.meta, () => {
              * This tests creating an empty draft on a site that doesn't allow public contributions
              */
             test("test permissions - PublicReadOnly Site", async () => {
+                const graph = await getGraph();
                 // Set Access Mode to PublicReadOnly:
                 await graph.runAsSystem(UpdateSite({
                     key: defaultData.site.id,
@@ -77,6 +79,7 @@ group(import.meta, () => {
              * This tests creating an empty draft on a site that does allow public contributions
              */
             test("test permissions - PublicContributions Site", async () => {
+                const graph = await getGraph();
                 // Set Access Mode to PublicReadOnly:
                 await graph.runAsSystem(UpdateSite({
                     key: defaultData.site.id,
@@ -105,7 +108,7 @@ group(import.meta, () => {
                 await assertRejects(
                     () => client.createDraft({ title: "", description: null, edits: [] }),
                     (err: Error) => {
-                        assert(err instanceof api.InvalidFieldValue);
+                        assertInstanceOf(err, api.InvalidFieldValue);
                         assertEquals(err.fieldErrors[0].fieldPath, "title");
                     },
                 );
@@ -127,7 +130,7 @@ group(import.meta, () => {
                             ],
                         }),
                     (err: Error) => {
-                        assert(err instanceof api.InvalidFieldValue);
+                        assertInstanceOf(err, api.InvalidFieldValue);
                         assertEquals(err.fieldErrors[0].fieldPath, "edits.0.code");
                     },
                 );
@@ -145,7 +148,7 @@ group(import.meta, () => {
                             ],
                         }),
                     (err: Error) => {
-                        assert(err instanceof api.InvalidFieldValue);
+                        assertInstanceOf(err, api.InvalidFieldValue);
                         assertEquals(err.fieldErrors[0].fieldPath, "edits.0.data");
                     },
                 );
@@ -181,6 +184,7 @@ group(import.meta, () => {
             });
 
             test("test permissions - user with no permission grants", async () => {
+                const graph = await getGraph();
                 // If the site is "private" or "public read only", a user without explicit permissions cannot create content edits.
                 const { userData: userWithNoPermissions } = await createUserWithPermissions(new Set());
                 const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.shortId);
@@ -201,6 +205,7 @@ group(import.meta, () => {
             });
 
             test("test permissions - user with explicit permissions", async () => {
+                const graph = await getGraph();
                 // On a site in private mode:
                 await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
                 // A user with "propose schema changes" can create a draft with schema edits:
@@ -249,6 +254,7 @@ group(import.meta, () => {
             });
 
             test("test permissions - user with no permission grants", async () => {
+                const graph = await getGraph();
                 // If the site is "private" or "public read only", a user without explicit permissions cannot create content edits.
                 const { userData: userWithNoPermissions } = await createUserWithPermissions(new Set());
                 const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.shortId);
@@ -269,6 +275,7 @@ group(import.meta, () => {
             });
 
             test("test permissions - user with explicit permissions", async () => {
+                const graph = await getGraph();
                 // Set the site to "public read only":
                 await graph.runAsSystem(
                     UpdateSite({ accessMode: AccessMode.PublicReadOnly, key: defaultData.site.id }),

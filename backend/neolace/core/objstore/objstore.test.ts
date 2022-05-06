@@ -2,7 +2,7 @@ import { assertEquals, group, test } from "neolace/lib/tests.ts";
 import { files, getFullPath } from "neolace/sample-data/plantdb/datafiles.ts";
 import { uploadFileToObjStore } from "./objstore.ts";
 
-group(import.meta, () => {
+group("objstore.ts", () => {
     test("it can upload an image file into object storage", async () => {
         const imageDataWebp = await Deno.open(getFullPath(files.ponderosaPineImg.path));
         const uploadResult = await uploadFileToObjStore(imageDataWebp, { contentType: "image/webp" });
