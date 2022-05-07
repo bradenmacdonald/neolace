@@ -5,6 +5,7 @@ import React from 'react';
 import { api } from 'lib/api-client';
 import { MDTContext } from './markdown-mdt/mdt';
 import G6, { Graph, IG6GraphEvent, NodeConfig } from '@antv/g6';
+import { useResizeObserver } from './utils/resizeObserverHook';
 
 interface GraphProps {
     value: api.GraphValue;
@@ -74,9 +75,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     React.useEffect(() => {
         if (!graph && ref.current) {
             const container = ref.current;
-            const width = container.scrollWidth;
-            const height = container.scrollHeight || 500;
-            console.log("Here")
+            const width = container.clientWidth;
+            const height = container.clientHeight;
             const newGraph = new G6.Graph({
                 container,
                 width,
@@ -112,5 +112,17 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         }
     }, [ref.current]);
 
-    return <div ref={ref}></div>;
+    // Automatically resize the graph if the containing element changes size.
+    const handleSizeChange = React.useCallback(() => {
+        if (!graph || graph.destroyed) { return; }
+        const width = ref.current!.clientWidth, height = ref.current!.clientHeight;
+        if (graph.getWidth() !== width || graph.getHeight() !== height) {
+            graph.changeSize(width, height);
+            graph.layout();
+            graph.fitView();
+        }
+    }, [graph]);
+    useResizeObserver(ref, handleSizeChange);
+
+    return <div ref={ref} className="w-full aspect-square md:aspect-video border-2 border-gray-200 overflow-hidden"></div>;
 };  
