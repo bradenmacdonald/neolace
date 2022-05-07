@@ -100,6 +100,9 @@ services:
      --data-dir /data --api-key=typesensedevkey --enable-cors
     volumes:
       - typesense-data:/data
+    # Suppress TypeSense's extremely noisy logging by default
+    logging:
+      driver: none
 
   ################################################################
   # S3-compatible object storage (used only for development)
