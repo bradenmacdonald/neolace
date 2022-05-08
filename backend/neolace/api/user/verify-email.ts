@@ -1,11 +1,12 @@
-import { Field } from "neolace/deps/vertex-framework.ts";
+import { C, Field } from "neolace/deps/vertex-framework.ts";
 
-import { api, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getRedis } from "neolace/core/redis.ts";
 import { createRandomToken } from "neolace/lib/secure-token.ts";
 import { mailer, makeSystemEmail } from "neolace/core/mailer/mailer.ts";
 import { siteIdFromShortId } from "neolace/core/Site.ts";
 import { dedent } from "neolace/lib/dedent.ts";
+import { HumanUser } from "neolace/core/User.ts";
 
 const validateEmail = Field.validators.email;
 
@@ -15,6 +16,22 @@ const DAYS = 60 * 60 * 24;
  */
 const EMAIL_VALIDATION_EXPIRY_SECONDS = 2 * DAYS;
 const redisKeyPrefix = "email-validation-token:";
+
+/**
+ * Generate and store an expiring a validation token, which we can then email to the user.
+ * If they click the link with this token in their email, we know their email address is valid.
+ */
+export async function saveValidationToken(
+    { email, data }: { email: string; data: Record<string, unknown> },
+): Promise<string> {
+    const token = await createRandomToken(24);
+    const key = redisKeyPrefix + token;
+    const value = JSON.stringify({ email, data });
+    const redis = await getRedis();
+    // Store the token in Redis, and have it expire after a certain amount of time.
+    await redis.set(key, value, { ex: EMAIL_VALIDATION_EXPIRY_SECONDS });
+    return token;
+}
 
 /**
  * Given an email validation token that was emailed to a user, check if it's
@@ -51,16 +68,21 @@ export class VerifyUserEmailResource extends NeolaceHttpResource {
             throw new api.InvalidFieldValue([{ fieldPath: "email", message: err.message }]);
         }
 
+        // And make sure the email address isn't already used:
+        const graph = await getGraph();
+        const checkEmail = await graph.pull(HumanUser, (u) => u.id, { where: C`@this.email = ${email}` });
+        if (checkEmail.length !== 0) {
+            throw new api.InvalidRequest(
+                api.InvalidRequestReason.EmailAlreadyRegistered,
+                "A user account is already registered with that email address.",
+            );
+        }
+
+        const token = await saveValidationToken({ email, data: bodyData.data as Record<string, unknown> });
+
         // The API always accepts the site "shortId" but we need the site VNID if we're sending
         // the validation email as coming from a specific site and not the overall realm.
         const siteId = bodyData.siteId ? await siteIdFromShortId(bodyData.siteId) : undefined;
-
-        const token = await createRandomToken(24);
-        const key = redisKeyPrefix + token;
-        const value = JSON.stringify({ email, data: bodyData.data });
-        const redis = await getRedis();
-        // Store the token in Redis, and have it expire after a certain amount of time.
-        await redis.set(key, value, { ex: EMAIL_VALIDATION_EXPIRY_SECONDS });
 
         // Send the user an email with the link:
         const msg = await makeSystemEmail({
@@ -108,16 +130,6 @@ export class VerifyUserEmailResource extends NeolaceHttpResource {
             throw new api.InvalidFieldValue([{ fieldPath: "token", message: "No token was provided." }]);
         }
 
-        const key = redisKeyPrefix + token;
-        const redis = await getRedis();
-        const value = await redis.get(key);
-        if (!value) {
-            throw new api.NotFound("Invalid or expired token.");
-        }
-        const valueObj = JSON.parse(value);
-        return {
-            email: valueObj.email,
-            data: valueObj.data,
-        };
+        return await checkValidationToken(token);
     });
 }

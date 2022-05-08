@@ -3,7 +3,7 @@ import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 import { FormattedMessage, useIntl } from 'react-intl';
 
-import { client, getSiteData, SiteData } from 'lib/api-client';
+import { api, client, getSiteData, SiteData } from 'lib/api-client';
 import { SitePage } from 'components/SitePage';
 import { UserContext, UserStatus, requestPasswordlessLogin } from 'components/user/UserContext';
 import { Control, Form } from 'components/widgets/Form';
@@ -12,6 +12,7 @@ import { Button } from 'components/widgets/Button';
 import { Redirect } from 'components/utils/Redirect';
 import { Spinner } from 'components/widgets/Spinner';
 import { SuccessMessage } from 'components/widgets/SuccessMessage';
+import { ErrorMessage } from 'components/widgets/ErrorMessage';
 
 interface PageProps {
     site: SiteData;
@@ -38,9 +39,11 @@ const LoginPage: NextPage<PageProps> = function(props) {
     // Handler for when user enters their email and clicks "Create Account"
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isSubmittedSuccessfully, setSubmittedSuccessfully] = React.useState(false);
+    const [submissionError, setSubmissionError] = React.useState<string|undefined>(undefined);
     const handleRegister = React.useCallback(async (event: React.MouseEvent) => {
         event.preventDefault();
         setIsSubmitting(true);
+        setSubmissionError(undefined);
         try {
             await client.requestEmailVerification({
                 email: userEmail,
@@ -50,7 +53,11 @@ const LoginPage: NextPage<PageProps> = function(props) {
             });
             setSubmittedSuccessfully(true);
         } catch (err) {
-            throw err;
+            if (err instanceof api.ApiError) {
+                setSubmissionError(err.message);
+            } else {
+                throw err;
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -102,6 +109,11 @@ const LoginPage: NextPage<PageProps> = function(props) {
                     <SuccessMessage>
                         <FormattedMessage id="site.register.submitted" defaultMessage="Please check your email and click the link we sent you to activate your account." />
                     </SuccessMessage>
+                }
+                {submissionError &&
+                    <ErrorMessage>
+                        {submissionError}
+                    </ErrorMessage>
                 }
             </Form>
 

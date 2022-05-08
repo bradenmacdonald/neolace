@@ -1,17 +1,17 @@
-import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
+import { C, VNID } from "neolace/deps/vertex-framework.ts";
 
 import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { CreateUser, HumanUser } from "neolace/core/User.ts";
 import { authClient } from "neolace/core/authn-client.ts";
 import { getPublicUserData } from "./_helpers.ts";
-
-const validateEmail = Field.validators.email;
+import { checkValidationToken } from "./verify-email.ts";
+import { createRandomToken } from "../../lib/secure-token.ts";
 
 export class UserIndexResource extends NeolaceHttpResource {
     public paths = ["/user"];
 
     POST = this.method({
-        responseSchema: api.UserDataResponse,
+        responseSchema: api.CreateHumanUserResponse,
         requestBodySchema: api.CreateHumanUser,
         description: "Create a user account",
         notes:
@@ -21,13 +21,10 @@ export class UserIndexResource extends NeolaceHttpResource {
             throw new api.NotAuthorized("You cannot create an account if you are already logged in.");
         }
 
-        // Validate the email address before we try doing anything else:
-        const email = bodyData.email.toLowerCase();
-        try {
-            validateEmail(email);
-        } catch (err) {
-            throw new api.InvalidFieldValue([{ fieldPath: "email", message: err.message }]);
-        }
+        // Get the email address from the token - this ensures that the email address has been verified already.
+        const email = (await checkValidationToken(bodyData.emailToken)).email;
+
+        // Make sure no account with that email already exists:
         const graph = await getGraph();
         const checkEmail = await graph.pull(HumanUser, (u) => u.id, { where: C`@this.email = ${email}` });
         if (checkEmail.length !== 0) {
@@ -40,7 +37,9 @@ export class UserIndexResource extends NeolaceHttpResource {
         // OK at this point we can be pretty sure the data is valid, so next
         // we create their account in the auth server (required before we save their User record)
         const userId = VNID(); // Their new internal user ID.
-        const authnData = await authClient.createUser({ username: userId });
+        // Create a temporary password that the API client can use to (1) log in the user and (2) set a new password
+        const tempPassword = await createRandomToken(24);
+        const authnData = await authClient.createUser({ username: userId, password: tempPassword });
 
         // Now we create their user account
 
@@ -54,6 +53,14 @@ export class UserIndexResource extends NeolaceHttpResource {
             adaptErrors("email", "fullName", adaptErrors.remap("slugId", "username")),
         ); // An error in the "slugId" property gets remapped into the "username" field
 
-        return await getPublicUserData(result.id);
+        const userData = await getPublicUserData(result.id);
+        console.log(`Created user ${userId} with temporary password ${tempPassword} and username ${userData.username}`);
+        return {
+            userData,
+            temporaryCredentials: {
+                username: userId,
+                password: tempPassword,
+            },
+        };
     });
 }

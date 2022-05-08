@@ -3,6 +3,7 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 
 import { environment } from "neolace/app/config.ts";
 import { getGraph, stopGraphDatabaseConnection } from "neolace/core/graph.ts";
+import { stopRedis } from "neolace/core/redis.ts";
 import { CreateGroup, PermissionGrant } from "neolace/core/Group.ts";
 import { CreateBot, CreateUser } from "neolace/core/User.ts";
 import {
@@ -33,6 +34,7 @@ export function group(name: string, tests: () => unknown) {
             () => {
                 afterAll(async () => {
                     await stopGraphDatabaseConnection();
+                    await stopRedis();
                 });
                 level++;
                 tests();

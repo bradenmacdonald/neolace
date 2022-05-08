@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { PasswordlessLoginResponse, UserDataResponse, VerifyEmailRequest, EmailTokenResponse } from "./user.ts";
+import { PasswordlessLoginResponse, UserDataResponse, VerifyEmailRequest, EmailTokenResponse, CreateHumanUserResponse } from "./user.ts";
 import * as errors from "./errors.ts";
 import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags } from "./edit/index.ts";
@@ -178,9 +178,11 @@ export class NeolaceApiClient {
     }
 
     /**
-     * Register a new user account (human user)
+     * Register a new user account (human user).
+     * First you must use requestEmailVerification() to verify the user's email address and get an email token.
+     * This will return a temporary password which you can use to log the user in and/or to set a new password for them.
      */
-    public async registerHumanUser(data: {email: string, fullName?: string, username?: string}): Promise<schemas.Type<typeof UserDataResponse>> {
+    public async registerHumanUser(data: {emailToken: string, fullName?: string, username?: string}): Promise<schemas.Type<typeof CreateHumanUserResponse>> {
         return await this.call("/user", {method: "POST", data});
     }
 

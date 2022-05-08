@@ -5,15 +5,6 @@ export interface PasswordlessLoginResponse {
     requested: boolean;
 }
 
-/**
- * Data required when requesting creation of a (normal, human) user account
- */
-export const CreateHumanUser = Schema({
-    email: normalString,
-    fullName: normalString.strictOptional(),
-    username: normalString.strictOptional(),
-});
-
 export const UserDataResponse = Schema.either(
     {
         isBot: boolean.equals(false),
@@ -27,6 +18,26 @@ export const UserDataResponse = Schema.either(
         fullName: nullable(normalString),
     }
 );
+
+/**
+ * Data required when requesting creation of a (normal, human) user account
+ */
+export const CreateHumanUser = Schema({
+    emailToken: normalString,
+    fullName: normalString.strictOptional(),
+    username: normalString.strictOptional(),
+});
+
+export const CreateHumanUserResponse = Schema({
+    temporaryCredentials: Schema({
+        /** A temporary username just for logging in to our AuthN server this one time. */
+        username: string,
+        /** A password that can be used to log the user in after registration, and to set a new password. */
+        password: string,
+    }),
+    userData: UserDataResponse,
+});
+
 
 /**
  * Before registering a user account, that user's email address must be verified using this API.
@@ -56,5 +67,6 @@ export const VerifyEmailRequest = Schema({
  */
 export const EmailTokenResponse = Schema({
     email: normalString,
-    data: object,
+    // deno-lint-ignore no-explicit-any
+    data: object.transform(x => x as Record<string, any>),
 });

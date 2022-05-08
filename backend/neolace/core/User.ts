@@ -142,7 +142,7 @@ export const CreateUser = defineAction({
         await tx.queryOne(C`
             CREATE (u:Human:User:VNode {
                 id: ${data.id},
-                authnId: ${data.authnId},
+                authnId: ${BigInt(data.authnId)},
                 email: ${data.email},
                 slugId: ${User.slugIdPrefix + username},
                 fullName: ${data.fullName || null}
