@@ -162,6 +162,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 e.item.get('model').fy = null;
             });
 
+            // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
+            ref.current.addEventListener("MozMousePixelScroll", (e) => { e.preventDefault(); }, {passive: false })
         }
     }, [ref.current]);
 
