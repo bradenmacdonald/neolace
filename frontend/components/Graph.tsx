@@ -130,9 +130,10 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                       endArrow: {
                         path: G6.Arrow.triangle(10, 20, 0),
                         d: 0,
-                        fill: 'black',
+                        fill: '#ddd',
                         },
-                      lineWidth: 3,
+                      lineWidth: 2,
+                      stroke: "#ddd",
                       /* and other styles */
                       // stroke: '#F6BD16',
                     },
