@@ -196,6 +196,9 @@ export class ReferenceCache {
                 for (const entry of value.entries) {
                     this._entryIdsUsed.add(entry.entryId);
                 }
+                for (const relationship of value.rels) {
+                    this._propertyIdsUsed.add(relationship.relType);
+                }
                 return;
             }
             case "Integer":

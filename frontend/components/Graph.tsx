@@ -27,13 +27,13 @@ const listOfColours = [
 const colour_dict = new Map()
 
 
-function convertValueToData(value: api.GraphValue) {
+function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
     const data = {
         nodes: value.entries.map((n) => (
             { id: n.entryId, label: n.name , entryType: n.entryType}
         )),
         edges: value.rels.map((e) => (
-            { source: e.fromEntryId, target: e.toEntryId, entryType: e.relType , label: e.relType }
+            { source: e.fromEntryId, target: e.toEntryId, entryType: e.relType , label: refCache.properties[e.relType]?.name ?? e.relType }
         )),
     }
 
@@ -65,7 +65,7 @@ function refreshDragedNodePosition(e: IG6GraphEvent) {
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const data = React.useMemo(() => {
-        return convertValueToData(props.value);
+        return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value])
 
     const ref = React.useRef<HTMLDivElement>(null);
