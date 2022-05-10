@@ -20,6 +20,8 @@ const listOfColours = [
     "orange",
     "green",
     "violet",
+    "lightgreen",
+    "lightblue",
 ]
 
 const colour_dict = new Map()
@@ -31,13 +33,11 @@ function convertValueToData(value: api.GraphValue) {
             { id: n.entryId, label: n.name , entryType: n.entryType}
         )),
         edges: value.rels.map((e) => (
-            { source: e.fromEntryId, target: e.toEntryId, entryType: e.relType }
+            { source: e.fromEntryId, target: e.toEntryId, entryType: e.relType , label: e.relType }
         )),
     }
 
     data.nodes.forEach((node: NodeConfig) => {
-        node.type = 'rect';
-
         if (!colour_dict.has(node.entryType)) {
             colour_dict.set(node.entryType, listOfColours.pop());
         }
@@ -47,7 +47,7 @@ function convertValueToData(value: api.GraphValue) {
             // The style for the keyShape
             fill: colour,
             stroke: '#888',
-            lineWidth: 1,
+            lineWidth: 2,
         };
     })
 
@@ -82,10 +82,63 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 width,
                 height,
                 layout: {
-                    type: 'force',
+                    type: 'dagre',
+                    rankdir: 'RL', // The center of the graph by default
+                    align: 'DL',
+                    nodesep: 50,
+                    ranksep: 100,
+                    controlPoints: true,
                 },
                 defaultNode: {
-                    size: 15,
+                    type: 'modelRect',
+                        // The configuration of the logo icon in the node
+                    logoIcon: {
+                        // Whether to show the icon. false means hide the icon
+                        show: false,
+                        x: 0,
+                        y: 0,
+                        // the image url of icon
+                        img: 'https://gw.alipayobjects.com/zos/basement_prod/4f81893c-1806-4de4-aff3-9a6b266bc8a2.svg',
+                        width: 16,
+                        height: 16,
+                        // Adjust the left/right offset of the icon
+                        offset: 0
+                    },
+                    // The configuration of the state icon in the node
+                    stateIcon: {
+                        // Whether to show the icon. false means hide the icon
+                        show: false,
+                        x: 0,
+                        y: 0,
+                        // the image url of icon
+                        img: 'https://gw.alipayobjects.com/zos/basement_prod/300a2523-67e0-4cbf-9d4a-67c077b40395.svg',
+                        width: 16,
+                        height: 16,
+                        // Adjust the left/right offset of the icon
+                        offset: -5
+                    },
+                    preRect: {
+
+                    }
+                },
+                defaultEdge: {
+                    type: 'polyline',
+                    /* configure the bending radius and min distance to the end nodes */
+                    style: {
+                      radius: 10,
+                      offset: 30,
+                      endArrow: {
+                        path: G6.Arrow.triangle(10, 20, 0),
+                        d: 0,
+                        fill: 'black',
+                        },
+                      lineWidth: 3,
+                      /* and other styles */
+                      // stroke: '#F6BD16',
+                    },
+                },
+                modes: {
+                    default: ['drag-canvas', 'click-select', 'zoom-canvas'],
                 },
             });
             newGraph.data(data);
