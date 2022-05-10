@@ -6,6 +6,11 @@ import { api } from "lib/api-client";
 import { MDTContext } from "./markdown-mdt/mdt";
 import G6, { Graph, IG6GraphEvent, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "./utils/resizeObserverHook";
+import { useRouter } from "next/router";
+import { Tooltip } from "./widgets/Tooltip";
+import ReactDOM from "react-dom";
+import Link from "next/link";
+import { GraphTooltip } from "./GraphTooltip";
 
 interface GraphProps {
     value: api.GraphValue;
@@ -100,6 +105,7 @@ const truncateString = (str: string, maxWidth: number, fontSize: number) => {
  * Display a graph visualization.
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
+    const router = useRouter();
     const data = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value]);
@@ -112,10 +118,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             const container = ref.current;
             const width = container.clientWidth;
             const height = container.clientHeight;
+            const tooltip = new GraphTooltip(props.mdtContext);
             const newGraph = new G6.Graph({
                 container,
                 width,
                 height,
+                plugins: [tooltip],
                 layout: {
                     type: "dagre",
                     rankdir: "RL", // The center of the graph by default
@@ -196,6 +204,11 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 e.item.get("model").fy = null;
             });
 
+            // newGraph.on("node:click", function (e){
+            //     const entryId = e.item?.getModel().id;
+            //     router.push(`/entry/${entryId}`);
+            // })
+
             // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
             ref.current.addEventListener("MozMousePixelScroll", (e) => {
                 e.preventDefault();
@@ -216,6 +229,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     useResizeObserver(ref, handleSizeChange);
 
     return (
-        <div ref={ref} className="w-full aspect-square md:aspect-video border-2 border-gray-200 overflow-hidden"></div>
+        <>
+            <div ref={ref} className="w-full aspect-square md:aspect-video border-2 border-gray-200 overflow-hidden">
+            </div>
+        </>
     );
 };
