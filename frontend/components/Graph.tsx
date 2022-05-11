@@ -125,12 +125,30 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 height,
                 plugins: [tooltip],
                 layout: {
-                    type: "dagre",
-                    rankdir: "RL", // The center of the graph by default
-                    align: "DL",
-                    nodesep: 50,
-                    ranksep: 100,
-                    controlPoints: true,
+                    type: 'force',
+                    preventOverlap: true,
+                    nodeSize: 150,
+                    nodeSpacing: 100,
+                    // clustering: true,
+                    // type: "dagre",
+                    // rankdir: "TB", // The center of the graph by default
+                    // align: "DL",
+                    // nodesep: 50,
+                    // ranksep: 100,
+                    // controlPoints: true,
+                    // type: 'radial',
+                    // unitRadius: 1000,
+                    // preventOverlap: true,
+                    // nodeSize: 200,
+                    // nodeSpacing: 4000,
+                    // linkDistance: 400,
+                    // sortBy: 'comboId',
+                    // sortStrength: 100,
+                    // type: 'comboCombined',
+                    // nodeSize: 200,
+                    // outerLayout: new G6.Layout['gForce']({
+                    //     linkDistance: 2500,
+                    // }),
                 },
                 defaultNode: {
                     type: "modelRect",
@@ -163,7 +181,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     preRect: {},
                 },
                 defaultEdge: {
-                    type: "polyline",
+                    type: "line",
                     /* configure the bending radius and min distance to the end nodes */
                     style: {
                         radius: 10,
@@ -200,8 +218,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 if (!e.item) {
                     return;
                 }
-                e.item.get("model").fx = null;
-                e.item.get("model").fy = null;
+                // e.item.get("model").fx = null;
+                // e.item.get("model").fy = null;
             });
 
             // newGraph.on("node:click", function (e){
