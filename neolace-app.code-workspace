@@ -29,6 +29,7 @@
 			"https://deno.land": false,
 			"https://raw.githubusercontent.com": false
 		},
-		"deno.unstable": false
+		"deno.unstable": false,
+		"python.terminal.activateEnvironment": false
 	}
 }

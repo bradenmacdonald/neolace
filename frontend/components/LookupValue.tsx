@@ -10,6 +10,7 @@ import { FormattedFileSize } from './widgets/FormattedFileSize';
 import { HoverClickNote } from './widgets/HoverClickNote';
 import Link from 'next/link';
 import { ErrorMessage } from './widgets/ErrorMessage';
+import { LookupGraph } from './Graph';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -88,6 +89,9 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         }
         case "Image": {
             return <LookupImage value={value} mdtContext={props.mdtContext} />;
+        }
+        case "Graph": {
+            return <LookupGraph value={value} mdtContext={props.mdtContext} />;
         }
         case "File": {
             return <>
