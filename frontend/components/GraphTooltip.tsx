@@ -2,15 +2,12 @@
  * A graph that is displayed as the result of the .graph() lookup function.
  */
 import React from "react";
-import G6, { Graph, IG6GraphEvent, NodeConfig } from "@antv/g6";
+import G6 from "@antv/g6";
 import ReactDOM from "react-dom";
-import Link from "next/link";
-import { api } from "lib/api-client";
 import { InlineMDT, MDTContext } from "./markdown-mdt/mdt";
 
 export class GraphTooltip extends G6.Tooltip {
-    constructor(mdtContext: MDTContext) {
-        const refCache = mdtContext.refCache;
+    constructor(mdtContext: React.RefObject<MDTContext>) {
         super({
             offsetX: 10,
             offsetY: 10,
@@ -22,9 +19,10 @@ export class GraphTooltip extends G6.Tooltip {
             // custom the tooltip's content
             // 自定义 tooltip 内容
             getContent: (e) => {
+                const refCache = mdtContext.current?.refCache;
                 const outDiv = document.createElement("div");
                 // const root = ReactDOM.createRoot(outDiv); //for React 18
-                if (!e || !e.item) {
+                if (!e || !e.item || !refCache) {
                     return outDiv;
                 }
                 const node = e.item.getModel();
