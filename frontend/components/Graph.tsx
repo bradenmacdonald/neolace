@@ -4,7 +4,7 @@
 import React from "react";
 import { api } from "lib/api-client";
 import { MDTContext } from "./markdown-mdt/mdt";
-import G6, { Graph, GraphOptions, IG6GraphEvent, NodeConfig } from "@antv/g6";
+import G6, { Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "./utils/resizeObserverHook";
 import { GraphTooltip } from "./GraphTooltip";
 
@@ -115,7 +115,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     React.useEffect(() => { mdtContextRef.current = props.mdtContext; }, [props.mdtContext]);
 
     // Construct the tooltip plugin.
-    const tooltip = React.useMemo(() => 
+    const tooltip = React.useMemo(() =>
         new GraphTooltip(mdtContextRef), []
     );
     // Our graph configuration
@@ -126,6 +126,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             preventOverlap: true,
             nodeSize: [200, 50],
             nodeSpacing: 60,
+            alphaMin: 0.2,
             // clustering: true,
 
             // type: "dagre",
@@ -201,6 +202,25 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         modes: {
             default: ["drag-canvas", "click-select", "zoom-canvas"],
         },
+        nodeStateStyles: {
+            selected: {
+                stroke: '#f00',
+                lineWidth: 3
+            },
+            highlight: {
+                stroke: 'blue',
+                lineWidth: 2,
+            },
+            disabled: {
+                opacity: 0.5,
+            }
+        },
+        edgeStateStyles: {
+            selected: {
+                lineWidth: 3,
+                stroke: '#f00'
+            }
+        }
     }), [tooltip]);
 
     // Initialize the G6 graph, once we're ready
@@ -211,7 +231,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         const container = ref.current;
         const width = container.clientWidth;
         const height = container.clientHeight;
-        const newGraph = new G6.Graph({container, width, height, ...graphConfig});
+        const newGraph = new G6.Graph({ container, width, height, ...graphConfig });
         setGraph((oldGraph) => {
             if (oldGraph) {
                 // If there already was a graph, destroy it because we're about to re-create it.
@@ -231,6 +251,50 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Set up G6 event handlers whenever the graph has been initialized for the first time or re-initialized
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
+
+        //  when a node is selected, show the neighbouring nodes and connecting edges as selected.
+        // NOTE the built in node and edge states are: active, inactive, selected, highlight, disable
+        // styles for the states can be configured.
+        graph.on("node:click", function (e) {
+            // reset all states for edges and nodes
+            graph.getEdges().forEach((edge) => {
+                graph.clearItemStates(edge);
+            });
+            graph.getNodes().forEach((node) => {
+                graph.clearItemStates(node);
+            });
+            
+            // graph.layout();
+            const item = e.item as INode;
+            // if it is this node or connected node, then highlight
+            graph.getNodes().forEach((node) => {
+                if (node === item) {
+                    graph.setItemState(item, 'selected', true);
+                } else if (item.getNeighbors().includes(node)) {
+                    graph.setItemState(node, 'highlight', true);
+                } else {
+                    graph.setItemState(node, 'disabled', true);
+                }
+            })
+            
+            // if it is a connected adge, then highlight
+            console.log('Begin')
+            // BUG sometimes when click on the node it does not highlight all of them
+            // even though it does check the if statement correctly
+            graph.getEdges().forEach((edge) => {
+                if (
+                    ((edge.getSource().getID()  === item.getID()) ||
+                    (edge.getTarget().getID()  === item.getID()))
+                ){
+                    graph.setItemState(edge, 'active', true);
+                    console.log('I am here')
+                  } else {
+                    graph.setItemState(edge, 'disable', true);
+                }
+            })
+
+        });
+
         // Allow users to drag nodes around:
         graph.on("node:dragstart", function (e) {
             graph.layout();
@@ -245,6 +309,32 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             if (!e.item) { return; }
             // e.item.get("model").fx = null;
             // e.item.get("model").fy = null;
+        });
+        // allow selection of edges
+        graph.on('edge:mouseenter', (e) => {
+            if (!e.item) { return; }
+            const { item } = e;
+            graph.setItemState(item, 'active', true);
+        });
+
+        graph.on('edge:mouseleave', (e) => {
+            if (!e.item) { return; }
+            const { item } = e;
+            graph.setItemState(item, 'active', false);
+        });
+
+        graph.on('edge:click', (e) => {
+            if (!e.item) { return; }
+            const { item } = e;
+            graph.setItemState(item, 'selected', true);
+        });
+        graph.on('canvas:click', (e) => {
+            graph.getEdges().forEach((edge) => {
+                graph.clearItemStates(edge);
+            });
+            graph.getNodes().forEach((node) => {
+                graph.clearItemStates(node);
+            });
         });
     }, [graph]);
 
