@@ -191,7 +191,9 @@ export class GetProperty extends LookupExpression {
             } else {
                 // We are lookup up this value property for many entries.
                 // const forEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
-                throw new LookupEvaluationError("Multiple property values not yet supported for get()");
+                throw new LookupEvaluationError(
+                    "Getting a property from multiple entries is not yet supported by get()",
+                );
             }
         }
     }
