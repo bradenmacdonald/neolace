@@ -200,7 +200,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             },
         },
         modes: {
-            default: ["drag-canvas", "click-select", "zoom-canvas"],
+            default: ["drag-canvas", "click-select", "zoom-canvas", 'drag-node'],
         },
         nodeStateStyles: {
             selected: {
@@ -251,19 +251,57 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Set up G6 event handlers whenever the graph has been initialized for the first time or re-initialized
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
+  
+        // create a hull of immideately connected nodes upon double clicking on the node
+        graph.on("node:dblclick", function (e) {
+            const item = e.item as INode;
+            const this_hull_id = `hull-${item.getID()}`;
+            const hulls = graph.getHulls();
 
+            let hull_exist = false;
+
+            if (!hulls) {
+                hull_exist = false;
+            } else {
+                Object.entries(hulls).forEach(([hull_id, hull_value]) => {
+                    if (hull_id === this_hull_id ) {
+                        hull_exist = true;
+                    }
+                })
+            }
+
+            if (!hull_exist) {
+                console.log('Hull created')
+                graph.createHull({
+                    id: `hull-${item.getID()}`,
+                    type: 'bubble',
+                    members: [...item.getNeighbors(), item],
+                    padding: 30,
+                })
+            }
+        })
+
+        graph.on('afterlayout', () => {
+            console.log('After layout call')
+            graph.on('afterupdateitem', (e) => {
+                console.log('After update item')
+                const hulls = graph.getHulls();
+                if (!hulls) return;
+                Object.values(hulls).forEach((hull) => {
+                    hull.updateData(hull.members, hull.nonMembers);
+                })
+            })
+        });
         //  when a node is selected, show the neighbouring nodes and connecting edges as selected.
         // NOTE the built in node and edge states are: active, inactive, selected, highlight, disable
         // styles for the states can be configured.
         graph.on("node:click", function (e) {
-            // reset all states for edges and nodes
             graph.getEdges().forEach((edge) => {
                 graph.clearItemStates(edge);
             });
             graph.getNodes().forEach((node) => {
                 graph.clearItemStates(node);
             });
-            
             // graph.layout();
             const item = e.item as INode;
             // if it is this node or connected node, then highlight
@@ -286,30 +324,17 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     ((edge.getSource().getID()  === item.getID()) ||
                     (edge.getTarget().getID()  === item.getID()))
                 ){
-                    graph.setItemState(edge, 'active', true);
+                    graph.setItemState(edge, 'selected', true);
+                    graph.setItemState(edge, 'disabled', false);
                     console.log('I am here')
                   } else {
-                    graph.setItemState(edge, 'disable', true);
+                    graph.setItemState(edge, 'disabled', true);
+                    graph.setItemState(edge, 'selected', false);
                 }
             })
 
         });
 
-        // Allow users to drag nodes around:
-        graph.on("node:dragstart", function (e) {
-            graph.layout();
-            refreshDragedNodePosition(e);
-        });
-        graph.on("node:drag", function (e) {
-            const forceLayout = graph.get("layoutController").layoutMethods[0];
-            forceLayout.execute();
-            refreshDragedNodePosition(e);
-        });
-        graph.on("node:dragend", function (e) {
-            if (!e.item) { return; }
-            // e.item.get("model").fx = null;
-            // e.item.get("model").fy = null;
-        });
         // allow selection of edges
         graph.on('edge:mouseenter', (e) => {
             if (!e.item) { return; }
