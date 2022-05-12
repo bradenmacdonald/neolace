@@ -6,6 +6,7 @@ import {
     Ancestors,
     AndAncestors,
     AndDescendants,
+    AndRelated,
     DateExpression,
     // Count,
     Descendants,
@@ -51,9 +52,15 @@ export function parseLookupString(lookup: string): LookupExpression {
         [/^\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]$/, (m) => new LiteralExpression(new V.PropertyValue(VNID(m[1])))],
 
         // ....get(prop=...)
-        [/^(.*)\.get\(prop=(.*)\)$/, (m) => new GetProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) })],
+        [
+            /^(.*)\.get\(prop=(.*)\)$/,
+            (m) => new GetProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) }),
+        ],
         // get(..., prop=...)
-        [/^get\((.*), prop=(.*)\)$/, (m) => new GetProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) })],
+        [
+            /^get\((.*), prop=(.*)\)$/,
+            (m) => new GetProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) }),
+        ],
 
         // ....reverse(prop=...)
         [
@@ -85,6 +92,15 @@ export function parseLookupString(lookup: string): LookupExpression {
         [/^(.*)\.andDescendants\(\)$/, (m) => new AndDescendants(parseLookupString(m[1]))],
         // andDescendants(...)
         [/^andDescendants\((.*)\)$/, (m) => new AndDescendants(parseLookupString(m[1]))],
+
+        // ....andRelated()
+        [/^(.*)\.andRelated\(\)$/, (m) => new AndRelated(parseLookupString(m[1]))],
+        // ....andRelated(depth=N)
+        [/^(.*)\.andRelated\(depth=(.*)\)$/, (m) => new AndRelated(parseLookupString(m[1]), parseLookupString(m[2]))],
+        // andRelated(...)
+        [/^andRelated\((.*)\)$/, (m) => new AndRelated(parseLookupString(m[1]))],
+        // andRelated(..., depth=N)
+        [/^andRelated\((.*), depth=(.*)\)$/, (m) => new AndRelated(parseLookupString(m[1]), parseLookupString(m[2]))],
 
         // [[/entry/...]].image(format="...")
 

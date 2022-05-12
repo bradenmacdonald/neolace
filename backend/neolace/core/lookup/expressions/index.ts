@@ -12,6 +12,7 @@ export { Image } from "./image.ts";
 export { List } from "./list-expr.ts";
 export { LiteralExpression } from "./literal-expr.ts";
 export { Markdown } from "./markdown.ts";
+export { AndRelated } from "./related.ts";
 export { ReverseProperty } from "./reverse.ts";
 export { This } from "./this.ts";
 export { Slice } from "./slice.ts";
