@@ -236,8 +236,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     // Automatically resize the graph if the containing element changes size.
     const handleSizeChange = React.useCallback(() => {
-        if (!graph || graph.destroyed) return;
-        const width = ref.current!.clientWidth, height = ref.current!.clientHeight;
+        if (!graph || graph.destroyed || !ref.current) return;
+        const width = ref.current.clientWidth, height = ref.current.clientHeight;
         if (graph.getWidth() !== width || graph.getHeight() !== height) {
             graph.changeSize(width, height);
             graph.layout();
