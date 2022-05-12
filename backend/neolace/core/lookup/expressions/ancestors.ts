@@ -2,7 +2,7 @@ import { C } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 import { LookupExpression } from "../expression.ts";
-import { EntryValue, IntegerValue, LazyEntrySetValue, LookupValue } from "../values.ts";
+import { IntegerValue, LazyEntrySetValue, LookupValue } from "../values.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupContext } from "../context.ts";
 
@@ -32,12 +32,12 @@ export class Ancestors extends LookupExpression {
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
-        const startingEntry = await this.entryExpr.getValueAs(EntryValue, context);
+        const startingEntry = await this.entryExpr.getValueAs(LazyEntrySetValue, context);
 
         return new LazyEntrySetValue(
             context,
             C`
-            MATCH (entry:${Entry} {id: ${startingEntry.id}})
+            ${startingEntry.cypherQuery}
             MATCH path = (entry)-[:${Entry.rel.IS_A}*..${C(String(MAX_DEPTH))}]->(ancestor:${Entry})
             WHERE ancestor <> entry  // Never return the starting node as its own ancestor, if the graph is cyclic
             // We want to only return DISTINCT ancestors, and return only the minimum distance to each one.
@@ -72,12 +72,12 @@ export class AndAncestors extends LookupExpression {
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
-        const startingEntry = await this.entryExpr.getValueAs(EntryValue, context);
+        const startingEntry = await this.entryExpr.getValueAs(LazyEntrySetValue, context);
 
         return new LazyEntrySetValue(
             context,
             C`
-            MATCH (entry:${Entry} {id: ${startingEntry.id}})
+            ${startingEntry.cypherQuery}
             MATCH path = (entry)-[:${Entry.rel.IS_A}*0..${C(String(MAX_DEPTH))}]->(ancestor:${Entry})
             WITH ancestor, min(length(path)) AS distance
             ORDER BY distance, ancestor.name

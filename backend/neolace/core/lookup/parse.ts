@@ -6,6 +6,7 @@ import {
     Ancestors,
     AndAncestors,
     AndDescendants,
+    AndRelated,
     DateExpression,
     // Count,
     Descendants,
@@ -37,16 +38,6 @@ export function parseLookupString(lookup: string): LookupExpression {
     if (lookup === "null") return new LiteralExpression(new V.NullValue());
     if (lookup === "this") return new This();
 
-    if (lookup === "this.ancestors()") return new Ancestors(new This());
-    if (lookup === "ancestors(this)") return new Ancestors(new This());
-    if (lookup === "this.andAncestors()") return new AndAncestors(new This());
-    if (lookup === "andAncestors(this)") return new AndAncestors(new This());
-
-    if (lookup === "this.descendants()") return new Descendants(new This());
-    if (lookup === "descendants(this)") return new Descendants(new This());
-    if (lookup === "this.andDescendants()") return new AndDescendants(new This());
-    if (lookup === "andDescendants(this)") return new AndDescendants(new This());
-
     if (lookup === "this.files()") return new Files(new This(), {});
     if (lookup === "this.files().first()") return new First(new Files(new This(), {}));
 
@@ -60,42 +51,56 @@ export function parseLookupString(lookup: string): LookupExpression {
         // [[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]] (Property literal)
         [/^\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]$/, (m) => new LiteralExpression(new V.PropertyValue(VNID(m[1])))],
 
-        // this.get(prop=...)
-        [/^this\.get\(prop=(.*)\)$/, (m) => new GetProperty(new This(), { propertyExpr: parseLookupString(m[1]) })],
-        // get(this, prop=...)
-        [/^get\(this, prop=(.*)\)$/, (m) => new GetProperty(new This(), { propertyExpr: parseLookupString(m[1]) })],
-        // this.reverse(prop=...)
+        // ....get(prop=...)
         [
-            /^this\.reverse\(prop=(.*)\)$/,
-            (m) => new ReverseProperty(new This(), { propertyExpr: parseLookupString(m[1]) }),
+            /^(.*)\.get\(prop=(.*)\)$/,
+            (m) => new GetProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) }),
         ],
-        // reverse(this, prop=...)
+        // get(..., prop=...)
         [
-            /^reverse\(this, prop=(.*)\)$/,
-            (m) => new ReverseProperty(new This(), { propertyExpr: parseLookupString(m[1]) }),
+            /^get\((.*), prop=(.*)\)$/,
+            (m) => new GetProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) }),
         ],
 
-        // this.andAncestors().get(prop=...)
+        // ....reverse(prop=...)
         [
-            /^this\.andAncestors\(\)\.get\(prop=(.*)\)$/,
-            (m) => new GetProperty(new AndAncestors(new This()), { propertyExpr: parseLookupString(m[1]) }),
+            /^(.*)\.reverse\(prop=(.*)\)$/,
+            (m) => new ReverseProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) }),
         ],
-        // get(andAncestors(this), prop=...)
+        // reverse(..., prop=...)
         [
-            /^get\(andAncestors\(this\), prop=(.*)\)$/,
-            (m) => new GetProperty(new AndAncestors(new This()), { propertyExpr: parseLookupString(m[1]) }),
+            /^reverse\((.*), prop=(.*)\)$/,
+            (m) => new ReverseProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) }),
         ],
 
-        // this.andDescendants().reverse(prop=...)
-        [
-            /^this\.andDescendants\(\)\.reverse\(prop=(.*)\)$/,
-            (m) => new ReverseProperty(new AndDescendants(new This()), { propertyExpr: parseLookupString(m[1]) }),
-        ],
-        // reverse(andDescendants(this), prop=...)
-        [
-            /^reverse\(andDescendants\(this\), prop=(.*)\)$/,
-            (m) => new ReverseProperty(new AndDescendants(new This()), { propertyExpr: parseLookupString(m[1]) }),
-        ],
+        // ....ancestors()
+        [/^(.*)\.ancestors\(\)$/, (m) => new Ancestors(parseLookupString(m[1]))],
+        // ancestors(...)
+        [/^ancestors\((.*)\)$/, (m) => new Ancestors(parseLookupString(m[1]))],
+
+        // ....andAncestors()
+        [/^(.*)\.andAncestors\(\)$/, (m) => new AndAncestors(parseLookupString(m[1]))],
+        // andAncestors(...)
+        [/^andAncestors\((.*)\)$/, (m) => new AndAncestors(parseLookupString(m[1]))],
+
+        // ....descendants()
+        [/^(.*)\.descendants\(\)$/, (m) => new Descendants(parseLookupString(m[1]))],
+        // descendants(...)
+        [/^descendants\((.*)\)$/, (m) => new Descendants(parseLookupString(m[1]))],
+
+        // ....andDescendants()
+        [/^(.*)\.andDescendants\(\)$/, (m) => new AndDescendants(parseLookupString(m[1]))],
+        // andDescendants(...)
+        [/^andDescendants\((.*)\)$/, (m) => new AndDescendants(parseLookupString(m[1]))],
+
+        // ....andRelated()
+        [/^(.*)\.andRelated\(\)$/, (m) => new AndRelated(parseLookupString(m[1]))],
+        // ....andRelated(depth=N)
+        [/^(.*)\.andRelated\(depth=(.*)\)$/, (m) => new AndRelated(parseLookupString(m[1]), parseLookupString(m[2]))],
+        // andRelated(...)
+        [/^andRelated\((.*)\)$/, (m) => new AndRelated(parseLookupString(m[1]))],
+        // andRelated(..., depth=N)
+        [/^andRelated\((.*), depth=(.*)\)$/, (m) => new AndRelated(parseLookupString(m[1]), parseLookupString(m[2]))],
 
         // [[/entry/...]].image(format="...")
 
@@ -138,10 +143,9 @@ export function parseLookupString(lookup: string): LookupExpression {
         ],
 
         // ....graph()
-        [
-            /^(.*)\.graph\(\)$/,
-            (m) => new Graph(parseLookupString(m[1])),
-        ],
+        [/^(.*)\.graph\(\)$/, (m) => new Graph(parseLookupString(m[1]))],
+        // graph(...)
+        [/^graph\((.*)\)$/, (m) => new Graph(parseLookupString(m[1]))],
 
         // slice(expr, start=x, size=y)
         [

@@ -5,10 +5,12 @@ import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { Ancestors, AndAncestors } from "./ancestors.ts";
-import { AnnotatedValue, IntegerValue, MakeAnnotatedEntryValue, PageValue } from "../values.ts";
+import { AnnotatedValue, EntryValue, IntegerValue, MakeAnnotatedEntryValue, PageValue } from "../values.ts";
 import { This } from "./this.ts";
 import { Count } from "./count.ts";
 import { LookupExpression } from "../expression.ts";
+import { List } from "./list-expr.ts";
+import { LiteralExpression } from "./literal-expr.ts";
 
 group("ancestors.ts", () => {
     group("ancestors()", () => {
@@ -48,6 +50,48 @@ group("ancestors.ts", () => {
                         pageSize: 10n,
                         startedAt: 0n,
                         totalCount: 5n,
+                        sourceExpression: expression,
+                        sourceExpressionEntryId: ponderosaPine.id,
+                    },
+                ),
+            );
+        });
+        test("It can give all the ancestors of [ponderosa pine, Mediterranean Cypress]", async () => {
+            const expression = new Ancestors(
+                new List([
+                    new LiteralExpression(new EntryValue(defaultData.entries.ponderosaPine.id)),
+                    new LiteralExpression(new EntryValue(defaultData.entries.mediterraneanCypress.id)),
+                ]),
+            );
+
+            const value = await evalExpression(expression, ponderosaPine.id);
+
+            assertEquals(
+                value,
+                new PageValue(
+                    [
+                        MakeAnnotatedEntryValue(defaultData.entries.genusCupressus.id, {
+                            distance: new IntegerValue(1),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.genusPinus.id, { distance: new IntegerValue(1) }),
+                        MakeAnnotatedEntryValue(defaultData.entries.familyCupressaceae.id, {
+                            distance: new IntegerValue(2),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.familyPinaceae.id, {
+                            distance: new IntegerValue(2),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.orderPinales.id, { distance: new IntegerValue(3) }),
+                        MakeAnnotatedEntryValue(defaultData.entries.classPinopsida.id, {
+                            distance: new IntegerValue(4),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {
+                            distance: new IntegerValue(5),
+                        }),
+                    ],
+                    {
+                        pageSize: 10n,
+                        startedAt: 0n,
+                        totalCount: 7n,
                         sourceExpression: expression,
                         sourceExpressionEntryId: ponderosaPine.id,
                     },
@@ -103,6 +147,55 @@ group("ancestors.ts", () => {
                         pageSize: 10n,
                         startedAt: 0n,
                         totalCount: 6n,
+                        sourceExpression: expression,
+                        sourceExpressionEntryId: ponderosaPine.id,
+                    },
+                ),
+            );
+        });
+
+        test("It can give all the ancestors of [ponderosa pine, Mediterranean Cypress]", async () => {
+            const expression = new AndAncestors(
+                new List([
+                    new LiteralExpression(new EntryValue(defaultData.entries.ponderosaPine.id)),
+                    new LiteralExpression(new EntryValue(defaultData.entries.mediterraneanCypress.id)),
+                ]),
+            );
+
+            const value = await evalExpression(expression, ponderosaPine.id);
+
+            assertEquals(
+                value,
+                new PageValue(
+                    [
+                        MakeAnnotatedEntryValue(defaultData.entries.mediterraneanCypress.id, {
+                            distance: new IntegerValue(0),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.ponderosaPine.id, {
+                            distance: new IntegerValue(0),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.genusCupressus.id, {
+                            distance: new IntegerValue(1),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.genusPinus.id, { distance: new IntegerValue(1) }),
+                        MakeAnnotatedEntryValue(defaultData.entries.familyCupressaceae.id, {
+                            distance: new IntegerValue(2),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.familyPinaceae.id, {
+                            distance: new IntegerValue(2),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.orderPinales.id, { distance: new IntegerValue(3) }),
+                        MakeAnnotatedEntryValue(defaultData.entries.classPinopsida.id, {
+                            distance: new IntegerValue(4),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {
+                            distance: new IntegerValue(5),
+                        }),
+                    ],
+                    {
+                        pageSize: 10n,
+                        startedAt: 0n,
+                        totalCount: 9n,
                         sourceExpression: expression,
                         sourceExpressionEntryId: ponderosaPine.id,
                     },

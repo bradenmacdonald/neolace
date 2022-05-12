@@ -1,12 +1,19 @@
-import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
+import { VNID } from "neolace/deps/vertex-framework.ts";
+import { PropertyType } from "neolace/deps/neolace-api.ts";
+import {
+    assertArrayIncludes,
+    assertEquals,
+    assertInstanceOf,
+    group,
+    setTestIsolation,
+    test,
+} from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { AndAncestors } from "./ancestors.ts";
 import { GraphValue } from "../values.ts";
 import { This } from "./this.ts";
 import { Graph } from "./graph.ts";
-import { ApplyEdits } from "../../edit/ApplyEdits.ts";
-import { PropertyType } from "../../../deps/neolace-api.ts";
-import { VNID } from "../../../deps/vertex-framework.ts";
+import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 
 group("graph()", () => {
     // These tests are read-only so don't need isolation, but do use the default plantDB example data:
@@ -211,73 +218,73 @@ group("graph()", () => {
             expression.getValue({ tx, siteId, entryId: A, defaultPageSize: 10n }).then((v) => v.makeConcrete())
         );
 
-        assertEquals(
-            value,
-            new GraphValue(
-                [
-                    {
-                        data: {},
-                        entryId: A,
-                        entryType: entryType,
-                        name: "Entry A",
-                    },
-                    {
-                        data: {},
-                        entryId: D,
-                        entryType: entryType,
-                        name: "Entry D",
-                    },
-                    {
-                        data: {},
-                        entryId: B,
-                        entryType: entryType,
-                        name: "Entry B",
-                    },
-                    {
-                        data: {},
-                        entryId: C,
-                        entryType: entryType,
-                        name: "Entry C",
-                    },
-                ],
-                [
-                    {
-                        data: {},
-                        fromEntryId: A,
-                        relId: (value as GraphValue).rels[0]?.relId,
-                        relType: entryIsA,
-                        toEntryId: D,
-                    },
-                    {
-                        data: {},
-                        fromEntryId: B,
-                        relId: (value as GraphValue).rels[1]?.relId,
-                        relType: entryIsA,
-                        toEntryId: A,
-                    },
-                    {
-                        data: {},
-                        fromEntryId: C,
-                        relId: (value as GraphValue).rels[2]?.relId,
-                        relType: entryIsA,
-                        toEntryId: A,
-                    },
-                    {
-                        data: {},
-                        fromEntryId: D,
-                        relId: (value as GraphValue).rels[3]?.relId,
-                        relType: entryIsA,
-                        toEntryId: C,
-                    },
-                    {
-                        data: {},
-                        fromEntryId: D,
-                        relId: (value as GraphValue).rels[4]?.relId,
-                        relType: entryIsA,
-                        toEntryId: B,
-                    },
-                ],
-            ),
-        );
+        assertInstanceOf(value, GraphValue);
+        assertEquals<typeof value.entries>(value.entries, [
+            {
+                data: {},
+                entryId: A,
+                entryType: entryType,
+                name: "Entry A",
+            },
+            {
+                data: {},
+                entryId: D,
+                entryType: entryType,
+                name: "Entry D",
+            },
+            {
+                data: {},
+                entryId: B,
+                entryType: entryType,
+                name: "Entry B",
+            },
+            {
+                data: {},
+                entryId: C,
+                entryType: entryType,
+                name: "Entry C",
+            },
+        ]);
+
+        // These are the expected relationships, without 'relId' since that will be different each time.
+        const expectedRels = [
+            {
+                data: {},
+                fromEntryId: A,
+                relType: entryIsA,
+                toEntryId: D,
+            },
+            {
+                data: {},
+                fromEntryId: B,
+                relType: entryIsA,
+                toEntryId: A,
+            },
+            {
+                data: {},
+                fromEntryId: C,
+                relType: entryIsA,
+                toEntryId: A,
+            },
+            {
+                data: {},
+                fromEntryId: D,
+                relType: entryIsA,
+                toEntryId: C,
+            },
+            {
+                data: {},
+                fromEntryId: D,
+                relType: entryIsA,
+                toEntryId: B,
+            },
+        ];
+        assertEquals(value.rels.length, expectedRels.length);
+        // Because the order of the relationships changes over time, we have to test this way:
+        const actualRelsWithoutRelId = value.rels.map((r) => {
+            const { relId: _unused, ...rest } = r;
+            return rest;
+        });
+        assertArrayIncludes(actualRelsWithoutRelId, expectedRels);
     });
 });
