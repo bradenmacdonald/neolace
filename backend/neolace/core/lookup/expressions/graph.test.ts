@@ -14,6 +14,7 @@ import { GraphValue } from "../values.ts";
 import { This } from "./this.ts";
 import { Graph } from "./graph.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { Descendants } from "./descendants.ts";
 
 group("graph()", () => {
     // These tests are read-only so don't need isolation, but do use the default plantDB example data:
@@ -286,5 +287,19 @@ group("graph()", () => {
             return rest;
         });
         assertArrayIncludes(actualRelsWithoutRelId, expectedRels);
+    });
+
+    test("Works on empty values", async () => {
+        const graph = await getGraph();
+
+        // Ponderosa pine has no descendants so this will be an empty set of entries to graph:
+        const expression = new Graph(new Descendants(new This()));
+        const value = await graph.read((tx) =>
+            expression.getValue({ tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n }).then((v) =>
+                v.makeConcrete()
+            )
+        );
+
+        assertEquals(value, new GraphValue([], []));
     });
 });
