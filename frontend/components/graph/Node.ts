@@ -1,4 +1,4 @@
-import G6, { Graph, GraphOptions, IG6GraphEvent, NodeConfig } from "@antv/g6";
+import G6 from "@antv/g6";
 
 /**
  * Always use this node type by importing this string, don't hard-code "entryNode" elsewhere,
@@ -153,7 +153,7 @@ G6.registerNode(
          * @param  {Object} cfg The configurations of the node
          * @param  {G.Group} group Graphics group, the container of the shapes of the node
          */
-        afterDraw(cfg, group) {},
+        afterDraw(_cfg, _group) {},
         /**
          * Update the node and its label
          * @override
@@ -170,7 +170,7 @@ G6.registerNode(
          * @param  {Object} cfg The configurations of the node
          * @param  {Node} node The node item
          */
-        afterUpdate(cfg, node) {},
+        afterUpdate(_cfg, _node) {},
         /**
          * Should be rewritten when you want to response the state changes by animation.
          * Responsing the state changes by styles can be configured, which is described in the document Middle-Behavior & Event-State
@@ -178,13 +178,13 @@ G6.registerNode(
          * @param  {Object} value The value of the state
          * @param  {Node} node The node item
          */
-        setState(name, value, node) {},
+        setState(_name, _value, _node) {},
         /**
          * Get the anchorPoints (link points for related edges)
          * @param  {Object} cfg The configuration of the node
          * @return The array of anchorPoints (link points for related edges). Null means there are no anchorPoints
          */
-        getAnchorPoints(cfg) {
+        getAnchorPoints(_cfg) {
             // We don't specify any anchor points, and that way the whole outer rectangle (keyShape) is used, which
             // means edges can point to or leave from anywhere along the border of the outer rectangle, which is exactly
             // what we want.
@@ -219,7 +219,7 @@ function truncateString(str: string, maxWidth: number, fontSize: number): string
         }
     });
     return res;
-};
+}
 
 /**
  * Given an entry type name like "TechConcept", return its abbreviation like "TC"
