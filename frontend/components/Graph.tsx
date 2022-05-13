@@ -7,7 +7,7 @@ import { MDTContext } from "./markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, IG6GraphEvent, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "./utils/resizeObserverHook";
 import { GraphTooltip } from "./GraphTooltip";
-import { EntryColor, entryNode } from "./graph/Node";
+import { EntryColor, entryNode, pickEntryTypeLetter } from "./graph/Node";
 import { VNID } from "neolace-api";
 
 interface GraphProps {
@@ -40,6 +40,7 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
             nextColor = (nextColor + 1) % Object.values(EntryColor).length;
         }
         node.color = colourMap.get(node.entryType as VNID);
+        node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
     });
 
     return data;

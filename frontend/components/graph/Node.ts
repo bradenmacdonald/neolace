@@ -115,7 +115,7 @@ G6.registerNode(
                     fontFamily: "Inter Var",
                     fontWeight: "bold",
                     x: -width / 2 + leftRectWidth + textPadding,
-                    y: 0,
+                    y: 1, // It looks more centered with y=1 than y=0
                     text: labelTextTruncated,
                     textBaseline: "middle",  // vertically center the text
                 },
@@ -124,6 +124,26 @@ G6.registerNode(
                 draggable: true,
                 labelRelated: true,  // This doesn't seem important but is in the example code...
             });
+            // Now draw the letter (or two) on the dark rectangle on the left, indicating the type of node.
+            if (cfg.leftLetter) {
+                group.addShape('text', {
+                    attrs: {
+                        fill: textColor,
+                        opacity: 0.2,
+                        fontSize,
+                        fontFamily: "Inter Var",
+                        fontWeight: "bold",
+                        x: (-width / 2) + (leftRectWidth / 2),
+                        y: 1, // It looks more centered with y=1 than y=0
+                        text: cfg.leftLetter,
+                        textAlign: "center",
+                        textBaseline: "middle",  // vertically center the text
+                    },
+                    className: 'entryNode-typeLabel',
+                    name: 'entryNode-typeLabel',
+                    draggable: true,
+                });
+            }
 
             // Return the keyShape so the graph engine knows the overall size and click area for this node.
             return keyShape;
@@ -200,3 +220,20 @@ function truncateString(str: string, maxWidth: number, fontSize: number): string
     });
     return res;
 };
+
+/**
+ * Given an entry type name like "TechConcept", return its abbreviation like "TC"
+ */
+export function pickEntryTypeLetter(entryTypeName: string): string {
+    let capitals = "";
+    for (const char of entryTypeName) {
+        if (char.toLocaleUpperCase() === char) {
+            capitals += char;
+        }
+    }
+    if (capitals.length > 0) {
+        return capitals.substring(0, 2);
+    }
+    // Otherwise if there are no capitals, just use the first letter.
+    return entryTypeName.substring(0, 1);
+}
