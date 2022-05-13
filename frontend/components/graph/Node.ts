@@ -1,4 +1,4 @@
-import G6 from "@antv/g6";
+import G6, { IShape } from "@antv/g6";
 
 /**
  * Always use this node type by importing this string, don't hard-code "entryNode" elsewhere,
@@ -61,6 +61,24 @@ G6.registerNode(
 
             const [bgColor, darkColor, textColor] = (cfg.color && cfg.color in colorSets) ? colorSets[cfg.color as EntryColor] : colorSets[EntryColor.Red];
 
+            // Draw the selection rectangle, which forms an outer border when this node is selected.
+            // Most of the time (when not selected), it is invisible.
+            const selectRectThickness = 2;
+            group.addShape('rect', {
+                attrs: {
+                    opacity: 0,  // usually this is hidden.
+                    x: -width / 2 - selectRectThickness,
+                    y: -height / 2 - selectRectThickness,
+                    width: width + selectRectThickness * 2,
+                    height: height + selectRectThickness * 2,
+                    radius,
+                    fill: textColor,
+                },
+                className: `entryNode-selectRect`,
+                name: `entryNode-selectRect`,
+                draggable: true,
+            });
+
             // Draw the base rectangle:
             const keyShape = group.addShape('rect', {
                 attrs: {
@@ -71,7 +89,7 @@ G6.registerNode(
                     radius,
                     fill: bgColor,
                 },
-                // className: `${this.type}-keyShape`,
+                className: `entryNode-keyShape`,
                 name: `entryNode-keyShape`,
                 draggable: true,
             });
@@ -178,7 +196,18 @@ G6.registerNode(
          * @param  {Object} value The value of the state
          * @param  {Node} node The node item
          */
-        setState(_name, _value, _node) {},
+        setState(name, value, item) {
+            if (!item) { return; }
+            const baseRect: IShape = item.get('keyShape');
+            if (!baseRect || baseRect.destroyed) { return; }
+            const group = item.getContainer();
+            
+            if (name === "selected") {
+                // When the "select" state changes, toggle the outer border's visibility
+                const selectRect = group.find((element) => element.get('name') === "entryNode-selectRect");
+                selectRect.attr("opacity", value ? 1 : 0);
+            }
+        },
         /**
          * Get the anchorPoints (link points for related edges)
          * @param  {Object} cfg The configuration of the node
