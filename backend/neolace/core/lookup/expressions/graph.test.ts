@@ -14,6 +14,7 @@ import { GraphValue } from "../values.ts";
 import { This } from "./this.ts";
 import { Graph } from "./graph.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { Descendants } from "./descendants.ts";
 
 group("graph()", () => {
     // These tests are read-only so don't need isolation, but do use the default plantDB example data:
@@ -38,86 +39,84 @@ group("graph()", () => {
             )
         );
 
-        assertEquals(
-            value,
-            new GraphValue(
-                [
-                    {
-                        data: {},
-                        entryId: defaultData.entries.ponderosaPine.id,
-                        entryType: defaultData.schema.entryTypes._ETSPECIES.id,
-                        name: "Ponderosa Pine",
-                    },
-                    {
-                        data: {},
-                        entryId: defaultData.entries.genusPinus.id,
-                        entryType: defaultData.schema.entryTypes._ETGENUS.id,
-                        name: "Pinus",
-                    },
-                    {
-                        data: {},
-                        entryId: defaultData.entries.familyPinaceae.id,
-                        entryType: defaultData.schema.entryTypes._ETFAMILY.id,
-                        name: "Pinaceae",
-                    },
-                    {
-                        data: {},
-                        entryId: defaultData.entries.orderPinales.id,
-                        entryType: defaultData.schema.entryTypes._ETORDER.id,
-                        name: "Pinales",
-                    },
-                    {
-                        data: {},
-                        entryId: defaultData.entries.classPinopsida.id,
-                        entryType: defaultData.schema.entryTypes._ETCLASS.id,
-                        name: "Pinopsida",
-                    },
-                    {
-                        data: {},
-                        entryId: defaultData.entries.divisionTracheophyta.id,
-                        entryType: defaultData.schema.entryTypes._ETDIVISION.id,
-                        name: "Tracheophyta",
-                    },
-                ],
-                [
-                    {
-                        data: {},
-                        fromEntryId: defaultData.entries.classPinopsida.id,
-                        relId: (value as GraphValue).rels[0]?.relId,
-                        relType: defaultData.schema.properties._parentDivision.id,
-                        toEntryId: defaultData.entries.divisionTracheophyta.id,
-                    },
-                    {
-                        data: {},
-                        fromEntryId: defaultData.entries.orderPinales.id,
-                        relId: (value as GraphValue).rels[1]?.relId,
-                        relType: defaultData.schema.properties._parentClass.id,
-                        toEntryId: defaultData.entries.classPinopsida.id,
-                    },
-                    {
-                        data: {},
-                        fromEntryId: defaultData.entries.familyPinaceae.id,
-                        relId: (value as GraphValue).rels[2]?.relId,
-                        relType: defaultData.schema.properties._parentOrder.id,
-                        toEntryId: defaultData.entries.orderPinales.id,
-                    },
-                    {
-                        data: {},
-                        fromEntryId: defaultData.entries.genusPinus.id,
-                        relId: (value as GraphValue).rels[3]?.relId,
-                        relType: defaultData.schema.properties._parentFamily.id,
-                        toEntryId: defaultData.entries.familyPinaceae.id,
-                    },
-                    {
-                        data: {},
-                        fromEntryId: defaultData.entries.ponderosaPine.id,
-                        relId: (value as GraphValue).rels[4]?.relId,
-                        relType: defaultData.schema.properties._parentGenus.id,
-                        toEntryId: defaultData.entries.genusPinus.id,
-                    },
-                ],
-            ),
-        );
+        assertInstanceOf(value, GraphValue);
+        assertEquals(value.entries, [
+            {
+                data: {},
+                entryId: defaultData.entries.ponderosaPine.id,
+                entryType: defaultData.schema.entryTypes._ETSPECIES.id,
+                name: "Ponderosa Pine",
+            },
+            {
+                data: {},
+                entryId: defaultData.entries.genusPinus.id,
+                entryType: defaultData.schema.entryTypes._ETGENUS.id,
+                name: "Pinus",
+            },
+            {
+                data: {},
+                entryId: defaultData.entries.familyPinaceae.id,
+                entryType: defaultData.schema.entryTypes._ETFAMILY.id,
+                name: "Pinaceae",
+            },
+            {
+                data: {},
+                entryId: defaultData.entries.orderPinales.id,
+                entryType: defaultData.schema.entryTypes._ETORDER.id,
+                name: "Pinales",
+            },
+            {
+                data: {},
+                entryId: defaultData.entries.classPinopsida.id,
+                entryType: defaultData.schema.entryTypes._ETCLASS.id,
+                name: "Pinopsida",
+            },
+            {
+                data: {},
+                entryId: defaultData.entries.divisionTracheophyta.id,
+                entryType: defaultData.schema.entryTypes._ETDIVISION.id,
+                name: "Tracheophyta",
+            },
+        ]);
+        const expectedRels = [
+            {
+                data: {},
+                fromEntryId: defaultData.entries.classPinopsida.id,
+                relType: defaultData.schema.properties._parentDivision.id,
+                toEntryId: defaultData.entries.divisionTracheophyta.id,
+            },
+            {
+                data: {},
+                fromEntryId: defaultData.entries.orderPinales.id,
+                relType: defaultData.schema.properties._parentClass.id,
+                toEntryId: defaultData.entries.classPinopsida.id,
+            },
+            {
+                data: {},
+                fromEntryId: defaultData.entries.familyPinaceae.id,
+                relType: defaultData.schema.properties._parentOrder.id,
+                toEntryId: defaultData.entries.orderPinales.id,
+            },
+            {
+                data: {},
+                fromEntryId: defaultData.entries.genusPinus.id,
+                relType: defaultData.schema.properties._parentFamily.id,
+                toEntryId: defaultData.entries.familyPinaceae.id,
+            },
+            {
+                data: {},
+                fromEntryId: defaultData.entries.ponderosaPine.id,
+                relType: defaultData.schema.properties._parentGenus.id,
+                toEntryId: defaultData.entries.genusPinus.id,
+            },
+        ];
+        assertEquals(value.rels.length, expectedRels.length);
+        // Because the order of the relationships changes over time, we have to test this way:
+        const actualRelsWithoutRelId = value.rels.map((r) => {
+            const { relId: _unused, ...rest } = r;
+            return rest;
+        });
+        assertArrayIncludes(actualRelsWithoutRelId, expectedRels);
     });
 
     test("Works despite cyclic relationships", async () => {
@@ -286,5 +285,19 @@ group("graph()", () => {
             return rest;
         });
         assertArrayIncludes(actualRelsWithoutRelId, expectedRels);
+    });
+
+    test("Works on empty values", async () => {
+        const graph = await getGraph();
+
+        // Ponderosa pine has no descendants so this will be an empty set of entries to graph:
+        const expression = new Graph(new Descendants(new This()));
+        const value = await graph.read((tx) =>
+            expression.getValue({ tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n }).then((v) =>
+                v.makeConcrete()
+            )
+        );
+
+        assertEquals(value, new GraphValue([], []));
     });
 });
