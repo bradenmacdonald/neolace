@@ -282,14 +282,21 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         })
 
         graph.on('afterlayout', () => {
-            console.log('After layout call')
+            let timer: ReturnType<typeof setTimeout>|null;
             graph.on('afterupdateitem', (e) => {
-                console.log('After update item')
                 const hulls = graph.getHulls();
                 if (!hulls) return;
-                Object.values(hulls).forEach((hull) => {
-                    hull.updateData(hull.members, hull.nonMembers);
-                })
+                if (timer) {
+                    // We have already scheduled a call to hull.updateData(). Don't call it again or it can cause
+                    // performance problems and freezes.
+                    return;
+                }
+                timer = setTimeout(() => {
+                    Object.values(hulls).forEach((hull) => {
+                        hull.updateData(hull.members, hull.nonMembers);
+                    });
+                    timer = null;
+                }, 50);
             })
         });
         //  when a node is selected, show the neighbouring nodes and connecting edges as selected.
