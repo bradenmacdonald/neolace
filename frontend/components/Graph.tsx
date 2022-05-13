@@ -7,6 +7,8 @@ import { MDTContext } from "./markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, IG6GraphEvent, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "./utils/resizeObserverHook";
 import { GraphTooltip } from "./GraphTooltip";
+import { EntryColor, entryNode } from "./graph/Node";
+import { VNID } from "neolace-api";
 
 interface GraphProps {
     value: api.GraphValue;
@@ -25,7 +27,8 @@ const listOfColours = [
     "lightblue",
 ];
 
-const colour_dict = new Map();
+let nextColor = 0;
+const colourMap = new Map<VNID, EntryColor>();
 const globalFontSize = 12;
 const maxNodeSize = 130;
 const maxEdgeSize = 120;
@@ -46,17 +49,11 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
     };
 
     data.nodes.forEach((node: NodeConfig) => {
-        if (!colour_dict.has(node.entryType)) {
-            colour_dict.set(node.entryType, listOfColours.pop());
+        if (!colourMap.has(node.entryType as VNID)) {
+            colourMap.set(node.entryType as VNID, Object.values(EntryColor)[nextColor]);
+            nextColor = (nextColor + 1) % Object.values(EntryColor).length;
         }
-        const colour = colour_dict.get(node.entryType);
-
-        node.style = {
-            // The style for the keyShape
-            fill: colour,
-            stroke: "#888",
-            lineWidth: 2,
-        };
+        node.color = colourMap.get(node.entryType as VNID);
     });
 
     return data;
@@ -151,35 +148,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             // }),
         },
         defaultNode: {
-            type: "modelRect",
-            size: [200, 50],
-            // The configuration of the logo icon in the node
-            logoIcon: {
-                // Whether to show the icon. false means hide the icon
-                show: false,
-                x: 0,
-                y: 0,
-                // the image url of icon
-                img: "https://gw.alipayobjects.com/zos/basement_prod/4f81893c-1806-4de4-aff3-9a6b266bc8a2.svg",
-                width: 16,
-                height: 16,
-                // Adjust the left/right offset of the icon
-                offset: 0,
-            },
-            // The configuration of the state icon in the node
-            stateIcon: {
-                // Whether to show the icon. false means hide the icon
-                show: false,
-                x: 0,
-                y: 0,
-                // the image url of icon
-                img: "https://gw.alipayobjects.com/zos/basement_prod/300a2523-67e0-4cbf-9d4a-67c077b40395.svg",
-                width: 16,
-                height: 16,
-                // Adjust the left/right offset of the icon
-                offset: -5,
-            },
-            preRect: {},
+            type: entryNode,
         },
         defaultEdge: {
             type: "line",
