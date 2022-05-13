@@ -16,34 +16,20 @@ interface GraphProps {
     children?: never;
 }
 
-const listOfColours = [
-    "red",
-    "pink",
-    "skyblue",
-    "orange",
-    "green",
-    "violet",
-    "lightgreen",
-    "lightblue",
-];
-
 let nextColor = 0;
 const colourMap = new Map<VNID, EntryColor>();
-const globalFontSize = 12;
-const maxNodeSize = 130;
-const maxEdgeSize = 120;
 
 function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
     const data = {
         nodes: value.entries.map((n) => (
-            { id: n.entryId, label: truncateString(n.name, maxNodeSize, globalFontSize), entryType: n.entryType }
+            { id: n.entryId, label: n.name, entryType: n.entryType }
         )),
         edges: value.rels.map((e) => (
             {
                 source: e.fromEntryId,
                 target: e.toEntryId,
                 entryType: e.relType,
-                label: truncateString(refCache.properties[e.relType]?.name ?? e.relType, maxEdgeSize, globalFontSize),
+                label: refCache.properties[e.relType]?.name ?? e.relType,
             }
         )),
     };
@@ -64,35 +50,6 @@ function refreshDragedNodePosition(e: IG6GraphEvent) {
     model.fx = e.x;
     model.fy = e.y;
 }
-
-/**
- * format the string
- * @param {string} str The origin string
- * @param {number} maxWidth max width
- * @param {number} fontSize font size
- * @return {string} the processed result
- */
-const truncateString = (str: string, maxWidth: number, fontSize: number) => {
-    const ellipsis = "...";
-    const ellipsisLength = G6.Util.getTextSize(ellipsis, fontSize)[0];
-    let currentWidth = 0;
-    let res = str;
-    const pattern = new RegExp("[\u4E00-\u9FA5]+"); // distinguish the Chinese charactors and letters
-    str.split("").forEach((letter, i) => {
-        if (currentWidth > maxWidth - ellipsisLength) return;
-        if (pattern.test(letter)) {
-            // Chinese charactors
-            currentWidth += fontSize;
-        } else {
-            // get the width of single letter according to the fontSize
-            currentWidth += G6.Util.getLetterWidth(letter, fontSize);
-        }
-        if (currentWidth > maxWidth - ellipsisLength) {
-            res = `${str.substr(0, i)}${ellipsis}`;
-        }
-    });
-    return res;
-};
 
 /**
  * Display a graph visualization.

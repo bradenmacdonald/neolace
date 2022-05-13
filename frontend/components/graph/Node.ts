@@ -7,18 +7,24 @@ import G6, { Graph, GraphOptions, IG6GraphEvent, NodeConfig } from "@antv/g6";
 export const entryNode = "entryNode";
 
 export enum EntryColor {
-    Red = "red",
-    Orange = "orange",
+    Blue = "blue",
+    Emerald = "emerald",
     Cyan = "cyan",
+    Orange = "orange",
+    Violet = "violet",
+    Red = "red",
 }
 
 const colorSets: Record<EntryColor, [backgroundColor: string, darkerBackgroundColor: string, textColor: string]> = {
     // [overall background color, darker left rectangle color, text color]
     // These colors come from https://tailwindcss.com/docs/customizing-colors and are typically the
-    // [color-200, color-300, and color-800] variants from that pallete
+    // [color-100, color-200, and color-800] variants from that pallete
     [EntryColor.Red]: ["#FECACA", "#FCA5A5", "#991B1B"],
     [EntryColor.Orange]: ["#FFEDD5", "#FED7AA", "#9A3412"],
+    [EntryColor.Emerald]: ["#D1FAE5", "#A7F3D0", "##065F46"],
     [EntryColor.Cyan]: ["#CFFAFE", "#A5F3FC", "#155E75"],
+    [EntryColor.Blue]: ["#DBEAFE", "#BFDBFE", "#3730A3"],
+    [EntryColor.Violet]: ["#EDE9FE", "#DDD6FE", "#5B21B6"],
 };
 
 G6.registerNode(
@@ -49,8 +55,9 @@ G6.registerNode(
             const radius = 5; // radius by which the rectangle corners are rounded.
             // Width of the darker, inset rectangle on the left
             const leftRectWidth = 30;
-            const textPadding = 5; // How much padding is around the text
+            const textPadding = 7; // How much padding is around the text
             const fontSize = 16;
+            const maxTextWidth = width - leftRectWidth - (textPadding * 2) - 5;  // The 5 is because the text truncation algorithm doesn't work perfectly with our preferred font; with this little fix it always seems good.
 
             const [bgColor, darkColor, textColor] = (cfg.color && cfg.color in colorSets) ? colorSets[cfg.color as EntryColor] : colorSets[EntryColor.Red];
 
@@ -99,6 +106,8 @@ G6.registerNode(
             });
 
             // Now draw the label of the node (its name)
+            const labelText = typeof cfg.label === "string" ? cfg.label : "";
+            const labelTextTruncated = truncateString(labelText, maxTextWidth, fontSize);
             group.addShape('text', {
                 attrs: {
                     fill: textColor,
@@ -106,12 +115,13 @@ G6.registerNode(
                     fontFamily: "Inter Var",
                     fontWeight: "bold",
                     x: -width / 2 + leftRectWidth + textPadding,
-                    y: (fontSize + 2) / 2,
-                    text: cfg.label,
+                    y: 0,
+                    text: labelTextTruncated,
+                    textBaseline: "middle",  // vertically center the text
                 },
                 className: 'entryNode-label',
                 name: 'entryNode-label',
-                // draggable: true,
+                draggable: true,
                 labelRelated: true,  // This doesn't seem important but is in the example code...
             });
 
@@ -164,3 +174,29 @@ G6.registerNode(
     // We are extending the base class for 'single-node' type:
     "single-node",
 );
+
+/**
+ * Shorten a string and add an ellipsis as needed so that the string fits the maximum width specified.
+ * Unfortunately this doesn't take the font into account so it's only perfectly accurate for G6's default font.
+ */
+function truncateString(str: string, maxWidth: number, fontSize: number): string {
+    const ellipsis = "…";
+    const ellipsisLength = G6.Util.getTextSize(ellipsis, fontSize)[0];
+    let currentWidth = 0;
+    let res = str;
+    const pattern = new RegExp("[\u4E00-\u9FA5]+"); // distinguish the Chinese charactors and letters
+    str.split("").forEach((letter, i) => {
+        if (currentWidth > maxWidth - ellipsisLength) return;
+        if (pattern.test(letter)) {
+            // Chinese charactors
+            currentWidth += fontSize;
+        } else {
+            // get the width of single letter according to the fontSize
+            currentWidth += G6.Util.getLetterWidth(letter, fontSize);
+        }
+        if (currentWidth > maxWidth - ellipsisLength) {
+            res = `${str.substring(0, i)}${ellipsis}`;
+        }
+    });
+    return res;
+};
