@@ -206,6 +206,11 @@ G6.registerNode(
                 // When the "select" state changes, toggle the outer border's visibility
                 const selectRect = group.find((element) => element.get('name') === "entryNode-selectRect");
                 selectRect.attr("opacity", value ? 1 : 0);
+            } else if (name === "hover" || name === "active") {
+                if (!item.hasState("selected")) {
+                    const selectRect = group.find((element) => element.get('name') === "entryNode-selectRect");
+                    selectRect.attr("opacity", value ? 0.2 : 0);
+                }
             }
         },
         /**

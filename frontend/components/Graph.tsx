@@ -173,6 +173,14 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             // e.item.get("model").fx = null;
             // e.item.get("model").fy = null;
         });
+
+        // Hover effect:
+        graph.on("node:mouseenter", function (e) {
+            e.item?.setState("hover", true);
+        });
+        graph.on("node:mouseleave", function (e) {
+            e.item?.setState("hover", false);
+        });
     }, [graph]);
 
     // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
