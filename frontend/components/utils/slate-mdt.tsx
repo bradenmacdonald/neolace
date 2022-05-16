@@ -16,8 +16,9 @@ import './slate.ts';
 export const PropertyVoid = ({ propertyId, attributes, children }: {propertyId: api.VNID, attributes: Record<string, unknown>, children: React.ReactNode}) => {
     const [schema] = useSiteSchema();
     const propertyName = schema ? (propertyId ? schema.properties[propertyId]?.name : `Unknown property (${propertyId})`) : "Loading...";
-    return <span contentEditable={false} {...attributes} className="rounded-md bg-gray-100 text-sm py-1 px-2 font-medium">
-        <span className="text-green-700 text-xs"><Icon icon="diamond-fill"/></span>{' '}{propertyName}
+    return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
+        <span className="rounded-l-md py-[3px] px-2 bg-gray-200 text-green-700"><span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="diamond-fill"/></span></span>
+        <span className="rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700">{propertyName}</span>
         {children /* Slate.js requires this empty text node child inside void elements that aren't editable. */}
     </span>;
 }

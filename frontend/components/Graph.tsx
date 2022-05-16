@@ -7,6 +7,8 @@ import { MDTContext } from "./markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, IG6GraphEvent, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "./utils/resizeObserverHook";
 import { GraphTooltip } from "./GraphTooltip";
+import { EntryColor, entryNode, pickEntryTypeLetter } from "./graph/Node";
+import { VNID } from "neolace-api";
 
 interface GraphProps {
     value: api.GraphValue;
@@ -14,49 +16,31 @@ interface GraphProps {
     children?: never;
 }
 
-const listOfColours = [
-    "red",
-    "pink",
-    "skyblue",
-    "orange",
-    "green",
-    "violet",
-    "lightgreen",
-    "lightblue",
-];
-
-const colour_dict = new Map();
-const globalFontSize = 12;
-const maxNodeSize = 130;
-const maxEdgeSize = 120;
+let nextColor = 0;
+const colourMap = new Map<VNID, EntryColor>();
 
 function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
     const data = {
         nodes: value.entries.map((n) => (
-            { id: n.entryId, label: truncateString(n.name, maxNodeSize, globalFontSize), entryType: n.entryType }
+            { id: n.entryId, label: n.name, entryType: n.entryType }
         )),
         edges: value.rels.map((e) => (
             {
                 source: e.fromEntryId,
                 target: e.toEntryId,
                 entryType: e.relType,
-                label: truncateString(refCache.properties[e.relType]?.name ?? e.relType, maxEdgeSize, globalFontSize),
+                label: refCache.properties[e.relType]?.name ?? e.relType,
             }
         )),
     };
 
     data.nodes.forEach((node: NodeConfig) => {
-        if (!colour_dict.has(node.entryType)) {
-            colour_dict.set(node.entryType, listOfColours.pop());
+        if (!colourMap.has(node.entryType as VNID)) {
+            colourMap.set(node.entryType as VNID, Object.values(EntryColor)[nextColor]);
+            nextColor = (nextColor + 1) % Object.values(EntryColor).length;
         }
-        const colour = colour_dict.get(node.entryType);
-
-        node.style = {
-            // The style for the keyShape
-            fill: colour,
-            stroke: "#888",
-            lineWidth: 2,
-        };
+        node.color = colourMap.get(node.entryType as VNID);
+        node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
     });
 
     return data;
@@ -67,35 +51,6 @@ function refreshDragedNodePosition(e: IG6GraphEvent) {
     model.fx = e.x;
     model.fy = e.y;
 }
-
-/**
- * format the string
- * @param {string} str The origin string
- * @param {number} maxWidth max width
- * @param {number} fontSize font size
- * @return {string} the processed result
- */
-const truncateString = (str: string, maxWidth: number, fontSize: number) => {
-    const ellipsis = "...";
-    const ellipsisLength = G6.Util.getTextSize(ellipsis, fontSize)[0];
-    let currentWidth = 0;
-    let res = str;
-    const pattern = new RegExp("[\u4E00-\u9FA5]+"); // distinguish the Chinese charactors and letters
-    str.split("").forEach((letter, i) => {
-        if (currentWidth > maxWidth - ellipsisLength) return;
-        if (pattern.test(letter)) {
-            // Chinese charactors
-            currentWidth += fontSize;
-        } else {
-            // get the width of single letter according to the fontSize
-            currentWidth += G6.Util.getLetterWidth(letter, fontSize);
-        }
-        if (currentWidth > maxWidth - ellipsisLength) {
-            res = `${str.substr(0, i)}${ellipsis}`;
-        }
-    });
-    return res;
-};
 
 /**
  * Display a graph visualization.
@@ -151,35 +106,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             // }),
         },
         defaultNode: {
-            type: "modelRect",
-            size: [200, 50],
-            // The configuration of the logo icon in the node
-            logoIcon: {
-                // Whether to show the icon. false means hide the icon
-                show: false,
-                x: 0,
-                y: 0,
-                // the image url of icon
-                img: "https://gw.alipayobjects.com/zos/basement_prod/4f81893c-1806-4de4-aff3-9a6b266bc8a2.svg",
-                width: 16,
-                height: 16,
-                // Adjust the left/right offset of the icon
-                offset: 0,
-            },
-            // The configuration of the state icon in the node
-            stateIcon: {
-                // Whether to show the icon. false means hide the icon
-                show: false,
-                x: 0,
-                y: 0,
-                // the image url of icon
-                img: "https://gw.alipayobjects.com/zos/basement_prod/300a2523-67e0-4cbf-9d4a-67c077b40395.svg",
-                width: 16,
-                height: 16,
-                // Adjust the left/right offset of the icon
-                offset: -5,
-            },
-            preRect: {},
+            type: entryNode,
         },
         defaultEdge: {
             type: "line",
@@ -245,6 +172,14 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             if (!e.item) { return; }
             // e.item.get("model").fx = null;
             // e.item.get("model").fy = null;
+        });
+
+        // Hover effect:
+        graph.on("node:mouseenter", function (e) {
+            e.item?.setState("hover", true);
+        });
+        graph.on("node:mouseleave", function (e) {
+            e.item?.setState("hover", false);
         });
     }, [graph]);
 
