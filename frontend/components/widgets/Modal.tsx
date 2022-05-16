@@ -3,6 +3,7 @@ import React from 'react';
 
 interface ModalProps {
     children?: React.ReactNode;
+    className?: string;
     onClose?: () => void;
 }
 
@@ -36,7 +37,13 @@ export const Modal: React.FunctionComponent<ModalProps> = (props) => {
             <Portal>
                 <div
                     ref={setModalElement}
-                    className={`m-2 border p-1 rounded bg-white border-gray-800 shadow font-normal z-50`}
+                    className={
+                        // Modals are centered in the viewport, and not affected by scrolling (fixed):
+                        `fixed left-[50vw] top-[50vh] -translate-x-1/2 -translate-y-1/2 ` +
+                        // And this is the default appearance of our modals:
+                        `border p-0 rounded bg-white border-gray-800 shadow font-normal z-50 ` +
+                        (props.className ?? "")
+                    }
                 >
                     {props.children}
                 </div>

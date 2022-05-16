@@ -49,22 +49,43 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
     return data;
 }
 
-function refreshDragedNodePosition(e: IG6GraphEvent) {
-    const model = e.item!.get("model");
-    model.fx = e.x;
-    model.fy = e.y;
-}
-
 /**
  * Display a graph visualization.
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const intl = useIntl();
+    // The data (nodes and relationships) that we want to display as a graph.
     const data = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value]);
 
-    const ref = React.useRef<HTMLDivElement>(null);
+    // In order to preserve our G6 graph when we move it to a modal (when expanding the view), the <div> that contains
+    // it must not be destroyed and re-created. React will normally try to destroy and re-create it, not realizing that
+    // doing so will destroy G6's <canvas> element. So what we do is create this wrapper <div> that holds the G6 canvas,
+    // and we manage this wrapper div manually. When React changes which <div> contains this wrapper <div>, we'll move
+    // it to the new DOM location ourselves. That way, the <canvas> that G6 needs does not get destroyed.
+    const [graphContainer] = React.useState(() => {
+        // Create a persistent <div> that gets saved into this <LookGraph> component's state. This <div> will never
+        // change for the entire lifetime of this <LookupGraph> component.
+        const _graphContainer = document.createElement("div");
+        _graphContainer.style.width = "100%";
+        _graphContainer.style.height = "100%";
+        _graphContainer.style.overflow = "none";
+        return _graphContainer;
+    });
+    // This gets called by React when the outer <div> that holds the above graphContainer has changed.
+    const updateGraphHolder = React.useCallback((newGraphHolderDiv) => {
+        // Move graphContainer into the new parent div, or detach it from the DOM and keep it in memory only (if the new
+        // parent div isn't ready yet).
+        if (!newGraphHolderDiv) {
+            graphContainer.parentElement?.removeChild(graphContainer);
+        } else {
+            newGraphHolderDiv.appendChild(graphContainer);
+        }
+    }, []);
+
+    // "graph" is the actual G6 graph instance which owns a <canvas> element, and renders the graph.
+    // See https://g6.antv.vision/en/docs/api/Graph
     const [graph, setGraph] = React.useState<Graph | null>(null);
 
     // Create a reference (an object that holds mdtContext) that we can pass to the tooltip,
@@ -77,7 +98,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const tooltip = React.useMemo(() =>
         new GraphTooltip(mdtContextRef), []
     );
-    // Our graph configuration
+
+    // Our G6 Graph configuration
     const graphConfig: Partial<GraphOptions> = React.useMemo(() => ({
         plugins: [tooltip],
         layout: {
@@ -143,16 +165,14 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     // Initialize the G6 graph, once we're ready
     React.useEffect(() => {
-        console.log("About to initialize.");
-        if (!ref.current) {
+        if (!graphContainer) {
             return;  // We can't (re-)initialize the graph yet, 
             // because we don't have a valid reference to the <div> that will hold it.
         }
-        const container = ref.current;
+        const container = graphContainer;
         const width = container.clientWidth;
         const height = container.clientHeight;
         const newGraph = new G6.Graph({ container, width, height, ...graphConfig });
-        console.log('Initialized.');
         setGraph((oldGraph) => {
             if (oldGraph) {
                 // If there already was a graph, destroy it because we're about to re-create it.
@@ -160,7 +180,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             }
             return newGraph;
         });
-    }, [ref, graphConfig]);
+    }, [graphConfig]);
 
     // Set the graph data and render it whenever the data has changed or the graph has been re-initialized:
     React.useEffect(() => {
@@ -172,9 +192,6 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Set up G6 event handlers whenever the graph has been initialized for the first time or re-initialized
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-
-        // create a hull of immideately connected nodes upon double clicking on the node
-        
 
         //  when a node is selected, show the neighbouring nodes and connecting edges as selected.
         // NOTE the built in node and edge states are: active, inactive, selected, highlight, disable
@@ -195,9 +212,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 }
             })
 
-            // if it is a connected adge, then highlight
-            console.log('Begin')
-            // even though it does check the if statement correctly
+            // if it is a connected edge, then highlight:
             graph.getEdges().forEach((edge) => {
                 if (
                     ((edge.getSource().getID() === item.getID()) ||
@@ -205,7 +220,6 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 ) {
                     graph.setItemState(edge, 'selected', true);
                     graph.setItemState(edge, 'disabled', false);
-                    console.log('I am here')
                 } else {
                     graph.setItemState(edge, 'disabled', true);
                     graph.setItemState(edge, 'selected', false);
@@ -262,49 +276,56 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
     React.useEffect(() => {
-        ref.current?.addEventListener("MozMousePixelScroll", (e) => {
+        graphContainer.addEventListener("MozMousePixelScroll", (e) => {
             e.preventDefault();
         }, { passive: false });
-    }, [ref.current]);
+    }, []);
 
     // Automatically resize the graph if the containing element changes size.
     const handleSizeChange = React.useCallback(() => {
-        if (!graph || graph.destroyed || !ref.current) return;
-        const width = ref.current.clientWidth, height = ref.current.clientHeight;
+        if (!graph || graph.destroyed || !graphContainer) return;
+        const width = graphContainer.clientWidth, height = graphContainer.clientHeight;
         if (graph.getWidth() !== width || graph.getHeight() !== height) {
             graph.changeSize(width, height);
-            graph.layout();
             graph.fitView();
         }
-    }, [graph]);
-    useResizeObserver(ref, handleSizeChange);
+    }, [graph, graphContainer]);
+    useResizeObserver({current: graphContainer}, handleSizeChange);
 
     const [expanded, setExpanded] = React.useState(false);
     const expandGraphCanvas = React.useCallback(() => {
         setExpanded((wasExpanded) => !wasExpanded);
     }, []);
             
-    const graphDiv = <>
-        <div ref={ref} className="w-full relative aspect-square md:aspect-video border-2 border-gray-200 overflow-hidden">
+    const contents = <>
+        <div ref={updateGraphHolder} className="relative border-2 border-gray-200 overflow-hidden w-screen max-w-full h-screen max-h-full">
+            {/* in here is 'graphContainer', and which holds a <canvas> element. */}
         </div>
         <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
             <ToolbarButton
+                enabled={expanded}
                 onClick={expandGraphCanvas}
-                title={intl.formatMessage({id: "ui.component.mdtEditor.toolbar.sourceMode", defaultMessage: "Edit source"})}
+                title={intl.formatMessage({id: "graph.toolbar.expand", defaultMessage: "Toggle expanded view"})}
                 icon="plus"
             />
         </div>
     </>
 
     if (expanded) {
+        // Display the graph and controls in a modal (dialog/overlay),
+        // centered on the screen and no bigger than the screen.
         return (
-            <Modal>
-                {graphDiv}
+            <Modal onClose={expandGraphCanvas} className="flex flex-col w-auto h-auto max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]">
+                {contents}
             </Modal>
         );
     } else {
+        // Display the graph in our parent element, making it as wide as possible, and setting the height based
+        // on an aspect ratio (square on mobile, 16:9 on desktop)
         return (
-                graphDiv
+            <div className="flex flex-col w-auto h-auto aspect-square md:aspect-video max-w-full">
+                {contents}
+            </div>
         );
     }
 
