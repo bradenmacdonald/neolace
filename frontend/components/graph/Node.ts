@@ -67,19 +67,20 @@ G6.registerNode(
             group.addShape('rect', {
                 attrs: {
                     opacity: 0,  // usually this is hidden.
-                    x: -width / 2 - selectRectThickness,
-                    y: -height / 2 - selectRectThickness,
-                    width: width + selectRectThickness * 2,
-                    height: height + selectRectThickness * 2,
+                    x: -width / 2 - selectRectThickness / 2,
+                    y: -height / 2 - selectRectThickness / 2,
+                    width: width + selectRectThickness,
+                    height: height + selectRectThickness,
                     radius,
-                    fill: textColor,
+                    stroke: textColor,
+                    lineWidth: selectRectThickness,
                 },
                 className: `entryNode-selectRect`,
                 name: `entryNode-selectRect`,
                 draggable: true,
             });
 
-            // Draw the base rectangle:
+            // Draw an invisible to define the overall shape of this node (affects where edges/relationships connect)
             const keyShape = group.addShape('rect', {
                 attrs: {
                     x: -width / 2,
@@ -87,41 +88,44 @@ G6.registerNode(
                     width,
                     height,
                     radius,
-                    fill: bgColor,
                 },
                 className: `entryNode-keyShape`,
                 name: `entryNode-keyShape`,
                 draggable: true,
+                visible: false,
             });
 
             // Now draw the darker rectangle on the left
-            group.addShape('rect', {
+            const leftRect = group.addShape('rect', {
                 attrs: {
                     x: -width / 2,
                     y: -height / 2,
-                    width: leftRectWidth,
+                    width: leftRectWidth + radius,  // We will use a "clip" to hide the right side of this rectangle so only the left side has rounded edges
                     height,
                     radius,
                     fill: darkColor,
                 },
-                // className: `${this.type}-keyShape`,
-                name: `entryNode-keyShape`,
+                className: `entryNode-leftRect`,
+                name: `entryNode-leftRect`,
                 draggable: true,
             });
-            // But we want the right side of the darker rectangle to be flat, not a rounded border, so we fake it:
-            group.addShape('rect', {
+            leftRect.setClip({type: "rect", attrs: { x: -width / 2, y: -height / 2, width: leftRectWidth, height}});
+
+            // Now draw the lighter rectangle on the right
+            const rightRect = group.addShape('rect', {
                 attrs: {
-                    x: -width / 2 + radius,
+                    x: -width / 2 + leftRectWidth - radius,
                     y: -height / 2,
-                    width: leftRectWidth - radius,
+                    width: width - leftRectWidth + radius,  // We will use a "clip" to hide the left side of this rectangle so only the right side has rounded edges
                     height,
-                    radius: 0,
-                    fill: darkColor,
+                    radius,
+                    fill: bgColor,
                 },
-                className: `entryNode-keyShape`,
-                name: `entryNode-keyShape`,
+                className: `entryNode-rightRect`,
+                name: `entryNode-rightRect`,
                 draggable: true,
             });
+            rightRect.setClip({type: "rect", attrs: { x: -width / 2 + leftRectWidth, y: -height / 2, width, height}});
 
             // Now draw the label of the node (its name)
             const labelText = typeof cfg.label === "string" ? cfg.label : "";
@@ -206,6 +210,14 @@ G6.registerNode(
                 // When the "select" state changes, toggle the outer border's visibility
                 const selectRect = group.find((element) => element.get('name') === "entryNode-selectRect");
                 selectRect.attr("opacity", value ? 1 : 0);
+            } else if (name === "hover" || name === "active") {
+                if (!item.hasState("selected") && !item.hasState("disabled")) {
+                    const selectRect = group.find((element) => element.get('name') === "entryNode-selectRect");
+                    selectRect.attr("opacity", value ? 0.2 : 0);
+                }
+            } else if (name === "disabled") {
+                // Fade out the whole node.
+                group.attr("opacity", value ? 0.3 : 1);
             }
         },
         /**
