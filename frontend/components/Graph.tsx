@@ -9,6 +9,9 @@ import { useResizeObserver } from "./utils/resizeObserverHook";
 import { GraphTooltip } from "./GraphTooltip";
 import { EntryColor, entryNode, pickEntryTypeLetter } from "./graph/Node";
 import { VNID } from "neolace-api";
+import { ToolbarButton } from "./widgets/Button";
+import { useIntl } from "react-intl";
+import { Modal } from "./widgets/Modal";
 
 interface GraphProps {
     value: api.GraphValue;
@@ -56,6 +59,7 @@ function refreshDragedNodePosition(e: IG6GraphEvent) {
  * Display a graph visualization.
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
+    const intl = useIntl();
     const data = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value]);
@@ -139,6 +143,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     // Initialize the G6 graph, once we're ready
     React.useEffect(() => {
+        console.log("About to initialize.");
         if (!ref.current) {
             return;  // We can't (re-)initialize the graph yet, 
             // because we don't have a valid reference to the <div> that will hold it.
@@ -147,6 +152,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         const width = container.clientWidth;
         const height = container.clientHeight;
         const newGraph = new G6.Graph({ container, width, height, ...graphConfig });
+        console.log('Initialized.');
         setGraph((oldGraph) => {
             if (oldGraph) {
                 // If there already was a graph, destroy it because we're about to re-create it.
@@ -273,10 +279,33 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     }, [graph]);
     useResizeObserver(ref, handleSizeChange);
 
-    return (
-        <>
-            <div ref={ref} className="w-full relative aspect-square md:aspect-video border-2 border-gray-200 overflow-hidden">
-            </div>
-        </>
-    );
+    const [expanded, setExpanded] = React.useState(false);
+    const expandGraphCanvas = React.useCallback(() => {
+        setExpanded((wasExpanded) => !wasExpanded);
+    }, []);
+            
+    const graphDiv = <>
+        <div ref={ref} className="w-full relative aspect-square md:aspect-video border-2 border-gray-200 overflow-hidden">
+        </div>
+        <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
+            <ToolbarButton
+                onClick={expandGraphCanvas}
+                title={intl.formatMessage({id: "ui.component.mdtEditor.toolbar.sourceMode", defaultMessage: "Edit source"})}
+                icon="plus"
+            />
+        </div>
+    </>
+
+    if (expanded) {
+        return (
+            <Modal>
+                {graphDiv}
+            </Modal>
+        );
+    } else {
+        return (
+                graphDiv
+        );
+    }
+
 };
