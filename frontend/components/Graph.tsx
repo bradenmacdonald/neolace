@@ -129,19 +129,6 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         modes: {
             default: ["drag-canvas", "click-select", "zoom-canvas", 'drag-node'],
         },
-        nodeStateStyles: {
-            selected: {
-                stroke: '#f00',
-                lineWidth: 3
-            },
-            highlight: {
-                stroke: 'blue',
-                lineWidth: 2,
-            },
-            disabled: {
-                opacity: 0.5,
-            }
-        },
         edgeStateStyles: {
             selected: {
                 lineWidth: 3,
@@ -153,7 +140,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Initialize the G6 graph, once we're ready
     React.useEffect(() => {
         if (!ref.current) {
-            return;  // We can't (re-)initialize the graph yet, because we don't have a valid reference to the <div> that will hold it.
+            return;  // We can't (re-)initialize the graph yet, 
+            // because we don't have a valid reference to the <div> that will hold it.
         }
         const container = ref.current;
         const width = container.clientWidth;
@@ -178,88 +166,56 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Set up G6 event handlers whenever the graph has been initialized for the first time or re-initialized
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-  
+
         // create a hull of immideately connected nodes upon double clicking on the node
-        graph.on("node:dblclick", function (e) {
-            const item = e.item as INode;
-            const this_hull_id = `hull-${item.getID()}`;
-            const hulls = graph.getHulls();
+        
 
-            let hull_exist = false;
-
-            if (!hulls) {
-                hull_exist = false;
-            } else {
-                Object.entries(hulls).forEach(([hull_id, hull_value]) => {
-                    if (hull_id === this_hull_id ) {
-                        hull_exist = true;
-                    }
-                })
-            }
-
-            if (!hull_exist) {
-                console.log('Hull created')
-                graph.createHull({
-                    id: `hull-${item.getID()}`,
-                    type: 'bubble',
-                    members: [...item.getNeighbors(), item],
-                    padding: 30,
-                })
-            }
-        })
-
-        graph.on('afterlayout', () => {
-            console.log('After layout call')
-            graph.on('afterupdateitem', (e) => {
-                console.log('After update item')
-                const hulls = graph.getHulls();
-                if (!hulls) return;
-                Object.values(hulls).forEach((hull) => {
-                    hull.updateData(hull.members, hull.nonMembers);
-                })
-            })
-        });
         //  when a node is selected, show the neighbouring nodes and connecting edges as selected.
         // NOTE the built in node and edge states are: active, inactive, selected, highlight, disable
         // styles for the states can be configured.
         graph.on("node:click", function (e) {
-            graph.getEdges().forEach((edge) => {
-                graph.clearItemStates(edge);
-            });
-            graph.getNodes().forEach((node) => {
-                graph.clearItemStates(node);
-            });
-            // graph.layout();
             const item = e.item as INode;
             // if it is this node or connected node, then highlight
             graph.getNodes().forEach((node) => {
                 if (node === item) {
-                    graph.setItemState(item, 'selected', true);
+                    graph.setItemState(node, 'disabled', false);
+                    graph.setItemState(node, 'selected', true);
+                    console.log('selected node')
                 } else if (item.getNeighbors().includes(node)) {
-                    graph.setItemState(node, 'highlight', true);
+                    graph.setItemState(node, 'disabled', false);
+                    graph.setItemState(node, 'selected', true);
                 } else {
                     graph.setItemState(node, 'disabled', true);
                 }
             })
-            
+
             // if it is a connected adge, then highlight
             console.log('Begin')
-            // BUG sometimes when click on the node it does not highlight all of them
             // even though it does check the if statement correctly
             graph.getEdges().forEach((edge) => {
                 if (
-                    ((edge.getSource().getID()  === item.getID()) ||
-                    (edge.getTarget().getID()  === item.getID()))
-                ){
+                    ((edge.getSource().getID() === item.getID()) ||
+                        (edge.getTarget().getID() === item.getID()))
+                ) {
                     graph.setItemState(edge, 'selected', true);
                     graph.setItemState(edge, 'disabled', false);
                     console.log('I am here')
-                  } else {
+                } else {
                     graph.setItemState(edge, 'disabled', true);
                     graph.setItemState(edge, 'selected', false);
                 }
             })
 
+
+        });
+
+        graph.on("nodeselectchange" as any, (e) => { // the type says it's not allowed but it works
+            // The current manipulated item
+            console.log(e.target);
+            // The set of selected items after this operation
+            console.log(e.selectedItems);
+            // A boolean tag to distinguish if the current operation is select(`true`) or deselect (`false`)
+            console.log(e.select);
         });
 
         // allow selection of edges
@@ -319,7 +275,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     return (
         <>
-            <div ref={ref} className="w-full aspect-square md:aspect-video border-2 border-gray-200 overflow-hidden">
+            <div ref={ref} className="w-full relative aspect-square md:aspect-video border-2 border-gray-200 overflow-hidden">
             </div>
         </>
     );
