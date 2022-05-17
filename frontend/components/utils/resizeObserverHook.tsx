@@ -18,7 +18,12 @@ export const useResizeObserver = (ref: React.RefObject<Element>, callback: () =>
         if (callbackRef.current) { callbackRef.current(); }
     }, []);
 
-    const [observer] = React.useState<ResizeObserver>(new ResizeObserver(handleSizeChange));
+    const [observer] = React.useState<ResizeObserver>(
+        typeof ResizeObserver === "undefined" ?
+            // When pre-rendering on the server, or in browsers that don't support ResizeObserver, use a dummy object:
+            { observe: () => null, disconnect: () => null } as unknown as ResizeObserver
+        : new ResizeObserver(handleSizeChange)
+    );
 
     React.useEffect(() => {
         if (ref.current) {
