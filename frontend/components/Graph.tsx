@@ -6,12 +6,13 @@ import { api } from "lib/api-client";
 import { MDTContext } from "./markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "./utils/resizeObserverHook";
-import { GraphTooltip } from "./GraphTooltip";
 import { EntryColor, entryNode, pickEntryTypeLetter } from "./graph/Node";
 import { VNID } from "neolace-api";
 import { ToolbarButton } from "./widgets/Button";
 import { useIntl } from "react-intl";
 import { Modal } from "./widgets/Modal";
+import { Tooltip } from "./widgets/Tooltip";
+import { NodeTooltip, useNodeTooltipHelper } from "./graph/NodeTooltip";
 
 interface GraphProps {
     value: api.GraphValue;
@@ -65,6 +66,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // and we manage this wrapper div manually. When React changes which <div> contains this wrapper <div>, we'll move
     // it to the new DOM location ourselves. That way, the <canvas> that G6 needs does not get destroyed.
     const [graphContainer] = React.useState(() => {
+        if (typeof document === "undefined") {
+            return undefined;
+        }
         // Create a persistent <div> that gets saved into this <LookGraph> component's state. This <div> will never
         // change for the entire lifetime of this <LookupGraph> component.
         const _graphContainer = document.createElement("div");
@@ -78,7 +82,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         // Move graphContainer into the new parent div, or detach it from the DOM and keep it in memory only (if the new
         // parent div isn't ready yet).
         if (!newGraphHolderDiv) {
-            graphContainer.parentElement?.removeChild(graphContainer);
+            graphContainer?.parentElement?.removeChild(graphContainer);
         } else {
             newGraphHolderDiv.appendChild(graphContainer);
         }
@@ -91,17 +95,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Create a reference (an object that holds mdtContext) that we can pass to the tooltip,
     // so that the tooltip can always access the mdtContext and we don't have to re-create the
     // tooltip plugin whenever the mdtContext changes.
-    const mdtContextRef = React.useRef<MDTContext>(props.mdtContext);
-    React.useEffect(() => { mdtContextRef.current = props.mdtContext; }, [props.mdtContext]);
-
-    // Construct the tooltip plugin.
-    const tooltip = React.useMemo(() =>
-        new GraphTooltip(mdtContextRef), []
-    );
+    // const mdtContextRef = React.useRef<MDTContext>(props.mdtContext);
+    // React.useEffect(() => { mdtContextRef.current = props.mdtContext; }, [props.mdtContext]);
 
     // Our G6 Graph configuration
     const graphConfig: Partial<GraphOptions> = React.useMemo(() => ({
-        plugins: [tooltip],
+        plugins: [],
         layout: {
             type: 'force',
             preventOverlap: true,
@@ -162,7 +161,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 stroke: '#f00'
             }
         }
-    }), [tooltip]);
+    }), []);
 
     // Initialize the G6 graph, once we're ready
     React.useEffect(() => {
@@ -200,6 +199,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         }, true);
     }, [graph, data]);
 
+    const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
+
     // Set up G6 event handlers whenever the graph has been initialized for the first time or re-initialized
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
@@ -214,7 +215,6 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 if (node === item) {
                     graph.setItemState(node, 'disabled', false);
                     graph.setItemState(node, 'selected', true);
-                    console.log('selected node')
                 } else if (item.getNeighbors().includes(node)) {
                     graph.setItemState(node, 'disabled', false);
                     graph.setItemState(node, 'selected', true);
@@ -242,12 +242,21 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
         // deno-lint-ignore no-explicit-any
         graph.on("nodeselectchange" as any, (e) => { // the type says it's not allowed but it works
+            // deno-lint-ignore no-explicit-any
+            const selectedNodes = (e.selectedItems as any).nodes as INode[];
+            if (selectedNodes.length === 1) {
+                // Show a tooltip for this node, since there's exactly one node selected:
+                setShowTooltipForNode(selectedNodes[0].getModel().id);
+            } else {
+                // Clear the tooltip if 0 or 2+ nodes are selected:
+                setShowTooltipForNode(undefined);
+            }
             // The current manipulated item
-            console.log(e.target);
+            // console.log(e.target);
             // The set of selected items after this operation
-            console.log(e.selectedItems);
+            // console.log(e.selectedItems);
             // A boolean tag to distinguish if the current operation is select(`true`) or deselect (`false`)
-            console.log(e.select);
+            // console.log(e.select);
         });
 
         // allow selection of edges
@@ -288,7 +297,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
     React.useEffect(() => {
-        graphContainer.addEventListener("MozMousePixelScroll", (e) => {
+        graphContainer?.addEventListener("MozMousePixelScroll", (e) => {
             e.preventDefault();
         }, { passive: false });
     }, []);
@@ -302,7 +311,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             graph.fitView();
         }
     }, [graph, graphContainer]);
-    useResizeObserver({current: graphContainer}, handleSizeChange);
+    useResizeObserver({current: graphContainer!}, handleSizeChange);
 
     const [expanded, setExpanded] = React.useState(false);
     const expandGraphCanvas = React.useCallback(() => {
@@ -313,6 +322,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         <div ref={updateGraphHolder} className="relative border-2 border-gray-200 bg-white rounded overflow-hidden w-screen max-w-full h-screen max-h-full">
             {/* in here is 'graphContainer', and which holds a <canvas> element. */}
         </div>
+        {/* A tooltip that displays information about the currently selected entry node. */}
+        <NodeTooltip
+            showTooltipForNode={showTooltipForNode}
+            mdtContext={props.mdtContext}
+            tooltipVirtualElement={tooltipVirtualElement}
+        />
         <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
             <ToolbarButton
                 enabled={expanded}
