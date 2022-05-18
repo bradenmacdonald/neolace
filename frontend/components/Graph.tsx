@@ -183,14 +183,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Set the graph data and render it whenever the data has changed or the graph has been re-initialized:
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        let dataToUse;
-        if (condensed) {
-            dataToUse = transformDataForGraph(data);
-            dataToUse = colorGraph(dataToUse, props.mdtContext.refCache);
-        } else {
-            dataToUse = data;
-        }
-        graph.data(dataToUse);
+        graph.data(data);
         graph.render();
         // By default, we zoom the graph so that four nodes would fit horizontally.
         graph.zoomTo(graph.getWidth()/(220*4), undefined, false);
@@ -202,7 +195,18 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 graph.focusItem(firstNode, true);
             }
         }, true);
-    }, [graph, data, condensed]);
+    }, [graph, data]);
+
+    React.useEffect(() => {
+        if (!graph || graph.destroyed) { return; }
+        if (condensed) {
+            let condensedData = transformDataForGraph(data);
+            condensedData = colorGraph(condensedData, props.mdtContext.refCache);
+            graph.changeData(condensedData);
+        } else {
+            graph.changeData(data);
+        }
+    }, [condensed]);
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
 
@@ -374,6 +378,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "graph.toolbar.condenseNodes",
                     })}
                     icon="chevron-down"
+                    enabled={condensed}
                 />
             </div>
             <div
