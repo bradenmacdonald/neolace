@@ -105,8 +105,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             preventOverlap: true,
             nodeSize: [200, 50],
             nodeSpacing: 60,
-            alphaMin: 0.2,
-            // alphaDecay: 0.1,
+            alphaDecay: 0.1,
             // clustering: true,
 
             // type: "dagre",
