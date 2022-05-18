@@ -4,6 +4,7 @@ import { api, useSiteData } from 'lib/api-client';
 import { DEVELOPMENT_MODE } from 'lib/config';
 import { Tooltip } from 'components/widgets/Tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
+import { EntryTooltipContent } from './EntryTooltipContent';
 
 interface Props {
     /** VNID or friendlyId */
@@ -31,10 +32,10 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
     }
 
     if (site.frontendConfig.features?.hoverPreview?.enabled) {
-        return <Tooltip tooltipContent={<>
-            <strong>{entry.name}</strong> ({refCache.entryTypes[entry.entryType.id]?.name})<br/>
-            <p className="text-sm"><InlineMDT mdt={entry.description} context={props.mdtContext.childContextWith({entryId: entry.id})} /></p>
-        </>}>
+        return <Tooltip tooltipContent={<EntryTooltipContent
+            entryId={entry.id}
+            mdtContext={props.mdtContext}
+        />}>
             {attribs => <Link href={`/entry/${entry.friendlyId}`}><a {...attribs}>{props.children}</a></Link>}
         </Tooltip>;
     } else {
