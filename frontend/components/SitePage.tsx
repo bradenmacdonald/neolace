@@ -132,7 +132,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         <div className="scroll-root absolute top-8 md:top-24 w-full bottom-8 md:bottom-0 overflow-y-auto overflow-x-hidden flex flex-row bg-gray-200 items-start">{/* It's unclear why there is a horizontal scroll on entry pages on mobile without overflow-x-hidden */}
 
             {/* Left column, which shows various links and the current page's table of contents. On mobile it's hidden until the user clicks "Menu". */}
-            <div id="left-panel" className={`${mobileMenuVisible ? `translate-x-0 visible` : `-translate-x-[100%] invisible`} z-[100] transition-visibility-transform md:visible md:translate-x-0 fixed md:sticky flex top-8 md:top-0 bottom-8 md:bottom-0 w-[80vw] md:w-1/4 md:max-w-[280px] bg-gray-300 xl:border-r border-r-gray-100 flex-initial p-4 overflow-y-auto flex-col self-stretch`} onClick={handleLeftPanelClick}>
+            <div id="left-panel" className={`${mobileMenuVisible ? `translate-x-0 visible z-[100]` : `-translate-x-[100%] invisible`} transition-visibility-transform md:visible md:translate-x-0 fixed md:sticky flex top-8 md:top-0 bottom-8 md:bottom-0 w-[80vw] md:w-1/4 md:max-w-[280px] bg-gray-300 xl:border-r border-r-gray-100 flex-initial p-4 overflow-y-auto flex-col self-stretch`} onClick={handleLeftPanelClick}>
                 <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavTopSlot ?? []), {
                     id: "siteLinks",
                     priority: 15,
