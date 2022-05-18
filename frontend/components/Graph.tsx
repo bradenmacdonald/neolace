@@ -108,6 +108,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             nodeSize: [200, 50],
             nodeSpacing: 60,
             alphaMin: 0.2,
+            alphaDecay: 0.1,
             // clustering: true,
 
             // type: "dagre",
@@ -187,6 +188,16 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         if (!graph || graph.destroyed) { return; }
         graph.data(data);
         graph.render();
+        // By default, we zoom the graph so that four nodes would fit horizontally.
+        graph.zoomTo(graph.getWidth()/(220*4), undefined, false);
+        graph.on("afterlayout", () => {
+            // Zoom to focus on whatever node came first in the data:
+            const firstNode = graph.getNodes()[0];
+            if (firstNode) {
+                graph.setItemState(firstNode, "selected", true);
+                graph.focusItem(firstNode, true);
+            }
+        }, true);
     }, [graph, data]);
 
     // Set up G6 event handlers whenever the graph has been initialized for the first time or re-initialized
@@ -298,7 +309,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     }, []);
             
     const contents = <>
-        <div ref={updateGraphHolder} className="relative border-2 border-gray-200 overflow-hidden w-screen max-w-full h-screen max-h-full">
+        <div ref={updateGraphHolder} className="relative border-2 border-gray-200 bg-white rounded overflow-hidden w-screen max-w-full h-screen max-h-full">
             {/* in here is 'graphContainer', and which holds a <canvas> element. */}
         </div>
         <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">

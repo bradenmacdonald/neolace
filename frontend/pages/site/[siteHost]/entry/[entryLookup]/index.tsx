@@ -103,7 +103,11 @@ const EntryPage: NextPage<PageProps> = function(props) {
             <div className={`flex flex-wrap xl:flex-nowrap ${hasProps || "hidden"}`}>
                 <div id="properties" className="flex-auto">
                     <h2><FormattedMessage id="site.entry.propertiesHeading" defaultMessage="Properties"/></h2>
-                    <table>
+                    <table className="w-full table-fixed">
+                        <colgroup>
+                            <col className="w-full md:w-1/4" />
+                            <col/>
+                        </colgroup>
                         <tbody>
                             {props.entry.propertiesSummary?.map(p => 
                                 <tr key={p.propertyId} className="even:bg-gray-50 hover:bg-blue-50">
