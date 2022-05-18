@@ -11,32 +11,45 @@ interface ModalProps {
  * Display a modal, which is a dialogue that pops up and overlaps with everything else.
  */
 export const Modal: React.FunctionComponent<ModalProps> = (props) => {
-    const [modalElement, setModalElement] = React.useState<HTMLDivElement|null>(null);
+    const modalElement = React.useRef<HTMLDivElement|null>(null);
     
     // A general click event handler to watch for "click outside of modal" events
     const handleClickOutside = React.useCallback((event: MouseEvent) => {
-        if (props.onClose && modalElement && !modalElement.contains(event.target as Node)) {
+        if (props.onClose && modalElement.current && !modalElement.current.contains(event.target as Node)) {
+            event.preventDefault();
             props.onClose();
         }
-    }, [props.onClose, modalElement]);
+    }, [props.onClose]);
 
     React.useEffect(() => {
-        if (props.onClose) {
-            document.addEventListener("mousedown", handleClickOutside);
-        } else {
-            document.removeEventListener("mousedown", handleClickOutside);
-        }
-        return () => {
-            // Unbind the event listener on clean up
+        document.addEventListener("mousedown", handleClickOutside, {passive: false});
+        return () => { // Unbind the event listener on clean up
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [modalElement, props.onClose, handleClickOutside]);
+    }, [handleClickOutside]);
+
+    // A listener to handle for ESC key press events
+    const handleKeyPress = React.useCallback((event: KeyboardEvent) => {
+        if (event.key === "Escape" && props.onClose) {
+            event.preventDefault();
+            props.onClose();
+        }
+    }, [props.onClose]);
+
+    React.useEffect(() => {
+        document.addEventListener("keydown", handleKeyPress, {passive: false});
+        return () => { // Unbind the event listener on clean up
+            document.removeEventListener("keydown", handleKeyPress);
+        };
+    }, [handleClickOutside]);
 
     return (
         <>
             <Portal>
                 <div
-                    ref={setModalElement}
+                    ref={modalElement}
+                    role="dialog"
+                    aria-modal="true"
                     className={
                         // Modals are centered in the viewport, and not affected by scrolling (fixed):
                         `fixed left-[50vw] top-[50vh] -translate-x-1/2 -translate-y-1/2 ` +
