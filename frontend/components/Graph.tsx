@@ -11,6 +11,7 @@ import { VNID } from "neolace-api";
 import { ToolbarButton } from "./widgets/Button";
 import { useIntl } from "react-intl";
 import { Modal } from "./widgets/Modal";
+import { transformDataForGraph } from './graph/GraphFunctions'
 import { NodeTooltip, useNodeTooltipHelper } from "./graph/NodeTooltip";
 
 interface GraphProps {
@@ -22,8 +23,23 @@ interface GraphProps {
 let nextColor = 0;
 const colourMap = new Map<VNID, EntryColor>();
 
+export interface rawData {
+    nodes: {
+      id: VNID;
+      label: string;
+      entryType: VNID;
+
+    }[];
+    edges: {
+        source: string;
+        target: string;
+        entryType: string;
+        label: string;
+    }[];
+}
+
 function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
-    const data = {
+    let data: rawData = {
         nodes: value.entries.map((n) => (
             { id: n.entryId, label: n.name, entryType: n.entryType }
         )),
@@ -36,6 +52,8 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
             }
         )),
     };
+    
+    data = transformDataForGraph(data);
 
     data.nodes.forEach((node: NodeConfig) => {
         if (!colourMap.has(node.entryType as VNID)) {
@@ -46,6 +64,7 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
         node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
     });
 
+    console.log(data);
     return data;
 }
 
@@ -106,30 +125,6 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             nodeSize: [200, 50],
             nodeSpacing: 60,
             alphaMin: 0.2,
-            // alphaDecay: 0.1,
-            // clustering: true,
-
-            // type: "dagre",
-            // rankdir: "TB", // The center of the graph by default
-            // align: "DL",
-            // nodesep: 50,
-            // ranksep: 100,
-            // controlPoints: true,
-
-            // type: 'radial',
-            // unitRadius: 1000,
-            // preventOverlap: true,
-            // nodeSize: 200,
-            // nodeSpacing: 4000,
-            // linkDistance: 400,
-            // sortBy: 'comboId',
-            // sortStrength: 100,
-
-            // type: 'comboCombined',
-            // nodeSize: 200,
-            // outerLayout: new G6.Layout['gForce']({
-            //     linkDistance: 2500,
-            // }),
         },
         defaultNode: {
             type: entryNode,
