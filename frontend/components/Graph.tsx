@@ -4,14 +4,13 @@
 import React from "react";
 import { api } from "lib/api-client";
 import { MDTContext } from "./markdown-mdt/mdt";
-import G6, { Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
+import G6, { Graph, GraphOptions, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "./utils/resizeObserverHook";
 import { EntryColor, entryNode, pickEntryTypeLetter } from "./graph/Node";
 import { VNID } from "neolace-api";
 import { ToolbarButton } from "./widgets/Button";
 import { useIntl } from "react-intl";
 import { Modal } from "./widgets/Modal";
-import { Tooltip } from "./widgets/Tooltip";
 import { NodeTooltip, useNodeTooltipHelper } from "./graph/NodeTooltip";
 
 interface GraphProps {
@@ -311,38 +310,82 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             graph.fitView();
         }
     }, [graph, graphContainer]);
-    useResizeObserver({current: graphContainer!}, handleSizeChange);
+    useResizeObserver({ current: graphContainer! }, handleSizeChange);
 
+    // Code for "toggle expanded view" toolbar button
     const [expanded, setExpanded] = React.useState(false);
-    const expandGraphCanvas = React.useCallback(() => {
-        setExpanded((wasExpanded) => !wasExpanded);
-    }, []);
-            
-    const contents = <>
-        <div ref={updateGraphHolder} className="relative border-2 border-gray-200 bg-white rounded overflow-hidden w-screen max-w-full h-screen max-h-full">
-            {/* in here is 'graphContainer', and which holds a <canvas> element. */}
-        </div>
-        {/* A tooltip that displays information about the currently selected entry node. */}
-        <NodeTooltip
-            showTooltipForNode={showTooltipForNode}
-            mdtContext={props.mdtContext}
-            tooltipVirtualElement={tooltipVirtualElement}
-        />
-        <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
-            <ToolbarButton
-                enabled={expanded}
-                onClick={expandGraphCanvas}
-                title={intl.formatMessage({id: "graph.toolbar.expand", defaultMessage: "Toggle expanded view"})}
-                icon={expanded ? "arrows-angle-contract" : "arrows-angle-expand"}
+    const handleExpandCanvasButton = React.useCallback(() => { setExpanded((wasExpanded) => !wasExpanded); }, []);
+    // Code for "zoom" toolbar buttons
+    const zoomRatio = 1.20; // Zoom in by 20% each time
+    const handleZoomInButton = React.useCallback(() => {
+        graph?.zoom(zoomRatio, graph?.getViewPortCenterPoint());
+    }, [graph]);
+    const handleZoomOutButton = React.useCallback(() => {
+        graph?.zoom(1 / zoomRatio, graph?.getViewPortCenterPoint());
+    }, [graph]);
+    // Code for "fit view" button
+    const handleFitViewButton = React.useCallback(() => { graph?.fitView(10, { direction: "both" }); }, [graph]);
+    // Code for "download as image" toolbar button
+    const handleDownloadImageButton = React.useCallback(() => { graph?.downloadFullImage(); }, [graph]);
+
+    const contents = (
+        <>
+            <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
+                <ToolbarButton
+                    onClick={handleExpandCanvasButton}
+                    title={intl.formatMessage({ defaultMessage: "Toggle expanded view", id: "graph.toolbar.expand" })}
+                    icon={expanded ? "arrows-angle-contract" : "arrows-angle-expand"}
+                />
+                <ToolbarButton
+                    onClick={handleZoomInButton}
+                    title={intl.formatMessage({ defaultMessage: "Zoom in", id: "graph.toolbar.zoomIn" })}
+                    icon="zoom-in"
+                />
+                <ToolbarButton
+                    onClick={handleZoomOutButton}
+                    title={intl.formatMessage({ defaultMessage: "Zoom out", id: "graph.toolbar.zoomOut" })}
+                    icon="zoom-out"
+                />
+                <ToolbarButton
+                    onClick={handleFitViewButton}
+                    title={intl.formatMessage({ defaultMessage: "Fit graph to view", id: "graph.toolbar.fitView" })}
+                    icon="aspect-ratio"
+                />
+                <ToolbarButton
+                    onClick={handleDownloadImageButton}
+                    title={intl.formatMessage({
+                        defaultMessage: "Download entire graph as an image",
+                        id: "graph.toolbar.downloadImage",
+                    })}
+                    icon="image"
+                />
+            </div>
+            <div
+                ref={updateGraphHolder}
+                className="relative bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
+            >
+                {/* in here is 'graphContainer', and which holds a <canvas> element. */}
+            </div>
+            {/* A tooltip that displays information about the currently selected entry node. */}
+            <NodeTooltip
+                showTooltipForNode={showTooltipForNode}
+                mdtContext={props.mdtContext}
+                tooltipVirtualElement={tooltipVirtualElement}
             />
-        </div>
-    </>
+        </>
+    );
 
     if (expanded) {
         // Display the graph and controls in a modal (dialog/overlay),
         // centered on the screen and no bigger than the screen.
         return (
-            <Modal onClose={expandGraphCanvas} className="flex flex-col w-auto h-auto max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]">
+            <Modal
+                onClose={handleExpandCanvasButton}
+                className={`
+                    flex flex-col rounded border-2 border-gray-200 w-auto h-auto
+                    max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]
+                `}
+            >
                 {contents}
             </Modal>
         );
@@ -350,10 +393,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         // Display the graph in our parent element, making it as wide as possible, and setting the height based
         // on an aspect ratio (square on mobile, 16:9 on desktop)
         return (
-            <div className="flex flex-col w-auto h-auto aspect-square md:aspect-video max-w-full">
+            <div className={`
+                flex flex-col rounded border-2 border-gray-200 w-auto h-auto
+                aspect-square md:aspect-video max-w-full
+            `}>
                 {contents}
             </div>
         );
     }
-
 };

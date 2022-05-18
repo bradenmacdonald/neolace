@@ -13,7 +13,8 @@ import { Spinner } from 'components/widgets/Spinner';
 import { Tooltip } from 'components/widgets/Tooltip';
 import { ErrorMessage } from 'components/widgets/ErrorMessage';
 import { Breadcrumb, Breadcrumbs } from 'components/widgets/Breadcrumbs';
-import { Control, Form } from 'components/widgets/Form';
+import { AutoControl, Control, Form } from 'components/widgets/Form';
+import { MDTEditor } from 'components/widgets/MDTEditor';
 
 // interface PageProps {
 // }
@@ -29,9 +30,9 @@ const UiDemoPage: NextPage = function(props) {
 
     const intl = useIntl();
     const [selectedIcon, setSelectedIcon] = React.useState<IconId>("search");
-    const [textDemoText, setTextDemoText] = React.useState("");
     const [searchDemoText, setSearchDemoText] = React.useState("");
     const [lookupDemoText, setLookupDemoText] = React.useState("");
+    const [mdtDemoText, setMDTDemoText] = React.useState("This has **bold**, *italic*, and a { lookup expression }.");
 
     if (process.env.NODE_ENV === "production") {
         return <FourOhFour/>;
@@ -66,6 +67,18 @@ const UiDemoPage: NextPage = function(props) {
                         placeholder={"Enter a lookup expression"}
                     />
                 </Control>
+                <AutoControl
+                    id="form-mdt-editor"
+                    label={{id: "ui.demo.form.lookup", defaultMessage: "MDT (Markdown / rich text) editor"}}
+                    hint={intl.formatMessage({
+                        id: "ui.demo.form.toolbar",
+                        defaultMessage: "This also shows our <ToolbarButton/> component used to make a toolbar."
+                    })}
+                    onChangeFinished={setMDTDemoText}
+                    value={mdtDemoText}
+                >
+                    <MDTEditor inlineOnly={true} />
+                </AutoControl>
             </Form>
 
             <h2>Icons</h2>
@@ -81,7 +94,11 @@ const UiDemoPage: NextPage = function(props) {
             <p>Preview on a button:</p>
             <Button><Icon icon={selectedIcon} /> Demo</Button>
 
-            <p>See more: <a href={`https://icons.getbootstrap.com/icons/${selectedIcon}/`}>"{selectedIcon}" at Bootstrap Icons</a>.</p>
+            <p>
+                See details about <a href={`https://icons.getbootstrap.com/icons/${selectedIcon}/`}>"{selectedIcon}" at
+                Bootstrap Icons</a>, or <a href="https://icons.getbootstrap.com/">get more icons</a> (add to
+                <code>Icon.tsx</code>).
+            </p>
 
             <br/>
 
