@@ -207,7 +207,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         //  when a node is selected, show the neighbouring nodes and connecting edges as selected.
         // NOTE the built in node and edge states are: active, inactive, selected, highlight, disable
         // styles for the states can be configured.
-        graph.on("node:click", function (e) {
+        graph.on("node:dblclick", function (e) {
             const item = e.item as INode;
             // if it is this node or connected node, then highlight
             graph.getNodes().forEach((node) => {
