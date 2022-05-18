@@ -26,7 +26,7 @@ export const EntryTooltipContent: React.FunctionComponent<Props> = (props: Props
         <p className="text-sm">
             <InlineMDT
                 mdt={entry.description}
-                context={props.mdtContext.childContextWith({entryId: entry.id})}
+                context={props.mdtContext.childContextWith({entryId: entry.id, disableHoverPreview: true})}
             />
         </p>
     </> : <p>Error: entry missing from reference cache.</p>

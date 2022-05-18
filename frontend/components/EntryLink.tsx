@@ -31,7 +31,7 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
         return <Link href={`/entry/${props.entryKey}`}><a className={textColorClass}>{props.children}</a></Link>
     }
 
-    if (site.frontendConfig.features?.hoverPreview?.enabled) {
+    if (site.frontendConfig.features?.hoverPreview?.enabled && !props.mdtContext.disableHoverPreview) {
         return <Tooltip tooltipContent={<EntryTooltipContent
             entryId={entry.id}
             mdtContext={props.mdtContext}
