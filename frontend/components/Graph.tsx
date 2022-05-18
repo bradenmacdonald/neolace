@@ -240,6 +240,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
         });
 
+        // deno-lint-ignore no-explicit-any
         graph.on("nodeselectchange" as any, (e) => { // the type says it's not allowed but it works
             // The current manipulated item
             console.log(e.target);
@@ -317,7 +318,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 enabled={expanded}
                 onClick={expandGraphCanvas}
                 title={intl.formatMessage({id: "graph.toolbar.expand", defaultMessage: "Toggle expanded view"})}
-                icon="plus"
+                icon={expanded ? "arrows-angle-contract" : "arrows-angle-expand"}
             />
         </div>
     </>
