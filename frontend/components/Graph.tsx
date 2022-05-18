@@ -38,6 +38,19 @@ export interface rawData {
     }[];
 }
 
+function colorGraph(data: rawData, refCache: api.ReferenceCacheData) {
+    data.nodes.forEach((node: NodeConfig) => {
+        if (!colourMap.has(node.entryType as VNID)) {
+            colourMap.set(node.entryType as VNID, Object.values(EntryColor)[nextColor]);
+            nextColor = (nextColor + 1) % Object.values(EntryColor).length;
+        }
+        node.color = colourMap.get(node.entryType as VNID);
+        node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
+    });
+
+    return data;
+}
+
 function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
     let data: rawData = {
         nodes: value.entries.map((n) => (
@@ -53,18 +66,8 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
         )),
     };
     
-    data = transformDataForGraph(data);
+    data = colorGraph(data, refCache);
 
-    data.nodes.forEach((node: NodeConfig) => {
-        if (!colourMap.has(node.entryType as VNID)) {
-            colourMap.set(node.entryType as VNID, Object.values(EntryColor)[nextColor]);
-            nextColor = (nextColor + 1) % Object.values(EntryColor).length;
-        }
-        node.color = colourMap.get(node.entryType as VNID);
-        node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
-    });
-
-    console.log(data);
     return data;
 }
 
@@ -73,6 +76,7 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const intl = useIntl();
+    const [condensed, setCondensed] = React.useState(false);
     // The data (nodes and relationships) that we want to display as a graph.
     const data = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
@@ -179,7 +183,14 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Set the graph data and render it whenever the data has changed or the graph has been re-initialized:
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        graph.data(data);
+        let dataToUse;
+        if (condensed) {
+            dataToUse = transformDataForGraph(data);
+            dataToUse = colorGraph(dataToUse, props.mdtContext.refCache);
+        } else {
+            dataToUse = data;
+        }
+        graph.data(dataToUse);
         graph.render();
         // By default, we zoom the graph so that four nodes would fit horizontally.
         graph.zoomTo(graph.getWidth()/(220*4), undefined, false);
@@ -191,7 +202,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 graph.focusItem(firstNode, true);
             }
         }, true);
-    }, [graph, data]);
+    }, [graph, data, condensed]);
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
 
@@ -322,6 +333,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const handleFitViewButton = React.useCallback(() => { graph?.fitView(10, { direction: "both" }); }, [graph]);
     // Code for "download as image" toolbar button
     const handleDownloadImageButton = React.useCallback(() => { graph?.downloadFullImage(); }, [graph]);
+    // Code for "Condense leaves" toolbar button
+    const handleCondenseNodesButton = React.useCallback(() => { setCondensed((wasCondensed) => !wasCondensed)}, []);
 
     const contents = (
         <>
@@ -353,6 +366,14 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "graph.toolbar.downloadImage",
                     })}
                     icon="image"
+                />
+                <ToolbarButton
+                    onClick={handleCondenseNodesButton}
+                    title={intl.formatMessage({
+                        defaultMessage: "Condense leaves and intermediate nodes",
+                        id: "graph.toolbar.condenseNodes",
+                    })}
+                    icon="chevron-down"
                 />
             </div>
             <div
