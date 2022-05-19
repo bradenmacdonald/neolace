@@ -77,15 +77,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         return _graphContainer;
     });
     // This gets called by React when the outer <div> that holds the above graphContainer has changed.
-    const updateGraphHolder = React.useCallback((newGraphHolderDiv) => {
+    const updateGraphHolder = React.useCallback((newGraphHolderDiv: HTMLDivElement|null) => {
         // Move graphContainer into the new parent div, or detach it from the DOM and keep it in memory only (if the new
         // parent div isn't ready yet).
         if (!newGraphHolderDiv) {
             graphContainer?.parentElement?.removeChild(graphContainer);
-        } else {
+        } else if (graphContainer) {
             newGraphHolderDiv.appendChild(graphContainer);
         }
-    }, []);
+    }, []);  // "graphContainer" will never change (we don't define a "set" function), so we don't need to depend on it.
 
     // "graph" is the actual G6 graph instance which owns a <canvas> element, and renders the graph.
     // See https://g6.antv.vision/en/docs/api/Graph
