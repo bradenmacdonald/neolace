@@ -22,13 +22,11 @@ COPY --from=transpile /build/neolace-api/ /neolace/neolace-api/
 # Dependencies
 RUN apk add --no-cache git
 RUN npm ci --also=dev
-RUN for plugdir in plugins/*/; do cd $plugdir && npm ci --also=dev; cd -; done
+# Compile locales
 RUN npm run compile:i18n
 
 # The frontend runs on port 5555
 EXPOSE 5555
-
-# Compile locales
 
 # Build Next.js app (transpile Typescript, save out some static pages, etc.),
 # then start the server. We don't build in advance (unfortunately) because
