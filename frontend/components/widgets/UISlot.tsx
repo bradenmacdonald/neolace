@@ -21,14 +21,15 @@ interface Props<ContentType = React.ReactElement> {
     renderWidget: (widget: UISlotWidget<ContentType>) => React.ReactElement;
 }
 
-export const defaultRender = (widget: UISlotWidget<React.ReactElement>) => <React.Fragment key={widget.id}>{widget.content}</React.Fragment>;
+export const defaultRender = (widget: UISlotWidget<React.ReactElement>) => (
+    <React.Fragment key={widget.id}>{widget.content}</React.Fragment>
+);
 
 /**
  * A UI slot is a placeholder in the user interface that can be filled with various content/widgets, and in particular
  * which plugins can modify.
  */
-export const UISlot = function<ContentType = React.ReactElement>(props: Props<ContentType>) {
-
+export const UISlot = function <ContentType = React.ReactElement>(props: Props<ContentType>) {
     // Allow any plugins that are active for this site to modify this UI slot:
     const pluginsData = React.useContext(UiPluginsContext);
 
@@ -44,13 +45,14 @@ export const UISlot = function<ContentType = React.ReactElement>(props: Props<Co
                 }
             }
         }
+        // Sort first by priority, then by ID
+        contents.sort((a, b) => (a.priority - b.priority) * 10_000 + a.id.localeCompare(b.id));
         return contents;
     }, [props.defaultContents, pluginsData]);
-        
-    // Sort first by priority, then by ID
-    contents.sort((a, b) => (a.priority - b.priority) * 10_000 + a.id.localeCompare(b.id));
 
-    return <>
-        {contents.map((c) => props.renderWidget(c))}
-    </>;
-}
+    return (
+        <>
+            {contents.map((c) => props.renderWidget(c))}
+        </>
+    );
+};
