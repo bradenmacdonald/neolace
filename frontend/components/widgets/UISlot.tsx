@@ -1,5 +1,7 @@
 import React from "react";
 
+import { UiPluginsContext, UiSlotId } from "components/utils/ui-plugins";
+
 /**
  * Some widget that appears in a UI slot
  */
@@ -27,9 +29,24 @@ export const defaultRender = (widget: UISlotWidget<React.ReactElement>) => <Reac
  */
 export const UISlot = function<ContentType = React.ReactElement>(props: Props<ContentType>) {
 
-    // TODO: allow plugins to modify the default contents. And/or allow placement to be "before", "after", "innerBefore", "innerAfter" an existing slot widget?
+    // Allow any plugins that are active for this site to modify this UI slot:
+    const pluginsData = React.useContext(UiPluginsContext);
 
-    const contents = [...props.defaultContents ?? []];
+    const contents = React.useMemo(() => {
+        const contents = [...props.defaultContents ?? []];
+        for (const p of pluginsData.plugins) {
+            for (const change of (p.uiSlotChanges?.[props.slotId as UiSlotId] ?? [])) {
+                if (change.op === "insert") {
+                    // deno-lint-ignore no-explicit-any
+                    contents.push(change.widget as any);
+                } else {
+                    throw new Error(`unknown plugin UI change operation: ${change.op}`);
+                }
+            }
+        }
+        return contents;
+    }, [props.defaultContents, pluginsData]);
+        
     // Sort first by priority, then by ID
     contents.sort((a, b) => (a.priority - b.priority) * 10_000 + a.id.localeCompare(b.id));
 

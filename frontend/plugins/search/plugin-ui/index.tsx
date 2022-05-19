@@ -51,8 +51,6 @@ const SiteSearchPage: React.FunctionComponent = function(props) {
         }
     }, [connectionData]);
 
-    const [currentQuery, setCurrentQuery] = React.useState("");
-
     if (!adapter || !connectionData) {
         return <Spinner/>;
     }
