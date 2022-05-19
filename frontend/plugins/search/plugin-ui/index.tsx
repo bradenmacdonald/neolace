@@ -2,8 +2,8 @@ import React from 'react';
 
 import { api, client, useSiteData } from 'lib/api-client';
 import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
-import { InstantSearch } from "react-instantsearch-dom";
-import { Hits } from "../components/Hits";
+import { InstantSearch } from "react-instantsearch-hooks-web";
+import { InfiniteHits } from "../components/Hits";
 import { SearchBox } from '../components/SearchBox';
 import { Spinner } from 'components/widgets/Spinner';
 
@@ -59,9 +59,9 @@ const SiteSearchPage: React.FunctionComponent = function(props) {
 
     return (<>
         <h1 className="text-3xl font-semibold">Search {site.name}</h1>
-        <InstantSearch indexName={connectionData.siteEntriesCollection} searchClient={adapter.searchClient} onSearchStateChange={({query}) => { setCurrentQuery(query); }}>
+        <InstantSearch indexName={connectionData.siteEntriesCollection} searchClient={adapter.searchClient} >
             <SearchBox />
-            <Hits currentQuery={currentQuery} />
+            <InfiniteHits />
         </InstantSearch>
     </>);
 }
