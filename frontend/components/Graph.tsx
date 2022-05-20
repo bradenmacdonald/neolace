@@ -52,7 +52,11 @@ function colorGraph(data: G6RawGraphData, refCache: api.ReferenceCacheData) {
             nextColor = (nextColor + 1) % Object.values(EntryColor).length;
         }
         node.color = colourMap.get(node.entryType as VNID);
-        node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
+        if (refCache.entryTypes[node.entryType as VNID]?.name === undefined) {
+            console.log(node.entryType , node.label);
+        } else {
+            node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
+        }
     });
 
     return data;
@@ -110,9 +114,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         };
         for (const t of transformList) {
             if (t.transform === transforms.condense) {
-                transformedData = condenseGraphData(transformedData, props.mdtContext.refCache);
+                transformedData = condenseGraphData(transformedData);
             } else if (t.transform === transforms.hideType) {
-                transformedData = hideNodeTypeInGraph(transformedData, t.param, props.mdtContext.refCache);
+                transformedData = hideNodeTypeInGraph(transformedData, t.param);
             }
         }
 

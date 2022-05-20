@@ -1,3 +1,4 @@
+import { Edge } from '@antv/g6';
 import Graph from 'graphology';
 import { VNID } from 'neolace-api';
 import { G6RawGraphData } from '../Graph'
@@ -12,23 +13,25 @@ function createGraphObject(data: G6RawGraphData): Graph {
         entryType: n.entryType,
     }))
     
-    data.edges.forEach((e) => graph.addEdge(e.source, e.target, {
-        label: e.label,
-        entryType: e.entryType,
-    }))
-
+    data.edges.forEach((e) => {
+        graph.addEdge(e.source, e.target, {
+            label: e.label,
+            entryType: e.entryType,
+        })
+    })
+    
     return graph;
 }
 
 function convertGraphToData(graph: Graph): G6RawGraphData {
     const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({ 
-                id: VNID(nodeKey),
-                label: graph.getNodeAttribute(nodeKey, 'label') as string, 
-                entryType: VNID(graph.getNodeAttribute(nodeKey, 'entryType')),
-            }
+            id: VNID(nodeKey),
+            label: graph.getNodeAttribute(nodeKey, 'label') as string, 
+            entryType: VNID(graph.getNodeAttribute(nodeKey, 'entryType')),
+        }
         )),
-        edges: graph.mapEdges((_edge, attributes, source, target) => {
+        edges: graph.mapEdges((edge, attributes, source, target) => {
             return {
                 source: source,
                 target: target,
@@ -37,7 +40,6 @@ function convertGraphToData(graph: Graph): G6RawGraphData {
             }
         }),
     };
-
     return data;
 }
 
@@ -97,7 +99,13 @@ function condenseLeaves(graph:Graph): Graph {
             label: `${leafyNode.hiddenNodeNumber} entries condensed`, 
             entryType: leafyNode.entryType,
         });
-        newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
+        // BUG sometimes this shows that edge already exists when I only have person nodes and try to condense.
+
+        if (newGraph.hasEdge(leafyNode.nodeKey, newLeafKey)) {
+            console.log('edge already exists');
+        } else {
+            newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
+        }
     })
 
     return newGraph;
@@ -208,8 +216,18 @@ function condenseSimplePattern(graph: Graph, relativeEType: VNID): Graph {
                 label: `${pair.hiddenNodeNumber} entries condensed`, 
                 entryType: pair.middleNodeEType,
             });
-            newGraph.addEdge(pair.nodeKey, newLeafKey);
-            newGraph.addEdge(pair.endNodeKey, newLeafKey);
+
+            if (newGraph.hasEdge(pair.nodeKey, newLeafKey)) {
+                console.log('edge already exists');
+            } else {
+                newGraph.addEdge(pair.nodeKey, newLeafKey);
+            }
+
+            if (newGraph.hasEdge(pair.endNodeKey, newLeafKey)) {
+                console.log('edge already exists');
+            } else {
+                newGraph.addEdge(pair.endNodeKey, newLeafKey);
+            }
         }
     })
 
@@ -223,15 +241,20 @@ with undirected relationsips.
 export function hideNodesOfType(graph: Graph, eTypeToRemove: VNID): Graph {
     // filter nodes to only of the removed type
     const newGraph = graph.copy();
-    const nodesKeys = newGraph.filterNodes((n, attr) => {
+    const nodesToRemove = newGraph.filterNodes((n, attr) => {
         return attr.entryType === eTypeToRemove;
     })
 
     // iterate over the nodes
-    nodesKeys.forEach((n) => {
-        const neighbors: string[] = [];
+    nodesToRemove.forEach((n) => {
+        let neighbors: string[] = [];
         newGraph.forEachNeighbor(n, (neihgborKey) => {
             neighbors.push(neihgborKey);
+        })
+
+        // keep only those neighbors that are not targeted for deletion
+        neighbors = neighbors.filter((n) => {
+            return !nodesToRemove.includes(n);
         })
 
         // delete the node
@@ -240,10 +263,15 @@ export function hideNodesOfType(graph: Graph, eTypeToRemove: VNID): Graph {
         neighbors.forEach((neighbor) => {
             // add undirected edges between naighbours
             neighbors.forEach((nb) => {
-                newGraph.mergeUndirectedEdge(
-                    neighbor,
-                    nb
-                )
+                // do not create self loops
+                if (nb !== neighbor) {
+                    if (!newGraph.hasEdge(neighbor, nb) && !newGraph.hasEdge(nb, neighbor)) {
+                        newGraph.addDirectedEdge(
+                            neighbor,
+                            nb
+                        )
+                    }
+                }
             })
         })
     })
@@ -263,5 +291,6 @@ export function transformDataForGraph(data: G6RawGraphData, entryType: VNID) {
 export function transformHideNodesOfType(data: G6RawGraphData, nType: VNID) {
     const graph = createGraphObject(data);
     const transformedGraph = hideNodesOfType(graph, nType);
-    return convertGraphToData(transformedGraph);
+    const transformedData = convertGraphToData(transformedGraph);
+    return transformedData;
 }
