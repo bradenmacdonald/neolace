@@ -23,7 +23,7 @@ interface GraphProps {
 let nextColor = 0;
 const colourMap = new Map<VNID, EntryColor>();
 
-export interface rawData {
+export interface G6RawGraphData {
     nodes: {
       id: VNID;
       label: string;
@@ -38,7 +38,7 @@ export interface rawData {
     }[];
 }
 
-function colorGraph(data: rawData, refCache: api.ReferenceCacheData) {
+function colorGraph(data: G6RawGraphData, refCache: api.ReferenceCacheData) {
     data.nodes.forEach((node: NodeConfig) => {
         if (!colourMap.has(node.entryType as VNID)) {
             colourMap.set(node.entryType as VNID, Object.values(EntryColor)[nextColor]);
@@ -52,7 +52,7 @@ function colorGraph(data: rawData, refCache: api.ReferenceCacheData) {
 }
 
 function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
-    let data: rawData = {
+    let data: G6RawGraphData = {
         nodes: value.entries.map((n) => (
             { id: n.entryId, label: n.name, entryType: n.entryType }
         )),
@@ -199,14 +199,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        if (condensed) {
-            let condensedData = transformDataForGraph(data);
+        if (condensed && data.nodes.length !== 0) {
+            // NOTE for now, we are performing node condensing relative to the "this" node of the graph.
+            let condensedData = transformDataForGraph(data, data.nodes[0].entryType);
             condensedData = colorGraph(condensedData, props.mdtContext.refCache);
             graph.changeData(condensedData);
         } else {
             graph.changeData(data);
         }
-    }, [condensed]);
+    }, [condensed, data, props.mdtContext.refCache]);
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
 
@@ -377,7 +378,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         defaultMessage: "Condense leaves and intermediate nodes",
                         id: "graph.toolbar.condenseNodes",
                     })}
-                    icon="chevron-down"
+                    icon="chevron-contract"
                     enabled={condensed}
                 />
             </div>

@@ -1,9 +1,9 @@
 import { MultiDirectedGraph } from 'graphology';
 import { VNID } from 'neolace-api';
-import { rawData } from '../Graph'
+import { G6RawGraphData } from '../Graph'
 
 
-function createGraphObject(data: rawData): MultiDirectedGraph {
+function createGraphObject(data: G6RawGraphData): MultiDirectedGraph {
     const graph = new MultiDirectedGraph();
     
     data.nodes.forEach((n) => graph.addNode(n.id, {
@@ -19,8 +19,8 @@ function createGraphObject(data: rawData): MultiDirectedGraph {
     return graph;
 }
 
-function convertGraphToData(graph: MultiDirectedGraph): rawData {
-    const data: rawData = {
+function convertGraphToData(graph: MultiDirectedGraph): G6RawGraphData {
+    const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({ 
                 id: VNID(nodeKey),
                 label: graph.getNodeAttribute(nodeKey, 'label') as string, 
@@ -40,35 +40,39 @@ function convertGraphToData(graph: MultiDirectedGraph): rawData {
     return data;
 }
 
-// returns a new graph object where leafs are consensed. i.e. if a node has
-// multiple leafs, the leafs are repalced with one leaf that contains label
-// the number of leafs they substitiuted, as an array of original leaf data
-function condenseLeafs(graph:MultiDirectedGraph): MultiDirectedGraph {
+/**
+ * Returns a new graph object where leaves are consensed. i.e. if a node has
+ * multiple leaves, the leaves are repalced with one leaf that contains label
+ * the number of leaves they substitiuted, as an array of original leaf data
+ * @param graph 
+ * @returns a graph with condensed leaves.
+ */
+function condenseLeaves(graph:MultiDirectedGraph): MultiDirectedGraph {
     // create dictionary of nodes with entry ids as keys
     const newGraph = graph.copy();
     
-    // iterate over nodes and if a node has many leafs, delete them and add a new leaf node
-    const leafsToDelete = new Set<string>();
+    // iterate over nodes and if a node has many leaves, delete them and add a new leaf node
+    const leavesToDelete = new Set<string>();
     let leafyNodes: {nodeKey: string, entryType: VNID, hiddenNodeNumber:number}[] = [];
     
     newGraph.forEachNode(nodeKey => {
-        const leafs: Record<VNID, string[]> = {};
+        const leaves: Record<VNID, string[]> = {};
 
         newGraph.forEachNeighbor(nodeKey, neighborKey => {
             const neighborEntryType = graph.getNodeAttribute(neighborKey, 'entryType');
             if (newGraph.neighbors(neighborKey).length === 1) {
-                if (leafs[neighborEntryType]) {
-                    leafs[neighborEntryType].push(neighborKey);
+                if (leaves[neighborEntryType]) {
+                    leaves[neighborEntryType].push(neighborKey);
                 } else {
-                    leafs[neighborEntryType] = [];
-                    leafs[neighborEntryType].push(neighborKey);
+                    leaves[neighborEntryType] = [];
+                    leaves[neighborEntryType].push(neighborKey);
                 }              
             }
         });
-        for (const [entryType, value] of Object.entries(leafs)) {
+        for (const [entryType, value] of Object.entries(leaves)) {
             if (value.length > 1) {
-                // add leafs to nodes to delete
-                value.forEach((l) => leafsToDelete.add(l));
+                // add leaves to nodes to delete
+                value.forEach((l) => leavesToDelete.add(l));
                 // add nodekey to list to create nodes
                 leafyNodes.push(
                     {
@@ -81,11 +85,11 @@ function condenseLeafs(graph:MultiDirectedGraph): MultiDirectedGraph {
           }
     });
     
-    // delete leafs
-    leafsToDelete.forEach((leafKey) => {
+    // delete leaves
+    leavesToDelete.forEach((leafKey) => {
         newGraph.dropNode(leafKey);
     })
-    // create leafs
+    // create leaves
     leafyNodes.forEach((leafyNode) => {
         const newLeafKey = VNID();
         newGraph.addNode(newLeafKey, {
@@ -99,17 +103,21 @@ function condenseLeafs(graph:MultiDirectedGraph): MultiDirectedGraph {
 }
 
 
-/*
-Condense the simplest but often fairly prominant pattern:
-
-{Node of type A} - {Node of Type B} - {Node of Type A}
-                - {Node of Type B} -
-                - {Node of Type B} -
-                - {Node of Type B} -
-
-Results in:
-{Node of type A} - {Node of Type B saying "4 nodes condensed"} - {Node of Type A}
-*/
+/**
+ * Condense the simplest but often fairly prominant pattern:
+*
+*{Node of type A} - {Node of Type B} - {Node of Type A}
+*                - {Node of Type B} -
+*                - {Node of Type B} -
+*                - {Node of Type B} -
+*
+* Results in:
+* {Node of type A} - {Node of Type B saying "4 nodes condensed"} - {Node of Type A}
+ * 
+ * @param graph a Graph object representing the graph data
+ * @param relativeEType The entry type of the nodes relative to which to perform the condensing operation.
+ * @returns a new condensed graph
+ */
 function condenseSimplePattern(graph: MultiDirectedGraph, relativeEType: VNID): MultiDirectedGraph {
     // delete these nodes and save only one condensed node
     
@@ -134,7 +142,6 @@ function condenseSimplePattern(graph: MultiDirectedGraph, relativeEType: VNID): 
                     const eType2 = graph.getNodeAttribute(nNeighbours[1], 'entryType');
                     const endNodeKey = nNeighbours[0] === nodeKey ? nNeighbours[1] : nNeighbours[0];
                     
-                    console.log(nTripletsByType);
                     if (eType1 === eType2) {
                         if (!nTripletsByType[neighborEntryType]) {
                             nTripletsByType[neighborEntryType] = {}
@@ -153,7 +160,7 @@ function condenseSimplePattern(graph: MultiDirectedGraph, relativeEType: VNID): 
             for (const [entryType, value] of Object.entries(nTripletsByType)) {
                 for (const [endNode, nodeList] of Object.entries(value)) {
                     if (nodeList.length > 1) {
-                        // add leafs to nodes to delete
+                        // add leaves to nodes to delete
                         nodeList.forEach((l) => nodesToDelete.add(l));
                         // add nodekey to list to create nodes
                         nodePairs.push(
@@ -197,7 +204,7 @@ function condenseSimplePattern(graph: MultiDirectedGraph, relativeEType: VNID): 
             pairs.push(thisPair);
             const newLeafKey = VNID();
             newGraph.addNode(newLeafKey, {
-                label: `${pair.hiddenNodeNumber} nodes condensed`, 
+                label: `${pair.hiddenNodeNumber} entries condensed`, 
                 entryType: pair.middleNodeEType,
             });
             newGraph.addEdge(pair.nodeKey, newLeafKey);
@@ -211,9 +218,9 @@ function condenseSimplePattern(graph: MultiDirectedGraph, relativeEType: VNID): 
 
 // for now just find all the leaf nodes and for every node that has more than one leaf node:
 // remove the leaf nodes, create one leaf node with label saying how many leaf nodes there are.
-export function transformDataForGraph(data: rawData) {
+export function transformDataForGraph(data: G6RawGraphData, entryType: VNID) {
     const graph = createGraphObject(data);
-    const transformedGraph = condenseLeafs(graph);
-    const condensedGraph = condenseSimplePattern(transformedGraph, VNID("_15xbN6Om4SAe0DZ7yXDy6e"));
+    const transformedGraph = condenseLeaves(graph);
+    const condensedGraph = condenseSimplePattern(transformedGraph, entryType);
     return convertGraphToData(condensedGraph);
 }
