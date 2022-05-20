@@ -6,7 +6,7 @@ module.exports = (phase, { defaultConfig }) => {
     // When Neolace is accessed via this hostname, it shows the "admin site" for the Neolace domain
     const adminSiteHost = process.env.NEOLACE_ADMIN_SITE_HOST ?? "local.neolace.net";
 
-    const baseConfig = {
+    let baseConfig = {
         ...defaultConfig,
         reactStrictMode: true,
         images: {
@@ -81,7 +81,7 @@ module.exports = (phase, { defaultConfig }) => {
     };
 
     if (phase === PHASE_DEVELOPMENT_SERVER) {
-        return {
+        baseConfig = {
             /* development only config options here */
             ...baseConfig,
             images: {
@@ -92,7 +92,10 @@ module.exports = (phase, { defaultConfig }) => {
         }
     }
 
-    return {
-        ...baseConfig,
-    }
+    const withBundleAnalyzer = require('@next/bundle-analyzer')({
+        enabled: process.env.ANALYZE === 'true',
+    });
+    baseConfig = withBundleAnalyzer(baseConfig);
+
+    return baseConfig;
 }

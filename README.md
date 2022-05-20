@@ -14,6 +14,12 @@ This repository contains the web backend and frontend for [neolace](https://neol
 1. Terminal > Run Task > Run Frontend
 1. See it at http://plantdb.local.neolace.net:5555/
 
+## How to analyze the frontend bundle's size
+
+From the `frontend` folder, while the frontend is not running, run:
+
+    ANALYZE=true npm run build
+
 ## How to test imgproxy locally
 
 In production, we usually serve images via a CDN which sends its requests to
