@@ -3,18 +3,18 @@
  */
 import React from "react";
 import { api } from "lib/api-client";
-import { MDTContext } from "./markdown-mdt/mdt";
+import { MDTContext } from "../markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, INode, NodeConfig } from "@antv/g6";
-import { useResizeObserver } from "./utils/resizeObserverHook";
-import { EntryColor, entryNode, pickEntryTypeLetter } from "./graph/Node";
+import { useResizeObserver } from "../utils/resizeObserverHook";
+import { EntryColor, entryNode, pickEntryTypeLetter } from "./Node";
 import { VNID } from "neolace-api";
-import { ToolbarButton } from "./widgets/Button";
+import { ToolbarButton } from "../widgets/Button";
 import { useIntl } from "react-intl";
-import { Modal } from "./widgets/Modal";
-import { transformDataForGraph } from './graph/GraphFunctions'
-import { NodeTooltip, useNodeTooltipHelper } from "./graph/NodeTooltip";
+import { Modal } from "../widgets/Modal";
+import { transformDataForGraph } from "./GraphFunctions";
+import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 
-interface GraphProps {
+export interface GraphProps {
     value: api.GraphValue;
     mdtContext: MDTContext;
     children?: never;
