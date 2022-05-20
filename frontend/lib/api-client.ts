@@ -24,7 +24,7 @@ const getSessionPromise = () => {
             console.error("Session token was invalid, or an error occurred while refreshing it.");
             // If we're unable to restore/validate the sesion,
             // clear the session cookie so we don't try to log in again.
-            KeratinAuthN.logout().finally(() => {});
+            KeratinAuthN.logout();
         });
     }
     // There is no session saved locally, or we're running on the server; either way, no user is logged in.

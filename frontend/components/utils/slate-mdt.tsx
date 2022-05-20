@@ -52,7 +52,7 @@ export function renderElement({element, children, attributes}: RenderElementProp
         // case "code_inline":
         //     return <code key={key}>{node.children[0].text}</code>;
         case "lookup_inline": {
-            return <InlineLookupEditableElement element={element} attributes={attributes} children={children} />;
+            return <InlineLookupEditableElement element={element} attributes={attributes}>{children}</InlineLookupEditableElement>;
         }
         case "strong":
             return <strong {...attributes}>{children}</strong>;

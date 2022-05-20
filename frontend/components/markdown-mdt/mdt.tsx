@@ -124,7 +124,7 @@ function inlineNodeToComponent(node: MDT.InlineNode | MDT.AnyInlineNode, context
                 node.href.startsWith("http://") || node.href.startsWith("https://") || node.href.startsWith("mailto:")
             ) {
                 return (
-                    <a href={node.href} key={key} target="_blank">
+                    <a href={node.href} key={key} target="_blank" rel="noopener">
                         {node.children.map((child) => inlineNodeToComponent(child, context))}
                         {/* Icon to indicate this is an external link */}
                         <span title="(External Link)">
