@@ -5,6 +5,7 @@ import React from 'react';
 import { IntlProvider } from 'react-intl';
 
 import { UserProvider } from 'components/user/UserContext';
+import { AllPluginsProvider } from 'components/utils/ui-plugins';
 // Import global CSS (Tailwind-based)
 import '../global-styles.css';
 
@@ -47,7 +48,9 @@ export default function NeolaceApp({ Component, pageProps }: AppProps) {
 
     return <UserProvider>
         <LoadIntlProvider>
-            <Component {...pageProps} />
+            <AllPluginsProvider>
+                <Component {...pageProps} />
+            </AllPluginsProvider>
         </LoadIntlProvider>
     </UserProvider>;
 }

@@ -75,6 +75,7 @@ module.exports = (phase, { defaultConfig }) => {
             // we want to ensure that the server project's version of react is used in all cases
             config.resolve.alias["react"] = path.join(__dirname, "node_modules", "react");
             config.resolve.alias["react-dom"] = path.resolve(__dirname, "node_modules", "react-dom");
+            config.resolve.alias["scheduler"] = path.resolve(__dirname, "node_modules", "scheduler");
             return config;
         },
     };

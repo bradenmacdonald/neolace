@@ -10,6 +10,7 @@ import FourOhFour from 'pages/404';
 import { MDTContext, RenderMDT } from './markdown-mdt/mdt';
 import { Icon, IconId } from './widgets/Icon';
 import { FormattedMessage } from 'react-intl';
+import { UiPluginsProvider } from './utils/ui-plugins';
 
 export const DefaultSiteTitle = Symbol("DefaultSiteTitle");
 
@@ -77,12 +78,12 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // we also pass "fallback" in to the useSiteData hook above.
     const fallback = props.sitePreloaded ? {[`site:${props.sitePreloaded.domain}`]: props.sitePreloaded} : {};
 
-    const systemLinks = <ul><UISlot<SystemLink> slotId="leftNavTop" defaultContents={[
+    const systemLinks = <ul><UISlot<SystemLink> slotId="systemLinks" defaultContents={[
         //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
         {id: "login", priority: 60, content: {url: "/login", label: <FormattedMessage id="systemLink.login" defaultMessage="Login" />, icon: "person-fill"}},
     ]} renderWidget={(link: UISlotWidget<SystemLink>) => <li key={link.id}><Link href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link></li>} /></ul>;
 
-    return <SWRConfig value={{ fallback }}><div>
+    return <SWRConfig value={{ fallback }}><UiPluginsProvider site={site}><div>
         <Head>
             <title>{props.title === DefaultSiteTitle ? site.name : `${props.title} - ${site.name}`}</title>
             <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
@@ -146,7 +147,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     </>,
                 }]} renderWidget={defaultRender} />
                 <div className="flex-auto">{/* This is a spacer that pushes the "bottom" content to the end */}</div>
-                <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavBottomSlot ?? []), {
+                <UISlot slotId="leftNavBottom" defaultContents={[...(props.leftNavBottomSlot ?? []), {
                     id: "systemLinks",
                     priority: 80,
                     content: systemLinks,
@@ -175,5 +176,5 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 <FormattedMessage id="mobileFooter.menuButton" defaultMessage="Menu" />
             </button>
         </div>
-    </div></SWRConfig>;
+    </div></UiPluginsProvider></SWRConfig>;
 };
