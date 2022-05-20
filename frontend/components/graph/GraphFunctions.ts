@@ -93,7 +93,7 @@ function condenseLeaves(graph:MultiDirectedGraph): MultiDirectedGraph {
     leafyNodes.forEach((leafyNode) => {
         const newLeafKey = VNID();
         newGraph.addNode(newLeafKey, {
-            label: `${leafyNode.hiddenNodeNumber} nodes condensed`, 
+            label: `${leafyNode.hiddenNodeNumber} entries condensed`, 
             entryType: leafyNode.entryType,
         });
         newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
