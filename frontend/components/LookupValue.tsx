@@ -10,7 +10,7 @@ import { FormattedFileSize } from './widgets/FormattedFileSize';
 import { HoverClickNote } from './widgets/HoverClickNote';
 import Link from 'next/link';
 import { ErrorMessage } from './widgets/ErrorMessage';
-import { LookupGraph } from './Graph';
+import { LookupGraph } from "./graph/GraphLoader";
 
 interface LookupValueProps {
     value: api.AnyLookupValue;

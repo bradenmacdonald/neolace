@@ -1,6 +1,6 @@
 import { MultiDirectedGraph } from 'graphology';
 import { VNID } from 'neolace-api';
-import { G6RawGraphData } from '../Graph'
+import type { G6RawGraphData } from './Graph'
 
 
 function createGraphObject(data: G6RawGraphData): MultiDirectedGraph {
