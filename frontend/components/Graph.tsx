@@ -11,6 +11,7 @@ import { VNID } from "neolace-api";
 import { ToolbarButton } from "./widgets/Button";
 import { useIntl } from "react-intl";
 import { Modal } from "./widgets/Modal";
+import { transformDataForGraph } from './graph/GraphFunctions'
 import { NodeTooltip, useNodeTooltipHelper } from "./graph/NodeTooltip";
 
 interface GraphProps {
@@ -22,21 +23,22 @@ interface GraphProps {
 let nextColor = 0;
 const colourMap = new Map<VNID, EntryColor>();
 
-function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
-    const data = {
-        nodes: value.entries.map((n) => (
-            { id: n.entryId, label: n.name, entryType: n.entryType }
-        )),
-        edges: value.rels.map((e) => (
-            {
-                source: e.fromEntryId,
-                target: e.toEntryId,
-                entryType: e.relType,
-                label: refCache.properties[e.relType]?.name ?? e.relType,
-            }
-        )),
-    };
+export interface G6RawGraphData {
+    nodes: {
+      id: VNID;
+      label: string;
+      entryType: VNID;
 
+    }[];
+    edges: {
+        source: string;
+        target: string;
+        entryType: string;
+        label: string;
+    }[];
+}
+
+function colorGraph(data: G6RawGraphData, refCache: api.ReferenceCacheData) {
     data.nodes.forEach((node: NodeConfig) => {
         if (!colourMap.has(node.entryType as VNID)) {
             colourMap.set(node.entryType as VNID, Object.values(EntryColor)[nextColor]);
@@ -49,11 +51,32 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
     return data;
 }
 
+function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
+    let data: G6RawGraphData = {
+        nodes: value.entries.map((n) => (
+            { id: n.entryId, label: n.name, entryType: n.entryType }
+        )),
+        edges: value.rels.map((e) => (
+            {
+                source: e.fromEntryId,
+                target: e.toEntryId,
+                entryType: e.relType,
+                label: refCache.properties[e.relType]?.name ?? e.relType,
+            }
+        )),
+    };
+    
+    data = colorGraph(data, refCache);
+
+    return data;
+}
+
 /**
  * Display a graph visualization.
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const intl = useIntl();
+    const [condensed, setCondensed] = React.useState(false);
     // The data (nodes and relationships) that we want to display as a graph.
     const data = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
@@ -106,29 +129,6 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             nodeSize: [200, 50],
             nodeSpacing: 60,
             alphaDecay: 0.1,
-            // clustering: true,
-
-            // type: "dagre",
-            // rankdir: "TB", // The center of the graph by default
-            // align: "DL",
-            // nodesep: 50,
-            // ranksep: 100,
-            // controlPoints: true,
-
-            // type: 'radial',
-            // unitRadius: 1000,
-            // preventOverlap: true,
-            // nodeSize: 200,
-            // nodeSpacing: 4000,
-            // linkDistance: 400,
-            // sortBy: 'comboId',
-            // sortStrength: 100,
-
-            // type: 'comboCombined',
-            // nodeSize: 200,
-            // outerLayout: new G6.Layout['gForce']({
-            //     linkDistance: 2500,
-            // }),
         },
         defaultNode: {
             type: entryNode,
@@ -196,6 +196,18 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             }
         }, true);
     }, [graph, data]);
+
+    React.useEffect(() => {
+        if (!graph || graph.destroyed) { return; }
+        if (condensed && data.nodes.length !== 0) {
+            // NOTE for now, we are performing node condensing relative to the "this" node of the graph.
+            let condensedData = transformDataForGraph(data, data.nodes[0].entryType);
+            condensedData = colorGraph(condensedData, props.mdtContext.refCache);
+            graph.changeData(condensedData);
+        } else {
+            graph.changeData(data);
+        }
+    }, [condensed, data, props.mdtContext.refCache]);
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
 
@@ -326,6 +338,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const handleFitViewButton = React.useCallback(() => { graph?.fitView(10, { direction: "both" }); }, [graph]);
     // Code for "download as image" toolbar button
     const handleDownloadImageButton = React.useCallback(() => { graph?.downloadFullImage(); }, [graph]);
+    // Code for "Condense leaves" toolbar button
+    const handleCondenseNodesButton = React.useCallback(() => { setCondensed((wasCondensed) => !wasCondensed)}, []);
 
     const contents = (
         <>
@@ -357,6 +371,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "graph.toolbar.downloadImage",
                     })}
                     icon="image"
+                />
+                <ToolbarButton
+                    onClick={handleCondenseNodesButton}
+                    title={intl.formatMessage({
+                        defaultMessage: "Condense leaves and intermediate nodes",
+                        id: "graph.toolbar.condenseNodes",
+                    })}
+                    icon="chevron-contract"
+                    enabled={condensed}
                 />
             </div>
             <div

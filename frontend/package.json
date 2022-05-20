@@ -16,6 +16,8 @@
     "@antv/g6": "4.6.4",
     "@popperjs/core": "2.11.5",
     "blurhash": "1.1.5",
+    "graphology": "^0.24.1",
+    "graphology-types": "^0.24.4",
     "keratin-authn": "1.3.4",
     "neolace-api": "file:../neolace-api/dist/",
     "neolace-search-frontend": "file:./plugins/search/",
