@@ -24,6 +24,7 @@ type ProviderProps = {children: React.ReactNode};
 const DynamicIntlProviders = {
     en: (props: ProviderProps) => <IntlProvider locale="en" messages={{}}>{props.children}</IntlProvider>,
     fr: dynamic<ProviderProps>(() => import("../content/compiled-locales/fr.json").then(data =>
+        // eslint-disable-next-line react/display-name
         (props: ProviderProps) => <IntlProvider locale="fr" messages={data.default}>{props.children}</IntlProvider>
     )),
 };

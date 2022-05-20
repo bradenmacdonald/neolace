@@ -38,8 +38,8 @@ export const UISlot = function <ContentType = React.ReactElement>(props: Props<C
         for (const p of pluginsData.plugins) {
             for (const change of (p.uiSlotChanges?.[props.slotId as UiSlotId] ?? [])) {
                 if (change.op === "insert") {
-                    // deno-lint-ignore no-explicit-any
-                    contents.push(change.widget as any);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    contents.push(change.widget as UISlotWidget<any>);
                 } else {
                     throw new Error(`unknown plugin UI change operation: ${change.op}`);
                 }

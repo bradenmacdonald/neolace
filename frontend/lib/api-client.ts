@@ -84,7 +84,7 @@ export async function getSiteData(domain: string): Promise<SiteDetailsData|null>
 
 // Store the API client on the global window object for development purposes.
 if (IN_BROWSER) {
-    // deno-lint-ignore no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).client = client;
 }
 

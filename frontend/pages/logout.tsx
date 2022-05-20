@@ -12,6 +12,8 @@ const LogoutPage: NextPage = function() {
     // Unconditionally log out. This runs only once.
     React.useEffect(() => {
         user.logout().then(() => setLoggedOut(true));
+    // Because we always want this to run exactly once:
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

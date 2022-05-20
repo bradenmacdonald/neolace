@@ -6,7 +6,7 @@ import React from 'react';
  * @param ref A React 'ref' object for the HTML element that we want to observe for size changes.
  * @param callback The function to call when the element's size has changed.
  */
-export const useResizeObserver = (ref: React.RefObject<Element>, callback: () => void) => {
+export const useResizeObserver = (element: Element|undefined, callback: () => void) => {
 
     // Use a ref to wrap the callback so that our ref never changes:
     const callbackRef = React.useRef<() => void>(callback);
@@ -26,13 +26,13 @@ export const useResizeObserver = (ref: React.RefObject<Element>, callback: () =>
     );
 
     React.useEffect(() => {
-        if (ref.current) {
-            observer.observe(ref.current);
+        if (element) {
+            observer.observe(element);
         }
         // Cleanup:
         return () => {
             observer.disconnect();
         };
-    }, [ref.current]);
+    }, [element, observer]);
 
 }

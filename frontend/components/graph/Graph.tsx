@@ -178,7 +178,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             }
             return newGraph;
         });
-    }, [graphConfig]);
+    }, [graphConfig, graphContainer]);
 
     // Set the graph data and render it whenever the data has changed or the graph has been re-initialized:
     React.useEffect(() => {
@@ -250,9 +250,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
         });
 
-        // deno-lint-ignore no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         graph.on("nodeselectchange" as any, (e) => { // the type says it's not allowed but it works
-            // deno-lint-ignore no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const selectedNodes = (e.selectedItems as any).nodes as INode[];
             if (selectedNodes.length === 1) {
                 // Show a tooltip for this node, since there's exactly one node selected:
@@ -321,7 +321,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             graph.fitView();
         }
     }, [graph, graphContainer]);
-    useResizeObserver({ current: graphContainer! }, handleSizeChange);
+    useResizeObserver(graphContainer, handleSizeChange);
 
     // Code for "toggle expanded view" toolbar button
     const [expanded, setExpanded] = React.useState(false);

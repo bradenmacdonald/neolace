@@ -20,6 +20,8 @@ interface PageUrlQuery extends ParsedUrlQuery {
     entryId: string;
 }
 
+const emptyArray: api.AnyEdit[] = [];  // Declare this out here so it doesn't change on every render of DraftEntrypage
+
 const DraftEntryEditPage: NextPage = function(_props) {
     const intl = useIntl();
     // Look up the Neolace site by domain:
@@ -33,7 +35,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
     const [baseEntry, entryError] = useEditableEntry(query.entryId as api.VNID);
 
     // Any edits that have previously been saved into the draft that we're editing, if any:
-    const draftEdits = (draft?.edits ?? []) as api.AnyEdit[];
+    const draftEdits = (draft?.edits ?? emptyArray) as api.AnyEdit[];
     // Any edits that the user has made on this page now, but hasn't yet saved to a draft:
     const [unsavedEdits, setUnsavedEdits] = React.useState<api.AnyContentEdit[]>([]);
     const addUnsavedEdit = React.useCallback((newEdit: api.AnyContentEdit) => {
@@ -91,7 +93,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
             // We're updating an existing draft
             alert("Updating an existing draft is not yet implemented.");
         }
-    }, [draftId, baseEntry?.name, unsavedEdits, newDraftTitle, draftError]);
+    }, [draftId, baseEntry?.name, unsavedEdits, newDraftTitle, draftError, intl, router, site.shortId]);
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour/>;
