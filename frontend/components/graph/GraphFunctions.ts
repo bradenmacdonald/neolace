@@ -27,7 +27,7 @@ function convertGraphToData(graph: MultiDirectedGraph): G6RawGraphData {
                 entryType: VNID(graph.getNodeAttribute(nodeKey, 'entryType')),
             }
         )),
-        edges: graph.mapEdges((edge, attributes, source, target) => {
+        edges: graph.mapEdges((_edge, attributes, source, target) => {
             return {
                 source: source,
                 target: target,
@@ -53,7 +53,7 @@ function condenseLeaves(graph:MultiDirectedGraph): MultiDirectedGraph {
     
     // iterate over nodes and if a node has many leaves, delete them and add a new leaf node
     const leavesToDelete = new Set<string>();
-    let leafyNodes: {nodeKey: string, entryType: VNID, hiddenNodeNumber:number}[] = [];
+    const leafyNodes: {nodeKey: string, entryType: VNID, hiddenNodeNumber:number}[] = [];
     
     newGraph.forEachNode(nodeKey => {
         const leaves: Record<VNID, string[]> = {};
@@ -126,7 +126,7 @@ function condenseSimplePattern(graph: MultiDirectedGraph, relativeEType: VNID): 
     
     // iterate over nodes
     const nodesToDelete = new Set<string>();
-    let nodePairs: {nodeKey: string, endNodeKey: string, middleNodeEType: VNID, hiddenNodeNumber:number}[] = [];
+    const nodePairs: {nodeKey: string, endNodeKey: string, middleNodeEType: VNID, hiddenNodeNumber:number}[] = [];
     
     newGraph.forEachNode(nodeKey => {
         if (graph.getNodeAttribute(nodeKey, 'entryType') === relativeEType) {
