@@ -5,7 +5,8 @@ ARG DENO_IMAGE_VERSION=alpine
 FROM denoland/deno:${DENO_IMAGE_VERSION} AS transpile
 WORKDIR /build/neolace-api/
 COPY ./neolace-api/ /build/neolace-api/
-RUN deno run --allow-read --allow-write --unstable _compile.ts
+RUN apk add --update nodejs npm
+RUN deno run --allow-read --allow-run --allow-write --allow-env --no-check _compile.ts
 ################################################################
 # Stage 2: Intall our Next.js frontend
 ################################################################

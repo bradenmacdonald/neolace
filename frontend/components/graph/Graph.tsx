@@ -3,19 +3,19 @@
  */
 import React, { useState } from "react";
 import { api } from "lib/api-client";
-import { MDTContext } from "./markdown-mdt/mdt";
+import { MDTContext } from "../markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, INode, NodeConfig } from "@antv/g6";
-import { useResizeObserver } from "./utils/resizeObserverHook";
-import { EntryColor, entryNode, pickEntryTypeLetter } from "./graph/Node";
+import { useResizeObserver } from "../utils/resizeObserverHook";
+import { EntryColor, entryNode, pickEntryTypeLetter } from "./Node";
 import { VNID } from "neolace-api";
-import { ToolbarButton } from "./widgets/Button";
+import { ToolbarButton } from "../widgets/Button";
 import { useIntl } from "react-intl";
-import { Modal } from "./widgets/Modal";
-import { NodeTooltip, useNodeTooltipHelper } from "./graph/NodeTooltip";
-import { useStateRef } from "./utils/stateRefHook";
-import { applyTransforms, Transform, transforms } from "./graph/Transforms";
+import { useStateRef } from "../utils/stateRefHook";
+import { applyTransforms, Transform, transforms } from "./Transforms";
+import { Modal } from "../widgets/Modal";
+import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 
-interface GraphProps {
+export interface GraphProps {
     value: api.GraphValue;
     mdtContext: MDTContext;
     children?: never;
@@ -191,7 +191,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             }
             return newGraph;
         });
-    }, [graphConfig]);
+    }, [graphConfig, graphContainer]);
 
     // Set the graph data and render it whenever the data has changed or the graph has been re-initialized:
     React.useEffect(() => {
@@ -293,9 +293,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             }
         });
 
-        // deno-lint-ignore no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         graph.on("nodeselectchange" as any, (e) => { // the type says it's not allowed but it works
-            // deno-lint-ignore no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const selectedNodes = (e.selectedItems as any).nodes as INode[];
             if (selectedNodes.length === 1) {
                 // Show a tooltip for this node, since there's exactly one node selected:
@@ -364,7 +364,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             graph.fitView();
         }
     }, [graph, graphContainer]);
-    useResizeObserver({ current: graphContainer! }, handleSizeChange);
+    useResizeObserver(graphContainer, handleSizeChange);
 
     // Code for "toggle expanded view" toolbar button
     const [expanded, setExpanded] = React.useState(false);

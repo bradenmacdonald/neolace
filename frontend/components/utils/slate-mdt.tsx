@@ -2,7 +2,7 @@ import React from "react";
 import { Icon } from "components/widgets/Icon";
 import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
 import { api, useSiteSchema } from "lib/api-client";
-import { type InlineLookupNode } from "neolace-api/markdown-mdt-ast.ts";
+import { type MDT } from "neolace-api";
 import { Transforms } from "slate";
 import { RenderElementProps, useSlate, ReactEditor } from "slate-react";
 import { type VoidPropNode } from "./slate";
@@ -27,7 +27,7 @@ export const PropertyVoid = ({ propertyId, attributes, children }: {propertyId: 
  * In "visual mode" for editing an MDT (Markdown) document, this is how an inline lookup expression is rendered.
  * The lookup expression can be edited.
  */
-export const InlineLookupEditableElement = ({element, attributes, children}: {element: InlineLookupNode, attributes: RenderElementProps["attributes"], children: React.ReactNode}) => {
+export const InlineLookupEditableElement = ({element, attributes, children}: {element: MDT.InlineLookupNode, attributes: RenderElementProps["attributes"], children: React.ReactNode}) => {
     const editor = useSlate();
 
     const handleChange = React.useCallback((newValue: string) => {
@@ -52,7 +52,7 @@ export function renderElement({element, children, attributes}: RenderElementProp
         // case "code_inline":
         //     return <code key={key}>{node.children[0].text}</code>;
         case "lookup_inline": {
-            return <InlineLookupEditableElement element={element} attributes={attributes} children={children} />;
+            return <InlineLookupEditableElement element={element} attributes={attributes}>{children}</InlineLookupEditableElement>;
         }
         case "strong":
             return <strong {...attributes}>{children}</strong>;

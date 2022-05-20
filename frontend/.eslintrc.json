@@ -1,0 +1,16 @@
+{
+    "extends": [
+        "next/core-web-vitals",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
+    "rules": {
+        // 
+        "react/no-unescaped-entities": ["warn", {"forbid": [">"]}],
+        "@typescript-eslint/no-empty-function": "warn",
+        "react/jsx-no-target-blank": ["error", {"allowReferrer": true}]
+    },
+    "plugins": [
+        "@typescript-eslint"
+    ]
+}

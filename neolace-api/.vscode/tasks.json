@@ -4,10 +4,10 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Compile bundle for Node.js",
+            "label": "Compile neolace-api package for Node.js",
             "type": "shell",
             "command": "deno",
-            "args": ["run", "--allow-read", "--allow-write", "--unstable", "_compile.ts"],
+            "args": ["run", "--allow-read", "--allow-run", "--allow-write", "--allow-env", "--no-check", "_compile.ts"],
             "problemMatcher": []
         },
     ]

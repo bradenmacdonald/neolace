@@ -56,9 +56,10 @@ async function loadAllPlugins(): Promise<React.FunctionComponent<{children: Reac
         console.debug(`Loaded ${result.length} frontend plugins, available for server-side rendering.`);
     }
 
-    return ((props: {children: React.ReactNode}) => 
+    const AvailablePluginsProvider = ((props: {children: React.ReactNode}) => 
         <AvailablePluginsContext.Provider value={result}>{props.children}</AvailablePluginsContext.Provider>
     );
+    return AvailablePluginsProvider;
 }
 
 export const AllPluginsProvider = dynamic(() => loadAllPlugins());

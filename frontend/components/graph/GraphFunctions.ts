@@ -1,7 +1,7 @@
 import { Edge } from '@antv/g6';
 import Graph from 'graphology';
 import { VNID } from 'neolace-api';
-import { G6RawGraphData } from '../Graph'
+import type { G6RawGraphData } from './Graph'
 
 
 

@@ -1,10 +1,8 @@
-// deno-lint-ignore-file no-explicit-any
 import React from "react";
 import Link from "next/link";
 import { api } from "lib/api-client";
 import { EntryLink } from "components/EntryLink";
-import { MDT } from "neolace-api";
-import { VNID } from "neolace-api/types.ts";
+import { MDT, VNID } from "neolace-api";
 import { LookupValue } from "components/LookupValue";
 import { FormattedMessage } from "react-intl";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
@@ -124,7 +122,7 @@ function inlineNodeToComponent(node: MDT.InlineNode | MDT.AnyInlineNode, context
                 node.href.startsWith("http://") || node.href.startsWith("https://") || node.href.startsWith("mailto:")
             ) {
                 return (
-                    <a href={node.href} key={key} target="_blank">
+                    <a href={node.href} key={key} target="_blank" rel="noopener">
                         {node.children.map((child) => inlineNodeToComponent(child, context))}
                         {/* Icon to indicate this is an external link */}
                         <span title="(External Link)">
@@ -183,11 +181,12 @@ function inlineNodeToComponent(node: MDT.InlineNode | MDT.AnyInlineNode, context
         case "sup":
             return <sup key={key}>{node.children.map((child) => inlineNodeToComponent(child, context))}</sup>;
         case "footnote_ref": {
-            const footnoteParagraph = (context[footnotes] as any)[node.footnoteId].children[0];
+            const footnoteParagraph = (context[footnotes])?.[node.footnoteId].children[0];
             return (
                 <HoverClickNote key={key} displayText={node.referenceText}>
                     <p className="text-sm">
-                        {footnoteParagraph.children.map((child: any) => inlineNodeToComponent(child, context))}
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {(footnoteParagraph as any).children.map((child: any) => inlineNodeToComponent(child, context))}
                     </p>
                 </HoverClickNote>
             );
@@ -318,7 +317,7 @@ function nodeToComponent(node: MDT.Node, context: MDTContext): React.ReactElemen
             );
         }
         default:
-            return <React.Fragment key={key}>[ Unimplemented MDT node type: {(node as any).type} ]</React.Fragment>;
+            return <React.Fragment key={key}>[ Unimplemented MDT node type: {(node as MDT.Node).type} ]</React.Fragment>;
     }
 }
 

@@ -24,7 +24,7 @@ const getSessionPromise = () => {
             console.error("Session token was invalid, or an error occurred while refreshing it.");
             // If we're unable to restore/validate the sesion,
             // clear the session cookie so we don't try to log in again.
-            KeratinAuthN.logout().finally(() => {});
+            KeratinAuthN.logout();
         });
     }
     // There is no session saved locally, or we're running on the server; either way, no user is logged in.
@@ -84,7 +84,7 @@ export async function getSiteData(domain: string): Promise<SiteDetailsData|null>
 
 // Store the API client on the global window object for development purposes.
 if (IN_BROWSER) {
-    // deno-lint-ignore no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).client = client;
 }
 

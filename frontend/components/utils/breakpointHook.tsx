@@ -8,7 +8,11 @@ export enum Breakpoint {
     "2xl" = 1536,
 }
 
-const calculateBreakpoint = (width: number): Breakpoint => {
+const calculateBreakpoint = (): Breakpoint => {
+    if (typeof window === "undefined") {
+        return Breakpoint.md;  // On the server, just assume desktop
+    }
+    const width: number = window.innerWidth;
     if (width < Breakpoint.sm) {
         return Breakpoint.sm;
     } else if (width < Breakpoint.md ) {
@@ -23,18 +27,12 @@ const calculateBreakpoint = (width: number): Breakpoint => {
   
 export const useBreakpoint = () => {
 
-    if (typeof window === "undefined") {
-        return Breakpoint.md;  // On the server, just assume desktop
-    }
-
-    const [breakpoint, setBreakpoint] = React.useState(() => calculateBreakpoint(window.innerWidth));
+    const [breakpoint, setBreakpoint] = React.useState(() => calculateBreakpoint());
     
     React.useEffect(() => {
         const listener = () => {
-            const newBreakpoint = calculateBreakpoint(window.innerWidth);
-            if (newBreakpoint !== breakpoint) {
-                setBreakpoint(newBreakpoint);
-            }
+            const newBreakpoint = calculateBreakpoint();
+            setBreakpoint(newBreakpoint);
         };
         addEventListener('resize', listener);
         // Cleanup when we don't need to monitor the breakpoint anymore:
