@@ -1,25 +1,24 @@
-import React from 'react';
+import React from "react";
 
-import { api, client, useSiteData } from 'lib/api-client';
+import { api, client, useSiteData } from "lib/api-client";
 import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
-import { InstantSearch } from "react-instantsearch-dom";
-import { Hits } from "../components/Hits";
-import { SearchBox } from '../components/SearchBox';
-import { Spinner } from 'components/widgets/Spinner';
+import { InstantSearch } from "react-instantsearch-hooks-web";
+import { InfiniteHits } from "../components/Hits";
+import { SearchBox } from "../components/SearchBox";
+import { Spinner } from "components/widgets/Spinner";
 
-const SiteSearchPage: React.FunctionComponent = function(props) {
+const SiteSearchPage: React.FunctionComponent = function (props) {
+    const { site } = useSiteData();
 
-    const {site} = useSiteData();
-
-    const [connectionData, setConnectionData] = React.useState<api.SiteSearchConnectionData|undefined>();
+    const [connectionData, setConnectionData] = React.useState<api.SiteSearchConnectionData | undefined>();
 
     React.useEffect(() => {
         if (!site.shortId) {
-            return;  // This effect needs to wait until we have the site data.
+            return; // This effect needs to wait until we have the site data.
         }
         // Get the search connection:
         let cancelled = false;
-        client.getSearchConnection({siteId: site.shortId}).then(sc => {
+        client.getSearchConnection({ siteId: site.shortId }).then((sc) => {
             if (!cancelled) {
                 setConnectionData(sc);
             }
@@ -29,41 +28,48 @@ const SiteSearchPage: React.FunctionComponent = function(props) {
         };
     }, [site.shortId]);
 
-    const [adapter, setAdapter] = React.useState<TypesenseInstantSearchAdapter|undefined>();
+    const [adapter, setAdapter] = React.useState<TypesenseInstantSearchAdapter | undefined>();
     React.useEffect(() => {
         if (connectionData) {
             const endpoint = new URL(connectionData.searchEndpoint);
             setAdapter(
                 new TypesenseInstantSearchAdapter({
                     server: {
-                        apiKey: connectionData.apiKey,  // This API key only allows searching based on the current site and current user's permissions
+                        // This API key only allows searching based on the current site and current user's permissions:
+                        apiKey: connectionData.apiKey,
                         nodes: [
-                            {host: endpoint.hostname, port: Number(endpoint.port), protocol: endpoint.protocol === "http:" ? "http" : "https"},
+                            {
+                                host: endpoint.hostname,
+                                port: endpoint.port
+                                    ? Number(endpoint.port)
+                                    : (endpoint.protocol === "http:" ? 80 : 443),
+                                protocol: endpoint.protocol === "http:" ? "http" : "https",
+                            },
                         ],
                     },
                     additionalSearchParameters: {
                         query_by: "name,description,friendlyId,articleText",
                     },
-                  })
+                }),
             );
         } else {
             setAdapter(undefined);
         }
     }, [connectionData]);
 
-    const [currentQuery, setCurrentQuery] = React.useState("");
-
     if (!adapter || !connectionData) {
-        return <Spinner/>;
+        return <Spinner />;
     }
 
-    return (<>
-        <h1 className="text-3xl font-semibold">Search {site.name}</h1>
-        <InstantSearch indexName={connectionData.siteEntriesCollection} searchClient={adapter.searchClient} onSearchStateChange={({query}) => { setCurrentQuery(query); }}>
-            <SearchBox />
-            <Hits currentQuery={currentQuery} />
-        </InstantSearch>
-    </>);
-}
+    return (
+        <>
+            <h1 className="text-3xl font-semibold">Search {site.name}</h1>
+            <InstantSearch indexName={connectionData.siteEntriesCollection} searchClient={adapter.searchClient}>
+                <SearchBox />
+                <InfiniteHits />
+            </InstantSearch>
+        </>
+    );
+};
 
 export default SiteSearchPage;

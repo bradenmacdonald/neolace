@@ -10,8 +10,6 @@ interface TooltipProps {
     children?: VirtualElement | ((attribsForElement: Record<string, unknown>) => React.ReactNode);
 }
 
-let uniqueId = 0;
-
 function isVirtualElement(obj: unknown): obj is VirtualElement {
     // deno-lint-ignore no-explicit-any
     return typeof obj === "object" && obj !== null && typeof (obj as any).getBoundingClientRect === "function";
@@ -21,8 +19,7 @@ function isVirtualElement(obj: unknown): obj is VirtualElement {
  * Display a tooltip that contains HTML
  */
 export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
-    // TODO: change this to useId() hook in React 18 : https://reactjs.org/docs/hooks-reference.html#useid
-    const [tooltipId] = React.useState(() => `neo-tooltip${uniqueId++}`);
+    const tooltipId = React.useId();
     const [isElementHovered, setElementHovered] = React.useState(false);
     const [referenceElement, setReferenceElement] = React.useState<HTMLElement|null>(null);
     const [popperElement, setPopperElement] = React.useState<HTMLSpanElement|null>(null);
