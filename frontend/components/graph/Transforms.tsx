@@ -15,8 +15,11 @@ export enum Transforms {
 
 function condenseGraphData(currentData: G6RawGraphData) {
     // NOTE for now, we are performing node condensing relative to the "this" node of the graph.
-    // NOTE: the 'this' node is only indicated by being first in the index of nodes
-    const condensedData = transformDataForGraph(currentData, currentData.nodes[0].entryType);
+    const focusNode = currentData.nodes.find((n) => n.isFocusEntry) ?? currentData.nodes[0];
+    if (focusNode === undefined) {
+        return currentData;  // Error - there are no nodes at all.
+    }
+    const condensedData = transformDataForGraph(currentData, focusNode.entryType);
     return condensedData;
 }
 

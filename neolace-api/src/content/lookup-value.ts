@@ -53,14 +53,13 @@ export interface GraphValue extends LookupValue {
         entryId: VNID;
         name: string;
         entryType: VNID;
-        data: Record<string, unknown>;
+        isFocusEntry?: boolean;
     }[],
     rels: {
         relId: VNID;
         relType: VNID;
         fromEntryId: VNID;
         toEntryId: VNID;
-        data: Record<string, unknown>;
     }[],
 }
 

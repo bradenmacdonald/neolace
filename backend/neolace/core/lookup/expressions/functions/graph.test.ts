@@ -36,37 +36,32 @@ group("graph()", () => {
         assertInstanceOf(value, GraphValue);
         assertEquals(value.entries, [
             {
-                data: {},
                 entryId: defaultData.entries.ponderosaPine.id,
                 entryType: defaultData.schema.entryTypes._ETSPECIES.id,
                 name: "Ponderosa Pine",
+                isFocusEntry: true,
             },
             {
-                data: {},
                 entryId: defaultData.entries.genusPinus.id,
                 entryType: defaultData.schema.entryTypes._ETGENUS.id,
                 name: "Pinus",
             },
             {
-                data: {},
                 entryId: defaultData.entries.familyPinaceae.id,
                 entryType: defaultData.schema.entryTypes._ETFAMILY.id,
                 name: "Pinaceae",
             },
             {
-                data: {},
                 entryId: defaultData.entries.orderPinales.id,
                 entryType: defaultData.schema.entryTypes._ETORDER.id,
                 name: "Pinales",
             },
             {
-                data: {},
                 entryId: defaultData.entries.classPinopsida.id,
                 entryType: defaultData.schema.entryTypes._ETCLASS.id,
                 name: "Pinopsida",
             },
             {
-                data: {},
                 entryId: defaultData.entries.divisionTracheophyta.id,
                 entryType: defaultData.schema.entryTypes._ETDIVISION.id,
                 name: "Tracheophyta",
@@ -74,31 +69,26 @@ group("graph()", () => {
         ]);
         const expectedRels = [
             {
-                data: {},
                 fromEntryId: defaultData.entries.classPinopsida.id,
                 relType: defaultData.schema.properties._parentDivision.id,
                 toEntryId: defaultData.entries.divisionTracheophyta.id,
             },
             {
-                data: {},
                 fromEntryId: defaultData.entries.orderPinales.id,
                 relType: defaultData.schema.properties._parentClass.id,
                 toEntryId: defaultData.entries.classPinopsida.id,
             },
             {
-                data: {},
                 fromEntryId: defaultData.entries.familyPinaceae.id,
                 relType: defaultData.schema.properties._parentOrder.id,
                 toEntryId: defaultData.entries.orderPinales.id,
             },
             {
-                data: {},
                 fromEntryId: defaultData.entries.genusPinus.id,
                 relType: defaultData.schema.properties._parentFamily.id,
                 toEntryId: defaultData.entries.familyPinaceae.id,
             },
             {
-                data: {},
                 fromEntryId: defaultData.entries.ponderosaPine.id,
                 relType: defaultData.schema.properties._parentGenus.id,
                 toEntryId: defaultData.entries.genusPinus.id,
@@ -213,25 +203,22 @@ group("graph()", () => {
         assertInstanceOf(value, GraphValue);
         assertEquals<typeof value.entries>(value.entries, [
             {
-                data: {},
                 entryId: A,
                 entryType: entryType,
                 name: "Entry A",
+                isFocusEntry: true,
             },
             {
-                data: {},
                 entryId: D,
                 entryType: entryType,
                 name: "Entry D",
             },
             {
-                data: {},
                 entryId: B,
                 entryType: entryType,
                 name: "Entry B",
             },
             {
-                data: {},
                 entryId: C,
                 entryType: entryType,
                 name: "Entry C",
@@ -241,31 +228,26 @@ group("graph()", () => {
         // These are the expected relationships, without 'relId' since that will be different each time.
         const expectedRels = [
             {
-                data: {},
                 fromEntryId: A,
                 relType: entryIsA,
                 toEntryId: D,
             },
             {
-                data: {},
                 fromEntryId: B,
                 relType: entryIsA,
                 toEntryId: A,
             },
             {
-                data: {},
                 fromEntryId: C,
                 relType: entryIsA,
                 toEntryId: A,
             },
             {
-                data: {},
                 fromEntryId: D,
                 relType: entryIsA,
                 toEntryId: C,
             },
             {
-                data: {},
                 fromEntryId: D,
                 relType: entryIsA,
                 toEntryId: B,

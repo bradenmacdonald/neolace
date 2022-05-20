@@ -11,6 +11,7 @@ function createGraphObject(data: G6RawGraphData): Graph {
     data.nodes.forEach((n) => graph.addNode(n.id, {
         label: n.label,
         entryType: n.entryType,
+        ...(n.isFocusEntry && {isFocusEntry: true}),
     }))
     
     data.edges.forEach((e) => {
@@ -29,8 +30,8 @@ function convertGraphToData(graph: Graph): G6RawGraphData {
             id: VNID(nodeKey),
             label: graph.getNodeAttribute(nodeKey, 'label') as string, 
             entryType: VNID(graph.getNodeAttribute(nodeKey, 'entryType')),
-        }
-        )),
+            ...(graph.getNodeAttribute(nodeKey, 'isFocusEntry') && {isFocusEntry: true}),
+        })),
         edges: graph.mapEdges((edge, attributes, source, target) => {
             return {
                 source: source,

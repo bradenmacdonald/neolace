@@ -59,7 +59,8 @@ export class Graph extends LookupFunctionOneArg {
                 entryId: entry.id,
                 name: entry.name,
                 entryType: entry.type,
-                data: {},
+                // If this entry is the "current" entry, indicate that:
+                ...(entry.id === context.entryId && { isFocusEntry: true }),
             };
         });
 
@@ -69,7 +70,6 @@ export class Graph extends LookupFunctionOneArg {
                 relType: rel.relType,
                 fromEntryId: rel.start,
                 toEntryId: rel.end,
-                data: {},
             };
         });
 
