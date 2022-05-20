@@ -18,7 +18,7 @@ export const Portal : React.FC<Props> = ( { children, className = 'fixed root-po
     const [container, setContainer] = React.useState<HTMLElement|null>(null);
 
     React.useEffect(() => {
-        // deno-lint-ignore no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const portals: Record<string, {element: HTMLElement, usageCount: number}> = (window as any)._portals || ((window as any)._portals = {});
         const portalKey = el + ":" + className;
         if (portals[portalKey] === undefined) {

@@ -45,9 +45,9 @@ jobs:
         run: deno lint src
         working-directory: ./neolace-api
 
-      - name: Run linter (frontend)
-        run: deno lint components pages lib
-        working-directory: ./frontend
+      # - name: Run linter (frontend)
+      #   run: npm run lint
+      #   working-directory: ./frontend
 
   check-backend-types:
     runs-on: ubuntu-latest

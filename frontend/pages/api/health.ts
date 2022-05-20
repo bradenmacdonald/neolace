@@ -4,7 +4,7 @@ import { client } from 'lib/api-client';
 /**
  * This page can be used to confirm that the frontend is working.
  */
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+const getFrontendHealth = async (req: NextApiRequest, res: NextApiResponse) => {
     if (req.method !== "GET") {
         res.status(405).json({error: "Invalid method requested. Use GET."});
     }
@@ -18,3 +18,4 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         backendWorking,
     });
 }
+export default getFrontendHealth;
