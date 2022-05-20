@@ -11,9 +11,9 @@ import { VNID } from "neolace-api";
 import { ToolbarButton } from "./widgets/Button";
 import { useIntl } from "react-intl";
 import { Modal } from "./widgets/Modal";
-import { transformHideNodesOfType, transformDataForGraph } from './graph/GraphFunctions'
 import { NodeTooltip, useNodeTooltipHelper } from "./graph/NodeTooltip";
 import { useStateRef } from "./utils/stateRefHook";
+import { applyTransforms, Transform, transforms } from "./graph/Transforms";
 
 interface GraphProps {
     value: api.GraphValue;
@@ -39,11 +39,6 @@ export interface G6RawGraphData {
     }[];
 }
 
-// NOTE assuming that transforms can only be applied once
-const transforms = {
-    condense: "condense",
-    hideType: "hide-type",
-};
 
 function colorGraph(data: G6RawGraphData, refCache: api.ReferenceCacheData) {
     data.nodes.forEach((node: NodeConfig) => {
@@ -78,22 +73,9 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
     };
     
     data = colorGraph(data, refCache);
-    console.log(data);
     return data;
 }
 
-function condenseGraphData(currentData: G6RawGraphData) {
-    const condensedData = transformDataForGraph(currentData, currentData.nodes[0].entryType);
-    return condensedData;
-}
-
-function hideNodeTypeInGraph(currentData: G6RawGraphData, param: string) {
-    const prunedData = transformHideNodesOfType(
-            currentData, 
-            VNID(param)
-        );
-    return prunedData;
-}
 /**
  * Display a graph visualization.
  */
@@ -105,21 +87,10 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const originalData = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value]);
-    const [transformList, setTransforms, currentTransforms] = useStateRef<{transform: string, param: string}[]>([]);
+    const [transformList, setTransforms, currentTransforms] = useStateRef<Transform[]>([]);
 
     const currentData = React.useMemo(() => {
-        let transformedData = {
-            nodes: [... originalData.nodes],
-            edges: [... originalData.edges],
-        };
-        for (const t of transformList) {
-            if (t.transform === transforms.condense) {
-                transformedData = condenseGraphData(transformedData);
-            } else if (t.transform === transforms.hideType) {
-                transformedData = hideNodeTypeInGraph(transformedData, t.param);
-            }
-        }
-
+        let transformedData = applyTransforms(originalData, transformList);
         transformedData = colorGraph(transformedData, props.mdtContext.refCache);
         return transformedData;
     }, [originalData, transformList, props.mdtContext.refCache])
@@ -242,7 +213,6 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Update the graph data whenever the current data changes
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; };
-        console.log("Changing data")
         graph.changeData(currentData);
     }, [currentData])
 
@@ -255,18 +225,17 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             setTransforms((t) => {
                 return t.concat(
                     {
-                        transform: transforms.condense,
-                        param: ""
+                        id: transforms.condense,
+                        params: {}
                     }
                 );
             })
 
         } else {
             setTransforms(t => {
-                return t.filter((t) => t.transform != transforms.condense);
+                return t.filter((t) => t.id != transforms.condense);
             })
         }
-        console.log("Condensing data")
     }, [condensed]);
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
@@ -316,8 +285,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 // add condense to the transforms
                 setTransforms((t) => {
                     return t.concat({
-                        transform: transforms.hideType,
-                        param: item.getModel().entryType as string,
+                        id: transforms.hideType,
+                        params: {'nodeType': item.getModel().entryType as string},
                     });
                 })
 

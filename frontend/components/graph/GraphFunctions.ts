@@ -99,8 +99,6 @@ function condenseLeaves(graph:Graph): Graph {
             label: `${leafyNode.hiddenNodeNumber} entries condensed`, 
             entryType: leafyNode.entryType,
         });
-        // BUG sometimes this shows that edge already exists when I only have person nodes and try to condense.
-
         if (newGraph.hasEdge(leafyNode.nodeKey, newLeafKey)) {
             console.log('edge already exists');
         } else {
@@ -261,7 +259,7 @@ export function hideNodesOfType(graph: Graph, eTypeToRemove: VNID): Graph {
         newGraph.dropNode(n);
 
         neighbors.forEach((neighbor) => {
-            // add undirected edges between naighbours
+            // add edges between naighbours
             neighbors.forEach((nb) => {
                 // do not create self loops
                 if (nb !== neighbor) {
