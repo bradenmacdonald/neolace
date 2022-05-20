@@ -1,7 +1,7 @@
 /**
  * A graph that is displayed as the result of the .graph() lookup function.
  */
-import React from "react";
+import React, { useState } from "react";
 import { api } from "lib/api-client";
 import { MDTContext } from "./markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, INode, NodeConfig } from "@antv/g6";
@@ -11,8 +11,9 @@ import { VNID } from "neolace-api";
 import { ToolbarButton } from "./widgets/Button";
 import { useIntl } from "react-intl";
 import { Modal } from "./widgets/Modal";
-import { transformDataForGraph } from './graph/GraphFunctions'
+import { transformHideNodesOfType, transformDataForGraph } from './graph/GraphFunctions'
 import { NodeTooltip, useNodeTooltipHelper } from "./graph/NodeTooltip";
+import { useStateRef } from "./utils/stateRefHook";
 
 interface GraphProps {
     value: api.GraphValue;
@@ -37,6 +38,12 @@ export interface G6RawGraphData {
         label: string;
     }[];
 }
+
+// NOTE assuming that transforms can only be applied once
+const transforms = {
+    condense: "condense",
+    hideType: "hide-type",
+};
 
 function colorGraph(data: G6RawGraphData, refCache: api.ReferenceCacheData) {
     data.nodes.forEach((node: NodeConfig) => {
@@ -67,20 +74,51 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
     };
     
     data = colorGraph(data, refCache);
-
+    console.log(data);
     return data;
 }
 
+function condenseGraphData(currentData: G6RawGraphData) {
+    const condensedData = transformDataForGraph(currentData, currentData.nodes[0].entryType);
+    return condensedData;
+}
+
+function hideNodeTypeInGraph(currentData: G6RawGraphData, param: string) {
+    const prunedData = transformHideNodesOfType(
+            currentData, 
+            VNID(param)
+        );
+    return prunedData;
+}
 /**
  * Display a graph visualization.
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const intl = useIntl();
     const [condensed, setCondensed] = React.useState(false);
+    const [hidden, setHidden, hiddenRef] = useStateRef(false);
     // The data (nodes and relationships) that we want to display as a graph.
-    const data = React.useMemo(() => {
+    const originalData = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value]);
+    const [transformList, setTransforms, currentTransforms] = useStateRef<{transform: string, param: string}[]>([]);
+
+    const currentData = React.useMemo(() => {
+        let transformedData = {
+            nodes: [... originalData.nodes],
+            edges: [... originalData.edges],
+        };
+        for (const t of transformList) {
+            if (t.transform === transforms.condense) {
+                transformedData = condenseGraphData(transformedData, props.mdtContext.refCache);
+            } else if (t.transform === transforms.hideType) {
+                transformedData = hideNodeTypeInGraph(transformedData, t.param, props.mdtContext.refCache);
+            }
+        }
+
+        transformedData = colorGraph(transformedData, props.mdtContext.refCache);
+        return transformedData;
+    }, [originalData, transformList, props.mdtContext.refCache])
 
     // In order to preserve our G6 graph when we move it to a modal (when expanding the view), the <div> that contains
     // it must not be destroyed and re-created. React will normally try to destroy and re-create it, not realizing that
@@ -128,7 +166,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             preventOverlap: true,
             nodeSize: [200, 50],
             nodeSpacing: 60,
-            alphaDecay: 0.1,
+            alphaMin: 0.1,
         },
         defaultNode: {
             type: entryNode,
@@ -183,7 +221,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Set the graph data and render it whenever the data has changed or the graph has been re-initialized:
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        graph.data(data);
+        graph.data(originalData);
         graph.render();
         // By default, we zoom the graph so that four nodes would fit horizontally.
         graph.zoomTo(graph.getWidth()/(220*4), undefined, false);
@@ -195,19 +233,37 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 graph.focusItem(firstNode, true);
             }
         }, true);
-    }, [graph, data]);
+    }, [graph, originalData]);
+
+    // Update the graph data whenever the current data changes
+    React.useEffect(() => {
+        if (!graph || graph.destroyed) { return; };
+        console.log("Changing data")
+        graph.changeData(currentData);
+    }, [currentData])
 
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        if (condensed && data.nodes.length !== 0) {
+        if (condensed) {
             // NOTE for now, we are performing node condensing relative to the "this" node of the graph.
-            let condensedData = transformDataForGraph(data, data.nodes[0].entryType);
-            condensedData = colorGraph(condensedData, props.mdtContext.refCache);
-            graph.changeData(condensedData);
+            // NOTE: the 'this' node is only indicated by being first in the index of nodes
+            // add condense to the transforms
+            setTransforms((t) => {
+                return t.concat(
+                    {
+                        transform: transforms.condense,
+                        param: ""
+                    }
+                );
+            })
+
         } else {
-            graph.changeData(data);
+            setTransforms(t => {
+                return t.filter((t) => t.transform != transforms.condense);
+            })
         }
-    }, [condensed, data, props.mdtContext.refCache]);
+        console.log("Condensing data")
+    }, [condensed]);
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
 
@@ -246,8 +302,22 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     graph.setItemState(edge, 'selected', false);
                 }
             })
+        });
 
+        graph.on("node:click", function(e) {
+            const item = e.item as INode;
+            if (hiddenRef.current) {
+                // NOTE for now, we are performing node condensing relative to the "this" node of the graph.
+                // NOTE: the 'this' node is only indicated by being first in the index of nodes
+                // add condense to the transforms
+                setTransforms((t) => {
+                    return t.concat({
+                        transform: transforms.hideType,
+                        param: item.getModel().entryType as string,
+                    });
+                })
 
+            }
         });
 
         // deno-lint-ignore no-explicit-any
@@ -340,6 +410,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const handleDownloadImageButton = React.useCallback(() => { graph?.downloadFullImage(); }, [graph]);
     // Code for "Condense leaves" toolbar button
     const handleCondenseNodesButton = React.useCallback(() => { setCondensed((wasCondensed) => !wasCondensed)}, []);
+    // Code for "Hide article antries" toolbar button
+    const handleHideArticlesButton = React.useCallback(() => { setHidden((wasHidden) => !wasHidden); }, []);
 
     const contents = (
         <>
@@ -380,6 +452,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     })}
                     icon="chevron-contract"
                     enabled={condensed}
+                />
+                <ToolbarButton
+                    onClick={handleHideArticlesButton}
+                    title={intl.formatMessage({
+                        defaultMessage: "Hide article entries.",
+                        id: "graph.toolbar.hideArticles",
+                    })}
+                    icon="diamond-fill"
+                    enabled={hidden}
                 />
             </div>
             <div

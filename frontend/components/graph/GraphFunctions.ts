@@ -1,10 +1,11 @@
-import { MultiDirectedGraph } from 'graphology';
+import Graph from 'graphology';
 import { VNID } from 'neolace-api';
 import { G6RawGraphData } from '../Graph'
 
 
-function createGraphObject(data: G6RawGraphData): MultiDirectedGraph {
-    const graph = new MultiDirectedGraph();
+
+function createGraphObject(data: G6RawGraphData): Graph {
+    const graph = new Graph();
     
     data.nodes.forEach((n) => graph.addNode(n.id, {
         label: n.label,
@@ -19,7 +20,7 @@ function createGraphObject(data: G6RawGraphData): MultiDirectedGraph {
     return graph;
 }
 
-function convertGraphToData(graph: MultiDirectedGraph): G6RawGraphData {
+function convertGraphToData(graph: Graph): G6RawGraphData {
     const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({ 
                 id: VNID(nodeKey),
@@ -47,7 +48,7 @@ function convertGraphToData(graph: MultiDirectedGraph): G6RawGraphData {
  * @param graph 
  * @returns a graph with condensed leaves.
  */
-function condenseLeaves(graph:MultiDirectedGraph): MultiDirectedGraph {
+function condenseLeaves(graph:Graph): Graph {
     // create dictionary of nodes with entry ids as keys
     const newGraph = graph.copy();
     
@@ -118,7 +119,7 @@ function condenseLeaves(graph:MultiDirectedGraph): MultiDirectedGraph {
  * @param relativeEType The entry type of the nodes relative to which to perform the condensing operation.
  * @returns a new condensed graph
  */
-function condenseSimplePattern(graph: MultiDirectedGraph, relativeEType: VNID): MultiDirectedGraph {
+function condenseSimplePattern(graph: Graph, relativeEType: VNID): Graph {
     // delete these nodes and save only one condensed node
     
     // create dictionary of nodes with entry ids as keys
@@ -215,6 +216,40 @@ function condenseSimplePattern(graph: MultiDirectedGraph, relativeEType: VNID): 
     return newGraph;
 }
 
+/*
+Hide nodes of given entry type as follows: for each deleted node, take all of its neighbours, and connect all of them
+with undirected relationsips.
+*/
+export function hideNodesOfType(graph: Graph, eTypeToRemove: VNID): Graph {
+    // filter nodes to only of the removed type
+    const newGraph = graph.copy();
+    const nodesKeys = newGraph.filterNodes((n, attr) => {
+        return attr.entryType === eTypeToRemove;
+    })
+
+    // iterate over the nodes
+    nodesKeys.forEach((n) => {
+        const neighbors: string[] = [];
+        newGraph.forEachNeighbor(n, (neihgborKey) => {
+            neighbors.push(neihgborKey);
+        })
+
+        // delete the node
+        newGraph.dropNode(n);
+
+        neighbors.forEach((neighbor) => {
+            // add undirected edges between naighbours
+            neighbors.forEach((nb) => {
+                newGraph.mergeUndirectedEdge(
+                    neighbor,
+                    nb
+                )
+            })
+        })
+    })
+    return newGraph;
+}
+
 
 // for now just find all the leaf nodes and for every node that has more than one leaf node:
 // remove the leaf nodes, create one leaf node with label saying how many leaf nodes there are.
@@ -223,4 +258,10 @@ export function transformDataForGraph(data: G6RawGraphData, entryType: VNID) {
     const transformedGraph = condenseLeaves(graph);
     const condensedGraph = condenseSimplePattern(transformedGraph, entryType);
     return convertGraphToData(condensedGraph);
+}
+
+export function transformHideNodesOfType(data: G6RawGraphData, nType: VNID) {
+    const graph = createGraphObject(data);
+    const transformedGraph = hideNodesOfType(graph, nType);
+    return convertGraphToData(transformedGraph);
 }
