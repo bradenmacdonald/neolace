@@ -11,7 +11,7 @@ import {
 } from "neolace/api/tests.ts";
 import { saveValidationToken } from "./verify-email.ts";
 
-group("index.ts", () => {
+group("api/user/index.ts", () => {
     group("Create a user account", () => {
         setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
@@ -21,35 +21,33 @@ group("index.ts", () => {
             const emailToken = await saveValidationToken({ email: "jamie456@example.com", data: {} });
             const result = await client.registerHumanUser({ emailToken });
 
-            assertEquals(result, {
-                isBot: false,
-                fullName: null,
-                username: "jamie456",
-            });
+            assertEquals(result.userData.isBot, false);
+            assertEquals(result.userData.fullName, null);
+            assertEquals(result.userData.username, "jamie456");
         });
 
         test("can create an account an email and full name and username", async () => {
             const client = await getClient();
 
+            const emailToken = await saveValidationToken({ email: "jamie456@example.com", data: {} });
             const result = await client.registerHumanUser({
-                email: "jamie456@example.com",
+                emailToken,
                 username: "JamieRocks",
                 fullName: "Jamie Rockland",
             });
 
-            assertEquals(result, {
-                isBot: false,
-                fullName: "Jamie Rockland",
-                username: "JamieRocks",
-            });
+            assertEquals(result.userData.isBot, false);
+            assertEquals(result.userData.fullName, "Jamie Rockland");
+            assertEquals(result.userData.username, "JamieRocks");
         });
 
         test("cannot create two accounts with the same email address", async () => {
             const client = await getClient();
 
-            await client.registerHumanUser({ email: "jamie456@example.com" });
+            const emailToken = await saveValidationToken({ email: "jamie456@example.com", data: {} });
+            await client.registerHumanUser({ emailToken });
             await assertRejects(
-                () => client.registerHumanUser({ email: "jamie456@example.com" }),
+                () => client.registerHumanUser({ emailToken }),
                 (err: Error) => {
                     assertInstanceOf(err, api.InvalidRequest);
                     assertEquals(err.message, "A user account is already registered with that email address.");
