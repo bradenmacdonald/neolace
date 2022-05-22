@@ -63,6 +63,11 @@ export const config = (() => {
         }),
         // If set, this prefix will be used for images, instead of objStorePublicUrlPrefix. Useful for CDN+imgproxy.
         objStorePublicUrlPrefixForImages: "",
+        // Redis is used as a cache and a message queue
+        redisHostname: "localhost",
+        redisPassword: defaultTo("devpassword", { production: "" }),
+        redisDatabaseNumber: defaultTo(0, { test: 1 }),
+        redisPort: defaultTo(5553, { production: 6379 }),
         // The system API key is very dangerous and allows a user to do ANYTHING with the REST API, such as delete
         // entire sites. We store only the salted SHA-256 hash of the system API key. It defaults to
         // "SYS_KEY_INSECURE_DEV_KEY" in development and by default is disabled in production. Go to

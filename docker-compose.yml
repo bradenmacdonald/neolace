@@ -1,3 +1,22 @@
+# Most Neolace services run on port 555x:
+#
+# 5550
+# 5551
+# 5552 - authentication server (public port)
+# 5553 - redis (cache, message queue)
+# 5554 - backend (REST API)
+# 5555 - frontend (local development)
+# 5556 - TypeSense (search)
+# 5557 - imgproxy (optional, used to serve image thumbnails)
+# 5558 - imgproxy gateway (used to restrict access to imgproxy)
+# 5559 - authentication server (private port for backend use only)
+# 7474 - Neo4j web UI
+# 7687 - Neo4j Bolt interface
+# 9000 - MinIO (S3-compatible object storage)
+#
+# For tests, these same services run on ports with the 444x prefix instead of 555x
+
+
 # Configuration for our development and test environments
 version: '3'
 x-service-templates:
@@ -44,10 +63,12 @@ services:
   redis:
     image: redis:6.0-alpine
     command: >
-     --requirepass devpassword 
+     --requirepass devpassword
     # Redis DB 0 is used by the neolace backend.
     # Redis DB 1 is used by the neolace backend (tests).
     # Redis DB 8 is used by AuthN microservice.
+    ports:
+      - 5553:6379
 
   ################################################################
   # Neo4j graph database

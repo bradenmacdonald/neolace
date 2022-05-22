@@ -65,7 +65,7 @@ jobs:
         run: deno check neolace/api/server.ts
         working-directory: ./backend
 
-      # Type checking the test suite is very slow we do it asynchronously now too, while the actual tests themselves run in a separate job
+      # Type checking the test suite is very slow so we do it asynchronously now too, while the actual tests themselves run in a separate job
 
       - name: Type check test suite setup
         run: deno check neolace/scripts/test-setup.ts
