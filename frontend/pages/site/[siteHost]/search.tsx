@@ -1,10 +1,10 @@
-import React from 'react';
-import { GetStaticPaths, GetStaticProps, NextPage} from 'next';
-import dynamic from 'next/dynamic';
+import React from "react";
+import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import dynamic from "next/dynamic";
 
-import { SitePage } from 'components/SitePage';
-import { getSiteData, SiteData } from 'lib/api-client';
-import { ParsedUrlQuery } from 'querystring';
+import { SitePage } from "components/SitePage";
+import { getSiteData, SiteData } from "lib/api-client";
+import { ParsedUrlQuery } from "querystring";
 
 interface PageProps {
     site: SiteData;
@@ -13,8 +13,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
 }
 
-const PluginTestPage: NextPage<PageProps> = function(props) {
-
+const PluginTestPage: NextPage<PageProps> = function (props) {
     const pluginName = `search`;
 
     const PluginComponent = dynamic(
@@ -23,22 +22,21 @@ const PluginTestPage: NextPage<PageProps> = function(props) {
         // will see webpack accounting for many different possible imports that we'll never use, and .next/server/ will
         // be filled with unwanted webpack build files like "plugins_search_node_modules_react_index_js", which slows
         // down the frontend build.
-        () =>
-            import(`../../../plugins/${pluginName}/plugin-ui/index`),
+        () => import(`../../../plugins/${pluginName}/plugin-ui/index`),
         {
             loading: () => <p>Loading {pluginName} plugin...</p>,
-        }
-      );
+        },
+    );
 
     return (
         <SitePage
             title="Search"
             sitePreloaded={props.site}
         >
-            <PluginComponent/>
+            <PluginComponent />
         </SitePage>
     );
-}
+};
 
 export default PluginTestPage;
 
@@ -48,18 +46,19 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
         paths: [],
         // Enable statically generating any additional pages as needed
         fallback: "blocking",
-    }
-}
+    };
+};
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
+    if (!context.params) throw new Error("Internal error - missing URL params."); // Make TypeScript happy
 
     // Look up the Neolace site by domain:
-    const site = await getSiteData(context.params!.siteHost);
-    if (site === null) { return {notFound: true}; }
+    const site = await getSiteData(context.params.siteHost);
+    if (site === null) return { notFound: true };
 
     return {
         props: {
             site,
         },
     };
-}
+};

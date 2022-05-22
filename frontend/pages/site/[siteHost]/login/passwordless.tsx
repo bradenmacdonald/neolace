@@ -1,11 +1,11 @@
-import React, { ReactNode } from 'react';
-import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
-import { ParsedUrlQuery } from 'querystring';
+import React, { ReactNode } from "react";
+import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { ParsedUrlQuery } from "querystring";
 
-import { getSiteData, SiteData } from 'lib/api-client';
-import { SitePage } from 'components/SitePage';
-import { UserContext, UserStatus, } from 'components/user/UserContext';
-import { Redirect } from 'components/utils/Redirect';
+import { getSiteData, SiteData } from "lib/api-client";
+import { SitePage } from "components/SitePage";
+import { UserContext, UserStatus } from "components/user/UserContext";
+import { Redirect } from "components/utils/Redirect";
 
 interface PageProps {
     site: SiteData;
@@ -32,7 +32,7 @@ enum TokenStatus {
     TokenInvalid,
 }
 
-const PasswordlessLoginPage: NextPage<PageProps>= function(props) {
+const PasswordlessLoginPage: NextPage<PageProps> = function (props) {
     const user = React.useContext(UserContext);
     const [tokenStatus, setTokenStatus] = React.useState(TokenStatus.Unknown);
 
@@ -43,7 +43,7 @@ const PasswordlessLoginPage: NextPage<PageProps>= function(props) {
             setTokenStatus(TokenStatus.ValidatingToken);
             user.submitPasswordlessLoginToken(hash).then(() => {
                 setTokenStatus(TokenStatus.TokenValid);
-            }).catch(err => {
+            }).catch((err) => {
                 setTokenStatus(TokenStatus.TokenInvalid);
             });
         } else {
@@ -54,7 +54,7 @@ const PasswordlessLoginPage: NextPage<PageProps>= function(props) {
     let detail: ReactNode = <>Error: unknown status enum value</>;
     switch (tokenStatus) {
         case TokenStatus.Unknown: {
-            detail = <>...</>
+            detail = <>...</>;
             break;
         }
         case TokenStatus.ValidatingToken: {
@@ -89,11 +89,11 @@ const PasswordlessLoginPage: NextPage<PageProps>= function(props) {
             sitePreloaded={props.site}
         >
             <h1 className="text-3xl font-semibold">Log in to {props.site.name}</h1>
-            
+
             <p className="my-4">{detail}</p>
         </SitePage>
     );
-}
+};
 
 export default PasswordlessLoginPage;
 
@@ -103,17 +103,21 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
         paths: [],
         // Enable statically generating any additional pages as needed
         fallback: "blocking",
-    }
-}
+    };
+};
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
+    if (!context.params) throw new Error("Internal error - missing URL params."); // Make TypeScript happy
+
     // Look up the Neolace site by domain:
-    const site = await getSiteData(context.params!.siteHost);
-    if (site === null) { return {notFound: true}; }
+    const site = await getSiteData(context.params.siteHost);
+    if (site === null) {
+        return { notFound: true };
+    }
 
     return {
         props: {
             site,
         },
     };
-}
+};
