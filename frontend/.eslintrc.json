@@ -8,7 +8,8 @@
         // 
         "react/no-unescaped-entities": ["warn", {"forbid": [">"]}],
         "@typescript-eslint/no-empty-function": "warn",
-        "react/jsx-no-target-blank": ["error", {"allowReferrer": true}]
+        "react/jsx-no-target-blank": ["error", {"allowReferrer": true}],
+        "@typescript-eslint/no-unused-vars": ["off"]
     },
     "plugins": [
         "@typescript-eslint"
