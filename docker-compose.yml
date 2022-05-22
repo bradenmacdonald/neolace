@@ -35,15 +35,17 @@ x-service-templates:
       NEO4J_apoc_export_file_enabled: "true"
   authn:
     &authn-defaults
-    image: keratin/authn-server:1.10.2
+    image: keratin/authn-server:1.15.0
     depends_on:
       - redis
     environment:
       &authn-environment-defaults
       PORT: 5559
       PUBLIC_PORT: 5552
+      # The backend runs on the host, not inside docker, so these are the URLs for authn to post to:
       APP_PASSWORDLESS_TOKEN_URL: http://host.docker.internal:5554/auth/passwordless-login
       APP_PASSWORD_RESET_URL: http://host.docker.internal:5554/auth/password-reset
+      # authn's database requirements are very basic so we use sqlite:
       DATABASE_URL: sqlite3://localcontainer/data/authn.sqlite3?cache=shared
       SECRET_KEY_BASE: neolace-dev
       HTTP_AUTH_USERNAME: authn
@@ -52,7 +54,7 @@ x-service-templates:
       USERNAME_IS_EMAIL: "true"
       PASSWORD_CHANGE_LOGOUT: "true"  # user password changes will expire all other sessions
       AUTHN_URL: http://localhost:5552  # Public URL as reachable by end users
-      APP_DOMAINS: localhost:5555
+      APP_DOMAINS: localhost:5555,*.local.neolace.net:5555
     entrypoint: ["/bin/sh", "-c", "./authn migrate && ./authn server"]  # Override to ensure migrations get run
 
 
@@ -104,6 +106,7 @@ services:
       << : *authn-environment-defaults
       AUTHN_URL: http://authn-test:4442  # Public URL as reachable by end users
       APP_DOMAINS: backend:4445
+      GODEBUG: netdns=go  # Work around weird "dial tcp: lookup redis: device or resource busy" error on GitHub actions
     ports:
       - 4442:5552  # Expose public port to the host computer so users can log in
       - 4449:5559  # Expose public port to the host computer so users can log in
