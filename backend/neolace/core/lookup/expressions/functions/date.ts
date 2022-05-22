@@ -2,17 +2,16 @@ import { LookupExpression } from "../base.ts";
 import { DateValue, StringValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
+import { LookupFunctionOneArg } from "./base.ts";
 
 /**
  * date("YYYY-MM-DD"): parse a string into a date value
  */
-export class DateExpression extends LookupExpression {
-    // An expression that evaluates to a string, giving the date
-    readonly stringDateArg: LookupExpression;
-
-    constructor(stringDateArg: LookupExpression) {
-        super();
-        this.stringDateArg = stringDateArg;
+export class DateExpression extends LookupFunctionOneArg {
+    static functionName = "date";
+    /** An expression that evaluates to a string, giving the date */
+    public get stringDateArg(): LookupExpression {
+        return this.firstArg;
     }
 
     public async getValue(context: LookupContext) {
@@ -62,9 +61,5 @@ export class DateExpression extends LookupExpression {
         }
 
         return newDateValue;
-    }
-
-    public toString(): string {
-        return `date(${this.stringDateArg.toString()})`;
     }
 }

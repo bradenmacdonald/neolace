@@ -43,7 +43,7 @@ group("list-expr.ts", () => {
             const value = new IntegerValue(3);
 
             assertEquals(await evalExpression(expression), value);
-            assertEquals(expression.toString(), `count([1, 2, null])`);
+            assertEquals(expression.toString(), `[1, 2, null].count()`);
         });
 
         // TODO test that this can be evaluated to get the count() without evaluating lazy values that it holds

@@ -142,7 +142,7 @@ group("entry/index.test.ts", () => {
                                         annotations: { distance: { type: "Integer", value: "5" } },
                                     },
                                 ],
-                                source: { expr: "ancestors(this)", entryId: ponderosaPine.id },
+                                source: { expr: "this.ancestors()", entryId: ponderosaPine.id },
                             },
                             annotations: {
                                 // This value came from the default on the entry type, not the specific entry itself.
@@ -225,7 +225,7 @@ group("entry/index.test.ts", () => {
                                 ],
                                 source: {
                                     expr:
-                                        `reverse(andDescendants(this), prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                                        `reverse(this.andDescendants(), prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
                                     entryId: ponderosaPine.id,
                                 },
                             },

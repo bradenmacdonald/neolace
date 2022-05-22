@@ -1,11 +1,12 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
+import { assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { IntegerValue } from "../../values.ts";
 import { Count } from "./count.ts";
 import { LiteralExpression } from "../literal-expr.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupExpression } from "../base.ts";
+import { This } from "../this.ts";
 
 group("count.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
@@ -17,15 +18,18 @@ group("count.ts", () => {
         );
     const siteId = defaultData.site.id;
 
-    group("count()", () => {
-        test(`It gives an error with non-countable values`, async () => {
-            const expression = new Count(new LiteralExpression(new IntegerValue(-30)));
+    test(`It gives an error with non-countable values`, async () => {
+        const expression = new Count(new LiteralExpression(new IntegerValue(-30)));
 
-            await assertRejects(
-                () => evalExpression(expression),
-                LookupEvaluationError,
-                `The expression "-30" cannot be counted with count().`,
-            );
-        });
+        await assertRejects(
+            () => evalExpression(expression),
+            LookupEvaluationError,
+            `The expression "-30" cannot be counted with count().`,
+        );
+    });
+
+    test(`toString()`, async () => {
+        assertEquals((new Count(new LiteralExpression(new IntegerValue(-30)))).toString(), "count(-30)");
+        assertEquals((new Count(new This())).toString(), "this.count()");
     });
 });

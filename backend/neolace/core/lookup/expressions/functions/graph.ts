@@ -6,22 +6,18 @@ import { LookupExpression } from "../base.ts";
 import { GraphValue, LazyEntrySetValue } from "../../values.ts";
 import { LookupContext } from "../../context.ts";
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
+import { LookupFunctionOneArg } from "./base.ts";
 
 /**
  * graph([entry or entry set])
  *
  * Given an entry, return the data required to graph that.
  */
-export class Graph extends LookupExpression {
-    // An expression that specifies what entry/entries we want to display
-    readonly entriesExpr: LookupExpression;
-
-    constructor(
-        entriesExpr: LookupExpression,
-        // extraParams: {},
-    ) {
-        super();
-        this.entriesExpr = entriesExpr;
+export class Graph extends LookupFunctionOneArg {
+    static functionName = "graph";
+    /** An expression that specifies what entry/entries we want to display */
+    public get entriesExpr(): LookupExpression {
+        return this.firstArg;
     }
 
     public async getValue(context: LookupContext): Promise<GraphValue> {
@@ -78,9 +74,5 @@ export class Graph extends LookupExpression {
         });
 
         return new GraphValue(entries, relationships);
-    }
-
-    public toString(): string {
-        return `graph(${this.entriesExpr.toString()})`;
     }
 }

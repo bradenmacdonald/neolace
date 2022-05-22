@@ -300,4 +300,8 @@ group("graph()", () => {
 
         assertEquals(value, new GraphValue([], []));
     });
+
+    test("toString()", () => {
+        assertEquals(new Graph(new This()).toString(), "this.graph()");
+    });
 });

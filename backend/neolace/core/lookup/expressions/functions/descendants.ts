@@ -5,6 +5,7 @@ import { LookupExpression } from "../base.ts";
 import { IntegerValue, LazyEntrySetValue, LookupValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
+import { LookupFunctionOneArg } from "./base.ts";
 
 const MAX_DEPTH = 50;
 
@@ -22,13 +23,11 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
 /**
  * descendants(entry): returns the descendants of the specified entry
  */
-export class Descendants extends LookupExpression {
-    // An expression that specifies what entry's descendants we want to retrieve
-    readonly entryExpr: LookupExpression;
-
-    constructor(entryExpr: LookupExpression) {
-        super();
-        this.entryExpr = entryExpr;
+export class Descendants extends LookupFunctionOneArg {
+    static functionName = "descendants";
+    /** An expression that specifies what entry's descendants we want to retrieve */
+    public get entryExpr(): LookupExpression {
+        return this.firstArg;
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
@@ -53,22 +52,16 @@ export class Descendants extends LookupExpression {
             },
         );
     }
-
-    public toString(): string {
-        return `descendants(${this.entryExpr.toString()})`;
-    }
 }
 
 /**
  * andDescendants(entry): returns the descendants of the specified entry AND the entry itself
  */
-export class AndDescendants extends LookupExpression {
-    // An expression that specifies what entry's descendants we want to retrieve
-    readonly entryExpr: LookupExpression;
-
-    constructor(entryExpr: LookupExpression) {
-        super();
-        this.entryExpr = entryExpr;
+export class AndDescendants extends LookupFunctionOneArg {
+    static functionName = "andDescendants";
+    /** An expression that specifies what entry's descendants we want to retrieve */
+    public get entryExpr(): LookupExpression {
+        return this.firstArg;
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
@@ -90,9 +83,5 @@ export class AndDescendants extends LookupExpression {
                 sourceExpressionEntryId: context.entryId,
             },
         );
-    }
-
-    public toString(): string {
-        return `andDescendants(${this.entryExpr.toString()})`;
     }
 }

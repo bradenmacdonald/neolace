@@ -58,7 +58,7 @@ group("lookup.ts", () => {
                 },
             ],
             source: {
-                expr: `reverse(andDescendants(this), prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                expr: `reverse(this.andDescendants(), prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
                 entryId: defaultData.entries.ponderosaPine.id,
             },
         });

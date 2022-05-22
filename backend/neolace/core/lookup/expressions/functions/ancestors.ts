@@ -5,6 +5,7 @@ import { LookupExpression } from "../base.ts";
 import { IntegerValue, LazyEntrySetValue, LookupValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
+import { LookupFunctionOneArg } from "./base.ts";
 
 const MAX_DEPTH = 50;
 
@@ -22,13 +23,11 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
 /**
  * ancestors(entry): returns the ancestors of the specified entry
  */
-export class Ancestors extends LookupExpression {
-    // An expression that specifies what entry's ancestors we want to retrieve
-    readonly entryExpr: LookupExpression;
-
-    constructor(entryExpr: LookupExpression) {
-        super();
-        this.entryExpr = entryExpr;
+export class Ancestors extends LookupFunctionOneArg {
+    static functionName = "ancestors";
+    /** An expression that specifies what entry's ancestors we want to retrieve */
+    public get entryExpr(): LookupExpression {
+        return this.firstArg;
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
@@ -53,22 +52,16 @@ export class Ancestors extends LookupExpression {
             },
         );
     }
-
-    public toString(): string {
-        return `ancestors(${this.entryExpr.toString()})`;
-    }
 }
 
 /**
  * andAncestors(entry): returns the ancestors of the specified entry AND the entry itself
  */
-export class AndAncestors extends LookupExpression {
-    // An expression that specifies what entry's ancestors we want to retrieve
-    readonly entryExpr: LookupExpression;
-
-    constructor(entryExpr: LookupExpression) {
-        super();
-        this.entryExpr = entryExpr;
+export class AndAncestors extends LookupFunctionOneArg {
+    static functionName = "andAncestors";
+    /** An expression that specifies what entry's ancestors we want to retrieve */
+    public get entryExpr(): LookupExpression {
+        return this.firstArg;
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
@@ -90,9 +83,5 @@ export class AndAncestors extends LookupExpression {
                 sourceExpressionEntryId: context.entryId,
             },
         );
-    }
-
-    public toString(): string {
-        return `andAncestors(${this.entryExpr.toString()})`;
     }
 }

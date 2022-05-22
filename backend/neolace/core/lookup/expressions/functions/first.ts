@@ -2,18 +2,17 @@ import { LookupExpression } from "../base.ts";
 import { isIterableValue, NullValue } from "../../values.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupEvaluationError } from "../../errors.ts";
+import { LookupFunctionOneArg } from "./base.ts";
 
 /**
  * first(value): given an iterable, return the first item, or null if there is
  * no first item.
  */
-export class First extends LookupExpression {
-    // An expression that we want to take the first item from
-    readonly expr: LookupExpression;
-
-    constructor(expr: LookupExpression) {
-        super();
-        this.expr = expr;
+export class First extends LookupFunctionOneArg {
+    static functionName = "first";
+    /** An expression that we want to take the first item from */
+    public get expr(): LookupExpression {
+        return this.firstArg;
     }
 
     public async getValue(context: LookupContext) {
@@ -30,9 +29,5 @@ export class First extends LookupExpression {
                 `The expression "${this.expr.toDebugString()}" cannot be used with first().`,
             );
         }
-    }
-
-    public toString(): string {
-        return `first(${this.expr.toString()})`;
     }
 }

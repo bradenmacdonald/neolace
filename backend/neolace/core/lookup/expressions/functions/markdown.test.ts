@@ -17,24 +17,22 @@ group("markdown.ts", () => {
         );
     const siteId = defaultData.site.id;
 
-    group("markdown(...)", () => {
-        test(`It can be given a string argument, and returns an InlineMarkdownStringValue`, async () => {
-            const stringValue = new StringValue("**markdown**");
-            const expression = new Markdown(new LiteralExpression(stringValue));
+    test(`It can be given a string argument, and returns an InlineMarkdownStringValue`, async () => {
+        const stringValue = new StringValue("**markdown**");
+        const expression = new Markdown(new LiteralExpression(stringValue));
 
-            assertEquals(await evalExpression(expression), new InlineMarkdownStringValue("**markdown**"));
-            assertEquals(expression.toString(), `markdown("**markdown**")`);
-        });
+        assertEquals(await evalExpression(expression), new InlineMarkdownStringValue("**markdown**"));
+        assertEquals(expression.toString(), `markdown("**markdown**")`);
+    });
 
-        test(`It gives an error with invalid input`, async () => {
-            const nullValue = new NullValue();
-            const expression = new Markdown(new LiteralExpression(nullValue));
+    test(`It gives an error with invalid input`, async () => {
+        const nullValue = new NullValue();
+        const expression = new Markdown(new LiteralExpression(nullValue));
 
-            await assertRejects(
-                () => evalExpression(expression),
-                LookupEvaluationError,
-                `The expression "null" is not of the right type.`,
-            );
-        });
+        await assertRejects(
+            () => evalExpression(expression),
+            LookupEvaluationError,
+            `The expression "null" is not of the right type.`,
+        );
     });
 });

@@ -6,22 +6,18 @@ import { LookupContext } from "../../context.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { FilesData } from "neolace/core/entry/features/Files/FilesData.ts";
 import { DataFile, publicUrlForDataFile } from "neolace/core/objstore/DataFile.ts";
+import { LookupFunctionOneArg } from "./base.ts";
 
 /**
  * files([entry or entries])
  *
  * Return an iterable of all file(s) attached to the given entry/entries, sorted by filename.
  */
-export class Files extends LookupExpression {
-    // An entry or entry set
-    readonly entriesExpr: LookupExpression;
-
-    constructor(
-        entriesExpr: LookupExpression,
-        _extraParams: Record<never, never> = {},
-    ) {
-        super();
-        this.entriesExpr = entriesExpr;
+export class Files extends LookupFunctionOneArg {
+    static functionName = "files";
+    /** An expression that specifies what entry/entries' files we want to retrieve */
+    public get entriesExpr(): LookupExpression {
+        return this.firstArg;
     }
 
     public async getValue(context: LookupContext) {
@@ -67,9 +63,5 @@ export class Files extends LookupExpression {
             }
             return result;
         });
-    }
-
-    public toString(): string {
-        return `files(${this.entriesExpr.toString()})`;
     }
 }

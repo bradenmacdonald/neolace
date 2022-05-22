@@ -2,19 +2,18 @@ import { LookupExpression } from "../base.ts";
 import { IntegerValue, isCountableValue } from "../../values.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupEvaluationError } from "../../errors.ts";
+import { LookupFunctionOneArg } from "./base.ts";
 
 /**
  * count(entry): returns the count of the specified value
  * -> Lazy Query: give the number of results (rows)
  * -> List: give the number of items in the list
  */
-export class Count extends LookupExpression {
-    // An expression that specifies what value's count we want to retrieve
-    readonly exprToCount: LookupExpression;
-
-    constructor(exprToCount: LookupExpression) {
-        super();
-        this.exprToCount = exprToCount;
+export class Count extends LookupFunctionOneArg {
+    static functionName = "count";
+    /** An expression that specifies what value's count we want to retrieve */
+    public get exprToCount(): LookupExpression {
+        return this.firstArg;
     }
 
     public async getValue(context: LookupContext) {
@@ -26,9 +25,5 @@ export class Count extends LookupExpression {
                 `The expression "${this.exprToCount.toDebugString()}" cannot be counted with count().`,
             );
         }
-    }
-
-    public toString(): string {
-        return `count(${this.exprToCount.toString()})`;
     }
 }

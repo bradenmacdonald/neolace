@@ -25,6 +25,10 @@ group("ancestors.ts", () => {
                 )
             );
 
+        test(`toString()`, async () => {
+            assertEquals((new Ancestors(new This())).toString(), "this.ancestors()");
+        });
+
         test("It can give all the ancestors of the ponderosa pine", async () => {
             const expression = new Ancestors(new This());
 
@@ -119,6 +123,10 @@ group("ancestors.ts", () => {
                     expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
                 )
             );
+
+        test(`toString()`, async () => {
+            assertEquals((new AndAncestors(new This())).toString(), "this.andAncestors()");
+        });
 
         test("It can give all the ancestors of the ponderosa pine", async () => {
             const expression = new AndAncestors(new This());

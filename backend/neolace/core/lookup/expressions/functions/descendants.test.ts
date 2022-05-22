@@ -17,6 +17,10 @@ group("descendants.ts", () => {
         const siteId = defaultData.site.id;
         const familyPinaceae = defaultData.entries.familyPinaceae;
 
+        test(`toString()`, async () => {
+            assertEquals((new Descendants(new This())).toString(), "this.descendants()");
+        });
+
         test("It can give all the descendants of the family Pinaceae", async () => {
             const graph = await getGraph();
             const expression = new Descendants(new This());
@@ -70,6 +74,10 @@ group("descendants.ts", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
         const siteId = defaultData.site.id;
         const familyPinaceae = defaultData.entries.familyPinaceae;
+
+        test(`toString()`, async () => {
+            assertEquals((new AndDescendants(new This())).toString(), "this.andDescendants()");
+        });
 
         test("It can give all the descendants of the ponderosa pine", async () => {
             const graph = await getGraph();

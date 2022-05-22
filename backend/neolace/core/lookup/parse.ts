@@ -38,8 +38,8 @@ export function parseLookupString(lookup: string): LookupExpression {
     if (lookup === "null") return new LiteralExpression(new V.NullValue());
     if (lookup === "this") return new This();
 
-    if (lookup === "this.files()") return new Files(new This(), {});
-    if (lookup === "this.files().first()") return new First(new Files(new This(), {}));
+    if (lookup === "this.files()") return new Files(new This());
+    if (lookup === "this.files().first()") return new First(new Files(new This()));
 
     const otherTemplates: [RegExp, (match: RegExpMatchArray) => LookupExpression][] = [
         // "foo" (String literal)
