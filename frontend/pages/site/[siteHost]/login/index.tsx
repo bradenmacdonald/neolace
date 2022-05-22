@@ -49,6 +49,8 @@ const LoginPage: NextPage<PageProps> = function(props) {
         <SitePage title={title} sitePreloaded={props.site} >
             <h1 className="text-3xl font-semibold">{title}</h1>
 
+            <p>Account registration is not yet available. However, if you already have an account, you can log in here:</p>
+
             <Form>
                 <Control
                     id="login-email"
@@ -62,6 +64,7 @@ const LoginPage: NextPage<PageProps> = function(props) {
                 </Button>
             </Form>
 
+            {/*}
             <p className="!mt-[100px]">
                 <FormattedMessage
                     id="site.login.howToCreateAccount"
@@ -70,7 +73,7 @@ const LoginPage: NextPage<PageProps> = function(props) {
                         link: (str: string) => <Link href="/account/create"><a>{str}</a></Link>,
                     }}
                 />
-            </p>
+            </p>*/}
 
         </SitePage>
     );
