@@ -35,6 +35,9 @@ export const config = (() => {
         realmURL: "https://www.neolace.com",
         realmPhysicalAddress: "317 - 161 West Georgia St.\nVancouver, BC  Canada",
 
+        // Frontend domains:
+        frontendDomains: ["localhost:5555", "*.local.neolace.net:5555"],
+
         // URL of the Neo4j server
         neo4jUrl: defaultTo("bolt://localhost:7687", { test: "bolt://localhost:4687" }),
         neo4jUser: "neo4j",
