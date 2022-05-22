@@ -8,7 +8,7 @@ import { directRelTypeForPropertyType, PropertyFact } from "neolace/core/entry/P
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { getEntryProperty } from "neolace/core/entry/properties.ts";
 
-import { LookupExpression } from "../expression.ts";
+import { LookupExpression } from "../base.ts";
 import {
     EntryValue,
     ErrorValue,
@@ -19,10 +19,10 @@ import {
     NullValue,
     PropertyValue,
     StringValue,
-} from "../values.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupContext } from "../context.ts";
-import { parseLookupString } from "../parse.ts";
+} from "../../values.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupContext } from "../../context.ts";
+import { parseLookupString } from "../../parse.ts";
 
 /**
  * Helper function to read annotated rank values from a database query result

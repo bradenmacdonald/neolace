@@ -1,7 +1,7 @@
-import { LookupExpression } from "../expression.ts";
-import { IntegerValue, isCountableValue } from "../values.ts";
-import { LookupContext } from "../context.ts";
-import { LookupEvaluationError } from "../errors.ts";
+import { LookupExpression } from "../base.ts";
+import { IntegerValue, isCountableValue } from "../../values.ts";
+import { LookupContext } from "../../context.ts";
+import { LookupEvaluationError } from "../../errors.ts";
 
 /**
  * count(entry): returns the count of the specified value

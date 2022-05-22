@@ -2,7 +2,7 @@ import { C, CypherQuery, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import type * as api from "neolace/deps/neolace-api.ts";
 
 import type { LookupContext } from "../context.ts";
-import type { LookupExpression } from "../expression.ts";
+import type { LookupExpression } from "../expressions/base.ts";
 import { LookupEvaluationError } from "../errors.ts";
 
 // This is a cicular import, but it seems to work if we import from ../values.ts instead of directly from

@@ -6,7 +6,7 @@ import { Property } from "neolace/core/schema/Property.ts";
 import { directRelTypeForPropertyType, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
-import { LookupExpression } from "../expression.ts";
+import { LookupExpression } from "../base.ts";
 import {
     InlineMarkdownStringValue,
     IntegerValue,
@@ -15,9 +15,9 @@ import {
     NullValue,
     PropertyValue,
     StringValue,
-} from "../values.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupContext } from "../context.ts";
+} from "../../values.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupContext } from "../../context.ts";
 
 /**
  * Helper function to read annotated rank values from a database query result

@@ -1,7 +1,6 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { LookupParseError } from "./errors.ts";
-import { LookupExpression } from "./expression.ts";
-import { Graph } from "./expressions/graph.ts";
+import { LookupExpression } from "./expressions/base.ts";
 import {
     Ancestors,
     AndAncestors,
@@ -13,6 +12,7 @@ import {
     Files,
     First,
     GetProperty,
+    Graph,
     Image,
     List,
     LiteralExpression,
@@ -20,7 +20,7 @@ import {
     ReverseProperty,
     Slice,
     This,
-} from "./expressions/index.ts";
+} from "./expressions.ts";
 import * as V from "./values.ts";
 
 /**

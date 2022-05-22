@@ -2,7 +2,7 @@ import { ImageDisplayFormat } from "neolace/deps/neolace-api.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { getEntryFeatureData } from "neolace/core/entry/features/get-feature-data.ts";
 
-import { LookupExpression } from "../expression.ts";
+import { LookupExpression } from "../base.ts";
 import {
     AnnotatedValue,
     EntryValue,
@@ -13,10 +13,10 @@ import {
     LazyIterableValue,
     NullValue,
     StringValue,
-} from "../values.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupContext } from "../context.ts";
-import { LiteralExpression } from "./literal-expr.ts";
+} from "../../values.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupContext } from "../../context.ts";
+import { LiteralExpression } from "../literal-expr.ts";
 
 /**
  * image([entry or entry set], [align])

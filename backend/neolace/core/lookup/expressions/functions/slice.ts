@@ -1,7 +1,7 @@
-import { LookupExpression } from "../expression.ts";
-import { IntegerValue, isCountableValue, isIterableValue, PageValue } from "../values.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupContext } from "../context.ts";
+import { LookupExpression } from "../base.ts";
+import { IntegerValue, isCountableValue, isIterableValue, PageValue } from "../../values.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupContext } from "../../context.ts";
 
 /**
  * slice([iterable expression], [start=index], [size=length], [end=index])

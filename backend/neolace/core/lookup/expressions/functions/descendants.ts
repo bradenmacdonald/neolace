@@ -1,10 +1,10 @@
 import { C } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
-import { LookupExpression } from "../expression.ts";
-import { IntegerValue, LazyEntrySetValue, LookupValue } from "../values.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupContext } from "../context.ts";
+import { LookupExpression } from "../base.ts";
+import { IntegerValue, LazyEntrySetValue, LookupValue } from "../../values.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupContext } from "../../context.ts";
 
 const MAX_DEPTH = 50;
 
@@ -20,10 +20,10 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
 };
 
 /**
- * ancestors(entry): returns the ancestors of the specified entry
+ * descendants(entry): returns the descendants of the specified entry
  */
-export class Ancestors extends LookupExpression {
-    // An expression that specifies what entry's ancestors we want to retrieve
+export class Descendants extends LookupExpression {
+    // An expression that specifies what entry's descendants we want to retrieve
     readonly entryExpr: LookupExpression;
 
     constructor(entryExpr: LookupExpression) {
@@ -38,13 +38,13 @@ export class Ancestors extends LookupExpression {
             context,
             C`
             ${startingEntry.cypherQuery}
-            MATCH path = (entry)-[:${Entry.rel.IS_A}*..${C(String(MAX_DEPTH))}]->(ancestor:${Entry})
-            WHERE ancestor <> entry  // Never return the starting node as its own ancestor, if the graph is cyclic
-            // We want to only return DISTINCT ancestors, and return only the minimum distance to each one.
-            WITH ancestor, min(length(path)) AS distance
-            ORDER BY distance, ancestor.name
+            MATCH path = (descendant:${Entry})-[:${Entry.rel.IS_A}*..${C(String(MAX_DEPTH))}]->(entry)
+            WHERE descendant <> entry  // Never return the starting node as its own descendant, if the graph is cyclic
+            // We want to only return DISTINCT descendants, and return only the minimum distance to each one.
+            WITH descendant, min(length(path)) AS distance
+            ORDER BY distance, descendant.name
 
-            WITH ancestor AS entry, {distance: distance} AS annotations
+            WITH descendant AS entry, {distance: distance} AS annotations
         `,
             {
                 annotations: { distance: dbDistanceToValue },
@@ -55,15 +55,15 @@ export class Ancestors extends LookupExpression {
     }
 
     public toString(): string {
-        return `ancestors(${this.entryExpr.toString()})`;
+        return `descendants(${this.entryExpr.toString()})`;
     }
 }
 
 /**
- * andAncestors(entry): returns the ancestors of the specified entry AND the entry itself
+ * andDescendants(entry): returns the descendants of the specified entry AND the entry itself
  */
-export class AndAncestors extends LookupExpression {
-    // An expression that specifies what entry's ancestors we want to retrieve
+export class AndDescendants extends LookupExpression {
+    // An expression that specifies what entry's descendants we want to retrieve
     readonly entryExpr: LookupExpression;
 
     constructor(entryExpr: LookupExpression) {
@@ -78,11 +78,11 @@ export class AndAncestors extends LookupExpression {
             context,
             C`
             ${startingEntry.cypherQuery}
-            MATCH path = (entry)-[:${Entry.rel.IS_A}*0..${C(String(MAX_DEPTH))}]->(ancestor:${Entry})
-            WITH ancestor, min(length(path)) AS distance
-            ORDER BY distance, ancestor.name
+            MATCH path = (descendant:${Entry})-[:${Entry.rel.IS_A}*0..${C(String(MAX_DEPTH))}]->(entry)
+            WITH descendant, min(length(path)) AS distance
+            ORDER BY distance, descendant.name
 
-            WITH ancestor AS entry, {distance: distance} AS annotations
+            WITH descendant AS entry, {distance: distance} AS annotations
         `,
             {
                 annotations: { distance: dbDistanceToValue },
@@ -93,6 +93,6 @@ export class AndAncestors extends LookupExpression {
     }
 
     public toString(): string {
-        return `andAncestors(${this.entryExpr.toString()})`;
+        return `andDescendants(${this.entryExpr.toString()})`;
     }
 }

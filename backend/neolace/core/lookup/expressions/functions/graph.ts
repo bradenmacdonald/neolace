@@ -1,11 +1,11 @@
 import { Entry } from "neolace/core/entry/Entry.ts";
+import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
+import { EntryType } from "neolace/core/schema/EntryType.ts";
 
-import { LookupExpression } from "../expression.ts";
-import { GraphValue, LazyEntrySetValue } from "../values.ts";
-import { LookupContext } from "../context.ts";
+import { LookupExpression } from "../base.ts";
+import { GraphValue, LazyEntrySetValue } from "../../values.ts";
+import { LookupContext } from "../../context.ts";
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { PropertyFact } from "../../entry/PropertyFact.ts";
-import { EntryType } from "../../schema/EntryType.ts";
 
 /**
  * graph([entry or entry set])

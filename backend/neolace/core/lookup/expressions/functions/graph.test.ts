@@ -10,8 +10,8 @@ import {
 } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { AndAncestors } from "./ancestors.ts";
-import { GraphValue } from "../values.ts";
-import { This } from "./this.ts";
+import { GraphValue } from "../../values.ts";
+import { This } from "../this.ts";
 import { Graph } from "./graph.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { Descendants } from "./descendants.ts";

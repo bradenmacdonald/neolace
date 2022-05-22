@@ -1,11 +1,11 @@
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { ConcreteValue, IntegerValue, PageValue, StringValue } from "../values.ts";
+import { ConcreteValue, IntegerValue, PageValue, StringValue } from "../../values.ts";
 
 import { Slice } from "./slice.ts";
-import { List } from "./list-expr.ts";
-import { LiteralExpression } from "./literal-expr.ts";
-import { LookupExpression } from "../expression.ts";
+import { List } from "../list-expr.ts";
+import { LiteralExpression } from "../literal-expr.ts";
+import { LookupExpression } from "../base.ts";
 
 group("slice.ts", () => {
     // These tests are read-only so don't need isolation, but do use the default plantDB example data:

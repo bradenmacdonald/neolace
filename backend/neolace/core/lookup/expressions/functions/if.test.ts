@@ -9,11 +9,11 @@ import {
     IntegerValue,
     NullValue,
     StringValue,
-} from "../values.ts";
+} from "../../values.ts";
 import { If } from "./if.ts";
-import { LiteralExpression } from "./literal-expr.ts";
-import { LookupExpression } from "../expression.ts";
-import { List } from "./list-expr.ts";
+import { LiteralExpression } from "../literal-expr.ts";
+import { LookupExpression } from "../base.ts";
+import { List } from "../list-expr.ts";
 
 group("if.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);

@@ -1,6 +1,6 @@
 import { C, CypherQuery, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { LookupContext } from "../context.ts";
-import { LookupExpression } from "../expression.ts";
+import type { LookupExpression } from "../expressions/base.ts";
 import { AbstractLazyCypherQueryValue, ConcreteValue } from "./base.ts";
 import { AnnotatedValue } from "./AnnotatedValue.ts";
 import { EntryValue } from "./EntryValue.ts";

@@ -9,11 +9,11 @@ import {
     PageValue,
     PropertyValue,
     StringValue,
-} from "../values.ts";
+} from "../../values.ts";
 import { GetProperty } from "./get.ts";
-import { LookupExpression } from "../expression.ts";
-import { This } from "./this.ts";
-import { LiteralExpression } from "./literal-expr.ts";
+import { LookupExpression } from "../base.ts";
+import { This } from "../this.ts";
+import { LiteralExpression } from "../literal-expr.ts";
 import { ReverseProperty } from "./reverse.ts";
 
 group("get.ts", () => {

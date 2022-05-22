@@ -3,7 +3,7 @@ import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.t
 import { getGraph } from "neolace/core/graph.ts";
 import { IntegerValue, NullValue, StringValue } from "../values.ts";
 import { LiteralExpression } from "./literal-expr.ts";
-import { LookupExpression } from "../expression.ts";
+import { LookupExpression } from "./base.ts";
 
 group("literal-expr.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);

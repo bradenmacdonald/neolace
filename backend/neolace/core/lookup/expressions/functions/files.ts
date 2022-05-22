@@ -1,8 +1,8 @@
 import { C, Field } from "neolace/deps/vertex-framework.ts";
-import { LookupExpression } from "../expression.ts";
-import { FileValue, LazyCypherIterableValue, LazyEntrySetValue } from "../values.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupContext } from "../context.ts";
+import { LookupExpression } from "../base.ts";
+import { FileValue, LazyCypherIterableValue, LazyEntrySetValue } from "../../values.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupContext } from "../../context.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { FilesData } from "neolace/core/entry/features/Files/FilesData.ts";
 import { DataFile, publicUrlForDataFile } from "neolace/core/objstore/DataFile.ts";

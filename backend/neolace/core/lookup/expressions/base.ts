@@ -1,6 +1,6 @@
-import { LookupContext } from "./context.ts";
-import { LookupEvaluationError } from "./errors.ts";
-import type { LookupValue } from "./values/base.ts";
+import { LookupContext } from "../context.ts";
+import { LookupEvaluationError } from "../errors.ts";
+import type { LookupValue } from "../values/base.ts";
 
 // deno-lint-ignore no-explicit-any
 type ClassOf<QV extends LookupValue> = { new (...args: any[]): QV };

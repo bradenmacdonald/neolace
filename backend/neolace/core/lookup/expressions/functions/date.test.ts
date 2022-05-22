@@ -1,11 +1,11 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { assertEquals, assertInstanceOf, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { DateValue, StringValue } from "../values.ts";
+import { DateValue, StringValue } from "../../values.ts";
 import { DateExpression } from "./date.ts";
-import { LiteralExpression } from "./literal-expr.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupExpression } from "../expression.ts";
+import { LiteralExpression } from "../literal-expr.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupExpression } from "../base.ts";
 
 group("date.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);

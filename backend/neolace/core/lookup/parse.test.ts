@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { assertEquals, assertNotEquals, assertThrows, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { LookupParseError } from "./errors.ts";
-import { LookupExpression } from "./expression.ts";
+import type { LookupExpression } from "./expressions/base.ts";
 import {
     Ancestors,
     AndAncestors,
@@ -11,7 +11,7 @@ import {
     List,
     LiteralExpression,
     This,
-} from "./expressions/index.ts";
+} from "./expressions.ts";
 import * as V from "./values.ts";
 import { parseLookupString } from "./parse.ts";
 

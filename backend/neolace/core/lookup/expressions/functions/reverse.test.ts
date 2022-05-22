@@ -8,11 +8,11 @@ import {
     NullValue,
     PageValue,
     PropertyValue,
-} from "../values.ts";
+} from "../../values.ts";
 import { ReverseProperty } from "./reverse.ts";
-import { LookupExpression } from "../expression.ts";
-import { This } from "./this.ts";
-import { LiteralExpression } from "./literal-expr.ts";
+import { LookupExpression } from "../base.ts";
+import { This } from "../this.ts";
+import { LiteralExpression } from "../literal-expr.ts";
 
 group("reverse.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);

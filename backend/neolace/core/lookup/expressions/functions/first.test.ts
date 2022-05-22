@@ -1,12 +1,12 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { AnnotatedValue, EntryValue, IntegerValue, NullValue, StringValue } from "../values.ts";
+import { AnnotatedValue, EntryValue, IntegerValue, NullValue, StringValue } from "../../values.ts";
 import { First } from "./first.ts";
-import { LiteralExpression } from "./literal-expr.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupExpression } from "../expression.ts";
-import { List } from "./list-expr.ts";
+import { LiteralExpression } from "../literal-expr.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupExpression } from "../base.ts";
+import { List } from "../list-expr.ts";
 import { Ancestors } from "./ancestors.ts";
 
 group("first.ts", () => {

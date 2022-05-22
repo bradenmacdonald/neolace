@@ -4,229 +4,136 @@ import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.t
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
-import { Ancestors, AndAncestors } from "./ancestors.ts";
-import { AnnotatedValue, EntryValue, IntegerValue, MakeAnnotatedEntryValue, PageValue } from "../values.ts";
-import { This } from "./this.ts";
+import { AnnotatedValue, IntegerValue, MakeAnnotatedEntryValue, PageValue } from "../../values.ts";
+import { This } from "../this.ts";
 import { Count } from "./count.ts";
-import { LookupExpression } from "../expression.ts";
-import { List } from "./list-expr.ts";
-import { LiteralExpression } from "./literal-expr.ts";
+import { LookupExpression } from "../base.ts";
+import { AndDescendants, Descendants } from "./descendants.ts";
 
-group("ancestors.ts", () => {
-    group("ancestors()", () => {
+group("descendants.ts", () => {
+    group("descendants()", () => {
         // These tests are read-only so don't need isolation, but do use the default plantDB example data:
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
         const siteId = defaultData.site.id;
-        const ponderosaPine = defaultData.entries.ponderosaPine;
-        const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-            getGraph().then((graph) =>
-                graph.read((tx) =>
-                    expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
+        const familyPinaceae = defaultData.entries.familyPinaceae;
+
+        test("It can give all the descendants of the family Pinaceae", async () => {
+            const graph = await getGraph();
+            const expression = new Descendants(new This());
+
+            const value = await graph.read((tx) =>
+                expression.getValue({ tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 5n }).then((v) =>
+                    v.makeConcrete()
                 )
             );
 
-        test("It can give all the ancestors of the ponderosa pine", async () => {
-            const expression = new Ancestors(new This());
-
-            const value = await evalExpression(expression, ponderosaPine.id);
-
             assertEquals(
                 value,
                 new PageValue(
                     [
                         MakeAnnotatedEntryValue(defaultData.entries.genusPinus.id, { distance: new IntegerValue(1) }),
-                        MakeAnnotatedEntryValue(defaultData.entries.familyPinaceae.id, {
+                        // The first four pine species, in alphabetical order:
+                        MakeAnnotatedEntryValue(defaultData.entries.jackPine.id, { distance: new IntegerValue(2) }),
+                        MakeAnnotatedEntryValue(defaultData.entries.japaneseRedPine.id, {
                             distance: new IntegerValue(2),
                         }),
-                        MakeAnnotatedEntryValue(defaultData.entries.orderPinales.id, { distance: new IntegerValue(3) }),
-                        MakeAnnotatedEntryValue(defaultData.entries.classPinopsida.id, {
-                            distance: new IntegerValue(4),
+                        MakeAnnotatedEntryValue(defaultData.entries.japaneseWhitePine.id, {
+                            distance: new IntegerValue(2),
                         }),
-                        MakeAnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {
-                            distance: new IntegerValue(5),
-                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.jeffreyPine.id, { distance: new IntegerValue(2) }),
                     ],
                     {
-                        pageSize: 10n,
-                        startedAt: 0n,
-                        totalCount: 5n,
-                        sourceExpression: expression,
-                        sourceExpressionEntryId: ponderosaPine.id,
-                    },
-                ),
-            );
-        });
-        test("It can give all the ancestors of [ponderosa pine, Mediterranean Cypress]", async () => {
-            const expression = new Ancestors(
-                new List([
-                    new LiteralExpression(new EntryValue(defaultData.entries.ponderosaPine.id)),
-                    new LiteralExpression(new EntryValue(defaultData.entries.mediterraneanCypress.id)),
-                ]),
-            );
-
-            const value = await evalExpression(expression, ponderosaPine.id);
-
-            assertEquals(
-                value,
-                new PageValue(
-                    [
-                        MakeAnnotatedEntryValue(defaultData.entries.genusCupressus.id, {
-                            distance: new IntegerValue(1),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.genusPinus.id, { distance: new IntegerValue(1) }),
-                        MakeAnnotatedEntryValue(defaultData.entries.familyCupressaceae.id, {
-                            distance: new IntegerValue(2),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.familyPinaceae.id, {
-                            distance: new IntegerValue(2),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.orderPinales.id, { distance: new IntegerValue(3) }),
-                        MakeAnnotatedEntryValue(defaultData.entries.classPinopsida.id, {
-                            distance: new IntegerValue(4),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {
-                            distance: new IntegerValue(5),
-                        }),
-                    ],
-                    {
-                        pageSize: 10n,
-                        startedAt: 0n,
-                        totalCount: 7n,
-                        sourceExpression: expression,
-                        sourceExpressionEntryId: ponderosaPine.id,
-                    },
-                ),
-            );
-        });
-
-        test("It is compatible with count()", async () => {
-            const expression = new Count(new Ancestors(new This()));
-
-            const value = await evalExpression(expression, ponderosaPine.id);
-
-            assertEquals(value, new IntegerValue(5));
-        });
-    });
-
-    group("andAncestors()", () => {
-        // These tests are read-only so don't need isolation, but do use the default plantDB example data:
-        const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
-        const siteId = defaultData.site.id;
-        const ponderosaPine = defaultData.entries.ponderosaPine;
-        const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-            getGraph().then((graph) =>
-                graph.read((tx) =>
-                    expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
-                )
-            );
-
-        test("It can give all the ancestors of the ponderosa pine", async () => {
-            const expression = new AndAncestors(new This());
-            const value = await evalExpression(expression, ponderosaPine.id);
-
-            assertEquals(
-                value,
-                new PageValue(
-                    [
-                        MakeAnnotatedEntryValue(defaultData.entries.ponderosaPine.id, {
-                            distance: new IntegerValue(0),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.genusPinus.id, { distance: new IntegerValue(1) }),
-                        MakeAnnotatedEntryValue(defaultData.entries.familyPinaceae.id, {
-                            distance: new IntegerValue(2),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.orderPinales.id, { distance: new IntegerValue(3) }),
-                        MakeAnnotatedEntryValue(defaultData.entries.classPinopsida.id, {
-                            distance: new IntegerValue(4),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {
-                            distance: new IntegerValue(5),
-                        }),
-                    ],
-                    {
-                        pageSize: 10n,
-                        startedAt: 0n,
-                        totalCount: 6n,
-                        sourceExpression: expression,
-                        sourceExpressionEntryId: ponderosaPine.id,
-                    },
-                ),
-            );
-        });
-
-        test("It can give all the ancestors of [ponderosa pine, Mediterranean Cypress]", async () => {
-            const expression = new AndAncestors(
-                new List([
-                    new LiteralExpression(new EntryValue(defaultData.entries.ponderosaPine.id)),
-                    new LiteralExpression(new EntryValue(defaultData.entries.mediterraneanCypress.id)),
-                ]),
-            );
-
-            const value = await evalExpression(expression, ponderosaPine.id);
-
-            assertEquals(
-                value,
-                new PageValue(
-                    [
-                        MakeAnnotatedEntryValue(defaultData.entries.mediterraneanCypress.id, {
-                            distance: new IntegerValue(0),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.ponderosaPine.id, {
-                            distance: new IntegerValue(0),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.genusCupressus.id, {
-                            distance: new IntegerValue(1),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.genusPinus.id, { distance: new IntegerValue(1) }),
-                        MakeAnnotatedEntryValue(defaultData.entries.familyCupressaceae.id, {
-                            distance: new IntegerValue(2),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.familyPinaceae.id, {
-                            distance: new IntegerValue(2),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.orderPinales.id, { distance: new IntegerValue(3) }),
-                        MakeAnnotatedEntryValue(defaultData.entries.classPinopsida.id, {
-                            distance: new IntegerValue(4),
-                        }),
-                        MakeAnnotatedEntryValue(defaultData.entries.divisionTracheophyta.id, {
-                            distance: new IntegerValue(5),
-                        }),
-                    ],
-                    {
-                        pageSize: 10n,
+                        pageSize: 5n,
                         startedAt: 0n,
                         totalCount: 9n,
                         sourceExpression: expression,
-                        sourceExpressionEntryId: ponderosaPine.id,
+                        sourceExpressionEntryId: familyPinaceae.id,
                     },
                 ),
             );
         });
 
         test("It is compatible with count()", async () => {
-            const expression = new Count(new AndAncestors(new This()));
+            const expression = new Count(new Descendants(new This()));
 
-            const value = await evalExpression(expression, ponderosaPine.id);
+            const graph = await getGraph();
+            const value = await graph.read((tx) =>
+                expression.getValue({ tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 10n })
+            );
 
-            assertEquals(value, new IntegerValue(6));
+            assertEquals(value, new IntegerValue(9));
+        });
+    });
+
+    group("andDescendants()", () => {
+        // These tests are read-only so don't need isolation, but do use the default plantDB example data:
+        const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
+        const siteId = defaultData.site.id;
+        const familyPinaceae = defaultData.entries.familyPinaceae;
+
+        test("It can give all the descendants of the ponderosa pine", async () => {
+            const graph = await getGraph();
+            const expression = new AndDescendants(new This());
+            const value = await graph.read((tx) =>
+                expression.getValue({ tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 5n }).then((v) =>
+                    v.makeConcrete()
+                )
+            );
+
+            assertEquals(
+                value,
+                new PageValue(
+                    [
+                        MakeAnnotatedEntryValue(defaultData.entries.familyPinaceae.id, {
+                            distance: new IntegerValue(0),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.genusPinus.id, { distance: new IntegerValue(1) }),
+                        MakeAnnotatedEntryValue(defaultData.entries.jackPine.id, { distance: new IntegerValue(2) }),
+                        MakeAnnotatedEntryValue(defaultData.entries.japaneseRedPine.id, {
+                            distance: new IntegerValue(2),
+                        }),
+                        MakeAnnotatedEntryValue(defaultData.entries.japaneseWhitePine.id, {
+                            distance: new IntegerValue(2),
+                        }),
+                    ],
+                    {
+                        pageSize: 5n,
+                        startedAt: 0n,
+                        totalCount: 10n,
+                        sourceExpression: expression,
+                        sourceExpressionEntryId: familyPinaceae.id,
+                    },
+                ),
+            );
+        });
+
+        test("It is compatible with count()", async () => {
+            const graph = await getGraph();
+            const expression = new Count(new AndDescendants(new This()));
+
+            const value = await graph.read((tx) =>
+                expression.getValue({ tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 10n })
+            );
+
+            assertEquals(value, new IntegerValue(10));
         });
 
         /* Not reliable on the low-powered GitHub Actions CI runners
         const maxTime = 40;
         test(`It executes in < ${maxTime}ms`, async () => {
-            const expression = new AndAncestors(new This());
+            const expression = new AndDescendants(new This());
 
             const start = performance.now();
             await graph.read(tx =>
-                expression.getValue({tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n}).then(v => v.makeConcrete())
+                expression.getValue({tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 10n}).then(v => v.makeConcrete())
             );
             const end = performance.now();
-            assert(end - start < maxTime, `Expected andAncestors() to take under ${maxTime}ms but it took ${end - start}ms.`);
+            assert(end - start < maxTime, `Expected andDescendants() to take under ${maxTime}ms but it took ${end - start}ms.`);
         });
         */
     });
 
-    group("ancestors()/andAncestors() - additional tests", () => {
+    group("descendants()/andDescendants() - additional tests", () => {
         setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
         const siteId = VNID();
@@ -248,9 +155,9 @@ group("ancestors.ts", () => {
                 )
             );
 
-        const checkAncestors = async (entryId: VNID, expected: AnnotatedValue[]) => {
-            // with ancestors():
-            const expr1 = new Ancestors(new This());
+        const checkDescendants = async (entryId: VNID, expected: AnnotatedValue[]) => {
+            // with descendants():
+            const expr1 = new Descendants(new This());
             assertEquals(
                 await evalExpr(expr1, entryId),
                 new PageValue([
@@ -264,8 +171,8 @@ group("ancestors.ts", () => {
                 }),
             );
 
-            // And with andAncestors():
-            const expr2 = new AndAncestors(new This());
+            // And with andDescendants():
+            const expr2 = new AndDescendants(new This());
             assertEquals(
                 await evalExpr(expr2, entryId),
                 new PageValue([
@@ -281,7 +188,7 @@ group("ancestors.ts", () => {
             );
         };
 
-        test("Returns only the shortest distance to duplicate ancestors", async () => {
+        test("Returns only the shortest distance to duplicate descendants", async () => {
             // Create this entry tree:
             //     A    B
             //    / \  /  \
@@ -452,29 +359,29 @@ group("ancestors.ts", () => {
                 ],
             }));
 
-            // Check the ancestor of C
-            await checkAncestors(C, [
-                // Expect one ancestor, A:
-                MakeAnnotatedEntryValue(A, { distance: new IntegerValue(1n) }),
+            // Check the descendants of F
+            await checkDescendants(F, [
+                // Expect one descendant, H:
+                MakeAnnotatedEntryValue(H, { distance: new IntegerValue(1n) }),
             ]);
 
-            // Check the ancestor of I
-            await checkAncestors(I, [
-                // Expect 2 immediate ancestors (E & G), plus one ancestor B at distance of 2.
-                MakeAnnotatedEntryValue(E, { distance: new IntegerValue(1n) }),
-                MakeAnnotatedEntryValue(G, { distance: new IntegerValue(1n) }),
-                MakeAnnotatedEntryValue(B, { distance: new IntegerValue(2n) }),
+            // Check the descendants of A
+            await checkDescendants(A, [
+                // Expect 2 immediate descendants (C & D), plus F and H as distant descendants
+                MakeAnnotatedEntryValue(C, { distance: new IntegerValue(1n) }),
+                MakeAnnotatedEntryValue(D, { distance: new IntegerValue(1n) }),
+                MakeAnnotatedEntryValue(F, { distance: new IntegerValue(2n) }),
+                MakeAnnotatedEntryValue(H, { distance: new IntegerValue(3n) }),
             ]);
 
-            // Check the ancestor of H
-            await checkAncestors(H, [
-                // We should find that H has 6 ancestors, and the distance from H to B is 2, from H to A is 3, and from H to E is 1
+            // Check the descendants of B
+            await checkDescendants(B, [
+                // We should find that B has 5 descendants, and the distance from B to H is 2 not 3.
+                MakeAnnotatedEntryValue(D, { distance: new IntegerValue(1n) }),
                 MakeAnnotatedEntryValue(E, { distance: new IntegerValue(1n) }),
-                MakeAnnotatedEntryValue(F, { distance: new IntegerValue(1n) }),
-                MakeAnnotatedEntryValue(B, { distance: new IntegerValue(2n) }),
-                MakeAnnotatedEntryValue(C, { distance: new IntegerValue(2n) }),
-                MakeAnnotatedEntryValue(D, { distance: new IntegerValue(2n) }),
-                MakeAnnotatedEntryValue(A, { distance: new IntegerValue(3n) }),
+                MakeAnnotatedEntryValue(F, { distance: new IntegerValue(2n) }),
+                MakeAnnotatedEntryValue(H, { distance: new IntegerValue(2n) }),
+                MakeAnnotatedEntryValue(I, { distance: new IntegerValue(2n) }),
             ]);
         });
 
@@ -574,20 +481,20 @@ group("ancestors.ts", () => {
                 ],
             }));
 
-            // Check the ancestor of D
-            await checkAncestors(D, [
-                // B and C at a distance of 1, A at a distance of 2
-                MakeAnnotatedEntryValue(B, { distance: new IntegerValue(1n) }),
-                MakeAnnotatedEntryValue(C, { distance: new IntegerValue(1n) }),
-                MakeAnnotatedEntryValue(A, { distance: new IntegerValue(2n) }),
-            ]);
-
-            // Check the ancestor of A
-            await checkAncestors(A, [
-                // D at a distance of 1, B and C at a distance of 2
-                MakeAnnotatedEntryValue(D, { distance: new IntegerValue(1n) }),
+            // Check the descendant of D
+            await checkDescendants(D, [
+                // A at a distance of 1, B and C at a distance of 2
+                MakeAnnotatedEntryValue(A, { distance: new IntegerValue(1n) }),
                 MakeAnnotatedEntryValue(B, { distance: new IntegerValue(2n) }),
                 MakeAnnotatedEntryValue(C, { distance: new IntegerValue(2n) }),
+            ]);
+
+            // Check the descendants of A
+            await checkDescendants(A, [
+                // B and C at a distance of 1, D at a distance of 2
+                MakeAnnotatedEntryValue(B, { distance: new IntegerValue(1n) }),
+                MakeAnnotatedEntryValue(C, { distance: new IntegerValue(1n) }),
+                MakeAnnotatedEntryValue(D, { distance: new IntegerValue(2n) }),
             ]);
         });
     });

@@ -1,7 +1,7 @@
-import { LookupExpression } from "../expression.ts";
-import { BooleanValue, NullValue } from "../values.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupContext } from "../context.ts";
+import { LookupExpression } from "../base.ts";
+import { BooleanValue, NullValue } from "../../values.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupContext } from "../../context.ts";
 
 /**
  * if([boolean expression], then=[some value], else=[some value])

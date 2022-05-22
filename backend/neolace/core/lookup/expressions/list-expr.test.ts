@@ -4,8 +4,8 @@ import { getGraph } from "neolace/core/graph.ts";
 import { IntegerValue, NullValue, PageValue } from "../values.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { List } from "./list-expr.ts";
-import { LookupExpression } from "../expression.ts";
-import { Count } from "./count.ts";
+import { LookupExpression } from "./base.ts";
+import { Count } from "./functions/count.ts";
 
 group("list-expr.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);

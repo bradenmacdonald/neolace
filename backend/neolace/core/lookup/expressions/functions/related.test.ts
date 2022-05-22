@@ -1,9 +1,9 @@
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { AndRelated } from "./related.ts";
-import { AnnotatedValue, EntryValue, IntegerValue, PageValue } from "../values.ts";
-import { This } from "./this.ts";
-import { LiteralExpression } from "./literal-expr.ts";
+import { AnnotatedValue, EntryValue, IntegerValue, PageValue } from "../../values.ts";
+import { This } from "../this.ts";
+import { LiteralExpression } from "../literal-expr.ts";
 
 group("andRelated()", () => {
     // These tests are read-only so don't need isolation, but do use the default plantDB example data:

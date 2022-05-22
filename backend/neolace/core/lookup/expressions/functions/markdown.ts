@@ -1,6 +1,6 @@
-import { LookupExpression } from "../expression.ts";
-import { InlineMarkdownStringValue, StringValue } from "../values.ts";
-import { LookupContext } from "../context.ts";
+import { LookupExpression } from "../base.ts";
+import { InlineMarkdownStringValue, StringValue } from "../../values.ts";
+import { LookupContext } from "../../context.ts";
 
 /**
  * markdown(str): indicates that the given string is markdown and should be rendered as markdown

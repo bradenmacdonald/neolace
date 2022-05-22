@@ -1,4 +1,4 @@
-import { LookupExpression } from "../expression.ts";
+import { LookupExpression } from "./base.ts";
 import { ConcreteValue, hasLiteralExpression, IHasLiteralExpression } from "../values.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { LookupContext } from "../context.ts";

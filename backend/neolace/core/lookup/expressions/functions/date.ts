@@ -1,7 +1,7 @@
-import { LookupExpression } from "../expression.ts";
-import { DateValue, StringValue } from "../values.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupContext } from "../context.ts";
+import { LookupExpression } from "../base.ts";
+import { DateValue, StringValue } from "../../values.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupContext } from "../../context.ts";
 
 /**
  * date("YYYY-MM-DD"): parse a string into a date value

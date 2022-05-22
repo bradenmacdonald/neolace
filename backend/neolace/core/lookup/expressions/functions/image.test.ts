@@ -2,14 +2,22 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
 import { assertEquals, assertInstanceOf, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { EntryValue, ImageValue, IntegerValue, NullValue, PageValue, PropertyValue, StringValue } from "../values.ts";
+import {
+    EntryValue,
+    ImageValue,
+    IntegerValue,
+    NullValue,
+    PageValue,
+    PropertyValue,
+    StringValue,
+} from "../../values.ts";
 import { Image } from "./image.ts";
-import { LiteralExpression } from "./literal-expr.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupExpression } from "../expression.ts";
+import { LiteralExpression } from "../literal-expr.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupExpression } from "../base.ts";
 import { GetProperty } from "./get.ts";
 import { First } from "./first.ts";
-import { parseLookupString } from "../parse.ts";
+import { parseLookupString } from "../../parse.ts";
 import { ReverseProperty } from "./reverse.ts";
 
 group("image.ts", () => {

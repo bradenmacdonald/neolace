@@ -1,10 +1,10 @@
 import { C } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
-import { LookupExpression } from "../expression.ts";
-import { IntegerValue, LazyEntrySetValue, LookupValue } from "../values.ts";
-import { LookupEvaluationError } from "../errors.ts";
-import { LookupContext } from "../context.ts";
+import { LookupExpression } from "../base.ts";
+import { IntegerValue, LazyEntrySetValue, LookupValue } from "../../values.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { LookupContext } from "../../context.ts";
 
 /**
  * Helper function to read annotated distance values from a lookup result
