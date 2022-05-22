@@ -30,6 +30,10 @@ export const config = (() => {
          * URL for the Realm admin UI. This is where you can create a new site, register a user account, etc.
          */
         realmAdminUrl: defaultTo("http://local.neolace.net:5555", { test: "http://frontend-realm-admin" }),
+        realmName: defaultTo("Neolace Dev", { production: "Neolace", test: "Neolace Test" }),
+        /** URL to page with information about the overall realm. Could be a site's home page. */
+        realmURL: "https://www.neolace.com",
+        realmPhysicalAddress: "317 - 161 West Georgia St.\nVancouver, BC  Canada",
 
         // URL of the Neo4j server
         neo4jUrl: defaultTo("bolt://localhost:7687", { test: "bolt://localhost:4687" }),
@@ -51,6 +55,14 @@ export const config = (() => {
         authnApiUsername: "authn",
         // Password for making private API requests to the authentication microservice (Keratin AuthN)
         authnApiPassword: "neolace",
+
+        // Which email provider to use for sending transactional email. See deno-mailer.ts.
+        mailProvider: "console", // By default just log emails to the console.
+        // Detailed provider configuration depends on which provider is selected.
+        mailProviderConfig: {},
+        /** Address which most system transactional emails will come from. */
+        mailFromAddress: "neolace@example.com",
+
         // S3-compatible object store used for assets like images, PDFs, etc.
         objStoreEndpointURL: "http://localhost:9000/",
         objStoreRegion: "dev-region",
