@@ -23,7 +23,7 @@ group("lookup.ts", () => {
         assertEquals(result.resultValue, { type: "String", value: "Pinus ponderosa" });
         assertEquals(
             result.expressionNormalized,
-            `get(this, prop=[[/prop/${defaultData.schema.properties._propScientificName.id}]])`,
+            `this.get(prop=[[/prop/${defaultData.schema.properties._propScientificName.id}]])`,
         );
     });
 
@@ -58,13 +58,13 @@ group("lookup.ts", () => {
                 },
             ],
             source: {
-                expr: `reverse(andDescendants(this), prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                expr: `this.andDescendants().reverse(prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
                 entryId: defaultData.entries.ponderosaPine.id,
             },
         });
         assertEquals(
             result.expressionNormalized,
-            `get(this, prop=[[/prop/${defaultData.schema.properties._relImages.id}]])`,
+            `this.get(prop=[[/prop/${defaultData.schema.properties._relImages.id}]])`,
         );
         assertEquals(
             result.referenceCache.entries[defaultData.entries.imgPonderosaTrunk.id]?.name,

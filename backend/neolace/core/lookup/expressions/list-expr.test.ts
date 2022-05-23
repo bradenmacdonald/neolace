@@ -4,8 +4,8 @@ import { getGraph } from "neolace/core/graph.ts";
 import { IntegerValue, NullValue, PageValue } from "../values.ts";
 import { LiteralExpression } from "./literal-expr.ts";
 import { List } from "./list-expr.ts";
-import { LookupExpression } from "../expression.ts";
-import { Count } from "./count.ts";
+import { LookupExpression } from "./base.ts";
+import { Count } from "./functions/count.ts";
 
 group("list-expr.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
@@ -43,7 +43,7 @@ group("list-expr.ts", () => {
             const value = new IntegerValue(3);
 
             assertEquals(await evalExpression(expression), value);
-            assertEquals(expression.toString(), `count([1, 2, null])`);
+            assertEquals(expression.toString(), `[1, 2, null].count()`);
         });
 
         // TODO test that this can be evaluated to get the count() without evaluating lazy values that it holds

@@ -1,7 +1,7 @@
 import { VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { LookupError, LookupParseError } from "./errors.ts";
 
-import type { LookupExpression } from "./expression.ts";
+import type { LookupExpression } from "./expressions/base.ts";
 import { parseLookupString } from "./parse.ts";
 import { ErrorValue, LookupValue } from "./values.ts";
 

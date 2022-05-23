@@ -3,7 +3,7 @@ import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod
 import { CachedLookupContext } from "neolace/core/lookup/context.ts";
 import { parseLookupString } from "neolace/core/lookup/parse.ts";
 import { LookupParseError } from "neolace/core/lookup/errors.ts";
-import { LookupExpression } from "neolace/core/lookup/expression.ts";
+import { type LookupExpression } from "neolace/core/lookup/expressions/base.ts";
 import { getEntry } from "./entry/{entryId}/_helpers.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 

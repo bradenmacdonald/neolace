@@ -1,4 +1,5 @@
 import * as log from "std/log/mod.ts";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
 import { isPlugin, NeolacePlugin } from "neolace/plugins/mod.ts";
 
@@ -28,4 +29,8 @@ export function getPlugins(): Promise<NeolacePlugin[]> {
         return pluginCache;
     })();
     return pluginsPromise;
+}
+
+export async function getPluginsForSite(siteId: VNID): Promise<NeolacePlugin[]> {
+    return (await getPlugins()).filter((plugin) => plugin.isEnabledForSite(siteId));
 }

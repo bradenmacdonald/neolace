@@ -1,27 +1,10 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { LookupParseError } from "./errors.ts";
-import { LookupExpression } from "./expression.ts";
-import { Graph } from "./expressions/graph.ts";
-import {
-    Ancestors,
-    AndAncestors,
-    AndDescendants,
-    AndRelated,
-    DateExpression,
-    // Count,
-    Descendants,
-    Files,
-    First,
-    GetProperty,
-    Image,
-    List,
-    LiteralExpression,
-    Markdown,
-    ReverseProperty,
-    Slice,
-    This,
-} from "./expressions/index.ts";
+import { LookupExpression } from "./expressions/base.ts";
+import { List, LiteralExpression, This } from "./expressions.ts";
 import * as V from "./values.ts";
+import { type LookupFunctionClass } from "./expressions/functions/base.ts";
+import { builtInLookupFunctions } from "./expressions/functions/all-functions.ts";
 
 /**
  * Given a lookup expression as a string like
@@ -29,7 +12,7 @@ import * as V from "./values.ts";
  * Parse it and return it as a LookupExpression object:
  *     new AndAncestors(new This());
  */
-export function parseLookupString(lookup: string): LookupExpression {
+export function parseLookupString(lookup: string, withExtraFunctions: LookupFunctionClass[] = []): LookupExpression {
     // To save time and make development faster, we are cheating with a working but very fake parser.
     // In the future this function should be replaced with a proper parser built using https://chevrotain.io/
 
@@ -38,8 +21,7 @@ export function parseLookupString(lookup: string): LookupExpression {
     if (lookup === "null") return new LiteralExpression(new V.NullValue());
     if (lookup === "this") return new This();
 
-    if (lookup === "this.files()") return new Files(new This(), {});
-    if (lookup === "this.files().first()") return new First(new Files(new This(), {}));
+    const recursiveParse = (otherLookup: string) => parseLookupString(otherLookup, withExtraFunctions);
 
     const otherTemplates: [RegExp, (match: RegExpMatchArray) => LookupExpression][] = [
         // "foo" (String literal)
@@ -51,121 +33,190 @@ export function parseLookupString(lookup: string): LookupExpression {
         // [[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]] (Property literal)
         [/^\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]$/, (m) => new LiteralExpression(new V.PropertyValue(VNID(m[1])))],
 
-        // ....get(prop=...)
+        // something.function()
         [
-            /^(.*)\.get\(prop=(.*)\)$/,
-            (m) => new GetProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) }),
-        ],
-        // get(..., prop=...)
-        [
-            /^get\((.*), prop=(.*)\)$/,
-            (m) => new GetProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) }),
-        ],
-
-        // ....reverse(prop=...)
-        [
-            /^(.*)\.reverse\(prop=(.*)\)$/,
-            (m) => new ReverseProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) }),
-        ],
-        // reverse(..., prop=...)
-        [
-            /^reverse\((.*), prop=(.*)\)$/,
-            (m) => new ReverseProperty(parseLookupString(m[1]), { propertyExpr: parseLookupString(m[2]) }),
+            /^(.+)\.([A-za-z0-9_]+)\([ \t]*\)$/,
+            (m) => {
+                const something = m[1];
+                const functionName = m[2];
+                const allFunctions = builtInLookupFunctions.concat(withExtraFunctions);
+                const matchedFunction = allFunctions.find((fn) => fn.functionName === functionName);
+                if (matchedFunction) {
+                    return matchedFunction.constructWithArgs(recursiveParse(something));
+                } else {
+                    throw new LookupParseError(`Unknown function: ${functionName}()`);
+                }
+            },
         ],
 
-        // ....ancestors()
-        [/^(.*)\.ancestors\(\)$/, (m) => new Ancestors(parseLookupString(m[1]))],
-        // ancestors(...)
-        [/^ancestors\((.*)\)$/, (m) => new Ancestors(parseLookupString(m[1]))],
-
-        // ....andAncestors()
-        [/^(.*)\.andAncestors\(\)$/, (m) => new AndAncestors(parseLookupString(m[1]))],
-        // andAncestors(...)
-        [/^andAncestors\((.*)\)$/, (m) => new AndAncestors(parseLookupString(m[1]))],
-
-        // ....descendants()
-        [/^(.*)\.descendants\(\)$/, (m) => new Descendants(parseLookupString(m[1]))],
-        // descendants(...)
-        [/^descendants\((.*)\)$/, (m) => new Descendants(parseLookupString(m[1]))],
-
-        // ....andDescendants()
-        [/^(.*)\.andDescendants\(\)$/, (m) => new AndDescendants(parseLookupString(m[1]))],
-        // andDescendants(...)
-        [/^andDescendants\((.*)\)$/, (m) => new AndDescendants(parseLookupString(m[1]))],
-
-        // ....andRelated()
-        [/^(.*)\.andRelated\(\)$/, (m) => new AndRelated(parseLookupString(m[1]))],
-        // ....andRelated(depth=N)
-        [/^(.*)\.andRelated\(depth=(.*)\)$/, (m) => new AndRelated(parseLookupString(m[1]), parseLookupString(m[2]))],
-        // andRelated(...)
-        [/^andRelated\((.*)\)$/, (m) => new AndRelated(parseLookupString(m[1]))],
-        // andRelated(..., depth=N)
-        [/^andRelated\((.*), depth=(.*)\)$/, (m) => new AndRelated(parseLookupString(m[1]), parseLookupString(m[2]))],
-
-        // [[/entry/...]].image(format="...")
-
+        // function(something)
         [
-            /^(.*)\.image\(format=(.*), link=(.*), maxWidth=(.*)\)$/,
-            (m) =>
-                new Image(parseLookupString(m[1]), {
-                    formatExpr: parseLookupString(m[2]),
-                    linkExpr: parseLookupString(m[3]),
-                    maxWidthExpr: parseLookupString(m[4]),
-                }),
-        ],
-        [
-            /^(.*)\.image\(format=(.*), link=(.*)\)$/,
-            (m) =>
-                new Image(parseLookupString(m[1]), {
-                    formatExpr: parseLookupString(m[2]),
-                    linkExpr: parseLookupString(m[3]),
-                }),
-        ],
-        [
-            /^(.*)\.image\(format=(.*), caption=(.*)\)$/,
-            (m) =>
-                new Image(parseLookupString(m[1]), {
-                    formatExpr: parseLookupString(m[2]),
-                    captionExpr: parseLookupString(m[3]),
-                }),
+            /^([A-za-z0-9_]+)\((.+)\)$/,
+            (m) => {
+                const something = m[2];
+                const functionName = m[1];
+                const allFunctions = builtInLookupFunctions.concat(withExtraFunctions);
+                const matchedFunction = allFunctions.find((fn) => fn.functionName === functionName);
+                if (matchedFunction) {
+                    return matchedFunction.constructWithArgs(recursiveParse(something));
+                } else {
+                    throw new LookupParseError(`Unknown function: ${functionName}()`);
+                }
+            },
         ],
 
-        // ....image(format="...")
+        // function()
         [
-            /^(.*)\.image\(format=(.*)\)$/,
-            (m) => new Image(parseLookupString(m[1]), { formatExpr: parseLookupString(m[2]) }),
+            /^([A-za-z0-9_]+)\([ \t]*\)$/,
+            (m) => {
+                const functionName = m[1];
+                const allFunctions = builtInLookupFunctions.concat(withExtraFunctions);
+                const matchedFunction = allFunctions.find((fn) => fn.functionName === functionName);
+                if (matchedFunction) {
+                    return matchedFunction.constructWithArgs();
+                } else {
+                    throw new LookupParseError(`Unknown function: ${functionName}()`);
+                }
+            },
         ],
 
-        // image(..., format="...")
+        // something.function(arg1=arg1Value)
         [
-            /^image\((.*), format=(.*)\)$/,
-            (m) => new Image(parseLookupString(m[1]), { formatExpr: parseLookupString(m[2]) }),
+            /^(.+)\.([A-za-z0-9_]+)\([ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            (m) => {
+                const something = m[1];
+                const functionName = m[2];
+                const arg1 = m[3];
+                const arg1Value = m[4];
+                const allFunctions = builtInLookupFunctions.concat(withExtraFunctions);
+                const matchedFunction = allFunctions.find((fn) => fn.functionName === functionName);
+                if (matchedFunction) {
+                    return matchedFunction.constructWithArgs(recursiveParse(something), {
+                        [arg1]: recursiveParse(arg1Value),
+                    });
+                } else {
+                    throw new LookupParseError(`Unknown function: ${functionName}()`);
+                }
+            },
         ],
 
-        // ....graph()
-        [/^(.*)\.graph\(\)$/, (m) => new Graph(parseLookupString(m[1]))],
-        // graph(...)
-        [/^graph\((.*)\)$/, (m) => new Graph(parseLookupString(m[1]))],
-
-        // slice(expr, start=x, size=y)
+        // function(something, arg1=arg1Value)
         [
-            /^slice\((.*), start=(.*), size=(.*)\)$/,
-            (m) =>
-                new Slice(parseLookupString(m[1]), {
-                    startIndexExpr: parseLookupString(m[2]),
-                    sizeExpr: parseLookupString(m[3]),
-                }),
-        ],
-        // slice(expr, start=x)
-        [
-            /^slice\((.*), start=(.*)\)$/,
-            (m) => new Slice(parseLookupString(m[1]), { startIndexExpr: parseLookupString(m[2]) }),
+            /^([A-za-z0-9_]+)\([ \t]*(.+),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            (m) => {
+                const functionName = m[1];
+                const something = m[2];
+                const arg1 = m[3];
+                const arg1Value = m[4];
+                const allFunctions = builtInLookupFunctions.concat(withExtraFunctions);
+                const matchedFunction = allFunctions.find((fn) => fn.functionName === functionName);
+                if (matchedFunction) {
+                    return matchedFunction.constructWithArgs(recursiveParse(something), {
+                        [arg1]: recursiveParse(arg1Value),
+                    });
+                } else {
+                    throw new LookupParseError(`Unknown function: ${functionName}()`);
+                }
+            },
         ],
 
-        // markdown("*string*")
-        [/^markdown\((.*)\)$/, (m) => new Markdown(parseLookupString(m[1]))],
-        // date("*string*")
-        [/^date\((.*)\)$/, (m) => new DateExpression(parseLookupString(m[1]))],
+        // something.function(arg1=arg1Value, arg2=arg2value)
+        [
+            /^(.+)\.([A-za-z0-9_]+)\([ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            (m) => {
+                const something = m[1];
+                const functionName = m[2];
+                const arg1 = m[3];
+                const arg1Value = m[4];
+                const arg2 = m[5];
+                const arg2Value = m[6];
+                const allFunctions = builtInLookupFunctions.concat(withExtraFunctions);
+                const matchedFunction = allFunctions.find((fn) => fn.functionName === functionName);
+                if (matchedFunction) {
+                    return matchedFunction.constructWithArgs(recursiveParse(something), {
+                        [arg1]: recursiveParse(arg1Value),
+                        [arg2]: recursiveParse(arg2Value),
+                    });
+                } else {
+                    throw new LookupParseError(`Unknown function: ${functionName}()`);
+                }
+            },
+        ],
+
+        // function(something, arg1=arg1Value, arg2=arg2value)
+        [
+            /^([A-za-z0-9_]+)\([ \t]*(.+),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            (m) => {
+                const functionName = m[1];
+                const something = m[2];
+                const arg1 = m[3];
+                const arg1Value = m[4];
+                const arg2 = m[5];
+                const arg2Value = m[6];
+                const allFunctions = builtInLookupFunctions.concat(withExtraFunctions);
+                const matchedFunction = allFunctions.find((fn) => fn.functionName === functionName);
+                if (matchedFunction) {
+                    return matchedFunction.constructWithArgs(recursiveParse(something), {
+                        [arg1]: recursiveParse(arg1Value),
+                        [arg2]: recursiveParse(arg2Value),
+                    });
+                } else {
+                    throw new LookupParseError(`Unknown function: ${functionName}()`);
+                }
+            },
+        ],
+
+        // something.function(arg1=arg1Value, arg2=arg2value, arg3=arg3value)
+        [
+            /^(.+)\.([A-za-z0-9_]+)\([ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            (m) => {
+                const something = m[1];
+                const functionName = m[2];
+                const arg1 = m[3];
+                const arg1Value = m[4];
+                const arg2 = m[5];
+                const arg2Value = m[6];
+                const arg3 = m[7];
+                const arg3Value = m[8];
+                const allFunctions = builtInLookupFunctions.concat(withExtraFunctions);
+                const matchedFunction = allFunctions.find((fn) => fn.functionName === functionName);
+                if (matchedFunction) {
+                    return matchedFunction.constructWithArgs(recursiveParse(something), {
+                        [arg1]: recursiveParse(arg1Value),
+                        [arg2]: recursiveParse(arg2Value),
+                        [arg3]: recursiveParse(arg3Value),
+                    });
+                } else {
+                    throw new LookupParseError(`Unknown function: ${functionName}()`);
+                }
+            },
+        ],
+
+        // function(something, arg1=arg1Value, arg2=arg2value, arg3=arg3value)
+        [
+            /^([A-za-z0-9_]+)\([ \t]*(.+),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            (m) => {
+                const functionName = m[1];
+                const something = m[2];
+                const arg1 = m[3];
+                const arg1Value = m[4];
+                const arg2 = m[5];
+                const arg2Value = m[6];
+                const arg3 = m[7];
+                const arg3Value = m[8];
+                const allFunctions = builtInLookupFunctions.concat(withExtraFunctions);
+                const matchedFunction = allFunctions.find((fn) => fn.functionName === functionName);
+                if (matchedFunction) {
+                    return matchedFunction.constructWithArgs(recursiveParse(something), {
+                        [arg1]: recursiveParse(arg1Value),
+                        [arg2]: recursiveParse(arg2Value),
+                        [arg3]: recursiveParse(arg3Value),
+                    });
+                } else {
+                    throw new LookupParseError(`Unknown function: ${functionName}()`);
+                }
+            },
+        ],
     ];
 
     for (const [re, fn] of otherTemplates) {
@@ -193,7 +244,7 @@ export function parseLookupString(lookup: string): LookupExpression {
             return new List([]);
         }
         const parts = lookup.substring(1, lookup.length - 1).split(",").map((part) => part.trim());
-        return new List(parts.map((part) => parseLookupString(part)));
+        return new List(parts.map((part) => recursiveParse(part)));
     }
 
     throw new LookupParseError(`Unable to parse the lookup expression "${lookup}"`);

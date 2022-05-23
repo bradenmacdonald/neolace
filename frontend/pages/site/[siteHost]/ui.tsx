@@ -1,33 +1,34 @@
-import React from 'react';
-import { NextPage } from 'next';
-import { useIntl } from 'react-intl';
+import React from "react";
+import { NextPage } from "next";
+import { useIntl } from "react-intl";
 
-
-import { SitePage } from 'components/SitePage';
-import FourOhFour from 'pages/404';
-import { Icon, IconId, _allIcons } from 'components/widgets/Icon';
-import { Button } from 'components/widgets/Button';
-import { TextInput } from 'components/widgets/TextInput';
-import { LookupExpressionInput } from 'components/widgets/LookupExpressionInput';
-import { Spinner } from 'components/widgets/Spinner';
-import { Tooltip } from 'components/widgets/Tooltip';
-import { ErrorMessage } from 'components/widgets/ErrorMessage';
-import { Breadcrumb, Breadcrumbs } from 'components/widgets/Breadcrumbs';
-import { AutoControl, Control, Form } from 'components/widgets/Form';
-import { MDTEditor } from 'components/widgets/MDTEditor';
+import { SitePage } from "components/SitePage";
+import FourOhFour from "pages/404";
+import { _allIcons, Icon, IconId } from "components/widgets/Icon";
+import { Button } from "components/widgets/Button";
+import { TextInput } from "components/widgets/TextInput";
+import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
+import { Spinner } from "components/widgets/Spinner";
+import { Tooltip } from "components/widgets/Tooltip";
+import { ErrorMessage } from "components/widgets/ErrorMessage";
+import { SuccessMessage } from "components/widgets/SuccessMessage";
+import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
+import { AutoControl, Control, Form } from "components/widgets/Form";
+import { MDTEditor } from "components/widgets/MDTEditor";
 
 // interface PageProps {
 // }
 
-const UIDemo = (props: {label: string, children: React.ReactNode}) => {
-    return <tr>
-        <th className="pb-4 align-top pr-4 text-left">{props.label}</th>
-        <td className="pb-4 align-top">{props.children}</td>
-    </tr>;
+const UIDemo = (props: { label: string; children: React.ReactNode }) => {
+    return (
+        <tr>
+            <th className="pb-4 align-top pr-4 text-left">{props.label}</th>
+            <td className="pb-4 align-top">{props.children}</td>
+        </tr>
+    );
 };
 
-const UiDemoPage: NextPage = function(props) {
-
+const UiDemoPage: NextPage = function (props) {
     const intl = useIntl();
     const [selectedIcon, setSelectedIcon] = React.useState<IconId>("search");
     const [searchDemoText, setSearchDemoText] = React.useState("");
@@ -35,9 +36,8 @@ const UiDemoPage: NextPage = function(props) {
     const [mdtDemoText, setMDTDemoText] = React.useState("This has **bold**, *italic*, and a { lookup expression }.");
 
     if (process.env.NODE_ENV === "production") {
-        return <FourOhFour/>;
+        return <FourOhFour />;
     }
-
 
     return (
         <SitePage
@@ -53,13 +53,17 @@ const UiDemoPage: NextPage = function(props) {
             <p>Here is an example of our form component.</p>
 
             <Form>
-                <Control id="form-email" label={{id: "ui.demo.form.email", defaultMessage: "Your Email"}}>
+                <Control id="form-email" label={{ id: "ui.demo.form.email", defaultMessage: "Your Email" }}>
                     <TextInput />
                 </Control>
                 <Control
                     id="form-lookup-expr"
-                    label={{id: "ui.demo.form.lookup", defaultMessage: "Lookup Expression"}}
-                    hint={intl.formatMessage({id: "ui.demo.form.lookupHint", defaultMessage: "Try using SHIFT-ENTER to create multiple lines, or entering a long string to see the box expand."})}
+                    label={{ id: "ui.demo.form.lookup", defaultMessage: "Lookup Expression" }}
+                    hint={intl.formatMessage({
+                        id: "ui.demo.form.lookupHint",
+                        defaultMessage:
+                            "Try using SHIFT-ENTER to create multiple lines, or entering a long string to see the box expand.",
+                    })}
                 >
                     <LookupExpressionInput
                         value={lookupDemoText}
@@ -69,10 +73,10 @@ const UiDemoPage: NextPage = function(props) {
                 </Control>
                 <AutoControl
                     id="form-mdt-editor"
-                    label={{id: "ui.demo.form.lookup", defaultMessage: "MDT (Markdown / rich text) editor"}}
+                    label={{ id: "ui.demo.form.lookup", defaultMessage: "MDT (Markdown / rich text) editor" }}
                     hint={intl.formatMessage({
                         id: "ui.demo.form.toolbar",
-                        defaultMessage: "This also shows our <ToolbarButton/> component used to make a toolbar."
+                        defaultMessage: "This also shows our <ToolbarButton/> component used to make a toolbar.",
                     })}
                     onChangeFinished={setMDTDemoText}
                     value={mdtDemoText}
@@ -84,23 +88,32 @@ const UiDemoPage: NextPage = function(props) {
             <h2>Icons</h2>
 
             <div className="flex flex-wrap">
-                {
-                    _allIcons.map(id => <div key={id} className="inline-block w-32 h-32 border-2 m-2 text-center text-4xl pt-6 hover:border-theme-link-color" onClick={() => setSelectedIcon(id)}>
-                        <Icon key={id} icon={id} /><code className="block text-xs pt-5">{id}</code>
-                    </div>)
-                }
+                {_allIcons.map((id) => (
+                    <div
+                        key={id}
+                        className="inline-block w-32 h-32 border-2 m-2 text-center text-4xl pt-6 hover:border-theme-link-color"
+                        onClick={() => setSelectedIcon(id)}
+                    >
+                        <Icon key={id} icon={id} />
+                        <code className="block text-xs pt-5">{id}</code>
+                    </div>
+                ))}
             </div>
 
             <p>Preview on a button:</p>
-            <Button><Icon icon={selectedIcon} /> Demo</Button>
+            <Button>
+                <Icon icon={selectedIcon} /> Demo
+            </Button>
 
             <p>
-                See details about <a href={`https://icons.getbootstrap.com/icons/${selectedIcon}/`}>"{selectedIcon}" at
-                Bootstrap Icons</a>, or <a href="https://icons.getbootstrap.com/">get more icons</a> (add to
+                See details about{" "}
+                <a href={`https://icons.getbootstrap.com/icons/${selectedIcon}/`}>
+                    "{selectedIcon}" at Bootstrap Icons
+                </a>, or <a href="https://icons.getbootstrap.com/">get more icons</a> (add to
                 <code>Icon.tsx</code>).
             </p>
 
-            <br/>
+            <br />
 
             <h2>More stuff</h2>
 
@@ -114,27 +127,43 @@ const UiDemoPage: NextPage = function(props) {
                             <Breadcrumb>This Entry</Breadcrumb>
                         </Breadcrumbs>
                     </UIDemo>
-                    <UIDemo label="Spinner"><Spinner/></UIDemo>
-                    <UIDemo label="Button"><Button>I'm a button</Button></UIDemo>
-                    <UIDemo label="Tooltip">
-                        <Tooltip tooltipContent={<><strong>Hello</strong> from the tooltip</>}>{(attrs) => <span {...attrs}>hover me.</span>}</Tooltip>
+                    <UIDemo label="Spinner">
+                        <Spinner />
                     </UIDemo>
-                    <UIDemo label="Error"><ErrorMessage>Something went wrong.</ErrorMessage></UIDemo>
+                    <UIDemo label="Button">
+                        <Button>I'm a button</Button>
+                    </UIDemo>
+                    <UIDemo label="Tooltip">
+                        <Tooltip
+                            tooltipContent={
+                                <>
+                                    <strong>Hello</strong> from the tooltip
+                                </>
+                            }
+                        >
+                            {(attrs) => <span {...attrs}>hover me.</span>}
+                        </Tooltip>
+                    </UIDemo>
+                    <UIDemo label="Error">
+                        <ErrorMessage>Something went wrong.</ErrorMessage>
+                    </UIDemo>
+                    <UIDemo label="Success">
+                        <SuccessMessage>Something went right.</SuccessMessage>
+                    </UIDemo>
                     <UIDemo label="Search">
                         <TextInput
                             type="search"
                             icon="search"
                             className="w-[600px] max-w-full"
                             value={searchDemoText}
-                            onChange={event => setSearchDemoText(event.currentTarget.value)}
+                            onChange={(event) => setSearchDemoText(event.currentTarget.value)}
                             placeholder={"Example of a search input"}
                         />
                     </UIDemo>
                 </tbody>
             </table>
-
         </SitePage>
     );
-}
+};
 
 export default UiDemoPage;

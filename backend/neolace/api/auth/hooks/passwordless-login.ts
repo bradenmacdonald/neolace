@@ -10,9 +10,9 @@ export class PasswordlessLoginWebhookResource extends NeolaceHttpResource {
         description: "Passwordless login webhook",
         notes: "Passwordless login webhook (called by the Keratin AuthN microservice)",
     }, async ({ bodyData }) => {
-        const accountId = bodyData.account_id;
+        const accountId = Number(bodyData.account_id);
         const token = bodyData.token;
-        log.debug(`Passwordless login for account ID ${accountId}`);
+        log.info(`Passwordless login hook from authn service for user with account ID ${accountId}`);
         const loginUrl = `${config.realmAdminUrl}/login/passwordless#${token}`;
         // TODO in future: email this link to the user
         log.info(`To log in, go to ${loginUrl}`);
