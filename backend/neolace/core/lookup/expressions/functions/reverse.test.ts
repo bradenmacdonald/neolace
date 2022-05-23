@@ -37,25 +37,23 @@ group("reverse.ts", () => {
         slot: new NullValue(),
     };
 
-    group("reverse()", () => {
-        test(`Can reverse a simple IS A relationship property value`, async () => {
-            const expression = new ReverseProperty(new This(), { propertyExpr: partIsAPart });
-            const value = await evalExpression(expression, cone);
-            // A "seed cone" and a "pollen cone" are both a "cone", so we should get them
-            // by reversing the "IS A" relationship on "cone"
-            assertEquals(
-                value,
-                new PageValue([
-                    MakeAnnotatedEntryValue(pollenCone, { ...defaultAnnotations }),
-                    MakeAnnotatedEntryValue(seedCone, { ...defaultAnnotations }),
-                ], {
-                    pageSize: 10n,
-                    startedAt: 0n,
-                    totalCount: 2n,
-                    sourceExpression: expression,
-                    sourceExpressionEntryId: cone,
-                }),
-            );
-        });
+    test(`Can reverse a simple IS A relationship property value`, async () => {
+        const expression = new ReverseProperty(new This(), { prop: partIsAPart });
+        const value = await evalExpression(expression, cone);
+        // A "seed cone" and a "pollen cone" are both a "cone", so we should get them
+        // by reversing the "IS A" relationship on "cone"
+        assertEquals(
+            value,
+            new PageValue([
+                MakeAnnotatedEntryValue(pollenCone, { ...defaultAnnotations }),
+                MakeAnnotatedEntryValue(seedCone, { ...defaultAnnotations }),
+            ], {
+                pageSize: 10n,
+                startedAt: 0n,
+                totalCount: 2n,
+                sourceExpression: expression,
+                sourceExpressionEntryId: cone,
+            }),
+        );
     });
 });

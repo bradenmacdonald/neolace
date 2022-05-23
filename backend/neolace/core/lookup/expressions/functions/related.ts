@@ -5,6 +5,7 @@ import { LookupExpression } from "../base.ts";
 import { IntegerValue, LazyEntrySetValue, LookupValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
+import { LookupFunctionWithArgs } from "./base.ts";
 
 /**
  * Helper function to read annotated distance values from a lookup result
@@ -20,13 +21,18 @@ const dbDistanceToValue = (dbValue: unknown): IntegerValue => {
 /**
  * andRelated(entry): returns all directly related entries AND the entry itself
  */
-export class AndRelated extends LookupExpression {
-    constructor(
-        /** An expression that specifies what entry's related entries we want to retrieve */
-        public readonly entryExpr: LookupExpression,
-        public readonly depthExpr?: LookupExpression,
-    ) {
-        super();
+export class AndRelated extends LookupFunctionWithArgs {
+    static functionName = "andRelated";
+
+    public get entryExpr(): LookupExpression {
+        return this.firstArg;
+    }
+    public get depthExpr(): LookupExpression | undefined {
+        return this.otherArgs["depth"];
+    }
+
+    protected override validateArgs(): void {
+        this.requireArgs([], { optional: ["depth"] });
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
@@ -55,11 +61,5 @@ export class AndRelated extends LookupExpression {
                 sourceExpressionEntryId: context.entryId,
             },
         );
-    }
-
-    public toString(): string {
-        return `andRelated(${this.entryExpr.toString()}${
-            this.depthExpr ? `, depth=${this.depthExpr.toString()}` : ""
-        })`;
     }
 }

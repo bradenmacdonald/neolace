@@ -17,6 +17,7 @@ import {
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LiteralExpression } from "../literal-expr.ts";
+import { LookupFunctionWithArgs } from "./base.ts";
 
 /**
  * image([entry or entry set], [align])
@@ -24,36 +25,41 @@ import { LiteralExpression } from "../literal-expr.ts";
  * Given an entry, if it is an image entry (its entry type has the "image" feature enabled) or it has a hero image (its
  * entry type has the "hero image" feature enabled), display it as an image.
  */
-export class Image extends LookupExpression {
-    // An expression that specifies what entry/entries image[s] we want to display
-    readonly entriesExpr: LookupExpression;
-    // The format mode:
-    // - "right" to float a thumbnail of the image to the right.
-    // - "logo" to display the image at actual size, with no border
-    // - "thumb" to display a thumbnail of the image(s) where a paragraph of text would go
-    readonly formatExpr: LookupExpression;
-    // Optional paramater - URL to link to. Only valid for "logo" format.
-    readonly linkExpr?: LookupExpression;
-    // Optional parameter - caption to display under the image
-    readonly captionExpr?: LookupExpression;
-    // Optional parameter - maximum width of the image.
-    readonly maxWidthExpr?: LookupExpression;
+export class Image extends LookupFunctionWithArgs {
+    static functionName = "image";
 
-    constructor(
-        entriesExpr: LookupExpression,
-        extraParams: {
-            formatExpr?: LookupExpression;
-            linkExpr?: LookupExpression;
-            captionExpr?: LookupExpression;
-            maxWidthExpr?: LookupExpression;
-        },
-    ) {
-        super();
-        this.entriesExpr = entriesExpr;
-        this.formatExpr = extraParams.formatExpr ?? new LiteralExpression(new StringValue("thumb"));
-        this.linkExpr = extraParams.linkExpr;
-        this.captionExpr = extraParams.captionExpr;
-        this.maxWidthExpr = extraParams.maxWidthExpr;
+    /** An expression that specifies what entry/entries image[s] we want to display */
+    public get entriesExpr(): LookupExpression {
+        return this.firstArg;
+    }
+    /**
+     * The format mode:
+     * - "right" to float a thumbnail of the image to the right.
+     * - "logo" to display the image at actual size, with no border
+     * - "thumb" to display a thumbnail of the image(s) where a paragraph of text would go
+     */
+    public get formatExpr(): LookupExpression {
+        return this.otherArgs["format"] ?? Image.defaultFormat;
+    }
+    public static readonly defaultFormat = new LiteralExpression(new StringValue("thumb"));
+
+    /** Optional paramater - URL to link to. Only valid for "logo" format. */
+    public get linkExpr(): LookupExpression | undefined {
+        return this.otherArgs["link"];
+    }
+
+    /** Optional paramater - caption to display under the image */
+    public get captionExpr(): LookupExpression | undefined {
+        return this.otherArgs["caption"];
+    }
+
+    /** Optional paramater - maximum width of the image */
+    public get maxWidthExpr(): LookupExpression | undefined {
+        return this.otherArgs["maxWidth"];
+    }
+
+    protected override validateArgs(): void {
+        this.requireArgs([], { optional: ["format", "link", "caption", "maxWidth"] });
     }
 
     public async getValue(context: LookupContext): Promise<ImageValue | NullValue | LazyIterableValue> {
@@ -130,9 +136,5 @@ export class Image extends LookupExpression {
                 );
             }
         }
-    }
-
-    public toString(): string {
-        return `image(${this.entriesExpr.toString()}, format=${this.formatExpr.toString()})`;
     }
 }

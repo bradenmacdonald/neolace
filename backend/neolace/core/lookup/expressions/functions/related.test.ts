@@ -16,7 +16,7 @@ group("andRelated()", () => {
 
     test("It can find all entries related to the ponderosa pine (depth = 1)", async () => {
         // this is the same as this.ancestors().graph()
-        const expression = new AndRelated(new This(), /* depth = */ one);
+        const expression = new AndRelated(new This(), { depth: one });
 
         const graph = await getGraph();
         const value = await graph.read((tx) =>
@@ -53,7 +53,7 @@ group("andRelated()", () => {
 
     test("It can find all entries related to the ponderosa pine (depth = 2)", async () => {
         // this is the same as this.ancestors().graph()
-        const expression = new AndRelated(new This(), /* depth = */ two);
+        const expression = new AndRelated(new This(), { depth: two });
 
         const graph = await getGraph();
         const value = await graph.read((tx) =>
@@ -111,6 +111,17 @@ group("andRelated()", () => {
                     sourceExpressionEntryId: ponderosaPine.id,
                 },
             ),
+        );
+    });
+
+    test("toString()", async () => {
+        assertEquals(
+            (new AndRelated(new This(), { depth: two })).toString(),
+            "this.andRelated(depth=2)",
+        );
+        assertEquals(
+            (new AndRelated(new This(), {})).toString(),
+            "this.andRelated()",
         );
     });
 });

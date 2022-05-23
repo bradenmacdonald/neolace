@@ -2,35 +2,37 @@ import { LookupExpression } from "../base.ts";
 import { IntegerValue, isCountableValue, isIterableValue, PageValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
+import { LookupFunctionWithArgs } from "./base.ts";
 
 /**
  * slice([iterable expression], [start=index], [size=length], [end=index])
  *
  * Given any iterable, take a slice out of it. This will return a PageValue or a List.
  */
-export class Slice extends LookupExpression {
-    // The iterable we want to slice
-    readonly iterableExpr: LookupExpression;
-    // Index to start the slice at. If negative, it means counting from the end. If omitted, starts at zero.
-    readonly startIndexExpr?: LookupExpression;
-    // Index to end the slice at. If negative, it means counting from the end. If omitted, ends at the end.
-    readonly endIndexExpr?: LookupExpression;
-    // Maximum size of the slice. If both 'end' and 'size' are specified, whichever is smaller will be used.
-    readonly sizeExpr?: LookupExpression;
+export class Slice extends LookupFunctionWithArgs {
+    static functionName = "slice";
 
-    constructor(
-        iterableExpr: LookupExpression,
-        extraParams: {
-            startIndexExpr?: LookupExpression;
-            endIndexExpr?: LookupExpression;
-            sizeExpr?: LookupExpression;
-        },
-    ) {
-        super();
-        this.iterableExpr = iterableExpr;
-        this.startIndexExpr = extraParams.startIndexExpr;
-        this.endIndexExpr = extraParams.endIndexExpr;
-        this.sizeExpr = extraParams.sizeExpr;
+    /** The iterable we want to slice */
+    public get iterableExpr(): LookupExpression {
+        return this.firstArg;
+    }
+    /** Index to start the slice at. If negative, it means counting from the end. If omitted, starts at zero. */
+    public get startIndexExpr(): LookupExpression | undefined {
+        return this.otherArgs["start"];
+    }
+
+    /** Index to end the slice at. If negative, it means counting from the end. If omitted, ends at the end. */
+    public get endIndexExpr(): LookupExpression | undefined {
+        return this.otherArgs["end"];
+    }
+
+    /** Maximum size of the slice. If both 'end' and 'size' are specified, whichever is smaller will be used. */
+    public get sizeExpr(): LookupExpression | undefined {
+        return this.otherArgs["size"];
+    }
+
+    protected override validateArgs(): void {
+        this.requireArgs([], { optional: ["start", "end", "size"] });
     }
 
     public async getValue(context: LookupContext) {
@@ -108,12 +110,5 @@ export class Slice extends LookupExpression {
             sourceExpression: this.iterableExpr,
             sourceExpressionEntryId: context.entryId,
         });
-    }
-
-    public toString(): string {
-        const startPart = this.startIndexExpr ? `, then=${this.startIndexExpr.toString()}` : "";
-        const endPart = this.endIndexExpr ? `, else=${this.endIndexExpr.toString()}` : "";
-        const sizePart = this.sizeExpr ? `, else=${this.sizeExpr.toString()}` : "";
-        return `slice(${this.iterableExpr.toString()}${startPart}${endPart}${sizePart})`;
     }
 }

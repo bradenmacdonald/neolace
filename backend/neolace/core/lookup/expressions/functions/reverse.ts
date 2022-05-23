@@ -18,6 +18,7 @@ import {
 } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
+import { LookupFunctionWithArgs } from "./base.ts";
 
 /**
  * Helper function to read annotated rank values from a database query result
@@ -67,15 +68,20 @@ const dbSlotToValue = (dbValue: unknown): StringValue | NullValue => {
  *
  * Returned entries are not necessarily distinct.
  */
-export class ReverseProperty extends LookupExpression {
-    // An expression that specifies what entry(ies)' property we want to reverse
-    readonly fromEntriesExpr: LookupExpression;
-    readonly propertyExpr: LookupExpression;
+export class ReverseProperty extends LookupFunctionWithArgs {
+    static functionName = "reverse";
 
-    constructor(fromEntriesExpr: LookupExpression, extraParams: { propertyExpr: LookupExpression }) {
-        super();
-        this.fromEntriesExpr = fromEntriesExpr;
-        this.propertyExpr = extraParams.propertyExpr;
+    /** An expression that specifies what entry(ies)' properties we want to reverse */
+    public get fromEntriesExpr(): LookupExpression {
+        return this.firstArg;
+    }
+    /** An expression that specifies what property we want to retrieve */
+    public get propertyExpr(): LookupExpression {
+        return this.otherArgs["prop"];
+    }
+
+    protected override validateArgs(): void {
+        this.requireArgs(["prop"]);
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
@@ -135,9 +141,5 @@ export class ReverseProperty extends LookupExpression {
                 sourceExpressionEntryId: context.entryId,
             },
         );
-    }
-
-    public toString(): string {
-        return `reverse(${this.fromEntriesExpr.toString()}, prop=${this.propertyExpr.toString()})`;
     }
 }

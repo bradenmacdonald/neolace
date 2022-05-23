@@ -30,107 +30,105 @@ group("image.ts", () => {
         );
     const siteId = defaultData.site.id;
 
-    group("image()", () => {
-        test(`It gives data about the image associated with an entry`, async () => {
-            const expression = new Image(
-                new LiteralExpression(
-                    new EntryValue(
-                        defaultData.entries.imgPonderosaTrunk.id,
-                    ),
+    test(`It gives data about the image associated with an entry`, async () => {
+        const expression = new Image(
+            new LiteralExpression(
+                new EntryValue(
+                    defaultData.entries.imgPonderosaTrunk.id,
                 ),
-                {},
-            );
+            ),
+            {},
+        );
 
-            const result = await evalExpression(expression);
+        const result = await evalExpression(expression);
 
-            assertInstanceOf(result, ImageValue);
-            assertEquals(result.data, {
-                entryId: defaultData.entries.imgPonderosaTrunk.id,
-                altText: defaultData.entries.imgPonderosaTrunk.name,
-                caption: undefined,
-                contentType: "image/webp",
-                format: "thumb", // default format
-                imageUrl: result.data.imageUrl,
-                blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
-                borderColor: undefined,
-                size: 1581898,
-                sizing: ImageSizingMode.Cover,
-                width: 3504,
-                height: 2336,
-                link: new EntryValue(defaultData.entries.imgPonderosaTrunk.id),
-                maxWidth: undefined,
-            });
+        assertInstanceOf(result, ImageValue);
+        assertEquals(result.data, {
+            entryId: defaultData.entries.imgPonderosaTrunk.id,
+            altText: defaultData.entries.imgPonderosaTrunk.name,
+            caption: undefined,
+            contentType: "image/webp",
+            format: "thumb", // default format
+            imageUrl: result.data.imageUrl,
+            blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
+            borderColor: undefined,
+            size: 1581898,
+            sizing: ImageSizingMode.Cover,
+            width: 3504,
+            height: 2336,
+            link: new EntryValue(defaultData.entries.imgPonderosaTrunk.id),
+            maxWidth: undefined,
         });
+    });
 
-        test(`It gives data about the image retrieved from an entry's property which is a lookup expression`, async () => {
-            const expression = new Image(
-                new First(
-                    new GetProperty(
-                        // Instead of a literal referencing the photo of a ponderosa pine,
-                        // lookup the "hero image" property of the "Ponderosa Pine (Species)" entry
-                        new LiteralExpression(new EntryValue(defaultData.entries.ponderosaPine.id)),
-                        {
-                            propertyExpr: new LiteralExpression(
-                                new PropertyValue(defaultData.schema.properties._hasHeroImage.id),
-                            ),
-                        },
-                    ),
+    test(`It gives data about the image retrieved from an entry's property which is a lookup expression`, async () => {
+        const expression = new Image(
+            new First(
+                new GetProperty(
+                    // Instead of a literal referencing the photo of a ponderosa pine,
+                    // lookup the "hero image" property of the "Ponderosa Pine (Species)" entry
+                    new LiteralExpression(new EntryValue(defaultData.entries.ponderosaPine.id)),
+                    {
+                        prop: new LiteralExpression(
+                            new PropertyValue(defaultData.schema.properties._hasHeroImage.id),
+                        ),
+                    },
                 ),
-                { formatExpr: new LiteralExpression(new StringValue("right")) },
-            );
+            ),
+            { format: new LiteralExpression(new StringValue("right")) },
+        );
 
-            const result = await evalExpression(expression);
+        const result = await evalExpression(expression);
 
-            const equivalentExpression = new Image(
-                new LiteralExpression(
-                    new EntryValue(
-                        defaultData.entries.imgPonderosaTrunk.id,
-                    ),
+        const equivalentExpression = new Image(
+            new LiteralExpression(
+                new EntryValue(
+                    defaultData.entries.imgPonderosaTrunk.id,
                 ),
-                { formatExpr: new LiteralExpression(new StringValue("right")) },
-            );
-            const result2 = await evalExpression(equivalentExpression);
-            assertEquals(result, result2);
-        });
+            ),
+            { format: new LiteralExpression(new StringValue("right")) },
+        );
+        const result2 = await evalExpression(equivalentExpression);
+        assertEquals(result, result2);
+    });
 
-        test(`It works with multiple entry values`, async () => {
-            const expression = new Image(
-                parseLookupString(
-                    `this.andDescendants().reverse(prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+    test(`It works with multiple entry values`, async () => {
+        const expression = new Image(
+            parseLookupString(
+                `this.andDescendants().reverse(prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+            ),
+            { format: new LiteralExpression(new StringValue("thumb")) },
+        );
+
+        const result = await evalExpression(expression, defaultData.entries.ponderosaPine.id);
+
+        assertInstanceOf(result, PageValue);
+        assertInstanceOf(result.values[0], ImageValue);
+        assertEquals(result.values[0].data.entryId, defaultData.entries.imgPonderosaTrunk.id);
+        assertInstanceOf(result.sourceExpression, ReverseProperty);
+        assertEquals(result.sourceExpressionEntryId, defaultData.entries.ponderosaPine.id);
+    });
+
+    test(`It gives a null value when used with non-image entries`, async () => {
+        const expression = new Image(
+            new LiteralExpression(
+                new EntryValue(
+                    defaultData.entries.ponderosaPine.id,
                 ),
-                { formatExpr: new LiteralExpression(new StringValue("thumb")) },
-            );
+            ),
+            {},
+        );
 
-            const result = await evalExpression(expression, defaultData.entries.ponderosaPine.id);
+        assertEquals(await evalExpression(expression), new NullValue());
+    });
 
-            assertInstanceOf(result, PageValue);
-            assertInstanceOf(result.values[0], ImageValue);
-            assertEquals(result.values[0].data.entryId, defaultData.entries.imgPonderosaTrunk.id);
-            assertInstanceOf(result.sourceExpression, ReverseProperty);
-            assertEquals(result.sourceExpressionEntryId, defaultData.entries.ponderosaPine.id);
-        });
+    test(`It gives an error message when used with non-entries`, async () => {
+        const expression = new Image(new LiteralExpression(new IntegerValue(123n)), {});
 
-        test(`It gives a null value when used with non-image entries`, async () => {
-            const expression = new Image(
-                new LiteralExpression(
-                    new EntryValue(
-                        defaultData.entries.ponderosaPine.id,
-                    ),
-                ),
-                {},
-            );
-
-            assertEquals(await evalExpression(expression), new NullValue());
-        });
-
-        test(`It gives an error message when used with non-entries`, async () => {
-            const expression = new Image(new LiteralExpression(new IntegerValue(123n)), {});
-
-            await assertRejects(
-                () => evalExpression(expression),
-                LookupEvaluationError,
-                `The expression "123" is not of the right type.`,
-            );
-        });
+        await assertRejects(
+            () => evalExpression(expression),
+            LookupEvaluationError,
+            `The expression "123" is not of the right type.`,
+        );
     });
 });

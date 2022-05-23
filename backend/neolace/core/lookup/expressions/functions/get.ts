@@ -23,6 +23,7 @@ import {
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { parseLookupString } from "../../parse.ts";
+import { LookupFunctionWithArgs } from "./base.ts";
 
 /**
  * Helper function to read annotated rank values from a database query result
@@ -82,15 +83,20 @@ const dbSlotToValue = (dbValue: unknown): StringValue | NullValue => {
  *  e.g. this.andAncestors().get(prop=[[/prop/_dateOfBirth]])
  * Then this will always return a MultipleValues
  */
-export class GetProperty extends LookupExpression {
-    // An expression that specifies what entry(ies)' property we want to retrieve
-    readonly fromEntriesExpr: LookupExpression;
-    readonly propertyExpr: LookupExpression;
+export class GetProperty extends LookupFunctionWithArgs {
+    static functionName = "get";
 
-    constructor(fromEntriesExpr: LookupExpression, extraParams: { propertyExpr: LookupExpression }) {
-        super();
-        this.fromEntriesExpr = fromEntriesExpr;
-        this.propertyExpr = extraParams.propertyExpr;
+    /** An expression that specifies what entry(ies)' property we want to retrieve */
+    public get fromEntriesExpr(): LookupExpression {
+        return this.firstArg;
+    }
+    /** An expression that specifies what property we want to retrieve */
+    public get propertyExpr(): LookupExpression {
+        return this.otherArgs["prop"];
+    }
+
+    protected override validateArgs(): void {
+        this.requireArgs(["prop"]);
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
@@ -196,10 +202,6 @@ export class GetProperty extends LookupExpression {
                 );
             }
         }
-    }
-
-    public toString(): string {
-        return `get(${this.fromEntriesExpr.toString()}, prop=${this.propertyExpr.toString()})`;
     }
 }
 

@@ -186,7 +186,7 @@ group("entry/index.test.ts", () => {
                                 },
                             ],
                             source: {
-                                expr: `get(this, prop=[[/prop/${defaultData.schema.properties._hasPart.id}]])`,
+                                expr: `this.get(prop=[[/prop/${defaultData.schema.properties._hasPart.id}]])`,
                                 entryId: ponderosaPine.id,
                             },
                         },
@@ -225,7 +225,7 @@ group("entry/index.test.ts", () => {
                                 ],
                                 source: {
                                     expr:
-                                        `reverse(this.andDescendants(), prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                                        `this.andDescendants().reverse(prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
                                     entryId: ponderosaPine.id,
                                 },
                             },

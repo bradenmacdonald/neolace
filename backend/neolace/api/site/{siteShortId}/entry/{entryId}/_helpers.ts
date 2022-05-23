@@ -140,7 +140,7 @@ export async function getEntry(
                             // Also pass along the lookup expression that can be used to retrieve the rest of the values from this property:
                             // this.get(prop=[[/prop/_id]])
                             sourceExpression: new GetProperty(new This(), {
-                                propertyExpr: new LiteralExpression(new PropertyValue(property.id)),
+                                prop: new LiteralExpression(new PropertyValue(property.id)),
                             }),
                             sourceExpressionEntryId: entryData.id,
                         },

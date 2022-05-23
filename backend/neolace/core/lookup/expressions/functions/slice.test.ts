@@ -62,56 +62,56 @@ group("slice.ts", () => {
         });
 
         test("slice(list, start=5)", async () => {
-            const expression = new Slice(tenList, { startIndexExpr: int(5) });
+            const expression = new Slice(tenList, { start: int(5) });
             const value = await evaluate(expression);
             check(value, tenListValues.slice(5), { startedAt: 5n });
         });
 
         test("slice(list, start=-3)", async () => {
-            const expression = new Slice(tenList, { startIndexExpr: int(-3) });
+            const expression = new Slice(tenList, { start: int(-3) });
             const value = await evaluate(expression);
             check(value, tenListValues.slice(7), { startedAt: 7n });
         });
 
         test("slice(list, start=-30)", async () => {
-            const expression = new Slice(tenList, { startIndexExpr: int(-30) });
+            const expression = new Slice(tenList, { start: int(-30) });
             const value = await evaluate(expression);
             check(value, tenListValues, { startedAt: 0n });
         });
 
         test("slice(list, start=5, size=2)", async () => {
-            const expression = new Slice(tenList, { startIndexExpr: int(5), sizeExpr: int(2) });
+            const expression = new Slice(tenList, { start: int(5), size: int(2) });
             const value = await evaluate(expression);
             check(value, tenListValues.slice(5, 7), { startedAt: 5n });
         });
 
         test("slice(list, start=5, end=8)", async () => {
-            const expression = new Slice(tenList, { startIndexExpr: int(5), endIndexExpr: int(8) });
+            const expression = new Slice(tenList, { start: int(5), end: int(8) });
             const value = await evaluate(expression);
             check(value, tenListValues.slice(5, 8), { startedAt: 5n });
         });
 
         test("slice(list, start=5, end=8, size=2)", async () => {
             // size takes priority over end
-            const expression = new Slice(tenList, { startIndexExpr: int(5), endIndexExpr: int(8), sizeExpr: int(2) });
+            const expression = new Slice(tenList, { start: int(5), end: int(8), size: int(2) });
             const value = await evaluate(expression);
             check(value, tenListValues.slice(5, 7), { startedAt: 5n });
         });
 
         test("slice(list, end=500)", async () => {
-            const expression = new Slice(tenList, { endIndexExpr: int(500) });
+            const expression = new Slice(tenList, { end: int(500) });
             const value = await evaluate(expression);
             check(value, tenListValues, { startedAt: 0n });
         });
 
         test("slice(list, start=3, end=-3)", async () => {
-            const expression = new Slice(tenList, { startIndexExpr: int(3), endIndexExpr: int(-3) });
+            const expression = new Slice(tenList, { start: int(3), end: int(-3) });
             const value = await evaluate(expression);
             check(value, tenListValues.slice(3, 7), { startedAt: 3n });
         });
 
         test("slice(list, end=-3, size=2)", async () => {
-            const expression = new Slice(tenList, { endIndexExpr: int(-3), sizeExpr: int(2) });
+            const expression = new Slice(tenList, { end: int(-3), size: int(2) });
             const value = await evaluate(expression);
             check(value, tenListValues.slice(0, 2), { startedAt: 0n });
         });
