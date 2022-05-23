@@ -4,16 +4,18 @@ import { transformDataForGraph, transformHideNodesOfType } from "./GraphFunction
 
 export interface Transform {
     id: string;
-    params: Record<string, any>;
+    params: Record<string, unknown>;
 }
 
 // NOTE assuming that transforms can only be applied once
-export const transforms = {
-    condense: "condense",
-    hideType: "hide-type",
-};
+export enum Transforms {
+    CONDENSE =  "condense",
+    HIDETYPE = "hide-type",
+}
 
 function condenseGraphData(currentData: G6RawGraphData) {
+    // NOTE for now, we are performing node condensing relative to the "this" node of the graph.
+    // NOTE: the 'this' node is only indicated by being first in the index of nodes
     const condensedData = transformDataForGraph(currentData, currentData.nodes[0].entryType);
     return condensedData;
 }
@@ -33,11 +35,11 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
     };
 
     for (const t of transformList) {
-        if (t.id === transforms.condense) {
+        if (t.id === Transforms.CONDENSE) {
             transformedData = condenseGraphData(transformedData);
-        } else if (t.id === transforms.hideType) {
+        } else if (t.id === Transforms.HIDETYPE) {
             console.log(transformList)
-            transformedData = hideNodeTypeInGraph(transformedData, t.params.nodeType);
+            transformedData = hideNodeTypeInGraph(transformedData, t.params.nodeType as string);
         }
     }
     return transformedData;

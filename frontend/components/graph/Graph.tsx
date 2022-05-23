@@ -1,7 +1,7 @@
 /**
  * A graph that is displayed as the result of the .graph() lookup function.
  */
-import React, { useState } from "react";
+import React from "react";
 import { api } from "lib/api-client";
 import { MDTContext } from "../markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, INode, NodeConfig } from "@antv/g6";
@@ -11,7 +11,7 @@ import { VNID } from "neolace-api";
 import { ToolbarButton } from "../widgets/Button";
 import { useIntl } from "react-intl";
 import { useStateRef } from "../utils/stateRefHook";
-import { applyTransforms, Transform, transforms } from "./Transforms";
+import { applyTransforms, Transform, Transforms } from "./Transforms";
 import { Modal } from "../widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 
@@ -47,11 +47,7 @@ function colorGraph(data: G6RawGraphData, refCache: api.ReferenceCacheData) {
             nextColor = (nextColor + 1) % Object.values(EntryColor).length;
         }
         node.color = colourMap.get(node.entryType as VNID);
-        if (refCache.entryTypes[node.entryType as VNID]?.name === undefined) {
-            console.log(node.entryType , node.label);
-        } else {
-            node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
-        }
+        node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
     });
 
     return data;
@@ -81,7 +77,6 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const intl = useIntl();
-    const [condensed, setCondensed] = React.useState(false);
     const [hidden, setHidden, hiddenRef] = useStateRef(false);
     // The data (nodes and relationships) that we want to display as a graph.
     const originalData = React.useMemo(() => {
@@ -212,31 +207,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     // Update the graph data whenever the current data changes
     React.useEffect(() => {
-        if (!graph || graph.destroyed) { return; };
+        if (!graph || graph.destroyed) { return; }
         graph.changeData(currentData);
     }, [currentData])
-
-    React.useEffect(() => {
-        if (!graph || graph.destroyed) { return; }
-        if (condensed) {
-            // NOTE for now, we are performing node condensing relative to the "this" node of the graph.
-            // NOTE: the 'this' node is only indicated by being first in the index of nodes
-            // add condense to the transforms
-            setTransforms((t) => {
-                return t.concat(
-                    {
-                        id: transforms.condense,
-                        params: {}
-                    }
-                );
-            })
-
-        } else {
-            setTransforms(t => {
-                return t.filter((t) => t.id != transforms.condense);
-            })
-        }
-    }, [condensed]);
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
 
@@ -280,12 +253,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         graph.on("node:click", function(e) {
             const item = e.item as INode;
             if (hiddenRef.current) {
-                // NOTE for now, we are performing node condensing relative to the "this" node of the graph.
-                // NOTE: the 'this' node is only indicated by being first in the index of nodes
-                // add condense to the transforms
                 setTransforms((t) => {
                     return t.concat({
-                        id: transforms.hideType,
+                        id: Transforms.HIDETYPE,
                         params: {'nodeType': item.getModel().entryType as string},
                     });
                 })
@@ -382,7 +352,14 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Code for "download as image" toolbar button
     const handleDownloadImageButton = React.useCallback(() => { graph?.downloadFullImage(); }, [graph]);
     // Code for "Condense leaves" toolbar button
-    const handleCondenseNodesButton = React.useCallback(() => { setCondensed((wasCondensed) => !wasCondensed)}, []);
+    const isCondensed = transformList.find((t) => t.id === Transforms.CONDENSE) !== undefined;
+    const handleCondenseNodesButton = React.useCallback(() => {
+        if (isCondensed) {
+            setTransforms((prevTransforms) => prevTransforms.filter((t) => t.id !== Transforms.CONDENSE));
+        } else {
+            setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.CONDENSE, params: {}}]);
+        }
+    }, [isCondensed, setTransforms]);
     // Code for "Hide article antries" toolbar button
     const handleHideArticlesButton = React.useCallback(() => { setHidden((wasHidden) => !wasHidden); }, []);
 
@@ -424,12 +401,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "graph.toolbar.condenseNodes",
                     })}
                     icon="chevron-contract"
-                    enabled={condensed}
+                    enabled={isCondensed}
                 />
                 <ToolbarButton
                     onClick={handleHideArticlesButton}
                     title={intl.formatMessage({
-                        defaultMessage: "Hide article entries.",
+                        defaultMessage: "Hide entries tool: click on an entry to hide all entries of that type.",
                         id: "graph.toolbar.hideArticles",
                     })}
                     icon="diamond-fill"
