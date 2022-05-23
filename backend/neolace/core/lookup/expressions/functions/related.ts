@@ -39,7 +39,7 @@ export class AndRelated extends LookupFunctionWithArgs {
         const startingEntry = await this.entryExpr.getValueAs(LazyEntrySetValue, context);
         const depth = await this.depthExpr?.getValueAs(IntegerValue, context) ?? new IntegerValue(1);
 
-        if (depth.value < 1n || depth.value > 10n) {
+        if (depth.value < 1n || depth.value > 4n) {
             throw new LookupEvaluationError(`Invalid depth for andRelated(): ${depth}`);
         }
 
