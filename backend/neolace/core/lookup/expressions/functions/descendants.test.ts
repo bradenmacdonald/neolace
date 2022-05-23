@@ -1,13 +1,12 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { PropertyType } from "neolace/deps/neolace-api.ts";
-import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
+import { assertEquals, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { AnnotatedValue, IntegerValue, MakeAnnotatedEntryValue, PageValue } from "../../values.ts";
 import { This } from "../this.ts";
 import { Count } from "./count.ts";
-import { LookupExpression } from "../base.ts";
 import { AndDescendants, Descendants } from "./descendants.ts";
 
 group("descendants.ts", () => {
@@ -16,20 +15,15 @@ group("descendants.ts", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
         const siteId = defaultData.site.id;
         const familyPinaceae = defaultData.entries.familyPinaceae;
+        const context = new TestLookupContext({ siteId, entryId: familyPinaceae.id, defaultPageSize: 5n });
 
         test(`toString()`, async () => {
             assertEquals((new Descendants(new This())).toString(), "this.descendants()");
         });
 
         test("It can give all the descendants of the family Pinaceae", async () => {
-            const graph = await getGraph();
             const expression = new Descendants(new This());
-
-            const value = await graph.read((tx) =>
-                expression.getValue({ tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 5n }).then((v) =>
-                    v.makeConcrete()
-                )
-            );
+            const value = await context.evaluateExprConcrete(expression);
 
             assertEquals(
                 value,
@@ -59,11 +53,7 @@ group("descendants.ts", () => {
 
         test("It is compatible with count()", async () => {
             const expression = new Count(new Descendants(new This()));
-
-            const graph = await getGraph();
-            const value = await graph.read((tx) =>
-                expression.getValue({ tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 10n })
-            );
+            const value = await context.evaluateExprConcrete(expression);
 
             assertEquals(value, new IntegerValue(9));
         });
@@ -74,19 +64,15 @@ group("descendants.ts", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
         const siteId = defaultData.site.id;
         const familyPinaceae = defaultData.entries.familyPinaceae;
+        const context = new TestLookupContext({ siteId, defaultPageSize: 5n });
 
         test(`toString()`, async () => {
             assertEquals((new AndDescendants(new This())).toString(), "this.andDescendants()");
         });
 
         test("It can give all the descendants of the ponderosa pine", async () => {
-            const graph = await getGraph();
             const expression = new AndDescendants(new This());
-            const value = await graph.read((tx) =>
-                expression.getValue({ tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 5n }).then((v) =>
-                    v.makeConcrete()
-                )
-            );
+            const value = await context.evaluateExprConcrete(expression, familyPinaceae.id);
 
             assertEquals(
                 value,
@@ -116,12 +102,8 @@ group("descendants.ts", () => {
         });
 
         test("It is compatible with count()", async () => {
-            const graph = await getGraph();
             const expression = new Count(new AndDescendants(new This()));
-
-            const value = await graph.read((tx) =>
-                expression.getValue({ tx, siteId, entryId: familyPinaceae.id, defaultPageSize: 10n })
-            );
+            const value = await context.evaluateExprConcrete(expression, familyPinaceae.id);
 
             assertEquals(value, new IntegerValue(10));
         });
@@ -155,19 +137,13 @@ group("descendants.ts", () => {
             G = VNID(),
             H = VNID(),
             I = VNID();
-
-        const evalExpr = async (expr: LookupExpression, entryId: VNID) =>
-            await getGraph().then((graph) =>
-                graph.read((tx) =>
-                    expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
-                )
-            );
+        const context = new TestLookupContext({ siteId });
 
         const checkDescendants = async (entryId: VNID, expected: AnnotatedValue[]) => {
             // with descendants():
             const expr1 = new Descendants(new This());
             assertEquals(
-                await evalExpr(expr1, entryId),
+                await context.evaluateExprConcrete(expr1, entryId),
                 new PageValue([
                     ...expected,
                 ], {
@@ -182,7 +158,7 @@ group("descendants.ts", () => {
             // And with andDescendants():
             const expr2 = new AndDescendants(new This());
             assertEquals(
-                await evalExpr(expr2, entryId),
+                await context.evaluateExprConcrete(expr2, entryId),
                 new PageValue([
                     MakeAnnotatedEntryValue(entryId, { distance: new IntegerValue(0n) }),
                     ...expected,

@@ -130,7 +130,6 @@ export function useLookupExpression(expr: string, options: {entryId?: VNID} = {}
         if (expr.trim() === "") {
             // If there is no expression, don't bother hitting the API:
             return {
-                expressionNormalized: "",
                 resultValue: {type: "Null" as const},
                 entryContext: options.entryId,
                 referenceCache: { entries: {}, entryTypes: {}, lookups: [], properties: {} },

@@ -10,6 +10,9 @@ import {
     testDataFile,
     TestSetupData,
 } from "neolace/lib/tests-default-data.ts";
+import { LookupExpression } from "neolace/core/lookup/expressions/base.ts";
+import { ConcreteValue, ErrorValue, LookupValue } from "neolace/core/lookup/values.ts";
+import { LookupContext } from "neolace/core/lookup/context.ts";
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, it, ItDefinition } from "std/testing/bdd.ts";
 
@@ -192,4 +195,74 @@ export async function createUserWithPermissions(
     }));
 
     return { userId, groupId, userData: { bot: { authToken: botAuthToken } } };
+}
+
+/**
+ * A class that makes it easier to evaluate lookup expressions in a test context.
+ */
+export class TestLookupContext {
+    public readonly siteId: VNID;
+    /**
+     * The "current entry", i.e. the value of "this" in any lookup expression in this context. May not be defined, in
+     * cases like the home page which can have lookup expressions but aren't entries themselves.
+     */
+    public readonly entryId?: VNID;
+    public readonly defaultPageSize?: bigint;
+
+    constructor(args: {
+        siteId: VNID;
+        entryId?: VNID;
+        defaultPageSize?: bigint;
+    }) {
+        this.siteId = args.siteId;
+        this.entryId = args.entryId;
+        this.defaultPageSize = args.defaultPageSize;
+    }
+
+    /**
+     * Evaluate a lookup expression.
+     * This may return "Lazy" values depending on the expression, which you may not want for test purposes. Use
+     * evaluateExprConcrete() in that case to get concete values only.
+     */
+    public async evaluateExpr(expr: LookupExpression | string, entryId?: VNID): Promise<LookupValue> {
+        const graph = await getGraph();
+        const result = await graph.read(async (tx) => {
+            const tempContext = new LookupContext({
+                tx,
+                siteId: this.siteId,
+                entryId: entryId ?? this.entryId,
+                defaultPageSize: this.defaultPageSize,
+            });
+            return await tempContext.evaluateExpr(expr);
+        });
+        if (result instanceof ErrorValue) {
+            throw result.error;
+        }
+        return result;
+    }
+
+    /**
+     * Evaluate an expression as a "Concrete" value, which excludes any of the "Lazy" value types and forces them to be
+     * evaluated. For example, instead of returning a LazyEntrySet representing a yet-unknown set of entries, it will
+     * evaluate the query, determine which actual entries are included, and return the first 10 as a PageValue.
+     */
+    public async evaluateExprConcrete(expr: LookupExpression | string, entryId?: VNID): Promise<ConcreteValue> {
+        // We can't just call evaluateExpr() and then .makeConcrete() because makeConcrete() requires the same
+        // transaction, and the transaction gets closed within evaluateExpr().
+        const graph = await getGraph();
+        const result = await graph.read(async (tx) => {
+            const tempContext = new LookupContext({
+                tx,
+                siteId: this.siteId,
+                entryId: entryId ?? this.entryId,
+                defaultPageSize: this.defaultPageSize,
+            });
+            const innerResult = await tempContext.evaluateExpr(expr);
+            return await innerResult.makeConcrete();
+        });
+        if (result instanceof ErrorValue) {
+            throw result.error;
+        }
+        return result;
+    }
 }

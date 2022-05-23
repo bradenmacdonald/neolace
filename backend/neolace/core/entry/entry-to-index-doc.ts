@@ -3,7 +3,7 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 import * as api from "neolace/deps/neolace-api.ts";
 
 import { getGraph } from "neolace/core/graph.ts";
-import { CachedLookupContext } from "neolace/core/lookup/context.ts";
+import { LookupContext } from "neolace/core/lookup/context.ts";
 import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-data.ts";
 import { Entry } from "./Entry.ts";
 import { getEntryProperties } from "./properties.ts";
@@ -38,7 +38,7 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
 
     // Convert markdown fields into plain text, convert properties into values
     await graph.read(async (tx) => {
-        const lookupContext = new CachedLookupContext(tx, siteId, entryId, BigInt(maxValuesPerProp));
+        const lookupContext = new LookupContext({ tx, siteId, entryId, defaultPageSize: BigInt(maxValuesPerProp) });
 
         description = await markdownToPlainText(api.MDT.tokenizeMDT(entryData.description), lookupContext);
         articleText = await markdownToPlainText(api.MDT.tokenizeMDT(features?.Article?.articleMD ?? ""), lookupContext);
@@ -83,7 +83,7 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
  * Convert Markdown to plain text, including lookup values.
  * This is tricky because the MDT API is not asynchronous, but lookup evaluation is.
  */
-async function markdownToPlainText(mdt: api.MDT.RootNode, lookupContext: CachedLookupContext): Promise<string> {
+async function markdownToPlainText(mdt: api.MDT.RootNode, lookupContext: LookupContext): Promise<string> {
     let placeholderCount = 0;
     const nextPlaceholder = () => `╼${placeholderCount++}╾`;
     const pendingValues: Promise<[placeholder: string, valueText: string]>[] = [];
@@ -107,7 +107,7 @@ async function markdownToPlainText(mdt: api.MDT.RootNode, lookupContext: CachedL
     return text;
 }
 
-async function lookupValueToPlainText(value: V.LookupValue, context: CachedLookupContext): Promise<string> {
+async function lookupValueToPlainText(value: V.LookupValue, context: LookupContext): Promise<string> {
     value = await value.makeConcrete();
     if (value instanceof V.StringValue) {
         return value.value;

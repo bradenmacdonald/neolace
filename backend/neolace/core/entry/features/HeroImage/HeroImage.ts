@@ -11,7 +11,6 @@ import { EnabledFeature } from "../EnabledFeature.ts";
 import { Entry, siteIdForEntryId } from "neolace/core/entry/Entry.ts";
 import { HeroImageData } from "./HeroImageData.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
-import { parseLookupString } from "neolace/core/lookup/parse.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
 import { AnnotatedValue, EntryValue, InlineMarkdownStringValue, PageValue } from "neolace/core/lookup/values.ts";
 import { getEntryFeatureData } from "../get-feature-data.ts";
@@ -69,11 +68,11 @@ export const HeroImageFeature = EntryTypeFeature({
      */
     async loadData({ tx, config, entryId, refCache }) {
         const siteId = await siteIdForEntryId(entryId);
-        const context: LookupContext = { tx, siteId, entryId, defaultPageSize: 1n };
+        const context = new LookupContext({ tx, siteId, entryId, defaultPageSize: 1n });
 
         let value;
         try {
-            value = await parseLookupString(config.lookupExpression).getValue(context).then((v) => v.makeConcrete());
+            value = await context.evaluateExpr(config.lookupExpression).then((v) => v.makeConcrete());
         } catch (err: unknown) {
             if (err instanceof LookupError) {
                 log.error(err.message);

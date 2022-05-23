@@ -1,6 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { getGraph } from "neolace/core/graph.ts";
+import { assertEquals, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import {
     BooleanValue,
     ConcreteValue,
@@ -18,14 +17,9 @@ import { List } from "../list-expr.ts";
 group("if.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const siteId = defaultData.site.id;
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        getGraph().then((graph) =>
-            graph.read((tx) => expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n })).then((v) =>
-                v.makeConcrete()
-            )
-        );
+    const context = new TestLookupContext({ siteId });
     const assertEvaluatesTo = async (expr: LookupExpression, value: ConcreteValue) =>
-        assertEquals(await evalExpression(expr), value);
+        assertEquals(await context.evaluateExprConcrete(expr), value);
 
     const literal = (value: ConcreteValue) => new LiteralExpression(value);
     const literalTrue = literal(new BooleanValue(true));

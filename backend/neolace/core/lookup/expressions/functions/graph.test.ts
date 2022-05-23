@@ -7,6 +7,7 @@ import {
     group,
     setTestIsolation,
     test,
+    TestLookupContext,
 } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { AndAncestors } from "./ancestors.ts";
@@ -21,6 +22,7 @@ group("graph()", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const siteId = defaultData.site.id;
     const ponderosaPine = defaultData.entries.ponderosaPine;
+    const context = new TestLookupContext({ siteId, entryId: ponderosaPine.id });
 
     const entryType = VNID(), entryIsA = VNID();
     const A = VNID(),
@@ -29,15 +31,7 @@ group("graph()", () => {
         D = VNID();
 
     test("It can graph all the ancestors of the ponderosa pine", async () => {
-        // this is the same as this.ancestors().graph()
-        const expression = new Graph(new AndAncestors(new This()));
-
-        const graph = await getGraph();
-        const value = await graph.read((tx) =>
-            expression.getValue({ tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n }).then((v) =>
-                v.makeConcrete()
-            )
-        );
+        const value = await context.evaluateExprConcrete("this.andAncestors().graph()");
 
         assertInstanceOf(value, GraphValue);
         assertEquals(value.entries, [
@@ -213,9 +207,8 @@ group("graph()", () => {
         }));
 
         const expression = new Graph(new AndAncestors(new This()));
-        const value = await graph.read((tx) =>
-            expression.getValue({ tx, siteId, entryId: A, defaultPageSize: 10n }).then((v) => v.makeConcrete())
-        );
+        // Get A and its ancestors:
+        const value = await context.evaluateExprConcrete(expression, A);
 
         assertInstanceOf(value, GraphValue);
         assertEquals<typeof value.entries>(value.entries, [
@@ -288,15 +281,9 @@ group("graph()", () => {
     });
 
     test("Works on empty values", async () => {
-        const graph = await getGraph();
-
         // Ponderosa pine has no descendants so this will be an empty set of entries to graph:
         const expression = new Graph(new Descendants(new This()));
-        const value = await graph.read((tx) =>
-            expression.getValue({ tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n }).then((v) =>
-                v.makeConcrete()
-            )
-        );
+        const value = await context.evaluateExprConcrete(expression);
 
         assertEquals(value, new GraphValue([], []));
     });

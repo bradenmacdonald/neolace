@@ -7,13 +7,20 @@ import { type LookupFunctionClass } from "./expressions/functions/base.ts";
 import { builtInLookupFunctions } from "./expressions/functions/all-functions.ts";
 
 /**
+ * Parse a lookup expression.
+ *
  * Given a lookup expression as a string like
- *     this.andAncestors()
- * Parse it and return it as a LookupExpression object:
+ *     "this.andAncestors()"
+ * This function will parse it and return it as a LookupExpression object:
  *     new AndAncestors(new This());
+ *
+ * You should generally not use this directly, but rather use LookupContext.parseLookupString() or
+ * parseLookupString.evaluateExpr() since those will load any lookup function plugins that are enabled for the specific
+ * site before calling this method to do the parsing. You can use this directly in tests, however, as long as the tests
+ * don't rely on any plugins.
  */
 export function parseLookupString(lookup: string, withExtraFunctions: LookupFunctionClass[] = []): LookupExpression {
-    // To save time and make development faster, we are cheating with a working but very fake parser.
+    // To save time and make development faster, we are cheating with a working but somewhat simplistic parser.
     // In the future this function should be replaced with a proper parser built using https://chevrotain.io/
 
     lookup = lookup.trim();

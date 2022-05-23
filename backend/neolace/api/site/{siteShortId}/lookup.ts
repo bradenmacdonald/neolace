@@ -1,11 +1,10 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
-import { CachedLookupContext } from "neolace/core/lookup/context.ts";
-import { parseLookupString } from "neolace/core/lookup/parse.ts";
-import { LookupParseError } from "neolace/core/lookup/errors.ts";
-import { type LookupExpression } from "neolace/core/lookup/expressions/base.ts";
+import { LookupContext } from "neolace/core/lookup/context.ts";
 import { getEntry } from "./entry/{entryId}/_helpers.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
+import { ErrorValue } from "neolace/core/lookup/values.ts";
+import { LookupParseError } from "neolace/core/lookup/errors.ts";
 
 export class EvaluateLookupResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/lookup"];
@@ -34,34 +33,28 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
             entry = await graph.read((tx) => getEntry(entryKeyStr, siteId, tx));
         }
 
-        // Parse the expression
-        let parsedExpression: LookupExpression;
-        try {
-            parsedExpression = parseLookupString(lookupString);
-        } catch (err) {
-            if (err instanceof LookupParseError) {
-                throw new api.InvalidRequest(api.InvalidRequestReason.LookupExpressionParseError, err.message);
-            }
-            throw err;
-        }
-
         const { resultValue, refCacheData } = await graph.read(async (tx) => {
             const defaultPageSize = 20n;
-            const context = new CachedLookupContext(tx, siteId, entry?.id, defaultPageSize);
+            const context = new LookupContext({ tx, siteId, entryId: entry?.id, defaultPageSize });
             // Evaluate the expression. On LookupEvaluationError, this will return an ErrorValue.
-            const value = await context.evaluateExpr(parsedExpression);
+            const value = await context.evaluateExpr(lookupString);
+            if (value instanceof ErrorValue && value.error instanceof LookupParseError) {
+                throw new api.InvalidRequest(
+                    api.InvalidRequestReason.LookupExpressionParseError,
+                    value.error.message,
+                );
+            }
             // TODO: set a timeout to rollback/abort the transaction if it's taking too long.
             const resultValue = (await value.makeConcrete()).toJSON();
 
             const refCache = new ReferenceCache({ siteId });
             refCache.extractLookupReferences(resultValue, { currentEntryId: entry?.id });
-            const refCacheData = await refCache.getData(tx, context);
+            const refCacheData = await refCache.getData(context);
 
             return { resultValue, refCacheData };
         });
 
         return {
-            expressionNormalized: parsedExpression.toString(),
             resultValue,
             referenceCache: refCacheData,
         };

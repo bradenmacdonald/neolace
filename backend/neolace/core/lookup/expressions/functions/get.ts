@@ -11,7 +11,6 @@ import { getEntryProperty } from "neolace/core/entry/properties.ts";
 import { LookupExpression } from "../base.ts";
 import {
     EntryValue,
-    ErrorValue,
     InlineMarkdownStringValue,
     IntegerValue,
     LazyEntrySetValue,
@@ -22,7 +21,6 @@ import {
 } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
-import { parseLookupString } from "../../parse.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
 
 /**
@@ -120,7 +118,7 @@ export class GetProperty extends LookupFunctionWithArgs {
 
         if (propMode === PropertyMode.Auto) {
             // This is an "auto" property, which means its value is determined by evaluating another lookup expression:
-            return await expressionStringToValue(propertyData["prop.default"] ?? "null", context);
+            return await context.evaluateExpr(propertyData["prop.default"] ?? "null");
         } else if (propType === PropertyType.RelIsA || propType === PropertyType.RelOther) {
             // This is a relationship property.
             const startingEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
@@ -182,14 +180,14 @@ export class GetProperty extends LookupFunctionWithArgs {
                     // The property is set.
                     if (propFacts?.facts.length === 1) {
                         // And it has a single value
-                        return await expressionStringToValue(propFacts.facts[0].valueExpression, context);
+                        return await context.evaluateExpr(propFacts.facts[0].valueExpression);
                     } else {
                         // And it has multiple values
                         throw new LookupEvaluationError("Multiple property values not yet supported for get()");
                     }
                 } else if (propFacts?.property.default) {
                     // Return the default value.
-                    return await expressionStringToValue(propFacts?.property.default, context);
+                    return await context.evaluateExpr(propFacts.property.default);
                 } else {
                     // Return null - the property is not set and has no default.
                     return new NullValue();
@@ -201,21 +199,6 @@ export class GetProperty extends LookupFunctionWithArgs {
                     "Getting a property from multiple entries is not yet supported by get()",
                 );
             }
-        }
-    }
-}
-
-async function expressionStringToValue(expression: string, context: LookupContext): Promise<LookupValue> {
-    try {
-        // Parse the default expression:
-        const defaultExpr = await parseLookupString(expression);
-        // Now evaluate it:
-        return defaultExpr.getValue(context);
-    } catch (err) {
-        if (err instanceof LookupEvaluationError) {
-            return new ErrorValue(err);
-        } else {
-            throw err;
         }
     }
 }

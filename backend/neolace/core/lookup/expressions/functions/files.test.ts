@@ -1,5 +1,13 @@
 import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
-import { assert, assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
+import {
+    assert,
+    assertEquals,
+    assertRejects,
+    group,
+    setTestIsolation,
+    test,
+    TestLookupContext,
+} from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
@@ -8,18 +16,12 @@ import { EntryValue, FileValue, IntegerValue, PageValue } from "../../values.ts"
 import { Files } from "./files.ts";
 import { LiteralExpression } from "../literal-expr.ts";
 import { LookupEvaluationError } from "../../errors.ts";
-import { LookupExpression } from "../base.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 
 group("files.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const siteId = defaultData.site.id;
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        getGraph().then((graph) =>
-            graph.read((tx) =>
-                expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
-            )
-        );
+    const context = new TestLookupContext({ siteId });
 
     test(`It gives data about the files associated with an entry`, async () => {
         const graph = await getGraph();
@@ -111,7 +113,7 @@ group("files.ts", () => {
         // entry.files()
         const expression = new Files(new LiteralExpression(new EntryValue(entryId)));
 
-        const result = await evalExpression(expression);
+        const result = await context.evaluateExprConcrete(expression);
 
         assert(result instanceof PageValue);
         assert(result.values[0].url.startsWith(firstPdf.url));
@@ -145,7 +147,7 @@ group("files.ts", () => {
         );
 
         assertEquals(
-            await evalExpression(expression),
+            await context.evaluateExprConcrete(expression),
             new PageValue([], { startedAt: 0n, pageSize: 10n, totalCount: 0n }),
         );
     });
@@ -166,7 +168,7 @@ group("files.ts", () => {
         const expression = new Files(new LiteralExpression(new IntegerValue(123n)));
 
         await assertRejects(
-            () => evalExpression(expression),
+            () => context.evaluateExprConcrete(expression),
             LookupEvaluationError,
             `The expression "123" cannot be used with files().`,
         );

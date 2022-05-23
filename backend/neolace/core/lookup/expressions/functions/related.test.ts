@@ -1,5 +1,4 @@
-import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { getGraph } from "neolace/core/graph.ts";
+import { assertEquals, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import { AndRelated } from "./related.ts";
 import { AnnotatedValue, EntryValue, IntegerValue, PageValue } from "../../values.ts";
 import { This } from "../this.ts";
@@ -10,20 +9,15 @@ group("andRelated()", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const siteId = defaultData.site.id;
     const ponderosaPine = defaultData.entries.ponderosaPine;
+    const context = new TestLookupContext({ siteId, entryId: ponderosaPine.id, defaultPageSize: 15n });
 
     const one = new LiteralExpression(new IntegerValue(1));
     const two = new LiteralExpression(new IntegerValue(2));
 
     test("It can find all entries related to the ponderosa pine (depth = 1)", async () => {
-        // this is the same as this.ancestors().graph()
+        // this is the same as this.andRelated(depth=1)
         const expression = new AndRelated(new This(), { depth: one });
-
-        const graph = await getGraph();
-        const value = await graph.read((tx) =>
-            expression.getValue({ tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n }).then((v) =>
-                v.makeConcrete()
-            )
-        );
+        const value = await context.evaluateExprConcrete(expression);
 
         assertEquals(
             value,
@@ -41,7 +35,7 @@ group("andRelated()", () => {
                     }),
                 ],
                 {
-                    pageSize: 10n,
+                    pageSize: 15n,
                     startedAt: 0n,
                     totalCount: 3n,
                     sourceExpression: expression,
@@ -52,15 +46,8 @@ group("andRelated()", () => {
     });
 
     test("It can find all entries related to the ponderosa pine (depth = 2)", async () => {
-        // this is the same as this.ancestors().graph()
         const expression = new AndRelated(new This(), { depth: two });
-
-        const graph = await getGraph();
-        const value = await graph.read((tx) =>
-            expression.getValue({ tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 15n }).then((v) =>
-                v.makeConcrete()
-            )
-        );
+        const value = await context.evaluateExprConcrete(expression);
 
         assertEquals(
             value,
