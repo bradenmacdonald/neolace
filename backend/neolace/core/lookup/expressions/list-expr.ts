@@ -1,4 +1,4 @@
-import { LookupExpression } from "../expression.ts";
+import { LookupExpression } from "./base.ts";
 import { LazyIterableValue } from "../values.ts";
 import { LookupContext } from "../context.ts";
 
