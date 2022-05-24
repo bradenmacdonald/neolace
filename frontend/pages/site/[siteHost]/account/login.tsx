@@ -96,6 +96,11 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     const site = await getSiteData(context.params.siteHost);
     if (site === null) { return {notFound: true}; }
 
+    // Users are only able to log in via the "home site".
+    if (!site.isHomeSite) {
+        return {redirect: {destination: `${site.homeSiteUrl}/account/login`, permanent: true}};
+    }
+
     return {
         props: {
             site,

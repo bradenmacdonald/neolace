@@ -25,18 +25,21 @@ export const config = (() => {
         port: defaultTo(5554, { test: 4444 }),
         // Full URL at which the REST API is available
         apiUrl: defaultTo("http://local.neolace.net:5554", { test: "http://localhost:4444" }),
+        // To create the full URL to a site, prefix this before the domain:
+        siteUrlPrefix: defaultTo("http://", { production: "https://" }),
+        // To create the full URL to a site's frontend, prefix this after the domain:
+        siteUrlSuffix: defaultTo(":5555", { production: "", test: ":4445" }),
 
         /**
-         * URL for the Realm admin UI. This is where you can create a new site, register a user account, etc.
+         * The shortId of the "home site" for this Realm. Every Realm has a home site, which is the site where users
+         * log in, manage their account, and from where authorized users can create additional sites (if enabled).
          */
-        realmAdminUrl: defaultTo("http://local.neolace.net:5555", { test: "http://frontend-realm-admin" }),
-        realmName: defaultTo("Neolace Dev", { production: "Neolace", test: "Neolace Test" }),
-        /** URL to page with information about the overall realm. Could be a site's home page. */
-        realmURL: "https://www.neolace.com",
+        realmHomeSiteId: "home",
+        /** Physical address of the organization whose realm this is. Required for outbound emails. */
         realmPhysicalAddress: "317 - 161 West Georgia St.\nVancouver, BC  Canada",
 
-        // Frontend domains:
-        frontendDomains: ["localhost:5555", "*.local.neolace.net:5555"],
+        // Frontend domains - currently only used for authn to set the audience of the JWTs that it issues:
+        frontendDomains: ["*.local.neolace.net:5555"],
 
         // URL of the Neo4j server
         neo4jUrl: defaultTo("bolt://localhost:7687", { test: "bolt://localhost:4687" }),
@@ -116,7 +119,7 @@ export const config = (() => {
         }
     }
     // Sanity checks
-    const rootUrls = ["realmAdminUrl", "apiUrl", "authnUrl", "authnPrivateUrl"] as const;
+    const rootUrls = ["apiUrl", "authnUrl", "authnPrivateUrl"] as const;
     for (const url of rootUrls) {
         if (config[url].endsWith("/")) {
             throw new Error(`${url} must not end with a /`);
@@ -126,9 +129,6 @@ export const config = (() => {
         // Enforce HTTPS
         if (!config.apiUrl.startsWith("https://")) {
             throw new Error("In production, apiUrl must be https://");
-        }
-        if (!config.realmAdminUrl.startsWith("https://")) {
-            throw new Error("In production, realmAdminUrl must be https://");
         }
     }
     return Object.freeze(config);

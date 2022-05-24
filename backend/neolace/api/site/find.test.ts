@@ -13,6 +13,7 @@ group("find.ts", () => {
                 name: "PlantDB",
                 shortId: "plantdb",
                 domain: "plantdb.local.neolace.net",
+                url: "http://plantdb.local.neolace.net:4445",
                 description: null,
                 footerMD: "Powered by [Neolace](https://www.neolace.com/).",
                 frontendConfig: {
@@ -26,6 +27,9 @@ group("find.ts", () => {
                         },
                     },
                 },
+                homeSiteName: "Neolace Development",
+                homeSiteUrl: "http://home.local.neolace.net:4445",
+                isHomeSite: false,
             });
         });
 

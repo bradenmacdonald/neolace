@@ -107,9 +107,13 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
             name: "━━━━━━━━━━━━━━",
             description: "",
             domain,
+            url: "",
             footerMD: "━━━━━━━━━━━━━━",
             shortId: "",
             frontendConfig: {},
+            isHomeSite: false,
+            homeSiteName: "━━━━━━━━━━━━━━",
+            homeSiteUrl: "",
         },
         refreshInterval: 10 * 60_000,  // Reload the site data every 10 minutes in case anything was changed.
     });

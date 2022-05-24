@@ -79,7 +79,7 @@
             "problemMatcher": []
         },
         {
-            "label": "Erase Dev DB and re-create PlantDB example",
+            "label": "Erase Database and create default sites",
             "type": "shell",
             "command": "deno",
             "args": [
@@ -88,12 +88,12 @@
                 "--allow-read",
                 "--allow-env",
                 "--no-check",
-                "neolace/scripts/reset-dev-data-create-plantdb.ts"
+                "neolace/scripts/reset-dev-data-create-default-sites.ts"
             ],
             "problemMatcher": []
         },
         {
-            "label": "Fully reset/erase data",
+            "label": "Fully reset/erase all data",
             "type": "shell",
             "command": "docker-compose",
             "args": ["down", "-v"],

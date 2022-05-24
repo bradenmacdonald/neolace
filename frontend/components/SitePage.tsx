@@ -80,7 +80,16 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
 
     const systemLinks = <ul><UISlot<SystemLink> slotId="systemLinks" defaultContents={[
         //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
-        {id: "login", priority: 60, content: {url: "/login", label: <FormattedMessage id="systemLink.login" defaultMessage="Login" />, icon: "person-fill"}},
+        // Login link:
+        {
+            id: "login",
+            priority: 60,
+            content: {
+                url: site.isHomeSite ? "/account/login" : `${site.homeSiteUrl}/account/login?returnSite=${encodeURI(site.shortId)}`,
+                label: <FormattedMessage id="systemLink.login" defaultMessage="Login" />,
+                icon: "person-fill",
+            }
+        },
     ]} renderWidget={(link: UISlotWidget<SystemLink>) => <li key={link.id}><Link href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link></li>} /></ul>;
 
     return <SWRConfig value={{ fallback }}><UiPluginsProvider site={site}><div>
@@ -108,6 +117,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
                 <a className="flex-none h-8 md:h-24 p-1 md:p-3 mr-1 flex items-center">
                     {
+                        // eslint-disable-next-line @next/next/no-img-element
                         site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-auto h-full block" /> : site.name
                     }
                 </a>

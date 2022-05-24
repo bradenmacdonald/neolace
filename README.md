@@ -12,7 +12,7 @@ This repository contains the web backend and frontend for [neolace](https://neol
 1. Terminal > Run Task > Erase Dev DB and re-create PlantDB example
 1. Terminal > Run Task > Run Backend
 1. Terminal > Run Task > Run Frontend
-1. See it at http://plantdb.local.neolace.net:5555/
+1. See it at http://home.local.neolace.net:5555/
 
 ## How to analyze the frontend bundle's size
 

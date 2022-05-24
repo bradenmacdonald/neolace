@@ -14,6 +14,7 @@ import {
     VNodeType,
     VNodeTypeRef,
 } from "neolace/deps/vertex-framework.ts";
+import { config } from "neolace/app/config.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { getGraph } from "neolace/core/graph.ts";
 
@@ -151,6 +152,7 @@ export class Site extends VNodeType {
     static readonly derivedProperties = this.hasDerivedProperties({
         shortId,
         frontendConfig,
+        url,
     });
 
     static async validate(dbObject: RawVNode<typeof this>): Promise<void> {
@@ -199,6 +201,17 @@ export function shortId(): DerivedProperty<string> {
 }
 
 /**
+ * A derived property that provides the full URL of a Site.
+ */
+export function url(): DerivedProperty<string> {
+    return DerivedProperty.make(
+        Site,
+        (s) => s.domain,
+        (s) => `${config.siteUrlPrefix}${s.domain}${config.siteUrlSuffix}`,
+    );
+}
+
+/**
  * A derived property that provides the "frontend config", parsed from JSON
  */
 export function frontendConfig(): DerivedProperty<FrontendConfigData> {
@@ -219,6 +232,45 @@ export const siteCodeForSite = makeCachedLookup(
 /** Convert an entry's slugId (with siteCode prefix) into a "friendlyId" */
 export function slugIdToFriendlyId(slugId: string): string {
     return slugId.substring(5);
+}
+
+interface HomeSiteData {
+    siteId: VNID,
+    shortId: string,
+    name: string;
+    domain: string;
+    url: string;
+}
+/** Internal cache that makes getHomeSite() instant in most cases. */
+let mainSiteCache: Readonly<HomeSiteData>;
+
+/**
+ * Get basic information about the "home site" of this Neolace realm.
+ * The home site is where users log in, manage their profiles, and create/edit/delete other sites.
+ */
+export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
+    if (mainSiteCache === undefined) {
+        const shortId = config.realmHomeSiteId;
+        const graph = await getGraph();
+        let data;
+        try {
+            data = await graph.pullOne(Site, s => s.id.name.domain.url(), {key: `site-${shortId}`});
+        } catch (err) {
+            throw new Error(
+                "Unable to load the home site. Check the realmHomeSiteId setting. In development, you may need to " +
+                "run the \"Erase Database and create default sites\" task.",
+                {cause: err},
+            );
+        }
+        mainSiteCache = Object.freeze({
+            siteId: data.id,
+            shortId,
+            name: data.name,
+            domain: data.domain,
+            url: data.url,
+        });
+    }
+    return mainSiteCache;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

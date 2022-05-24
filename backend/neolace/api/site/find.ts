@@ -1,6 +1,6 @@
 import { C, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { Site } from "neolace/core/Site.ts";
+import { getHomeSite, Site } from "neolace/core/Site.ts";
 import { CanViewHomePage } from "../../core/permissions.ts";
 
 export class SiteFindByDomainResource extends NeolaceHttpResource {
@@ -23,7 +23,7 @@ export class SiteFindByDomainResource extends NeolaceHttpResource {
 
         // Load the site or throw a 404 error:
         const graph = await getGraph();
-        const site = await graph.pullOne(Site, (s) => s.name.description.domain.footerMD.shortId().frontendConfig(), {
+        const site = await graph.pullOne(Site, (s) => s.name.description.domain.url().footerMD.shortId().frontendConfig(), {
             where: C`@this.domain = ${domain}`,
         }).catch((err) => {
             if (err instanceof EmptyResultError) {
@@ -43,7 +43,14 @@ export class SiteFindByDomainResource extends NeolaceHttpResource {
             site.frontendConfig = {};
         }
 
+        const homeSite = await getHomeSite();
+
         // Response:
-        return site;
+        return {
+            ...site,
+            isHomeSite: site.shortId === homeSite.shortId,
+            homeSiteName: homeSite.name,
+            homeSiteUrl: homeSite.url,
+        };
     });
 }

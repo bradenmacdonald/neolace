@@ -117,6 +117,34 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     }));
 
     await graph.runAsSystem(CreateSite({
+        name: "Neolace Development",
+        domain: "home.local.neolace.net",
+        slugId: `site-home`,  // The shortId of this site is "main"
+        adminUser: data.users.admin.id,
+        accessMode: AccessMode.PublicReadOnly,
+        homePageMD: dedent`
+            # Welcome to Neolace Development
+
+            A Neolace installation is called a "Realm", and can have one or more sites. This is the home site for your
+            Neolace Development Realm. The home site is where users log in, manage their profiles, and create new sites.
+
+            This home site doesn't have any content. To see example content, check out one of these other sites on this
+            realm:
+
+            * [**PlantDB**](http://plantdb.local.neolace.net:5555): A site showing an example of botany/biology content.
+        `,
+        footerMD: `Powered by [Neolace](https://www.neolace.com/).`,
+        frontendConfig: {
+            headerLinks: [
+                { text: "Home", href: "/" },
+            ],
+            features: {
+                hoverPreview: { enabled: true },
+            },
+        },
+    }));
+
+    await graph.runAsSystem(CreateSite({
         name: data.site.name,
         domain: data.site.domain,
         slugId: `site-${data.site.shortId}`,
