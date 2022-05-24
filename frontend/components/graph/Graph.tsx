@@ -26,15 +26,16 @@ const colourMap = new Map<VNID, EntryColor>();
 
 export interface G6RawGraphData {
     nodes: {
-      id: VNID;
-      label: string;
-      entryType: VNID;
-
+        id: VNID;
+        label: string;
+        entryType: VNID;
+        isFocusEntry?: boolean;
     }[];
     edges: {
+        id: VNID;
         source: string;
         target: string;
-        entryType: string;
+        relType: VNID;
         label: string;
     }[];
 }
@@ -56,13 +57,14 @@ function colorGraph(data: G6RawGraphData, refCache: api.ReferenceCacheData) {
 function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
     let data: G6RawGraphData = {
         nodes: value.entries.map((n) => (
-            { id: n.entryId, label: n.name, entryType: n.entryType }
+            { id: n.entryId, label: n.name, entryType: n.entryType, isFocusEntry: n.isFocusEntry }
         )),
         edges: value.rels.map((e) => (
             {
+                id: e.relId,
                 source: e.fromEntryId,
                 target: e.toEntryId,
-                entryType: e.relType,
+                relType: e.relType,
                 label: refCache.properties[e.relType]?.name ?? e.relType,
             }
         )),
@@ -198,7 +200,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         graph.on("afterlayout", () => {
             if (!graph || graph.destroyed) { return; }
             // Zoom to focus on whatever node came first in the data:
-            const firstNode = graph.getNodes()[0];
+            const firstNode = graph.getNodes().find((node) => node.getModel().isFocusEntry);
             if (firstNode) {
                 graph.setItemState(firstNode, "selected", true);
                 graph.focusItem(firstNode, true);

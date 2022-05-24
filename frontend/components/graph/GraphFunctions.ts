@@ -3,39 +3,54 @@ import Graph from 'graphology';
 import { VNID } from 'neolace-api';
 import type { G6RawGraphData } from './Graph'
 
+interface NodeAttributes {
+    label: string;
+    entryType: VNID;
+    isFocusEntry?: boolean;
+}
+interface EdgeAttributes {
+    label: string;
+    relId: VNID;
+    relType: VNID;
+}
+type GraphType = Graph<NodeAttributes, EdgeAttributes>;
 
 
-function createGraphObject(data: G6RawGraphData): Graph {
-    const graph = new Graph();
+
+function createGraphObject(data: G6RawGraphData): GraphType {
+    const graph = new Graph<NodeAttributes, EdgeAttributes>();
     
     data.nodes.forEach((n) => graph.addNode(n.id, {
         label: n.label,
         entryType: n.entryType,
+        ...(n.isFocusEntry && {isFocusEntry: true}),
     }))
     
     data.edges.forEach((e) => {
         graph.addEdge(e.source, e.target, {
+            relId: e.id,
             label: e.label,
-            entryType: e.entryType,
+            relType: e.relType,
         })
     })
     
     return graph;
 }
 
-function convertGraphToData(graph: Graph): G6RawGraphData {
+function convertGraphToData(graph: GraphType): G6RawGraphData {
     const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({ 
             id: VNID(nodeKey),
             label: graph.getNodeAttribute(nodeKey, 'label') as string, 
             entryType: VNID(graph.getNodeAttribute(nodeKey, 'entryType')),
-        }
-        )),
+            ...(graph.getNodeAttribute(nodeKey, 'isFocusEntry') && {isFocusEntry: true}),
+        })),
         edges: graph.mapEdges((edge, attributes, source, target) => {
             return {
+                id: attributes.relId,
                 source: source,
                 target: target,
-                entryType: attributes.entryType,
+                relType: attributes.relType,
                 label: attributes.label,
             }
         }),
@@ -50,7 +65,7 @@ function convertGraphToData(graph: Graph): G6RawGraphData {
  * @param graph 
  * @returns a graph with condensed leaves.
  */
-function condenseLeaves(graph:Graph): Graph {
+function condenseLeaves(graph: GraphType): GraphType {
     // create dictionary of nodes with entry ids as keys
     const newGraph = graph.copy();
     
@@ -125,7 +140,7 @@ function condenseLeaves(graph:Graph): Graph {
  * @param relativeEType The entry type of the nodes relative to which to perform the condensing operation.
  * @returns a new condensed graph
  */
-function condenseSimplePattern(graph: Graph, relativeEType: VNID): Graph {
+function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType {
     // delete these nodes and save only one condensed node
     
     // create dictionary of nodes with entry ids as keys
@@ -236,7 +251,7 @@ function condenseSimplePattern(graph: Graph, relativeEType: VNID): Graph {
 Hide nodes of given entry type as follows: for each deleted node, take all of its neighbours, and connect all of them
 with undirected relationsips.
 */
-export function hideNodesOfType(graph: Graph, eTypeToRemove: VNID): Graph {
+export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphType {
     // filter nodes to only of the removed type
     const newGraph = graph.copy();
     const nodesToRemove = newGraph.filterNodes((n, attr) => {
