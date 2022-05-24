@@ -196,6 +196,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         // By default, we zoom the graph so that four nodes would fit horizontally.
         graph.zoomTo(graph.getWidth()/(220*4), undefined, false);
         graph.on("afterlayout", () => {
+            if (!graph || graph.destroyed) { return; }
             // Zoom to focus on whatever node came first in the data:
             const firstNode = graph.getNodes()[0];
             if (firstNode) {
@@ -203,6 +204,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 graph.focusItem(firstNode, true);
             }
         }, true);
+        // We'll control the cursor using CSS:
+        graph.get('canvas').setCursor('inherit');
     }, [graph, originalData]);
 
     // Update the graph data whenever the current data changes
@@ -259,7 +262,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         params: {'nodeType': item.getModel().entryType as string},
                     });
                 })
-
+                setHidden(false);
             }
         });
 
@@ -267,7 +270,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         graph.on("nodeselectchange" as any, (e) => { // the type says it's not allowed but it works
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const selectedNodes = (e.selectedItems as any).nodes as INode[];
-            if (selectedNodes.length === 1) {
+            if (selectedNodes.length === 1 && !hiddenRef.current) {
                 // Show a tooltip for this node, since there's exactly one node selected:
                 setShowTooltipForNode(selectedNodes[0].getModel().id);
             } else {
@@ -409,13 +412,14 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         defaultMessage: "Hide entries tool: click on an entry to hide all entries of that type.",
                         id: "graph.toolbar.hideArticles",
                     })}
-                    icon="diamond-fill"
+                    icon="eraser"
                     enabled={hidden}
                 />
             </div>
             <div
                 ref={updateGraphHolder}
                 className="relative bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
+                style={hidden ? {cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z'/%3E%3C/svg%3E") 3 16, crosshair`} : {}}
             >
                 {/* in here is 'graphContainer', and which holds a <canvas> element. */}
             </div>
