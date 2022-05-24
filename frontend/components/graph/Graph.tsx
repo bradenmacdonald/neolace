@@ -10,8 +10,9 @@ import { EntryColor, entryNode, pickEntryTypeLetter } from "./Node";
 import { VNID } from "neolace-api";
 import { ToolbarButton } from "../widgets/Button";
 import { useIntl } from "react-intl";
+import { useStateRef } from "../utils/stateRefHook";
+import { applyTransforms, Transform, Transforms } from "./Transforms";
 import { Modal } from "../widgets/Modal";
-import { transformDataForGraph } from "./GraphFunctions";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 
 export interface GraphProps {
@@ -37,6 +38,7 @@ export interface G6RawGraphData {
         label: string;
     }[];
 }
+
 
 function colorGraph(data: G6RawGraphData, refCache: api.ReferenceCacheData) {
     data.nodes.forEach((node: NodeConfig) => {
@@ -67,7 +69,6 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
     };
     
     data = colorGraph(data, refCache);
-
     return data;
 }
 
@@ -76,11 +77,18 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const intl = useIntl();
-    const [condensed, setCondensed] = React.useState(false);
+    const [hidden, setHidden, hiddenRef] = useStateRef(false);
     // The data (nodes and relationships) that we want to display as a graph.
-    const data = React.useMemo(() => {
+    const originalData = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value]);
+    const [transformList, setTransforms, currentTransforms] = useStateRef<Transform[]>([]);
+
+    const currentData = React.useMemo(() => {
+        let transformedData = applyTransforms(originalData, transformList);
+        transformedData = colorGraph(transformedData, props.mdtContext.refCache);
+        return transformedData;
+    }, [originalData, transformList, props.mdtContext.refCache])
 
     // In order to preserve our G6 graph when we move it to a modal (when expanding the view), the <div> that contains
     // it must not be destroyed and re-created. React will normally try to destroy and re-create it, not realizing that
@@ -128,7 +136,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             preventOverlap: true,
             nodeSize: [200, 50],
             nodeSpacing: 60,
-            alphaDecay: 0.1,
+            alphaMin: 0.1,
         },
         defaultNode: {
             type: entryNode,
@@ -183,11 +191,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Set the graph data and render it whenever the data has changed or the graph has been re-initialized:
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        graph.data(data);
+        graph.data(originalData);
         graph.render();
         // By default, we zoom the graph so that four nodes would fit horizontally.
         graph.zoomTo(graph.getWidth()/(220*4), undefined, false);
         graph.on("afterlayout", () => {
+            if (!graph || graph.destroyed) { return; }
             // Zoom to focus on whatever node came first in the data:
             const firstNode = graph.getNodes()[0];
             if (firstNode) {
@@ -195,19 +204,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 graph.focusItem(firstNode, true);
             }
         }, true);
-    }, [graph, data]);
+        // We'll control the cursor using CSS:
+        graph.get('canvas').setCursor('inherit');
+    }, [graph, originalData]);
 
+    // Update the graph data whenever the current data changes
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        if (condensed && data.nodes.length !== 0) {
-            // NOTE for now, we are performing node condensing relative to the "this" node of the graph.
-            let condensedData = transformDataForGraph(data, data.nodes[0].entryType);
-            condensedData = colorGraph(condensedData, props.mdtContext.refCache);
-            graph.changeData(condensedData);
-        } else {
-            graph.changeData(data);
-        }
-    }, [condensed, data, props.mdtContext.refCache]);
+        graph.changeData(currentData);
+    }, [currentData])
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
 
@@ -246,15 +251,26 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     graph.setItemState(edge, 'selected', false);
                 }
             })
+        });
 
-
+        graph.on("node:click", function(e) {
+            const item = e.item as INode;
+            if (hiddenRef.current) {
+                setTransforms((t) => {
+                    return t.concat({
+                        id: Transforms.HIDETYPE,
+                        params: {'nodeType': item.getModel().entryType as string},
+                    });
+                })
+                setHidden(false);
+            }
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         graph.on("nodeselectchange" as any, (e) => { // the type says it's not allowed but it works
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const selectedNodes = (e.selectedItems as any).nodes as INode[];
-            if (selectedNodes.length === 1) {
+            if (selectedNodes.length === 1 && !hiddenRef.current) {
                 // Show a tooltip for this node, since there's exactly one node selected:
                 setShowTooltipForNode(selectedNodes[0].getModel().id);
             } else {
@@ -339,7 +355,16 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Code for "download as image" toolbar button
     const handleDownloadImageButton = React.useCallback(() => { graph?.downloadFullImage(); }, [graph]);
     // Code for "Condense leaves" toolbar button
-    const handleCondenseNodesButton = React.useCallback(() => { setCondensed((wasCondensed) => !wasCondensed)}, []);
+    const isCondensed = transformList.find((t) => t.id === Transforms.CONDENSE) !== undefined;
+    const handleCondenseNodesButton = React.useCallback(() => {
+        if (isCondensed) {
+            setTransforms((prevTransforms) => prevTransforms.filter((t) => t.id !== Transforms.CONDENSE));
+        } else {
+            setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.CONDENSE, params: {}}]);
+        }
+    }, [isCondensed, setTransforms]);
+    // Code for "Hide article antries" toolbar button
+    const handleHideArticlesButton = React.useCallback(() => { setHidden((wasHidden) => !wasHidden); }, []);
 
     const contents = (
         <>
@@ -379,12 +404,22 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "graph.toolbar.condenseNodes",
                     })}
                     icon="chevron-contract"
-                    enabled={condensed}
+                    enabled={isCondensed}
+                />
+                <ToolbarButton
+                    onClick={handleHideArticlesButton}
+                    title={intl.formatMessage({
+                        defaultMessage: "Hide entries tool: click on an entry to hide all entries of that type.",
+                        id: "graph.toolbar.hideArticles",
+                    })}
+                    icon="eraser"
+                    enabled={hidden}
                 />
             </div>
             <div
                 ref={updateGraphHolder}
                 className="relative bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
+                style={hidden ? {cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z'/%3E%3C/svg%3E") 3 16, crosshair`} : {}}
             >
                 {/* in here is 'graphContainer', and which holds a <canvas> element. */}
             </div>

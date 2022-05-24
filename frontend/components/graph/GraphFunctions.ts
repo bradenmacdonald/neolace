@@ -1,33 +1,37 @@
-import { MultiDirectedGraph } from 'graphology';
+import { Edge } from '@antv/g6';
+import Graph from 'graphology';
 import { VNID } from 'neolace-api';
 import type { G6RawGraphData } from './Graph'
 
 
-function createGraphObject(data: G6RawGraphData): MultiDirectedGraph {
-    const graph = new MultiDirectedGraph();
+
+function createGraphObject(data: G6RawGraphData): Graph {
+    const graph = new Graph();
     
     data.nodes.forEach((n) => graph.addNode(n.id, {
         label: n.label,
         entryType: n.entryType,
     }))
     
-    data.edges.forEach((e) => graph.addEdge(e.source, e.target, {
-        label: e.label,
-        entryType: e.entryType,
-    }))
-
+    data.edges.forEach((e) => {
+        graph.addEdge(e.source, e.target, {
+            label: e.label,
+            entryType: e.entryType,
+        })
+    })
+    
     return graph;
 }
 
-function convertGraphToData(graph: MultiDirectedGraph): G6RawGraphData {
+function convertGraphToData(graph: Graph): G6RawGraphData {
     const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({ 
-                id: VNID(nodeKey),
-                label: graph.getNodeAttribute(nodeKey, 'label') as string, 
-                entryType: VNID(graph.getNodeAttribute(nodeKey, 'entryType')),
-            }
+            id: VNID(nodeKey),
+            label: graph.getNodeAttribute(nodeKey, 'label') as string, 
+            entryType: VNID(graph.getNodeAttribute(nodeKey, 'entryType')),
+        }
         )),
-        edges: graph.mapEdges((_edge, attributes, source, target) => {
+        edges: graph.mapEdges((edge, attributes, source, target) => {
             return {
                 source: source,
                 target: target,
@@ -36,7 +40,6 @@ function convertGraphToData(graph: MultiDirectedGraph): G6RawGraphData {
             }
         }),
     };
-
     return data;
 }
 
@@ -47,7 +50,7 @@ function convertGraphToData(graph: MultiDirectedGraph): G6RawGraphData {
  * @param graph 
  * @returns a graph with condensed leaves.
  */
-function condenseLeaves(graph:MultiDirectedGraph): MultiDirectedGraph {
+function condenseLeaves(graph:Graph): Graph {
     // create dictionary of nodes with entry ids as keys
     const newGraph = graph.copy();
     
@@ -96,7 +99,11 @@ function condenseLeaves(graph:MultiDirectedGraph): MultiDirectedGraph {
             label: `${leafyNode.hiddenNodeNumber} entries condensed`, 
             entryType: leafyNode.entryType,
         });
-        newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
+        if (newGraph.hasEdge(leafyNode.nodeKey, newLeafKey)) {
+            console.log('edge already exists');
+        } else {
+            newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
+        }
     })
 
     return newGraph;
@@ -118,7 +125,7 @@ function condenseLeaves(graph:MultiDirectedGraph): MultiDirectedGraph {
  * @param relativeEType The entry type of the nodes relative to which to perform the condensing operation.
  * @returns a new condensed graph
  */
-function condenseSimplePattern(graph: MultiDirectedGraph, relativeEType: VNID): MultiDirectedGraph {
+function condenseSimplePattern(graph: Graph, relativeEType: VNID): Graph {
     // delete these nodes and save only one condensed node
     
     // create dictionary of nodes with entry ids as keys
@@ -207,11 +214,65 @@ function condenseSimplePattern(graph: MultiDirectedGraph, relativeEType: VNID): 
                 label: `${pair.hiddenNodeNumber} entries condensed`, 
                 entryType: pair.middleNodeEType,
             });
-            newGraph.addEdge(pair.nodeKey, newLeafKey);
-            newGraph.addEdge(pair.endNodeKey, newLeafKey);
+
+            if (newGraph.hasEdge(pair.nodeKey, newLeafKey)) {
+                console.log('edge already exists');
+            } else {
+                newGraph.addEdge(pair.nodeKey, newLeafKey);
+            }
+
+            if (newGraph.hasEdge(pair.endNodeKey, newLeafKey)) {
+                console.log('edge already exists');
+            } else {
+                newGraph.addEdge(pair.endNodeKey, newLeafKey);
+            }
         }
     })
 
+    return newGraph;
+}
+
+/*
+Hide nodes of given entry type as follows: for each deleted node, take all of its neighbours, and connect all of them
+with undirected relationsips.
+*/
+export function hideNodesOfType(graph: Graph, eTypeToRemove: VNID): Graph {
+    // filter nodes to only of the removed type
+    const newGraph = graph.copy();
+    const nodesToRemove = newGraph.filterNodes((n, attr) => {
+        return attr.entryType === eTypeToRemove;
+    })
+
+    // iterate over the nodes
+    nodesToRemove.forEach((n) => {
+        let neighbors: string[] = [];
+        newGraph.forEachNeighbor(n, (neihgborKey) => {
+            neighbors.push(neihgborKey);
+        })
+
+        // keep only those neighbors that are not targeted for deletion
+        neighbors = neighbors.filter((n) => {
+            return !nodesToRemove.includes(n);
+        })
+
+        // delete the node
+        newGraph.dropNode(n);
+
+        neighbors.forEach((neighbor) => {
+            // add edges between naighbours
+            neighbors.forEach((nb) => {
+                // do not create self loops
+                if (nb !== neighbor) {
+                    if (!newGraph.hasEdge(neighbor, nb) && !newGraph.hasEdge(nb, neighbor)) {
+                        newGraph.addDirectedEdge(
+                            neighbor,
+                            nb
+                        )
+                    }
+                }
+            })
+        })
+    })
     return newGraph;
 }
 
@@ -223,4 +284,11 @@ export function transformDataForGraph(data: G6RawGraphData, entryType: VNID) {
     const transformedGraph = condenseLeaves(graph);
     const condensedGraph = condenseSimplePattern(transformedGraph, entryType);
     return convertGraphToData(condensedGraph);
+}
+
+export function transformHideNodesOfType(data: G6RawGraphData, nType: VNID) {
+    const graph = createGraphObject(data);
+    const transformedGraph = hideNodesOfType(graph, nType);
+    const transformedData = convertGraphToData(transformedGraph);
+    return transformedData;
 }
