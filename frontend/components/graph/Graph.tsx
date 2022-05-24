@@ -32,9 +32,10 @@ export interface G6RawGraphData {
         isFocusEntry?: boolean;
     }[];
     edges: {
+        id: VNID;
         source: string;
         target: string;
-        entryType: string;
+        relType: VNID;
         label: string;
     }[];
 }
@@ -60,9 +61,10 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
         )),
         edges: value.rels.map((e) => (
             {
+                id: e.relId,
                 source: e.fromEntryId,
                 target: e.toEntryId,
-                entryType: e.relType,
+                relType: e.relType,
                 label: refCache.properties[e.relType]?.name ?? e.relType,
             }
         )),
