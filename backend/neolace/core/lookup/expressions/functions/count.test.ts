@@ -1,28 +1,20 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
-import { assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { getGraph } from "neolace/core/graph.ts";
+import { assertEquals, assertRejects, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import { IntegerValue } from "../../values.ts";
 import { Count } from "./count.ts";
 import { LiteralExpression } from "../literal-expr.ts";
 import { LookupEvaluationError } from "../../errors.ts";
-import { LookupExpression } from "../base.ts";
 import { This } from "../this.ts";
 
 group("count.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        getGraph().then((graph) =>
-            graph.read((tx) => expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n })).then((v) =>
-                v.makeConcrete()
-            )
-        );
     const siteId = defaultData.site.id;
+    const context = new TestLookupContext({ siteId });
 
     test(`It gives an error with non-countable values`, async () => {
         const expression = new Count(new LiteralExpression(new IntegerValue(-30)));
 
         await assertRejects(
-            () => evalExpression(expression),
+            () => context.evaluateExprConcrete(expression),
             LookupEvaluationError,
             `The expression "-30" cannot be counted with count().`,
         );

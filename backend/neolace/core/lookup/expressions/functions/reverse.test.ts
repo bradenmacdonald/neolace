@@ -1,6 +1,4 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
-import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { getGraph } from "neolace/core/graph.ts";
+import { assertEquals, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import {
     InlineMarkdownStringValue,
     IntegerValue,
@@ -10,7 +8,6 @@ import {
     PropertyValue,
 } from "../../values.ts";
 import { ReverseProperty } from "./reverse.ts";
-import { LookupExpression } from "../base.ts";
 import { This } from "../this.ts";
 import { LiteralExpression } from "../literal-expr.ts";
 
@@ -20,12 +17,7 @@ group("reverse.ts", () => {
     const cone = defaultData.entries.cone.id;
     const seedCone = defaultData.entries.seedCone.id;
     const pollenCone = defaultData.entries.pollenCone.id;
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        getGraph().then((graph) =>
-            graph.read((tx) =>
-                expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
-            )
-        );
+    const context = new TestLookupContext({ siteId });
 
     // Literal expressions referencing some properties in the default PlantDB data set:
     const partIsAPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._partIsAPart.id));
@@ -39,7 +31,7 @@ group("reverse.ts", () => {
 
     test(`Can reverse a simple IS A relationship property value`, async () => {
         const expression = new ReverseProperty(new This(), { prop: partIsAPart });
-        const value = await evalExpression(expression, cone);
+        const value = await context.evaluateExprConcrete(expression, cone);
         // A "seed cone" and a "pollen cone" are both a "cone", so we should get them
         // by reversing the "IS A" relationship on "cone"
         assertEquals(

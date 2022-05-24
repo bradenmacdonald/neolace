@@ -1,7 +1,13 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
 import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
-import { assertEquals, assertInstanceOf, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { getGraph } from "neolace/core/graph.ts";
+import {
+    assertEquals,
+    assertInstanceOf,
+    assertRejects,
+    group,
+    setTestIsolation,
+    test,
+    TestLookupContext,
+} from "neolace/lib/tests.ts";
 import {
     EntryValue,
     ImageValue,
@@ -14,7 +20,6 @@ import {
 import { Image } from "./image.ts";
 import { LiteralExpression } from "../literal-expr.ts";
 import { LookupEvaluationError } from "../../errors.ts";
-import { LookupExpression } from "../base.ts";
 import { GetProperty } from "./get.ts";
 import { First } from "./first.ts";
 import { parseLookupString } from "../../parse.ts";
@@ -22,13 +27,8 @@ import { ReverseProperty } from "./reverse.ts";
 
 group("image.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        getGraph().then((graph) =>
-            graph.read((tx) =>
-                expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n }).then((v) => v.makeConcrete())
-            )
-        );
     const siteId = defaultData.site.id;
+    const context = new TestLookupContext({ siteId });
 
     test(`It gives data about the image associated with an entry`, async () => {
         const expression = new Image(
@@ -40,7 +40,7 @@ group("image.ts", () => {
             {},
         );
 
-        const result = await evalExpression(expression);
+        const result = await context.evaluateExprConcrete(expression);
 
         assertInstanceOf(result, ImageValue);
         assertEquals(result.data, {
@@ -78,7 +78,7 @@ group("image.ts", () => {
             { format: new LiteralExpression(new StringValue("right")) },
         );
 
-        const result = await evalExpression(expression);
+        const result = await context.evaluateExprConcrete(expression);
 
         const equivalentExpression = new Image(
             new LiteralExpression(
@@ -88,7 +88,7 @@ group("image.ts", () => {
             ),
             { format: new LiteralExpression(new StringValue("right")) },
         );
-        const result2 = await evalExpression(equivalentExpression);
+        const result2 = await context.evaluateExprConcrete(equivalentExpression);
         assertEquals(result, result2);
     });
 
@@ -100,7 +100,7 @@ group("image.ts", () => {
             { format: new LiteralExpression(new StringValue("thumb")) },
         );
 
-        const result = await evalExpression(expression, defaultData.entries.ponderosaPine.id);
+        const result = await context.evaluateExprConcrete(expression, defaultData.entries.ponderosaPine.id);
 
         assertInstanceOf(result, PageValue);
         assertInstanceOf(result.values[0], ImageValue);
@@ -119,14 +119,14 @@ group("image.ts", () => {
             {},
         );
 
-        assertEquals(await evalExpression(expression), new NullValue());
+        assertEquals(await context.evaluateExprConcrete(expression), new NullValue());
     });
 
     test(`It gives an error message when used with non-entries`, async () => {
         const expression = new Image(new LiteralExpression(new IntegerValue(123n)), {});
 
         await assertRejects(
-            () => evalExpression(expression),
+            () => context.evaluateExprConcrete(expression),
             LookupEvaluationError,
             `The expression "123" is not of the right type.`,
         );
