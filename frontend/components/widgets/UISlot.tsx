@@ -48,7 +48,7 @@ export const UISlot = function <ContentType = React.ReactElement>(props: Props<C
         // Sort first by priority, then by ID
         contents.sort((a, b) => (a.priority - b.priority) * 10_000 + a.id.localeCompare(b.id));
         return contents;
-    }, [props.defaultContents, pluginsData]);
+    }, [props.defaultContents, pluginsData, props.slotId]);
 
     return (
         <>

@@ -3,7 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link';
 import { SWRConfig } from 'swr';
 
-import { UserContext } from 'components/user/UserContext';
+import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData, useSiteData, api } from 'lib/api-client';
 import { UISlot, UISlotWidget, defaultRender } from './widgets/UISlot';
 import FourOhFour from 'pages/404';
@@ -78,19 +78,34 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // we also pass "fallback" in to the useSiteData hook above.
     const fallback = props.sitePreloaded ? {[`site:${props.sitePreloaded.domain}`]: props.sitePreloaded} : {};
 
-    const systemLinks = <ul><UISlot<SystemLink> slotId="systemLinks" defaultContents={[
-        //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
-        // Login link:
-        {
-            id: "login",
+    const defaultSystemLinks: UISlotWidget<SystemLink>[] = [];
+    //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
+    
+    if (user.status === UserStatus.LoggedIn) {
+        // Log out link:
+        defaultSystemLinks.push({
+            id: "login-out",
+            priority: 60,
+            content: {
+                url: site.isHomeSite ? "/account/logout" : `${site.homeSiteUrl}/account/logout?returnSite=${encodeURI(site.shortId)}`,
+                label: <FormattedMessage id="systemLink.logout" defaultMessage="Log out" />,
+                icon: "door-closed",
+            }
+        });
+    } else {
+        // Log in link:
+        defaultSystemLinks.push({
+            id: "login-out",
             priority: 60,
             content: {
                 url: site.isHomeSite ? "/account/login" : `${site.homeSiteUrl}/account/login?returnSite=${encodeURI(site.shortId)}`,
-                label: <FormattedMessage id="systemLink.login" defaultMessage="Login" />,
+                label: <FormattedMessage id="systemLink.login" defaultMessage="Log in" />,
                 icon: "person-fill",
             }
-        },
-    ]} renderWidget={(link: UISlotWidget<SystemLink>) => <li key={link.id}><Link href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link></li>} /></ul>;
+        });
+    }
+
+    const systemLinks = <ul><UISlot<SystemLink> slotId="systemLinks" defaultContents={defaultSystemLinks} renderWidget={(link: UISlotWidget<SystemLink>) => <li key={link.id}><Link href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link></li>} /></ul>;
 
     return <SWRConfig value={{ fallback }}><UiPluginsProvider site={site}><div>
         <Head>

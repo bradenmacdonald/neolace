@@ -235,8 +235,8 @@ export function slugIdToFriendlyId(slugId: string): string {
 }
 
 interface HomeSiteData {
-    siteId: VNID,
-    shortId: string,
+    siteId: VNID;
+    shortId: string;
     name: string;
     domain: string;
     url: string;
@@ -254,12 +254,12 @@ export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
         const graph = await getGraph();
         let data;
         try {
-            data = await graph.pullOne(Site, s => s.id.name.domain.url(), {key: `site-${shortId}`});
+            data = await graph.pullOne(Site, (s) => s.id.name.domain.url(), { key: `site-${shortId}` });
         } catch (err) {
             throw new Error(
                 "Unable to load the home site. Check the realmHomeSiteId setting. In development, you may need to " +
-                "run the \"Erase Database and create default sites\" task.",
-                {cause: err},
+                    'run the "Erase Database and create default sites" task.',
+                { cause: err },
             );
         }
         mainSiteCache = Object.freeze({

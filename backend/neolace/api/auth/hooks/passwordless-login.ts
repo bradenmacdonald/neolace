@@ -1,9 +1,9 @@
 import { C, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, log, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { config } from "neolace/app/config.ts";
 import { mailer, makeSystemEmail } from "neolace/core/mailer/mailer.ts";
 import { HumanUser } from "neolace/core/User.ts";
 import { dedent } from "neolace/lib/dedent.ts";
+import { getHomeSite } from "neolace/core/Site.ts";
 
 export class PasswordlessLoginWebhookResource extends NeolaceHttpResource {
     public paths = ["/auth/passwordless-login"];
@@ -16,8 +16,9 @@ export class PasswordlessLoginWebhookResource extends NeolaceHttpResource {
     }, async ({ bodyData }) => {
         const accountId = Number(bodyData.account_id);
         const token = bodyData.token;
+        const homeSite = await getHomeSite();
         log.info(`Passwordless login hook from authn service for user with account ID ${accountId}`);
-        const loginUrl = `${config.realmAdminUrl}/login/passwordless#${token}`;
+        const loginUrl = `${homeSite.url}/account/login-passwordless#${token}`;
 
         const graph = await getGraph();
         let userData;
@@ -35,14 +36,14 @@ export class PasswordlessLoginWebhookResource extends NeolaceHttpResource {
         const msg = await makeSystemEmail({
             siteId: undefined,
             to: userData.email,
-            subjectTemplate: `Log in to ${config.realmName}`,
+            subjectTemplate: `Log in to {site}`,
             args: {
                 loginUrl,
             },
             plainTextTemplate: dedent`
                 Hi,
 
-                Someone - hopefully you - wants to log in to ${config.realmName}.
+                Someone - hopefully you - wants to log in to {site}.
 
                 To log in, click here:
 
@@ -53,7 +54,7 @@ export class PasswordlessLoginWebhookResource extends NeolaceHttpResource {
             htmlTemplate: dedent`
                 <p>Hi,</p>
 
-                <p>Someone - hopefully you - wants to log in to ${config.realmName}.</p>
+                <p>Someone - hopefully you - wants to log in to {site}.</p>
 
                 <p>To log in, click here:</p>
 

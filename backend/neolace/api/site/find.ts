@@ -23,9 +23,13 @@ export class SiteFindByDomainResource extends NeolaceHttpResource {
 
         // Load the site or throw a 404 error:
         const graph = await getGraph();
-        const site = await graph.pullOne(Site, (s) => s.name.description.domain.url().footerMD.shortId().frontendConfig(), {
-            where: C`@this.domain = ${domain}`,
-        }).catch((err) => {
+        const site = await graph.pullOne(
+            Site,
+            (s) => s.name.description.domain.url().footerMD.shortId().frontendConfig(),
+            {
+                where: C`@this.domain = ${domain}`,
+            },
+        ).catch((err) => {
             if (err instanceof EmptyResultError) {
                 throw new api.NotFound(`Site with domain "${domain}" not found.`);
             } else {

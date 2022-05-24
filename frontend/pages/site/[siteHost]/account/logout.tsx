@@ -4,6 +4,7 @@ import { NextPage } from "next";
 import { SitePage } from "components/SitePage";
 import { UserContext } from "components/user/UserContext";
 import { Redirect } from "components/utils/Redirect";
+import { Spinner } from "components/widgets/Spinner";
 
 const LogoutPage: NextPage = function () {
     const user = React.useContext(UserContext);
@@ -24,11 +25,9 @@ const LogoutPage: NextPage = function () {
             <h1>Log out</h1>
             {isLoggedOut
                 ? (
-                    <Redirect to="/" replace={true}>
-                        <p>You have been logged out.</p>
-                    </Redirect>
+                    <p>You have been logged out.</p>
                 )
-                : <p>Logging out...</p>}
+                : <p>Logging out... <Spinner /></p>}
         </SitePage>
     );
 };

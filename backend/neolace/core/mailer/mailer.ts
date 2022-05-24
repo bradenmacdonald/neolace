@@ -32,7 +32,9 @@ export async function makeSystemEmail(
 ): Promise<Email> {
     const homeSite = await getHomeSite();
     // Data about the specific Site we're sending from.
-    const site = siteId ? await (await getGraph()).pullOne(Site, (s) => s.name.domain.url(), { key: siteId }) : homeSite;
+    const site = siteId
+        ? await (await getGraph()).pullOne(Site, (s) => s.name.domain.url(), { key: siteId })
+        : homeSite;
     // Values that can be interpolated into the template, e.g. {site} becomes the name of the site or realm:
     const args: Record<string, string> = {
         ...params.args,
