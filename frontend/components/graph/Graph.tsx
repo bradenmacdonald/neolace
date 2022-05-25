@@ -29,13 +29,14 @@ export interface G6RawGraphData {
       id: VNID;
       label: string;
       entryType: VNID;
-
+      [other: string]: unknown; // attributes
     }[];
     edges: {
         source: string;
         target: string;
         entryType: string;
         label: string;
+        [other: string]: unknown; // attributes
     }[];
 }
 
@@ -260,6 +261,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     });
                 })
 
+            } else if (item.getModel().leavesCondensed) {
+                console.log('The node to expand is',  item.getNeighbors()[0].getModel().id);
+                console.log('The node is ', item.getNeighbors()[0].getModel().label)
+                setTransforms((prevTransforms) => [...prevTransforms, {
+                    id: Transforms.EXPANDLEAF, 
+                    // instead of this node id, get type and parent
+                    // should have only one neighbour
+                    params: {parentKey: item.getNeighbors()[0].getModel().id, entryType: item.getModel().entryType}
+                }])
             }
         });
 
@@ -355,7 +365,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const isCondensed = transformList.find((t) => t.id === Transforms.CONDENSE) !== undefined;
     const handleCondenseNodesButton = React.useCallback(() => {
         if (isCondensed) {
-            setTransforms((prevTransforms) => prevTransforms.filter((t) => t.id !== Transforms.CONDENSE));
+            setTransforms((prevTransforms) => prevTransforms.filter((t) => (t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF));
         } else {
             setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.CONDENSE, params: {}}]);
         }
