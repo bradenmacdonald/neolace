@@ -64,124 +64,107 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
  * @returns a graph with condensed leaves.
  */
 function condenseLeaves(graph: GraphType): GraphType {
-    // create dictionary of nodes with entry ids as keys
-    const newGraph = graph.copy();
-    
-    // iterate over nodes and if a node has many leaves, delete them and add a new leaf node
-    const leavesToDelete: Record<string, Set<string>> = {};
-    const leafyNodes: {nodeKey: string, entryType: VNID, hiddenNodeNumber:number}[] = [];
-    
+    const newGraph = graph.copy(); 
+    const leafyNodes: {
+        nodeKey: string, 
+        entryType: VNID, 
+        hiddenNodeNumber:number,
+        leavesToDelete: Set<string>,
+    }[] = [];
+    // iterate over nodes and, for each entry type, if a node has many leaves of that type, add them for condensing
     newGraph.forEachNode(nodeKey => {
         const leaves: Record<VNID, string[]> = {};
-
         newGraph.forEachNeighbor(nodeKey, neighborKey => {
             const neighborEntryType = graph.getNodeAttribute(neighborKey, 'entryType');
             if (newGraph.neighbors(neighborKey).length === 1) {
                 if (leaves[neighborEntryType]) {
                     leaves[neighborEntryType].push(neighborKey);
                 } else {
-                    leaves[neighborEntryType] = [];
-                    leaves[neighborEntryType].push(neighborKey);
+                    leaves[neighborEntryType] = [neighborKey];
                 }              
             }
         });
 
-        leavesToDelete[nodeKey] = new Set<string>();
         for (const [entryType, value] of Object.entries(leaves)) {
             if (value.length > 1) {
-                // add leaves to nodes to delete
-                value.forEach((l) => leavesToDelete[nodeKey].add(l));
-                // add nodekey to list to create nodes
                 leafyNodes.push(
                     {
                         nodeKey: nodeKey,
                         entryType: VNID(entryType),
                         hiddenNodeNumber: value.length,
+                        leavesToDelete: new Set<string>(value),
                     }
                 );
             }
           }
     });
-    
-    // delete leaves
-    for (const node in leavesToDelete) {
-        leavesToDelete[node].forEach((leafKey) => {
-            newGraph.dropNode(leafKey);
-        })
-    }
     // create condensed leaves
     leafyNodes.forEach((leafyNode) => {
+        // delete nodes
+        leafyNode.leavesToDelete.forEach((leafKey) => {
+            newGraph.dropNode(leafKey);
+        })
+        // add condensed node and edge to it
         const newLeafKey = VNID();
         newGraph.addNode(newLeafKey, {
             label: `${leafyNode.hiddenNodeNumber} entries condensed`, 
             entryType: leafyNode.entryType,
-            leavesCondensed: leavesToDelete[leafyNode.nodeKey],
+            leavesCondensed: leafyNode.leavesToDelete,
         });
-        if (newGraph.hasEdge(leafyNode.nodeKey, newLeafKey)) {
-            console.log('edge already exists');
-        } else {
-            newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
-        }
+        newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
     })
-
     return newGraph;
 }
 
 /**
  * Given the leafNodeKey for a condensed node, remove the leaf node 
  * If leafNodeKey refers to a non-leaf node (does not have list of condensed leaves), returns the input graph.
+ * ASSUMING the parent node can have only one condensed node of a certain type
  * @param parentNodeKey 
  */
-function expandLeaf(originalGraph: GraphType, currGraph: GraphType, parentNodeKey: string, entryType: string): GraphType {
+function expandLeaf(
+        originalGraph: GraphType,
+        currGraph: GraphType,
+        parentNodeKey: string,
+        entryType: string
+    ): GraphType {
     const newGraph = currGraph.copy();
-
     // find the key of the condensed leaf
-    // assuming the parent node can have only one condensed node of the type
-    const condensedLeafkey = newGraph.filterNeighbors(parentNodeKey, (n, attrs) => {
-        console.log(`The node key is ${n}`, attrs)
+    const condensedLeafkey = newGraph.filterNeighbors(parentNodeKey, (_n, attrs) => {
         if (attrs.leavesCondensed) {
             if (attrs.entryType === entryType) {
-                console.log('The list condensed is ', newGraph.getNodeAttribute(n, 'leavesCondensed'));
                 return true;
             }
         }
         return false;
     })[0];
-
-    console.log('The condensed key is ', condensedLeafkey)
+    if (!condenseLeaves)  console.log(`The condensed key is ${condensedLeafkey}, something is wrong.`);
     
     const nodesToAdd = newGraph.getNodeAttribute(condensedLeafkey, 'leavesCondensed'); 
     if (nodesToAdd === undefined) {
-        console.log('The condensed leaf does not seem to have leavesCondensed attribute.');
+        console.log('The condensed leaf does not have leavesCondensed attribute.');
     } else {
-        (nodesToAdd).forEach((leafNode) => {
+        nodesToAdd.forEach((leafNode) => {
             // create leaf
-            newGraph.addNode(leafNode, {
-                label: originalGraph.getNodeAttribute(leafNode, 'label'),
-                entryType: originalGraph.getNodeAttribute(leafNode, 'entryType'),
-            });
-    
-            // add edge
-            const isOutboundRel = originalGraph.hasEdge(parentNodeKey, leafNode);
-            const isInboundRel = originalGraph.hasEdge(leafNode, parentNodeKey);
-    
-            console.log(`isOutbound ${isOutboundRel}, isInboundRel ${isInboundRel}`);
-    
-            if ((isInboundRel && isOutboundRel) || (!isInboundRel && !isOutboundRel)) {
+            newGraph.addNode(leafNode, originalGraph.getNodeAttributes(leafNode));
+            // add edge between parent and leaf
+            const inEdges = originalGraph.inEdges(leafNode, parentNodeKey);
+            const outEdges = originalGraph.outEdges(leafNode, parentNodeKey);
+            if (inEdges.length === 1 && outEdges.length === 0) {
+                newGraph.addEdge(parentNodeKey, leafNode, originalGraph.getEdgeAttributes(inEdges[0]));
+            } else if (inEdges.length === 0 && outEdges.length === 1) {
+                newGraph.addEdge(leafNode, parentNodeKey, originalGraph.getEdgeAttributes(outEdges[0]))
+            } else if (inEdges.length === 0 && outEdges.length === 0) {
+                console.log(`The relationship between ${parentNodeKey} and ${leafNode} does not exist.`);
+            } else if (inEdges.length === 1 && outEdges.length === 1) {
                 console.log(`The relationship between ${parentNodeKey} and ${leafNode} is bidirectional.`);
-            } else if (isInboundRel) {
-                newGraph.addEdge(leafNode, parentNodeKey);
-            } else {
-                newGraph.addEdge(parentNodeKey, leafNode);
+            } else if (inEdges.length > 1 || outEdges.length > 1) {
+                console.log(`The relationship between ${parentNodeKey} and ${leafNode} has multiple edges.`)
             }
-    
         })
-    
         // drop condensed node
         newGraph.dropNode(condensedLeafkey);
     }
-    
-
     return newGraph;
 }
 
@@ -202,109 +185,71 @@ function expandLeaf(originalGraph: GraphType, currGraph: GraphType, parentNodeKe
  * @returns a new condensed graph
  */
 function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType {
-    // delete these nodes and save only one condensed node
-    
-    // create dictionary of nodes with entry ids as keys
     const newGraph = graph.copy();
-    
-    // iterate over nodes
-    const nodesToDelete = new Set<string>();
-    const nodePairs: {nodeKey: string, endNodeKey: string, middleNodeEType: VNID, hiddenNodeNumber:number}[] = [];
+    const nodePairs: {
+        nodeKey: string,
+        endNodeKey: string,
+        middleNodeEType: VNID,
+        leavesCondensed:Set<string>
+    }[] = [];
     
     newGraph.forEachNode(nodeKey => {
-        if (graph.getNodeAttribute(nodeKey, 'entryType') === relativeEType) {
-            // divide neighbours by type
-            const nTripletsByType: Record<VNID, Record<string, string[]>> = {};
-            
-            // filter neighbours to have only one other connection to a node of the same type as this node
-            newGraph.forEachNeighbor(nodeKey, neighborKey => {
-                const neighborEntryType = graph.getNodeAttribute(neighborKey, 'entryType');
-                const nNeighbours = newGraph.neighbors(neighborKey);
-                if (nNeighbours.length === 2) {
-                    const eType1 = graph.getNodeAttribute(nNeighbours[0], 'entryType');
-                    const eType2 = graph.getNodeAttribute(nNeighbours[1], 'entryType');
-                    const endNodeKey = nNeighbours[0] === nodeKey ? nNeighbours[1] : nNeighbours[0];
-                    
-                    if (eType1 === eType2) {
-                        if (!nTripletsByType[neighborEntryType]) {
-                            nTripletsByType[neighborEntryType] = {}
+        if (graph.getNodeAttribute(nodeKey, 'entryType') !== relativeEType) return;
+        //divide neighbours by type = {EntryType: {EndNode, IntermediateNodes}}
+        const nTripletsByType: Record<VNID, Record<string, Set<string>>> = {};
+        // filter neighbours to have only one other connection to a node of the same type as nodeKey node
+        newGraph.forEachNeighbor(nodeKey, (neighborKey) => {
+            const nNeighbours = newGraph.neighbors(neighborKey);
+            if ((nNeighbours.length !== 2)) return;
+            const neighborEntryType = graph.getNodeAttribute(neighborKey, 'entryType');
+
+            const eType1 = graph.getNodeAttribute(nNeighbours[0], 'entryType');
+            const eType2 = graph.getNodeAttribute(nNeighbours[1], 'entryType');
+            if (eType1 !== eType2) return;
+
+            const endNodeKey = nNeighbours[0] === nodeKey ? nNeighbours[1] : nNeighbours[0];
+            if (!nTripletsByType[neighborEntryType]) nTripletsByType[neighborEntryType] = {};
+
+            if (nTripletsByType[neighborEntryType][endNodeKey]) {
+                nTripletsByType[neighborEntryType][endNodeKey].add(neighborKey);
+            } else {
+                nTripletsByType[neighborEntryType][endNodeKey] = new Set<string>(neighborKey);
+            }       
+        });
+        for (const [entryType, value] of Object.entries(nTripletsByType)) {
+            for (const [endNode, nodeList] of Object.entries(value)) {
+                if (nodeList.size > 1) { // if there are more than 1 intermediate nodes, add for condensing
+                    nodePairs.push(
+                        {
+                            nodeKey: nodeKey,
+                            endNodeKey: endNode,
+                            middleNodeEType: VNID(entryType),
+                            leavesCondensed: nodeList,
                         }
-                        if (nTripletsByType[neighborEntryType][endNodeKey]) {
-                            nTripletsByType[neighborEntryType][endNodeKey].push(neighborKey);
-                        } else {
-                            nTripletsByType[neighborEntryType][endNodeKey] = [];
-                            nTripletsByType[neighborEntryType][endNodeKey].push(neighborKey);
-                        }
-                            
-                    }
-    
-                }
-            });
-            for (const [entryType, value] of Object.entries(nTripletsByType)) {
-                for (const [endNode, nodeList] of Object.entries(value)) {
-                    if (nodeList.length > 1) {
-                        // add leaves to nodes to delete
-                        nodeList.forEach((l) => nodesToDelete.add(l));
-                        // add nodekey to list to create nodes
-                        nodePairs.push(
-                            {
-                                nodeKey: nodeKey,
-                                endNodeKey: endNode,
-                                middleNodeEType: VNID(entryType),
-                                hiddenNodeNumber: nodeList.length,
-                            }
-                        );
-                    }
+                    );
                 }
             }
         }
     });
-    
-    // delete middle nodes
-    nodesToDelete.forEach((middleNodeKey) => {
-        newGraph.dropNode(middleNodeKey);
-    })
     // create condensed middle nodes
-    const pairs: string[][] = [];
-
+    const pairs = new Set<string>();
     nodePairs.forEach((pair) => {
-        const thisPair = [pair.endNodeKey, pair.nodeKey];
-
-        let pairExists = false;
-        pairs.forEach((p) => {
-            if (p[0] === thisPair[0]) {
-                if (p[1] === thisPair[1]) {
-                    pairExists = true;
-                }
-            } else if (p[0] === thisPair[1]) {
-                if (p[1] === thisPair[0]) {
-                    pairExists = true;
-                }
-            }
-        })
-
-        if (!pairExists) {
-            pairs.push(thisPair);
+        const thisPair = pair.endNodeKey + pair.nodeKey;
+        if (pairs.has(thisPair)) {
+            pairs.add(thisPair);
+            // delete nodes
+            pair.leavesCondensed.forEach((middleNodeKey) => newGraph.dropNode(middleNodeKey));
+            // add condensed node and edges
             const newLeafKey = VNID();
             newGraph.addNode(newLeafKey, {
-                label: `${pair.hiddenNodeNumber} entries condensed`, 
+                label: `${pair.leavesCondensed.size} entries condensed`, 
                 entryType: pair.middleNodeEType,
+                leavesCondensed: pair.leavesCondensed, 
             });
-
-            if (newGraph.hasEdge(pair.nodeKey, newLeafKey)) {
-                console.log('edge already exists');
-            } else {
-                newGraph.addEdge(pair.nodeKey, newLeafKey);
-            }
-
-            if (newGraph.hasEdge(pair.endNodeKey, newLeafKey)) {
-                console.log('edge already exists');
-            } else {
-                newGraph.addEdge(pair.endNodeKey, newLeafKey);
-            }
+            newGraph.addEdge(pair.nodeKey, newLeafKey);
+            newGraph.addEdge(pair.endNodeKey, newLeafKey);
         }
     })
-
     return newGraph;
 }
 

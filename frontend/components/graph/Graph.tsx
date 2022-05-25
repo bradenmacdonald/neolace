@@ -272,6 +272,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             } else if (item.getModel().leavesCondensed && expandRef.current) {
                 console.log('The node to expand is',  item.getNeighbors()[0].getModel().id);
                 console.log('The node is ', item.getNeighbors()[0].getModel().label)
+                // need to pass parent key as the condensed node id changes with every load
                 setTransforms((prevTransforms) => [...prevTransforms, {
                     id: Transforms.EXPANDLEAF, 
                     // instead of this node id, get type and parent
@@ -373,7 +374,11 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const isCondensed = transformList.find((t) => t.id === Transforms.CONDENSE) !== undefined;
     const handleCondenseNodesButton = React.useCallback(() => {
         if (isCondensed) {
-            setTransforms((prevTransforms) => prevTransforms.filter((t) => (t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF));
+            setTransforms(
+                (prevTransforms) => prevTransforms.filter((t) => (
+                        t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF
+                    )
+                );
         } else {
             setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.CONDENSE, params: {}}]);
         }
