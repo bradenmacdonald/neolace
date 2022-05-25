@@ -7,13 +7,21 @@ export const IN_BROWSER = (typeof window !== "undefined");
 export const API_SERVER_URL: string = (IN_BROWSER ? process.env.NEXT_PUBLIC_API_SERVER_URL : process.env.NEXT_PUBLIC_API_SERVER_INTERNAL_URL) ?? "ERROR_API_SERVER_URL_UNDEFINED";
 /** URL of the authentication server */
 export const AUTHN_SERVER_URL: string = process.env.NEXT_PUBLIC_AUTHN_URL ?? "ERROR_NEXT_PUBLIC_AUTHN_URL_UNDEFINED";
+/** Domain on which to set the authn cookie so it'll work across subdomains */
+export const AUTHN_COOKIE_DOMAIN: string = process.env.NEXT_PUBLIC_AUTHN_COOKIE_DOMAIN ?? "error-no-cookie-domain-set";
 
-import * as KeratinAuthN from 'keratin-authn';
+import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
 
 // If we're running in the browser, initialize Keratin AuthN to check the user's authentication status:
 if (IN_BROWSER) {
     KeratinAuthN.setHost(AUTHN_SERVER_URL);
-    KeratinAuthN.setLocalStorageStore('tn-session');
+    
+    //KeratinAuthN.setLocalStorageStore('tn-session');
+    KeratinAuthN.setCookieStore("neolace-authn-keratin", {
+        path: "/",
+        domain: AUTHN_COOKIE_DOMAIN,
+        sameSite: `Strict`,
+    })
 }
 
 if (typeof API_SERVER_URL !== "string") {

@@ -7,7 +7,7 @@
  * Anonymous or LoggedIn
  */
 import React from 'react';
-import * as KeratinAuthN from 'keratin-authn';
+import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
 import { IN_BROWSER } from 'lib/config';
 import { client, apiSessionPromise } from 'lib/api-client';
 
@@ -36,7 +36,9 @@ export const UserContext = React.createContext<UserContextData>({
     // Submit the token (that was emailed to the user), to finalize a passwordless login.
     submitPasswordlessLoginToken: async () => {},
     // Log the user out.
-    logout: async () => {},
+    logout: async () => {
+        throw new Error("Unable to log out - user status is not yet known.");
+    },
 });
 
 export const UserProvider: React.FunctionComponent<{children?: React.ReactNode | undefined}> = (props) => {
@@ -55,7 +57,7 @@ export const UserProvider: React.FunctionComponent<{children?: React.ReactNode |
         // Check if the user is logged in. Elsewhere in the code we always ensure the token is valid
         // or deleted (via apiSessionPromise or await logout() etc.), before calling this refresh() method.
         const currentToken = KeratinAuthN.session();
-        if (currentToken === undefined) {
+        if (!currentToken) {  // If currentToken is invalid it may be either undefined or an empty string (depends on session store)
             // The user is not logged in:
             setData({
                 status: UserStatus.Anonymous,

@@ -1,4 +1,4 @@
-import * as KeratinAuthN from 'keratin-authn';
+import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
 import useSWR, { KeyedMutator } from 'swr';
 import { AsyncCache } from './async-cache';
 import { useRouter } from 'next/router';

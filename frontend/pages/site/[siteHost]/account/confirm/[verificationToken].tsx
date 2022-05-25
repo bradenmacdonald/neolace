@@ -3,7 +3,7 @@ import useSWR from "swr";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
 import { FormattedMessage, useIntl } from "react-intl";
-import * as KeratinAuthN from "keratin-authn";
+import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
 
 import { client, getSiteData, SiteData } from "lib/api-client";
 import { SitePage } from "components/SitePage";
