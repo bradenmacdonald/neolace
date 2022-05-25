@@ -6,10 +6,10 @@
  * on the client side, we call out to the TechNotes API and then set the user status to either
  * Anonymous or LoggedIn
  */
-import React from 'react';
+import React from "react";
 import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
-import { IN_BROWSER } from 'lib/config';
-import { client, apiSessionPromise } from 'lib/api-client';
+import { IN_BROWSER } from "lib/config";
+import { apiSessionPromise, client } from "lib/api-client";
 
 export enum UserStatus {
     Unknown,
@@ -41,7 +41,7 @@ export const UserContext = React.createContext<UserContextData>({
     },
 });
 
-export const UserProvider: React.FunctionComponent<{children?: React.ReactNode | undefined}> = (props) => {
+export const UserProvider: React.FunctionComponent<{ children?: React.ReactNode | undefined }> = (props) => {
     const [data, setData] = React.useState<UserData>({
         // This is the data used when the page is loading, or when it's rendered on the server side.
         status: UserStatus.Unknown,
@@ -57,7 +57,7 @@ export const UserProvider: React.FunctionComponent<{children?: React.ReactNode |
         // Check if the user is logged in. Elsewhere in the code we always ensure the token is valid
         // or deleted (via apiSessionPromise or await logout() etc.), before calling this refresh() method.
         const currentToken = KeratinAuthN.session();
-        if (!currentToken) {  // If currentToken is invalid it may be either undefined or an empty string (depends on session store)
+        if (!currentToken) { // If currentToken is invalid it may be either undefined or an empty string (depends on session store)
             // The user is not logged in:
             setData({
                 status: UserStatus.Anonymous,
@@ -91,15 +91,15 @@ export const UserProvider: React.FunctionComponent<{children?: React.ReactNode |
 
     // Callback to log the user in, by submitting a token that was emailed to them.
     const submitPasswordlessLoginToken = React.useCallback(async (token: string) => {
-        await KeratinAuthN.sessionTokenLogin({token, });
+        await KeratinAuthN.sessionTokenLogin({ token });
         refresh();
-    }, []);
+    }, [refresh]);
 
     // Callback to log the user out
     const logout = React.useCallback(async () => {
         await KeratinAuthN.logout();
         refresh();
-    }, []);
+    }, [refresh]);
 
     // Check the user's login status when this component is first mounted:
     React.useEffect(() => {
@@ -107,14 +107,14 @@ export const UserProvider: React.FunctionComponent<{children?: React.ReactNode |
         apiSessionPromise.finally(() => {
             refresh();
         });
-    }, []); // <-- [] indicates no dependencies (only run once).
+    }, [refresh]);
 
     return (
-        <UserContext.Provider value={{...data, submitPasswordlessLoginToken, logout}}>
+        <UserContext.Provider value={{ ...data, submitPasswordlessLoginToken, logout }}>
             {props.children}
         </UserContext.Provider>
     );
-}
+};
 
 /** Check if the given email address is avilable for registration. */
 export async function isEmailAvailable(email: string): Promise<boolean> {
@@ -126,9 +126,9 @@ export async function isEmailAvailable(email: string): Promise<boolean> {
  * Returns true if the email was valid and a login link was emailed to the user.
  * Returns false if the email is not a registered user.
  * Rejects the promise if an error occurs with requesting the login.
- * @param email 
+ * @param email
  */
 export async function requestPasswordlessLogin(email: string): Promise<boolean> {
-    const result = await client.requestPasswordlessLogin({email});
+    const result = await client.requestPasswordlessLogin({ email });
     return result.requested;
 }
