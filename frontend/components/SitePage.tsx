@@ -82,6 +82,16 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
     
     if (user.status === UserStatus.LoggedIn) {
+        // My Profile link
+        defaultSystemLinks.push({
+            id: "profile",
+            priority: 55,
+            content: {
+                url: site.isHomeSite ? "/account/" : `${site.homeSiteUrl}/account/`,
+                label: <FormattedMessage id="systemLink.profile" defaultMessage="Profile ({name})" values={{name: user.fullName}} />,
+                icon: "person-fill",
+            }
+        });
         // Log out link:
         defaultSystemLinks.push({
             id: "login-out",
