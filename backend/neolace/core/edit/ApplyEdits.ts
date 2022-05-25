@@ -10,6 +10,7 @@ import {
     InvalidEdit,
     PropertyMode,
     PropertyType,
+    SetEntryName,
     UpdateEntryFeature,
     UpdateEntryType,
     UpdateEntryTypeFeature,
@@ -71,6 +72,26 @@ export const ApplyEdits = defineAction({
                     break;
                 }
 
+                case SetEntryName.code: {
+                    try {
+                        await tx.queryOne(C`
+                            MATCH (e:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            SET e.name = ${edit.data.name}
+                        `.RETURN({}));
+                    } catch (err: unknown) {
+                        if (err instanceof EmptyResultError) {
+                            throw new InvalidEdit(
+                                SetEntryName.code,
+                                { entryId: edit.data.entryId },
+                                "Cannot set change the entry's name - entry does not exist.",
+                            );
+                        }
+                        throw err;
+                    }
+                    modifiedNodes.add(edit.data.entryId);
+                    break;
+                }
+
                 case UpdateEntryFeature.code: {
                     // Load details of the feature that we're editing:
                     const feature = features.find((f) => f.featureType === edit.data.feature.featureType);
@@ -96,6 +117,7 @@ export const ApplyEdits = defineAction({
                                 "Cannot set feature data for that entry - either the feature is not enabled or the entry ID is invalid.",
                             );
                         }
+                        throw err;
                     }
 
                     // Edit the feature:

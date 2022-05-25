@@ -6,7 +6,7 @@ export function getUiSlotChanges(config: Record<string, unknown>): Record<UiSlot
         "systemLinks": [
             {op: "insert", widget: {
                 id: "search",
-                priority: 50,
+                priority: 20,
                 content: {
                     url: "/search",
                     label: <FormattedMessage id="plugin.search.systemLink.search" defaultMessage="Search" />,

@@ -11,6 +11,7 @@ import { MDTContext, RenderMDT } from './markdown-mdt/mdt';
 import { Icon, IconId } from './widgets/Icon';
 import { FormattedMessage } from 'react-intl';
 import { UiPluginsProvider } from './utils/ui-plugins';
+import { DEVELOPMENT_MODE } from 'lib/config';
 
 export const DefaultSiteTitle = Symbol("DefaultSiteTitle");
 
@@ -80,6 +81,21 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
 
     const defaultSystemLinks: UISlotWidget<SystemLink>[] = [];
     //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
+
+    if (DEVELOPMENT_MODE) {
+        // For now, the "Drafts" link should only be visible during development
+        defaultSystemLinks.push(
+            {
+                id: "drafts",
+                priority: 30,
+                content: {
+                    url: "/draft/",
+                    label: <FormattedMessage id="systemLink.drafts" defaultMessage="Drafts" />,
+                    icon: "file-earmark-diff",
+                },
+            },
+        );
+    }
     
     if (user.status === UserStatus.LoggedIn) {
         // My Profile link

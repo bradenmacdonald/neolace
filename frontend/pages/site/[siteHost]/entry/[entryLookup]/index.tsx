@@ -11,7 +11,7 @@ import { SitePage } from 'components/SitePage';
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 import { LookupValue } from 'components/LookupValue';
 import { EntryLink } from 'components/EntryLink';
-import { imgThumbnailLoader } from 'lib/config';
+import { DEVELOPMENT_MODE, imgThumbnailLoader } from 'lib/config';
 //import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageProps {
@@ -37,8 +37,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
             sitePreloaded={props.sitePreloaded}
             leftNavTopSlot={[
                 {id: "entryName", priority: 20, content: <>
-                    <br/>
-                    <strong>{props.entry.name}</strong>
+                    <strong className="block mt-2">{props.entry.name}</strong>
                 </>},
                 {id: "entryId", priority: 21, content: <>
                     <code id="entry-id" data-entry-id={props.entry.id} className="font-mono font-light hidden">{props.entry.friendlyId}</code>
@@ -54,6 +53,13 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         }
                     </ul>
                 </>},
+                ...(DEVELOPMENT_MODE ? [
+                    {id: "entryActions", priority: 60, content: <>
+                    <ul id="entry-actions" className="mt-4">
+                        <li><Link href={`/draft/_/entry/${props.entry.id}/edit`}><a><FormattedMessage id="site.entry.editEntry" defaultMessage="Edit"/></a></Link></li>
+                    </ul>
+                </>},
+                ] : [])
             ]}
             title={props.entry.name}
         >
