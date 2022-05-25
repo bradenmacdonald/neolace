@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "predev": "npm install && npm run compile:i18n",
+    "predev": "npm install && npm run compile:i18n && cd ../neolace-api && deno run --allow-read --allow-run --allow-write --allow-env --no-check _compile.ts && cd -",
     "dev": "next dev -p 5555",
     "build": "next build",
     "lint": "next lint",

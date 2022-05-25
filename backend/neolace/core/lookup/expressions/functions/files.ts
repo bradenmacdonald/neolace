@@ -20,7 +20,7 @@ export class Files extends LookupFunctionOneArg {
         return this.firstArg;
     }
 
-    public async getValue(context: LookupContext) {
+    public async getValue(context: LookupContext): Promise<LazyCypherIterableValue<FileValue>> {
         const entrySet = await (await this.entriesExpr.getValue(context)).castTo(LazyEntrySetValue, context);
         if (entrySet === undefined) {
             throw new LookupEvaluationError(
@@ -62,6 +62,9 @@ export class Files extends LookupFunctionOneArg {
                 );
             }
             return result;
+        }, {
+            sourceExpression: this,
+            sourceExpressionEntryId: context.entryId,
         });
     }
 }
