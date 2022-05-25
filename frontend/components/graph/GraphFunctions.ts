@@ -13,11 +13,11 @@ interface EdgeAttributes {
     relId: VNID;
     relType: VNID;
 }
-type GraphType = Graph<NodeAttributes, EdgeAttributes>;
+export type GraphType = Graph<NodeAttributes, EdgeAttributes>;
 
 
 
-function createGraphObject(data: G6RawGraphData): GraphType {
+export function createGraphObject(data: G6RawGraphData): GraphType {
     const graph = new Graph<NodeAttributes, EdgeAttributes>();
     
     data.nodes.forEach((n) => {
@@ -32,7 +32,7 @@ function createGraphObject(data: G6RawGraphData): GraphType {
     return graph;
 }
 
-function convertGraphToData(graph: GraphType): G6RawGraphData {
+export function convertGraphToData(graph: GraphType): G6RawGraphData {
     const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({ 
             id: VNID(nodeKey),
@@ -355,27 +355,23 @@ export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphTyp
 
 // for now just find all the leaf nodes and for every node that has more than one leaf node:
 // remove the leaf nodes, create one leaf node with label saying how many leaf nodes there are.
-export function transformDataForGraph(data: G6RawGraphData, entryType: VNID) {
-    const graph = createGraphObject(data);
+export function transformCondenseGraph(graph: GraphType, entryType: VNID) {
     const transformedGraph = condenseLeaves(graph);
     const condensedGraph = condenseSimplePattern(transformedGraph, entryType);
-    return convertGraphToData(condensedGraph);
+    return condensedGraph;
 }
 
-export function transformHideNodesOfType(data: G6RawGraphData, nType: VNID) {
-    const graph = createGraphObject(data);
+export function transformHideNodesOfType(graph: GraphType, nType: VNID) {
     const transformedGraph = hideNodesOfType(graph, nType);
-    return convertGraphToData(transformedGraph);
+    return transformedGraph;
 }
 
 export function transformExpandLeaves(
-    originalData: G6RawGraphData, 
-    data: G6RawGraphData, 
+    originalDataGraph: GraphType, 
+    graph: GraphType, 
     parentKey: string, 
     entryType: string
 ) {
-    const graph = createGraphObject(data);
-    const originalGraph = createGraphObject(originalData);
-    const transformedGraph = expandLeaf(originalGraph, graph, parentKey, entryType);
-    return convertGraphToData(transformedGraph);
+    const transformedGraph = expandLeaf(originalDataGraph, graph, parentKey, entryType);
+    return transformedGraph;
 }

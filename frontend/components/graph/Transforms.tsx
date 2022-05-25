@@ -1,6 +1,6 @@
 import { G6RawGraphData } from "components/graph/Graph";
 import { VNID } from "neolace-api";
-import { transformDataForGraph, transformHideNodesOfType, transformExpandLeaves } from "./GraphFunctions";
+import { transformCondenseGraph, transformHideNodesOfType, transformExpandLeaves, createGraphObject, convertGraphToData, GraphType } from "./GraphFunctions";
 
 export interface Transform {
     id: string;
@@ -14,49 +14,34 @@ export enum Transforms {
     EXPANDLEAF = "expand-leaf",
 }
 
-function condenseGraphData(currentData: G6RawGraphData) {
+function condenseGraphData(currentData: G6RawGraphData, graph: GraphType) {
     // NOTE for now, we are performing node condensing relative to the "this" node of the graph.
     const focusNode = currentData.nodes.find((n) => n.isFocusEntry) ?? currentData.nodes[0];
     if (focusNode === undefined) {
-        return currentData;  // Error - there are no nodes at all.
+        return graph;  // Error - there are no nodes at all.
     }
-    const condensedData = transformDataForGraph(currentData, focusNode.entryType);
-    return condensedData;
+    const condensedGraph = transformCondenseGraph(graph, focusNode.entryType);
+    return condensedGraph;
 }
 
-function hideNodeTypeInGraph(currentData: G6RawGraphData, param: string) {
-    const prunedData = transformHideNodesOfType(
-            currentData, 
-            VNID(param)
-        );
-    return prunedData;
-}
 
 export function applyTransforms(data: G6RawGraphData, transformList: Transform[]) {
-    const originalData = {
-        nodes: [... data.nodes],
-        edges: [... data.edges],
-    };
-
-    let transformedData = {
-        nodes: [... data.nodes],
-        edges: [... data.edges],
-    };
+    const originalDataGraph = createGraphObject(data);
+    let transformedGraph = createGraphObject(data);
 
     for (const t of transformList) {
-        console.log('Prior to transform', transformedData);
         if (t.id === Transforms.CONDENSE) {
-            transformedData = condenseGraphData(transformedData);
+            transformedGraph = condenseGraphData(data, transformedGraph);
         } else if (t.id === Transforms.HIDETYPE) {
-            transformedData = hideNodeTypeInGraph(transformedData, t.params.nodeType as string);
+            transformedGraph = transformHideNodesOfType(transformedGraph, VNID(t.params.nodeType as string));
         } else if (t.id === Transforms.EXPANDLEAF) {
-            transformedData = transformExpandLeaves(
-                originalData, 
-                transformedData, 
+            transformedGraph = transformExpandLeaves(
+                originalDataGraph, 
+                transformedGraph, 
                 t.params.parentKey as string, 
                 t.params.entryType as string
             );
         }
     }
-    return transformedData;
+    return convertGraphToData(transformedGraph);
 }
