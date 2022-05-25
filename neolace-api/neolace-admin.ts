@@ -512,7 +512,11 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                 numProperties++;
             }
             numEntries++;
-            await pushEditsIfNeeded(edits);
+            try {
+                await pushEditsIfNeeded(edits);
+            } catch (err) {
+                throw new Error(`Failed to set properties of entry ${friendlyId}.`, {cause: err});
+            }
         }
         await pushEdits(edits);
         log.info(`${numProperties} properties updated on ${numEntries} entries`);
@@ -573,7 +577,10 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
             if (metadata.files) {
                 for (const [filename, fileIndex] of Object.entries(metadata.files)) {
                     const extension = filename.split(".").pop() as string;
-                    const fileContents = await Deno.readFile(folder + "/" + friendlyId + `.${fileIndex}.${extension}`);
+                    const fullFilePath = folder + "/" + friendlyId + `.${fileIndex}.${extension}`;
+                    const fileContents = await Deno.readFile(fullFilePath).catch((err) => {
+                        throw new Error(`Failed to open file ${fullFilePath}`, {cause: err});
+                    });
                     const fileBlob = new Blob([fileContents], {type: contentTypeFromExtension(extension)});
                     const draftFile = await client.uploadFileToDraft(fileBlob, {draftId, siteId});
                     await client.addEditToDraft({

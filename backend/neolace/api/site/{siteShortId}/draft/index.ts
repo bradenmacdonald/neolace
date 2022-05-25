@@ -1,3 +1,4 @@
+import * as log from "std/log/mod.ts";
 import { adaptErrors, api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
 import { CreateDraft } from "neolace/core/edit/Draft.ts";
 import { getDraft } from "./_helpers.ts";
@@ -39,9 +40,11 @@ export class DraftIndexResource extends NeolaceHttpResource {
             try {
                 editType.dataSchema(e.data);
             } catch (err) {
+                log.warning(`Found invalid edit - data was:`);
+                log.warning(e.data);
                 throw new api.InvalidFieldValue([{
                     fieldPath: `edits.${idx}.data`,
-                    message: `Invalid edit data: "${err.message}"`,
+                    message: `Invalid edit data for ${e.code} edit: "${err.message}"`,
                 }]);
             }
         }
