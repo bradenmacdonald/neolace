@@ -82,6 +82,7 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const intl = useIntl();
     const [hidden, setHidden, hiddenRef] = useStateRef(false);
+    const [expand, setExpand, expandRef] = useStateRef(false);
     // The data (nodes and relationships) that we want to display as a graph.
     const originalData = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
@@ -268,7 +269,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 })
                 setHidden(false);
 
-            } else if (item.getModel().leavesCondensed) {
+            } else if (item.getModel().leavesCondensed && expandRef.current) {
                 console.log('The node to expand is',  item.getNeighbors()[0].getModel().id);
                 console.log('The node is ', item.getNeighbors()[0].getModel().label)
                 setTransforms((prevTransforms) => [...prevTransforms, {
@@ -377,6 +378,10 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.CONDENSE, params: {}}]);
         }
     }, [isCondensed, setTransforms]);
+
+    const handleExpandLeafButton = React.useCallback(() => {
+        setExpand((wasExpanded) => !wasExpanded)
+    }, []);
     // Code for "Hide article antries" toolbar button
     const handleHideArticlesButton = React.useCallback(() => { setHidden((wasHidden) => !wasHidden); }, []);
 
@@ -428,6 +433,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     })}
                     icon="eraser"
                     enabled={hidden}
+                />
+                <ToolbarButton
+                    onClick={handleExpandLeafButton}
+                    title={intl.formatMessage({
+                        defaultMessage: "Expand leaf tool",
+                        id: "graph.toolbar.hideArticles",
+                    })}
+                    icon="eraser"
+                    enabled={expand}
                 />
             </div>
             <div
