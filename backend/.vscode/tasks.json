@@ -40,7 +40,7 @@
             "problemMatcher": []
         },
         {
-            "label": "Run backend (watch mode)",
+            "label": "🚀 Run backend (watch mode)",
             "type": "shell",
             "command": "deno",
             "args": [
@@ -68,7 +68,7 @@
             "problemMatcher": []
         },
         {
-            "label": "Run neolace database servers",
+            "label": "🗄️ Run neolace database servers",
             "type": "shell",
             "command": "docker-compose",
             "args": ["up"],
@@ -79,7 +79,7 @@
             "problemMatcher": []
         },
         {
-            "label": "Erase Database and create default sites",
+            "label": "♻️ Erase Database and create default sites",
             "type": "shell",
             "command": "deno",
             "args": [
@@ -93,14 +93,28 @@
             "problemMatcher": []
         },
         {
-            "label": "Fully reset/erase all data",
+            "label": "🔍 Rebuild search index for all sites",
+            "type": "shell",
+            "command": "deno",
+            "args": [
+                "run",
+                "--allow-net",
+                "--allow-read",
+                "--allow-env",
+                "--no-check",
+                "neolace/scripts/reindex-sites.ts"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "🔥 Fully reset/erase all data",
             "type": "shell",
             "command": "docker-compose",
             "args": ["down", "-v"],
             "problemMatcher": []
         },
         {
-            "label": "Apply database migrations",
+            "label": "⏩ Apply database migrations",
             "type": "shell",
             "command": "deno",
             "args": [
