@@ -9,14 +9,12 @@ import { sha256hmac } from "neolace/lib/sha256hmac.ts";
 
 export class NeolaceAuthService extends Drash.Service {
     public async runBeforeResource(request: Drash.Request): Promise<void> {
-
         // First, a little fix:
         if (request.headers.get("user-agent") === "Go-http-client/1.1" && !request.headers.get("accept")) {
-            // Work around an issue where our AuthN server doesn't set an Accept header, so Drash returns 
+            // Work around an issue where our AuthN server doesn't set an Accept header, so Drash returns
             // "406 Not Acceptable" to every request and it constantly retries every webhook.
             request.headers.set("accept", "*/*");
         }
-
 
         // Note: we return HTTP 401 if the authentication is invalid, because despite the name, it's about
         // Authentication and HTTP 403 is about authorization.

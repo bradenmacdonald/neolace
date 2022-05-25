@@ -25,5 +25,14 @@ export class NeolaceErrorLogger extends Drash.ErrorHandler {
         const parsedUrl = new URL(request.url);
         const msg = `${request.method} ${parsedUrl.pathname} -> ${response.status}: ${error.name}: ${error.message}`;
         log.error(msg);
+
+        // Most of our CORS handling is in the NeolaceHttpResource base class, but here we have to handle a special case
+        // to fix the CORS headers after an exception is thrown (e.g. by the auth middleware), so that our frontend can
+        // get the error instead of just a generic CORS error.
+        //
+        // Neolace APIs are generally public and don't directly use cookies for authentication so we allow all origins.
+        if (!response.headers.has("Access-Control-Allow-Origin")) {
+            response.headers.set("Access-Control-Allow-Origin", request.headers.get("Origin") ?? "");
+        }
     }
 }
