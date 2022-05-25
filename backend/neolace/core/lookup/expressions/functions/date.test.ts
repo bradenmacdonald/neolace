@@ -1,21 +1,21 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
-import { assertEquals, assertInstanceOf, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { getGraph } from "neolace/core/graph.ts";
+import {
+    assertEquals,
+    assertInstanceOf,
+    assertRejects,
+    group,
+    setTestIsolation,
+    test,
+    TestLookupContext,
+} from "neolace/lib/tests.ts";
 import { DateValue, StringValue } from "../../values.ts";
 import { DateExpression } from "./date.ts";
 import { LiteralExpression } from "../literal-expr.ts";
 import { LookupEvaluationError } from "../../errors.ts";
-import { LookupExpression } from "../base.ts";
 
 group("date.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
-    const evalExpression = (expr: LookupExpression, entryId?: VNID) =>
-        getGraph().then((graph) =>
-            graph.read((tx) => expr.getValue({ tx, siteId, entryId, defaultPageSize: 10n })).then((v) =>
-                v.makeConcrete()
-            )
-        );
     const siteId = defaultData.site.id;
+    const context = new TestLookupContext({ siteId });
 
     test(`toString()`, async () => {
         const expr = new DateExpression(new LiteralExpression(new StringValue("2020-01-10")));
@@ -25,7 +25,7 @@ group("date.ts", () => {
     test(`It can parse dates`, async () => {
         async function checkString(dateStr: string, expected?: string) {
             const expr = new DateExpression(new LiteralExpression(new StringValue(dateStr)));
-            const value = await evalExpression(expr);
+            const value = await context.evaluateExpr(expr);
             assertInstanceOf(value, DateValue);
             assertEquals(value.asIsoString(), expected ?? dateStr);
         }
@@ -47,7 +47,7 @@ group("date.ts", () => {
         async function checkString(dateStr: string, errorStr: string) {
             const expr = new DateExpression(new LiteralExpression(new StringValue(dateStr)));
             await assertRejects(
-                () => evalExpression(expr),
+                () => context.evaluateExpr(expr),
                 LookupEvaluationError,
                 errorStr,
             );

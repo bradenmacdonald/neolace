@@ -11,14 +11,13 @@ export class GraphValue extends ConcreteValue {
             entryId: VNID;
             name: string;
             entryType: VNID;
-            data: Record<string, unknown>;
+            isFocusEntry?: boolean;
         }[],
         public readonly rels: {
             relId: VNID;
             relType: VNID;
             fromEntryId: VNID;
             toEntryId: VNID;
-            data: Record<string, unknown>;
         }[],
     ) {
         super();

@@ -2,7 +2,7 @@ import { api } from "neolace/api/mod.ts";
 import { C, EmptyResultError, Field, isVNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
-import { CachedLookupContext } from "neolace/core/lookup/context.ts";
+import { LookupContext } from "neolace/core/lookup/context.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
 import {
     AnnotatedValue,
@@ -81,7 +81,12 @@ export async function getEntry(
     refCache?.addReferenceToEntryId(entryData.id);
 
     const maxValuesPerProp = 5;
-    const lookupContext = new CachedLookupContext(tx, siteId, entryData.id, BigInt(maxValuesPerProp));
+    const lookupContext = new LookupContext({
+        tx,
+        siteId,
+        entryId: entryData.id,
+        defaultPageSize: BigInt(maxValuesPerProp),
+    });
 
     if (flags.has(api.GetEntryFlags.IncludePropertiesSummary)) {
         // Include a summary of property values for this entry (up to 15 importance properties - whose importance is <= 20)
@@ -205,7 +210,7 @@ export async function getEntry(
     if (flags.has(api.GetEntryFlags.IncludeReferenceCache)) {
         // Extract references from the description of this entry
         refCache?.extractMarkdownReferences(entryData.description, { currentEntryId: entryData.id });
-        result.referenceCache = await refCache!.getData(tx, lookupContext);
+        result.referenceCache = await refCache!.getData(lookupContext);
     }
 
     return result;

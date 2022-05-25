@@ -2,10 +2,23 @@ import Graph from 'graphology';
 import { VNID } from 'neolace-api';
 import type { G6RawGraphData } from './Graph'
 
+interface NodeAttributes {
+    label: string;
+    entryType: VNID;
+    isFocusEntry?: boolean;
+    leavesCondensed?: Set<string>;
+}
+interface EdgeAttributes {
+    label: string;
+    relId: VNID;
+    relType: VNID;
+}
+type GraphType = Graph<NodeAttributes, EdgeAttributes>;
 
 
-function createGraphObject(data: G6RawGraphData): Graph {
-    const graph = new Graph();
+
+function createGraphObject(data: G6RawGraphData): GraphType {
+    const graph = new Graph<NodeAttributes, EdgeAttributes>();
     
     data.nodes.forEach((n) => {
         const  {id: id, ...nodeAttributes } = n;
@@ -13,35 +26,29 @@ function createGraphObject(data: G6RawGraphData): Graph {
     })
     
     data.edges.forEach((e) => {
-        const {source, target, ...edgeAttributes} = e;
-        graph.addEdge(source, target, edgeAttributes);
+        const {source, target, id:relId,  ...edgeAttributes} = e;
+        graph.addEdge(source, target, {relId, ...edgeAttributes});
     })   
     return graph;
 }
 
-function convertGraphToData(graph: Graph): G6RawGraphData {
+function convertGraphToData(graph: GraphType): G6RawGraphData {
     const data: G6RawGraphData = {
-        nodes: graph.mapNodes((nodeKey) => {
-            const node: {
-                id: VNID;
-                label: string;
-                entryType: VNID;
-                [other: string]: unknown; // attributes
-              } =  { 
-                id: VNID(nodeKey),
-                label: graph.getNodeAttribute(nodeKey, 'label') as string, 
-                entryType: VNID(graph.getNodeAttribute(nodeKey, 'entryType')),
-            }
-            if (graph.getNodeAttribute(nodeKey, 'leavesCondensed')) {
-                node["leavesCondensed"] = graph.getNodeAttribute(nodeKey, 'leavesCondensed');
-            }
-            return node;
-        }),
+        nodes: graph.mapNodes((nodeKey) => ({ 
+            id: VNID(nodeKey),
+            label: graph.getNodeAttribute(nodeKey, 'label') as string, 
+            entryType: VNID(graph.getNodeAttribute(nodeKey, 'entryType')),
+            ...(graph.hasNodeAttribute(nodeKey, 'isFocusEntry') && {isFocusEntry: true}),
+            ...(graph.hasNodeAttribute(nodeKey, 'leavesCondensed') 
+                && {leavesCondensed: graph.getNodeAttribute(nodeKey, 'leavesCondensed')}),
+
+        })),
         edges: graph.mapEdges((edge, attributes, source, target) => {
             return {
+                id: attributes.relId,
                 source: source,
                 target: target,
-                entryType: attributes.entryType,
+                relType: attributes.relType,
                 label: attributes.label,
             }
         }),
@@ -56,7 +63,7 @@ function convertGraphToData(graph: Graph): G6RawGraphData {
  * @param graph 
  * @returns a graph with condensed leaves.
  */
-function condenseLeaves(graph:Graph): Graph {
+function condenseLeaves(graph: GraphType): GraphType {
     // create dictionary of nodes with entry ids as keys
     const newGraph = graph.copy();
     
@@ -125,7 +132,7 @@ function condenseLeaves(graph:Graph): Graph {
  * If leafNodeKey refers to a non-leaf node (does not have list of condensed leaves), returns the input graph.
  * @param parentNodeKey 
  */
-function expandLeaf(originalGraph: Graph, currGraph: Graph, parentNodeKey: string, entryType: string): Graph {
+function expandLeaf(originalGraph: GraphType, currGraph: GraphType, parentNodeKey: string, entryType: string): GraphType {
     const newGraph = currGraph.copy();
 
     // find the key of the condensed leaf
@@ -143,33 +150,37 @@ function expandLeaf(originalGraph: Graph, currGraph: Graph, parentNodeKey: strin
 
     console.log('The condensed key is ', condensedLeafkey)
     
-    const nodesToAdd: string[] = newGraph.getNodeAttribute(condensedLeafkey, 'leavesCondensed');
-    console.log('Nodes to add', nodesToAdd);
+    const nodesToAdd = newGraph.getNodeAttribute(condensedLeafkey, 'leavesCondensed'); 
+    if (nodesToAdd === undefined) {
+        console.log('The condensed leaf does not seem to have leavesCondensed attribute.');
+    } else {
+        (nodesToAdd).forEach((leafNode) => {
+            // create leaf
+            newGraph.addNode(leafNode, {
+                label: originalGraph.getNodeAttribute(leafNode, 'label'),
+                entryType: originalGraph.getNodeAttribute(leafNode, 'entryType'),
+            });
     
-    nodesToAdd.forEach((leafNode) => {
-        newGraph.addNode(leafNode, {
-            label: originalGraph.getNodeAttribute(leafNode, 'label'),
-            entryType: originalGraph.getNodeAttribute(leafNode, 'entryType'),
-        });
-
-        // add edge
-        const isOutboundRel = originalGraph.hasEdge(parentNodeKey, leafNode);
-        const isInboundRel = originalGraph.hasEdge(leafNode, parentNodeKey);
-
-        console.log(`isOutbound ${isOutboundRel}, isInboundRel ${isInboundRel}`);
-
-        if ((isInboundRel && isOutboundRel) || (!isInboundRel && !isOutboundRel)) {
-            console.log(`The relationship between ${parentNodeKey} and ${leafNode} is bidirectional.`);
-        } else if (isInboundRel) {
-            newGraph.addEdge(leafNode, parentNodeKey);
-        } else {
-            newGraph.addEdge(parentNodeKey, leafNode);
-        }
-
-    })
-
-    // drop condensed node
-    newGraph.dropNode(condensedLeafkey);
+            // add edge
+            const isOutboundRel = originalGraph.hasEdge(parentNodeKey, leafNode);
+            const isInboundRel = originalGraph.hasEdge(leafNode, parentNodeKey);
+    
+            console.log(`isOutbound ${isOutboundRel}, isInboundRel ${isInboundRel}`);
+    
+            if ((isInboundRel && isOutboundRel) || (!isInboundRel && !isOutboundRel)) {
+                console.log(`The relationship between ${parentNodeKey} and ${leafNode} is bidirectional.`);
+            } else if (isInboundRel) {
+                newGraph.addEdge(leafNode, parentNodeKey);
+            } else {
+                newGraph.addEdge(parentNodeKey, leafNode);
+            }
+    
+        })
+    
+        // drop condensed node
+        newGraph.dropNode(condensedLeafkey);
+    }
+    
 
     return newGraph;
 }
@@ -190,7 +201,7 @@ function expandLeaf(originalGraph: Graph, currGraph: Graph, parentNodeKey: strin
  * @param relativeEType The entry type of the nodes relative to which to perform the condensing operation.
  * @returns a new condensed graph
  */
-function condenseSimplePattern(graph: Graph, relativeEType: VNID): Graph {
+function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType {
     // delete these nodes and save only one condensed node
     
     // create dictionary of nodes with entry ids as keys
@@ -301,7 +312,7 @@ function condenseSimplePattern(graph: Graph, relativeEType: VNID): Graph {
 Hide nodes of given entry type as follows: for each deleted node, take all of its neighbours, and connect all of them
 with undirected relationsips.
 */
-export function hideNodesOfType(graph: Graph, eTypeToRemove: VNID): Graph {
+export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphType {
     // filter nodes to only of the removed type
     const newGraph = graph.copy();
     const nodesToRemove = newGraph.filterNodes((n, attr) => {

@@ -7,6 +7,7 @@ import {
     group,
     setTestIsolation,
     test,
+    TestLookupContext,
 } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { AndAncestors } from "./ancestors.ts";
@@ -21,6 +22,7 @@ group("graph()", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const siteId = defaultData.site.id;
     const ponderosaPine = defaultData.entries.ponderosaPine;
+    const context = new TestLookupContext({ siteId, entryId: ponderosaPine.id });
 
     const entryType = VNID(), entryIsA = VNID();
     const A = VNID(),
@@ -29,50 +31,37 @@ group("graph()", () => {
         D = VNID();
 
     test("It can graph all the ancestors of the ponderosa pine", async () => {
-        // this is the same as this.ancestors().graph()
-        const expression = new Graph(new AndAncestors(new This()));
-
-        const graph = await getGraph();
-        const value = await graph.read((tx) =>
-            expression.getValue({ tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n }).then((v) =>
-                v.makeConcrete()
-            )
-        );
+        const value = await context.evaluateExprConcrete("this.andAncestors().graph()");
 
         assertInstanceOf(value, GraphValue);
         assertEquals(value.entries, [
             {
-                data: {},
                 entryId: defaultData.entries.ponderosaPine.id,
                 entryType: defaultData.schema.entryTypes._ETSPECIES.id,
                 name: "Ponderosa Pine",
+                isFocusEntry: true,
             },
             {
-                data: {},
                 entryId: defaultData.entries.genusPinus.id,
                 entryType: defaultData.schema.entryTypes._ETGENUS.id,
                 name: "Pinus",
             },
             {
-                data: {},
                 entryId: defaultData.entries.familyPinaceae.id,
                 entryType: defaultData.schema.entryTypes._ETFAMILY.id,
                 name: "Pinaceae",
             },
             {
-                data: {},
                 entryId: defaultData.entries.orderPinales.id,
                 entryType: defaultData.schema.entryTypes._ETORDER.id,
                 name: "Pinales",
             },
             {
-                data: {},
                 entryId: defaultData.entries.classPinopsida.id,
                 entryType: defaultData.schema.entryTypes._ETCLASS.id,
                 name: "Pinopsida",
             },
             {
-                data: {},
                 entryId: defaultData.entries.divisionTracheophyta.id,
                 entryType: defaultData.schema.entryTypes._ETDIVISION.id,
                 name: "Tracheophyta",
@@ -80,31 +69,26 @@ group("graph()", () => {
         ]);
         const expectedRels = [
             {
-                data: {},
                 fromEntryId: defaultData.entries.classPinopsida.id,
                 relType: defaultData.schema.properties._parentDivision.id,
                 toEntryId: defaultData.entries.divisionTracheophyta.id,
             },
             {
-                data: {},
                 fromEntryId: defaultData.entries.orderPinales.id,
                 relType: defaultData.schema.properties._parentClass.id,
                 toEntryId: defaultData.entries.classPinopsida.id,
             },
             {
-                data: {},
                 fromEntryId: defaultData.entries.familyPinaceae.id,
                 relType: defaultData.schema.properties._parentOrder.id,
                 toEntryId: defaultData.entries.orderPinales.id,
             },
             {
-                data: {},
                 fromEntryId: defaultData.entries.genusPinus.id,
                 relType: defaultData.schema.properties._parentFamily.id,
                 toEntryId: defaultData.entries.familyPinaceae.id,
             },
             {
-                data: {},
                 fromEntryId: defaultData.entries.ponderosaPine.id,
                 relType: defaultData.schema.properties._parentGenus.id,
                 toEntryId: defaultData.entries.genusPinus.id,
@@ -213,32 +197,28 @@ group("graph()", () => {
         }));
 
         const expression = new Graph(new AndAncestors(new This()));
-        const value = await graph.read((tx) =>
-            expression.getValue({ tx, siteId, entryId: A, defaultPageSize: 10n }).then((v) => v.makeConcrete())
-        );
+        // Get A and its ancestors:
+        const value = await context.evaluateExprConcrete(expression, A);
 
         assertInstanceOf(value, GraphValue);
         assertEquals<typeof value.entries>(value.entries, [
             {
-                data: {},
                 entryId: A,
                 entryType: entryType,
                 name: "Entry A",
+                isFocusEntry: true,
             },
             {
-                data: {},
                 entryId: D,
                 entryType: entryType,
                 name: "Entry D",
             },
             {
-                data: {},
                 entryId: B,
                 entryType: entryType,
                 name: "Entry B",
             },
             {
-                data: {},
                 entryId: C,
                 entryType: entryType,
                 name: "Entry C",
@@ -248,31 +228,26 @@ group("graph()", () => {
         // These are the expected relationships, without 'relId' since that will be different each time.
         const expectedRels = [
             {
-                data: {},
                 fromEntryId: A,
                 relType: entryIsA,
                 toEntryId: D,
             },
             {
-                data: {},
                 fromEntryId: B,
                 relType: entryIsA,
                 toEntryId: A,
             },
             {
-                data: {},
                 fromEntryId: C,
                 relType: entryIsA,
                 toEntryId: A,
             },
             {
-                data: {},
                 fromEntryId: D,
                 relType: entryIsA,
                 toEntryId: C,
             },
             {
-                data: {},
                 fromEntryId: D,
                 relType: entryIsA,
                 toEntryId: B,
@@ -288,15 +263,9 @@ group("graph()", () => {
     });
 
     test("Works on empty values", async () => {
-        const graph = await getGraph();
-
         // Ponderosa pine has no descendants so this will be an empty set of entries to graph:
         const expression = new Graph(new Descendants(new This()));
-        const value = await graph.read((tx) =>
-            expression.getValue({ tx, siteId, entryId: ponderosaPine.id, defaultPageSize: 10n }).then((v) =>
-                v.makeConcrete()
-            )
-        );
+        const value = await context.evaluateExprConcrete(expression);
 
         assertEquals(value, new GraphValue([], []));
     });

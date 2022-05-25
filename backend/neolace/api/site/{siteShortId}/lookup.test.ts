@@ -21,10 +21,6 @@ group("lookup.ts", () => {
         );
 
         assertEquals(result.resultValue, { type: "String", value: "Pinus ponderosa" });
-        assertEquals(
-            result.expressionNormalized,
-            `this.get(prop=[[/prop/${defaultData.schema.properties._propScientificName.id}]])`,
-        );
     });
 
     test("It can evaluate an AUTO relationship property and return a reference cache with details of each entry", async () => {
@@ -63,10 +59,6 @@ group("lookup.ts", () => {
             },
         });
         assertEquals(
-            result.expressionNormalized,
-            `this.get(prop=[[/prop/${defaultData.schema.properties._relImages.id}]])`,
-        );
-        assertEquals(
             result.referenceCache.entries[defaultData.entries.imgPonderosaTrunk.id]?.name,
             defaultData.entries.imgPonderosaTrunk.name,
         );
@@ -92,7 +84,6 @@ group("lookup.ts", () => {
             errorClass: "LookupEvaluationError",
             message: "Date values should be in the format YYYY-MM-DD.",
         });
-        assertEquals(result.expressionNormalized, `date("tribble")`);
     });
 
     // TODO: test permissions, once implemented - make sure lookups can't leak any data.

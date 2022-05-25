@@ -1,10 +1,10 @@
 import { api } from "neolace/api/mod.ts";
-import { C, isVNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { C, isVNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { PropertyType, ReferenceCacheData } from "neolace/deps/neolace-api.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
-import type { CachedLookupContext } from "neolace/core/lookup/context.ts";
+import type { LookupContext } from "neolace/core/lookup/context.ts";
 
 /**
  * A reference cache contains:
@@ -39,7 +39,7 @@ export class ReferenceCache {
         return this._propertyIdsUsed;
     }
 
-    async getData(tx: WrappedTransaction, lookupContext: CachedLookupContext): Promise<ReferenceCacheData> {
+    async getData(lookupContext: LookupContext): Promise<ReferenceCacheData> {
         const siteCode = await siteCodeForSite(this.siteId);
         const data: ReferenceCacheData = {
             entryTypes: {},
@@ -73,7 +73,7 @@ export class ReferenceCache {
         }
 
         // Entries referenced:
-        const entryReferences = await tx.pull(
+        const entryReferences = await lookupContext.tx.pull(
             Entry,
             (e) => e.id.name.description.friendlyId().type((et) => et.id.name.site((s) => s.id)),
             {
@@ -112,7 +112,7 @@ export class ReferenceCache {
             await evaluateLookupExpressions(lookup);
         }
 
-        const propertyReferences = await tx.pull(
+        const propertyReferences = await lookupContext.tx.pull(
             Property,
             (p) => p.id.name.type.descriptionMD.standardURL.importance.displayAs.site((s) => s.id),
             { where: C`@this.id IN ${Array.from(this.propertyIdsUsed)}` },
