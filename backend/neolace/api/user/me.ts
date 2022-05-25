@@ -5,7 +5,7 @@ export class UserMeResource extends NeolaceHttpResource {
     public paths = ["/user/me"];
 
     GET = this.method({
-        responseSchema: api.schemas.UserDataResponse,
+        responseSchema: api.UserDataResponse,
         description: "Get my public profile data",
         notes: "Get information about the logged in user (or bot)",
     }, async ({ request }) => {

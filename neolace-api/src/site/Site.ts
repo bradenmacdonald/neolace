@@ -28,6 +28,8 @@ export const SiteDetailsSchema = Schema({
     name: string,
     /** Canonical domain name of this site, e.g. "plantdb.neolace.com" */
     domain: string,
+    /** Full URL of this site, without any trailing slash */
+    url: string,
     /**
      * Description: a public description of the website, displayed to users in a few different places as well as to
      * search engines.
@@ -51,6 +53,13 @@ export const SiteDetailsSchema = Schema({
      *   - redirects
      */
     frontendConfig: FrontendConfigSchema,
+
+    /** Is this site the "home site" for this Realm? */
+    isHomeSite: boolean,
+    /** Some functionality, like Login / Registration / My Account / Create new sites is available on the "home site" */
+    homeSiteUrl: string,
+    /** The name of the home site, which can also be used as the name of this site's realm. */
+    homeSiteName: string,
 });
 export type SiteDetailsData = Type<typeof SiteDetailsSchema>;
 

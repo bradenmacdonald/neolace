@@ -1,3 +1,4 @@
+import { VNID } from "neolace/deps/vertex-framework.ts";
 import {
     assert,
     assertEquals,
@@ -117,6 +118,8 @@ group("Site.ts", () => {
             const graph = await getGraph();
             // Create a user:
             const jamie = await graph.runAsSystem(CreateUser({
+                id: VNID(),
+                authnId: -1,
                 email: "jamie@neolace.net",
                 fullName: "Jamie Admin",
             }));

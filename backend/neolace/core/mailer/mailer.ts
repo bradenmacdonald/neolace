@@ -2,7 +2,7 @@ import { VNID } from "neolace/deps/neolace-api.ts";
 import { config } from "neolace/app/config.ts";
 import { type Email, Mailer, responsiveHtmlEmailTemplate } from "neolace/deps/deno-mailer.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { Site } from "neolace/core/Site.ts";
+import { getHomeSite, Site } from "neolace/core/Site.ts";
 
 export { type Email, responsiveHtmlEmailTemplate };
 
@@ -30,16 +30,16 @@ export async function makeSystemEmail(
         args: Record<string, string>;
     },
 ): Promise<Email> {
-    // Data about the specific Site we're sending from, if any.
-    const site = siteId ? await (await getGraph()).pullOne(Site, (s) => s.name.domain, { key: siteId }) : undefined;
-    // Name that emails come from, e.g. "Neolace System"
-    const fromName = site ? site.name : config.realmName;
+    const homeSite = await getHomeSite();
+    // Data about the specific Site we're sending from.
+    const site = siteId
+        ? await (await getGraph()).pullOne(Site, (s) => s.name.domain.url(), { key: siteId })
+        : homeSite;
     // Values that can be interpolated into the template, e.g. {site} becomes the name of the site or realm:
     const args: Record<string, string> = {
         ...params.args,
-        site: fromName,
-        siteUrl: site ? `https://${site.domain}` : config.realmURL,
-        realm: config.realmName,
+        site: site.name,
+        siteUrl: site.url,
         sitePhysicalAddress: config.realmPhysicalAddress,
     };
     const applyTemplate = (str: string, html = false) => {
@@ -64,7 +64,7 @@ export async function makeSystemEmail(
 
     return {
         to: params.to,
-        from: { name: fromName, email: config.mailFromAddress },
+        from: { name: site.name, email: config.mailFromAddress },
         subject,
         bodyPlainText,
         bodyHtml,

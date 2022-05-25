@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { PasswordlessLoginResponse } from "./user.ts";
+import { PasswordlessLoginResponse, UserDataResponse, VerifyEmailRequest, EmailTokenResponse, CreateHumanUserResponse } from "./user.ts";
 import * as errors from "./errors.ts";
 import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags } from "./edit/index.ts";
@@ -145,14 +145,44 @@ export class NeolaceApiClient {
      *
      * Will throw a NotAuthenticated error if the user is not authenticated.
      */
-    public async whoAmI(): Promise<schemas.Type<typeof schemas.UserDataResponse>> {
+    public async whoAmI(): Promise<schemas.Type<typeof UserDataResponse>> {
         return await this.call("/user/me");
     }
 
     /**
-     * Register a new user account (human user)
+     * Send a validation email to an email address. Required before it can be used to register.
+     * You can pass additional data like fullName which you can later retrieve from the token
+     * that gets emailed to the user.
+     *
+     * returnUrl needs to include "{token}", which will get replaced with a secure token. Then
+     * that updated link will be emailed to the user.
      */
-    public async registerHumanUser(data: {email: string, fullName?: string, username?: string}): Promise<schemas.Type<typeof schemas.UserDataResponse>> {
+    public async requestEmailVerification(options: {email: string, returnUrl: string, data: Record<string, unknown>, siteId?: string}): Promise<void> {
+        const data: schemas.Type<typeof VerifyEmailRequest> = {
+            email: options.email,
+            data: options.data,
+            returnUrl: options.returnUrl,
+            // siteId is optional for this API call:
+            siteId: options.siteId ?? this.siteId ?? undefined,
+        };
+        await this.call("/user/verify-email", {method: "POST", data});
+    }
+
+    /**
+     * After requestEmailVerification() is used, a token will be emailed to the user.
+     * This API can then be used to check if that token is valid, and retrieve whatever
+     * data was passed when creating the token.
+     */
+    public async checkVerificationToken(token: string): Promise<schemas.Type<typeof EmailTokenResponse>> {
+        return await this.call(`/user/verify-email?token=${token}`, {method: "GET"});
+    }
+
+    /**
+     * Register a new user account (human user).
+     * First you must use requestEmailVerification() to verify the user's email address and get an email token.
+     * This will return a temporary password which you can use to log the user in and/or to set a new password for them.
+     */
+    public async registerHumanUser(data: {emailToken: string, fullName?: string, username?: string}): Promise<schemas.Type<typeof CreateHumanUserResponse>> {
         return await this.call("/user", {method: "POST", data});
     }
 
