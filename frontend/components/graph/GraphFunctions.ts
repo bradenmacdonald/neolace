@@ -122,8 +122,8 @@ function condenseLeaves(graph: GraphType): GraphType {
 }
 
 /**
- * Given the leafNodeKey for a condensed node, remove the leaf node 
- * If leafNodeKey refers to a non-leaf node (does not have list of condensed leaves), returns the input graph.
+ * Given the leafNodeKey for a condensed node, return a new graph with leaf nodes expanded.
+ * If leafNodeKey refers to a non-leaf node (does not have list of condensed leaves), returns the input graph copy.
  * ASSUMING the parent node can have only one condensed node of a certain type
  * @param parentNodeKey 
  */
@@ -133,7 +133,7 @@ function expandLeaf(
         parentNodeKey: string,
         entryType: string
     ): GraphType {
-    const newGraph = currGraph.copy();
+    let newGraph = currGraph.copy();
     // find the key of the condensed leaf
     const condensedLeafkey = newGraph.filterNeighbors(parentNodeKey, (_n, attrs) => {
         if (attrs.leavesCondensed) {
@@ -153,22 +153,84 @@ function expandLeaf(
             // create leaf
             newGraph.addNode(leafNode, originalGraph.getNodeAttributes(leafNode));
             // add edge between parent and leaf
-            const inEdges = originalGraph.inEdges(leafNode, parentNodeKey);
-            const outEdges = originalGraph.outEdges(leafNode, parentNodeKey);
-            if (inEdges.length === 1 && outEdges.length === 0) {
-                newGraph.addEdge(parentNodeKey, leafNode, originalGraph.getEdgeAttributes(inEdges[0]));
-            } else if (inEdges.length === 0 && outEdges.length === 1) {
-                newGraph.addEdge(leafNode, parentNodeKey, originalGraph.getEdgeAttributes(outEdges[0]))
-            } else if (inEdges.length === 0 && outEdges.length === 0) {
-                console.log(`The relationship between ${parentNodeKey} and ${leafNode} does not exist.`);
-            } else if (inEdges.length === 1 && outEdges.length === 1) {
-                console.log(`The relationship between ${parentNodeKey} and ${leafNode} is bidirectional.`);
-            } else if (inEdges.length > 1 || outEdges.length > 1) {
-                console.log(`The relationship between ${parentNodeKey} and ${leafNode} has multiple edges.`)
-            }
+            newGraph = copyEdge(leafNode, parentNodeKey, originalGraph, newGraph);
         })
         // drop condensed node
         newGraph.dropNode(condensedLeafkey);
+    }
+    return newGraph;
+}
+
+/**
+ * Copies edge between the target-source nodes from the original graph into the target graph
+ * assuming that the nodes exist in both. Does nothing if edge does not exist, or is bidirectional, or there
+ * are multiple edges between the nodes in the original graph. Returns copy of the graph with the added edges if any.
+ * 
+ * Does not support multi graphs yet. Does not support undirected edges.
+ */
+function copyEdge(node1: string, node2: string, originalGraph: GraphType, targetGraph: GraphType): GraphType {
+    const targetGraphCopy = targetGraph.copy();
+
+    const inEdges = originalGraph.inEdges(node1, node2);
+    const outEdges = originalGraph.outEdges(node1, node2);
+    if (inEdges.length === 1 && outEdges.length === 0) {
+        targetGraphCopy.addEdge(node2, node1, originalGraph.getEdgeAttributes(inEdges[0]));
+    } else if (inEdges.length === 0 && outEdges.length === 1) {
+        targetGraphCopy.addEdge(node1, node2, originalGraph.getEdgeAttributes(outEdges[0]))
+    } else if (inEdges.length === 0 && outEdges.length === 0) {
+        console.log(`The relationship between ${node2} and ${node1} does not exist.`);
+    } else if (inEdges.length === 1 && outEdges.length === 1) {
+        console.log(`The relationship between ${node2} and ${node1} is bidirectional.`);
+    } else if (inEdges.length > 1 || outEdges.length > 1) {
+        console.log(`The relationship between ${node2} and ${node1} has multiple edges.`)
+    }
+    return targetGraphCopy;
+}
+
+/**
+ * Given the middleNodeKey for a condensed node, remove the node and add back condensed nodes to the graph
+ * If leafNodeKey refers to a non-leaf node (does not have list of condensed leaves), returns the input graph.
+ * ASSUMING the parent node can have only one condensed node of a certain type
+ * @param parentNodeKey 
+ */
+function expandSimplePattern(
+    originalGraph: GraphType,
+    currGraph: GraphType,
+    parentNodeKey1: string,
+    parentNodeKey2: string,
+    entryType: string
+) {
+    let newGraph = currGraph.copy();
+    // find the key of the condensed leaf
+    const commonNodes = newGraph.neighbors(parentNodeKey1).filter((n) => {
+        return newGraph.neighbors(parentNodeKey2).includes(n);
+    })
+    const condensedLeaves = commonNodes.filter((n) => {
+        const attrs = newGraph.getNodeAttributes(n)
+        if (attrs.leavesCondensed) {
+            if (attrs.entryType === entryType) {
+                return true;
+            }
+        }
+        return false;
+    });
+    if (!condenseLeaves)  console.log(`The condensed key is ${condensedLeaves}, something is wrong.`);
+    if (condenseLeaves.length > 1) console.log('Warning: more than one condesned leaf of this type between these nodes')
+    const condensedLeaf = condensedLeaves[0];
+    
+    const nodesToAdd = newGraph.getNodeAttribute(condensedLeaf, 'leavesCondensed'); 
+    if (nodesToAdd === undefined) {
+        console.log('The condensed leaf does not have leavesCondensed attribute.');
+    } else {
+        nodesToAdd.forEach((leafNode) => {
+            // create leaf
+            newGraph.addNode(leafNode, originalGraph.getNodeAttributes(leafNode));
+            // add edge between parent and leaf
+            newGraph = copyEdge(leafNode, parentNodeKey1, originalGraph, newGraph);
+            newGraph = copyEdge(leafNode, parentNodeKey2, originalGraph, newGraph);
+        })
+        // drop condensed node
+        newGraph.dropNode(condensedLeaf);
     }
     return newGraph;
 }
@@ -213,12 +275,21 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
             if (eType1 !== eType2) return;
 
             const endNodeKey = nNeighbours[0] === nodeKey ? nNeighbours[1] : nNeighbours[0];
-            if (!nTripletsByType[neighborEntryType]) nTripletsByType[neighborEntryType] = {};
+            // check if the inverse of this node pair already exists
+            let pairExists = false;
+            nodePairs.forEach((pair) => {
+                if (pair.nodeKey === endNodeKey
+                    && pair.endNodeKey === nodeKey
+                    && pair.middleNodeEType === neighborEntryType
+                ) pairExists = true; 
+            })
+            if (pairExists) return;
 
+            if (!nTripletsByType[neighborEntryType]) nTripletsByType[neighborEntryType] = {};
             if (nTripletsByType[neighborEntryType][endNodeKey]) {
                 nTripletsByType[neighborEntryType][endNodeKey].add(neighborKey);
             } else {
-                nTripletsByType[neighborEntryType][endNodeKey] = new Set<string>(neighborKey);
+                nTripletsByType[neighborEntryType][endNodeKey] = new Set<string>([neighborKey]);
             }       
         });
         for (const [entryType, value] of Object.entries(nTripletsByType)) {
@@ -240,7 +311,7 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
     const pairs = new Set<string>();
     nodePairs.forEach((pair) => {
         const thisPair = pair.endNodeKey + pair.nodeKey;
-        if (pairs.has(thisPair)) {
+        if (!pairs.has(thisPair)) {
             pairs.add(thisPair);
             // delete nodes
             pair.leavesCondensed.forEach((middleNodeKey) => newGraph.dropNode(middleNodeKey));
@@ -327,9 +398,14 @@ export function transformHideNodesOfType(graph: GraphType, nType: VNID) {
 export function transformExpandLeaves(
     originalDataGraph: GraphType, 
     graph: GraphType, 
-    parentKey: string, 
+    parentKey: string[], 
     entryType: string
 ) {
-    const transformedGraph = expandLeaf(originalDataGraph, graph, parentKey, entryType);
+    let transformedGraph = graph.copy();
+    if (parentKey.length === 1) {
+        transformedGraph = expandLeaf(originalDataGraph, graph, parentKey[0], entryType);
+    } else if (parentKey.length === 2) {
+        transformedGraph = expandSimplePattern(originalDataGraph, graph, parentKey[0], parentKey[1], entryType);
+    }
     return transformedGraph;
 }

@@ -39,7 +39,7 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
             transformedGraph = transformExpandLeaves(
                 originalDataGraph, 
                 transformedGraph, 
-                t.params.parentKey as string, 
+                t.params.parentKey as string[], 
                 t.params.entryType as string
             );
         } else if (t.id === Transforms.COMMUNITY) {

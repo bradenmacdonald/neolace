@@ -283,12 +283,23 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 console.log('The node to expand is',  item.getNeighbors()[0].getModel().id);
                 console.log('The node is ', item.getNeighbors()[0].getModel().label)
                 // need to pass parent key as the condensed node id changes with every load
-                setTransforms((prevTransforms) => [...prevTransforms, {
-                    id: Transforms.EXPANDLEAF, 
-                    // instead of this node id, get type and parent
-                    // should have only one neighbour
-                    params: {parentKey: item.getNeighbors()[0].getModel().id, entryType: item.getModel().entryType}
-                }])
+                if (item.getNeighbors().length === 1) {
+                    // expand leaf
+                    setTransforms((prevTransforms) => [...prevTransforms, {
+                        id: Transforms.EXPANDLEAF, 
+                        // instead of this node id, get type and parent
+                        // should have only one neighbour
+                        params: {parentKey: [item.getNeighbors()[0].getModel().id], entryType: item.getModel().entryType}
+                    }])
+                } else if (item.getNeighbors().length === 2) {
+                    // expand simple pattern
+                    setTransforms((prevTransforms) => [...prevTransforms, {
+                        id: Transforms.EXPANDLEAF, 
+                        params: {
+                            parentKey: [item.getNeighbors()[0].getModel().id, item.getNeighbors()[1].getModel().id],
+                            entryType: item.getModel().entryType}
+                    }])
+                }
             }
         });
 
