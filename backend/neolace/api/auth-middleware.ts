@@ -1,5 +1,6 @@
+import * as log from "std/log/mod.ts";
 import { authClient } from "neolace/core/authn-client.ts";
-import { C, SYSTEM_VNID } from "neolace/deps/vertex-framework.ts";
+import { C, EmptyResultError, SYSTEM_VNID } from "neolace/deps/vertex-framework.ts";
 
 import { config } from "neolace/app/config.ts";
 import { Drash, getGraph, NeolaceHttpRequest } from "./mod.ts";
@@ -28,9 +29,20 @@ export class NeolaceAuthService extends Drash.Service {
                 throw new Drash.Errors.HttpError(401, "Authorization token is invalid or expired.");
             }
 
-            const user = await graph.pullOne(HumanUser, (u) => u.allProps.username(), {
-                where: C`@this.authnId = ${authInfo.accountId}`,
-            });
+            let user;
+            try {
+                user = await graph.pullOne(HumanUser, (u) => u.allProps.username(), {
+                    where: C`@this.authnId = ${authInfo.accountId}`,
+                });
+            } catch (err) {
+                if (err instanceof EmptyResultError) {
+                    log.error(
+                        `User had a valid token for AuthN account ${authInfo.accountId}, but no matching user was found`,
+                    );
+                    return;
+                }
+                throw err;
+            }
 
             (request as NeolaceHttpRequest).user = {
                 isBot: false,
