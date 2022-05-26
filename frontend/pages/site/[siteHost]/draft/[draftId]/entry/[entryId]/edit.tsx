@@ -13,6 +13,7 @@ import { Form, AutoControl, Control } from 'components/widgets/Form';
 import { TextInput } from 'components/widgets/TextInput';
 import { MDTEditor } from 'components/widgets/MDTEditor';
 import { Button } from 'components/widgets/Button';
+import { IN_BROWSER } from 'lib/config';
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -31,8 +32,12 @@ const DraftEntryEditPage: NextPage = function(_props) {
     const query = router.query as PageUrlQuery;
     const draftId = query.draftId as api.VNID|NEW;
     const [draft, draftError] = useDraft(draftId);
+    // *IF* we are creating a new entry from scratch, this will be its new VNID. Note that VNID() only works on the
+    // client in this case, and generating it on the server wouldn't make sense anyways.
+    const [newEntryId] = React.useState(() => IN_BROWSER ? api.VNID() : api.VNID('_tbd'));
+    const isNewEntry = query.entryId === "_";
     // The "base entry" is the unmodified entry, as published on the site, without any edits applied.
-    const [baseEntry, entryError] = useEditableEntry(query.entryId as api.VNID);
+    const [baseEntry, entryError] = useEditableEntry(isNewEntry ? {newEntryWithId: newEntryId} : query.entryId as api.VNID);
 
     // Any edits that have previously been saved into the draft that we're editing, if any:
     const draftEdits = (draft?.edits ?? emptyArray) as api.AnyEdit[];
@@ -124,8 +129,8 @@ const DraftEntryEditPage: NextPage = function(_props) {
                 <Breadcrumb href={draft ? `/draft/${draft.id}` : undefined}>
                     { draft ? draft.title : <FormattedMessage id="draft.new" defaultMessage="New Draft" /> }
                 </Breadcrumb>
-                <Breadcrumb href={entry ? `/entry/${entry.friendlyId}` : undefined}>{entry?.name ?? "Entry"}</Breadcrumb>
-                <Breadcrumb>Edit</Breadcrumb>
+                <Breadcrumb>{entry?.name || (isNewEntry ? "New Entry" : "Entry")}</Breadcrumb>
+                {!isNewEntry ? <Breadcrumb>Edit</Breadcrumb> : null}
             </Breadcrumbs>
 
             <br/>

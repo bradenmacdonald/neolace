@@ -86,6 +86,15 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         // For now, the "Drafts" link should only be visible during development
         defaultSystemLinks.push(
             {
+                id: "create-entry",
+                priority: 25,
+                content: {
+                    url: "/draft/_/entry/_/edit",
+                    label: <FormattedMessage id="systemLink.createEntry" defaultMessage="Create Entry" />,
+                    icon: "plus-lg",
+                },
+            },
+            {
                 id: "drafts",
                 priority: 30,
                 content: {
@@ -131,7 +140,24 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         });
     }
 
-    const systemLinks = <ul><UISlot<SystemLink> slotId="systemLinks" defaultContents={defaultSystemLinks} renderWidget={(link: UISlotWidget<SystemLink>) => <li key={link.id}><Link href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link></li>} /></ul>;
+    // The system links, which are in the bottom left corner
+    const systemLinks = (
+        <ul>
+            <UISlot<SystemLink>
+                slotId="systemLinks"
+                defaultContents={defaultSystemLinks}
+                renderWidget={
+                    (link: UISlotWidget<SystemLink>) => (
+                        <li key={link.id}>
+                            <Link href={link.content.url}><a>
+                                <Icon icon={link.content.icon}/> {link.content.label}
+                            </a></Link>
+                        </li>
+                    )
+                }
+            />
+        </ul>
+    );
 
     return <SWRConfig value={{ fallback }}><UiPluginsProvider site={site}><div>
         <Head>
