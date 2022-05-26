@@ -1,7 +1,6 @@
-import { useStateRef } from 'components/utils/stateRefHook';
-import React from 'react';
-import { FormattedMessage, MessageDescriptor, useIntl } from 'react-intl';
-
+import { useStateRef } from "components/utils/stateRefHook";
+import React from "react";
+import { FormattedMessage, MessageDescriptor, useIntl } from "react-intl";
 
 interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
     children: React.ReactNode;
@@ -11,18 +10,19 @@ const doNothing = () => false;
 
 export const Form: React.FunctionComponent<FormProps> = (props) => {
     const intl = useIntl();
-    const {children, className, ...formProps} = props;
+    const { children, className, ...formProps } = props;
 
-    return <form className={`block mt-2 ${className ?? ""}`} onSubmit={doNothing} {...formProps}>
-        {children}
-    </form>;
-}
-
+    return (
+        <form className={`block mt-2 ${className ?? ""}`} onSubmit={doNothing} {...formProps}>
+            {children}
+        </form>
+    );
+};
 
 interface ControlProps {
-    id: string,
-    label: MessageDescriptor,
-    hint?: string,
+    id: string;
+    label: MessageDescriptor;
+    hint?: string;
     children: React.ReactElement;
     /** Is this field required? */
     isRequired?: boolean;
@@ -31,20 +31,28 @@ interface ControlProps {
 export const Control: React.FunctionComponent<ControlProps> = (props) => {
     const intl = useIntl();
 
-    const childInput = React.cloneElement(props.children, {id: props.id});
+    const childInput = React.cloneElement(props.children, { id: props.id });
     const hasValue = childInput.props.value !== "" && childInput.props.value !== undefined;
 
-    return <div className={`mb-6`}>
-        <label htmlFor={props.id} className="block w-max mb-1 text-sm font-semibold">
-            <FormattedMessage {...props.label}/>
-            {props.isRequired && <span className={`text-xs p-1 mx-2 rounded-md  font-light ${hasValue ? "text-gray-400" : "bg-amber-100 text-gray-800"}`}>
-                    <FormattedMessage defaultMessage="Required" id="control.required"/>
-            </span>}
-        </label>
-        {childInput}
-        {props.hint? <span className="block text-sm text-gray-600">{props.hint}</span> : null}
-    </div>;
-}
+    return (
+        <div className={`mb-6`}>
+            <label htmlFor={props.id} className="block w-max mb-1 text-sm font-semibold">
+                <FormattedMessage {...props.label} />
+                {props.isRequired && (
+                    <span
+                        className={`text-xs p-1 mx-2 rounded-md  font-light ${
+                            hasValue ? "text-gray-400" : "bg-amber-100 text-gray-800"
+                        }`}
+                    >
+                        <FormattedMessage defaultMessage="Required" id="control.required" />
+                    </span>
+                )}
+            </label>
+            {childInput}
+            {props.hint ? <span className="block text-sm text-gray-600">{props.hint}</span> : null}
+        </div>
+    );
+};
 
 interface AutoControlProps<ValueType> extends ControlProps {
     value: ValueType;
@@ -54,8 +62,8 @@ interface AutoControlProps<ValueType> extends ControlProps {
 /**
  * An auto-control is a control that has its own internal state with the "current" value, and which only notifies
  * the parent's 'onChangeFinished' function when the user 'accepts' the edit by blurring off of the element.
- * @param props 
- * @returns 
+ * @param props
+ * @returns
  */
 export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
     // While the user is actively making edits, we track the value in state:
@@ -66,28 +74,29 @@ export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
         // Whenever 'props.value' is changed externally or when we finish editing and blur off, we need to reset our
         // internal "current" value to match the props.value.
         setCurrentValue(props.value);
-    }, [props.value, isCurrentlyEditing]);
+    }, [props.value, isCurrentlyEditing, setCurrentValue]);
 
-    const handleChange: React.ChangeEventHandler = React.useCallback((eventOrValue: ValueType|React.ChangeEvent) => {
+    const handleChange: React.ChangeEventHandler = React.useCallback((eventOrValue: ValueType | React.ChangeEvent) => {
         if (typeof eventOrValue === "object" && (eventOrValue as React.ChangeEvent).target) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setCurrentValue((eventOrValue as React.ChangeEvent<any>).target.value);
         } else {
             setCurrentValue(eventOrValue as ValueType);
         }
-    }, []);
+    }, [setCurrentValue]); // eslint doesn't know that 'setCurrentValue' will never change, so we include it here.
 
     const handleFocus: React.ChangeEventHandler = React.useCallback(() => {
         setCurrentlyEditing(true);
     }, []);
 
+    const { value, onChangeFinished, ...controlProps } = props;
     const handleBlur: React.ChangeEventHandler = React.useCallback(() => {
-        const value = currentValueRef.current;
-        if (props.onChangeFinished && value !== props.value) {
-            props.onChangeFinished(value);
+        const currentValueActual = currentValueRef.current;
+        if (onChangeFinished && currentValueActual !== value) {
+            onChangeFinished(currentValueActual);
         }
         setCurrentlyEditing(false);
-    }, [props.value, props.onChangeFinished, currentValueRef]);
+    }, [value, onChangeFinished, currentValueRef]);
 
     const childInput = React.cloneElement(props.children, {
         value: isCurrentlyEditing ? currentValue : props.value,
@@ -96,9 +105,9 @@ export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
         onBlur: handleBlur,
     });
 
-    const {value, onChangeFinished, ...controlProps} = props;
-
-    return <Control {...controlProps}>
-        {childInput}
-    </Control>;
+    return (
+        <Control {...controlProps}>
+            {childInput}
+        </Control>
+    );
 }
