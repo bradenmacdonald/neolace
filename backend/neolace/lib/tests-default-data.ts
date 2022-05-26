@@ -140,6 +140,11 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             There is a system administrator user already created. Use the email address **\`admin@example.com\`** to
             [log in](/account/login). Once you enter that email address into the login form, you'll have to check the
             "backend" console to get the passwordless login link in order to complete the login.
+
+            ## Developer Resources
+
+            * [**User Interface Demo Page**](/ui): Shows various UI components that can be used to develop the Neolace
+              frontend and/or frontend plugins.
         `,
         footerMD: `Powered by [Neolace](https://www.neolace.com/).`,
         frontendConfig: {

@@ -133,7 +133,12 @@ const DraftEntryEditPage: NextPage = function(_props) {
                 {!isNewEntry ? <Breadcrumb>Edit</Breadcrumb> : null}
             </Breadcrumbs>
 
-            <br/>
+            {
+                isNewEntry ?
+                    <h1><FormattedMessage id="draft.newEntry" defaultMessage="New Entry" /></h1>
+                :
+                    <h1><FormattedMessage id="draft.editEntry" defaultMessage="Edit Entry" /></h1>
+            }
 
             <Form>
                 <AutoControl
@@ -141,6 +146,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     onChangeFinished={updateEntryName}
                     id="title"
                     label={{id: "draft.entry.edit.name.label", defaultMessage: "Name / Title"}}
+                    isRequired={true}
                 >
                     <TextInput />
                 </AutoControl>
@@ -149,7 +155,13 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     value={entryType?.name ?? ""}
                     id="entryType"
                     label={{id: "draft.entry.edit.type.label", defaultMessage: "Entry Type"}}
-                    hint={intl.formatMessage({id: "draft.entry.edit.type.hint", defaultMessage: "Cannot be changed."})}
+                    hint={
+                        isNewEntry ? 
+                            intl.formatMessage({id: "draft.entry.edit.type.hint", defaultMessage: "Cannot be changed after the entry has been created."})
+                        :
+                            intl.formatMessage({id: "draft.entry.edit.type.hintExisting", defaultMessage: "Cannot be changed."})
+                    }
+                    isRequired={isNewEntry}
                 >
                     <TextInput readOnly={true} />
                 </AutoControl>
@@ -164,6 +176,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
                         intl.formatMessage({id: "draft.entry.edit.id.hint3", defaultMessage: "Must be unique."}) + " " +
                         intl.formatMessage({id: "draft.entry.edit.id.hint4", defaultMessage: "You cannot re-use an ID that was previously used for a different entry."})
                     }
+                    isRequired={true}
                 >
                     <TextInput />
                 </AutoControl>

@@ -24,16 +24,22 @@ interface ControlProps {
     label: MessageDescriptor,
     hint?: string,
     children: React.ReactElement;
+    /** Is this field required? */
+    isRequired?: boolean;
 }
 
 export const Control: React.FunctionComponent<ControlProps> = (props) => {
     const intl = useIntl();
 
     const childInput = React.cloneElement(props.children, {id: props.id});
+    const hasValue = childInput.props.value !== "" && childInput.props.value !== undefined;
 
     return <div className={`mb-6`}>
-        <label htmlFor={props.id} className="block w-max mb-1 text-sm font-semibold text-gray-800">
+        <label htmlFor={props.id} className="block w-max mb-1 text-sm font-semibold">
             <FormattedMessage {...props.label}/>
+            {props.isRequired && <span className={`text-xs p-1 mx-2 rounded-md  font-light ${hasValue ? "text-gray-400" : "bg-amber-100 text-gray-800"}`}>
+                    <FormattedMessage defaultMessage="Required" id="control.required"/>
+            </span>}
         </label>
         {childInput}
         {props.hint? <span className="block text-sm text-gray-600">{props.hint}</span> : null}
@@ -90,7 +96,9 @@ export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
         onBlur: handleBlur,
     });
 
-    return <Control id={props.id} label={props.label} hint={props.hint}>
+    const {value, onChangeFinished, ...controlProps} = props;
+
+    return <Control {...controlProps}>
         {childInput}
     </Control>;
 }
