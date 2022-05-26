@@ -208,12 +208,21 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
             if (eType1 !== eType2) return;
 
             const endNodeKey = nNeighbours[0] === nodeKey ? nNeighbours[1] : nNeighbours[0];
-            if (!nTripletsByType[neighborEntryType]) nTripletsByType[neighborEntryType] = {};
+            // check if the inverse of this node pair already exists
+            let pairExists = false;
+            nodePairs.forEach((pair) => {
+                if (pair.nodeKey === endNodeKey
+                    && pair.endNodeKey === nodeKey
+                    && pair.middleNodeEType === neighborEntryType
+                ) pairExists = true; 
+            })
+            if (pairExists) return;
 
+            if (!nTripletsByType[neighborEntryType]) nTripletsByType[neighborEntryType] = {};
             if (nTripletsByType[neighborEntryType][endNodeKey]) {
                 nTripletsByType[neighborEntryType][endNodeKey].add(neighborKey);
             } else {
-                nTripletsByType[neighborEntryType][endNodeKey] = new Set<string>(neighborKey);
+                nTripletsByType[neighborEntryType][endNodeKey] = new Set<string>([neighborKey]);
             }       
         });
         for (const [entryType, value] of Object.entries(nTripletsByType)) {
@@ -235,7 +244,7 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
     const pairs = new Set<string>();
     nodePairs.forEach((pair) => {
         const thisPair = pair.endNodeKey + pair.nodeKey;
-        if (pairs.has(thisPair)) {
+        if (!pairs.has(thisPair)) {
             pairs.add(thisPair);
             // delete nodes
             pair.leavesCondensed.forEach((middleNodeKey) => newGraph.dropNode(middleNodeKey));
