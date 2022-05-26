@@ -19,7 +19,7 @@ export async function getDraft(
             .author((a) => a.username().fullName)
             .created
             .status
-            .if("edits", (d) => d.edits((e) => e.id.code.changeType.timestamp.if("editsData", (e) => e.data()))), {
+            .if("edits", (d) => d.edits((e) => e.id.code.changeType.timestamp.data())), {
         key: id,
         where: C`EXISTS { MATCH (@this)-[:${Draft.rel.FOR_SITE}]->(:${Site} {id: ${siteId}}) }`,
         flags: Array.from(flags),
