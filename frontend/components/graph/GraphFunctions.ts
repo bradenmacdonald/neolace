@@ -1,12 +1,15 @@
 import Graph from 'graphology';
 import { VNID } from 'neolace-api';
 import type { G6RawGraphData } from './Graph'
+import toSimple from 'graphology-operators/to-simple';
+import louvain from 'graphology-communities-louvain';
 
 interface NodeAttributes {
     label: string;
     entryType: VNID;
     isFocusEntry?: boolean;
     leavesCondensed?: Set<string>;
+    community?: number;
 }
 interface EdgeAttributes {
     label: string;
@@ -36,9 +39,11 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
     const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({ 
             id: VNID(nodeKey),
-            label: graph.getNodeAttribute(nodeKey, 'label') as string, 
+            label: (graph.getNodeAttribute(nodeKey, 'label') as string), 
             entryType: VNID(graph.getNodeAttribute(nodeKey, 'entryType')),
             ...(graph.hasNodeAttribute(nodeKey, 'isFocusEntry') && {isFocusEntry: true}),
+            ...(graph.hasNodeAttribute(nodeKey, 'community') 
+                && {community: graph.getNodeAttribute(nodeKey, 'community')}),
             ...(graph.hasNodeAttribute(nodeKey, 'leavesCondensed') 
                 && {leavesCondensed: graph.getNodeAttribute(nodeKey, 'leavesCondensed')}),
 
@@ -295,6 +300,14 @@ export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphTyp
         })
     })
     return newGraph;
+}
+
+export function computeCommunities(graph: GraphType) {
+    // TODO need to turn graph back from simple type
+    // TODO make resolution parameters part of toolbar.
+    const simpleGraph = toSimple(graph);
+    louvain.assign(simpleGraph, {resolution: 2});
+    return simpleGraph;
 }
 
 

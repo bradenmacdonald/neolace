@@ -14,6 +14,7 @@ import { useStateRef } from "../utils/stateRefHook";
 import { applyTransforms, Transform, Transforms } from "./Transforms";
 import { Modal } from "../widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
+import { computeStyles } from "@popperjs/core";
 
 export interface GraphProps {
     value: api.GraphValue;
@@ -22,7 +23,7 @@ export interface GraphProps {
 }
 
 let nextColor = 0;
-const colourMap = new Map<VNID, EntryColor>();
+const colourMap = new Map<VNID | number, EntryColor>();
 
 export interface G6RawGraphData {
     nodes: {
@@ -31,6 +32,7 @@ export interface G6RawGraphData {
         entryType: VNID;
         isFocusEntry?: boolean;
         leavesCondensed?: Set<string>;
+        community?: number;
     }[];
     edges: {
         id: VNID;
@@ -43,16 +45,24 @@ export interface G6RawGraphData {
 }
 
 
-function colorGraph(data: G6RawGraphData, refCache: api.ReferenceCacheData) {
-    data.nodes.forEach((node: NodeConfig) => {
-        if (!colourMap.has(node.entryType as VNID)) {
-            colourMap.set(node.entryType as VNID, Object.values(EntryColor)[nextColor]);
-            nextColor = (nextColor + 1) % Object.values(EntryColor).length;
-        }
-        node.color = colourMap.get(node.entryType as VNID);
-        node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
-    });
-
+function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: api.ReferenceCacheData) {
+    function colorGraphByAttribute(attr: string, data: G6RawGraphData, refCache: api.ReferenceCacheData) {
+        data.nodes.forEach((node: NodeConfig) => {
+            const attrValue: VNID | number = node[attr] as VNID | number;
+            if (!colourMap.has(attrValue)) {
+                colourMap.set(attrValue, Object.values(EntryColor)[nextColor]);
+                nextColor = (nextColor + 1) % Object.values(EntryColor).length;
+            }
+            node.color = colourMap.get(attrValue);
+            node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
+        });
+        return data  
+    }
+    if (transformList.find((t) => t.id === Transforms.COMMUNITY) !== undefined) {
+        data = colorGraphByAttribute('community', data, refCache);
+    } else {
+        data = colorGraphByAttribute('entryType', data, refCache);
+    }
     return data;
 }
 
@@ -72,7 +82,7 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
         )),
     };
     
-    data = colorGraph(data, refCache);
+    data = colorGraph(data, [], refCache);
     return data;
 }
 
@@ -91,7 +101,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     const currentData = React.useMemo(() => {
         let transformedData = applyTransforms(originalData, transformList);
-        transformedData = colorGraph(transformedData, props.mdtContext.refCache);
+        transformedData = colorGraph(transformedData, transformList, props.mdtContext.refCache);
         return transformedData;
     }, [originalData, transformList, props.mdtContext.refCache])
 
@@ -141,7 +151,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             preventOverlap: true,
             nodeSize: [200, 50],
             nodeSpacing: 60,
-            alphaMin: 0.1,
+            alphaMin: 0.01,
         },
         defaultNode: {
             type: entryNode,
@@ -389,6 +399,19 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     }, []);
     // Code for "Hide article antries" toolbar button
     const handleHideArticlesButton = React.useCallback(() => { setHidden((wasHidden) => !wasHidden); }, []);
+    // Code for detecting communities toolbar button
+    const isCommunized = transformList.find((t) => t.id === Transforms.COMMUNITY) !== undefined;
+    const handleCommunityButton = React.useCallback(() => {
+        if (isCommunized) {
+            setTransforms(
+                (prevTransforms) => prevTransforms.filter((t) => (
+                        t.id !== Transforms.COMMUNITY)
+                    )
+                );
+        } else {
+            setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.COMMUNITY, params: {}}]);
+        }
+    }, [isCommunized, setTransforms]);
 
     const contents = (
         <>
@@ -447,6 +470,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     })}
                     icon="eraser"
                     enabled={expand}
+                />
+                <ToolbarButton
+                    onClick={handleCommunityButton}
+                    title={intl.formatMessage({
+                        defaultMessage: "Detect communities",
+                        id: "graph.toolbar.detectCommunities",
+                    })}
+                    icon="eraser"
+                    enabled={isCommunized}
                 />
             </div>
             <div
