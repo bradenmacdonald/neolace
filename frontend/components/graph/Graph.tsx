@@ -71,7 +71,7 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
             }
         )),
     };
-    
+
     data = colorGraph(data, refCache);
     return data;
 }
@@ -87,7 +87,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const originalData = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value]);
-    const [transformList, setTransforms, currentTransforms] = useStateRef<Transform[]>([]);
+    const [transformList, setTransforms, _currentTransforms] = useStateRef<Transform[]>([]);
 
     const currentData = React.useMemo(() => {
         let transformedData = applyTransforms(originalData, transformList);
@@ -113,7 +113,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         return _graphContainer;
     });
     // This gets called by React when the outer <div> that holds the above graphContainer has changed.
-    const updateGraphHolder = React.useCallback((newGraphHolderDiv: HTMLDivElement|null) => {
+    const updateGraphHolder = React.useCallback((newGraphHolderDiv: HTMLDivElement | null) => {
         // Move graphContainer into the new parent div, or detach it from the DOM and keep it in memory only (if the new
         // parent div isn't ready yet).
         if (!newGraphHolderDiv) {
@@ -199,7 +199,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         graph.data(originalData);
         graph.render();
         // By default, we zoom the graph so that four nodes would fit horizontally.
-        graph.zoomTo(graph.getWidth()/(220*4), undefined, false);
+        graph.zoomTo(graph.getWidth() / (220 * 4), undefined, false);
         graph.on("afterlayout", () => {
             if (!graph || graph.destroyed) { return; }
             // Zoom to focus on whatever node came first in the data:
@@ -258,36 +258,35 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             })
         });
 
-        graph.on("node:click", function(e) {
+        graph.on("node:click", function (e) {
             const item = e.item as INode;
             if (hiddenRef.current) {
                 setTransforms((t) => {
                     return t.concat({
                         id: Transforms.HIDETYPE,
-                        params: {'nodeType': item.getModel().entryType as string},
+                        params: { 'nodeType': item.getModel().entryType as string },
                     });
                 })
                 setHidden(false);
 
             } else if (item.getModel().leavesCondensed && expandRef.current) {
-                console.log('The node to expand is',  item.getNeighbors()[0].getModel().id);
-                console.log('The node is ', item.getNeighbors()[0].getModel().label)
                 // need to pass parent key as the condensed node id changes with every load
                 if (item.getNeighbors().length === 1) {
                     // expand leaf
                     setTransforms((prevTransforms) => [...prevTransforms, {
-                        id: Transforms.EXPANDLEAF, 
+                        id: Transforms.EXPANDLEAF,
                         // instead of this node id, get type and parent
                         // should have only one neighbour
-                        params: {parentKey: [item.getNeighbors()[0].getModel().id], entryType: item.getModel().entryType}
+                        params: { parentKey: [item.getNeighbors()[0].getModel().id], entryType: item.getModel().entryType }
                     }])
                 } else if (item.getNeighbors().length === 2) {
                     // expand simple pattern
                     setTransforms((prevTransforms) => [...prevTransforms, {
-                        id: Transforms.EXPANDLEAF, 
+                        id: Transforms.EXPANDLEAF,
                         params: {
                             parentKey: [item.getNeighbors()[0].getModel().id, item.getNeighbors()[1].getModel().id],
-                            entryType: item.getModel().entryType}
+                            entryType: item.getModel().entryType
+                        }
                     }])
                 }
             }
@@ -387,11 +386,11 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         if (isCondensed) {
             setTransforms(
                 (prevTransforms) => prevTransforms.filter((t) => (
-                        t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF
-                    )
-                );
+                    t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF
+                )
+            );
         } else {
-            setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.CONDENSE, params: {}}]);
+            setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.CONDENSE, params: {} }]);
         }
     }, [isCondensed, setTransforms]);
 
@@ -463,7 +462,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             <div
                 ref={updateGraphHolder}
                 className="relative bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
-                style={hidden ? {cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z'/%3E%3C/svg%3E") 3 16, crosshair`} : {}}
+                style={hidden ? { cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z'/%3E%3C/svg%3E") 3 16, crosshair` } : {}}
             >
                 {/* in here is 'graphContainer', and which holds a <canvas> element. */}
             </div>

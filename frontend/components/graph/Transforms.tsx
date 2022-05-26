@@ -4,12 +4,12 @@ import { transformCondenseGraph, transformHideNodesOfType, transformExpandLeaves
 
 export interface Transform {
     id: string;
-    params: Record<string, unknown>; 
+    params: Record<string, unknown>;
 }
 
 // NOTE assuming that transforms can only be applied once
 export enum Transforms {
-    CONDENSE =  "condense",
+    CONDENSE = "condense",
     HIDETYPE = "hide-type",
     EXPANDLEAF = "expand-leaf",
 }
@@ -36,9 +36,9 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
             transformedGraph = transformHideNodesOfType(transformedGraph, VNID(t.params.nodeType as string));
         } else if (t.id === Transforms.EXPANDLEAF) {
             transformedGraph = transformExpandLeaves(
-                originalDataGraph, 
-                transformedGraph, 
-                t.params.parentKey as string[], 
+                originalDataGraph,
+                transformedGraph,
+                t.params.parentKey as string[],
                 t.params.entryType as string
             );
         }
