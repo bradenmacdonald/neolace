@@ -16,6 +16,8 @@ import { Button } from 'components/widgets/Button';
 import { IN_BROWSER } from 'lib/config';
 import { SelectEntryType } from 'components/widgets/SelectEntryType';
 import { UserContext, UserStatus } from 'components/user/UserContext';
+import { Tab, TabBarRouter } from 'components/widgets/Tabs';
+import { defineMessage } from 'components/utils/i18n';
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -156,8 +158,11 @@ const DraftEntryEditPage: NextPage = function(_props) {
                 <Breadcrumb href={draft ? `/draft/${draft.id}` : undefined}>
                     { draft ? draft.title : <FormattedMessage id="draft.new" defaultMessage="New Draft" /> }
                 </Breadcrumb>
-                <Breadcrumb>{entry?.name || (isNewEntry ? "New Entry" : "Entry")}</Breadcrumb>
-                {!isNewEntry ? <Breadcrumb>Edit</Breadcrumb> : null}
+                <Breadcrumb>{
+                    isNewEntry
+                        ? <FormattedMessage defaultMessage="New Entry" id="draft.edit.newEntryTitle" />
+                        : <FormattedMessage defaultMessage='Edit "{entryName}"' id="draft.edit.editEntryTitle" values={{entryName: entry?.name}} />
+                }</Breadcrumb>
             </Breadcrumbs>
 
             {
@@ -167,88 +172,98 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     <h1><FormattedMessage id="draft.editEntry" defaultMessage="Edit Entry" /></h1>
             }
 
-            <Form>
-                {/* Entry Name/Title */}
-                <AutoControl
-                    value={entry?.name ?? ""}
-                    onChangeFinished={updateEntryName}
-                    id="title"
-                    label={{id: "draft.entry.edit.name.label", defaultMessage: "Name / Title"}}
-                    isRequired={true}
-                >
-                    <TextInput />
-                </AutoControl>
-
-                {/* Entry Type */}
-                <Control // SelectBoxes don't need "AutoControl" - changes apply immediately as the user makes a selection
-                    id="entryType"
-                    label={{id: "draft.entry.edit.type.label", defaultMessage: "Entry Type"}}
-                    hint={
-                        isNewEntry ? 
-                            intl.formatMessage({id: "draft.entry.edit.type.hint", defaultMessage: "Cannot be changed after the entry has been created."})
-                        :
-                            intl.formatMessage({id: "draft.entry.edit.type.hintExisting", defaultMessage: "Cannot be changed."})
-                    }
-                    isRequired={isNewEntry}
-                >
-                    <SelectEntryType value={entry?.entryType.id} onChange={updateEntryType} readOnly={!isNewEntry} />
-                </Control>
-
-                {/* Friendly ID */}
-                <AutoControl
-                    value={entry?.friendlyId ?? ""}
-                    onChangeFinished={updateEntryFriendlyId}
-                    id="id"
-                    label={{id: "draft.entry.edit.id.label", defaultMessage: "ID"}}
-                    hint={
-                        intl.formatMessage({id: "draft.entry.edit.id.hint1", defaultMessage: "Shown in the URL."}) + " " +
-                        (entryType?.friendlyIdPrefix ? intl.formatMessage({id: "draft.entry.edit.id.hint2", defaultMessage: "Must start with \"{prefix}\"."}, {prefix: entryType.friendlyIdPrefix}) : "") + " " +
-                        intl.formatMessage({id: "draft.entry.edit.id.hint3", defaultMessage: "Must be unique."}) + " " +
-                        intl.formatMessage({id: "draft.entry.edit.id.hint4", defaultMessage: "You cannot re-use an ID that was previously used for a different entry."})
-                    }
-                    isRequired={true}
-                >
-                    <TextInput />
-                </AutoControl>
-
-                {/* Description */}
-                <AutoControl
-                    value={entry?.description ?? ""}
-                    onChangeFinished={updateEntryDescription}
-                    id="description"
-                    label={{id: "draft.entry.edit.description.label", defaultMessage: "Description"}}
-                >
-                    <MDTEditor inlineOnly={true} />
-                </AutoControl>
-            </Form>
-
-            <h2><FormattedMessage id="draft.entry.edit.newChanges" defaultMessage={"New changes"} /></h2>
-            {
-                unsavedEdits.length > 0 ?
-                    <ul>
-                        {unsavedEdits.map((e, idx) => 
-                            <li key={idx}>{api.getEditType(e.code).describe(e.data)}</li>
-                        )}
-                    </ul>
-                :
-                    <p><FormattedMessage id="draft.entry.edit.noChangesYet" defaultMessage={"You haven't made any changes yet. Make some changes above and you'll be able to save the changes here."} /></p>
-            }
-            <h3><FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save changes"} /></h3>
-            {
-                draft ?
-                    <Button icon="file-earmark-diff" disabled={unsavedEdits.length === 0 || isSaving} onClick={saveChangesToDraft}>
-                        <FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save these changes (to draft \"{title}\")"} values={{title: draft.title}} />
-                    </Button>
-                :
+            <TabBarRouter>
+                <Tab id="main" icon="info-circle" name={defineMessage({defaultMessage: "Main", id: "draft.edit.entry.tab.main"})}>
                     <Form>
-                        <Control id="draft-desc" label={{id: "draft.entry.edit.draft-title-instructions", defaultMessage: "Provide a brief description of what you changed:"}}>
+                        {/* Entry Name/Title */}
+                        <AutoControl
+                            value={entry?.name ?? ""}
+                            onChangeFinished={updateEntryName}
+                            id="title"
+                            label={{id: "draft.entry.edit.name.label", defaultMessage: "Name / Title"}}
+                            isRequired={true}
+                        >
                             <TextInput />
+                        </AutoControl>
+
+                        {/* Entry Type */}
+                        <Control // SelectBoxes don't need "AutoControl" - changes apply immediately as the user makes a selection
+                            id="entryType"
+                            label={{id: "draft.entry.edit.type.label", defaultMessage: "Entry Type"}}
+                            hint={
+                                isNewEntry ? 
+                                    intl.formatMessage({id: "draft.entry.edit.type.hint", defaultMessage: "Cannot be changed after the entry has been created."})
+                                :
+                                    intl.formatMessage({id: "draft.entry.edit.type.hintExisting", defaultMessage: "Cannot be changed."})
+                            }
+                            isRequired={isNewEntry}
+                        >
+                            <SelectEntryType value={entry?.entryType.id} onChange={updateEntryType} readOnly={!isNewEntry} />
                         </Control>
-                        <Button icon="file-earmark-diff" disabled={unsavedEdits.length === 0 || isSaving} onClick={saveChangesToDraft}>
-                            <FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save these changes (as draft)"} />
-                        </Button>
+
+                        {/* Friendly ID */}
+                        <AutoControl
+                            value={entry?.friendlyId ?? ""}
+                            onChangeFinished={updateEntryFriendlyId}
+                            id="id"
+                            label={{id: "draft.entry.edit.id.label", defaultMessage: "ID"}}
+                            hint={
+                                intl.formatMessage({id: "draft.entry.edit.id.hint1", defaultMessage: "Shown in the URL."}) + " " +
+                                (entryType?.friendlyIdPrefix ? intl.formatMessage({id: "draft.entry.edit.id.hint2", defaultMessage: "Must start with \"{prefix}\"."}, {prefix: entryType.friendlyIdPrefix}) : "") + " " +
+                                intl.formatMessage({id: "draft.entry.edit.id.hint3", defaultMessage: "Must be unique."}) + " " +
+                                intl.formatMessage({id: "draft.entry.edit.id.hint4", defaultMessage: "You cannot re-use an ID that was previously used for a different entry."})
+                            }
+                            isRequired={true}
+                        >
+                            <TextInput />
+                        </AutoControl>
+
+                        {/* Description */}
+                        <AutoControl
+                            value={entry?.description ?? ""}
+                            onChangeFinished={updateEntryDescription}
+                            id="description"
+                            label={{id: "draft.entry.edit.description.label", defaultMessage: "Description"}}
+                        >
+                            <MDTEditor inlineOnly={true} />
+                        </AutoControl>
                     </Form>
-            }
+                </Tab>
+                <Tab id="properties" icon="diamond-fill" name={defineMessage({defaultMessage: "Properties", id: "draft.edit.entry.tab.properties"})}>
+                    This is the properties tab.
+                </Tab>
+                <Tab id="changes" icon="list" badge={unsavedEdits.length ? unsavedEdits.length.toString() : undefined} name={defineMessage({defaultMessage: "Changes", id: "draft.edit.entry.tab.changes"})}>
+                    {
+                        unsavedEdits.length > 0 ?
+                            <ul>
+                                {unsavedEdits.map((e, idx) => 
+                                    <li key={idx}>{api.getEditType(e.code).describe(e.data)}</li>
+                                )}
+                            </ul>
+                        :
+                            <p><FormattedMessage id="draft.entry.edit.noChangesYet" defaultMessage={"You haven't made any changes yet. Make some changes above and you'll be able to save the changes here."} /></p>
+                    }
+                </Tab>
+                <Tab id="save" icon="check-circle-fill" name={defineMessage({defaultMessage: "Save", id: "draft.edit.entry.tab.save"})}>
+                    <h3><FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save changes"} /></h3>
+                    {
+                        draft ?
+                            <Button icon="file-earmark-diff" disabled={unsavedEdits.length === 0 || isSaving} onClick={saveChangesToDraft}>
+                                <FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save these changes (to draft \"{title}\")"} values={{title: draft.title}} />
+                            </Button>
+                        :
+                            <Form>
+                                <Control id="draft-desc" label={{id: "draft.entry.edit.draft-title-instructions", defaultMessage: "Provide a brief description of what you changed:"}}>
+                                    <TextInput />
+                                </Control>
+                                <Button icon="file-earmark-diff" disabled={unsavedEdits.length === 0 || isSaving} onClick={saveChangesToDraft}>
+                                    <FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save these changes (as draft)"} />
+                                </Button>
+                            </Form>
+                    }
+                </Tab>
+            </TabBarRouter>
+
         </>;
     }
 

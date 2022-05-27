@@ -16,6 +16,7 @@ interface Props {
     options: SelectOption[];
     className?: string;
     value?: string;
+    readOnly?: boolean;
     onChange?: (newSelectedItem: string) => void;
     renderOption?: (option: SelectOption) => { classNameList: string; classNameButton: string; node: React.ReactNode };
 }
@@ -43,8 +44,8 @@ export const SelectBox: React.FunctionComponent<Props> = ({onChange, options, va
     // When the user clicks on this, show or hide the menu:
     const handleButtonClick = React.useCallback((event: React.MouseEvent) => {
         event.preventDefault();
-        setMenuVisible((current) => !current);
-    }, []);
+        setMenuVisible((current) => !current && !props.readOnly);
+    }, [props.readOnly]);
 
     // If the menu is open, hide it when the user clicks outside of the menu or presses escape:
     const handleHideMenu = React.useCallback((event: KeyboardEvent | MouseEvent) => {
@@ -104,14 +105,15 @@ export const SelectBox: React.FunctionComponent<Props> = ({onChange, options, va
                     group
                     hover:shadow-sm hover:shadow-theme-link-color
                     active:shadow-none active:ml-[4px] active:mt-[4px] active:mr-[2px] active:mb-[2px] 
-                    disabled:text-gray-300 disabled:border-gray-200 disabled:hover:shadow-none disabled:cursor-not-allowed
+                    disabled:text-gray-400 disabled:border-gray-300 disabled:hover:shadow-none disabled:cursor-not-allowed
                     ${classNameButton}
                 `}
                 onClick={handleButtonClick}
                 onKeyDown={handleListKeyPress}
+                disabled={props.readOnly}
             >
                 <span className="flex-1 text-left">{buttonContent}</span>
-                <span className="text-gray-700 inline-block ml-2 flex-none group-hover:text-sky-700">
+                <span className="text-gray-700 inline-block ml-2 flex-none group-hover:text-sky-700 group-disabled:!text-inherit">
                     <Icon icon="chevron-expand" />
                 </span>
             </button>
