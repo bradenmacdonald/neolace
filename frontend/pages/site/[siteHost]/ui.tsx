@@ -95,7 +95,7 @@ const UiDemoPage: NextPage = function (props) {
                 {_allIcons.map((id) => (
                     <div
                         key={id}
-                        className="inline-block w-32 h-32 border-2 m-2 text-center text-4xl pt-6 hover:border-theme-link-color"
+                        className="inline-block w-32 h-32 border rounded m-2 text-center text-4xl pt-6 hover:border-theme-link-color"
                         onClick={() => setSelectedIcon(id)}
                     >
                         <Icon key={id} icon={id} />
@@ -113,8 +113,7 @@ const UiDemoPage: NextPage = function (props) {
                 See details about{" "}
                 <a href={`https://icons.getbootstrap.com/icons/${selectedIcon}/`}>
                     "{selectedIcon}" at Bootstrap Icons
-                </a>, or <a href="https://icons.getbootstrap.com/">get more icons</a> (add to
-                <code>Icon.tsx</code>).
+                </a>, or <a href="https://icons.getbootstrap.com/">get more icons</a> (add to <code>Icon.tsx</code>).
             </p>
 
             <br />
