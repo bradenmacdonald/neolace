@@ -15,6 +15,8 @@ import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { AutoControl, Control, Form } from "components/widgets/Form";
 import { MDTEditor } from "components/widgets/MDTEditor";
+import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
+import { SelectBox } from "components/widgets/SelectBox";
 
 // interface PageProps {
 // }
@@ -34,6 +36,8 @@ const UiDemoPage: NextPage = function (props) {
     const [searchDemoText, setSearchDemoText] = React.useState("");
     const [lookupDemoText, setLookupDemoText] = React.useState("");
     const [mdtDemoText, setMDTDemoText] = React.useState("This has **bold**, *italic*, and a { lookup expression }.");
+    const [selectBoxItem, setSelectBoxItem] = React.useState("");
+    const [selectBox2Item, setSelectBox2Item] = React.useState("");
 
     if (process.env.NODE_ENV === "production") {
         return <FourOhFour />;
@@ -132,6 +136,18 @@ const UiDemoPage: NextPage = function (props) {
                     </UIDemo>
                     <UIDemo label="Button">
                         <Button>I'm a button</Button>
+                    </UIDemo>
+                    <UIDemo label="Select box">
+                        <SelectBox value={selectBoxItem} onChange={setSelectBoxItem} options={[
+                            {id: "first", label: defineMessage({defaultMessage: "First item", id: "ui-drop-first"})},
+                            {id: "second", label: defineMessage({defaultMessage: "Second item", id: "ui-drop-second"})},
+                            {id: "third", label: defineMessage({defaultMessage: "Third item", id: "ui-drop-third"})},
+                        ]}/>
+                    </UIDemo>
+                    <UIDemo label="Select box with icons and many items">
+                        <SelectBox value={selectBox2Item} onChange={setSelectBox2Item} options={_allIcons.map((id) => (
+                            {id, label: noTranslationNeeded( id ), icon: id}
+                        ))}/>
                     </UIDemo>
                     <UIDemo label="Tooltip">
                         <Tooltip
