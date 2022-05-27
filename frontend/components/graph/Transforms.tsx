@@ -1,6 +1,6 @@
 import { G6RawGraphData } from "components/graph/Graph";
 import { VNID } from "neolace-api";
-import { transformCondenseGraph, transformHideNodesOfType, transformExpandLeaves, createGraphObject, convertGraphToData, GraphType } from "./GraphFunctions";
+import { transformCondenseGraph, transformHideNodesOfType, transformExpandLeaves, createGraphObject, convertGraphToData, GraphType, transformCondenseNodeLeaves } from "./GraphFunctions";
 
 export interface Transform {
     id: string;
@@ -12,6 +12,7 @@ export enum Transforms {
     CONDENSE = "condense",
     HIDETYPE = "hide-type",
     EXPANDLEAF = "expand-leaf",
+    CONDENSENODE = "condense-node",
 }
 
 function condenseGraphData(currentData: G6RawGraphData, graph: GraphType) {
@@ -41,6 +42,8 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
                 t.params.parentKey as string[],
                 t.params.entryType as string
             );
+        } else if (t.id === Transforms.CONDENSENODE) {
+            transformedGraph = transformCondenseNodeLeaves(transformedGraph, t.params.nodeToCondense as string);
         }
     }
     return convertGraphToData(transformedGraph);

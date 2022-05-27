@@ -297,6 +297,13 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         }
                     }])
                 }
+            } else if (activeToolRef.current === Tool.ExpandNodes && !item.getModel().leavesCondensed) {
+                setTransforms((prevTransforms) => [...prevTransforms, {
+                    id: Transforms.CONDENSENODE,
+                    // instead of this node id, get type and parent
+                    // should have only one neighbour
+                    params: { nodeToCondense: item.getModel().id }
+                }]) 
             }
         });
 
@@ -394,7 +401,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         if (isCondensed) {
             setTransforms(
                 (prevTransforms) => prevTransforms.filter((t) => (
-                    t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF
+                    t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF && t.id !== Transforms.CONDENSENODE
                 )
             );
         } else {

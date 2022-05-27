@@ -335,6 +335,64 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
 }
 
 /**
+ * Removes leaves of the given node and adds a condensed node to the graph. If
+ * thre are no leaves to condense, does nothing and return the original graph copy.
+ * @param graph 
+ * @param nodeToCondense node which leaves need condensing
+ * @returns Copy of the graph with condensing modifications
+ */
+function condenseNodeLeaves(graph: GraphType, nodeToCondense: string) {
+    const newGraph = graph.copy();
+    const leavesPerType: {
+        nodeKey: string;
+        entryType: VNID;
+        hiddenNodeNumber: number;
+        leavesToDelete: Set<string>;
+    }[] = [];
+    // for each entry type, if a node has many leaves of that type, add them for condensing
+    const leaves: Record<VNID, string[]> = {};
+    newGraph.forEachNeighbor(nodeToCondense, (neighborKey) => {
+        const neighborEntryType = graph.getNodeAttribute(neighborKey, "entryType");
+        if (newGraph.neighbors(neighborKey).length === 1) {
+            if (leaves[neighborEntryType]) {
+                leaves[neighborEntryType].push(neighborKey);
+            } else {
+                leaves[neighborEntryType] = [neighborKey];
+            }
+        }
+    });
+
+    for (const [entryType, value] of Object.entries(leaves)) {
+        if (value.length > 1) {
+            leavesPerType.push(
+                {
+                    nodeKey: nodeToCondense,
+                    entryType: VNID(entryType),
+                    hiddenNodeNumber: value.length,
+                    leavesToDelete: new Set<string>(value),
+                },
+            );
+        }
+    }
+    // create condensed leaves, if any
+    leavesPerType.forEach((leafyNode) => {
+        // delete nodes
+        leafyNode.leavesToDelete.forEach((leafKey) => {
+            newGraph.dropNode(leafKey);
+        });
+        // add condensed node and edge to it
+        const newLeafKey = VNID();
+        newGraph.addNode(newLeafKey, {
+            label: `${leafyNode.hiddenNodeNumber} entries condensed`,
+            entryType: leafyNode.entryType,
+            leavesCondensed: leafyNode.leavesToDelete,
+        });
+        newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
+    });
+    return newGraph;
+}
+
+/**
  * Hide nodes of given entry type as follows: for each deleted node, take all of its neighbours, and connect all of them
  *  with undirected relationsips.
  * @param graph
@@ -407,5 +465,14 @@ export function transformExpandLeaves(
     } else if (parentKey.length === 2) {
         transformedGraph = expandSimplePattern(originalDataGraph, graph, parentKey[0], parentKey[1], entryType);
     }
+    return transformedGraph;
+}
+
+export function transformCondenseNodeLeaves(
+    graph: GraphType,
+    nodeToCondense: string,
+) {
+    let transformedGraph = graph.copy();
+    transformedGraph = condenseNodeLeaves(graph, nodeToCondense);
     return transformedGraph;
 }
