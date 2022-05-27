@@ -409,7 +409,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     const contents = (
         <>
-            <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
+            <div className="block rounded-t w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
                 <ToolbarButton
                     onClick={handleExpandCanvasButton}
                     title={intl.formatMessage({ defaultMessage: "Toggle expanded view", id: "graph.toolbar.expand" })}
@@ -478,7 +478,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             </div>
             <div
                 ref={updateGraphHolder}
-                className="relative bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
+                className="relative rounded-b bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
                 style={activeTool === Tool.HideNodes ? { cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z'/%3E%3C/svg%3E") 3 16, crosshair` } : {}}
             >
                 {/* in here is 'graphContainer', and which holds a <canvas> element. */}
@@ -499,7 +499,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             <Modal
                 onClose={handleExpandCanvasButton}
                 className={`
-                    flex flex-col rounded border-2 border-gray-200 w-auto h-auto
+                    flex flex-col rounded border border-gray-300 w-auto h-auto
                     max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]
                 `}
             >
@@ -511,7 +511,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         // on an aspect ratio (square on mobile, 16:9 on desktop)
         return (
             <div className={`
-                flex flex-col rounded border-2 border-gray-200 w-auto h-auto
+                flex flex-col rounded border border-gray-300 w-auto h-auto
                 aspect-square md:aspect-video max-w-full
             `}>
                 {contents}

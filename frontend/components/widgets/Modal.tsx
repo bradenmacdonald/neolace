@@ -1,5 +1,6 @@
-import { Portal } from 'components/utils/Portal';
-import React from 'react';
+import { useClickOutsideHandler, useKeyHandler } from "components/utils/events";
+import { Portal } from "components/utils/Portal";
+import React from "react";
 
 interface ModalProps {
     children?: React.ReactNode;
@@ -10,38 +11,19 @@ interface ModalProps {
 /**
  * Display a modal, which is a dialogue that pops up and overlaps with everything else.
  */
-export const Modal: React.FunctionComponent<ModalProps> = (props) => {
-    const modalElement = React.useRef<HTMLDivElement|null>(null);
-    
+export const Modal: React.FunctionComponent<ModalProps> = ({onClose, ...props}) => {
+    const modalElement = React.useRef<HTMLDivElement | null>(null);
+
     // A general click event handler to watch for "click outside of modal" events
-    const handleClickOutside = React.useCallback((event: MouseEvent) => {
-        if (props.onClose && modalElement.current && !modalElement.current.contains(event.target as Node)) {
+    const handleClickOutside = React.useCallback((event: MouseEvent|KeyboardEvent) => {
+        if (onClose) {
             event.preventDefault();
-            props.onClose();
+            onClose();
         }
-    }, [props.onClose]);
+    }, [onClose]);
 
-    React.useEffect(() => {
-        document.addEventListener("mousedown", handleClickOutside, {passive: false});
-        return () => { // Unbind the event listener on clean up
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, [handleClickOutside]);
-
-    // A listener to handle for ESC key press events
-    const handleKeyPress = React.useCallback((event: KeyboardEvent) => {
-        if (event.key === "Escape" && props.onClose) {
-            event.preventDefault();
-            props.onClose();
-        }
-    }, [props.onClose]);
-
-    React.useEffect(() => {
-        document.addEventListener("keydown", handleKeyPress, {passive: false});
-        return () => { // Unbind the event listener on clean up
-            document.removeEventListener("keydown", handleKeyPress);
-        };
-    }, [handleClickOutside]);
+    useClickOutsideHandler(modalElement, handleClickOutside);
+    useKeyHandler("Escape", handleClickOutside);
 
     return (
         <>

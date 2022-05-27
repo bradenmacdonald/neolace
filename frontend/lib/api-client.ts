@@ -215,7 +215,7 @@ export function useDraft(draftId: VNID|"_"): [data: DraftDataWithEdits|undefined
  * React hook to get the currently published version of an entry, to use as a basis for making edits.
  * @returns 
  */
-export function useEditableEntry(entryId: VNID): [data: api.EditableEntryData|undefined, error: ApiError|undefined, mutate: KeyedMutator<api.EditableEntryData|undefined>] {
+export function useEditableEntry(entryId: VNID | {newEntryWithId: VNID}): [data: api.EditableEntryData|undefined, error: ApiError|undefined, mutate: KeyedMutator<api.EditableEntryData|undefined>] {
     const {site, siteError} = useSiteData();
 
     // TODO: Change "no-draft" below to the ID of the current draft, if any, from a <DraftContext> provider.
@@ -224,22 +224,11 @@ export function useEditableEntry(entryId: VNID): [data: api.EditableEntryData|un
         if (siteError) {
             throw new ApiError(500, "Site Error");
         }
-        if (!site.shortId) {
-            return undefined; // We need to wait for the siteId before we can load the entry
-        }
-        if (!isVNID(entryId)) {
-            throw new ApiError(500, "Not a valid VNID");
-        }
-        try {
-            const data: api.EditableEntryData = await client.getEntry(entryId, {flags: [
-                api.GetEntryFlags.IncludeFeatures,
-                api.GetEntryFlags.IncludeRawProperties,
-            ] as const, siteId: site.shortId});
-            return data;
-        } catch (err) {
-            if (err instanceof api.NotFound) {
+        if (typeof entryId === "object") {
+            if (isVNID(entryId.newEntryWithId)) {
+                // We are creating a new entry, and it has been assigned a temporary new VNID:
                 const blankEntry: api.EditableEntryData = {
-                    id: entryId,
+                    id: entryId.newEntryWithId,
                     friendlyId: "",
                     name: "",
                     description: "",
@@ -249,9 +238,20 @@ export function useEditableEntry(entryId: VNID): [data: api.EditableEntryData|un
                 };
                 return blankEntry;
             } else {
-                throw err;
+                throw new ApiError(500, "Not a valid entry ID.");
             }
         }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the entry
+        }
+        if (!isVNID(entryId)) {
+            throw new ApiError(500, `"${entryId}" is not a valid VNID`);
+        }
+        const data: api.EditableEntryData = await client.getEntry(entryId, {flags: [
+            api.GetEntryFlags.IncludeFeatures,
+            api.GetEntryFlags.IncludeRawProperties,
+        ] as const, siteId: site.shortId});
+        return data;
     }, {
 
         // refreshInterval: 10 * 60_000,

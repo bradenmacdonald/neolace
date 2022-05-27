@@ -38,7 +38,7 @@
     .neo-typography a { @apply underline text-theme-link-color; }
 
     /* Unordered lists */
-    .neo-typography ul li {
+    .neo-typography ul:not(.unstyled) li {
         @apply ml-3 pl-2 mb-1;
         list-style-type: "▸";
     }
