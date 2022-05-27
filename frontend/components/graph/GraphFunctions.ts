@@ -4,6 +4,7 @@ import type { G6RawGraphData } from './Graph'
 import toSimple from 'graphology-operators/to-simple';
 import toUndirected from 'graphology-operators/to-undirected';
 import louvain from 'graphology-communities-louvain';
+import {subgraph} from 'graphology-operators';
 
 interface NodeAttributes {
     label: string;
@@ -11,6 +12,7 @@ interface NodeAttributes {
     isFocusEntry?: boolean;
     community?: number;
     nodesCondensed?: Set<string>;
+    clique?: boolean;
 }
 interface EdgeAttributes {
     label: string;
@@ -38,7 +40,7 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
     const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({
             id: VNID(nodeKey),
-            label: graph.getNodeAttribute(nodeKey, "label") as string,
+            label: graph.getNodeAttribute(nodeKey, 'clique') ? 'CLIQUE' : graph.getNodeAttribute(nodeKey, "label") as string,
             entryType: VNID(graph.getNodeAttribute(nodeKey, "entryType")),
             ...(graph.hasNodeAttribute(nodeKey, "isFocusEntry") && { isFocusEntry: true }),
             ...(graph.hasNodeAttribute(nodeKey, 'community') 
@@ -409,8 +411,83 @@ export function computeCommunities(graph: GraphType) {
     // TODO when collapsing communities, what community should they inherit?
     const simpleGraph = toUndirected(toSimple(graph))
     louvain.assign(simpleGraph, {resolution:0.8});
-    console.log(simpleGraph)
+    // get community partition
+    const id2comm: Record<string, number> = {};
+    const comm2id: Record<number, string[]> = {};
+    simpleGraph.forEachNode((n) => {
+        id2comm[n] = simpleGraph.getNodeAttribute(n, 'community') as number;
+        if (comm2id[simpleGraph.getNodeAttribute(n, 'community') as number]) {
+            comm2id[simpleGraph.getNodeAttribute(n, 'community') as number].push(n);
+        } else {
+            comm2id[simpleGraph.getNodeAttribute(n, 'community') as number] = [n];
+        }
+    })
+    // find largest cliques for each community and label nodes in graph
+    if (simpleGraph.order === 0) return;
+    for (const com in comm2id) {
+        // TODO some cliques are also overlapping - like cliques of three. Should I find all of them?
+        console.log('The community is ', com)
+        const comGraph = subgraph(simpleGraph, comm2id[com]);
+        const largestClique = maxClique(comGraph, comGraph.nodes(), []);
+        // only include cliques of sizes more than 2
+        if (largestClique.length <= 2) continue;
+        largestClique.forEach((n) => {
+            console.log('Adding to a clique', n)
+            simpleGraph.setNodeAttribute(n, 'clique', true);
+        })
+    }
     return simpleGraph;
+}
+
+/**
+ * Check if a subgraph is a clique, i.e. a compelte graph.
+ * @param subgraph 
+ * @returns 
+ */
+function isSubgraphClique(subgraph: GraphType): boolean {
+    let isClique = true;
+    subgraph.forEachNode((n) => {
+        if (subgraph.degree(n) < subgraph.order - 1) {
+            isClique = false;
+            return;
+        }
+        const neighbourSet = new Set<string>(subgraph.neighbors(n));
+        if ((neighbourSet.size === subgraph.order - 1) && !neighbourSet.has(n)) {
+            return;
+        } else {
+            isClique = false;
+        }
+        return;
+    })
+    // console.log('The clique value is ', isClique)
+    return isClique;
+}
+
+/**
+ * Recursive function to find the maximum clique subgraph and return it.
+ * @param graph 
+ * @param remainingNodeList 
+ * @param currSubgraphNodes 
+ * @returns list of node ids corresponding to the largest clique in graph
+ */
+function maxClique(graph: GraphType, remainingNodeList: string[], currSubgraphNodes: string[]) {
+    let largestClique = currSubgraphNodes;
+    // check if any vertices can be added
+    for (const node of remainingNodeList) {
+        // merge the node to the subgraph
+        const enlargedSubgraph = subgraph(graph, [...currSubgraphNodes, node]);
+        if (isSubgraphClique(enlargedSubgraph)) {
+            const cliqueResult = maxClique(
+                graph,
+                [...remainingNodeList.filter((n) => n !== node)],
+                [...currSubgraphNodes, node]
+            );
+            if (cliqueResult.length > largestClique.length) {
+                largestClique = cliqueResult;
+            }
+        }
+    }
+    return largestClique;
 }
 
 
