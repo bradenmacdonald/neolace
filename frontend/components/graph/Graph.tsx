@@ -30,7 +30,7 @@ export interface G6RawGraphData {
         label: string;
         entryType: VNID;
         isFocusEntry?: boolean;
-        leavesCondensed?: Set<string>;
+        nodesCondensed?: Set<string>;
     }[];
     edges: {
         id: VNID;
@@ -81,7 +81,7 @@ enum Tool {
     // Normal selection tool
     Select,
     HideNodes,
-    ExpandNodes,
+    CondenseExpandNode,
 }
 
 /**
@@ -277,7 +277,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 })
                 setActiveTool(Tool.Select);
 
-            } else if (activeToolRef.current === Tool.ExpandNodes && item.getModel().leavesCondensed) {
+            } else if (activeToolRef.current === Tool.CondenseExpandNode && item.getModel().nodesCondensed) {
                 // need to pass parent key as the condensed node id changes with every load
                 if (item.getNeighbors().length === 1) {
                     // expand leaf
@@ -297,7 +297,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         }
                     }])
                 }
-            } else if (activeToolRef.current === Tool.ExpandNodes && !item.getModel().leavesCondensed) {
+            } else if (activeToolRef.current === Tool.CondenseExpandNode && !item.getModel().nodesCondensed) {
                 setTransforms((prevTransforms) => [...prevTransforms, {
                     id: Transforms.CONDENSENODE,
                     // instead of this node id, get type and parent
@@ -411,7 +411,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     // Tools:
     const handleSelectToolButton = React.useCallback(() => { setActiveTool(Tool.Select); }, [setActiveTool]);
-    const handleExpandLeafButton = React.useCallback(() => { setActiveTool(Tool.ExpandNodes); }, [setActiveTool]);
+    const handleExpandLeafButton = React.useCallback(() => { setActiveTool(Tool.CondenseExpandNode); }, [setActiveTool]);
     const handleHideArticlesButton = React.useCallback(() => { setActiveTool(Tool.HideNodes); }, [setActiveTool]);
 
     const contents = (
@@ -480,7 +480,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "graph.toolbar.expandNodes",
                     })}
                     icon="chevron-expand"
-                    enabled={activeTool === Tool.ExpandNodes}
+                    enabled={activeTool === Tool.CondenseExpandNode}
                 />
             </div>
             <div
