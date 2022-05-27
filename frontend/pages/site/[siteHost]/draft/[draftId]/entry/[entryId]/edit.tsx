@@ -15,6 +15,7 @@ import { MDTEditor } from 'components/widgets/MDTEditor';
 import { Button } from 'components/widgets/Button';
 import { IN_BROWSER } from 'lib/config';
 import { SelectEntryType } from 'components/widgets/SelectEntryType';
+import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -30,6 +31,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
     const {site, siteError} = useSiteData();
     const [baseSchema] = useSiteSchema();
     const router = useRouter();
+    const user = React.useContext(UserContext);
     const query = router.query as PageUrlQuery;
     const draftId = query.draftId as api.VNID|NEW;
     const [draft, draftError] = useDraft(draftId);
@@ -131,7 +133,9 @@ const DraftEntryEditPage: NextPage = function(_props) {
 
     let content: JSX.Element;
     // Are there any other errors?
-    if (entryError instanceof api.NotFound) {
+    if (user.status === UserStatus.Anonymous) {
+        content = <ErrorMessage>You need to log in before you can edit or create entries.</ErrorMessage>
+    } else if (entryError instanceof api.NotFound) {
         content = <FourOhFour/>;
     } else if (draftError) {
         content = <ErrorMessage>{String(draftError)}</ErrorMessage>;
