@@ -8,7 +8,7 @@ import G6, { Graph, GraphOptions, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "../utils/resizeObserverHook";
 import { EntryColor, entryNode, pickEntryTypeLetter } from "./Node";
 import { VNID } from "neolace-api";
-import { ToolbarButton } from "../widgets/Button";
+import { ToolbarButton, ToolbarSeparator } from "../widgets/Button";
 import { useIntl } from "react-intl";
 import { useStateRef } from "../utils/stateRefHook";
 import { applyTransforms, Transform, Transforms } from "./Transforms";
@@ -30,6 +30,7 @@ export interface G6RawGraphData {
         label: string;
         entryType: VNID;
         isFocusEntry?: boolean;
+        leavesCondensed?: Set<string>;
     }[];
     edges: {
         id: VNID;
@@ -37,6 +38,7 @@ export interface G6RawGraphData {
         target: string;
         relType: VNID;
         label: string;
+        [other: string]: unknown; // attributes
     }[];
 }
 
@@ -69,9 +71,17 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
             }
         )),
     };
-    
+
     data = colorGraph(data, refCache);
     return data;
+}
+
+/** The different "tools" that can be active for manipulating the graph */
+enum Tool {
+    // Normal selection tool
+    Select,
+    HideNodes,
+    ExpandNodes,
 }
 
 /**
@@ -79,12 +89,13 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const intl = useIntl();
-    const [hidden, setHidden, hiddenRef] = useStateRef(false);
+    const [activeTool, setActiveTool, activeToolRef] = useStateRef(Tool.Select);
+
     // The data (nodes and relationships) that we want to display as a graph.
     const originalData = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value]);
-    const [transformList, setTransforms, currentTransforms] = useStateRef<Transform[]>([]);
+    const [transformList, setTransforms, _currentTransforms] = useStateRef<Transform[]>([]);
 
     const currentData = React.useMemo(() => {
         let transformedData = applyTransforms(originalData, transformList);
@@ -110,7 +121,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         return _graphContainer;
     });
     // This gets called by React when the outer <div> that holds the above graphContainer has changed.
-    const updateGraphHolder = React.useCallback((newGraphHolderDiv: HTMLDivElement|null) => {
+    const updateGraphHolder = React.useCallback((newGraphHolderDiv: HTMLDivElement | null) => {
         // Move graphContainer into the new parent div, or detach it from the DOM and keep it in memory only (if the new
         // parent div isn't ready yet).
         if (!newGraphHolderDiv) {
@@ -196,7 +207,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         graph.data(originalData);
         graph.render();
         // By default, we zoom the graph so that four nodes would fit horizontally.
-        graph.zoomTo(graph.getWidth()/(220*4), undefined, false);
+        graph.zoomTo(graph.getWidth() / (220 * 4), undefined, false);
         graph.on("afterlayout", () => {
             if (!graph || graph.destroyed) { return; }
             // Zoom to focus on whatever node came first in the data:
@@ -255,16 +266,37 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             })
         });
 
-        graph.on("node:click", function(e) {
+        graph.on("node:click", function (e) {
             const item = e.item as INode;
-            if (hiddenRef.current) {
+            if (activeToolRef.current === Tool.HideNodes) {
                 setTransforms((t) => {
                     return t.concat({
                         id: Transforms.HIDETYPE,
-                        params: {'nodeType': item.getModel().entryType as string},
+                        params: { 'nodeType': item.getModel().entryType as string },
                     });
                 })
-                setHidden(false);
+                setActiveTool(Tool.Select);
+
+            } else if (activeToolRef.current === Tool.ExpandNodes && item.getModel().leavesCondensed) {
+                // need to pass parent key as the condensed node id changes with every load
+                if (item.getNeighbors().length === 1) {
+                    // expand leaf
+                    setTransforms((prevTransforms) => [...prevTransforms, {
+                        id: Transforms.EXPANDLEAF,
+                        // instead of this node id, get type and parent
+                        // should have only one neighbour
+                        params: { parentKey: [item.getNeighbors()[0].getModel().id], entryType: item.getModel().entryType }
+                    }])
+                } else if (item.getNeighbors().length === 2) {
+                    // expand simple pattern
+                    setTransforms((prevTransforms) => [...prevTransforms, {
+                        id: Transforms.EXPANDLEAF,
+                        params: {
+                            parentKey: [item.getNeighbors()[0].getModel().id, item.getNeighbors()[1].getModel().id],
+                            entryType: item.getModel().entryType
+                        }
+                    }])
+                }
             }
         });
 
@@ -272,7 +304,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         graph.on("nodeselectchange" as any, (e) => { // the type says it's not allowed but it works
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const selectedNodes = (e.selectedItems as any).nodes as INode[];
-            if (selectedNodes.length === 1 && !hiddenRef.current) {
+            if (selectedNodes.length === 1 && activeToolRef.current === Tool.Select) {
                 // Show a tooltip for this node, since there's exactly one node selected:
                 setShowTooltipForNode(selectedNodes[0].getModel().id);
             } else {
@@ -360,13 +392,20 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const isCondensed = transformList.find((t) => t.id === Transforms.CONDENSE) !== undefined;
     const handleCondenseNodesButton = React.useCallback(() => {
         if (isCondensed) {
-            setTransforms((prevTransforms) => prevTransforms.filter((t) => t.id !== Transforms.CONDENSE));
+            setTransforms(
+                (prevTransforms) => prevTransforms.filter((t) => (
+                    t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF
+                )
+            );
         } else {
-            setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.CONDENSE, params: {}}]);
+            setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.CONDENSE, params: {} }]);
         }
     }, [isCondensed, setTransforms]);
-    // Code for "Hide article antries" toolbar button
-    const handleHideArticlesButton = React.useCallback(() => { setHidden((wasHidden) => !wasHidden); }, []);
+
+    // Tools:
+    const handleSelectToolButton = React.useCallback(() => { setActiveTool(Tool.Select); }, [setActiveTool]);
+    const handleExpandLeafButton = React.useCallback(() => { setActiveTool(Tool.ExpandNodes); }, [setActiveTool]);
+    const handleHideArticlesButton = React.useCallback(() => { setActiveTool(Tool.HideNodes); }, [setActiveTool]);
 
     const contents = (
         <>
@@ -408,20 +447,39 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     icon="chevron-contract"
                     enabled={isCondensed}
                 />
+                <ToolbarSeparator/>
+                <ToolbarButton
+                    onClick={handleSelectToolButton}
+                    title={intl.formatMessage({
+                        defaultMessage: "Select tool: click on an entry/node to select it. Double-click to see its neighbors.",
+                        id: "graph.toolbar.selectTool",
+                    })}
+                    icon="cursor-left-fill"
+                    enabled={activeTool === Tool.Select}
+                />
                 <ToolbarButton
                     onClick={handleHideArticlesButton}
                     title={intl.formatMessage({
                         defaultMessage: "Hide entries tool: click on an entry to hide all entries of that type.",
-                        id: "graph.toolbar.hideArticles",
+                        id: "graph.toolbar.hideNodesTool",
                     })}
                     icon="eraser"
-                    enabled={hidden}
+                    enabled={activeTool === Tool.HideNodes}
+                />
+                <ToolbarButton
+                    onClick={handleExpandLeafButton}
+                    title={intl.formatMessage({
+                        defaultMessage: "Expand leaf tool: Click on previously collapsed nodes to expand them again.",
+                        id: "graph.toolbar.expandNodes",
+                    })}
+                    icon="chevron-expand"
+                    enabled={activeTool === Tool.ExpandNodes}
                 />
             </div>
             <div
                 ref={updateGraphHolder}
                 className="relative bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
-                style={hidden ? {cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z'/%3E%3C/svg%3E") 3 16, crosshair`} : {}}
+                style={activeTool === Tool.HideNodes ? { cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z'/%3E%3C/svg%3E") 3 16, crosshair` } : {}}
             >
                 {/* in here is 'graphContainer', and which holds a <canvas> element. */}
             </div>
