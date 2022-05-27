@@ -31,6 +31,11 @@ interface ToolbarButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
     children?: never;
 }
 
+/** A vertical line that can be placed between toolbar buttons, to separate them into groups. */
+export const ToolbarSeparator: React.FunctionComponent<Record<never, never>> = (props) => {
+    return <span aria-hidden={true} className="inline-block py-1 text-slate-200 select-none">|</span>
+}
+
 export const ToolbarButton: React.FunctionComponent<ToolbarButtonProps> = ({title, icon, enabled, onClick, ...props}) => {
 
     const handleClick = React.useCallback((event: React.MouseEvent<HTMLButtonElement>) => {

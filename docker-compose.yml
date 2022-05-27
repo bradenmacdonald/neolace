@@ -53,8 +53,8 @@ x-service-templates:
       REDIS_URL: redis://:devpassword@redis:6379/8
       USERNAME_IS_EMAIL: "true"
       PASSWORD_CHANGE_LOGOUT: "true"  # user password changes will expire all other sessions
-      AUTHN_URL: http://localhost:5552  # Public URL as reachable by end users
-      APP_DOMAINS: localhost:5555,*.local.neolace.net:5555
+      AUTHN_URL: http://local.neolace.net:5552  # Public URL as reachable by end users
+      APP_DOMAINS: "*.local.neolace.net:5555"
     entrypoint: ["/bin/sh", "-c", "./authn migrate && ./authn server"]  # Override to ensure migrations get run
 
 

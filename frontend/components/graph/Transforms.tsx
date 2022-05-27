@@ -1,18 +1,19 @@
 import { G6RawGraphData } from "components/graph/Graph";
 import { VNID } from "neolace-api";
-import { transformCondenseGraph, transformHideNodesOfType, transformExpandLeaves, createGraphObject, convertGraphToData, GraphType, computeCommunities } from "./GraphFunctions";
+import { transformCondenseGraph, transformHideNodesOfType, transformExpandLeaves, createGraphObject, convertGraphToData, GraphType, transformCondenseNodeLeaves, computeCommunities } from "./GraphFunctions";
 
 export interface Transform {
     id: string;
-    params: Record<string, unknown>; 
+    params: Record<string, unknown>;
 }
 
 // NOTE assuming that transforms can only be applied once
 export enum Transforms {
-    CONDENSE =  "condense",
+    CONDENSE = "condense",
     HIDETYPE = "hide-type",
     EXPANDLEAF = "expand-leaf",
     COMMUNITY = "community",
+    CONDENSENODE = "condense-node",
 }
 
 function condenseGraphData(currentData: G6RawGraphData, graph: GraphType) {
@@ -37,14 +38,16 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
             transformedGraph = transformHideNodesOfType(transformedGraph, VNID(t.params.nodeType as string));
         } else if (t.id === Transforms.EXPANDLEAF) {
             transformedGraph = transformExpandLeaves(
-                originalDataGraph, 
-                transformedGraph, 
-                t.params.parentKey as string[], 
+                originalDataGraph,
+                transformedGraph,
+                t.params.parentKey as string[],
                 t.params.entryType as string
             );
         } else if (t.id === Transforms.COMMUNITY) {
             transformedGraph = computeCommunities(transformedGraph);
             // console.log(transformedGraph);
+        } else if (t.id === Transforms.CONDENSENODE) {
+            transformedGraph = transformCondenseNodeLeaves(transformedGraph, t.params.nodeToCondense as string);
         }
     }
     const finalData = convertGraphToData(transformedGraph);

@@ -2,6 +2,7 @@ import * as log from "std/log/mod.ts";
 import { Drash } from "neolace/deps/drash.ts";
 import { config } from "neolace/app/config.ts";
 import { NeolaceAuthService } from "neolace/api/auth-middleware.ts";
+import { NeolaceErrorLogger, NeolaceLogService } from "neolace/api/log-middleware.ts";
 import { builtInRestApiResources } from "neolace/api/resources.ts";
 import { getPlugins } from "neolace/plugins/loader.ts";
 import { defineStoppableResource } from "neolace/lib/stoppable.ts";
@@ -17,10 +18,12 @@ export const [startServer, stopServer] = defineStoppableResource(async () => {
         resources: [...builtInRestApiResources, ...pluginResources],
         services: [
             new NeolaceAuthService(),
+            new NeolaceLogService(),
         ],
         hostname,
         port,
         protocol: "http",
+        error_handler: NeolaceErrorLogger,
     });
 
     await server.run();

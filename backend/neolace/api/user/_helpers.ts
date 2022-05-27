@@ -9,7 +9,7 @@ import { isVNID, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
  */
 export async function getPublicUserData(
     usernameOrVNID: string | VNID,
-): Promise<api.schemas.Type<typeof api.schemas.UserDataResponse>> {
+): Promise<api.schemas.Type<typeof api.UserDataResponse>> {
     if (usernameOrVNID === "system" || usernameOrVNID === SYSTEM_VNID) {
         // Special case: the "system" user is neither a human nor a bot.
         return {

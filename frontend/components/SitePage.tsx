@@ -3,7 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link';
 import { SWRConfig } from 'swr';
 
-import { UserContext } from 'components/user/UserContext';
+import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData, useSiteData, api } from 'lib/api-client';
 import { UISlot, UISlotWidget, defaultRender } from './widgets/UISlot';
 import FourOhFour from 'pages/404';
@@ -11,6 +11,7 @@ import { MDTContext, RenderMDT } from './markdown-mdt/mdt';
 import { Icon, IconId } from './widgets/Icon';
 import { FormattedMessage } from 'react-intl';
 import { UiPluginsProvider } from './utils/ui-plugins';
+import { DEVELOPMENT_MODE } from 'lib/config';
 
 export const DefaultSiteTitle = Symbol("DefaultSiteTitle");
 
@@ -78,10 +79,59 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // we also pass "fallback" in to the useSiteData hook above.
     const fallback = props.sitePreloaded ? {[`site:${props.sitePreloaded.domain}`]: props.sitePreloaded} : {};
 
-    const systemLinks = <ul><UISlot<SystemLink> slotId="systemLinks" defaultContents={[
-        //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
-        {id: "login", priority: 60, content: {url: "/login", label: <FormattedMessage id="systemLink.login" defaultMessage="Login" />, icon: "person-fill"}},
-    ]} renderWidget={(link: UISlotWidget<SystemLink>) => <li key={link.id}><Link href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link></li>} /></ul>;
+    const defaultSystemLinks: UISlotWidget<SystemLink>[] = [];
+    //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
+
+    if (DEVELOPMENT_MODE) {
+        // For now, the "Drafts" link should only be visible during development
+        defaultSystemLinks.push(
+            {
+                id: "drafts",
+                priority: 30,
+                content: {
+                    url: "/draft/",
+                    label: <FormattedMessage id="systemLink.drafts" defaultMessage="Drafts" />,
+                    icon: "file-earmark-diff",
+                },
+            },
+        );
+    }
+    
+    if (user.status === UserStatus.LoggedIn) {
+        // My Profile link
+        defaultSystemLinks.push({
+            id: "profile",
+            priority: 55,
+            content: {
+                url: site.isHomeSite ? "/account/" : `${site.homeSiteUrl}/account/`,
+                label: <FormattedMessage id="systemLink.profile" defaultMessage="Profile ({name})" values={{name: user.fullName}} />,
+                icon: "person-fill",
+            }
+        });
+        // Log out link:
+        defaultSystemLinks.push({
+            id: "login-out",
+            priority: 60,
+            content: {
+                url: site.isHomeSite ? "/account/logout" : `${site.homeSiteUrl}/account/logout?returnSite=${encodeURI(site.shortId)}`,
+                label: <FormattedMessage id="systemLink.logout" defaultMessage="Log out" />,
+                icon: "door-closed",
+            }
+        });
+    } else {
+        // Log in link:
+        defaultSystemLinks.push({
+            id: "login-out",
+            priority: 60,
+            content: {
+                url: site.isHomeSite ? "/account/login" : `${site.homeSiteUrl}/account/login?returnSite=${encodeURI(site.shortId)}`,
+                label: <FormattedMessage id="systemLink.login" defaultMessage="Log in" />,
+                icon: "person-fill",
+            }
+        });
+    }
+
+    const systemLinks = <ul><UISlot<SystemLink> slotId="systemLinks" defaultContents={defaultSystemLinks} renderWidget={(link: UISlotWidget<SystemLink>) => <li key={link.id}><Link href={link.content.url}><a><Icon icon={link.content.icon}/> {link.content.label}</a></Link></li>} /></ul>;
 
     return <SWRConfig value={{ fallback }}><UiPluginsProvider site={site}><div>
         <Head>
@@ -108,6 +158,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
                 <a className="flex-none h-8 md:h-24 p-1 md:p-3 mr-1 flex items-center">
                     {
+                        // eslint-disable-next-line @next/next/no-img-element
                         site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-auto h-full block" /> : site.name
                     }
                 </a>

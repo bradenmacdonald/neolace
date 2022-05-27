@@ -7,12 +7,11 @@ This repository contains the web backend and frontend for [neolace](https://neol
 
 1. Install Deno, Node.js, and Docker
 1. Open this project in VS Code
-1. Terminal > Run Task > Compile neolace-api package for Node.js
-1. Terminal > Run Task > Run Neolace Database Servers
-1. Terminal > Run Task > Erase Dev DB and re-create PlantDB example
-1. Terminal > Run Task > Run Backend
-1. Terminal > Run Task > Run Frontend
-1. See it at http://plantdb.local.neolace.net:5555/
+1. Terminal > Run Task > 🗄️ Run Neolace Database Servers
+1. Terminal > Run Task > ♻️ Erase Database and create default sites (you only need to run this the first time you start Neolace)
+1. Terminal > Run Task > 🚀 Run Backend
+1. Terminal > Run Task > 🚀 Run Frontend
+1. See it at http://home.local.neolace.net:5555/
 
 ## How to analyze the frontend bundle's size
 

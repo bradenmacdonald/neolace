@@ -1,5 +1,6 @@
-import { CypherQuery } from "neolace/deps/vertex-framework.ts";
+import { CypherQuery, VNID } from "neolace/deps/vertex-framework.ts";
 import { LookupContext } from "../context.ts";
+import { LookupExpression } from "../expressions/base.ts";
 import { AbstractLazyCypherQueryValue, LookupValue } from "./base.ts";
 
 /**
@@ -11,7 +12,11 @@ export class LazyCypherIterableValue<ValueType extends LookupValue> extends Abst
         context: LookupContext,
         cypherQuery: CypherQuery,
         public readonly getSlice: (offset: bigint, numItems: bigint) => Promise<ValueType[]>,
+        options: {
+            sourceExpression?: LookupExpression;
+            sourceExpressionEntryId?: VNID;
+        } = {},
     ) {
-        super(context, cypherQuery);
+        super(context, cypherQuery, options.sourceExpression, options.sourceExpressionEntryId);
     }
 }

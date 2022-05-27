@@ -109,12 +109,18 @@ const DraftEntryEditPage: NextPage = function(_props) {
         content = <ErrorMessage>{String(draftError)}</ErrorMessage>;
     } else if (entryError) {
         content = <ErrorMessage>{String(entryError)}</ErrorMessage>;
+    } else if (draft?.status === api.DraftStatus.Accepted || draft?.status === api.DraftStatus.Cancelled) {
+        content = <ErrorMessage>This draft is no longer editable.</ErrorMessage>;
     } else {
         content = <>
             {/*
                 <Link href={`/draft/${query.draftId}/entry/${query.entryId}/preview`}><a className="float-right text-sm">Preview</a></Link>
             */}
             <Breadcrumbs>
+                <Breadcrumb href={`/`}>{site.name}</Breadcrumb>
+                <Breadcrumb href={`/draft/`}>
+                    <FormattedMessage id="draft.allDrafts" defaultMessage={"Drafts"} />
+                </Breadcrumb>
                 <Breadcrumb href={draft ? `/draft/${draft.id}` : undefined}>
                     { draft ? draft.title : <FormattedMessage id="draft.new" defaultMessage="New Draft" /> }
                 </Breadcrumb>
@@ -179,14 +185,21 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     <p><FormattedMessage id="draft.entry.edit.noChangesYet" defaultMessage={"You haven't made any changes yet. Make some changes above and you'll be able to save the changes here."} /></p>
             }
             <h3><FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save changes"} /></h3>
-            <Form>
-                <Control id="draft-desc" label={{id: "draft.entry.edit.draft-title-instructions", defaultMessage: "Provide a brief description of what you changed:"}}>
-                    <TextInput />
-                </Control>
-                <Button icon="file-earmark-diff" disabled={unsavedEdits.length === 0 || isSaving} onClick={saveChangesToDraft}>
-                    <FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save these changes (as draft)"} />
-                </Button>
-            </Form>
+            {
+                draft ?
+                    <Button icon="file-earmark-diff" disabled={unsavedEdits.length === 0 || isSaving} onClick={saveChangesToDraft}>
+                        <FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save these changes (to draft \"{title}\")"} values={{title: draft.title}} />
+                    </Button>
+                :
+                    <Form>
+                        <Control id="draft-desc" label={{id: "draft.entry.edit.draft-title-instructions", defaultMessage: "Provide a brief description of what you changed:"}}>
+                            <TextInput />
+                        </Control>
+                        <Button icon="file-earmark-diff" disabled={unsavedEdits.length === 0 || isSaving} onClick={saveChangesToDraft}>
+                            <FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save these changes (as draft)"} />
+                        </Button>
+                    </Form>
+            }
         </>;
     }
 

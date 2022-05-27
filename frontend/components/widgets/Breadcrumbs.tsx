@@ -21,7 +21,7 @@ export const Breadcrumb: React.FunctionComponent<BreadcrumbProps> = (props) => {
   </li>;
 }
 interface BreadcrumbsProps {
-    children: React.ReactElement<BreadcrumbProps, typeof Breadcrumb>[];
+    children: React.ReactElement<BreadcrumbProps, typeof Breadcrumb>[]|React.ReactElement<BreadcrumbProps, typeof Breadcrumb>;
 }
 
 export const Breadcrumbs: React.FunctionComponent<BreadcrumbsProps> = (props) => {
