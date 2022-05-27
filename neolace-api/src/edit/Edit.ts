@@ -12,6 +12,7 @@ export interface EditType<Code extends string = string, DataSchema extends Schem
     code: Code;
     dataSchema: DataSchema;
     describe: (data: Type<DataSchema>) => string;
+    consolidate?: (thisEdit: Edit<EditType<string, DataSchema>>, earlierEdit: Edit<EditType<any, any>>) => undefined|Edit<EditType<any, any>>;
 }
 
 /* Data structure describing a specific edit */

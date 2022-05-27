@@ -14,6 +14,7 @@ import { TextInput } from 'components/widgets/TextInput';
 import { MDTEditor } from 'components/widgets/MDTEditor';
 import { Button } from 'components/widgets/Button';
 import { IN_BROWSER } from 'lib/config';
+import { SelectEntryType } from 'components/widgets/SelectEntryType';
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -44,7 +45,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
     // Any edits that the user has made on this page now, but hasn't yet saved to a draft:
     const [unsavedEdits, setUnsavedEdits] = React.useState<api.AnyContentEdit[]>([]);
     const addUnsavedEdit = React.useCallback((newEdit: api.AnyContentEdit) => {
-        setUnsavedEdits((existingEdits) => [...existingEdits, newEdit]);
+        setUnsavedEdits((existingEdits) => api.consolidateEdits([...existingEdits, newEdit]));
     }, []);
 
     const entry = React.useMemo(() => {
@@ -58,15 +59,37 @@ const DraftEntryEditPage: NextPage = function(_props) {
 
     const entryType = schema?.entryTypes?.[entry?.entryType.id ?? ""];
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Here are the handlers for actually making edits, baed on what the user does.
+
     const updateEntryName = React.useCallback((name: string) => {
         if (!baseEntry) { return; }
         addUnsavedEdit({ code: api.SetEntryName.code, data: { entryId: baseEntry.id, name } });
+    }, [baseEntry, addUnsavedEdit]);
+
+    const updateEntryType = React.useCallback((type: string) => {
+        if (!entry) { return; }
+        addUnsavedEdit({ code: api.CreateEntry.code, data: {
+            id: entry.id,
+            type: api.VNID(type),
+            name: entry.name,
+            description: entry.description ?? "",
+            friendlyId: entry.friendlyId,
+        } });
+    }, [entry, addUnsavedEdit]);
+
+    const updateEntryFriendlyId = React.useCallback((friendlyId: string) => {
+        if (!baseEntry) { return; }
+        addUnsavedEdit({ code: api.SetEntryFriendlyId.code, data: { entryId: baseEntry.id, friendlyId, } });
     }, [baseEntry, addUnsavedEdit]);
 
     const updateEntryDescription = React.useCallback((description: string) => {
         if (!baseEntry) { return; }
         addUnsavedEdit({ code: api.SetEntryDescription.code, data: { entryId: baseEntry.id, description } });
     }, [baseEntry, addUnsavedEdit]);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Managing the draft (all edits are part of a draft)
 
     // If we'll be creating a new draft when the user saves these changes, this is the title for that new draft:
     const [newDraftTitle, setNewDraftTitle] = React.useState("");
@@ -141,6 +164,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
             }
 
             <Form>
+                {/* Entry Name/Title */}
                 <AutoControl
                     value={entry?.name ?? ""}
                     onChangeFinished={updateEntryName}
@@ -151,8 +175,8 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     <TextInput />
                 </AutoControl>
 
-                <AutoControl
-                    value={entryType?.name ?? ""}
+                {/* Entry Type */}
+                <Control // SelectBoxes don't need "AutoControl" - changes apply immediately as the user makes a selection
                     id="entryType"
                     label={{id: "draft.entry.edit.type.label", defaultMessage: "Entry Type"}}
                     hint={
@@ -163,11 +187,13 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     }
                     isRequired={isNewEntry}
                 >
-                    <TextInput readOnly={true} />
-                </AutoControl>
+                    <SelectEntryType value={entry?.entryType.id} onChange={updateEntryType} readOnly={!isNewEntry} />
+                </Control>
 
+                {/* Friendly ID */}
                 <AutoControl
                     value={entry?.friendlyId ?? ""}
+                    onChangeFinished={updateEntryFriendlyId}
                     id="id"
                     label={{id: "draft.entry.edit.id.label", defaultMessage: "ID"}}
                     hint={
@@ -181,6 +207,7 @@ const DraftEntryEditPage: NextPage = function(_props) {
                     <TextInput />
                 </AutoControl>
 
+                {/* Description */}
                 <AutoControl
                     value={entry?.description ?? ""}
                     onChangeFinished={updateEntryDescription}
