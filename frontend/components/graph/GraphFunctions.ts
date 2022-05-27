@@ -2,6 +2,7 @@ import Graph from 'graphology';
 import { VNID } from 'neolace-api';
 import type { G6RawGraphData } from './Graph'
 import toSimple from 'graphology-operators/to-simple';
+import toUndirected from 'graphology-operators/to-undirected';
 import louvain from 'graphology-communities-louvain';
 
 interface NodeAttributes {
@@ -405,8 +406,10 @@ export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphTyp
 export function computeCommunities(graph: GraphType) {
     // TODO need to turn graph back from simple type
     // TODO make resolution parameters part of toolbar.
-    const simpleGraph = toSimple(graph);
-    louvain.assign(simpleGraph, {resolution: 2});
+    // TODO when collapsing communities, what community should they inherit?
+    const simpleGraph = toUndirected(toSimple(graph))
+    louvain.assign(simpleGraph, {resolution:0.8});
+    console.log(simpleGraph)
     return simpleGraph;
 }
 

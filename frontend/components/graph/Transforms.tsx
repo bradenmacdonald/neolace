@@ -43,11 +43,12 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
                 t.params.parentKey as string[],
                 t.params.entryType as string
             );
-        } else if (t.id === Transforms.COMMUNITY) {
-            transformedGraph = computeCommunities(transformedGraph);
-            // console.log(transformedGraph);
         } else if (t.id === Transforms.CONDENSENODE) {
             transformedGraph = transformCondenseNodeLeaves(transformedGraph, t.params.nodeToCondense as string);
+        } else if (t.id === Transforms.COMMUNITY) {
+            // NOTE compute communities needs to be last transform to be applied as all final nodes are needed.
+            transformedGraph = computeCommunities(transformedGraph);
+            // console.log(transformedGraph);
         }
     }
     const finalData = convertGraphToData(transformedGraph);
