@@ -338,7 +338,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${A}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // D is a A
@@ -349,7 +348,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${A}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // D is a B
@@ -360,7 +358,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${B}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // E is a B
@@ -371,7 +368,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${B}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // F is a C
@@ -382,7 +378,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${C}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // F is a D
@@ -393,7 +388,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${D}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // H is a F
@@ -404,7 +398,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${F}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // H is a E
@@ -415,7 +408,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${E}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // I is a E
@@ -426,7 +418,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${E}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // I is a G
@@ -437,7 +428,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${G}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                 ],
@@ -515,7 +505,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${A}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // C is a A
@@ -526,7 +515,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${A}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // D is a B
@@ -537,7 +525,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${B}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // D is a C
@@ -548,7 +535,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${C}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // A is a D
@@ -559,7 +545,6 @@ group("ancestors.ts", () => {
                             valueExpression: `[[/entry/${D}]]`,
                             property: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                 ],

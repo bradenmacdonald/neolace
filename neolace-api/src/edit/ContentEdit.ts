@@ -188,7 +188,7 @@ export const AddPropertyValue = ContentEditType({
         /** Value expression: a lookup expression giving the value */
         valueExpression: string,
         /** An optional markdown note clarifying details of the property value */
-        note: string,
+        note: string.strictOptional(),
         /** Rank determines the order in which values are listed if there are multiple values for one property */
         rank: number.strictOptional(),
         /**
@@ -229,15 +229,26 @@ export const UpdatePropertyValue = ContentEditType({
     dataSchema: Schema({
         /** The ID of the property fact to change */
         propertyFactId: vnidString,
-        /** Value expression: a lookup expression giving the new value */
-        valueExpression: string,
-        /** An optional markdown note clarifying details of the property value */
-        note: string,
-        /** Change the rank of this property */
+        /**
+         * Value expression: a lookup expression giving the new value
+         * Use undefined to not change the value expression.
+         */
+        valueExpression: string.strictOptional(),
+        /**
+         * An optional markdown note clarifying details of the property value.
+         * Use a blank string for "no slot", and undefined to leave the slot unchanged.
+         */
+        note: string.strictOptional(),
+        /**
+         * Change the rank of this property fact. Lower ranks will come first. The first property value has a rank of 1.
+         * Changing this property fact's rank will not automatically change the rank of other property facts.
+         * Leave undefined to not change the rank.
+         */
         rank: number.strictOptional(),
         /**
          * If the property enables "slots", this can be used to selectively override inherited values (only values with
          * the same slot get overridden).
+         * Use a blank string for "no slot", and undefined to leave the slot unchanged.
          */
         slot: string.strictOptional(),
     }),
@@ -248,19 +259,11 @@ export const UpdatePropertyValue = ContentEditType({
             const baseFacts = baseEntry.propertiesRaw[propertyIndex].facts;
             const factIndex = baseFacts.findIndex((f) => f.id === data.propertyFactId);
             const newFacts = [...baseFacts];
-            newFacts[factIndex] = {
-                ...baseFacts[factIndex],
-                // TODO: make changing 'note' and 'valueExpression' optional, to minimize effects of edit conflicts
-                valueExpression: data.valueExpression,
-                note: data.note,
-            };
-            if (data.rank !== undefined) {
-                newFacts[factIndex].rank = data.rank;
-                // TODO: re-order other facts?
-            }
-            if (data.slot !== undefined) {
-                newFacts[factIndex].slot = data.slot;
-            }
+            newFacts[factIndex] = {...baseFacts[factIndex]};
+            if (data.valueExpression !== undefined) { newFacts[factIndex].valueExpression = data.valueExpression; }
+            if (data.note !== undefined) { newFacts[factIndex].note = data.note; }
+            if (data.rank !== undefined) { newFacts[factIndex].rank = data.rank; }
+            if (data.slot !== undefined) { newFacts[factIndex].slot = data.slot; }
         }
         return updatedEntry;
     },

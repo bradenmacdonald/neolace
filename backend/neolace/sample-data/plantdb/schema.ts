@@ -207,7 +207,7 @@ export const schema = ValidateSiteSchema({
             descriptionMD: `The full taxonomy of this PlantDB entry.`,
             importance: 5,
         },
-        // An image RELATES TO [a Tech Concept]
+        // An image RELATES TO [an entry]
         "_imgRelTo": {
             id: VNID("_imgRelTo"),
             name: "Relates to",
@@ -339,6 +339,16 @@ export const schema = ValidateSiteSchema({
             descriptionMD: "ID of this item on Wikidata, the free knowledge base that anyone can edit.",
             importance: 15,
             displayAs: "[{value}](https://www.wikidata.org/wiki/{value})",
+        },
+        // Other names for a plant
+        "_propOtherNames": {
+            id: VNID("_propOtherNames"),
+            name: "Other names",
+            type: PropertyType.Value,
+            appliesTo: [{ entryType: VNID("_ETSPECIES") }],
+            mode: PropertyMode.Optional,
+            descriptionMD: "Other common names for this species.",
+            importance: 5,
         },
     },
 });

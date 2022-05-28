@@ -49,7 +49,6 @@ export async function createImages(siteId: VNID) {
                     property: schema.properties._imgRelTo.id,
                     valueExpression: `[[/entry/${entryData.ponderosaPine.id}]]`,
                     propertyFactId: VNID(),
-                    note: "",
                 },
             },
             // This image is used as the hero image for the ponderosa pine

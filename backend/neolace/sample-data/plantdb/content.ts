@@ -91,7 +91,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentDivision.id,
             valueExpression: `[[/entry/${entryData.divisionTracheophyta.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Create Order "Pinales" (conifers) - https://www.catalogueoflife.org/data/taxon/623FD
@@ -113,7 +112,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentClass.id,
             valueExpression: `[[/entry/${entryData.classPinopsida.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Create Family "Pinaceae" (pine family) - https://www.catalogueoflife.org/data/taxon/625M7
@@ -135,7 +133,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentOrder.id,
             valueExpression: `[[/entry/${entryData.orderPinales.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Create Genus "Pinus" (pines) - https://www.catalogueoflife.org/data/taxon/6QPY
@@ -157,7 +154,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentFamily.id,
             valueExpression: `[[/entry/${entryData.familyPinaceae.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +175,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     {
@@ -189,7 +184,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._propScientificName.id,
             valueExpression: `"Pinus ponderosa"`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     {
@@ -199,7 +193,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._propWikidataQID.id,
             valueExpression: `"Q460523"`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     {
@@ -261,7 +254,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Jack Pine
@@ -282,7 +274,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Japanese Red Pine
@@ -303,7 +294,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Japanese White Pine
@@ -324,7 +314,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Jeffrey Pine
@@ -345,7 +334,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Pinyon Pine
@@ -366,7 +354,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Western White Pine
@@ -387,7 +374,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Create Family "Cupressaceae" (cypress family)
@@ -409,7 +395,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentOrder.id,
             valueExpression: `[[/entry/${entryData.orderPinales.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Create Genus "Cupressus" (cypresses)
@@ -431,7 +416,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentFamily.id,
             valueExpression: `[[/entry/${entryData.familyCupressaceae.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Create Species "Cupressus sempervirens" - https://www.catalogueoflife.org/data/taxon/32FXZ
@@ -453,7 +437,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusCupressus.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Create Genus "Thuja" (arborvitaes)
@@ -475,7 +458,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentFamily.id,
             valueExpression: `[[/entry/${entryData.familyCupressaceae.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Create Species "Thuja plicata" - https://www.catalogueoflife.org/data/taxon/56NTV
@@ -497,7 +479,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusThuja.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
 
@@ -535,7 +516,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._partIsAPart.id,
             valueExpression: `[[/entry/${entryData.cone.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
     // Female cone (seed cone), what you think of as a "pine cone"
@@ -557,7 +537,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._partIsAPart.id,
             valueExpression: `[[/entry/${entryData.cone.id}]]`,
             propertyFactId: VNID(),
-            note: "",
         },
     },
 
@@ -569,7 +548,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._hasPart.id,
             valueExpression: `[[/entry/${entryData.pollenCone.id}]]`,
             propertyFactId: VNID(),
-            note: "",
             slot: "pollen-cone",
         },
     },
@@ -580,7 +558,6 @@ export const makePlantDbContent: EditList = [
             property: schema.properties._hasPart.id,
             valueExpression: `[[/entry/${entryData.seedCone.id}]]`,
             propertyFactId: VNID(),
-            note: "",
             slot: "seed-cone",
         },
     },

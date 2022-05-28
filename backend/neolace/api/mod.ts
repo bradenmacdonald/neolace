@@ -68,10 +68,21 @@ export class NeolaceHttpResource extends Drash.Resource {
                 if (err instanceof api.ApiError) {
                     response.status = err.statusCode;
                     const errorData: Record<string, unknown> = { message: err.message };
-                    if (err instanceof api.InvalidRequest) errorData.reason = err.reason;
-                    if (err instanceof api.InvalidFieldValue) errorData.fieldErrors = err.fieldErrors;
+                    let logMessage = err.message;
+                    if (err instanceof api.InvalidRequest) {
+                        errorData.reason = err.reason;
+                        logMessage = `${err.reason} ` + logMessage;
+                    }
+                    if (err instanceof api.InvalidEdit) {
+                        errorData.context = err.context;
+                        logMessage += ` (context: ${JSON.stringify(err.context)})`;
+                    }
+                    if (err instanceof api.InvalidFieldValue) {
+                        errorData.fieldErrors = err.fieldErrors;
+                        logMessage += ` (fieldErrors: ${JSON.stringify(err.fieldErrors)})`;
+                    }
                     response.json(errorData);
-                    log.warning(`Returned error response: ${err.message}`);
+                    log.warning(`Returned error response: ${logMessage}`);
                 } else {
                     response.status = 500;
                     response.json({ message: "An internal error occurred" });

@@ -81,8 +81,6 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema
                 property: VNID(propId),
                 propertyFactId: VNID(),
                 valueExpression: "",
-                note: "",
-                rank: 1,
             },
         });
     }, [addUnsavedEdit, entryId]);
@@ -172,8 +170,6 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
                             property: prop.id,
                             propertyFactId: VNID(),
                             valueExpression: "",
-                            note: "",
-                            rank: 1,
                         },
                     });
                 }}
@@ -199,13 +195,7 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
                                     if (newValue !== currentValue) {
                                         addUnsavedEdit({
                                             code: api.UpdatePropertyValue.code,
-                                            data: {
-                                                propertyFactId: fact.id,
-                                                valueExpression: newValue,
-                                                note: fact.note,
-                                                rank: fact.rank,
-                                                slot: fact.slot,
-                                            },
+                                            data: { propertyFactId: fact.id, valueExpression: newValue },
                                         });
                                     }
                                 }}
