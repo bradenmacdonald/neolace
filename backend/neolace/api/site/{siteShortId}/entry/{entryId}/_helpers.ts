@@ -185,10 +185,11 @@ export async function getEntry(
             MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
             WITH prop, pf
             ORDER BY prop.importance, prop.name, pf.rank
-            WITH prop, collect(pf { .valueExpression, .note, .rank, .slot }) AS facts
+            WITH prop, collect(pf { .id, .valueExpression, .note, .rank, .slot }) AS facts
         `.RETURN({
             "prop.id": Field.VNID,
             "facts": Field.List(Field.Record({
+                "id": Field.VNID,
                 "valueExpression": Field.String,
                 "note": Field.String,
                 "rank": Field.Int,

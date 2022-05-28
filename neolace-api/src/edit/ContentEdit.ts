@@ -197,8 +197,28 @@ export const AddPropertyValue = ContentEditType({
          */
         slot: string.strictOptional(),
     }),
-    apply: () => {
-        throw new Error("This edit type is not implemented yet.");
+    apply: (baseEntry, data) => {
+        if (baseEntry.id !== data.entry) {
+            return baseEntry;  // This wasn't the entry we're changing.
+        }
+        const newPropertyFact = {
+            id: data.propertyFactId,
+            valueExpression: data.valueExpression,
+            note: data.note ?? "",
+            rank: data.rank ?? 1,
+            slot: data.slot ?? "",
+        };
+        const updatedEntry: EditableEntryData = {...baseEntry, propertiesRaw: [...baseEntry.propertiesRaw]};
+        const propertyIndex = baseEntry.propertiesRaw.findIndex((p) => p.propertyId === data.property);
+        if (propertyIndex === -1) {
+            // We're adding a value for a property that has no values/facts yet:
+            updatedEntry.propertiesRaw.push({propertyId: data.property, facts: [newPropertyFact]});
+        } else {
+            // We're adding an additional value/fact to a property that already has one or more values/facts:
+            const prop = updatedEntry.propertiesRaw[propertyIndex];
+            prop.facts = [...prop.facts, newPropertyFact];
+        }
+        return updatedEntry;
     },
     describe: (data) => `Added value for \`Property ${data.property}\` property on \`Entry ${data.entry}\``,
 });
@@ -221,10 +241,40 @@ export const UpdatePropertyValue = ContentEditType({
          */
         slot: string.strictOptional(),
     }),
-    apply: () => {
-        throw new Error("This edit type is not implemented yet.");
+    apply: (baseEntry, data) => {
+        const updatedEntry: EditableEntryData = {...baseEntry, propertiesRaw: [...baseEntry.propertiesRaw]};
+        const propertyIndex = baseEntry.propertiesRaw.findIndex((p) => p.facts.map((f) => f.id).includes(data.propertyFactId));
+        if (propertyIndex !== -1) {
+            const baseFacts = baseEntry.propertiesRaw[propertyIndex].facts;
+            const factIndex = baseFacts.findIndex((f) => f.id === data.propertyFactId);
+            const newFacts = [...baseFacts];
+            newFacts[factIndex] = {
+                ...baseFacts[factIndex],
+                // TODO: make changing 'note' and 'valueExpression' optional, to minimize effects of edit conflicts
+                valueExpression: data.valueExpression,
+                note: data.note,
+            };
+            if (data.rank !== undefined) {
+                newFacts[factIndex].rank = data.rank;
+                // TODO: re-order other facts?
+            }
+            if (data.slot !== undefined) {
+                newFacts[factIndex].slot = data.slot;
+            }
+        }
+        return updatedEntry;
     },
     describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value`,
+    consolidate(thisEdit, earlierEdit) {
+        // This can be consolidated with a previous UpdatePropertyValue or AddPropertyValue edit.
+        if (
+            (earlierEdit.code === thisEdit.code || earlierEdit.code === AddPropertyValue.code) &&
+            earlierEdit.data.propertyFactId === thisEdit.data.propertyFactId
+        ) {
+            return {code: earlierEdit.code, data: {...earlierEdit.data, ...thisEdit.data}};
+        }
+        return undefined;
+    },
 });
 
 export const DeletePropertyValue = ContentEditType({

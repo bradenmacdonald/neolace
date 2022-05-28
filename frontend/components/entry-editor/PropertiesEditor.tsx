@@ -18,17 +18,16 @@ import { Tooltip } from "components/widgets/Tooltip";
 const emptyPropsRawArray: api.EditableEntryData["propertiesRaw"] = [];
 
 interface Props {
-    entry: api.EditableEntryData|undefined;
+    entry: api.EditableEntryData | undefined;
     /** The schema, including any schema changes which have been made within the current draft, if any. */
-    schema: api.SiteSchemaData|undefined;
+    schema: api.SiteSchemaData | undefined;
     addUnsavedEdit: (newEdit: api.AnyContentEdit) => void;
 }
 
 /**
  * This widget implements the "Properties" tab of the "Edit Entry" page.
  */
-export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema, ...props }) => {
-
+export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema, addUnsavedEdit, ...props }) => {
     const entryType = entry?.entryType.id;
 
     // This list contains all the possible properties that can be applied to entries of this type:
@@ -70,13 +69,31 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema
         return [activeProps, unsetProps];
     }, [applicableProperties, propertiesRaw]);
 
+    // Handler for the menu at the bottom, to add a value for one of the "unsetProps" that has no value yet:
+    const entryId = entry?.id;
+    const handleAddNewProperty = React.useCallback((propId: string) => {
+        if (!entryId) return;
+        addUnsavedEdit({
+            code: api.AddPropertyValue.code,
+            data: {
+                // FIXME: should be 'entryId'
+                entry: entryId,
+                property: VNID(propId),
+                propertyFactId: VNID(),
+                valueExpression: "",
+                note: "",
+                rank: 1,
+            },
+        });
+    }, [addUnsavedEdit, entryId]);
+
     if (!schema || !entry) {
         return <Spinner />;
-    } else if (!entry.entryType) {
+    } else if (!entry.entryType.id) {
         return (
             <p>
                 <FormattedMessage
-                    defaultMessage="You need to choose an entry type for this entry before you can set properties."
+                    defaultMessage='Use the "Main" tab to choose an entry type for this entry before you set properties.'
                     id="propertiesEditor.error.noEntryType"
                 />
             </p>
@@ -97,7 +114,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema
                                 {p.prop.name}
                             </th>
                             <td className="block md:table-cell pr-2 pb-1 md:py-1 text-sm md:text-base">
-                                <SinglePropertyEditor {...p} />
+                                <SinglePropertyEditor {...p} entryId={entry.id} addUnsavedEdit={addUnsavedEdit} />
                             </td>
                         </tr>
                     ))}
@@ -107,7 +124,10 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema
                 id="addOtherProperty"
                 label={{ defaultMessage: "Add another property:", id: "propertiesEditor.addAnother" }}
             >
-                <SelectBox options={unsetProps.map((p) => ({ id: p.id, label: noTranslationNeeded(p.name) }))} />
+                <SelectBox
+                    options={unsetProps.map((p) => ({ id: p.id, label: noTranslationNeeded(p.name) }))}
+                    onChange={handleAddNewProperty}
+                />
             </Control>
         </>
     );
@@ -116,9 +136,13 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema
 interface SinglePropertyEditorProps {
     prop: api.PropertyData;
     facts: api.RawPropertyData["facts"];
+    entryId: VNID;
+    addUnsavedEdit: (newEdit: api.AnyContentEdit) => void;
 }
 
-const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> = ({ prop, facts }) => {
+const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> = (
+    { prop, facts, addUnsavedEdit, entryId },
+) => {
     const intl = useIntl();
 
     if (prop.mode === api.PropertyMode.Auto) {
@@ -136,24 +160,68 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
             id: "propertiesEditor.autoProp",
         });
         return (
-            <ToolbarButton icon="plus-lg" title={intl.formatMessage(message, {propName: prop.name})} />
+            <ToolbarButton
+                icon="plus-lg"
+                title={intl.formatMessage(message, { propName: prop.name })}
+                onClick={() => {
+                    addUnsavedEdit({
+                        code: api.AddPropertyValue.code,
+                        data: {
+                            // FIXME: should be 'entryId'
+                            entry: entryId,
+                            property: prop.id,
+                            propertyFactId: VNID(),
+                            valueExpression: "",
+                            note: "",
+                            rank: 1,
+                        },
+                    });
+                }}
+            />
         );
     } else {
-        return <>
-            {
-                facts.map((fact, idx) => {
-                    const isLast = (idx === facts.length - 1);
+        return (
+            <>
+                {facts.map((fact, idx) => {
+                    // const isLast = (idx === facts.length - 1);
+                    const currentValue = fact.valueExpression;
                     return (
                         <div key={idx} className="flex w-full min-w-0">
-                            <LookupExpressionInput value={fact.valueExpression} onChange={() => {}} className="md:!min-w-[200px] flex-auto" />
-                            <ToolbarButton icon="plus-lg" title={intl.formatMessage(defineMessage({
-                                defaultMessage: "Add another property value",
-                                id: "propertiesEditor.addAnother",
-                            }))} />
+                            {
+                                /*
+                                In the future, for simple values we can show the actual computed value, and not show
+                                the lookup editor unless you click on the displayed value to edit it.
+                            */
+                            }
+                            <LookupExpressionInput
+                                value={fact.valueExpression}
+                                onChange={(newValue) => {
+                                    if (newValue !== currentValue) {
+                                        addUnsavedEdit({
+                                            code: api.UpdatePropertyValue.code,
+                                            data: {
+                                                propertyFactId: fact.id,
+                                                valueExpression: newValue,
+                                                note: fact.note,
+                                                rank: fact.rank,
+                                                slot: fact.slot,
+                                            },
+                                        });
+                                    }
+                                }}
+                                className="md:!min-w-[200px] flex-auto"
+                            />
+                            <ToolbarButton
+                                icon="plus-lg"
+                                title={intl.formatMessage(defineMessage({
+                                    defaultMessage: "Add another property value",
+                                    id: "propertiesEditor.addAnother",
+                                }))}
+                            />
                         </div>
                     );
-                })
-            }
-        </>
+                })}
+            </>
+        );
     }
 };
