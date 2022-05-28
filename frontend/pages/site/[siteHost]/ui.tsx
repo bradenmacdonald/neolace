@@ -17,9 +17,7 @@ import { AutoControl, Control, Form } from "components/widgets/Form";
 import { MDTEditor } from "components/widgets/MDTEditor";
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
 import { SelectBox } from "components/widgets/SelectBox";
-
-// interface PageProps {
-// }
+import { Tab, TabBarRouter } from "components/widgets/Tabs";
 
 const UIDemo = (props: { label: string; children: React.ReactNode }) => {
     return (
@@ -130,6 +128,35 @@ const UiDemoPage: NextPage = function (props) {
                             <Breadcrumb>This Entry</Breadcrumb>
                         </Breadcrumbs>
                     </UIDemo>
+                    <UIDemo label="Tab Bar">
+                        <TabBarRouter>
+                            <Tab
+                                id="main"
+                                icon="info-circle"
+                                name={defineMessage({ defaultMessage: "Main", id: "draft.edit.entry.tab.main" })}
+                            >
+                                This is the main tab content.
+                            </Tab>
+                            <Tab
+                                id="properties"
+                                icon="diamond-fill"
+                                name={defineMessage({
+                                    defaultMessage: "Properties",
+                                    id: "draft.edit.entry.tab.properties",
+                                })}
+                            >
+                                This is the properties tab.
+                            </Tab>
+                            <Tab
+                                id="changes"
+                                icon="list"
+                                badge={"3"}
+                                name={defineMessage({ defaultMessage: "Changes", id: "draft.edit.entry.tab.changes" })}
+                            >
+                                This is the changes tab, with a "badge" that says "3".
+                            </Tab>
+                        </TabBarRouter>
+                    </UIDemo>
                     <UIDemo label="Spinner">
                         <Spinner />
                     </UIDemo>
@@ -137,16 +164,33 @@ const UiDemoPage: NextPage = function (props) {
                         <Button>I'm a button</Button>
                     </UIDemo>
                     <UIDemo label="Select box">
-                        <SelectBox value={selectBoxItem} onChange={setSelectBoxItem} options={[
-                            {id: "first", label: defineMessage({defaultMessage: "First item", id: "ui-drop-first"})},
-                            {id: "second", label: defineMessage({defaultMessage: "Second item", id: "ui-drop-second"})},
-                            {id: "third", label: defineMessage({defaultMessage: "Third item", id: "ui-drop-third"})},
-                        ]}/>
+                        <SelectBox
+                            value={selectBoxItem}
+                            onChange={setSelectBoxItem}
+                            options={[
+                                {
+                                    id: "first",
+                                    label: defineMessage({ defaultMessage: "First item", id: "ui-drop-first" }),
+                                },
+                                {
+                                    id: "second",
+                                    label: defineMessage({ defaultMessage: "Second item", id: "ui-drop-second" }),
+                                },
+                                {
+                                    id: "third",
+                                    label: defineMessage({ defaultMessage: "Third item", id: "ui-drop-third" }),
+                                },
+                            ]}
+                        />
                     </UIDemo>
                     <UIDemo label="Select box with icons and many items">
-                        <SelectBox value={selectBox2Item} onChange={setSelectBox2Item} options={_allIcons.map((id) => (
-                            {id, label: noTranslationNeeded( id ), icon: id}
-                        ))}/>
+                        <SelectBox
+                            value={selectBox2Item}
+                            onChange={setSelectBox2Item}
+                            options={_allIcons.map((id) => (
+                                { id, label: noTranslationNeeded(id), icon: id }
+                            ))}
+                        />
                     </UIDemo>
                     <UIDemo label="Tooltip">
                         <Tooltip

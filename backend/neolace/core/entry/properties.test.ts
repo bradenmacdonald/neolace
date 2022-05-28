@@ -62,7 +62,6 @@ group("properties.ts", () => {
                             property: propertyId,
                             propertyFactId: VNID(),
                             valueExpression: `"the value"`,
-                            note: "",
                         },
                     },
                 ],
@@ -211,7 +210,6 @@ group("properties.ts", () => {
                                 property: prop1,
                                 propertyFactId: factIdB1,
                                 valueExpression: `"value for B prop1"`,
-                                note: "",
                             },
                         },
                     ],
@@ -425,7 +423,6 @@ group("properties.ts", () => {
                                 entry: A,
                                 property: prop1,
                                 valueExpression: `"A1"`,
-                                note: "",
                                 propertyFactId: pfA1,
                             },
                         },
@@ -435,7 +432,6 @@ group("properties.ts", () => {
                                 entry: A,
                                 property: prop2,
                                 valueExpression: `"A2"`,
-                                note: "",
                                 propertyFactId: pfA2,
                             },
                         },
@@ -445,7 +441,6 @@ group("properties.ts", () => {
                                 entry: A,
                                 property: prop3,
                                 valueExpression: `"A3"`,
-                                note: "",
                                 propertyFactId: pfA3,
                             },
                         },
@@ -470,7 +465,6 @@ group("properties.ts", () => {
                                 entry: B,
                                 property: prop2,
                                 valueExpression: `"B2"`,
-                                note: "",
                                 propertyFactId: pfB2,
                             },
                         },
@@ -495,7 +489,6 @@ group("properties.ts", () => {
                                 entry: C,
                                 property: prop3,
                                 valueExpression: `"C3"`,
-                                note: "",
                                 propertyFactId: pfC3,
                             },
                         },
@@ -626,7 +619,6 @@ group("properties.ts", () => {
                                 property: prop1,
                                 propertyFactId: factIdA1,
                                 valueExpression: `"value for A prop1"`,
-                                note: "",
                             },
                         },
                         // Create B
@@ -642,7 +634,6 @@ group("properties.ts", () => {
                                 property: entryIsA,
                                 propertyFactId: pfBisA,
                                 valueExpression: `[[/entry/${A}]]`,
-                                note: "",
                             },
                         },
                         {
@@ -678,7 +669,6 @@ group("properties.ts", () => {
                                 property: entryIsA,
                                 propertyFactId: pfCisB,
                                 valueExpression: `[[/entry/${B}]]`,
-                                note: "",
                             },
                         },
                     ],
@@ -1123,7 +1113,6 @@ group("properties.ts", () => {
                             property: entryIsA,
                             propertyFactId: pfBisA,
                             valueExpression: `[[/entry/${A}]]`,
-                            note: "",
                         },
                     },
                 ],
@@ -1167,7 +1156,7 @@ group("properties.ts", () => {
                 const factId = VNID();
                 edits.push({
                     code: "AddPropertyValue",
-                    data: { entry: A, property: id, propertyFactId: factId, valueExpression: `"A${i}"`, note: "" },
+                    data: { entry: A, property: id, propertyFactId: factId, valueExpression: `"A${i}"` },
                 });
                 aPropertyValues.push({
                     property: { ...propArgs, default: null },
@@ -1190,7 +1179,6 @@ group("properties.ts", () => {
                     property: aPropertyValues[6].property.id,
                     propertyFactId: factIdB6,
                     valueExpression: `"B6"`,
-                    note: "",
                 },
             });
             const factIdB7 = VNID();
@@ -1201,7 +1189,6 @@ group("properties.ts", () => {
                     property: aPropertyValues[7].property.id,
                     propertyFactId: factIdB7,
                     valueExpression: `"B7"`,
-                    note: "",
                 },
             });
             // In addition to those two overwritten properties, B has 28 other properties set:
@@ -1220,7 +1207,7 @@ group("properties.ts", () => {
                 const factId = VNID();
                 edits.push({
                     code: "AddPropertyValue",
-                    data: { entry: B, property: id, propertyFactId: factId, valueExpression: `"B${i}"`, note: "" },
+                    data: { entry: B, property: id, propertyFactId: factId, valueExpression: `"B${i}"` },
                 });
                 bPropertyValues.push({
                     property: { ...propArgs, default: null },

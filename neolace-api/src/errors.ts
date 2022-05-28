@@ -90,7 +90,11 @@ export class InvalidEdit extends InvalidRequest {
     constructor(
         // The code string identifying the edit that failed:
         public readonly editCode: AnySchemaEdit["code"]|AnyContentEdit["code"],
-        // entryId or any other information useful to locating which edit failed:
+        /**
+         * entryId or any other information useful to locating which edit failed. Most error details should be in this
+         * data field, NOT in the message, in order to make the errors more machine readable and translatable into
+         * other languages.
+         */
         public readonly context: Record<string, unknown>,
         public readonly message: string,
     ) {

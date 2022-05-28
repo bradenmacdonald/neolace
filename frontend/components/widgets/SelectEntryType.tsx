@@ -38,5 +38,10 @@ export const SelectEntryType: React.FunctionComponent<Props> = ({ ...props }) =>
         );
     }
 
-    return <SelectBox value={props.value} options={options} onChange={props.onChange as (id: string) => void} />;
+    return <SelectBox 
+        value={props.value}
+        options={options}
+        readOnly={props.readOnly}
+        onChange={props.onChange as (id: string) => void}
+    />;
 };

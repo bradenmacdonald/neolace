@@ -35,7 +35,7 @@
     .neo-typography h4 { @apply text-xl; }
     .neo-typography h5 { @apply text-lg; }
     .neo-typography p { font-weight: 400; @apply my-1; }
-    .neo-typography a { @apply underline text-theme-link-color; }
+    .neo-typography a:not(.unstyled) { @apply underline text-theme-link-color; }
 
     /* Unordered lists */
     .neo-typography ul:not(.unstyled) li {

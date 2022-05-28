@@ -146,7 +146,6 @@ group("graph()", () => {
                         valueExpression: `[[/entry/${A}]]`,
                         property: entryIsA,
                         propertyFactId: VNID(),
-                        note: "",
                     },
                 },
                 // C is a A
@@ -157,7 +156,6 @@ group("graph()", () => {
                         valueExpression: `[[/entry/${A}]]`,
                         property: entryIsA,
                         propertyFactId: VNID(),
-                        note: "",
                     },
                 },
                 // D is a B
@@ -168,7 +166,6 @@ group("graph()", () => {
                         valueExpression: `[[/entry/${B}]]`,
                         property: entryIsA,
                         propertyFactId: VNID(),
-                        note: "",
                     },
                 },
                 // D is a C
@@ -179,7 +176,6 @@ group("graph()", () => {
                         valueExpression: `[[/entry/${C}]]`,
                         property: entryIsA,
                         propertyFactId: VNID(),
-                        note: "",
                     },
                 },
                 // A is a D
@@ -190,7 +186,6 @@ group("graph()", () => {
                         valueExpression: `[[/entry/${D}]]`,
                         property: entryIsA,
                         propertyFactId: VNID(),
-                        note: "",
                     },
                 },
             ],

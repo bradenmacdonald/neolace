@@ -10,6 +10,7 @@ import {
     InvalidEdit,
     PropertyMode,
     PropertyType,
+    SetEntryDescription,
     SetEntryName,
     UpdateEntryFeature,
     UpdateEntryType,
@@ -92,6 +93,26 @@ export const ApplyEdits = defineAction({
                     break;
                 }
 
+                case SetEntryDescription.code: {
+                    try {
+                        await tx.queryOne(C`
+                            MATCH (e:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            SET e.description = ${edit.data.description}
+                        `.RETURN({}));
+                    } catch (err: unknown) {
+                        if (err instanceof EmptyResultError) {
+                            throw new InvalidEdit(
+                                SetEntryName.code,
+                                { entryId: edit.data.entryId },
+                                "Cannot set change the entry's description - entry does not exist.",
+                            );
+                        }
+                        throw err;
+                    }
+                    modifiedNodes.add(edit.data.entryId);
+                    break;
+                }
+
                 case UpdateEntryFeature.code: {
                     // Load details of the feature that we're editing:
                     const feature = features.find((f) => f.featureType === edit.data.feature.featureType);
@@ -136,15 +157,12 @@ export const ApplyEdits = defineAction({
                 case AddPropertyValue.code: {
                     const valueExpression = edit.data.valueExpression;
                     const updatedPropertyFactFields: Record<string, unknown> = {
-                        valueExpression: edit.data.valueExpression,
-                        note: edit.data.note,
-                        slot: "",
+                        valueExpression,
+                        note: edit.data.note ?? "",
+                        slot: edit.data.slot ?? "",
                     };
                     if (edit.data.rank !== undefined) {
                         updatedPropertyFactFields.rank = BigInt(edit.data.rank);
-                    }
-                    if (edit.data.slot !== undefined) {
-                        updatedPropertyFactFields.slot = edit.data.slot;
                     }
 
                     // Validate the entry ID, property ID, and ensure they're part of the current site.
@@ -210,7 +228,7 @@ export const ApplyEdits = defineAction({
                                 // Match the target entry and make sure it's part of the same site:
                                 MATCH (toEntry:${Entry} {id: ${toEntryId}})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
                                 MATCH (pf:${PropertyFact} {id: ${edit.data.propertyFactId}})
-                                MERGE (entry)-[rel:${directRelType}]->(toEntry)  // Note that this may already exist if multiple separate properties of the same relationship type point to the same node
+                                CREATE (entry)-[rel:${directRelType}]->(toEntry)
                                 SET pf.directRelNeo4jId = id(rel)
                             `.RETURN({ "pf.directRelNeo4jId": Field.BigInt }));
                         } catch (err) {
@@ -222,7 +240,7 @@ export const ApplyEdits = defineAction({
                                         toEntryId: toEntryId,
                                         fromEntryId: edit.data.entry,
                                     },
-                                    `Entry with ID ${toEntryId} not found - cannot set property ${edit.data.property} on entry ${edit.data.entry} to that value.`,
+                                    `Target entry not found - cannot set that non-existent entry as a relationship property value.`,
                                 );
                             } else {
                                 throw err; // Other unknown internal error.
@@ -237,7 +255,91 @@ export const ApplyEdits = defineAction({
                 }
 
                 case UpdatePropertyValue.code: {
-                    throw new Error("UpdatePropertyValue is not yet implemented.");
+                    const propertyFactId = edit.data.propertyFactId;
+                    const updatedFields: Record<string, unknown> = {};
+                    if (edit.data.valueExpression !== undefined) {
+                        updatedFields.valueExpression = edit.data.valueExpression;
+                    }
+                    if (edit.data.note !== undefined) updatedFields.note = edit.data.note;
+                    if (edit.data.rank !== undefined) updatedFields.rank = BigInt(edit.data.rank);
+                    if (edit.data.slot !== undefined) updatedFields.slot = edit.data.slot;
+
+                    if (Object.keys(updatedFields).length === 0) {
+                        break; // No changes to apply, actually.
+                    }
+
+                    let baseData;
+                    try {
+                        baseData = await tx.queryOne(C`
+                            MATCH (pf:${PropertyFact} {id: ${propertyFactId}})-[:${PropertyFact.rel.FOR_PROP}]->(property:${Property})
+                            MATCH (pf)<-[:${Entry.rel.PROP_FACT}]-(e:${Entry})
+                            MATCH (e)-[:${Entry.rel.IS_OF_TYPE}]->(et)-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            WITH pf, e.id AS entryId, e.valueExpression AS originalValue, property.type AS propertyType
+                            SET pf += ${updatedFields}
+                            WITH entryId, originalValue, propertyType, pf.valueExpression AS newValue
+                        `.RETURN({
+                            entryId: Field.VNID,
+                            originalValue: Field.String,
+                            propertyType: Field.String,
+                            newValue: Field.String,
+                        }));
+                    } catch (err: unknown) {
+                        if (err instanceof EmptyResultError) {
+                            throw new InvalidEdit(
+                                UpdatePropertyValue.code,
+                                { propertyFactId: propertyFactId },
+                                `That property fact does not exist on this site.`,
+                            );
+                        } else {
+                            throw err;
+                        }
+                    }
+
+                    const propType = baseData.propertyType as PropertyType;
+                    const directRelType = directRelTypeForPropertyType(propType); // If this is a relationship property, there is a relationship of this type directly between two entries
+                    if (directRelType !== null && baseData.newValue !== baseData.originalValue) {
+                        // We have changed the value of a relationship property, so we have to ensure the target entry
+                        // exists and update the direct relationship between the entries:
+                        if (!baseData.newValue.startsWith(`[[/entry/`) || !baseData.newValue.endsWith(`]]`)) {
+                            throw new Error(`Relationship property values must be of the format [[/entry/entry-id]]`);
+                        }
+                        // There is a relationship FROM the current entry TO the entry with this id:
+                        const toEntryId = baseData.newValue.slice(9, -2);
+
+                        // We also need to update a direct (Entry)-[rel]->(Entry) relationship on the graph.
+                        try {
+                            await tx.queryOne(C`
+                                // Get the property fact and the "from entry":
+                                MATCH (pf:${PropertyFact} {id: ${propertyFactId}})<-[:${Entry.rel.PROP_FACT}]-(entry:${Entry})
+                                // Match the target entry and make sure it's part of the same site:
+                                MATCH (toEntry:${Entry} {id: ${toEntryId}})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
+                                // Delete the existing relationship:
+                                MATCH (entry)-[oldRel]->(oldEntry:${Entry}) WHERE pf.directRelNeo4jId = id(oldRel)
+                                DELETE oldRel
+                                CREATE (entry)-[rel:${directRelType}]->(toEntry)
+                                SET pf.directRelNeo4jId = id(rel)
+                            `.RETURN({ "pf.directRelNeo4jId": Field.BigInt }));
+                        } catch (err) {
+                            if (err instanceof EmptyResultError) {
+                                throw new InvalidEdit(
+                                    AddPropertyValue.code,
+                                    {
+                                        propertyFactId: edit.data.propertyFactId,
+                                        toEntryId: toEntryId,
+                                        fromEntryId: baseData.entryId,
+                                    },
+                                    `Target entry not found - cannot set that non-existent entry as an updated relationship property value.`,
+                                );
+                            } else {
+                                throw err; // Other unknown internal error.
+                            }
+                        }
+                    }
+
+                    // Changing a property value always counts as modifying the entry:
+                    modifiedNodes.add(baseData.entryId);
+                    modifiedNodes.add(propertyFactId);
+                    break;
                 }
 
                 case DeletePropertyValue.code: {
@@ -256,7 +358,7 @@ export const ApplyEdits = defineAction({
                             throw new InvalidEdit(
                                 DeletePropertyValue.code,
                                 { propertyFactId: propertyFactId },
-                                `Property ${propertyFactId} does not exist on this site.`,
+                                `That property fact does not exist on this site.`,
                             );
                         } else {
                             throw err;

@@ -126,7 +126,8 @@ group("index.ts", () => {
                                 {
                                     code: "FOOBAR",
                                     data: {},
-                                },
+                                    // deno-lint-ignore no-explicit-any
+                                } as any,
                             ],
                         }),
                     (err: Error) => {
@@ -143,7 +144,8 @@ group("index.ts", () => {
                             edits: [
                                 {
                                     code: api.CreateEntry.code,
-                                    data: { foo: "bar" },
+                                    // deno-lint-ignore no-explicit-any
+                                    data: { foo: "bar" } as any,
                                 },
                             ],
                         }),

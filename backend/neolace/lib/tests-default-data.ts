@@ -53,6 +53,12 @@ const data = {
         adminsGroupId: undefined as any as VNID, // will be set once created.
         usersGroupId: undefined as any as VNID, // will be set once created.
     },
+    otherSite: {
+        // A site with no content, but can be used for checking that edits are restricted to one site
+        // (e.g. try submitting an edit using the ID of a plantDB entry, while the client is scoped to otherSite)
+        id: undefined as any as VNID, // will be set below once created.
+        shortId: "home",
+    },
     schema,
     entries: entryData,
 };
@@ -155,7 +161,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
                 hoverPreview: { enabled: true },
             },
         },
-    }));
+    })).then((result) => {
+        data.otherSite.id = result.id;
+    });
 
     await graph.runAsSystem(CreateSite({
         name: data.site.name,

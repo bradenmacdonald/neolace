@@ -537,15 +537,24 @@ group("entry/index.test.ts", () => {
                     facts: [{
                         valueExpression: `[[/entry/${defaultData.entries.genusPinus.id}]]`,
                         ...propFactDefaults,
+                        id: result.propertiesRaw[0].facts[0].id, // We don't know the propertyFactId so just compare it to itself
                     }],
                 },
                 {
                     propertyId: defaultData.schema.properties._propScientificName.id,
-                    facts: [{ valueExpression: `"Pinus ponderosa"`, ...propFactDefaults }],
+                    facts: [{
+                        valueExpression: `"Pinus ponderosa"`,
+                        ...propFactDefaults,
+                        id: result.propertiesRaw[1].facts[0].id, // We don't know the propertyFactId so just compare it to itself
+                    }],
                 },
                 {
                     propertyId: defaultData.schema.properties._propWikidataQID.id,
-                    facts: [{ valueExpression: `"Q460523"`, ...propFactDefaults }],
+                    facts: [{
+                        valueExpression: `"Q460523"`,
+                        ...propFactDefaults,
+                        id: result.propertiesRaw[2].facts[0].id, // We don't know the propertyFactId so just compare it to itself
+                    }],
                 },
                 {
                     propertyId: defaultData.schema.properties._hasHeroImage.id,
@@ -553,6 +562,7 @@ group("entry/index.test.ts", () => {
                         valueExpression: `[[/entry/${defaultData.entries.imgPonderosaTrunk.id}]]`,
                         ...propFactDefaults,
                         note: "a ponderosa pine trunk in Lassen Volcanic National Park",
+                        id: result.propertiesRaw[3].facts[0].id, // We don't know the propertyFactId so just compare it to itself
                     }],
                 },
             ]);
