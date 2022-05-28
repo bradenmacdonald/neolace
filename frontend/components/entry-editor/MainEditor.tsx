@@ -11,6 +11,8 @@ import { SelectEntryType } from "components/widgets/SelectEntryType";
 
 interface Props {
     entry?: api.EditableEntryData;
+    /** The schema, including any schema changes which have been made within the current draft, if any. */
+    schema: api.SiteSchemaData|undefined;
     isNewEntry: boolean;
     addUnsavedEdit: (newEdit: api.AnyContentEdit) => void;
 }
@@ -18,9 +20,8 @@ interface Props {
 /**
  * This widget implements the "Main" tab of the "Edit Entry" page (set entry name, type, ID, and description)
  */
-export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEdit, isNewEntry }) => {
+export const MainEditor: React.FunctionComponent<Props> = ({ entry, schema, addUnsavedEdit, isNewEntry }) => {
     const intl = useIntl();
-    const [schema, schemaError] = useSiteSchema();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Here are the handlers for actually making edits, baed on what the user does.
@@ -56,13 +57,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
 
     const entryType = entry ? schema?.entryTypes[entry?.entryType.id] : undefined;
 
-    if (schemaError) {
-        return (
-            <ErrorMessage>
-                <FormattedMessage defaultMessage="Unable to load schema" id="propertiesEditor.error.schema" />
-            </ErrorMessage>
-        );
-    } else if (!schema || !entry) {
+    if (!schema || !entry) {
         return <Spinner />;
     } else if (!entry.entryType) {
         return (
@@ -104,6 +99,8 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
                 isRequired={isNewEntry}
             >
                 <SelectEntryType
+                    // TODO: This should have any schema changes that are part of the same draft; currently it loads the
+                    // "published" version of the schema only.
                     value={entry?.entryType.id}
                     onChange={updateEntryType}
                     readOnly={!isNewEntry}

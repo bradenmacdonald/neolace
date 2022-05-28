@@ -68,9 +68,6 @@ const DraftEntryEditPage: NextPage = function (_props) {
         unsavedEdits,
     ]);
 
-    const entryType = schema?.entryTypes?.[entry?.entryType.id ?? ""];
-
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Managing the draft (all edits are part of a draft)
 
@@ -172,14 +169,14 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         icon="info-circle"
                         name={defineMessage({ defaultMessage: "Main", id: "draft.edit.entry.tab.main" })}
                     >
-                        <MainEditor entry={entry} isNewEntry={isNewEntry} addUnsavedEdit={addUnsavedEdit} />
+                        <MainEditor entry={entry} schema={schema} addUnsavedEdit={addUnsavedEdit} isNewEntry={isNewEntry} />
                     </Tab>
                     <Tab
                         id="properties"
                         icon="diamond-fill"
                         name={defineMessage({ defaultMessage: "Properties", id: "draft.edit.entry.tab.properties" })}
                     >
-                        <PropertiesEditor entry={entry} />
+                        <PropertiesEditor entry={entry} schema={schema} addUnsavedEdit={addUnsavedEdit} />
                     </Tab>
                     <Tab
                         id="changes"

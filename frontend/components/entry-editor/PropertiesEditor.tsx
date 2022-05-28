@@ -18,14 +18,16 @@ import { Tooltip } from "components/widgets/Tooltip";
 const emptyPropsRawArray: api.EditableEntryData["propertiesRaw"] = [];
 
 interface Props {
-    entry?: api.EditableEntryData;
+    entry: api.EditableEntryData|undefined;
+    /** The schema, including any schema changes which have been made within the current draft, if any. */
+    schema: api.SiteSchemaData|undefined;
+    addUnsavedEdit: (newEdit: api.AnyContentEdit) => void;
 }
 
 /**
  * This widget implements the "Properties" tab of the "Edit Entry" page.
  */
-export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, ...props }) => {
-    const [schema, schemaError] = useSiteSchema();
+export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema, ...props }) => {
 
     const entryType = entry?.entryType.id;
 
@@ -68,13 +70,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, ...pro
         return [activeProps, unsetProps];
     }, [applicableProperties, propertiesRaw]);
 
-    if (schemaError) {
-        return (
-            <ErrorMessage>
-                <FormattedMessage defaultMessage="Unable to load schema" id="propertiesEditor.error.schema" />
-            </ErrorMessage>
-        );
-    } else if (!schema || !entry) {
+    if (!schema || !entry) {
         return <Spinner />;
     } else if (!entry.entryType) {
         return (
