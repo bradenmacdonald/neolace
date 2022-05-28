@@ -12,7 +12,7 @@ interface NodeAttributes {
     isFocusEntry?: boolean;
     community?: number;
     nodesCondensed?: Set<string>;
-    clique?: boolean;
+    clique?: number;
 }
 interface EdgeAttributes {
     label: string;
@@ -40,13 +40,15 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
     const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({
             id: VNID(nodeKey),
-            label: graph.getNodeAttribute(nodeKey, 'clique') ? 'CLIQUE' : graph.getNodeAttribute(nodeKey, "label") as string,
+            label: graph.getNodeAttribute(nodeKey, 'clique') !== undefined ? `CLIQUE ${graph.getNodeAttribute(nodeKey, 'clique')}` : graph.getNodeAttribute(nodeKey, "label") as string,
             entryType: VNID(graph.getNodeAttribute(nodeKey, "entryType")),
             ...(graph.hasNodeAttribute(nodeKey, "isFocusEntry") && { isFocusEntry: true }),
             ...(graph.hasNodeAttribute(nodeKey, 'community') 
             && {community: graph.getNodeAttribute(nodeKey, 'community')}),
             ...(graph.hasNodeAttribute(nodeKey, "nodesCondensed") &&
                 { nodesCondensed: graph.getNodeAttribute(nodeKey, "nodesCondensed") }),
+            ...(graph.hasNodeAttribute(nodeKey, "clique") &&
+                { clique: graph.getNodeAttribute(nodeKey, "clique") }),
         })),
         edges: graph.mapEdges((edge, attributes, source, target) => {
             return {
@@ -413,27 +415,29 @@ export function computeCommunities(graph: GraphType) {
     louvain.assign(simpleGraph, {resolution:0.8});
     // get community partition
     const id2comm: Record<string, number> = {};
-    const comm2id: Record<number, string[]> = {};
+    const comm2id = new Map<number, string[]>();
     simpleGraph.forEachNode((n) => {
         id2comm[n] = simpleGraph.getNodeAttribute(n, 'community') as number;
-        if (comm2id[simpleGraph.getNodeAttribute(n, 'community') as number]) {
-            comm2id[simpleGraph.getNodeAttribute(n, 'community') as number].push(n);
+        const community = comm2id.get(simpleGraph.getNodeAttribute(n, 'community') as number);
+        if (community) {
+            community.push(n);
         } else {
-            comm2id[simpleGraph.getNodeAttribute(n, 'community') as number] = [n];
+            comm2id.set(simpleGraph.getNodeAttribute(n, 'community') as number, [n]);
         }
     })
-    // find largest cliques for each community and label nodes in graph
+ 
     if (simpleGraph.order === 0) return;
-    for (const com in comm2id) {
+    for (const com of comm2id.keys()) {
+        // NOTE temporarily we will use community id as the clique id as each community so far has only one clique
         // TODO some cliques are also overlapping - like cliques of three. Should I find all of them?
         console.log('The community is ', com)
-        const comGraph = subgraph(simpleGraph, comm2id[com]);
+        const comGraph = subgraph(simpleGraph, comm2id.get(com) as string[]);
         const largestClique = maxClique(comGraph, comGraph.nodes(), []);
-        // only include cliques of sizes more than 2
+        // only include cliques of sizes more than 3
         if (largestClique.length <= 2) continue;
         largestClique.forEach((n) => {
             console.log('Adding to a clique', n)
-            simpleGraph.setNodeAttribute(n, 'clique', true);
+            simpleGraph.setNodeAttribute(n, 'clique', com);
         })
     }
     return simpleGraph;

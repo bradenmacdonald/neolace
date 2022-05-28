@@ -33,6 +33,7 @@ export interface G6RawGraphData {
         isFocusEntry?: boolean;
         community?: number;
         nodesCondensed?: Set<string>;
+        clique?: number;
     }[];
     edges: {
         id: VNID;
@@ -235,6 +236,38 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
         graph.changeData(currentData);
+        // add combos if needed
+        // creates lists of ids for combos
+        const comboDict: Record<number, string[]> = {};
+        originalData.nodes.forEach((n) => {
+            if (n.clique === undefined) return;
+            if (!comboDict[n.clique]) comboDict[n.clique] =[];
+            comboDict[n.clique].push(n.id);
+        })
+        // delete relationships within combos
+        for (const combo in comboDict) {
+            const nodeList = comboDict[combo];
+            for (const node of nodeList) {
+                graph.getNeighbors(node).forEach((n) => {
+                    if (nodeList.includes(n.getModel().id as string)) {
+                        // get edge
+                        const edge = graph.find('edge', (edge) => {
+                            return ((edge.getModel().source === node && edge.getModel().target === n.getModel().id)
+                                || (edge.getModel().target === node && edge.getModel().source === n.getModel().id))
+                        })
+                        if (edge) {
+                            graph.hideItem(edge);
+                        }
+                    }
+                })
+            }
+        }
+        // creates cobmos
+        console.log(comboDict)
+        for (const combo in comboDict) {
+            console.log('Creating combo')
+            graph.createCombo(combo, comboDict[combo]);
+        }
     }, [currentData])
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
