@@ -18,6 +18,7 @@ import { SelectEntryType } from "components/widgets/SelectEntryType";
 import { UserContext, UserStatus } from "components/user/UserContext";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
+import { PropertiesEditor } from "components/entry-editor/PropertiesEditor";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -289,7 +290,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         icon="diamond-fill"
                         name={defineMessage({ defaultMessage: "Properties", id: "draft.edit.entry.tab.properties" })}
                     >
-                        This is the properties tab.
+                        <PropertiesEditor entry={entry} />
                     </Tab>
                     <Tab
                         id="changes"
@@ -367,7 +368,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
 
     return (
         <SitePage
-            title={entry
+            title={entry?.name
                 ? intl.formatMessage({ id: "draft.entry.edit.title", defaultMessage: `Edit "{name}"` }, {
                     name: entry.name,
                 })

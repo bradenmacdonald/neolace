@@ -8,7 +8,14 @@ interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-export const Button: React.FunctionComponent<Props> = ({onClick, ...props}) => {
+/**
+ * Our button component is a regular old button. You can click on it to do actions.
+ *
+ * In general, any widget which goes to a new page should be a <Link>/<a>, while any widget that performs an action on
+ * the current page should be a Button. This refers to the actual HTML, not necessarily the visual appearance (you can
+ * style a button to look like a link, for example, if you want).
+ */
+export const Button = React.forwardRef<HTMLButtonElement, Props>(function Button({onClick, ...props}, ref) {
     const handleClick = React.useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         if (onClick) {
@@ -16,12 +23,12 @@ export const Button: React.FunctionComponent<Props> = ({onClick, ...props}) => {
         }
     }, [onClick]);
 
-    return <button onClick={handleClick} {...props} className={`border border-gray-500 rounded-md px-2 py-1 hover:shadow-sm hover:shadow-theme-link-color active:shadow-none m-[3px] active:ml-[4px] active:mt-[4px] active:mr-[2px] active:mb-[2px] disabled:text-gray-300 disabled:border-gray-200 disabled:hover:shadow-none disabled:cursor-not-allowed align-top ${props.bold && "font-semibold"}`}>
+    return <button ref={ref} onClick={handleClick} {...props} className={`border border-gray-500 rounded-md px-2 py-1 hover:shadow-sm hover:shadow-theme-link-color active:shadow-none m-[3px] active:ml-[4px] active:mt-[4px] active:mr-[2px] active:mb-[2px] disabled:text-gray-300 disabled:border-gray-200 disabled:hover:shadow-none disabled:cursor-not-allowed align-top ${props.bold && "font-semibold"}`}>
         {props.icon && <Icon icon={props.icon}/>}
         {props.icon && " "}
         {props.children}
     </button>
-}
+});
 
 interface ToolbarButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     icon: IconId;
