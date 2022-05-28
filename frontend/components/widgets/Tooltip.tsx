@@ -36,11 +36,12 @@ export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
     const makeVisible = React.useCallback(() => { setElementHovered(true) }, [setElementHovered]);
     const makeHidden = React.useCallback(() => { setElementHovered(false) }, [setElementHovered]);
     // A general click event handler to watch for "click outside of tooltip" events
+    const {onClickOutsideTooltip} = props;
     const handleClickOutside = React.useCallback((event: MouseEvent) => {
-        if (props.onClickOutsideTooltip && popperElement && !popperElement.contains(event.target as Node)) {
-            props.onClickOutsideTooltip();
+        if (onClickOutsideTooltip && popperElement && !popperElement.contains(event.target as Node)) {
+            onClickOutsideTooltip();
         }
-    }, [props.onClickOutsideTooltip, popperElement]);
+    }, [onClickOutsideTooltip, popperElement]);
 
     React.useEffect(() => {
         if (showTooltip && props.onClickOutsideTooltip) {
@@ -73,7 +74,7 @@ export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
                     style={styles.popper}
                     {...attributes.popper}
                     className={`
-                        max-w-[400px] border p-1 rounded border-gray-800 shadow bg-blue-50 z-10
+                        max-w-[400px] border p-1 rounded border-gray-800 shadow bg-blue-50 z-30
                         text-sm font-normal neo-typography
                         ${showTooltip ? "visible opacity-100" : "invisible opacity-0"}
                         transition-opacity duration-500
