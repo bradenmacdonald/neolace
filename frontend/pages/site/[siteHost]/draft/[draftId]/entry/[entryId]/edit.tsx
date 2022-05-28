@@ -9,16 +9,15 @@ import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { useRouter } from "next/router";
 import { ParsedUrlQuery } from "querystring";
-import { AutoControl, Control, Form } from "components/widgets/Form";
+import { Control, Form } from "components/widgets/Form";
 import { TextInput } from "components/widgets/TextInput";
-import { MDTEditor } from "components/widgets/MDTEditor";
 import { Button } from "components/widgets/Button";
 import { IN_BROWSER } from "lib/config";
-import { SelectEntryType } from "components/widgets/SelectEntryType";
 import { UserContext, UserStatus } from "components/user/UserContext";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
 import { PropertiesEditor } from "components/entry-editor/PropertiesEditor";
+import { MainEditor } from "components/entry-editor/MainEditor";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -71,37 +70,6 @@ const DraftEntryEditPage: NextPage = function (_props) {
 
     const entryType = schema?.entryTypes?.[entry?.entryType.id ?? ""];
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Here are the handlers for actually making edits, baed on what the user does.
-
-    const updateEntryName = React.useCallback((name: string) => {
-        if (!baseEntry) return;
-        addUnsavedEdit({ code: api.SetEntryName.code, data: { entryId: baseEntry.id, name } });
-    }, [baseEntry, addUnsavedEdit]);
-
-    const updateEntryType = React.useCallback((type: string) => {
-        if (!entry) return;
-        addUnsavedEdit({
-            code: api.CreateEntry.code,
-            data: {
-                id: entry.id,
-                type: api.VNID(type),
-                name: entry.name,
-                description: entry.description ?? "",
-                friendlyId: entry.friendlyId,
-            },
-        });
-    }, [entry, addUnsavedEdit]);
-
-    const updateEntryFriendlyId = React.useCallback((friendlyId: string) => {
-        if (!baseEntry) return;
-        addUnsavedEdit({ code: api.SetEntryFriendlyId.code, data: { entryId: baseEntry.id, friendlyId } });
-    }, [baseEntry, addUnsavedEdit]);
-
-    const updateEntryDescription = React.useCallback((description: string) => {
-        if (!baseEntry) return;
-        addUnsavedEdit({ code: api.SetEntryDescription.code, data: { entryId: baseEntry.id, description } });
-    }, [baseEntry, addUnsavedEdit]);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Managing the draft (all edits are part of a draft)
@@ -165,11 +133,6 @@ const DraftEntryEditPage: NextPage = function (_props) {
     } else {
         content = (
             <>
-                {
-                    /*
-                <Link href={`/draft/${query.draftId}/entry/${query.entryId}/preview`}><a className="float-right text-sm">Preview</a></Link>
-            */
-                }
                 <Breadcrumbs>
                     <Breadcrumb href={`/`}>{site.name}</Breadcrumb>
                     <Breadcrumb href={`/draft/`}>
@@ -209,81 +172,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         icon="info-circle"
                         name={defineMessage({ defaultMessage: "Main", id: "draft.edit.entry.tab.main" })}
                     >
-                        <Form>
-                            {/* Entry Name/Title */}
-                            <AutoControl
-                                value={entry?.name ?? ""}
-                                onChangeFinished={updateEntryName}
-                                id="title"
-                                label={{ id: "draft.entry.edit.name.label", defaultMessage: "Name / Title" }}
-                                isRequired={true}
-                            >
-                                <TextInput />
-                            </AutoControl>
-
-                            {/* Entry Type */}
-                            <Control // SelectBoxes don't need "AutoControl" - changes apply immediately as the user makes a selection
-                                id="entryType"
-                                label={{ id: "draft.entry.edit.type.label", defaultMessage: "Entry Type" }}
-                                hint={isNewEntry
-                                    ? intl.formatMessage({
-                                        id: "draft.entry.edit.type.hint",
-                                        defaultMessage: "Cannot be changed after the entry has been created.",
-                                    })
-                                    : intl.formatMessage({
-                                        id: "draft.entry.edit.type.hintExisting",
-                                        defaultMessage: "Cannot be changed.",
-                                    })}
-                                isRequired={isNewEntry}
-                            >
-                                <SelectEntryType
-                                    value={entry?.entryType.id}
-                                    onChange={updateEntryType}
-                                    readOnly={!isNewEntry}
-                                />
-                            </Control>
-
-                            {/* Friendly ID */}
-                            <AutoControl
-                                value={entry?.friendlyId ?? ""}
-                                onChangeFinished={updateEntryFriendlyId}
-                                id="id"
-                                label={{ id: "draft.entry.edit.id.label", defaultMessage: "ID" }}
-                                hint={intl.formatMessage({
-                                    id: "draft.entry.edit.id.hint1",
-                                    defaultMessage: "Shown in the URL.",
-                                }) + " " +
-                                    (entryType?.friendlyIdPrefix
-                                        ? intl.formatMessage({
-                                            id: "draft.entry.edit.id.hint2",
-                                            defaultMessage: 'Must start with "{prefix}".',
-                                        }, { prefix: entryType.friendlyIdPrefix })
-                                        : "") +
-                                    " " +
-                                    intl.formatMessage({
-                                        id: "draft.entry.edit.id.hint3",
-                                        defaultMessage: "Must be unique.",
-                                    }) + " " +
-                                    intl.formatMessage({
-                                        id: "draft.entry.edit.id.hint4",
-                                        defaultMessage:
-                                            "You cannot re-use an ID that was previously used for a different entry.",
-                                    })}
-                                isRequired={true}
-                            >
-                                <TextInput />
-                            </AutoControl>
-
-                            {/* Description */}
-                            <AutoControl
-                                value={entry?.description ?? ""}
-                                onChangeFinished={updateEntryDescription}
-                                id="description"
-                                label={{ id: "draft.entry.edit.description.label", defaultMessage: "Description" }}
-                            >
-                                <MDTEditor inlineOnly={true} />
-                            </AutoControl>
-                        </Form>
+                        <MainEditor entry={entry} isNewEntry={isNewEntry} addUnsavedEdit={addUnsavedEdit} />
                     </Tab>
                     <Tab
                         id="properties"
