@@ -156,11 +156,20 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const graphConfig: Partial<GraphOptions> = React.useMemo(() => ({
         plugins: [],
         layout: {
+            // type: 'comboCombined',
+            // center: [ 200, 200 ],     // The center of the graph by default
+
+            // type: 'comboForce',
+            // preventOverlap: true,
+            // nodeSize: [200, 50],
+            // nodeSpacing: 60,   
+            // preventComboOverlap: true,   
+            // comboCollideStrength: 1,      
             type: 'force',
             preventOverlap: true,
             nodeSize: [200, 50],
             nodeSpacing: 60,
-            alphaMin: 0.01,
+            alphaMin: 0.1,
         },
         defaultNode: {
             type: entryNode,
@@ -183,7 +192,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             },
         },
         modes: {
-            default: ["drag-canvas", "click-select", "zoom-canvas", 'drag-node'],
+            default: ["drag-canvas", "click-select", "zoom-canvas", 'drag-node', 'drag-combo'],
         },
         edgeStateStyles: {
             selected: {
@@ -244,6 +253,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             if (!comboDict[n.clique]) comboDict[n.clique] =[];
             comboDict[n.clique].push(n.id);
         })
+        // TODO refactor below
         // delete relationships within combos
         for (const combo in comboDict) {
             const nodeList = comboDict[combo];
@@ -268,6 +278,40 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             console.log('Creating combo')
             graph.createCombo(combo, comboDict[combo]);
         }
+
+        // optimize edges to combos
+        graph.getNodes().forEach((n) => {
+            const nodeId = n.getModel().id;
+            for (const combo in comboDict) {
+                const nodeList = comboDict[combo];
+                let doesCover = true;
+                nodeList.forEach((i) => {
+                    doesCover = graph.getNeighbors(i).map((nb) => nb.getModel().id).includes(nodeId);
+                });
+                console.log('Does cover is ', doesCover)
+
+                if (doesCover) {
+                    // remove all the edges but one
+                    nodeList.forEach((node) => {
+                        // get edge
+                        const edge = graph.find('edge', (edge) => {
+                            return ((edge.getModel().source === node && edge.getModel().target === nodeId)
+                                || (edge.getModel().target === node && edge.getModel().source === nodeId))
+                        })
+
+                        if (edge) {
+                            console.log('Hiding an edge')
+                            graph.hideItem(edge);
+                        }
+                    })
+
+                    // add edge 
+                    graph.addItem('edge', {id:VNID(), source: combo, target: nodeId, style: {
+                        stroke: 'blue',
+                      },});
+                }
+            }
+        });       
     }, [currentData])
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
