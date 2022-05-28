@@ -18,6 +18,8 @@ import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
 import { PropertiesEditor } from "components/entry-editor/PropertiesEditor";
 import { MainEditor } from "components/entry-editor/MainEditor";
+import { Tooltip } from "components/widgets/Tooltip";
+import { HoverClickNote } from "components/widgets/HoverClickNote";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -188,7 +190,24 @@ const DraftEntryEditPage: NextPage = function (_props) {
                             ? (
                                 <ul>
                                     {unsavedEdits.map((e, idx) => (
-                                        <li key={idx}>{api.getEditType(e.code).describe(e.data)}</li>
+                                        <li key={idx}>
+                                            <p>
+                                                <strong>{e.code}</strong>{" "}
+                                                {
+                                                    e.code === api.SetEntryName.code ?
+                                                        <FormattedMessage
+                                                            defaultMessage='Renamed this entry to "{newName}"'
+                                                            id="draft.edit.history.renameDescription"
+                                                            values={{newName: e.data.name}}
+                                                        />
+                                                    : null
+                                                }
+                                                <HoverClickNote superscript={false} displayText="(...)">
+                                                    <p>Data for this edit:</p>
+                                                    <pre className="whitespace-pre-wrap">{JSON.stringify(e.data, undefined, 4)}</pre>
+                                                </HoverClickNote>
+                                            </p>
+                                        </li>
                                     ))}
                                 </ul>
                             )
