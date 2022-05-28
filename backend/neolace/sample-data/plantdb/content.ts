@@ -87,8 +87,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.classPinopsida.id,
-            property: schema.properties._parentDivision.id,
+            entryId: entryData.classPinopsida.id,
+            propertyId: schema.properties._parentDivision.id,
             valueExpression: `[[/entry/${entryData.divisionTracheophyta.id}]]`,
             propertyFactId: VNID(),
         },
@@ -108,8 +108,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.orderPinales.id,
-            property: schema.properties._parentClass.id,
+            entryId: entryData.orderPinales.id,
+            propertyId: schema.properties._parentClass.id,
             valueExpression: `[[/entry/${entryData.classPinopsida.id}]]`,
             propertyFactId: VNID(),
         },
@@ -129,8 +129,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.familyPinaceae.id,
-            property: schema.properties._parentOrder.id,
+            entryId: entryData.familyPinaceae.id,
+            propertyId: schema.properties._parentOrder.id,
             valueExpression: `[[/entry/${entryData.orderPinales.id}]]`,
             propertyFactId: VNID(),
         },
@@ -150,8 +150,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.genusPinus.id,
-            property: schema.properties._parentFamily.id,
+            entryId: entryData.genusPinus.id,
+            propertyId: schema.properties._parentFamily.id,
             valueExpression: `[[/entry/${entryData.familyPinaceae.id}]]`,
             propertyFactId: VNID(),
         },
@@ -171,8 +171,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.ponderosaPine.id,
-            property: schema.properties._parentGenus.id,
+            entryId: entryData.ponderosaPine.id,
+            propertyId: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
         },
@@ -180,8 +180,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.ponderosaPine.id,
-            property: schema.properties._propScientificName.id,
+            entryId: entryData.ponderosaPine.id,
+            propertyId: schema.properties._propScientificName.id,
             valueExpression: `"Pinus ponderosa"`,
             propertyFactId: VNID(),
         },
@@ -189,8 +189,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.ponderosaPine.id,
-            property: schema.properties._propWikidataQID.id,
+            entryId: entryData.ponderosaPine.id,
+            propertyId: schema.properties._propWikidataQID.id,
             valueExpression: `"Q460523"`,
             propertyFactId: VNID(),
         },
@@ -250,8 +250,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.stonePine.id,
-            property: schema.properties._parentGenus.id,
+            entryId: entryData.stonePine.id,
+            propertyId: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
         },
@@ -270,8 +270,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.jackPine.id,
-            property: schema.properties._parentGenus.id,
+            entryId: entryData.jackPine.id,
+            propertyId: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
         },
@@ -290,8 +290,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.japaneseRedPine.id,
-            property: schema.properties._parentGenus.id,
+            entryId: entryData.japaneseRedPine.id,
+            propertyId: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
         },
@@ -310,8 +310,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.japaneseWhitePine.id,
-            property: schema.properties._parentGenus.id,
+            entryId: entryData.japaneseWhitePine.id,
+            propertyId: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
         },
@@ -330,8 +330,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.jeffreyPine.id,
-            property: schema.properties._parentGenus.id,
+            entryId: entryData.jeffreyPine.id,
+            propertyId: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
         },
@@ -350,8 +350,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.pinyonPine.id,
-            property: schema.properties._parentGenus.id,
+            entryId: entryData.pinyonPine.id,
+            propertyId: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
         },
@@ -370,8 +370,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.westernWhitePine.id,
-            property: schema.properties._parentGenus.id,
+            entryId: entryData.westernWhitePine.id,
+            propertyId: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
             propertyFactId: VNID(),
         },
@@ -391,8 +391,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.familyCupressaceae.id,
-            property: schema.properties._parentOrder.id,
+            entryId: entryData.familyCupressaceae.id,
+            propertyId: schema.properties._parentOrder.id,
             valueExpression: `[[/entry/${entryData.orderPinales.id}]]`,
             propertyFactId: VNID(),
         },
@@ -412,8 +412,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.genusCupressus.id,
-            property: schema.properties._parentFamily.id,
+            entryId: entryData.genusCupressus.id,
+            propertyId: schema.properties._parentFamily.id,
             valueExpression: `[[/entry/${entryData.familyCupressaceae.id}]]`,
             propertyFactId: VNID(),
         },
@@ -433,8 +433,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.mediterraneanCypress.id,
-            property: schema.properties._parentGenus.id,
+            entryId: entryData.mediterraneanCypress.id,
+            propertyId: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusCupressus.id}]]`,
             propertyFactId: VNID(),
         },
@@ -454,8 +454,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.genusThuja.id,
-            property: schema.properties._parentFamily.id,
+            entryId: entryData.genusThuja.id,
+            propertyId: schema.properties._parentFamily.id,
             valueExpression: `[[/entry/${entryData.familyCupressaceae.id}]]`,
             propertyFactId: VNID(),
         },
@@ -475,8 +475,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.westernRedcedar.id,
-            property: schema.properties._parentGenus.id,
+            entryId: entryData.westernRedcedar.id,
+            propertyId: schema.properties._parentGenus.id,
             valueExpression: `[[/entry/${entryData.genusThuja.id}]]`,
             propertyFactId: VNID(),
         },
@@ -512,8 +512,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.pollenCone.id,
-            property: schema.properties._partIsAPart.id,
+            entryId: entryData.pollenCone.id,
+            propertyId: schema.properties._partIsAPart.id,
             valueExpression: `[[/entry/${entryData.cone.id}]]`,
             propertyFactId: VNID(),
         },
@@ -533,8 +533,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.seedCone.id,
-            property: schema.properties._partIsAPart.id,
+            entryId: entryData.seedCone.id,
+            propertyId: schema.properties._partIsAPart.id,
             valueExpression: `[[/entry/${entryData.cone.id}]]`,
             propertyFactId: VNID(),
         },
@@ -544,8 +544,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.classPinopsida.id,
-            property: schema.properties._hasPart.id,
+            entryId: entryData.classPinopsida.id,
+            propertyId: schema.properties._hasPart.id,
             valueExpression: `[[/entry/${entryData.pollenCone.id}]]`,
             propertyFactId: VNID(),
             slot: "pollen-cone",
@@ -554,8 +554,8 @@ export const makePlantDbContent: EditList = [
     {
         code: "AddPropertyValue",
         data: {
-            entry: entryData.classPinopsida.id,
-            property: schema.properties._hasPart.id,
+            entryId: entryData.classPinopsida.id,
+            propertyId: schema.properties._hasPart.id,
             valueExpression: `[[/entry/${entryData.seedCone.id}]]`,
             propertyFactId: VNID(),
             slot: "seed-cone",

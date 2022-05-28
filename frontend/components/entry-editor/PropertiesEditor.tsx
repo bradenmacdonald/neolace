@@ -76,9 +76,8 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema
         addUnsavedEdit({
             code: api.AddPropertyValue.code,
             data: {
-                // FIXME: should be 'entryId'
-                entry: entryId,
-                property: VNID(propId),
+                entryId,
+                propertyId: VNID(propId),
                 propertyFactId: VNID(),
                 valueExpression: "",
             },
@@ -165,9 +164,8 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
                     addUnsavedEdit({
                         code: api.AddPropertyValue.code,
                         data: {
-                            // FIXME: should be 'entryId'
-                            entry: entryId,
-                            property: prop.id,
+                            entryId,
+                            propertyId: prop.id,
                             propertyFactId: VNID(),
                             valueExpression: "",
                         },

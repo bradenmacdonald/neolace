@@ -98,8 +98,8 @@ group("edit tests", () => {
             await doEdit(client, {
                 code: api.AddPropertyValue.code,
                 data: {
-                    entry: entryId,
-                    property: propertyId,
+                    entryId,
+                    propertyId,
                     propertyFactId: VNID(),
                     valueExpression: `"Jeffrey's pine"`,
                 },
@@ -116,8 +116,8 @@ group("edit tests", () => {
             await doEdit(client, {
                 code: api.AddPropertyValue.code,
                 data: {
-                    entry: entryId,
-                    property: propertyId,
+                    entryId,
+                    propertyId,
                     propertyFactId: VNID(),
                     valueExpression: `"pin de Jeffrey"`,
                     note: "(French)",
@@ -153,8 +153,8 @@ group("edit tests", () => {
                     doEdit(client, {
                         code: api.AddPropertyValue.code,
                         data: {
-                            entry: ponderosaEntryId,
-                            property: propertyId,
+                            entryId: ponderosaEntryId,
+                            propertyId,
                             propertyFactId: VNID(),
                             /** Value expression: a lookup expression giving the value */
                             valueExpression: "[[/entry/_FOOBAR]]",

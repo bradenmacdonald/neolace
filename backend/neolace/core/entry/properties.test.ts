@@ -58,8 +58,8 @@ group("properties.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: entryId,
-                            property: propertyId,
+                            entryId,
+                            propertyId,
                             propertyFactId: VNID(),
                             valueExpression: `"the value"`,
                         },
@@ -127,8 +127,8 @@ group("properties.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: entryB,
-                            property: propertyId,
+                            entryId: entryB,
+                            propertyId,
                             propertyFactId: VNID(),
                             valueExpression,
                             note,
@@ -206,8 +206,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: B,
-                                property: prop1,
+                                entryId: B,
+                                propertyId: prop1,
                                 propertyFactId: factIdB1,
                                 valueExpression: `"value for B prop1"`,
                             },
@@ -326,8 +326,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: B,
-                                property: entryIsA,
+                                entryId: B,
+                                propertyId: entryIsA,
                                 valueExpression: `[[/entry/${A}]]`,
                                 note: "B is an A",
                                 propertyFactId: pfBisA,
@@ -420,8 +420,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: A,
-                                property: prop1,
+                                entryId: A,
+                                propertyId: prop1,
                                 valueExpression: `"A1"`,
                                 propertyFactId: pfA1,
                             },
@@ -429,8 +429,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: A,
-                                property: prop2,
+                                entryId: A,
+                                propertyId: prop2,
                                 valueExpression: `"A2"`,
                                 propertyFactId: pfA2,
                             },
@@ -438,8 +438,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: A,
-                                property: prop3,
+                                entryId: A,
+                                propertyId: prop3,
                                 valueExpression: `"A3"`,
                                 propertyFactId: pfA3,
                             },
@@ -452,8 +452,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: B,
-                                property: entryIsA,
+                                entryId: B,
+                                propertyId: entryIsA,
                                 valueExpression: `[[/entry/${A}]]`,
                                 note: "B is an A",
                                 propertyFactId: pfBisA,
@@ -462,8 +462,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: B,
-                                property: prop2,
+                                entryId: B,
+                                propertyId: prop2,
                                 valueExpression: `"B2"`,
                                 propertyFactId: pfB2,
                             },
@@ -476,8 +476,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: C,
-                                property: entryIsA,
+                                entryId: C,
+                                propertyId: entryIsA,
                                 valueExpression: `[[/entry/${B}]]`,
                                 note: "C is a B",
                                 propertyFactId: pfCisB,
@@ -486,8 +486,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: C,
-                                property: prop3,
+                                entryId: C,
+                                propertyId: prop3,
                                 valueExpression: `"C3"`,
                                 propertyFactId: pfC3,
                             },
@@ -615,8 +615,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: A,
-                                property: prop1,
+                                entryId: A,
+                                propertyId: prop1,
                                 propertyFactId: factIdA1,
                                 valueExpression: `"value for A prop1"`,
                             },
@@ -630,8 +630,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: B,
-                                property: entryIsA,
+                                entryId: B,
+                                propertyId: entryIsA,
                                 propertyFactId: pfBisA,
                                 valueExpression: `[[/entry/${A}]]`,
                             },
@@ -639,8 +639,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: B,
-                                property: prop1,
+                                entryId: B,
+                                propertyId: prop1,
                                 propertyFactId: factIdB1v1,
                                 valueExpression: `"value 1 for B prop1"`,
                                 note: "first",
@@ -649,8 +649,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: B,
-                                property: prop1,
+                                entryId: B,
+                                propertyId: prop1,
                                 propertyFactId: factIdB1v2,
                                 valueExpression: `"value 2 for B prop1"`,
                                 note: "second",
@@ -665,8 +665,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: C,
-                                property: entryIsA,
+                                entryId: C,
+                                propertyId: entryIsA,
                                 propertyFactId: pfCisB,
                                 valueExpression: `[[/entry/${B}]]`,
                             },
@@ -764,8 +764,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: A,
-                                property: prop1,
+                                entryId: A,
+                                propertyId: prop1,
                                 propertyFactId: factIdA1v2,
                                 valueExpression: `"value 2 for A prop1"`,
                                 note: "second but added first",
@@ -775,8 +775,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: A,
-                                property: prop1,
+                                entryId: A,
+                                propertyId: prop1,
                                 propertyFactId: factIdA1v3,
                                 valueExpression: `"value 3 for A prop1"`,
                                 note: "third but added second",
@@ -786,8 +786,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: A,
-                                property: prop1,
+                                entryId: A,
+                                propertyId: prop1,
                                 propertyFactId: factIdA1v1,
                                 valueExpression: `"value 1 for A prop1"`,
                                 note: "first but added third",
@@ -921,8 +921,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: car,
-                                property: entryHasPart,
+                                entryId: car,
+                                propertyId: entryHasPart,
                                 slot: "sw",
                                 valueExpression: `[[/entry/${steeringWheel}]]`,
                                 note: "wheel",
@@ -932,8 +932,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: car,
-                                property: entryHasPart,
+                                entryId: car,
+                                propertyId: entryHasPart,
                                 slot: "motor",
                                 valueExpression: `[[/entry/${combustionEngine}]]`,
                                 note: "engine",
@@ -954,8 +954,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: electricCar,
-                                property: entryIsA,
+                                entryId: electricCar,
+                                propertyId: entryIsA,
                                 valueExpression: `[[/entry/${car}]]`,
                                 note: "wheel",
                                 propertyFactId: pfElectricCarIsCar,
@@ -964,8 +964,8 @@ group("properties.ts", () => {
                         {
                             code: "AddPropertyValue",
                             data: {
-                                entry: electricCar,
-                                property: entryHasPart,
+                                entryId: electricCar,
+                                propertyId: entryHasPart,
                                 slot: "motor",
                                 valueExpression: `[[/entry/${electricMotor}]]`,
                                 note: "motor",
@@ -1109,8 +1109,8 @@ group("properties.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: B,
-                            property: entryIsA,
+                            entryId: B,
+                            propertyId: entryIsA,
                             propertyFactId: pfBisA,
                             valueExpression: `[[/entry/${A}]]`,
                         },
@@ -1156,7 +1156,7 @@ group("properties.ts", () => {
                 const factId = VNID();
                 edits.push({
                     code: "AddPropertyValue",
-                    data: { entry: A, property: id, propertyFactId: factId, valueExpression: `"A${i}"` },
+                    data: { entryId: A, propertyId: id, propertyFactId: factId, valueExpression: `"A${i}"` },
                 });
                 aPropertyValues.push({
                     property: { ...propArgs, default: null },
@@ -1175,8 +1175,8 @@ group("properties.ts", () => {
             edits.push({
                 code: "AddPropertyValue",
                 data: {
-                    entry: B,
-                    property: aPropertyValues[6].property.id,
+                    entryId: B,
+                    propertyId: aPropertyValues[6].property.id,
                     propertyFactId: factIdB6,
                     valueExpression: `"B6"`,
                 },
@@ -1185,8 +1185,8 @@ group("properties.ts", () => {
             edits.push({
                 code: "AddPropertyValue",
                 data: {
-                    entry: B,
-                    property: aPropertyValues[7].property.id,
+                    entryId: B,
+                    propertyId: aPropertyValues[7].property.id,
                     propertyFactId: factIdB7,
                     valueExpression: `"B7"`,
                 },
@@ -1207,7 +1207,7 @@ group("properties.ts", () => {
                 const factId = VNID();
                 edits.push({
                     code: "AddPropertyValue",
-                    data: { entry: B, property: id, propertyFactId: factId, valueExpression: `"B${i}"` },
+                    data: { entryId: B, propertyId: id, propertyFactId: factId, valueExpression: `"B${i}"` },
                 });
                 bPropertyValues.push({
                     property: { ...propArgs, default: null },

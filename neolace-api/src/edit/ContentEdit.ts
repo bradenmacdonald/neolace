@@ -180,9 +180,9 @@ export const AddPropertyValue = ContentEditType({
     code: "AddPropertyValue",
     dataSchema: Schema({
         /** The Entry where we are adding a new property value */
-        entry: vnidString,
+        entryId: vnidString,
         /** The Property in question. */
-        property: vnidString,
+        propertyId: vnidString,
         /** The ID of this new property fact */
         propertyFactId: vnidString,
         /** Value expression: a lookup expression giving the value */
@@ -198,7 +198,7 @@ export const AddPropertyValue = ContentEditType({
         slot: string.strictOptional(),
     }),
     apply: (baseEntry, data) => {
-        if (baseEntry.id !== data.entry) {
+        if (baseEntry.id !== data.entryId) {
             return baseEntry;  // This wasn't the entry we're changing.
         }
         const newPropertyFact = {
@@ -209,10 +209,10 @@ export const AddPropertyValue = ContentEditType({
             slot: data.slot ?? "",
         };
         const updatedEntry: EditableEntryData = {...baseEntry, propertiesRaw: [...baseEntry.propertiesRaw]};
-        const propertyIndex = baseEntry.propertiesRaw.findIndex((p) => p.propertyId === data.property);
+        const propertyIndex = baseEntry.propertiesRaw.findIndex((p) => p.propertyId === data.propertyId);
         if (propertyIndex === -1) {
             // We're adding a value for a property that has no values/facts yet:
-            updatedEntry.propertiesRaw.push({propertyId: data.property, facts: [newPropertyFact]});
+            updatedEntry.propertiesRaw.push({propertyId: data.propertyId, facts: [newPropertyFact]});
         } else {
             // We're adding an additional value/fact to a property that already has one or more values/facts:
             const prop = updatedEntry.propertiesRaw[propertyIndex];
@@ -220,7 +220,7 @@ export const AddPropertyValue = ContentEditType({
         }
         return updatedEntry;
     },
-    describe: (data) => `Added value for \`Property ${data.property}\` property on \`Entry ${data.entry}\``,
+    describe: (data) => `Added value for \`Property ${data.propertyId}\` property on \`Entry ${data.entryId}\``,
 });
 
 export const UpdatePropertyValue = ContentEditType({
