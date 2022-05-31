@@ -193,8 +193,8 @@ group("edit tests", () => {
             assert(beforeValue?.type === "Annotated");
             // Because "Scientific name" gets italicized automatically, we have to read the "plainValue":
             assertEquals(beforeValue.annotations.plainValue, { type: "String", value: "Pinus ponderosa" });
-            assert(beforeValue.annotations.factId.type === "String");
-            const propertyFactId = VNID(beforeValue.annotations.factId.value);
+            assert(beforeValue.annotations.propertyFactId.type === "String");
+            const propertyFactId = VNID(beforeValue.annotations.propertyFactId.value);
 
             // Now we change the property value:
             await doEdit(client, {
@@ -228,8 +228,8 @@ group("edit tests", () => {
             assert(beforeValue?.type === "Annotated");
             // The original value of "Parent Genus" is "genus Pinus":
             assertEquals(beforeValue.value, { type: "Entry", id: defaultData.entries.genusPinus.id });
-            assert(beforeValue.annotations.factId.type === "String");
-            const propertyFactId = VNID(beforeValue.annotations.factId.value);
+            assert(beforeValue.annotations.propertyFactId.type === "String");
+            const propertyFactId = VNID(beforeValue.annotations.propertyFactId.value);
 
             // Now we change the property value:
             const newGenusId = defaultData.entries.genusThuja.id;
@@ -273,7 +273,7 @@ group("edit tests", () => {
             await doEdit(client, {
                 code: api.DeletePropertyValue.code,
                 data: {
-                    propertyFactId: VNID((propertyFact.value.annotations.factId as api.StringValue).value),
+                    propertyFactId: VNID((propertyFact.value.annotations.propertyFactId as api.StringValue).value),
                 },
             });
 

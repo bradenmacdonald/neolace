@@ -125,7 +125,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     await graph.runAsSystem(CreateSite({
         name: "Neolace Development",
         domain: "home.local.neolace.net",
-        slugId: `site-home`, // The shortId of this site is "main"
+        slugId: `site-home`, // The shortId of this site is "home"
         adminUser: data.users.admin.id,
         accessMode: AccessMode.PublicReadOnly,
         homePageMD: dedent`
