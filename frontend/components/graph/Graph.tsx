@@ -87,6 +87,13 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
     return data;
 }
 
+function getEdgeIfExists(graph: Graph, comboNode: string, nodeId: string) {
+    return graph.find('edge', (edge) => {
+        return ((edge.getModel().source === comboNode && edge.getModel().target === nodeId)
+            || (edge.getModel().target === comboNode && edge.getModel().source === nodeId))
+    })
+}
+
 /** The different "tools" that can be active for manipulating the graph */
 enum Tool {
     // Normal selection tool
@@ -245,7 +252,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
         graph.changeData(currentData);
-        // add combos if needed
+        // ADD COMBOS WHEN NEEDED
+        //TODO make this to be a part of combo operation under communities
         // creates lists of ids for combos
         const comboDict: Record<number, string[]> = {};
         originalData.nodes.forEach((n) => {
@@ -253,20 +261,16 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             if (!comboDict[n.clique]) comboDict[n.clique] =[];
             comboDict[n.clique].push(n.id);
         })
-        // TODO refactor below
         // delete relationships within combos
         for (const combo in comboDict) {
             const nodeList = comboDict[combo];
-            for (const node of nodeList) {
-                graph.getNeighbors(node).forEach((n) => {
+            // remove edges within combo
+            for (const comboNode of nodeList) {
+                graph.getNeighbors(comboNode).forEach((n) => {
                     if (nodeList.includes(n.getModel().id as string)) {
-                        // get edge
-                        const edge = graph.find('edge', (edge) => {
-                            return ((edge.getModel().source === node && edge.getModel().target === n.getModel().id)
-                                || (edge.getModel().target === node && edge.getModel().source === n.getModel().id))
-                        })
+                        const edge = getEdgeIfExists(graph, comboNode, n.getModel().id as string);
                         if (edge) {
-                            graph.hideItem(edge);
+                            graph.removeItem(edge);
                         }
                     }
                 })
@@ -281,34 +285,34 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
         // optimize edges to combos
         graph.getNodes().forEach((n) => {
-            const nodeId = n.getModel().id;
+            const nodeId = n.getModel().id as string;
             for (const combo in comboDict) {
+                let addEdge = false;
                 const nodeList = comboDict[combo];
+                const edgeColor = nodeList.includes(nodeId) ? 'red' : 'blue';
                 let doesCover = true;
                 nodeList.forEach((i) => {
                     doesCover = graph.getNeighbors(i).map((nb) => nb.getModel().id).includes(nodeId);
                 });
-                console.log('Does cover is ', doesCover)
-
+                // if the node covers an entire combo, exchange all the edges by a single edge to the combo
                 if (doesCover) {
-                    // remove all the edges but one
-                    nodeList.forEach((node) => {
+                    // remove all the edges
+                    nodeList.forEach((comboNode) => {
                         // get edge
-                        const edge = graph.find('edge', (edge) => {
-                            return ((edge.getModel().source === node && edge.getModel().target === nodeId)
-                                || (edge.getModel().target === node && edge.getModel().source === nodeId))
+                        const edge = getEdgeIfExists(graph, comboNode, nodeId);
+                            if (edge) {
+                                graph.removeItem(edge);
+                            }
                         })
-
-                        if (edge) {
-                            console.log('Hiding an edge')
-                            graph.hideItem(edge);
-                        }
-                    })
-
+                        addEdge = true;
+                }
+                if (nodeList.includes(nodeId)) addEdge = true;
+                    
+                if (addEdge) {
                     // add edge 
                     graph.addItem('edge', {id:VNID(), source: combo, target: nodeId, style: {
-                        stroke: 'blue',
-                      },});
+                        stroke: edgeColor,
+                    },});
                 }
             }
         });       
