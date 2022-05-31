@@ -1,4 +1,5 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
+import type { VNID } from "neolace/deps/vertex-framework.ts";
+import type * as api from "neolace/deps/neolace-api.ts";
 import { LookupContext } from "../context.ts";
 import { ClassOf, ConcreteValue, LookupValue } from "./base.ts";
 import { EntryValue } from "./EntryValue.ts";
@@ -31,11 +32,11 @@ export class AnnotatedValue extends ConcreteValue {
     }
 
     protected serialize() {
-        const annotations: Record<string, unknown> = {};
+        const annotations: Record<string, api.AnyLookupValue> = {};
         for (const key in this.annotations) {
             annotations[key] = this.annotations[key].toJSON();
         }
-        return { value: this.value.toJSON(), annotations };
+        return { ...this.value.toJSON(), annotations };
     }
 
     protected override doCastTo(

@@ -68,11 +68,8 @@ group("entry/index.test.ts", () => {
                     {
                         propertyId: defaultData.schema.properties._parentGenus.id,
                         value: {
-                            type: "Annotated",
-                            value: {
-                                type: "Entry",
-                                id: defaultData.entries.genusPinus.id,
-                            },
+                            type: "Entry",
+                            id: defaultData.entries.genusPinus.id,
                             annotations: {
                                 ...defaultAnnotations,
                             },
@@ -82,8 +79,8 @@ group("entry/index.test.ts", () => {
                     {
                         propertyId: defaultData.schema.properties._propScientificName.id,
                         value: {
-                            type: "Annotated",
-                            value: { value: "*Pinus ponderosa*", type: "InlineMarkdownString" },
+                            type: "InlineMarkdownString",
+                            value: "*Pinus ponderosa*",
                             annotations: {
                                 ...defaultAnnotations,
                                 plainValue: { value: "Pinus ponderosa", type: "String" },
@@ -94,56 +91,38 @@ group("entry/index.test.ts", () => {
                     {
                         propertyId: defaultData.schema.properties._taxonomy.id,
                         value: {
-                            type: "Annotated",
-                            value: {
-                                type: "Page",
-                                startedAt: 0,
-                                totalCount: 5,
-                                pageSize: 5,
-                                values: [
-                                    {
-                                        type: "Annotated",
-                                        value: {
-                                            type: "Entry",
-                                            id: defaultData.entries.genusPinus.id,
-                                        },
-                                        annotations: { distance: { type: "Integer", value: "1" } },
-                                    },
-                                    {
-                                        type: "Annotated",
-                                        value: {
-                                            type: "Entry",
-                                            id: defaultData.entries.familyPinaceae.id,
-                                        },
-                                        annotations: { distance: { type: "Integer", value: "2" } },
-                                    },
-                                    {
-                                        type: "Annotated",
-                                        value: {
-                                            type: "Entry",
-                                            id: defaultData.entries.orderPinales.id,
-                                        },
-                                        annotations: { distance: { type: "Integer", value: "3" } },
-                                    },
-                                    {
-                                        type: "Annotated",
-                                        value: {
-                                            type: "Entry",
-                                            id: defaultData.entries.classPinopsida.id,
-                                        },
-                                        annotations: { distance: { type: "Integer", value: "4" } },
-                                    },
-                                    {
-                                        type: "Annotated",
-                                        value: {
-                                            type: "Entry",
-                                            id: defaultData.entries.divisionTracheophyta.id,
-                                        },
-                                        annotations: { distance: { type: "Integer", value: "5" } },
-                                    },
-                                ],
-                                source: { expr: "this.ancestors()", entryId: ponderosaPine.id },
-                            },
+                            type: "Page",
+                            startedAt: 0,
+                            totalCount: 5,
+                            pageSize: 5,
+                            values: [
+                                {
+                                    type: "Entry",
+                                    id: defaultData.entries.genusPinus.id,
+                                    annotations: { distance: { type: "Integer", value: "1" } },
+                                },
+                                {
+                                    type: "Entry",
+                                    id: defaultData.entries.familyPinaceae.id,
+                                    annotations: { distance: { type: "Integer", value: "2" } },
+                                },
+                                {
+                                    type: "Entry",
+                                    id: defaultData.entries.orderPinales.id,
+                                    annotations: { distance: { type: "Integer", value: "3" } },
+                                },
+                                {
+                                    type: "Entry",
+                                    id: defaultData.entries.classPinopsida.id,
+                                    annotations: { distance: { type: "Integer", value: "4" } },
+                                },
+                                {
+                                    type: "Entry",
+                                    id: defaultData.entries.divisionTracheophyta.id,
+                                    annotations: { distance: { type: "Integer", value: "5" } },
+                                },
+                            ],
+                            source: { expr: "this.ancestors()", entryId: ponderosaPine.id },
                             annotations: {
                                 // This value came from the default on the entry type, not the specific entry itself.
                                 source: { type: "String", value: "Default" },
@@ -160,11 +139,8 @@ group("entry/index.test.ts", () => {
                             totalCount: 2,
                             values: [
                                 {
-                                    type: "Annotated",
-                                    value: {
-                                        type: "Entry",
-                                        id: defaultData.entries.pollenCone.id,
-                                    },
+                                    type: "Entry",
+                                    id: defaultData.entries.pollenCone.id,
                                     annotations: {
                                         ...defaultAnnotations,
                                         slot: { type: "String", value: "pollen-cone" },
@@ -172,11 +148,8 @@ group("entry/index.test.ts", () => {
                                     },
                                 },
                                 {
-                                    type: "Annotated",
-                                    value: {
-                                        type: "Entry",
-                                        id: defaultData.entries.seedCone.id,
-                                    },
+                                    type: "Entry",
+                                    id: defaultData.entries.seedCone.id,
                                     annotations: {
                                         ...defaultAnnotations,
                                         slot: { type: "String", value: "seed-cone" },
@@ -195,39 +168,35 @@ group("entry/index.test.ts", () => {
                     {
                         propertyId: defaultData.schema.properties._relImages.id,
                         value: {
-                            type: "Annotated",
-                            value: {
-                                pageSize: 5,
-                                startedAt: 0,
-                                totalCount: 1,
-                                type: "Page",
-                                values: [
-                                    {
-                                        type: "Image",
-                                        format: "thumb",
-                                        entryId: defaultData.entries.imgPonderosaTrunk.id,
-                                        altText: defaultData.entries.imgPonderosaTrunk.name,
-                                        blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
-                                        contentType: "image/webp",
-                                        imageUrl: (result.propertiesSummary?.find((x) =>
-                                            x.propertyId === defaultData.schema.properties._relImages.id
-                                            // deno-lint-ignore no-explicit-any
-                                        )?.value as any).value.values[0].imageUrl,
-                                        link: {
-                                            type: "Entry",
-                                            id: defaultData.entries.imgPonderosaTrunk.id,
-                                        },
-                                        size: 1581898,
-                                        sizing: "cover",
-                                        width: 3504,
-                                        height: 2336,
+                            pageSize: 5,
+                            startedAt: 0,
+                            totalCount: 1,
+                            type: "Page",
+                            values: [
+                                {
+                                    type: "Image",
+                                    format: "thumb",
+                                    entryId: defaultData.entries.imgPonderosaTrunk.id,
+                                    altText: defaultData.entries.imgPonderosaTrunk.name,
+                                    blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
+                                    contentType: "image/webp",
+                                    imageUrl: ((result.propertiesSummary?.find((x) =>
+                                        x.propertyId === defaultData.schema.properties._relImages.id
+                                    )?.value as api.PageValue).values[0] as api.ImageValue).imageUrl,
+                                    link: {
+                                        type: "Entry",
+                                        id: defaultData.entries.imgPonderosaTrunk.id,
                                     },
-                                ],
-                                source: {
-                                    expr:
-                                        `this.andDescendants().reverse(prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
-                                    entryId: ponderosaPine.id,
+                                    size: 1581898,
+                                    sizing: "cover",
+                                    width: 3504,
+                                    height: 2336,
                                 },
+                            ],
+                            source: {
+                                expr:
+                                    `this.andDescendants().reverse(prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                                entryId: ponderosaPine.id,
                             },
                             annotations: {
                                 source: { type: "String", value: "Default" },
@@ -238,11 +207,8 @@ group("entry/index.test.ts", () => {
                     {
                         propertyId: defaultData.schema.properties._propWikidataQID.id,
                         value: {
-                            type: "Annotated",
-                            value: {
-                                type: "InlineMarkdownString",
-                                value: "[Q460523](https://www.wikidata.org/wiki/Q460523)",
-                            },
+                            type: "InlineMarkdownString",
+                            value: "[Q460523](https://www.wikidata.org/wiki/Q460523)",
                             annotations: {
                                 ...defaultAnnotations,
                                 plainValue: { type: "String", value: "Q460523" },

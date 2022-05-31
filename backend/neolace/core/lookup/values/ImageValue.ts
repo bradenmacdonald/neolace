@@ -39,8 +39,9 @@ export class ImageValue extends ConcreteValue {
         return undefined; // There is no literal expression for an image
     }
 
-    protected serialize(): Omit<api.ImageValue, "type"> {
+    protected serialize(): api.ImageValue {
         return {
+            type: "Image",
             entryId: this.data.entryId,
             altText: this.data.altText,
             caption: this.data.caption?.toJSON() as api.InlineMarkdownString | api.StringValue | undefined,

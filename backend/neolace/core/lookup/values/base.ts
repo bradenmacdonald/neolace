@@ -87,14 +87,10 @@ export abstract class ConcreteValue extends LookupValue {
     static readonly isLazy = false;
 
     /** Return fields other than 'type' to be included in this value when serialized as a JSON object. */
-    protected abstract serialize(): Omit<api.AnyLookupValue, "type">;
+    protected abstract serialize(): api.AnyLookupValue;
     public toJSON(): api.AnyLookupValue {
         if (!this.constructor.name.endsWith("Value")) throw new Error("Invalid value class name");
-        return {
-            // "type" is the name of the ____Value class without the "Value" part
-            type: this.constructor.name.substr(0, this.constructor.name.length - 5),
-            ...this.serialize(),
-        } as api.AnyLookupValue;
+        return this.serialize();
     }
 
     public makeConcrete(): Promise<ConcreteValue> {

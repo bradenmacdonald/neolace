@@ -34,7 +34,7 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
     }
 
     protected serialize() {
-        return { value: this.value };
+        return { type: "String" as const, value: this.value };
     }
 
     protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {

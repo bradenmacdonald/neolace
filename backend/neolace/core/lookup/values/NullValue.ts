@@ -15,7 +15,7 @@ export class NullValue extends ConcreteValue implements IHasLiteralExpression {
     }
 
     protected serialize() {
-        return {};
+        return { type: "Null" as const };
     }
 
     protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {

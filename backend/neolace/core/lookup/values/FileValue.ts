@@ -18,8 +18,9 @@ export class FileValue extends ConcreteValue {
         return undefined; // There is no literal expression for a file
     }
 
-    protected serialize(): Omit<api.FileValue, "type"> {
+    protected serialize(): api.FileValue {
         return {
+            type: "File",
             filename: this.filename,
             url: this.url,
             contentType: this.contentType,
