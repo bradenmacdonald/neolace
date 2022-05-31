@@ -22,7 +22,7 @@ group("api/user/index.ts", () => {
             const result = await client.registerHumanUser({ emailToken });
 
             assertEquals(result.userData.isBot, false);
-            assertEquals(result.userData.fullName, null);
+            assertEquals(result.userData.fullName, "");
             assertEquals(result.userData.username, "jamie456");
         });
 

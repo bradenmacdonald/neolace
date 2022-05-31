@@ -187,7 +187,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
                 id: Field.VNID,
                 name: Field.String,
                 importance: Field.Int,
-                default: Field.NullOr.String,
+                default: Field.String,
                 displayAs: Field.String,
             }),
             facts: Field.List(Field.Record({

@@ -21,7 +21,7 @@ export class User extends VNodeType {
         // slugId: starts with "user-", then follows a unique code. Can be changed any time.
         slugId: Field.Slug,
         // Optional full name
-        fullName: Field.NullOr.String.Check(check.string.max(100)),
+        fullName: Field.String.Check(check.string.max(100)),
     };
 
     static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
@@ -145,7 +145,7 @@ export const CreateUser = defineAction({
                 authnId: ${BigInt(data.authnId)},
                 email: ${data.email},
                 slugId: ${User.slugIdPrefix + username},
-                fullName: ${data.fullName || null}
+                fullName: ${data.fullName || ""}
             })
         `.RETURN({}));
         return {
@@ -183,7 +183,7 @@ export const CreateBot = defineAction({
                 id: ${vnid},
                 slugId: ${User.slugIdPrefix + data.username},
                 authToken: ${authToken},
-                fullName: ${data.fullName || null}
+                fullName: ${data.fullName || ""}
             })-[:${BotUser.rel.OWNED_BY} {inheritPermissions: ${data.inheritPermissions ?? false}}]->(owner)
         `.RETURN({}));
         return {

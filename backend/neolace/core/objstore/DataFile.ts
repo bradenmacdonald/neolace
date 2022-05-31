@@ -43,7 +43,7 @@ export class DataFile extends VNodeType {
          * Any data in this field must be something that can be derived purely from the file contents; in other words,
          * this is data about what the file is, not about how it is being used.
          */
-        metadataJSON: Field.NullOr.String,
+        metadataJSON: Field.String,
     };
 
     static derivedProperties = this.hasDerivedProperties({
@@ -52,7 +52,7 @@ export class DataFile extends VNodeType {
     });
 
     static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
-        if (dbObject.metadataJSON !== null) {
+        if (dbObject.metadataJSON) {
             try {
                 const data = JSON.parse(dbObject.metadataJSON);
                 FileMetadataSchema(data); // Validate the metadata against the schema

@@ -26,7 +26,6 @@ group("index.ts", () => {
                 const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
                 const result = await client.createDraft({
                     title: "A Test Draft",
-                    description: null,
                     edits: [],
                 });
                 assert(isVNID(result.id));
@@ -45,7 +44,6 @@ group("index.ts", () => {
 
                 const createDraftArgs: api.CreateDraftData = {
                     title: "A Test Draft",
-                    description: null,
                     edits: [],
                 };
 
@@ -91,7 +89,6 @@ group("index.ts", () => {
 
                 const createDraftArgs: api.CreateDraftData = {
                     title: "A Test Draft",
-                    description: null,
                     edits: [],
                 };
 
@@ -109,7 +106,7 @@ group("index.ts", () => {
             test("cannot create a draft with an empty title", async () => {
                 const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
                 const err = await assertRejects(
-                    () => client.createDraft({ title: "", description: null, edits: [] }),
+                    () => client.createDraft({ title: "", edits: [] }),
                 );
                 assertInstanceOf(err, api.InvalidFieldValue);
                 assertEquals(err.fieldErrors[0].fieldPath, "title");
@@ -121,7 +118,6 @@ group("index.ts", () => {
                 const err = await assertRejects(() =>
                     client.createDraft({
                         title: "Invalid edits",
-                        description: null,
                         edits: [
                             // deno-lint-ignore no-explicit-any
                             { code: "FOOBAR", data: {} } as any,
@@ -134,7 +130,6 @@ group("index.ts", () => {
                 const err2 = await assertRejects(() =>
                     client.createDraft({
                         title: "Invalid edits",
-                        description: null,
                         edits: [
                             {
                                 code: api.CreateEntry.code,
@@ -152,7 +147,6 @@ group("index.ts", () => {
         group("A draft with schema edits", () => {
             const createDraftWithSchemaEdits: api.CreateDraftData = {
                 title: "A Test Draft",
-                description: null,
                 edits: [
                     {
                         code: api.CreateEntryType.code,
@@ -247,7 +241,6 @@ group("index.ts", () => {
         group("A draft with content edits", () => {
             const createDraftWithContentEdits: api.CreateDraftData = {
                 title: "A Test Draft",
-                description: null,
                 edits: [
                     {
                         code: api.CreateEntry.code,

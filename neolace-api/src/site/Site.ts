@@ -1,4 +1,4 @@
-import { Schema, Type, string, nullable, array, boolean, Record, number, object, } from "../api-schemas.ts";
+import { Schema, Type, string, array, boolean, Record, number, object } from "../api-schemas.ts";
 import { ReferenceCacheSchema } from "../content/reference-cache.ts";
 import { VNID } from "../types.ts";
 
@@ -35,7 +35,7 @@ export const SiteDetailsSchema = Schema({
      * Description: a public description of the website, displayed to users in a few different places as well as to
      * search engines.
      */
-    description: nullable(string),
+    description: string,
     /**
      * The short ID is a slug-like string identifier that uniquely identifies this site and must be used to specify the
      * site in any site-specific API requests.

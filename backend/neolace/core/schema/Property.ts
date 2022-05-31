@@ -34,7 +34,7 @@ export class Property extends VNodeType {
          * A lookup expression (usually an "x expression") that defines what values are allowed.
          * This property is ignored if mode is "Auto".
          */
-        valueConstraint: Field.NullOr.String,
+        valueConstraint: Field.String,
         /**
          * The default value for this property, if none is set on the specific entry or its parents.
          * This can be a lookup expression.

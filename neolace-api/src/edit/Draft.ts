@@ -1,4 +1,4 @@
-import { Schema, Type, string, vnidString, nullable, array, DateType, object, } from "../api-schemas.ts";
+import { Schema, Type, string, vnidString, array, DateType, object, } from "../api-schemas.ts";
 import type { AnyEdit } from "./AnyEdit.ts";
 import { EditChangeType } from "./Edit.ts";
 
@@ -22,7 +22,7 @@ export const CreateEditSchema = Schema({code: string, data: object}).transform(e
  */
 export const CreateDraftSchema = Schema({
     title: string,
-    description: nullable(string),
+    description: string.strictOptional(),
     edits: array.of(CreateEditSchema),
 });
 export type CreateDraftData = Type<typeof CreateDraftSchema>;
@@ -39,9 +39,9 @@ export type DraftEditData = Type<typeof DraftEditSchema>;
 
 export const DraftSchema = Schema({
     id: vnidString,
-    author: Schema({username: string, fullName: nullable(string)}),
+    author: Schema({username: string, fullName: string}),
     title: string,
-    description: nullable(string),
+    description: string,
     status: Schema.enum(DraftStatus),
     created: DateType,
     edits: array.of(DraftEditSchema).strictOptional(),
