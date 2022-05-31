@@ -110,7 +110,7 @@ export async function getEntry(
                 innerValue = new InlineMarkdownStringValue(prop.displayAs.replaceAll("{value}", innerValueAsString));
             }
             return new AnnotatedValue(innerValue, {
-                factId: new StringValue(fact.factId),
+                propertyFactId: new StringValue(fact.propertyFactId),
                 source: new StringValue(fact.source.from === "ThisEntry" ? "ThisEntry" : "AncestorEntry"),
                 note: new InlineMarkdownStringValue(fact.note),
                 rank: new IntegerValue(fact.rank),

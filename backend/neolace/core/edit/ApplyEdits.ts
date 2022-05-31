@@ -171,9 +171,9 @@ export const ApplyEdits = defineAction({
                     try {
                         baseData = await tx.queryOne(C`
                             MATCH (site:${Site} {id: ${siteId}})
-                            MATCH (entry:${Entry} {id: ${edit.data.entry}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+                            MATCH (entry:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
                             // Ensure that the property (still) applies to this entry type:
-                            MATCH (property:${Property} {id: ${edit.data.property}})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+                            MATCH (property:${Property} {id: ${edit.data.propertyId}})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
                             // Set the rank automatically by default:
                             OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(existingPf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
                             WITH entry, property, max(existingPf.rank) AS maxCurrentRank
@@ -189,20 +189,20 @@ export const ApplyEdits = defineAction({
                         if (err instanceof EmptyResultError) {
                             // Was the property not found, or does it not apply to that entry type?
                             const checkProperties = await tx.query(C`
-                                MATCH (property:${Property} {id: ${edit.data.property}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                                MATCH (property:${Property} {id: ${edit.data.propertyId}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                             `.RETURN({ "property.name": Field.String }));
                             if (checkProperties.length === 0) {
                                 throw new InvalidEdit(
                                     AddPropertyValue.code,
-                                    { propertyId: edit.data.property },
-                                    `Property with ID ${edit.data.property} was not found in the site's schema.`,
+                                    { propertyId: edit.data.propertyId },
+                                    `Property with ID ${edit.data.propertyId} was not found in the site's schema.`,
                                 );
                             } else {
                                 // If we get there, the property exists but doesn't apply to that entry type.
                                 const propertyName = checkProperties[0]["property.name"];
                                 throw new InvalidEdit(
                                     AddPropertyValue.code,
-                                    { propertyId: edit.data.property, propertyName, entryId: edit.data.entry },
+                                    { propertyId: edit.data.propertyId, propertyName, entryId: edit.data.entryId },
                                     `The "${propertyName}" property does not apply to entries of that type.`,
                                 );
                             }
@@ -224,7 +224,7 @@ export const ApplyEdits = defineAction({
                         // We also need to create/update a direct (Entry)-[rel]->(Entry) relationship on the graph.
                         try {
                             await tx.queryOne(C`
-                                MATCH (entry:${Entry} {id: ${edit.data.entry}})
+                                MATCH (entry:${Entry} {id: ${edit.data.entryId}})
                                 // Match the target entry and make sure it's part of the same site:
                                 MATCH (toEntry:${Entry} {id: ${toEntryId}})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
                                 MATCH (pf:${PropertyFact} {id: ${edit.data.propertyFactId}})
@@ -236,9 +236,9 @@ export const ApplyEdits = defineAction({
                                 throw new InvalidEdit(
                                     AddPropertyValue.code,
                                     {
-                                        propertyId: edit.data.property,
+                                        propertyId: edit.data.propertyId,
                                         toEntryId: toEntryId,
-                                        fromEntryId: edit.data.entry,
+                                        fromEntryId: edit.data.entryId,
                                     },
                                     `Target entry not found - cannot set that non-existent entry as a relationship property value.`,
                                 );
@@ -249,7 +249,7 @@ export const ApplyEdits = defineAction({
                     }
 
                     // Changing a property value always counts as modifying the entry:
-                    modifiedNodes.add(edit.data.entry);
+                    modifiedNodes.add(edit.data.entryId);
                     modifiedNodes.add(edit.data.propertyFactId);
                     break;
                 }

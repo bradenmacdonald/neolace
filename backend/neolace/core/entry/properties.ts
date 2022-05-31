@@ -21,7 +21,7 @@ export type EntryPropertyValueSet = {
         displayAs?: string;
     };
     facts: Array<{
-        factId: VNID;
+        propertyFactId: VNID;
         valueExpression: string;
         note: string;
         rank: number;
@@ -107,7 +107,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
             RETURN {
                 property: prop {.id, .name, .importance, default: null, .displayAs},
                 facts: collect({
-                    factId: pf.id,
+                    propertyFactId: pf.id,
                     valueExpression: pf.valueExpression,
                     note: pf.note,
                     rank: pf.rank,
@@ -148,7 +148,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
             RETURN {
                 property: prop {.id, .name, .importance, default: null, .displayAs},
                 facts: collect({
-                    factId: pf.id,
+                    propertyFactId: pf.id,
                     valueExpression: pf.valueExpression,
                     note: pf.note,
                     rank: pf.rank,
@@ -191,7 +191,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
                 displayAs: Field.String,
             }),
             facts: Field.List(Field.Record({
-                factId: Field.VNID,
+                propertyFactId: Field.VNID,
                 valueExpression: Field.String,
                 note: Field.String,
                 rank: Field.Int,

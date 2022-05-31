@@ -500,8 +500,8 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                     edits.push({
                         code: api.AddPropertyValue.code,
                         data: {
-                            entry: entryId,
-                            property: idMap[humanKey] as VNID,
+                            entryId,
+                            propertyId: idMap[humanKey] as VNID,
                             propertyFactId: VNID(),
                             valueExpression: replaceIdsInMarkdownAndLookupExpressions(idMap, fact.valueExpression),
                             note: fact.note ?? "",

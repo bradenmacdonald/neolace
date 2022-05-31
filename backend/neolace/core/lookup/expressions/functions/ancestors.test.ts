@@ -334,9 +334,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: C,
+                            entryId: C,
                             valueExpression: `[[/entry/${A}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -344,9 +344,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: D,
+                            entryId: D,
                             valueExpression: `[[/entry/${A}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -354,9 +354,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: D,
+                            entryId: D,
                             valueExpression: `[[/entry/${B}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -364,9 +364,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: E,
+                            entryId: E,
                             valueExpression: `[[/entry/${B}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -374,9 +374,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: F,
+                            entryId: F,
                             valueExpression: `[[/entry/${C}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -384,9 +384,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: F,
+                            entryId: F,
                             valueExpression: `[[/entry/${D}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -394,9 +394,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: H,
+                            entryId: H,
                             valueExpression: `[[/entry/${F}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -404,9 +404,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: H,
+                            entryId: H,
                             valueExpression: `[[/entry/${E}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -414,9 +414,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: I,
+                            entryId: I,
                             valueExpression: `[[/entry/${E}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -424,9 +424,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: I,
+                            entryId: I,
                             valueExpression: `[[/entry/${G}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -501,9 +501,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: B,
+                            entryId: B,
                             valueExpression: `[[/entry/${A}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -511,9 +511,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: C,
+                            entryId: C,
                             valueExpression: `[[/entry/${A}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -521,9 +521,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: D,
+                            entryId: D,
                             valueExpression: `[[/entry/${B}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -531,9 +531,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: D,
+                            entryId: D,
                             valueExpression: `[[/entry/${C}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -541,9 +541,9 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: A,
+                            entryId: A,
                             valueExpression: `[[/entry/${D}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },

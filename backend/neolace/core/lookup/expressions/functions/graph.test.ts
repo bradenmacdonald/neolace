@@ -142,9 +142,9 @@ group("graph()", () => {
                 {
                     code: "AddPropertyValue",
                     data: {
-                        entry: B,
+                        entryId: B,
                         valueExpression: `[[/entry/${A}]]`,
-                        property: entryIsA,
+                        propertyId: entryIsA,
                         propertyFactId: VNID(),
                     },
                 },
@@ -152,9 +152,9 @@ group("graph()", () => {
                 {
                     code: "AddPropertyValue",
                     data: {
-                        entry: C,
+                        entryId: C,
                         valueExpression: `[[/entry/${A}]]`,
-                        property: entryIsA,
+                        propertyId: entryIsA,
                         propertyFactId: VNID(),
                     },
                 },
@@ -162,9 +162,9 @@ group("graph()", () => {
                 {
                     code: "AddPropertyValue",
                     data: {
-                        entry: D,
+                        entryId: D,
                         valueExpression: `[[/entry/${B}]]`,
-                        property: entryIsA,
+                        propertyId: entryIsA,
                         propertyFactId: VNID(),
                     },
                 },
@@ -172,9 +172,9 @@ group("graph()", () => {
                 {
                     code: "AddPropertyValue",
                     data: {
-                        entry: D,
+                        entryId: D,
                         valueExpression: `[[/entry/${C}]]`,
-                        property: entryIsA,
+                        propertyId: entryIsA,
                         propertyFactId: VNID(),
                     },
                 },
@@ -182,9 +182,9 @@ group("graph()", () => {
                 {
                     code: "AddPropertyValue",
                     data: {
-                        entry: A,
+                        entryId: A,
                         valueExpression: `[[/entry/${D}]]`,
-                        property: entryIsA,
+                        propertyId: entryIsA,
                         propertyFactId: VNID(),
                     },
                 },
