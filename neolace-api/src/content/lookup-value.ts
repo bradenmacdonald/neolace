@@ -5,6 +5,7 @@ import { ImageSizingMode } from "./Entry.ts";
 /** A "lookup value" / query result / computed fact that has been serialized to JSON */
 export interface LookupValue {
     type: string;
+    annotations?: Record<string, AnyLookupValue>
 }
 
 export interface PageValue extends LookupValue {
@@ -23,6 +24,11 @@ export interface ListValue extends LookupValue {
 
 export interface EntryValue extends LookupValue {
     type: "Entry";
+    id: VNID;
+}
+
+export interface EntryTypeValue extends LookupValue {
+    type: "EntryType";
     id: VNID;
 }
 
@@ -83,10 +89,9 @@ export interface ImageValue extends LookupValue {
     sizing: ImageSizingMode,
 }
 
-export interface AnnotatedValue extends LookupValue {
-    type: "Annotated";
-    value: AnyLookupValue;
-    annotations: Record<string, AnyLookupValue>;
+export interface BooleanValue extends LookupValue {
+    type: "Boolean";
+    value: boolean;
 }
 
 export interface IntegerValue extends LookupValue {
@@ -124,11 +129,12 @@ export interface ErrorValue extends LookupValue {
 export type AnyLookupValue = (
     | PageValue
     | EntryValue
+    | EntryTypeValue
     | FileValue
     | PropertyValue
     | GraphValue
     | ImageValue
-    | AnnotatedValue
+    | BooleanValue
     | IntegerValue
     | DateValue
     | StringValue

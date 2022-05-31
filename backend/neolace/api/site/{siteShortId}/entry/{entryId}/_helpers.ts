@@ -159,13 +159,7 @@ export async function getEntry(
                 }
             }
             const serializedValue = value.toJSON();
-            if (
-                (serializedValue.type === "Page" && serializedValue.values.length === 0) ||
-                (
-                    serializedValue.type === "Annotated" && serializedValue.value.type === "Page" &&
-                    serializedValue.value.values.length === 0
-                )
-            ) {
+            if (serializedValue.type === "Page" && serializedValue.values.length === 0) {
                 // This property value is just an empty result set. Hide it from the result.
                 continue;
             }

@@ -164,6 +164,11 @@ export class ReferenceCache {
      * IDs that are present in the value (recursively). Adds to the set(s) passed as a parameter
      */
     public extractLookupReferences(value: api.AnyLookupValue, args: { currentEntryId?: VNID }) {
+        if (value.annotations) {
+            for (const annotatedValue of Object.values(value.annotations)) {
+                this.extractLookupReferences(annotatedValue, args);
+            }
+        }
         switch (value.type) {
             case "Page": {
                 value.values.forEach((v) => this.extractLookupReferences(v, args));
@@ -172,12 +177,12 @@ export class ReferenceCache {
                 }
                 return;
             }
-            case "Annotated": {
-                this.extractLookupReferences(value.value, args);
-                return;
-            }
             case "Entry": {
                 this._entryIdsUsed.add(value.id);
+                return;
+            }
+            case "EntryType": {
+                // TODO: store the entry type?
                 return;
             }
             case "Image": {
@@ -201,6 +206,7 @@ export class ReferenceCache {
                 }
                 return;
             }
+            case "Boolean":
             case "Integer":
             case "String":
             case "Date":

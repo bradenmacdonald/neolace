@@ -25,7 +25,7 @@ export class IntegerValue extends ConcreteValue {
     protected serialize() {
         // Unfortunately JavaScript cannot serialize BigInt to JSON numbers (even though JSON numbers can have
         // arbitrary digits), so we have to serialize it as a string.
-        return { value: String(this.value) };
+        return { type: "Integer" as const, value: String(this.value) };
     }
 
     protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {

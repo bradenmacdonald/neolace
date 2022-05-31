@@ -20,6 +20,6 @@ export class ErrorValue extends ConcreteValue {
     }
 
     protected serialize() {
-        return { errorClass: this.error.constructor.name, message: this.error.message };
+        return { type: "Error" as const, errorClass: this.error.constructor.name, message: this.error.message };
     }
 }

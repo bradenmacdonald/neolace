@@ -25,7 +25,7 @@ export class InlineMarkdownStringValue extends ConcreteValue implements IHasLite
     }
 
     protected serialize() {
-        return { value: this.value };
+        return { type: "InlineMarkdownString" as const, value: this.value };
     }
 
     protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {

@@ -68,11 +68,7 @@ export const LookupEvaluatorWithPagination: React.FunctionComponent<PropsWithPag
     // SWR will ensure that the inner <LookupEvaluator> doesn't send additional API requests for the same lookup expression.
     const {result, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId});
 
-    const pageData = (
-        result?.resultValue.type === "Page" ? result.resultValue :
-        result?.resultValue.type === "Annotated" && result.resultValue.value.type === "Page" ? result.resultValue.value :
-        undefined
-    );
+    const pageData = result?.resultValue.type === "Page" ? result.resultValue : undefined;
 
     if (pageData) {
         const numValuesPerPage = pageData.pageSize;

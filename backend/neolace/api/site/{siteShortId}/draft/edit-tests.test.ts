@@ -105,11 +105,10 @@ group("edit tests", () => {
                 },
             });
             const valueAfterEdit1 = getValue(await getEntry());
-            assert(valueAfterEdit1?.type === "Annotated");
-            assert(valueAfterEdit1.value.type === "String");
-            assertEquals(valueAfterEdit1.value.value, "Jeffrey's pine");
-            assertEquals(valueAfterEdit1.annotations.note, { type: "InlineMarkdownString", value: "" });
-            assertEquals(valueAfterEdit1.annotations.rank, { type: "Integer", value: "1" }); // Is a string since our number type is bigint, which doesn't JSON serialize as Number
+            assert(valueAfterEdit1?.type === "String");
+            assertEquals(valueAfterEdit1.value, "Jeffrey's pine");
+            assertEquals(valueAfterEdit1.annotations?.note, { type: "InlineMarkdownString", value: "" });
+            assertEquals(valueAfterEdit1.annotations?.rank, { type: "Integer", value: "1" }); // Is a string since our number type is bigint, which doesn't JSON serialize as Number
 
             // Now we give it a second value:
 
@@ -127,16 +126,14 @@ group("edit tests", () => {
             assert(valueAfterEdit2?.type === "Page");
             assertEquals(valueAfterEdit2.values.length, 2);
             // The first value is unchanged:
-            assert(valueAfterEdit2.values[0].type === "Annotated");
-            assert(valueAfterEdit2.values[0].value.type === "String");
-            assertEquals(valueAfterEdit2.values[0].value.value, "Jeffrey's pine");
+            assert(valueAfterEdit2.values[0].type === "String");
+            assertEquals(valueAfterEdit2.values[0].value, "Jeffrey's pine");
             // The second value is added:
-            assert(valueAfterEdit2.values[1].type === "Annotated");
-            assert(valueAfterEdit2.values[1].value.type === "String");
-            assertEquals(valueAfterEdit2.values[1].value.value, "pin de Jeffrey");
+            assert(valueAfterEdit2.values[1].type === "String");
+            assertEquals(valueAfterEdit2.values[1].value, "pin de Jeffrey");
             // The second value has a rank of 2 automatically assigned:
-            assertEquals(valueAfterEdit2.values[1].annotations.rank, { type: "Integer", value: "2" });
-            assertEquals(valueAfterEdit2.values[1].annotations.note, {
+            assertEquals(valueAfterEdit2.values[1].annotations?.rank, { type: "Integer", value: "2" });
+            assertEquals(valueAfterEdit2.values[1].annotations?.note, {
                 type: "InlineMarkdownString",
                 value: "(French)",
             });
@@ -190,10 +187,10 @@ group("edit tests", () => {
 
             // At first, the property is "Pinus ponderosa":
             const beforeValue = getValue(before);
-            assert(beforeValue?.type === "Annotated");
+            assert(beforeValue?.type === "InlineMarkdownString");
             // Because "Scientific name" gets italicized automatically, we have to read the "plainValue":
-            assertEquals(beforeValue.annotations.plainValue, { type: "String", value: "Pinus ponderosa" });
-            assert(beforeValue.annotations.propertyFactId.type === "String");
+            assertEquals(beforeValue.annotations?.plainValue, { type: "String", value: "Pinus ponderosa" });
+            assert(beforeValue.annotations?.propertyFactId.type === "String");
             const propertyFactId = VNID(beforeValue.annotations.propertyFactId.value);
 
             // Now we change the property value:
@@ -206,8 +203,8 @@ group("edit tests", () => {
             });
 
             const afterValue = getValue(await getEntry());
-            assert(afterValue?.type === "Annotated");
-            assertEquals(afterValue.annotations.plainValue, { type: "String", value: "New value" });
+            assert(afterValue?.type === "InlineMarkdownString");
+            assertEquals(afterValue.annotations?.plainValue, { type: "String", value: "New value" });
         });
 
         test("We can update an entry's relationship property value", async () => {
@@ -225,10 +222,10 @@ group("edit tests", () => {
 
             // At first, the property is "Pinus ponderosa":
             const beforeValue = getValue(before);
-            assert(beforeValue?.type === "Annotated");
+            assert(beforeValue?.type === "Entry");
             // The original value of "Parent Genus" is "genus Pinus":
-            assertEquals(beforeValue.value, { type: "Entry", id: defaultData.entries.genusPinus.id });
-            assert(beforeValue.annotations.propertyFactId.type === "String");
+            assertEquals(beforeValue.id, defaultData.entries.genusPinus.id);
+            assert(beforeValue.annotations?.propertyFactId.type === "String");
             const propertyFactId = VNID(beforeValue.annotations.propertyFactId.value);
 
             // Now we change the property value:
@@ -242,13 +239,13 @@ group("edit tests", () => {
             });
 
             const afterValue = getValue(await getEntry());
-            assert(afterValue?.type === "Annotated");
-            assertEquals(afterValue.value, { type: "Entry", id: newGenusId });
+            assert(afterValue?.type === "Entry");
+            assertEquals(afterValue.id, newGenusId);
             // And to test that the "direct relationships" were updated correctly, we use ancestors(), because the
             // ancestors() function doesn't check PropertyFact entries but rather uses the direct IS_A relationships.
             const result = await client.evaluateLookupExpression(`[[/entry/${entryId}]].ancestors().first()`);
-            assert(result.resultValue.type === "Annotated");
-            assertEquals(result.resultValue.value, { type: "Entry", id: newGenusId });
+            assert(result.resultValue.type === "Entry");
+            assertEquals(result.resultValue.id, newGenusId);
         });
     });
 
@@ -265,15 +262,14 @@ group("edit tests", () => {
             );
 
             //  check the property exists
-            assert(propertyFact?.value.type === "Annotated");
-            assert(propertyFact?.value.value.type === "Entry");
-            assertEquals(propertyFact?.value.value.id, defaultData.entries.familyCupressaceae.id);
+            assert(propertyFact?.value.type === "Entry");
+            assertEquals(propertyFact?.value.id, defaultData.entries.familyCupressaceae.id);
 
             // now delete the property
             await doEdit(client, {
                 code: api.DeletePropertyValue.code,
                 data: {
-                    propertyFactId: VNID((propertyFact.value.annotations.propertyFactId as api.StringValue).value),
+                    propertyFactId: VNID((propertyFact.value.annotations?.propertyFactId as api.StringValue).value),
                 },
             });
 
