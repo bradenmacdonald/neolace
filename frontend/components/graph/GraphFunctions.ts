@@ -412,7 +412,7 @@ export function computeCommunities(graph: GraphType) {
     // TODO make resolution parameters part of toolbar.
     // TODO when collapsing communities, what community should they inherit?
     const simpleGraph = toUndirected(toSimple(graph))
-    louvain.assign(simpleGraph, {resolution:0.8});
+    louvain.assign(simpleGraph, {resolution:1.3});
     // get community partition
     const id2comm: Record<string, number> = {};
     const comm2id = new Map<number, string[]>();
@@ -426,21 +426,34 @@ export function computeCommunities(graph: GraphType) {
         }
     })
  
+    // TODO add option to include or not include cliques?
     if (simpleGraph.order === 0) return;
     for (const com of comm2id.keys()) {
-        // NOTE temporarily we will use community id as the clique id as each community so far has only one clique
-        // TODO some cliques are also overlapping - like cliques of three. Should I find all of them?
-        console.log('The community is ', com)
-        const comGraph = subgraph(simpleGraph, comm2id.get(com) as string[]);
-        const largestClique = maxClique(comGraph, comGraph.nodes(), []);
-        // only include cliques of sizes more than 3
-        if (largestClique.length <= 2) continue;
-        largestClique.forEach((n) => {
-            console.log('Adding to a clique', n)
-            simpleGraph.setNodeAttribute(n, 'clique', com);
-        })
+        findCliquesInNodeSubset(simpleGraph, comm2id.get(com) as string[], com);
     }
     return simpleGraph;
+}
+
+/**
+ * Find the largest clique in the subgraph defined by the node list and mark nodes as part of the clique.
+ * NOTE temporarily we will use community id as the clique id as each community so far has only one clique
+ * @param simpleGraph 
+ * @param nodeList 
+ * @param cliqueId 
+ * @returns 
+ */
+function findCliquesInNodeSubset(simpleGraph: GraphType, nodeList: string[], cliqueId: number) {
+    if (simpleGraph.order === 0) return;
+    // TODO some cliques are also overlapping - like cliques of three. Should I find all of them?
+    console.log('The community is ', cliqueId)
+    const comGraph = subgraph(simpleGraph, nodeList);
+    const largestClique = maxClique(comGraph, comGraph.nodes(), []);
+    // only include cliques of sizes more than indicated
+    if (largestClique.length <= 2) return;
+    largestClique.forEach((n) => {
+        console.log('Adding to a clique', n)
+        simpleGraph.setNodeAttribute(n, 'clique', cliqueId);
+    })
 }
 
 /**
