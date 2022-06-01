@@ -1,5 +1,6 @@
 /** A helpful file to allow the import of all expression types */
 
+export { AllEntries } from "./expressions/functions/allEntries.ts";
 export { Ancestors, AndAncestors } from "./expressions/functions/ancestors.ts";
 export { Count } from "./expressions/functions/count.ts";
 export { DateExpression } from "./expressions/functions/date.ts";
