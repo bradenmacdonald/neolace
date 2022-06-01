@@ -102,6 +102,8 @@ enum Tool {
     CondenseExpandNode,
 }
 
+const emptyTransforms: Transform[] = [];
+
 /**
  * Display a graph visualization.
  */
@@ -113,7 +115,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const originalData = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value]);
-    const [transformList, setTransforms, _currentTransforms] = useStateRef<Transform[]>([]);
+    const [transformList, setTransforms] = React.useState<Transform[]>(emptyTransforms);
 
     const currentData = React.useMemo(() => {
         let transformedData = applyTransforms(originalData, transformList);
@@ -198,8 +200,33 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 // stroke: '#F6BD16',
             },
         },
+        defaultCombo: {
+            type: 'circle',
+            size: [80],
+            labelCfg: {
+                style: {
+                    fontSize: 18,
+                },
+            },
+            /* The minimum size of the combo. combo 最小大小 */
+            /* style for the keyShape */
+            style: {
+                fill: '#cffafe',
+                opacity: 0.3,
+            },
+        },
         modes: {
-            default: ["drag-canvas", "click-select", "zoom-canvas", 'drag-node', 'drag-combo'],
+            default: [
+                "drag-canvas", 
+                "click-select", 
+                "zoom-canvas", 
+                'drag-node', 
+                'drag-combo', 
+                {
+                    type: 'collapse-expand-combo',
+                    relayout: false,
+                },
+            ],
         },
         edgeStateStyles: {
             selected: {
@@ -280,7 +307,10 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         console.log(comboDict)
         for (const combo in comboDict) {
             console.log('Creating combo')
-            graph.createCombo(combo, comboDict[combo]);
+            graph.createCombo({
+                id: combo,
+                label: `Community ${combo}`,
+            }, comboDict[combo]);
         }
 
         // optimize edges to combos
