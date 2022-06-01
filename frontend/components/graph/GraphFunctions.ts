@@ -428,9 +428,11 @@ export function computeCommunities(graph: GraphType) {
  
     // TODO add option to include or not include cliques?
     if (simpleGraph.order === 0) return;
+    console.time('maxClique');
     for (const com of comm2id.keys()) {
         findCliquesInNodeSubset(simpleGraph, comm2id.get(com) as string[], com);
     }
+    console.timeEnd('maxClique');
     return simpleGraph;
 }
 
@@ -447,7 +449,7 @@ function findCliquesInNodeSubset(simpleGraph: GraphType, nodeList: string[], cli
     // TODO some cliques are also overlapping - like cliques of three. Should I find all of them?
     console.log('The community is ', cliqueId)
     const comGraph = subgraph(simpleGraph, nodeList);
-    const largestClique = maxClique(comGraph, comGraph.nodes(), []);
+    const largestClique = maxClique(comGraph);
     // only include cliques of sizes more than indicated
     if (largestClique.length <= 2) return;
     largestClique.forEach((n) => {
@@ -476,28 +478,64 @@ function isSubgraphClique(subgraph: GraphType): boolean {
         }
         return;
     })
-    // console.log('The clique value is ', isClique)
     return isClique;
+}
+
+function maxClique(graph: GraphType) {
+    const graphCopy = graph.copy();
+    // remove leaves
+    graph.forEachNode((n) => {
+        if (graph.neighbors(n).length < 2) {
+            graphCopy.dropNode(n);
+        }
+    })
+    let largestClique: string[] = [];
+    graphCopy.forEachNode((n) => {
+        const result = maxCliqueRec(graphCopy, [n]);
+        if (result.length > largestClique.length) largestClique = result;
+    })
+    return largestClique;
+}
+
+function isItStillClique(enlargedClique: GraphType, newNodeId: string): boolean {
+    // we already know that enlarged clique was a clique before adding new node
+    // check if new node has connection to every other node
+    let isItClique = true;
+    enlargedClique.forEachNode((n) => {
+        if (n === newNodeId) return;
+        if (!enlargedClique.areNeighbors(newNodeId, n)) {
+            isItClique = false;
+        }
+    })
+    return isItClique;
 }
 
 /**
  * Recursive function to find the maximum clique subgraph and return it.
  * @param graph 
  * @param remainingNodeList 
- * @param currSubgraphNodes 
+ * @param currClique 
  * @returns list of node ids corresponding to the largest clique in graph
  */
-function maxClique(graph: GraphType, remainingNodeList: string[], currSubgraphNodes: string[]) {
-    let largestClique = currSubgraphNodes;
-    // check if any vertices can be added
-    for (const node of remainingNodeList) {
+function maxCliqueRec(graph: GraphType, currClique: string[]) {
+    let largestClique = currClique;
+    // find the vertices that are directly neighboring the largestClique from the remaining nodes
+    const adjacentNodes = new Set<string>();
+    for (const node of currClique) {
+        graph.forEachNeighbor(node, (nb) => {
+            if (currClique.includes(nb)) return;
+            adjacentNodes.add(nb);
+        })
+    }
+
+    // check if any vertices can be added among the adjacent nodes
+    for (const node of adjacentNodes) {
         // merge the node to the subgraph
-        const enlargedSubgraph = subgraph(graph, [...currSubgraphNodes, node]);
-        if (isSubgraphClique(enlargedSubgraph)) {
-            const cliqueResult = maxClique(
+        const enlargedSubgraph = subgraph(graph, [...currClique, node]);
+        if (isItStillClique(enlargedSubgraph, node)) {
+            const cliqueResult = maxCliqueRec(
                 graph,
-                [...remainingNodeList.filter((n) => n !== node)],
-                [...currSubgraphNodes, node]
+                [...currClique, node]
             );
             if (cliqueResult.length > largestClique.length) {
                 largestClique = cliqueResult;
