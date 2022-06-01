@@ -5,7 +5,6 @@ import React from "react";
 import { IntlProvider } from "react-intl";
 
 import { UserProvider } from "components/user/UserContext";
-import { AllPluginsProvider } from "components/utils/ui-plugins";
 // Import global CSS (Tailwind-based)
 import "../global-styles.css";
 
@@ -31,6 +30,10 @@ const DynamicIntlProviders = {
     ),
 };
 
+export const AvailablePluginsProvider = dynamic<{children: React.ReactNode}>(
+    import('components/utils/ui-plugins-loader').then((mod) => mod.AvailablePluginsProvider)
+);
+
 export default function NeolaceApp({ Component, pageProps }: AppProps) {
     const { locale, events: routerEvents } = useRouter();
     // Dynamically load the IntlProvider for the currently active language:
@@ -51,9 +54,9 @@ export default function NeolaceApp({ Component, pageProps }: AppProps) {
     return (
         <UserProvider>
             <LoadIntlProvider>
-                <AllPluginsProvider>
+                <AvailablePluginsProvider>
                     <Component {...pageProps} />
-                </AllPluginsProvider>
+                </AvailablePluginsProvider>
             </LoadIntlProvider>
         </UserProvider>
     );

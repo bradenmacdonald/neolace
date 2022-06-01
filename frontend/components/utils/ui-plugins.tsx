@@ -1,8 +1,6 @@
 import { SiteData } from "lib/api-client";
 import React, { useContext } from "react";
 import type { UISlotWidget } from "components/widgets/UISlot";
-import dynamic from "next/dynamic";
-import { IN_BROWSER } from "lib/config";
 
 export type UiSlotId = "systemLinks" | `plugin:${string}`;
 
@@ -31,38 +29,7 @@ export const UiPluginsContext = React.createContext<EnabledPluginsConfig>({
     plugins: [],
 });
 
-const AvailablePluginsContext = React.createContext<PluginDefinition[]>([]);
-
-async function loadAllPlugins(): Promise<React.FunctionComponent<{children: React.ReactNode}>> {
-    const allPlugins = ["search"]
-    const pluginLoaders = allPlugins.map((pluginId) =>
-        import(`../../plugins/${pluginId}/plugin-definition`).then(
-            (pluginDefinition: PluginDefinition) => ({
-                pluginId,
-                pluginDefinition,
-            })
-        )
-    );
-    const loadedPlugins = await Promise.all(pluginLoaders);
-    const result: PluginDefinition[] = [];
-    for (const {pluginId, pluginDefinition} of loadedPlugins) {
-        result.push({
-            ...pluginDefinition,
-            id: pluginId,
-        });
-    }
-
-    if (!IN_BROWSER) {
-        console.debug(`Loaded ${result.length} frontend plugins, available for server-side rendering.`);
-    }
-
-    const AvailablePluginsProvider = ((props: {children: React.ReactNode}) => 
-        <AvailablePluginsContext.Provider value={result}>{props.children}</AvailablePluginsContext.Provider>
-    );
-    return AvailablePluginsProvider;
-}
-
-export const AllPluginsProvider = dynamic(() => loadAllPlugins());
+export const AvailablePluginsContext = React.createContext<PluginDefinition[]>([]);
 
 export const UiPluginsProvider = (props: {site: SiteData, children: React.ReactNode}) => {
     const allPlugins = useContext(AvailablePluginsContext);
@@ -79,7 +46,7 @@ export const UiPluginsProvider = (props: {site: SiteData, children: React.ReactN
             });
         }
         return result;
-    }, [allPlugins, props.site.name, props.site.frontendConfig]);
+    }, [allPlugins, props.site.name, /* props.site.frontendConfig */]);
 
     return <UiPluginsContext.Provider value={enabledPlugins}>{props.children}</UiPluginsContext.Provider>;
 };
