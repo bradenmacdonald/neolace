@@ -42,7 +42,7 @@ group("entry/index.test.ts", () => {
 
             const result = await client.getEntry(ponderosaPine.friendlyId);
 
-            assertEquals(result, basicResultExpected);
+            assertEquals<unknown>(result, basicResultExpected);
         });
 
         test("Get basic information about an entry plus a summary of properties", async () => {

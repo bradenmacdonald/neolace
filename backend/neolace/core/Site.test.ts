@@ -79,7 +79,7 @@ group("Site.ts", () => {
                             domain: "test2.neolace.net",
                         }),
                     ),
-                undefined,
+                Error,
                 "already exists with label `Site` and property `siteCode` = 'ABC10'",
             );
         });

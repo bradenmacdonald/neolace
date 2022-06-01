@@ -19,7 +19,7 @@ group("Group.ts", () => {
                             ...Group.emptyPermissions,
                         }),
                     ),
-                undefined,
+                Error,
                 "Required relationship type BELONGS_TO must point to one node, but does not exist.",
             );
         });
@@ -88,7 +88,7 @@ group("Group.ts", () => {
                             ...Group.emptyPermissions,
                         }),
                     ),
-                undefined,
+                Error,
                 "User groups cannot be nested more than 4 levels deep.",
             );
         });
@@ -120,7 +120,7 @@ group("Group.ts", () => {
                             belongsTo: site2details.id,
                         }),
                     ),
-                undefined,
+                Error,
                 "Cannot move Group from one site to another.",
             );
 
@@ -134,7 +134,7 @@ group("Group.ts", () => {
                             belongsTo: site2details.adminGroup,
                         }),
                     ),
-                undefined,
+                Error,
                 "Cannot move Group from one site to another.",
             );
         });

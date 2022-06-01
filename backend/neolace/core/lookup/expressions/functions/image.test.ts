@@ -1,4 +1,4 @@
-import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
+import * as api from "neolace/deps/neolace-api.ts";
 import {
     assertEquals,
     assertInstanceOf,
@@ -48,12 +48,12 @@ group("image.ts", () => {
             altText: defaultData.entries.imgPonderosaTrunk.name,
             caption: undefined,
             contentType: "image/webp",
-            format: "thumb", // default format
+            format: api.ImageDisplayFormat.Thumbnail,
             imageUrl: result.data.imageUrl,
             blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
             borderColor: undefined,
             size: 1581898,
-            sizing: ImageSizingMode.Cover,
+            sizing: api.ImageSizingMode.Cover,
             width: 3504,
             height: 2336,
             link: new EntryValue(defaultData.entries.imgPonderosaTrunk.id),
