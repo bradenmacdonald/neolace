@@ -44,7 +44,13 @@ group("entry/index.ts", () => {
                 { id: c.id, type: { id: genusEntryType.id }, name: c.name, friendlyId: c.friendlyId },
             ];
 
-            assertEquals(new Set(entries), new Set(expected)); // Order may vary as the API sorts by ID and the VNIDs are different on each test run
+            // bug: https://github.com/denoland/deno_std/issues/2295
+            // assertEquals(new Set(entries), new Set(expected)); // Order may vary as the API sorts by ID and the VNIDs are different on each test run
+            entries.sort((a, b) => a.name.localeCompare(b.name));
+            expected.sort((a, b) => a.name.localeCompare(b.name));
+            assertEquals(entries, expected);
+            // ^ use the above three lines until the bug in deno_std is fixed.
+
             assertEquals(result.totalCount, expected.length);
         });
     });

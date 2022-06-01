@@ -39,7 +39,7 @@ group("lookup.ts", () => {
             values: [
                 {
                     type: "Image",
-                    format: "thumb",
+                    format: api.ImageDisplayFormat.Thumbnail,
                     entryId: defaultData.entries.imgPonderosaTrunk.id,
                     altText: defaultData.entries.imgPonderosaTrunk.name,
                     blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
@@ -48,7 +48,7 @@ group("lookup.ts", () => {
                     // deno-lint-ignore no-explicit-any
                     imageUrl: (result.resultValue as any).values[0].imageUrl,
                     size: 1581898,
-                    sizing: "cover",
+                    sizing: api.ImageSizingMode.Cover,
                     width: 3504,
                     height: 2336,
                 },

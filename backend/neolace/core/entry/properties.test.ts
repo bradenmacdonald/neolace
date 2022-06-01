@@ -500,7 +500,7 @@ group("properties.ts", () => {
                     propId: VNID,
                     propertyFactId: VNID,
                     value: string,
-                    source: unknown = { from: "ThisEntry" },
+                    source: { from: "ThisEntry" } | { from: "AncestorEntry"; entryId: VNID } = { from: "ThisEntry" },
                 ) => {
                     return {
                         property: {
