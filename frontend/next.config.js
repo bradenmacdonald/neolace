@@ -21,7 +21,7 @@ module.exports = (phase, { defaultConfig }) => {
             imageSizesAttr: "640px, 1000px, 2000px, 4000px",
         },
         i18n: {
-            locales: ["en", "fr"],
+            locales: ["en", "fr", "ru"],
             defaultLocale: "en",
         },
         // deno-lint-ignore require-await

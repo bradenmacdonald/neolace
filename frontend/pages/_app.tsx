@@ -28,6 +28,12 @@ const DynamicIntlProviders = {
             (props: ProviderProps) => <IntlProvider locale="fr" messages={data.default}>{props.children}</IntlProvider>
         )
     ),
+    ru: dynamic<ProviderProps>(() =>
+    import("../content/compiled-locales/ru.json").then((data) =>
+            // eslint-disable-next-line react/display-name
+            (props: ProviderProps) => <IntlProvider locale="ru" messages={data.default}>{props.children}</IntlProvider>
+        )
+    ),
 };
 
 export const AvailablePluginsProvider = dynamic<{children: React.ReactNode}>(
