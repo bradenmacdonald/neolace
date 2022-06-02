@@ -177,45 +177,41 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             :null}
         </Head>
 
-        {/* Main header: */}
-        <header id="neo-main-header" className="bg-header-color w-screen h-8 md:h-24 flex flex-row flex-nowrap items-center">
-            {/* Site name/logo */}
-            <Link href="/">
-                {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
-                <a className="flex-none h-8 md:h-24 p-1 md:p-3 mr-1 flex items-center">
-                    {
-                        // eslint-disable-next-line @next/next/no-img-element
-                        site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-auto h-full block" /> : site.name
-                    }
-                </a>
-            </Link>
-            <div className="flex-1 min-w-0 items-center p-1 md:p-3 md:pl-0 text-header-color-light text-center text-sm md:text-lg"> {/* min-w-0 is required here per https://stackoverflow.com/a/66689926 */}
-                {/* Site-Specific Nav Links */}
-                <nav>
-                    <ul className="flex justify-center">
-                        {
-                            // This styling will ensure that links other than the first two will be truncated if there is not enough room on screen to display them all in full.
-                            site.frontendConfig.headerLinks?.map((link, idx) => 
-                                <li key={idx} className={`inline-block mr-4 hover:text-gray-300 whitespace-nowrap ${idx >= 2 ? "overflow-hidden overflow-ellipsis" : ""}`}><Link href={link.href}><a>{link.text}</a></Link></li>
-                            )
-                        }
-                    </ul>
-                </nav>
-                {/* Search */}
-                {/* TODO - search box */}
-            </div>
-        </header>
-
         {/* Container that wraps the left nav column (on desktop) and the article text/content */}
-        <div className="scroll-root absolute top-8 md:top-24 w-full bottom-8 md:bottom-0 overflow-y-auto overflow-x-hidden flex flex-row bg-gray-200 items-start">{/* It's unclear why there is a horizontal scroll on entry pages on mobile without overflow-x-hidden */}
+        <div className="flex flex-row justify-center mx-auto shadow-lg w-screen md:max-w-[1280px]">
 
             {/* Left column, which shows various links and the current page's table of contents. On mobile it's hidden until the user clicks "Menu". */}
-            <div id="left-panel" className={`${mobileMenuVisible ? `translate-x-0 visible z-[100]` : `-translate-x-[100%] invisible`} transition-visibility-transform md:visible md:translate-x-0 fixed md:sticky flex top-8 md:top-0 bottom-8 md:bottom-0 w-[80vw] md:w-1/4 md:max-w-[280px] bg-gray-300 xl:border-r border-r-gray-100 flex-initial p-4 overflow-y-auto flex-col self-stretch`} onClick={handleLeftPanelClick}>
+            <div
+                id="left-panel"
+                className={
+                    `${mobileMenuVisible ? `translate-x-0 visible z-[100]` : `-translate-x-[100%] invisible`}
+                    transition-visibility-transform md:visible md:translate-x-0
+                    fixed md:sticky
+                    flex
+                    top-0 left-0 bottom-8 md:bottom-0 w-[80vw] md:w-1/4 md:max-w-[280px] 
+                    bg-transparent
+                    flex-initial p-4 overflow-y-auto flex-col self-stretch
+                    md:h-[100vh]
+                    bg-slate-100
+                `}
+                onClick={handleLeftPanelClick}
+            >
+
+                {/* Site name/logo */}
+                <Link href="/">
+                    {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
+                    <a className="flex-none p-1 mr-1 flex items-center mb-3">
+                        {
+                            // eslint-disable-next-line @next/next/no-img-element
+                            site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
+                        }
+                    </a>
+                </Link>
+
                 <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavTopSlot ?? []), {
                     id: "siteLinks",
                     priority: 15,
                     content: <>
-                        <strong>{site.name}</strong>
                         <ul>
                             {site.frontendConfig.headerLinks?.map(link => 
                                 <li key={link.href}><Link href={link.href}>{link.text}</Link></li>
@@ -232,7 +228,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             </div>
 
             {/* The main content of this entry */}
-            <main role="main" id="content" className="w-full left-0 top-0 md:w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] mx-auto shadow-md xl:my-6 neo-typography" onClick={handleArticleClick}>{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
+            <main role="main" id="content" className="w-full left-0 top-0 md:w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] neo-typography" onClick={handleArticleClick}>{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                 <div className="md:min-h-[calc(100vh-11.5rem)]"> {/* Push the footer down to the bottom if the page content is very short */}
                     {props.children}
                 </div>
