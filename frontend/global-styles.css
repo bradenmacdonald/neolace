@@ -16,8 +16,16 @@
 @layer base {
 
     html, body {
-        /* Disable overscroll because the sudden appearance of white around the page doesn't look good */
         @apply overscroll-none;
+    }
+    html {
+        @apply bg-gray-200;
+        /*
+        background-image: url(/graph-bg.svg);
+        background-position: 50%;
+        background-size: cover;
+        background-attachment: fixed;
+        */
     }
 
     /* Typography: apply this class to a section that contains prose, to ensure headings have reasonable size/weight, paragraphs are spaced, etc. */
@@ -27,7 +35,7 @@
     .neo-typography h4,
     .neo-typography h5,
     .neo-typography h6  {
-        @apply font-semibold mt-3 text-theme-heading-color;
+        @apply font-medium mt-6 mb-2 text-theme-heading-color;
     }
     .neo-typography h1 { @apply text-4xl; }
     .neo-typography h2 { @apply text-3xl; }
