@@ -91,7 +91,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema
             <p>
                 <FormattedMessage
                     defaultMessage='Use the "Main" tab to choose an entry type for this entry before you set properties.'
-                    id="propertiesEditor.error.noEntryType"
+                    id="qfzF5C"
                 />
             </p>
         );
@@ -119,7 +119,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema
             </table>
             <Control
                 id="addOtherProperty"
-                label={{ defaultMessage: "Add another property:", id: "propertiesEditor.addAnother" }}
+                label={defineMessage({ defaultMessage: "Add another property:", id: 'wlyMMP' })}
             >
                 <SelectBox
                     options={unsetProps.map((p) => ({ id: p.id, label: noTranslationNeeded(p.name) }))}
@@ -145,21 +145,23 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
     if (prop.mode === api.PropertyMode.Auto) {
         return (
             <em className="text-gray-600 text-sm">
-                <FormattedMessage defaultMessage="(Automatically computed)" id="propertiesEditor.autoProp" />
+                <FormattedMessage defaultMessage="(Automatically computed)" id="3Wb62d" />
             </em>
         );
     }
 
     if (facts.length === 0) {
         // There are no values yet for this property, but we're still showing it because it's a "recommended" property:
-        const message = defineMessage({
-            defaultMessage: 'Add property value for "{propName}"',
-            id: "propertiesEditor.autoProp",
-        });
         return (
             <ToolbarButton
                 icon="plus-lg"
-                title={intl.formatMessage(message, { propName: prop.name })}
+                tooltip={{
+                    msg: defineMessage({
+                        defaultMessage: 'Add property value for "{propName}"',
+                        id: 's7agyK',
+                    }),
+                    values: { propName: prop.name },
+                }}
                 onClick={() => {
                     addUnsavedEdit({
                         code: api.AddPropertyValue.code,
@@ -201,10 +203,10 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
                             />
                             <ToolbarButton
                                 icon="plus-lg"
-                                title={intl.formatMessage(defineMessage({
+                                tooltip={defineMessage({
                                     defaultMessage: "Add another property value",
-                                    id: "propertiesEditor.addAnother",
-                                }))}
+                                    id: '6d1F0k',
+                                })}
                             />
                         </div>
                     );

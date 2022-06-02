@@ -55,7 +55,7 @@ const DraftDetailsPage: NextPage = function (_props) {
                 <Breadcrumbs>
                     <Breadcrumb href={`/`}>{site.name}</Breadcrumb>
                     <Breadcrumb href={`/draft/`}>
-                        <FormattedMessage id="draft.allDrafts" defaultMessage={"Drafts"} />
+                        <FormattedMessage id="2atspc" defaultMessage="Drafts" />
                     </Breadcrumb>
                     <Breadcrumb>{draft.title}</Breadcrumb>
                 </Breadcrumbs>
@@ -81,7 +81,7 @@ const DraftDetailsPage: NextPage = function (_props) {
                 <br />
 
                 <h2>
-                    <FormattedMessage id="draft.edits" defaultMessage={"Edits"} />
+                    <FormattedMessage id="m929Io" defaultMessage="Edits" />
                 </h2>
                 {draft.edits.length > 0
                     ? (
@@ -91,11 +91,11 @@ const DraftDetailsPage: NextPage = function (_props) {
                     )
                     : (
                         <p>
-                            <FormattedMessage id="draft.noChangesYet" defaultMessage={"This draft has no edits yet."} />
+                            <FormattedMessage id="vt7mne" defaultMessage="This draft has no edits yet." />
                         </p>
                     )}
                 <h2>
-                    <FormattedMessage id="draft.actions" defaultMessage={"Actions"} />
+                    <FormattedMessage id="wL7VAE" defaultMessage="Actions" />
                 </h2>
 
                 {
@@ -105,7 +105,7 @@ const DraftDetailsPage: NextPage = function (_props) {
                             disabled={isUpdatingDraft || draft.edits.length === 0 || draft.status !== api.DraftStatus.Open}
                             onClick={acceptDraft}
                         >
-                            <FormattedMessage id="draft.accept" defaultMessage={"Accept Draft (apply changes)"} />
+                            <FormattedMessage id="T3NjTq" defaultMessage="Accept Draft (apply changes)" />
                         </Button>
                     </> : <p>You need to log in to accept a draft.</p>
                 }
@@ -117,8 +117,8 @@ const DraftDetailsPage: NextPage = function (_props) {
     return (
         <SitePage
             title={draft
-                ? intl.formatMessage({ id: "draft.title", defaultMessage: `Draft: {title}` }, { title: draft.title })
-                : intl.formatMessage({ id: "draft.titleNoEntry", defaultMessage: `Loading draft` })}
+                ? intl.formatMessage({ id: 'Z2/PbO', defaultMessage: `Draft: {title}` }, { title: draft.title })
+                : intl.formatMessage({ id: 'f4NTf1', defaultMessage: `Loading draft` })}
             sitePreloaded={null}
             leftNavTopSlot={[]}
         >

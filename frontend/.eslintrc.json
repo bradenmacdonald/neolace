@@ -4,14 +4,16 @@
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended"
     ],
+    "plugins": [
+        "@typescript-eslint",
+        "formatjs"
+    ],
     "rules": {
         // 
         "react/no-unescaped-entities": ["warn", {"forbid": [">"]}],
         "@typescript-eslint/no-empty-function": "off",
         "react/jsx-no-target-blank": ["error", {"allowReferrer": true}],
-        "@typescript-eslint/no-unused-vars": ["off"]
-    },
-    "plugins": [
-        "@typescript-eslint"
-    ]
+        "@typescript-eslint/no-unused-vars": ["off"],
+        "formatjs/enforce-id": ["error", { "idInterpolationPattern": "[sha512:contenthash:base64:6]" } ]
+    }
 }

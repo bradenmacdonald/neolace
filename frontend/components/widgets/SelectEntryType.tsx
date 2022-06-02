@@ -33,7 +33,7 @@ export const SelectEntryType: React.FunctionComponent<Props> = ({ ...props }) =>
     if (schemaError) {
         return (
             <ErrorMessage>
-                <FormattedMessage defaultMessage={"Unable to load entry types"} id="selectEntryType.error" />
+                <FormattedMessage defaultMessage="Unable to load entry types" id="OaBMJc" />
             </ErrorMessage>
         );
     }

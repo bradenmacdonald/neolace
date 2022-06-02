@@ -28,7 +28,7 @@ const AccountPage: NextPage<PageProps> = function(props) {
         return <Redirect to="/account/login" />;
     }
 
-    const title = intl.formatMessage({id: "site.account.profile", defaultMessage: "My Profile"}, {siteName: props.site.name});
+    const title = intl.formatMessage({id: 'YzZa8+', defaultMessage: "My Profile"}, {siteName: props.site.name});
 
     return (
         <SitePage title={title} sitePreloaded={props.site} >

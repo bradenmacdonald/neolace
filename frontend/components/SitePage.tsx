@@ -90,7 +90,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 priority: 25,
                 content: {
                     url: "/draft/_/entry/_/edit",
-                    label: <FormattedMessage id="systemLink.createEntry" defaultMessage="Create Entry" />,
+                    label: <FormattedMessage id="oTIZFX" defaultMessage="Create Entry" />,
                     icon: "plus-lg",
                 },
             },
@@ -99,7 +99,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 priority: 30,
                 content: {
                     url: "/draft/",
-                    label: <FormattedMessage id="systemLink.drafts" defaultMessage="Drafts" />,
+                    label: <FormattedMessage id="2atspc" defaultMessage="Drafts" />,
                     icon: "file-earmark-diff",
                 },
             },
@@ -113,7 +113,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             priority: 55,
             content: {
                 url: site.isHomeSite ? "/account/" : `${site.homeSiteUrl}/account/`,
-                label: <FormattedMessage id="systemLink.profile" defaultMessage="Profile ({name})" values={{name: user.fullName}} />,
+                label: <FormattedMessage id="/GfBD6" defaultMessage="Profile ({name})" values={{name: user.fullName}} />,
                 icon: "person-fill",
             }
         });
@@ -123,7 +123,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             priority: 60,
             content: {
                 url: site.isHomeSite ? "/account/logout" : `${site.homeSiteUrl}/account/logout?returnSite=${encodeURI(site.shortId)}`,
-                label: <FormattedMessage id="systemLink.logout" defaultMessage="Log out" />,
+                label: <FormattedMessage id="PlBReU" defaultMessage="Log out" />,
                 icon: "door-closed",
             }
         });
@@ -134,7 +134,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             priority: 60,
             content: {
                 url: site.isHomeSite ? "/account/login" : `${site.homeSiteUrl}/account/login?returnSite=${encodeURI(site.shortId)}`,
-                label: <FormattedMessage id="systemLink.login" defaultMessage="Log in" />,
+                label: <FormattedMessage id="odXlk8" defaultMessage="Log in" />,
                 icon: "person-fill",
             }
         });
@@ -246,7 +246,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         <div className="fixed md:hidden bg-header-color text-white bottom-0 h-8 left-0 right-0">
             <button className="h-8 px-3" onClick={toggleMobileMenu}>
                 <Icon icon="list" />{" "}
-                <FormattedMessage id="mobileFooter.menuButton" defaultMessage="Menu" />
+                <FormattedMessage id="tKMlOc" defaultMessage="Menu" />
             </button>
         </div>
     </div></UiPluginsProvider></SWRConfig>;

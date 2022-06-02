@@ -46,7 +46,7 @@ export const Breadcrumbs: React.FunctionComponent<BreadcrumbsProps> = (props) =>
     return (
         <nav
             className="flex"
-            aria-label={intl.formatMessage({ id: "ui.component.breadcrumbs.label", defaultMessage: "Breadcrumbs" })}
+            aria-label={intl.formatMessage({ id: 'ByoZDD', defaultMessage: "Breadcrumbs" })}
         >
             <ol className="unstyled inline-flex items-center space-x-1 md:space-x-3">
                 {props.children}

@@ -229,7 +229,7 @@ export const RenderMDT: React.FunctionComponent<BlockProps> = (props) => {
                             `h${1 + props.context.headingShift}`,
                             { id: `footnotes` },
                             <>
-                                <FormattedMessage id="component.markdown.footnotes" defaultMessage="Footnotes" />
+                                <FormattedMessage id="t1Ql7Y" defaultMessage="Footnotes" />
                             </>,
                         )}
                         <ol>

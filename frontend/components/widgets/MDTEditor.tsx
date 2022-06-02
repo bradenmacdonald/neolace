@@ -5,6 +5,7 @@ import { Editable, RenderLeafProps, Slate } from 'slate-react';
 import { emptyDocument, EscapeMode, parseMdtStringToSlateDoc, slateDocToStringValue, stringValueToSlateDoc, useNeolaceSlateEditor } from 'components/utils/slate';
 import { ToolbarButton } from './Button';
 import { renderElement } from 'components/utils/slate-mdt';
+import { defineMessage } from 'components/utils/i18n';
 
 
 interface Props {
@@ -142,13 +143,13 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
             <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
                 <ToolbarButton
                     onClick={insertLookupExpression}
-                    title={intl.formatMessage({id: "ui.component.mdtEditor.toolbar.insertLookup", defaultMessage: "Insert lookup expression"})}
+                    tooltip={defineMessage({id: 'mFU1yM', defaultMessage: "Insert lookup expression"})}
                     icon="braces-asterisk"
                 />
                 <ToolbarButton
                     enabled={sourceMode}
                     onClick={toggleSourceMode}
-                    title={intl.formatMessage({id: "ui.component.mdtEditor.toolbar.sourceMode", defaultMessage: "Edit source"})}
+                    tooltip={defineMessage({id: 'mA1RDm', defaultMessage: "Edit source"})}
                     icon="code"
                 />
             </div>

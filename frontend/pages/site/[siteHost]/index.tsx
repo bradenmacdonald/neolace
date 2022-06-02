@@ -1,7 +1,6 @@
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
-import Link from 'next/link';
 import { ParsedUrlQuery } from 'querystring';
 import { getSiteData, SiteData, api, client } from 'lib/api-client';
 
@@ -40,11 +39,11 @@ const HomePage: NextPage<PageProps> = function(props) {
                 :
                     <>
                         <h1>
-                            <FormattedMessage id="site.home.defaultTitle" defaultMessage="Welcome to {siteName}" values={{siteName: props.site.name}}/>
+                            <FormattedMessage id="vfakHv" defaultMessage="Welcome to {siteName}" values={{siteName: props.site.name}}/>
                         </h1>
                         <p>
                             <FormattedMessage
-                                id="site.home"
+                                id="Gb43IT"
                                 defaultMessage="This site is powered by Neolace. If this is your site, you should customize this home page to say what you'd like."
                                 description="A default homepage description, if no home page text has been set."
                             />

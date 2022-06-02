@@ -11,6 +11,7 @@ import { TextInput } from 'components/widgets/TextInput';
 import { Button } from 'components/widgets/Button';
 import { Redirect } from 'components/utils/Redirect';
 import Link from 'next/link';
+import { defineMessage } from 'components/utils/i18n';
 
 interface PageProps {
     site: SiteData;
@@ -43,7 +44,7 @@ const LoginPage: NextPage<PageProps> = function(props) {
         return <Redirect to="/" />;
     }
 
-    const title = intl.formatMessage({id: "site.login.title", defaultMessage: "Log in to {siteName}"}, {siteName: props.site.name});
+    const title = intl.formatMessage({id: 'Ap3TN6', defaultMessage: "Log in to {siteName}"}, {siteName: props.site.name});
 
     return (
         <SitePage title={title} sitePreloaded={props.site} >
@@ -54,13 +55,16 @@ const LoginPage: NextPage<PageProps> = function(props) {
             <Form>
                 <Control
                     id="login-email"
-                    label={{id: "site.login.email", defaultMessage: "Email Address"}}
-                    hint={intl.formatMessage({id: "site.login.email.hint", defaultMessage: "We'll email you a link. Just click it and you'll be logged in."})}
+                    label={defineMessage({id: 'xxQxLE', defaultMessage: "Email Address"})}
+                    hint={defineMessage({
+                        defaultMessage: "We'll email you a link. Just click it and you'll be logged in.",
+                        id: 'E5pRaZ',
+                    })}
                 >
                     <TextInput value={userEmail} onChange={userEmailChange} />
                 </Control>
                 <Button onClick={handleLogin} disabled={userEmail === ""} className="font-bold">
-                    <FormattedMessage id="site.login.submit" defaultMessage="Log in" />
+                    <FormattedMessage id="odXlk8" defaultMessage="Log in" />
                 </Button>
             </Form>
 

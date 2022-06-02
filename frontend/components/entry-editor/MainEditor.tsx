@@ -1,13 +1,13 @@
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { api, useSiteSchema } from "lib/api-client";
-import { ErrorMessage } from "components/widgets/ErrorMessage";
+import { api } from "lib/api-client";
 import { Spinner } from "components/widgets/Spinner";
 import { AutoControl, Control, Form } from "components/widgets/Form";
 import { TextInput } from "components/widgets/TextInput";
 import { MDTEditor } from "components/widgets/MDTEditor";
 import { SelectEntryType } from "components/widgets/SelectEntryType";
+import { defineMessage } from "components/utils/i18n";
 
 interface Props {
     entry?: api.EditableEntryData;
@@ -64,7 +64,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, schema, addU
             <p>
                 <FormattedMessage
                     defaultMessage="You need to choose an entry type for this entry before you can set properties."
-                    id="propertiesEditor.error.noEntryType"
+                    id="SWt2PR"
                 />
             </p>
         );
@@ -77,7 +77,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, schema, addU
                 value={entry?.name ?? ""}
                 onChangeFinished={updateEntryName}
                 id="title"
-                label={{ id: "draft.entry.edit.name.label", defaultMessage: "Name / Title" }}
+                label={defineMessage({ defaultMessage: "Name / Title", id: 'j+aKkX' })}
                 isRequired={true}
             >
                 <TextInput />
@@ -86,16 +86,17 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, schema, addU
             {/* Entry Type */}
             <Control // SelectBoxes don't need "AutoControl" - changes apply immediately as the user makes a selection
                 id="entryType"
-                label={{ id: "draft.entry.edit.type.label", defaultMessage: "Entry Type" }}
-                hint={isNewEntry
+                label={defineMessage({ id: 'fVyv5L', defaultMessage: "Entry Type" })}
+                hint={{custom: (isNewEntry
                     ? intl.formatMessage({
-                        id: "draft.entry.edit.type.hint",
+                        id: 'uZW3Dr',
                         defaultMessage: "Cannot be changed after the entry has been created.",
                     })
                     : intl.formatMessage({
-                        id: "draft.entry.edit.type.hintExisting",
+                        id: 'KIAjvA',
                         defaultMessage: "Cannot be changed.",
-                    })}
+                    })
+                )}}
                 isRequired={isNewEntry}
             >
                 <SelectEntryType
@@ -112,26 +113,26 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, schema, addU
                 value={entry?.friendlyId ?? ""}
                 onChangeFinished={updateEntryFriendlyId}
                 id="id"
-                label={{ id: "draft.entry.edit.id.label", defaultMessage: "ID" }}
-                hint={intl.formatMessage({
-                    id: "draft.entry.edit.id.hint1",
+                label={defineMessage({ defaultMessage: "ID",  id: 'qlcuNQ' })}
+                hint={{custom: (intl.formatMessage({
+                    id: '6hE8SS',
                     defaultMessage: "Shown in the URL.",
                 }) + " " +
                     (entryType?.friendlyIdPrefix
                         ? intl.formatMessage({
-                            id: "draft.entry.edit.id.hint2",
+                            id: 'DYGIhv',
                             defaultMessage: 'Must start with "{prefix}".',
                         }, { prefix: entryType.friendlyIdPrefix })
                         : "") +
                     " " +
                     intl.formatMessage({
-                        id: "draft.entry.edit.id.hint3",
+                        id: 'FQi2nL',
                         defaultMessage: "Must be unique.",
                     }) + " " +
                     intl.formatMessage({
-                        id: "draft.entry.edit.id.hint4",
+                        id: '05LayV',
                         defaultMessage: "You cannot re-use an ID that was previously used for a different entry.",
-                    })}
+                    }))}}
                 isRequired={true}
             >
                 <TextInput />
@@ -142,7 +143,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, schema, addU
                 value={entry?.description ?? ""}
                 onChangeFinished={updateEntryDescription}
                 id="description"
-                label={{ id: "draft.entry.edit.description.label", defaultMessage: "Description" }}
+                label={defineMessage({ defaultMessage: 'Description', id: 'Q8Qw5B' })}
             >
                 <MDTEditor inlineOnly={true} />
             </AutoControl>
