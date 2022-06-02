@@ -3,13 +3,14 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import Link from 'next/link';
 import { ParsedUrlQuery } from 'querystring';
-import { client, api, getSiteData, SiteData } from 'lib/api-client';
+import { client, api, getSiteData } from 'lib/api-client';
 
 import { SitePage } from 'components/SitePage';
 import { LookupExpressionInput } from 'components/widgets/LookupExpressionInput';
 import { useRouter } from 'next/router';
 import { LookupEvaluatorWithPagination } from 'components/LookupEvaluator';
 import { MDTContext } from 'components/markdown-mdt/mdt';
+import { defineMessage } from 'components/utils/i18n';
 
 interface PageProps {
     entry: api.EntryData;
@@ -63,8 +64,8 @@ const EvaluateLookupPage: NextPage<PageProps> = function(props) {
                 </>},
                 {id: "tableOfContents", priority: 50, content: <>
                     <ul id="left-toc-headings">
-                        <li><Link  href={`/entry/${props.entry.friendlyId}#summary`}><a><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></Link></li>
-                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><a><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></Link></li>
+                        <li><Link  href={`/entry/${props.entry.friendlyId}#summary`}><a><FormattedMessage id="RrCui3" defaultMessage="Summary"/></a></Link></li>
+                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><a><FormattedMessage id="aI80kg" defaultMessage="Properties"/></a></Link></li>
                         {
                             props.entry.features?.Article?.headings.map(heading =>
                                 <li key={heading.id}><Link href={`/entry/${props.entry.friendlyId}#h-${heading.id}`}><a>{heading.title}</a></Link></li>
@@ -81,16 +82,16 @@ const EvaluateLookupPage: NextPage<PageProps> = function(props) {
                 value={editingLookupExpression}
                 onChange={handleLookupExpressionChange}
                 onFinishedEdits={handleFinishedChangingLookupExpression}
-                placeholder={intl.formatMessage({id: "site.entry.queryInputPlaceholder", defaultMessage: "Enter a lookup expression..."})}
+                placeholder={defineMessage({id: 'Uowwem', defaultMessage: "Enter a lookup expression..."})}
             />
 
-            <p><FormattedMessage id="site.entry.lookupResultHeading" defaultMessage="Result:" /></p>
+            <p><FormattedMessage id="vBiQpy" defaultMessage="Result:" /></p>
             <div className={activeLookupExpression !== editingLookupExpression ? `opacity-50` : ``}>
                 {
                     activeLookupExpression ?
                         <LookupEvaluatorWithPagination expr={activeLookupExpression} mdtContext={mdtContext} />
                     :
-                        <FormattedMessage id="site.entry.lookupExpressionMissing" defaultMessage="Enter a lookup expression above to see the result." />
+                        <FormattedMessage id="++0Uwo" defaultMessage="Enter a lookup expression above to see the result." />
                 }
             </div>
         </SitePage>

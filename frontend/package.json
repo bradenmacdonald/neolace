@@ -9,7 +9,7 @@
     "lint": "next lint",
     "start": "next start -p 5555",
     "entrypoint-dev": "npm link /local-dependencies/technotes-mdt/ && npm install && npm run dev",
-    "extract:i18n": "formatjs extract '{pages,components,sections}/**/*.{js,ts,tsx}' --format simple --out-file content/locales/en.json",
+    "extract:i18n": "formatjs extract '{pages,components,sections,plugins}/**/*.{js,ts,tsx}' --format simple --out-file content/locales/en.json",
     "compile:i18n": "formatjs compile-folder --ast --format simple content/locales content/compiled-locales",
     "i18n": "npm run extract:i18n && npm run compile:i18n"
   },
@@ -43,6 +43,7 @@
     "autoprefixer": "10.4.7",
     "eslint": "8.16.0",
     "eslint-config-next": "12.1.6",
+    "eslint-plugin-formatjs": "3.1.4",
     "postcss": "8.4.14",
     "tailwindcss": "3.0.24",
     "typescript": "4.6.4"

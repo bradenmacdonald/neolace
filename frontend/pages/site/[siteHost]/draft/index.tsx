@@ -22,7 +22,7 @@ const DraftDetailsPage: NextPage = function (_props) {
         return <ErrorMessage>{String(siteError)}</ErrorMessage>;
     }
 
-    const title = intl.formatMessage({ id: "drafts.title", defaultMessage: `Drafts` });
+    const title = intl.formatMessage({ id: '2atspc', defaultMessage: `Drafts` });
 
     return (
         <SitePage
@@ -33,7 +33,7 @@ const DraftDetailsPage: NextPage = function (_props) {
             <Breadcrumbs>
                     <Breadcrumb href={`/`}>{site.name}</Breadcrumb>
                     <Breadcrumb>
-                        <FormattedMessage id="draft.allDrafts" defaultMessage={"Drafts"} />
+                        <FormattedMessage id="2atspc" defaultMessage="Drafts" />
                     </Breadcrumb>
                 </Breadcrumbs>
 

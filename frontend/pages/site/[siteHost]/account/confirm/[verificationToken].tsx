@@ -68,14 +68,14 @@ const LoginPage: NextPage<PageProps> = function (props) {
     }, [data, props.verificationToken]);
 
     if (finalizeAccount) {
-        const title = intl.formatMessage({ id: "site.register.finalize", defaultMessage: "Finalize your account" });
+        const title = intl.formatMessage({ id: '/B3THW', defaultMessage: "Finalize your account" });
         return (
             <SitePage title={title} sitePreloaded={props.site}>
                 <h1 className="text-3xl font-semibold">{title}</h1>
 
                 <SuccessMessage>
                     <FormattedMessage
-                        id="site.register.complete"
+                        id="ksbTy8"
                         defaultMessage="Your account has been created, and you are now logged in."
                     />
                 </SuccessMessage>
@@ -85,7 +85,7 @@ const LoginPage: NextPage<PageProps> = function (props) {
         return <Redirect to="/" />;
     }
 
-    const title = intl.formatMessage({ id: "site.register.confirm", defaultMessage: "Confirm your account" });
+    const title = intl.formatMessage({ id: 'wG7BjX', defaultMessage: "Confirm your account" });
 
     return (
         <SitePage title={title} sitePreloaded={props.site}>
@@ -95,7 +95,7 @@ const LoginPage: NextPage<PageProps> = function (props) {
                 ? (
                     <ErrorMessage>
                         <FormattedMessage
-                            id="site.register.error.invalidToken"
+                            id="ZrwLkD"
                             defaultMessage="The link you clicked has expired or was invalid. Please try creating your account again."
                         />
                     </ErrorMessage>
@@ -115,7 +115,7 @@ const LoginPage: NextPage<PageProps> = function (props) {
                 : (
                     <p>
                         <FormattedMessage
-                            id="site.register.checkingToken"
+                            id="qNBuoM"
                             defaultMessage="Checking validation token."
                         />{" "}
                         <Spinner />

@@ -60,7 +60,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             if (numRemaining > 0 && !props.hideShowMoreLink) {
                 let moreLink = <FormattedMessage
                     key="more"
-                    id="common.list.xmore"
+                    id="hAv0cA"
                     defaultMessage="{extraCount, plural, one {# more…} other {# more…}}"
                     values={{extraCount: numRemaining}}
                     description="How many more items there are (at the end of a list)"
@@ -123,8 +123,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Boolean":
             return <>{
                 value.value
-                ? <FormattedMessage id="common.lookup-expression.true" defaultMessage="True"/>
-                : <FormattedMessage id="common.lookup-expression.false" defaultMessage="False"/>
+                ? <FormattedMessage id="KKkUks" defaultMessage="True"/>
+                : <FormattedMessage id="rxqs5U" defaultMessage="False"/>
             }</>
         case "Integer":
             return <>{value.value}</>
@@ -143,7 +143,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Error":
             return <ErrorMessage>
                 <FormattedMessage 
-                    id="common.lookup-expression.error"
+                    id="I9OUIM"
                     defaultMessage="Error ({errorType}): {errorMessage}"
                     values={{errorType: value.errorClass, errorMessage: value.message}}
                 />

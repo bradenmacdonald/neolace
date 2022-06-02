@@ -44,8 +44,8 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 </>},
                 {id: "tableOfContents", priority: 50, content: <>
                     <ul id="left-toc-headings">
-                        <li><Link href={`/entry/${props.entry.friendlyId}#summary`}><a><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></Link></li>
-                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><a><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></Link></li>
+                        <li><Link href={`/entry/${props.entry.friendlyId}#summary`}><a><FormattedMessage id="RrCui3" defaultMessage="Summary"/></a></Link></li>
+                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><a><FormattedMessage id="aI80kg" defaultMessage="Properties"/></a></Link></li>
                         {
                             props.entry.features?.Article?.headings.map(heading =>
                                 <li key={heading.id}><Link href={`/entry/${props.entry.friendlyId}#h-${heading.id}`}><a>{heading.title}</a></Link></li>
@@ -56,7 +56,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 ...(DEVELOPMENT_MODE ? [
                     {id: "entryActions", priority: 60, content: <>
                     <ul id="entry-actions" className="mt-4">
-                        <li><Link href={`/draft/_/entry/${props.entry.id}/edit`}><a><FormattedMessage id="site.entry.editEntry" defaultMessage="Edit"/></a></Link></li>
+                        <li><Link href={`/draft/_/entry/${props.entry.id}/edit`}><a><FormattedMessage id="wEQDC6" defaultMessage="Edit"/></a></Link></li>
                     </ul>
                 </>},
                 ] : [])
@@ -93,7 +93,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         {props.entry.features.HeroImage.caption ?
                             <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
                                 <EntryLink entryKey={props.entry.features.HeroImage.entryId} mdtContext={mdtContext}>
-                                    <FormattedMessage id="site.entry.heroImageCaptionPrefix" defaultMessage="Image:"/>
+                                    <FormattedMessage id="lr4lXN" defaultMessage="Image:"/>
                                 </EntryLink>&nbsp;
                                 <InlineMDT mdt={props.entry.features.HeroImage.caption} context={mdtContext} />
                             </div>
@@ -108,7 +108,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
             {/* Properties */}
             <div className={`flex flex-wrap xl:flex-nowrap ${hasProps || "hidden"}`}>
                 <div id="properties" className="flex-auto">
-                    <h2><FormattedMessage id="site.entry.propertiesHeading" defaultMessage="Properties"/></h2>
+                    <h2><FormattedMessage id="aI80kg" defaultMessage="Properties"/></h2>
                     <table className="w-full table-fixed">
                         <colgroup>
                             <col className="w-full md:w-1/4" />
@@ -141,7 +141,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 {
                     props.entry.features?.Image ?
                         <>
-                            <h2><FormattedMessage id="site.entry.imageHeading" defaultMessage="Image"/></h2>
+                            <h2><FormattedMessage id="+0zv6g" defaultMessage="Image"/></h2>
                             <img src={props.entry.features.Image.imageUrl} />
                         </>
                     : null

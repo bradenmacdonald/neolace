@@ -30,7 +30,7 @@ export const InfiniteHits: React.FunctionComponent<UseInfiniteHitsProps<Hit>> = 
             <div className="min-h-[50vh] text-gray-500">
                 <p>
                     <FormattedMessage
-                        id="plugin.search.enterSearchTerm"
+                        id="aWoo1x"
                         defaultMessage="Enter a search term above to see results."
                     />
                 </p>
@@ -41,7 +41,7 @@ export const InfiniteHits: React.FunctionComponent<UseInfiniteHitsProps<Hit>> = 
             <div className="min-h-[50vh]">
                 <p>
                     <FormattedMessage
-                        id="plugin.search.noResults"
+                        id="IJPMVo"
                         defaultMessage='No entries were found matching the query "{query}".'
                         values={{ query }}
                     />
@@ -57,7 +57,7 @@ export const InfiniteHits: React.FunctionComponent<UseInfiniteHitsProps<Hit>> = 
                     <div className="my-4">
                         <Button onClick={showPrevious} icon="chevron-up">
                             <FormattedMessage
-                                id="plugin.search.showPreviousResults"
+                                id="x/ZUyH"
                                 defaultMessage="Show previous results"
                             />
                         </Button>
@@ -92,7 +92,7 @@ export const InfiniteHits: React.FunctionComponent<UseInfiniteHitsProps<Hit>> = 
             </ol>
             <div className="my-4">
                 <Button disabled={isLastPage} onClick={showMore} icon="chevron-down">
-                    <FormattedMessage id="plugin.search.showMoreResults" defaultMessage="Show more results" />
+                    <FormattedMessage id="ntuqQX" defaultMessage="Show more results" />
                 </Button>
             </div>
         </div>

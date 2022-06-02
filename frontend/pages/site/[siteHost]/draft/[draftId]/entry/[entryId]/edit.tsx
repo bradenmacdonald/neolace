@@ -86,7 +86,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
             // We're creating a new draft:
             await client.createDraft({
                 title: newDraftTitle.trim() ||
-                    intl.formatMessage({ id: "draft.edit.newDraftTitle", defaultMessage: `Edited ${baseEntry?.name}` }),
+                    intl.formatMessage({ id: 'TUzKsg', defaultMessage: `Edited {title}` }, {title: baseEntry?.name ?? ""}),
                 description: "",
                 edits: unsavedEdits,
             }, { siteId: site.shortId }).then(
@@ -99,7 +99,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                     console.error(error);
                     alert(
                         intl.formatMessage({
-                            id: "draft.entry.edit.errorSaving",
+                            id: 'uAFusW',
                             defaultMessage: `Failed to save draft: {error}`,
                         }, { error: String(error?.message ?? error) }),
                     );
@@ -135,18 +135,18 @@ const DraftEntryEditPage: NextPage = function (_props) {
                 <Breadcrumbs>
                     <Breadcrumb href={`/`}>{site.name}</Breadcrumb>
                     <Breadcrumb href={`/draft/`}>
-                        <FormattedMessage id="draft.allDrafts" defaultMessage={"Drafts"} />
+                        <FormattedMessage id="2atspc" defaultMessage="Drafts" />
                     </Breadcrumb>
                     <Breadcrumb href={draft ? `/draft/${draft.id}` : undefined}>
-                        {draft ? draft.title : <FormattedMessage id="draft.new" defaultMessage="New Draft" />}
+                        {draft ? draft.title : <FormattedMessage id="CaAyve" defaultMessage="New Draft" />}
                     </Breadcrumb>
                     <Breadcrumb>
                         {isNewEntry
-                            ? <FormattedMessage defaultMessage="New Entry" id="draft.edit.newEntryTitle" />
+                            ? <FormattedMessage defaultMessage="New Entry" id="mgA3Ec" />
                             : (
                                 <FormattedMessage
                                     defaultMessage='Edit "{entryName}"'
-                                    id="draft.edit.editEntryTitle"
+                                    id="JbG3yV"
                                     values={{ entryName: entry?.name }}
                                 />
                             )}
@@ -156,12 +156,12 @@ const DraftEntryEditPage: NextPage = function (_props) {
                 {isNewEntry
                     ? (
                         <h1>
-                            <FormattedMessage id="draft.newEntry" defaultMessage="New Entry" />
+                            <FormattedMessage id="mgA3Ec" defaultMessage="New Entry" />
                         </h1>
                     )
                     : (
                         <h1>
-                            <FormattedMessage id="draft.editEntry" defaultMessage="Edit Entry" />
+                            <FormattedMessage id="2I11H+" defaultMessage="Edit Entry" />
                         </h1>
                     )}
 
@@ -169,14 +169,14 @@ const DraftEntryEditPage: NextPage = function (_props) {
                     <Tab
                         id="main"
                         icon="info-circle"
-                        name={defineMessage({ defaultMessage: "Main", id: "draft.edit.entry.tab.main" })}
+                        name={defineMessage({ defaultMessage: "Main", id: 'EFTSMc' })}
                     >
                         <MainEditor entry={entry} schema={schema} addUnsavedEdit={addUnsavedEdit} isNewEntry={isNewEntry} />
                     </Tab>
                     <Tab
                         id="properties"
                         icon="diamond-fill"
-                        name={defineMessage({ defaultMessage: "Properties", id: "draft.edit.entry.tab.properties" })}
+                        name={defineMessage({ defaultMessage: "Properties", id: 'aI80kg' })}
                     >
                         <PropertiesEditor entry={entry} schema={schema} addUnsavedEdit={addUnsavedEdit} />
                     </Tab>
@@ -184,7 +184,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         id="changes"
                         icon="list"
                         badge={unsavedEdits.length ? unsavedEdits.length.toString() : undefined}
-                        name={defineMessage({ defaultMessage: "Changes", id: "draft.edit.entry.tab.changes" })}
+                        name={defineMessage({ defaultMessage: "Changes", id: 'dgqhUM' })}
                     >
                         {unsavedEdits.length > 0
                             ? (
@@ -197,7 +197,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                                     e.code === api.SetEntryName.code ?
                                                         <FormattedMessage
                                                             defaultMessage='Renamed this entry to "{newName}"'
-                                                            id="draft.edit.history.renameDescription"
+                                                            id="Psr/Zc"
                                                             values={{newName: e.data.name}}
                                                         />
                                                     : null
@@ -214,8 +214,8 @@ const DraftEntryEditPage: NextPage = function (_props) {
                             : (
                                 <p>
                                     <FormattedMessage
-                                        id="draft.entry.edit.noChangesYet"
-                                        defaultMessage={"You haven't made any changes yet. Make some changes above and you'll be able to save the changes here."}
+                                        id="VtwXmq"
+                                        defaultMessage="You haven't made any changes yet. Make some changes above and you'll be able to save the changes here."
                                     />
                                 </p>
                             )}
@@ -223,10 +223,10 @@ const DraftEntryEditPage: NextPage = function (_props) {
                     <Tab
                         id="save"
                         icon="check-circle-fill"
-                        name={defineMessage({ defaultMessage: "Save", id: "draft.edit.entry.tab.save" })}
+                        name={defineMessage({ defaultMessage: "Save", id: 'jvo0vs' })}
                     >
                         <h3>
-                            <FormattedMessage id="draft.entry.edit.save" defaultMessage={"Save changes"} />
+                            <FormattedMessage id="X0ha1a" defaultMessage="Save changes" />
                         </h3>
                         {draft
                             ? (
@@ -236,8 +236,8 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                     onClick={saveChangesToDraft}
                                 >
                                     <FormattedMessage
-                                        id="draft.entry.edit.save"
-                                        defaultMessage={'Save these changes (to draft "{title}")'}
+                                        id="S/a7rH"
+                                        defaultMessage='Save these changes (to draft "{title}")'
                                         values={{ title: draft.title }}
                                     />
                                 </Button>
@@ -246,10 +246,10 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                 <Form>
                                     <Control
                                         id="draft-desc"
-                                        label={{
-                                            id: "draft.entry.edit.draft-title-instructions",
+                                        label={defineMessage({
+                                            id: 'I72/UY',
                                             defaultMessage: "Provide a brief description of what you changed:",
-                                        }}
+                                        })}
                                     >
                                         <TextInput />
                                     </Control>
@@ -259,8 +259,8 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                         onClick={saveChangesToDraft}
                                     >
                                         <FormattedMessage
-                                            id="draft.entry.edit.save"
-                                            defaultMessage={"Save these changes (as draft)"}
+                                            id="TpheOq"
+                                            defaultMessage="Save these changes (as draft)"
                                         />
                                     </Button>
                                 </Form>
@@ -274,10 +274,10 @@ const DraftEntryEditPage: NextPage = function (_props) {
     return (
         <SitePage
             title={entry?.name
-                ? intl.formatMessage({ id: "draft.entry.edit.title", defaultMessage: `Edit "{name}"` }, {
+                ? intl.formatMessage({ id: 'JQqknm', defaultMessage: `Edit "{name}"` }, {
                     name: entry.name,
                 })
-                : intl.formatMessage({ id: "draft.entry.edit.titleNoEntry", defaultMessage: `Edit` })}
+                : intl.formatMessage({ id: 'wEQDC6', defaultMessage: `Edit` })}
             sitePreloaded={null}
             leftNavTopSlot={[]}
         >

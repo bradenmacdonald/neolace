@@ -1,4 +1,6 @@
+import { displayString, TranslatableString } from 'components/utils/i18n';
 import React from 'react';
+import { useIntl } from 'react-intl';
 import { Icon, IconId } from './Icon';
 import { Tooltip } from './Tooltip';
 
@@ -32,7 +34,7 @@ export const Button = React.forwardRef<HTMLButtonElement, Props>(function Button
 
 interface ToolbarButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     icon: IconId;
-    title: string;
+    tooltip: TranslatableString;
     onClick?: React.MouseEventHandler<HTMLButtonElement>;
     enabled?: boolean;
     children?: never;
@@ -43,7 +45,8 @@ export const ToolbarSeparator: React.FunctionComponent<Record<never, never>> = (
     return <span aria-hidden={true} className="inline-block py-1 text-slate-200 select-none">|</span>
 }
 
-export const ToolbarButton: React.FunctionComponent<ToolbarButtonProps> = ({title, icon, enabled, onClick, ...props}) => {
+export const ToolbarButton: React.FunctionComponent<ToolbarButtonProps> = ({tooltip, icon, enabled, onClick, ...props}) => {
+    const intl = useIntl();
 
     const handleClick = React.useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
@@ -52,8 +55,8 @@ export const ToolbarButton: React.FunctionComponent<ToolbarButtonProps> = ({titl
         }
     }, [onClick]);
 
-    return <Tooltip tooltipContent={<span>{title}</span>}>
-        {attribs => <button {...props} {...attribs} aria-label={title} onClick={handleClick} className={`rounded-md px-2 py-1 hover:shadow-sm hover:shadow-gray-500 disabled:text-gray-300 disabled:hover:shadow-none disabled:cursor-not-allowed align-top ${enabled ? 'text-black' : 'text-gray-600'}`}>
+    return <Tooltip tooltipContent={<span>{displayString(intl, tooltip)}</span>}>
+        {attribs => <button {...props} {...attribs} aria-label={displayString(intl, tooltip)} onClick={handleClick} className={`rounded-md px-2 py-1 hover:shadow-sm hover:shadow-gray-500 disabled:text-gray-300 disabled:hover:shadow-none disabled:cursor-not-allowed align-top ${enabled ? 'text-black' : 'text-gray-600'}`}>
             <span className={`${enabled ? "border-b-2 border-b-red-700" : ""}`}>
                 <Icon icon={icon}/>
             </span>

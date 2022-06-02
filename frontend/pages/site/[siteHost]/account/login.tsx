@@ -1,16 +1,18 @@
-import React from 'react';
-import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
-import { ParsedUrlQuery } from 'querystring';
-import { FormattedMessage, useIntl } from 'react-intl';
+import React from "react";
+import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { ParsedUrlQuery } from "querystring";
+import { FormattedMessage, useIntl } from "react-intl";
 
-import { getSiteData, SiteData } from 'lib/api-client';
-import { SitePage } from 'components/SitePage';
-import { UserContext, UserStatus, requestPasswordlessLogin } from 'components/user/UserContext';
-import { Control, Form } from 'components/widgets/Form';
-import { TextInput } from 'components/widgets/TextInput';
-import { Button } from 'components/widgets/Button';
-import { Redirect } from 'components/utils/Redirect';
-import Link from 'next/link';
+import { getSiteData, SiteData } from "lib/api-client";
+import { SitePage } from "components/SitePage";
+import { requestPasswordlessLogin, UserContext, UserStatus } from "components/user/UserContext";
+import { Control, Form } from "components/widgets/Form";
+import { TextInput } from "components/widgets/TextInput";
+import { Button } from "components/widgets/Button";
+import { Redirect } from "components/utils/Redirect";
+import { defineMessage } from "components/utils/i18n";
+import { ActionStatus, ActionStatusDisplay, useActionStatus } from "components/widgets/ActionStatusIndicator";
+import { SuccessMessage } from "components/widgets/SuccessMessage";
 
 interface PageProps {
     site: SiteData;
@@ -19,8 +21,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
 }
 
-const LoginPage: NextPage<PageProps> = function(props) {
-
+const LoginPage: NextPage<PageProps> = function (props) {
     const intl = useIntl();
     const user = React.useContext(UserContext);
 
@@ -29,42 +30,66 @@ const LoginPage: NextPage<PageProps> = function(props) {
         setUserEmail(event.target.value);
     }, []);
 
+    const [loginStatus, wrapLogin, setLoginStatus] = useActionStatus();
+
     // Handler for when user enters their email and clicks "log in"
     const handleLogin = React.useCallback(async (event: React.MouseEvent) => {
         event.preventDefault();
-        if (await requestPasswordlessLogin(userEmail)) {
-            alert("A link was emailed to you; just click it an you'll be logged in.");
+        if (await wrapLogin(requestPasswordlessLogin(userEmail))) {
+            setLoginStatus(ActionStatus.Success);
         } else {
-            alert("You don't have an account. Please register first.");
+            setLoginStatus(ActionStatus.Error, new Error("You don't have an account. Please register first."));
         }
-    }, [userEmail]);
+    }, [userEmail, wrapLogin, setLoginStatus]);
 
     if (user.status === UserStatus.LoggedIn) {
         return <Redirect to="/" />;
     }
 
-    const title = intl.formatMessage({id: "site.login.title", defaultMessage: "Log in to {siteName}"}, {siteName: props.site.name});
+    const title = intl.formatMessage({ id: "Ap3TN6", defaultMessage: "Log in to {siteName}" }, {
+        siteName: props.site.name,
+    });
 
     return (
-        <SitePage title={title} sitePreloaded={props.site} >
+        <SitePage title={title} sitePreloaded={props.site}>
             <h1 className="text-3xl font-semibold">{title}</h1>
 
-            <p>Account registration is not yet available. However, if you already have an account, you can log in here:</p>
+            <p>
+                Account registration is not yet available. However, if you already have an account, you can log in here:
+            </p>
 
             <Form>
                 <Control
                     id="login-email"
-                    label={{id: "site.login.email", defaultMessage: "Email Address"}}
-                    hint={intl.formatMessage({id: "site.login.email.hint", defaultMessage: "We'll email you a link. Just click it and you'll be logged in."})}
+                    label={defineMessage({ id: "xxQxLE", defaultMessage: "Email Address" })}
+                    hint={defineMessage({
+                        defaultMessage: "We'll email you a link. Just click it and you'll be logged in.",
+                        id: "E5pRaZ",
+                    })}
                 >
                     <TextInput value={userEmail} onChange={userEmailChange} />
                 </Control>
-                <Button onClick={handleLogin} disabled={userEmail === ""} className="font-bold">
-                    <FormattedMessage id="site.login.submit" defaultMessage="Log in" />
+                <Button
+                    onClick={handleLogin}
+                    disabled={userEmail === "" || loginStatus.status === ActionStatus.InProgress ||
+                        loginStatus.status === ActionStatus.Success}
+                    className="font-bold"
+                >
+                    <FormattedMessage id="odXlk8" defaultMessage="Log in" />
                 </Button>
+                <ActionStatusDisplay
+                    state={loginStatus}
+                    className="my-3"
+                    success={
+                        <SuccessMessage>
+                            <FormattedMessage defaultMessage="We have emailed you a link. Click it to log in." id="bnOkqc"/>
+                        </SuccessMessage>
+                    }
+                />
             </Form>
 
-            {/*}
+            {
+                /*}
             <p className="!mt-[100px]">
                 <FormattedMessage
                     id="site.login.howToCreateAccount"
@@ -73,11 +98,11 @@ const LoginPage: NextPage<PageProps> = function(props) {
                         link: (str: string) => <Link href="/account/create"><a>{str}</a></Link>,
                     }}
                 />
-            </p>*/}
-
+            </p>*/
+            }
         </SitePage>
     );
-}
+};
 
 export default LoginPage;
 
@@ -87,18 +112,18 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
         paths: [],
         // Enable statically generating any additional pages as needed
         fallback: "blocking",
-    }
-}
+    };
+};
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
-    if (!context.params) { throw new Error("Internal error - missing URL params."); }  // Make TypeScript happy
+    if (!context.params) throw new Error("Internal error - missing URL params."); // Make TypeScript happy
     // Look up the Neolace site by domain:
     const site = await getSiteData(context.params.siteHost);
-    if (site === null) { return {notFound: true}; }
+    if (site === null) return { notFound: true };
 
     // Users are only able to log in via the "home site".
     if (!site.isHomeSite) {
-        return {redirect: {destination: `${site.homeSiteUrl}/account/login`, permanent: true}};
+        return { redirect: { destination: `${site.homeSiteUrl}/account/login`, permanent: true } };
     }
 
     return {
@@ -106,4 +131,4 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
             site,
         },
     };
-}
+};

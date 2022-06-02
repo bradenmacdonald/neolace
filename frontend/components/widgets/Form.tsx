@@ -1,3 +1,4 @@
+import { displayText, TranslatableText } from "components/utils/i18n";
 import { useStateRef } from "components/utils/stateRefHook";
 import React from "react";
 import { FormattedMessage, MessageDescriptor, useIntl } from "react-intl";
@@ -21,8 +22,8 @@ export const Form: React.FunctionComponent<FormProps> = (props) => {
 
 interface ControlProps {
     id: string;
-    label: MessageDescriptor;
-    hint?: string;
+    label: TranslatableText;
+    hint?: TranslatableText;
     children: React.ReactElement;
     /** Is this field required? */
     isRequired?: boolean;
@@ -37,19 +38,19 @@ export const Control: React.FunctionComponent<ControlProps> = (props) => {
     return (
         <div className={`mb-6`}>
             <label htmlFor={props.id} className="block w-max mb-1 text-sm font-semibold">
-                <FormattedMessage {...props.label} />
+                {displayText(props.label)}
                 {props.isRequired && (
                     <span
                         className={`text-xs p-1 mx-2 rounded-md  font-light ${
                             hasValue ? "text-gray-400" : "bg-amber-100 text-gray-800"
                         }`}
                     >
-                        <FormattedMessage defaultMessage="Required" id="control.required" />
+                        <FormattedMessage defaultMessage="Required" id="Seanpx" />
                     </span>
                 )}
             </label>
             {childInput}
-            {props.hint ? <span className="block text-sm text-gray-600">{props.hint}</span> : null}
+            {props.hint ? <span className="block text-sm text-gray-600">{displayText(props.hint)}</span> : null}
         </div>
     );
 };

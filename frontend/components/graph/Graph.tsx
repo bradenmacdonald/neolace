@@ -14,6 +14,7 @@ import { useStateRef } from "../utils/stateRefHook";
 import { applyTransforms, Transform, Transforms } from "./Transforms";
 import { Modal } from "../widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
+import { defineMessage } from "components/utils/i18n";
 
 export interface GraphProps {
     value: api.GraphValue;
@@ -412,37 +413,37 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             <div className="block rounded-t w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
                 <ToolbarButton
                     onClick={handleExpandCanvasButton}
-                    title={intl.formatMessage({ defaultMessage: "Toggle expanded view", id: "graph.toolbar.expand" })}
+                    tooltip={defineMessage({ defaultMessage: "Toggle expanded view", id: 'k4UVvX' })}
                     icon={expanded ? "arrows-angle-contract" : "arrows-angle-expand"}
                 />
                 <ToolbarButton
                     onClick={handleZoomInButton}
-                    title={intl.formatMessage({ defaultMessage: "Zoom in", id: "graph.toolbar.zoomIn" })}
+                    tooltip={defineMessage({ defaultMessage: "Zoom in", id: 'xbi38c' })}
                     icon="zoom-in"
                 />
                 <ToolbarButton
                     onClick={handleZoomOutButton}
-                    title={intl.formatMessage({ defaultMessage: "Zoom out", id: "graph.toolbar.zoomOut" })}
+                    tooltip={defineMessage({ defaultMessage: "Zoom out", id: '/UnJ3S' })}
                     icon="zoom-out"
                 />
                 <ToolbarButton
                     onClick={handleFitViewButton}
-                    title={intl.formatMessage({ defaultMessage: "Fit graph to view", id: "graph.toolbar.fitView" })}
+                    tooltip={defineMessage({ defaultMessage: "Fit graph to view", id: 'KW0LBg' })}
                     icon="aspect-ratio"
                 />
                 <ToolbarButton
                     onClick={handleDownloadImageButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Download entire graph as an image",
-                        id: "graph.toolbar.downloadImage",
+                        id: 'ZXv6xf',
                     })}
                     icon="image"
                 />
                 <ToolbarButton
                     onClick={handleCondenseNodesButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Condense leaves and intermediate nodes",
-                        id: "graph.toolbar.condenseNodes",
+                        id: 'r/Qe/+',
                     })}
                     icon="chevron-contract"
                     enabled={isCondensed}
@@ -450,27 +451,27 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 <ToolbarSeparator/>
                 <ToolbarButton
                     onClick={handleSelectToolButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Select tool: click on an entry/node to select it. Double-click to see its neighbors.",
-                        id: "graph.toolbar.selectTool",
+                        id: '5T8hcS',
                     })}
                     icon="cursor-left-fill"
                     enabled={activeTool === Tool.Select}
                 />
                 <ToolbarButton
                     onClick={handleHideArticlesButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Hide entries tool: click on an entry to hide all entries of that type.",
-                        id: "graph.toolbar.hideNodesTool",
+                        id: 'UNBVo0',
                     })}
                     icon="eraser"
                     enabled={activeTool === Tool.HideNodes}
                 />
                 <ToolbarButton
                     onClick={handleExpandLeafButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Expand leaf tool: Click on previously collapsed nodes to expand them again.",
-                        id: "graph.toolbar.expandNodes",
+                        id: 'ZT3+GQ',
                     })}
                     icon="chevron-expand"
                     enabled={activeTool === Tool.ExpandNodes}

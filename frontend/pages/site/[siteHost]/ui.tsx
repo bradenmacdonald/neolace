@@ -1,6 +1,5 @@
 import React from "react";
 import { NextPage } from "next";
-import { useIntl } from "react-intl";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -29,7 +28,6 @@ const UIDemo = (props: { label: string; children: React.ReactNode }) => {
 };
 
 const UiDemoPage: NextPage = function (props) {
-    const intl = useIntl();
     const [selectedIcon, setSelectedIcon] = React.useState<IconId>("search");
     const [searchDemoText, setSearchDemoText] = React.useState("");
     const [lookupDemoText, setLookupDemoText] = React.useState("");
@@ -55,14 +53,14 @@ const UiDemoPage: NextPage = function (props) {
             <p>Here is an example of our form component.</p>
 
             <Form>
-                <Control id="form-email" label={{ id: "ui.demo.form.email", defaultMessage: "Your Email" }}>
+                <Control id="form-email" label={defineMessage({ id: 'SqR1My', defaultMessage: "Your Email" })}>
                     <TextInput />
                 </Control>
                 <Control
                     id="form-lookup-expr"
-                    label={{ id: "ui.demo.form.lookup", defaultMessage: "Lookup Expression" }}
-                    hint={intl.formatMessage({
-                        id: "ui.demo.form.lookupHint",
+                    label={defineMessage({ id: 'UkgQ/N', defaultMessage: "Lookup Expression" })}
+                    hint={defineMessage({
+                        id: 'S02xzc',
                         defaultMessage:
                             "Try using SHIFT-ENTER to create multiple lines, or entering a long string to see the box expand.",
                     })}
@@ -70,14 +68,14 @@ const UiDemoPage: NextPage = function (props) {
                     <LookupExpressionInput
                         value={lookupDemoText}
                         onChange={setLookupDemoText}
-                        placeholder={"Enter a lookup expression"}
+                        placeholder={defineMessage({defaultMessage: 'Enter a lookup expression', id: '18J4sF'})}
                     />
                 </Control>
                 <AutoControl
                     id="form-mdt-editor"
-                    label={{ id: "ui.demo.form.lookup", defaultMessage: "MDT (Markdown / rich text) editor" }}
-                    hint={intl.formatMessage({
-                        id: "ui.demo.form.toolbar",
+                    label={defineMessage({ id: '2clcRr', defaultMessage: "MDT (Markdown / rich text) editor" })}
+                    hint={defineMessage({
+                        id: 'XR+5Ez',
                         defaultMessage: "This also shows our <ToolbarButton/> component used to make a toolbar.",
                     })}
                     onChangeFinished={setMDTDemoText}
@@ -133,7 +131,7 @@ const UiDemoPage: NextPage = function (props) {
                             <Tab
                                 id="main"
                                 icon="info-circle"
-                                name={defineMessage({ defaultMessage: "Main", id: "draft.edit.entry.tab.main" })}
+                                name={defineMessage({ defaultMessage: "Main", id: 'EFTSMc' })}
                             >
                                 This is the main tab content.
                             </Tab>
@@ -142,7 +140,7 @@ const UiDemoPage: NextPage = function (props) {
                                 icon="diamond-fill"
                                 name={defineMessage({
                                     defaultMessage: "Properties",
-                                    id: "draft.edit.entry.tab.properties",
+                                    id: 'aI80kg',
                                 })}
                             >
                                 This is the properties tab.
@@ -151,7 +149,7 @@ const UiDemoPage: NextPage = function (props) {
                                 id="changes"
                                 icon="list"
                                 badge={"3"}
-                                name={defineMessage({ defaultMessage: "Changes", id: "draft.edit.entry.tab.changes" })}
+                                name={defineMessage({ defaultMessage: "Changes", id: 'dgqhUM' })}
                             >
                                 This is the changes tab, with a "badge" that says "3".
                             </Tab>
@@ -170,15 +168,15 @@ const UiDemoPage: NextPage = function (props) {
                             options={[
                                 {
                                     id: "first",
-                                    label: defineMessage({ defaultMessage: "First item", id: "ui-drop-first" }),
+                                    label: defineMessage({ defaultMessage: "First item", id: 'c6B/JF' }),
                                 },
                                 {
                                     id: "second",
-                                    label: defineMessage({ defaultMessage: "Second item", id: "ui-drop-second" }),
+                                    label: defineMessage({ defaultMessage: "Second item", id: 'L9aUV9' }),
                                 },
                                 {
                                     id: "third",
-                                    label: defineMessage({ defaultMessage: "Third item", id: "ui-drop-third" }),
+                                    label: defineMessage({ defaultMessage: "Third item", id: 'hDD9II' }),
                                 },
                             ]}
                         />
