@@ -11,7 +11,7 @@ export function getPlugins(): Promise<NeolacePlugin[]> {
     }
     pluginsPromise = (async () => {
         const pluginCache: NeolacePlugin[] = [];
-        log.info("Initializing plugins...");
+        log.debug("Initializing plugins...");
         for (const plugin of config.plugins) {
             // For built-in plugins (in this folder), just specifying the name of the plugin folder is sufficient.
             // Otherwise, the plugin "mod" string should be the full import path/URL of the plugin's mod.ts file.
