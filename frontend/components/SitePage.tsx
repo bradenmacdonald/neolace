@@ -27,16 +27,6 @@ interface Props {
     leftNavTopSlot?: UISlotWidget[];
     leftNavBottomSlot?: UISlotWidget[];
     footerSlot?: UISlotWidget[];
-    /**
-     * For a better user experience with no flash of unstyled content etc, use getStaticProps to preload the site data
-     * and pass it in here.
-     * 
-     * However, if getStaticProps is not possible or doesn't make sense for a particular page, this can be set null and
-     * the site details will be loaded on the client side.
-     * 
-     * See comments below in SitePage ("fallback") about looking for a better way to do this.
-     */
-    sitePreloaded: SiteData | null;
     children: React.ReactNode;
 }
 

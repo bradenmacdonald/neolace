@@ -1,4 +1,4 @@
-import { Schema, Type, string, nullable, array, boolean, Record, number, } from "../api-schemas.ts";
+import { Schema, Type, string, nullable, array, boolean, Record, number, object, } from "../api-schemas.ts";
 import { ReferenceCacheSchema } from "../content/reference-cache.ts";
 import { VNID } from "../types.ts";
 
@@ -17,6 +17,7 @@ export const FrontendConfigSchema = Schema({
         headingColor: rgbTuple,
         linkColor: rgbTuple,
     }).strictOptional(),
+    plugins: Record(string, object).strictOptional(),
 });
 export type FrontendConfigData = Type<typeof FrontendConfigSchema>;
 
