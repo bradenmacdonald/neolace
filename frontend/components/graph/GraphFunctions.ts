@@ -40,9 +40,7 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
     const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({
             id: VNID(nodeKey),
-            label: graph.getNodeAttribute(nodeKey, "clique") !== undefined
-                ? `CLIQUE ${graph.getNodeAttribute(nodeKey, "clique")}`
-                : graph.getNodeAttribute(nodeKey, "label") as string,
+            label: graph.getNodeAttribute(nodeKey, "label") as string,
             entryType: VNID(graph.getNodeAttribute(nodeKey, "entryType")),
             ...(graph.hasNodeAttribute(nodeKey, "isFocusEntry") && { isFocusEntry: true }),
             ...(graph.hasNodeAttribute(nodeKey, "community") &&
@@ -581,7 +579,7 @@ export function transformComputeCommunities(graph: GraphType) {
 // Assumes that communites are computed for nodes.
 export function transformComputeCliques(graph: GraphType, comm2id: Map<number, string[]>) {
     const transformedGraph = graph.copy();
-    if (transformedGraph.order === 0) return;
+    if (transformedGraph.order === 0) return transformedGraph;
     for (const com of comm2id.keys()) {
         findCliquesInNodeSubset(transformedGraph, comm2id.get(com) as string[], com);
     }

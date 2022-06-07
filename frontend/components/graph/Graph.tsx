@@ -14,7 +14,6 @@ import { useStateRef } from "../utils/stateRefHook";
 import { applyTransforms, Transform, Transforms } from "./Transforms";
 import { Modal } from "../widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
-import { computeStyles } from "@popperjs/core";
 
 export interface GraphProps {
     value: api.GraphValue;

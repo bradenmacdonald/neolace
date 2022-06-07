@@ -42,7 +42,7 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
     const dataCopy = JSON.parse(JSON.stringify(data));
     const originalDataGraph = createGraphObject(dataCopy);
     let transformedGraph = createGraphObject(dataCopy);
-    let comm2id: Map<number, string[]>;
+    let comm2id = new Map<number, string[]>();
 
     for (const t of transformList) {
         if (t.id === Transforms.CONDENSE) {
@@ -59,12 +59,13 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
         } else if (t.id === Transforms.CONDENSENODE) {
             transformedGraph = transformCondenseNodeLeaves(transformedGraph, t.params.nodeToCondense as string);
         } else if (t.id === Transforms.COMMUNITY) {
-            // NOTE compute communities needs to be last transform to be applied as all final nodes are needed.
+            // compute communities needs to be last transform to be applied as all final nodes are needed.
             const result = transformComputeCommunities(transformedGraph);
             transformedGraph = result.simpleGraph;
             comm2id = result.comm2id;
         } else if (t.id === Transforms.ADDCLIQUES) {
-            if (transformList.includes(Transforms.CONDENSE)) return;
+            // if no community transform -> find cliques transform is not done.
+            if (transformList.find((t) => t.id === Transforms.COMMUNITY) === undefined) continue;
             transformedGraph = transformComputeCliques(transformedGraph, comm2id);
         }
     }
