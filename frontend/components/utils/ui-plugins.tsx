@@ -1,10 +1,8 @@
 import { api, SiteData } from "lib/api-client";
 import React, { useContext } from "react";
-import type { UISlotWidget } from "components/widgets/UISlot";
+import type { UiSlotChange } from "components/widgets/UISlot";
 
-export type UiSlotId = "systemLinks" | `plugin:${string}`;
-
-export type UiSlotChange = {op: "insert", widget: UISlotWidget<unknown>};
+export type UiSlotId = "systemLinks" | "leftNavBottom" | `plugin:${string}`;
 
 export interface PluginPageProps {
     path: string;

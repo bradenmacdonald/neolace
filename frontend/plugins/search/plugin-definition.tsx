@@ -1,5 +1,6 @@
 import { FormattedMessage } from "react-intl";
 import type { PluginDefinition } from "components/utils/ui-plugins";
+import { UiChangeOperation } from "components/widgets/UISlot";
 
 export const plugin: PluginDefinition = {
     id: "search",
@@ -7,7 +8,7 @@ export const plugin: PluginDefinition = {
         return {
             "systemLinks": [
                 {
-                    op: "insert",
+                    op: UiChangeOperation.Insert,
                     widget: {
                         id: "search",
                         priority: 20,

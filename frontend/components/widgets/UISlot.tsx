@@ -2,6 +2,16 @@ import React from "react";
 
 import { UiPluginsContext, UiSlotId } from "components/utils/ui-plugins";
 
+export enum UiChangeOperation {
+    Insert = "insert",
+    Hide = "hide",
+}
+
+export type UiSlotChange = 
+    |{op: UiChangeOperation.Insert, widget: UISlotWidget<unknown>}
+    |{op: UiChangeOperation.Hide, widgetId: string}
+;
+
 /**
  * Some widget that appears in a UI slot
  */
@@ -11,6 +21,8 @@ export interface UISlotWidget<ContentType = React.ReactElement> {
     // label?: React.ReactElement;
     /** Priority, 0 comes first, 100 comes last */
     priority: number;
+    /** If a widget in a slot is hidden, it won't be rendered at all. */
+    hidden?: boolean;
     content: ContentType;
 }
 
@@ -37,11 +49,17 @@ export const UISlot = function <ContentType = React.ReactElement>(props: Props<C
         const contents = [...props.defaultContents ?? []];
         for (const p of pluginsData.plugins) {
             for (const change of (p.uiSlotChanges?.[props.slotId as UiSlotId] ?? [])) {
-                if (change.op === "insert") {
+                if (change.op === UiChangeOperation.Insert) {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     contents.push(change.widget as UISlotWidget<any>);
+                } else if (change.op === UiChangeOperation.Hide) {
+                    const widget = contents.find((w) => w.id === change.widgetId);
+                    if (widget) {
+                        widget.hidden = true;
+                    }
                 } else {
-                    throw new Error(`unknown plugin UI change operation: ${change.op}`);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    throw new Error(`unknown plugin UI change operation: ${(change as any).op}`);
                 }
             }
         }
@@ -52,7 +70,7 @@ export const UISlot = function <ContentType = React.ReactElement>(props: Props<C
 
     return (
         <>
-            {contents.map((c) => props.renderWidget(c))}
+            {contents.map((c) => c.hidden ? null : props.renderWidget(c))}
         </>
     );
 };
