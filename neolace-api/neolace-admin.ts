@@ -515,7 +515,11 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
             try {
                 await pushEditsIfNeeded(edits);
             } catch (err) {
-                throw new Error(`Failed to set properties of entry ${friendlyId}.`, {cause: err});
+                if (err instanceof api.InvalidEdit) {
+                    throw new Error(`Failed to set properties of entry (${JSON.stringify(err.context)})`, {cause: err});
+                } else {
+                    throw new Error(`Failed to set properties of entry`, {cause: err});
+                }
             }
         }
         await pushEdits(edits);

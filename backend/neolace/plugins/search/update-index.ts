@@ -105,13 +105,16 @@ export async function reindexAllEntries(siteId: VNID) {
                 const documents = await Promise.all(
                     entriesChunk.map((row) => entryToIndexDocument(row["entry.id"])),
                 );
-                try {
-                    await client.collections(newCollectionName).documents().import(documents, { action: "upsert" });
-                } catch (err) {
-                    if (err instanceof TypeSense.Errors.ImportError) {
-                        log.error(err.importResults);
+
+                if (documents.length > 0) { // <-- .import() will give an error if we pass in an empty list
+                    try {
+                        await client.collections(newCollectionName).documents().import(documents, { action: "upsert" });
+                    } catch (err) {
+                        if (err instanceof TypeSense.Errors.ImportError) {
+                            log.error(err.importResults);
+                        }
+                        throw err;
                     }
-                    throw err;
                 }
 
                 const totalTime = performance.now();
