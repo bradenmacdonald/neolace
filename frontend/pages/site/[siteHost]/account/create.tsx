@@ -4,8 +4,8 @@ import { ParsedUrlQuery } from 'querystring';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import { api, client, getSiteData, SiteData } from 'lib/api-client';
-import { SitePage } from 'components/SitePage';
-import { UserContext, UserStatus, requestPasswordlessLogin } from 'components/user/UserContext';
+import { SiteDataProvider, SitePage } from 'components/SitePage';
+import { UserContext, UserStatus } from 'components/user/UserContext';
 import { Control, Form } from 'components/widgets/Form';
 import { TextInput } from 'components/widgets/TextInput';
 import { Button } from 'components/widgets/Button';
@@ -70,8 +70,8 @@ const LoginPage: NextPage<PageProps> = function(props) {
 
     const title = intl.formatMessage({id: '0vL5u1', defaultMessage: "Create an account"});
 
-    return (
-        <SitePage title={title} sitePreloaded={props.site} >
+    return (<SiteDataProvider sitePreloaded={props.site}>
+        <SitePage title={title}>
             <h1 className="text-3xl font-semibold">{title}</h1>
 
             <p>
@@ -119,7 +119,7 @@ const LoginPage: NextPage<PageProps> = function(props) {
             </Form>
 
         </SitePage>
-    );
+    </SiteDataProvider>);
 }
 
 export default LoginPage;
