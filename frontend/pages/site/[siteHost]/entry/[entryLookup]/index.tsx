@@ -7,7 +7,7 @@ import { ParsedUrlQuery } from 'querystring';
 import { Blurhash } from "react-blurhash";
 import { client, api, getSiteData, SiteData } from 'lib/api-client';
 
-import { SitePage } from 'components/SitePage';
+import { SiteDataProvider, SitePage } from "components/SitePage";
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 import { LookupValue } from 'components/LookupValue';
 import { EntryLink } from 'components/EntryLink';
@@ -28,13 +28,12 @@ const EntryPage: NextPage<PageProps> = function(props) {
     const mdtContext = React.useMemo(() => new MDTContext({
         entryId: props.entry.id,
         refCache: props.entry.referenceCache,
-    }), [props.entry.id]);
+    }), [props.entry.id, props.entry.referenceCache]);
     //const user = React.useContext(UserContext);
     const hasProps = props.entry.propertiesSummary?.length ?? 0 > 0;
 
-    return (
+    return (<SiteDataProvider sitePreloaded={props.sitePreloaded}>
         <SitePage
-            sitePreloaded={props.sitePreloaded}
             leftNavTopSlot={[
                 {id: "entryName", priority: 20, content: <>
                     <strong className="block mt-2">{props.entry.name}</strong>
@@ -155,7 +154,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 }
             </div>
         </SitePage>
-    );
+    </SiteDataProvider>);
 }
 
 export default EntryPage;
@@ -170,13 +169,14 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
 }
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
+    if (!context.params) { throw new Error("Internal error - missing URL params."); }  // Make TypeScript happy
 
     // Look up the Neolace site by domain:
-    const site = await getSiteData(context.params!.siteHost);
+    const site = await getSiteData(context.params.siteHost);
     if (site === null) { return {notFound: true}; }
     let entry: api.EntryData;
     try {
-        entry = await client.getEntry(context.params!.entryLookup, {siteId: site.shortId, flags: [
+        entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [
             api.GetEntryFlags.IncludePropertiesSummary,
             api.GetEntryFlags.IncludeReferenceCache,
             api.GetEntryFlags.IncludeFeatures,
@@ -188,7 +188,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         throw err;
     }
 
-    if (entry.friendlyId !== context.params!.entryLookup) {
+    if (entry.friendlyId !== context.params.entryLookup) {
         // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
         return {
             redirect: {

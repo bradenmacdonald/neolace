@@ -119,7 +119,6 @@ const DraftDetailsPage: NextPage = function (_props) {
             title={draft
                 ? intl.formatMessage({ id: 'Z2/PbO', defaultMessage: `Draft: {title}` }, { title: draft.title })
                 : intl.formatMessage({ id: 'f4NTf1', defaultMessage: `Loading draft` })}
-            sitePreloaded={null}
             leftNavTopSlot={[]}
         >
             {content}

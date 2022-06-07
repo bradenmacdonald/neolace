@@ -4,13 +4,9 @@ import { ParsedUrlQuery } from 'querystring';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import { getSiteData, SiteData } from 'lib/api-client';
-import { SitePage } from 'components/SitePage';
-import { UserContext, UserStatus, requestPasswordlessLogin } from 'components/user/UserContext';
-import { Control, Form } from 'components/widgets/Form';
-import { TextInput } from 'components/widgets/TextInput';
-import { Button } from 'components/widgets/Button';
+import { SiteDataProvider, SitePage } from 'components/SitePage';
+import { UserContext, UserStatus } from 'components/user/UserContext';
 import { Redirect } from 'components/utils/Redirect';
-import Link from 'next/link';
 
 interface PageProps {
     site: SiteData;
@@ -31,12 +27,14 @@ const AccountPage: NextPage<PageProps> = function(props) {
     const title = intl.formatMessage({id: 'YzZa8+', defaultMessage: "My Profile"}, {siteName: props.site.name});
 
     return (
-        <SitePage title={title} sitePreloaded={props.site} >
-            <h1 className="text-3xl font-semibold">{title}</h1>
+        <SiteDataProvider sitePreloaded={props.site}>
+            <SitePage title={title}>
+                <h1 className="text-3xl font-semibold">{title}</h1>
 
-            <p>Profile for {user.fullName} ({user.username}). This will have options to change your name, reset password, etc.</p>
+                <p>Profile for {user.fullName} ({user.username}). This will have options to change your name, reset password, etc.</p>
 
-        </SitePage>
+            </SitePage>
+        </SiteDataProvider>
     );
 }
 

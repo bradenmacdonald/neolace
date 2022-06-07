@@ -40,10 +40,7 @@ const UiDemoPage: NextPage = function (props) {
     }
 
     return (
-        <SitePage
-            title="UI Demos"
-            sitePreloaded={null}
-        >
+        <SitePage title="UI Demos">
             <h1 className="text-3xl font-semibold">UI Demos</h1>
 
             <p>This page (for development only) provides a demo of the various Neolace UI components.</p>

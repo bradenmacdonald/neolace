@@ -5,9 +5,8 @@ import { ParsedUrlQuery } from "querystring";
 
 import { getSiteData, SiteData } from "lib/api-client";
 import { PluginPageProps } from "components/utils/ui-plugins";
-import { SitePage } from "components/SitePage";
+import { SiteDataProvider, SitePage } from "components/SitePage";
 import { Spinner } from "components/widgets/Spinner";
-import { SiteDataProvider } from "components/utils/SiteDataProvider";
 
 interface PageProps {
     site: SiteData;

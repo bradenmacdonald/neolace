@@ -4,7 +4,7 @@ import { ParsedUrlQuery } from "querystring";
 import { FormattedMessage, useIntl } from "react-intl";
 
 import { getSiteData, SiteData } from "lib/api-client";
-import { SitePage } from "components/SitePage";
+import { SiteDataProvider, SitePage } from "components/SitePage";
 import { requestPasswordlessLogin, UserContext, UserStatus } from "components/user/UserContext";
 import { Control, Form } from "components/widgets/Form";
 import { TextInput } from "components/widgets/TextInput";
@@ -50,8 +50,8 @@ const LoginPage: NextPage<PageProps> = function (props) {
         siteName: props.site.name,
     });
 
-    return (
-        <SitePage title={title} sitePreloaded={props.site}>
+    return (<SiteDataProvider sitePreloaded={props.site}>
+        <SitePage title={title}>
             <h1 className="text-3xl font-semibold">{title}</h1>
 
             <p>
@@ -101,7 +101,7 @@ const LoginPage: NextPage<PageProps> = function (props) {
             </p>*/
             }
         </SitePage>
-    );
+    </SiteDataProvider>);
 };
 
 export default LoginPage;

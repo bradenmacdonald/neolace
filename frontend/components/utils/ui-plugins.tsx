@@ -23,6 +23,7 @@ export interface EnabledPluginsConfig {
         siteConfig: Record<string, unknown>,
         uiSlotChanges: Partial<Record<UiSlotId, UiSlotChange[]>>,
     }[],
+    loaded: boolean,
 }
 
 /**
@@ -32,6 +33,7 @@ export interface EnabledPluginsConfig {
 export const UiPluginsContext = React.createContext<EnabledPluginsConfig>({
     // Default values for this context:
     plugins: [],
+    loaded: false,
 });
 
 export const AvailablePluginsContext = React.createContext<PluginDefinition[]>([]);
@@ -40,7 +42,7 @@ export const UiPluginsProvider = (props: {site: SiteData, children: React.ReactN
     const allPlugins = useContext(AvailablePluginsContext);
 
     const enabledPlugins = React.useMemo(() => {
-        const result: EnabledPluginsConfig = {plugins: []};
+        const result: EnabledPluginsConfig = {plugins: [], loaded: true};
         for (const plugin of allPlugins) {
             const siteConfig = props.site.frontendConfig.plugins?.[plugin.id] as Record<string, unknown>|undefined;
             if (siteConfig !== undefined) {
