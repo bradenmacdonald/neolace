@@ -3,7 +3,7 @@ import { NextPage } from "next";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api, client, NEW, useDraft, useEditableEntry, useSiteData, useSiteSchema } from "lib/api-client";
 
-import { SitePage } from "components/SitePage";
+import { SiteDataProvider, SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
@@ -18,7 +18,6 @@ import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
 import { PropertiesEditor } from "components/entry-editor/PropertiesEditor";
 import { MainEditor } from "components/entry-editor/MainEditor";
-import { Tooltip } from "components/widgets/Tooltip";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
 
 interface PageUrlQuery extends ParsedUrlQuery {
@@ -278,7 +277,6 @@ const DraftEntryEditPage: NextPage = function (_props) {
                     name: entry.name,
                 })
                 : intl.formatMessage({ id: 'wEQDC6', defaultMessage: `Edit` })}
-            sitePreloaded={null}
             leftNavTopSlot={[]}
         >
             {content}

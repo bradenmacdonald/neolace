@@ -5,13 +5,45 @@ import { SWRConfig } from 'swr';
 
 import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData, useSiteData, api } from 'lib/api-client';
-import { UISlot, UISlotWidget, defaultRender } from './widgets/UISlot';
+import { UISlot, UISlotWidget, defaultRender, DefaultUISlot } from './widgets/UISlot';
 import FourOhFour from 'pages/404';
 import { MDTContext, RenderMDT } from './markdown-mdt/mdt';
 import { Icon, IconId } from './widgets/Icon';
 import { FormattedMessage } from 'react-intl';
-import { UiPluginsProvider } from './utils/ui-plugins';
+import { UiPluginsContext, UiPluginsProvider } from './utils/ui-plugins';
 import { DEVELOPMENT_MODE } from 'lib/config';
+import { ErrorMessage } from './widgets/ErrorMessage';
+
+
+interface SiteDataProviderProps {
+    /**
+     * For a better user experience with no flash of unstyled content etc, use getStaticProps to preload the site data
+     * and pass it in here.
+     *
+     * TODO: Ideally the logic to load the data in getStaticProps shouldn't need to be duplicated in each separate page.
+     * Follow https://github.com/vercel/next.js/discussions/10949 for updates on a better way to handle this.
+     */
+    sitePreloaded: SiteData | null;
+    children: React.ReactNode;
+}
+
+/**
+ * Provide all React components within this one with data about the current site (and its enabled plugins)
+ * 
+ * See https://swr.vercel.app/docs/with-nextjs for details of how this works using SWR's global fallback config.
+ */
+export const SiteDataProvider: React.FunctionComponent<SiteDataProviderProps> = (props) => {
+    const {site, siteError} = useSiteData(props.sitePreloaded ? {fallback: props.sitePreloaded} : {});
+    const fallback = props.sitePreloaded ? {[`site:${props.sitePreloaded.domain}`]: props.sitePreloaded} : {};
+
+    return (
+        <SWRConfig value={{ fallback }}>
+            <UiPluginsProvider site={site}>
+                {props.children}
+            </UiPluginsProvider>
+        </SWRConfig>
+    );
+};
 
 export const DefaultSiteTitle = Symbol("DefaultSiteTitle");
 
@@ -27,16 +59,6 @@ interface Props {
     leftNavTopSlot?: UISlotWidget[];
     leftNavBottomSlot?: UISlotWidget[];
     footerSlot?: UISlotWidget[];
-    /**
-     * For a better user experience with no flash of unstyled content etc, use getStaticProps to preload the site data
-     * and pass it in here.
-     * 
-     * However, if getStaticProps is not possible or doesn't make sense for a particular page, this can be set null and
-     * the site details will be loaded on the client side.
-     * 
-     * See comments below in SitePage ("fallback") about looking for a better way to do this.
-     */
-    sitePreloaded: SiteData | null;
     children: React.ReactNode;
 }
 
@@ -45,7 +67,8 @@ interface Props {
  */
 export const SitePage: React.FunctionComponent<Props> = (props) => {
     const user = React.useContext(UserContext);
-    const {site, siteError} = useSiteData(props.sitePreloaded ? {fallback: props.sitePreloaded} : {});
+    const {site, siteError} = useSiteData();
+    const pluginsData = React.useContext(UiPluginsContext);
 
     // On mobile, we use JavaScript to show the menu when the user taps on the "Menu" button
     const [mobileMenuVisible, showMobileMenu] = React.useState(false);
@@ -70,14 +93,6 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         const color: [number, number, number] = site.frontendConfig.theme?.[name] ?? defaultColor;
         return color.join(", ");
     };
-
-    // If getStaticProps has preloaded data about the current site, pass it in to SWR so it'll be immediately used
-    // everywhere that we need site data. See https://swr.vercel.app/docs/with-nextjs
-    // TODO: Ideally the logic to load this shouldn't need to be duplicated in each separate page. Follow
-    //       https://github.com/vercel/next.js/discussions/10949 for updates on a better way to handle this.
-    // Note that this fallback/SWRConfig only applies to child components, not _this_ SitePage component, which is why
-    // we also pass "fallback" in to the useSiteData hook above.
-    const fallback = props.sitePreloaded ? {[`site:${props.sitePreloaded.domain}`]: props.sitePreloaded} : {};
 
     const defaultSystemLinks: UISlotWidget<SystemLink>[] = [];
     //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
@@ -159,7 +174,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         </ul>
     );
 
-    return <SWRConfig value={{ fallback }}><UiPluginsProvider site={site}><div>
+    const content = <div>
         <Head>
             <title>{props.title === DefaultSiteTitle ? site.name : `${props.title} - ${site.name}`}</title>
             <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
@@ -176,6 +191,9 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 <script defer data-domain={site.domain} src="https://plausible.io/js/plausible.js"></script>
             :null}
         </Head>
+
+        {/* If plugins want to render a header (e.g. for theming purposes), they can. By default there is no full-width header. */}
+        <DefaultUISlot slotId="globalHeader"/>
 
         {/* Container that wraps the left nav column (on desktop) and the article text/content */}
         <div className="flex flex-row justify-center mx-auto shadow-lg w-screen md:max-w-[1280px]">
@@ -198,15 +216,17 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             >
 
                 {/* Site name/logo */}
-                <Link href="/">
-                    {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
-                    <a className="flex-none p-1 mr-1 flex items-center mb-3">
-                        {
-                            // eslint-disable-next-line @next/next/no-img-element
-                            site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
-                        }
-                    </a>
-                </Link>
+                <DefaultUISlot slotId="siteLogo">
+                    <Link href="/">
+                        {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
+                        <a className="flex-none p-1 mr-1 flex items-center mb-3">
+                            {
+                                // eslint-disable-next-line @next/next/no-img-element
+                                site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
+                            }
+                        </a>
+                    </Link>
+                </DefaultUISlot>
 
                 <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavTopSlot ?? []), {
                     id: "siteLinks",
@@ -230,6 +250,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             {/* The main content of this entry */}
             <main role="main" id="content" className="w-full left-0 top-0 md:w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] neo-typography" onClick={handleArticleClick}>{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                 <div className="md:min-h-[calc(100vh-11.5rem)]"> {/* Push the footer down to the bottom if the page content is very short */}
+                    <DefaultUISlot slotId="preContent"/>
                     {props.children}
                 </div>
                 <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 clear-both">
@@ -249,5 +270,8 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 <FormattedMessage id="tKMlOc" defaultMessage="Menu" />
             </button>
         </div>
-    </div></UiPluginsProvider></SWRConfig>;
+    </div>;
+
+    // Automatically inject SiteDataProvider if necessary:
+    return pluginsData.loaded ? content : <SiteDataProvider sitePreloaded={null}>{content}</SiteDataProvider>;
 };

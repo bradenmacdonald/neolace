@@ -96,14 +96,25 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
     const router = useRouter();
     // router.query.siteHost gives the site's domain name because of how we have the Next.js URL rewriting configured.
     const domain = router.query.siteHost as string;
-    const { data, error } = useSWR(`site:${domain}`, async () => {
+    // eslint-disable-next-line prefer-const
+    let { data, error } = useSWR(`site:${domain}`, async () => {
         if (domain) {
             return await client.getSite({domain});
         } else {
             throw new Error("Can't load site yet because domain is unknown.");
         }
     }, {
-        fallbackData: (options.fallback && options.fallback.domain === domain) ? options.fallback : {
+        refreshInterval: 10 * 60_000,  // Reload the site data every 10 minutes in case anything was changed.
+    });
+    if (data === undefined) {
+        // If data is undefined at this point, it means that it hasn't yet been loaded from the API (or couldn't be),
+        // AND that the data is not available from a parent <SiteDataProvider> (which usually should be the source of
+        // preloaded site data for most pages in Neolace.)
+        // Fallback to a default while we wait for the data to load:
+        // Note that we cannot use this as a 'fallbackData' parameter in the useSWR call above, because then it would
+        // overwrite the data coming from <SiteDataProvider>, which makes the preloaded site data available as a
+        // global fallback.
+        data = options.fallback ?? {
             name: "━━━━━━━━━━━━━━",
             description: "",
             domain,
@@ -114,10 +125,8 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
             isHomeSite: false,
             homeSiteName: "━━━━━━━━━━━━━━",
             homeSiteUrl: "",
-        },
-        refreshInterval: 10 * 60_000,  // Reload the site data every 10 minutes in case anything was changed.
-    });
-    if (data === undefined) { throw "fallbackError"; }  // Tell TypeScript data is always defined due to the fallback above.
+        }
+    }
     return {site: data, siteError: error};
 }
 

@@ -4,8 +4,8 @@ import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 import { getSiteData, SiteData, api, client } from 'lib/api-client';
 
-import { SitePage } from 'components/SitePage';
-import { UserContext, UserStatus } from 'components/user/UserContext';
+import { SiteDataProvider, SitePage } from "components/SitePage";
+import { UserContext } from 'components/user/UserContext';
 import { MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 
 interface PageProps {
@@ -27,11 +27,8 @@ const HomePage: NextPage<PageProps> = function(props) {
     }), [props.refCache]);
     const user = React.useContext(UserContext);
 
-    return (
-        <SitePage
-            title={props.site.name}
-            sitePreloaded={props.site}
-        >
+    return (<SiteDataProvider sitePreloaded={props.site}>
+        <SitePage title={props.site.name}>
             {/* Below, 100vh-11.6rem pushes the footer down to the bottom of the screen but prevents scrolling if there's only a single line in the footer */}
             <div className="max-w-6xl mx-auto neo-typography md:min-h-[calc(100vh-11.6rem)]">
                 {props.homepageMD ?
@@ -52,7 +49,7 @@ const HomePage: NextPage<PageProps> = function(props) {
                 }
             </div>
         </SitePage>
-    );
+    </SiteDataProvider>);
 }
 
 export default HomePage;

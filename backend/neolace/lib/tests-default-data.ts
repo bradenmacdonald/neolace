@@ -160,6 +160,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             features: {
                 hoverPreview: { enabled: true },
             },
+            plugins: {},
         },
     })).then((result) => {
         data.otherSite.id = result.id;
@@ -188,6 +189,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             ],
             features: {
                 hoverPreview: { enabled: true },
+            },
+            plugins: {
+                search: {},
             },
         },
     })).then((result) => {

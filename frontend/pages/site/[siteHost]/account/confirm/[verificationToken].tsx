@@ -6,7 +6,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
 
 import { client, getSiteData, SiteData } from "lib/api-client";
-import { SitePage } from "components/SitePage";
+import { SiteDataProvider, SitePage } from "components/SitePage";
 import { UserContext, UserStatus } from "components/user/UserContext";
 import { Button } from "components/widgets/Button";
 import { Redirect } from "components/utils/Redirect";
@@ -69,8 +69,8 @@ const LoginPage: NextPage<PageProps> = function (props) {
 
     if (finalizeAccount) {
         const title = intl.formatMessage({ id: '/B3THW', defaultMessage: "Finalize your account" });
-        return (
-            <SitePage title={title} sitePreloaded={props.site}>
+        return (<SiteDataProvider sitePreloaded={props.site}>
+            <SitePage title={title}>
                 <h1 className="text-3xl font-semibold">{title}</h1>
 
                 <SuccessMessage>
@@ -80,15 +80,15 @@ const LoginPage: NextPage<PageProps> = function (props) {
                     />
                 </SuccessMessage>
             </SitePage>
-        );
+        </SiteDataProvider>);
     } else if (user.status === UserStatus.LoggedIn) {
         return <Redirect to="/" />;
     }
 
     const title = intl.formatMessage({ id: 'wG7BjX', defaultMessage: "Confirm your account" });
 
-    return (
-        <SitePage title={title} sitePreloaded={props.site}>
+    return (<SiteDataProvider sitePreloaded={props.site}>
+        <SitePage title={title}>
             <h1 className="text-3xl font-semibold">{title}</h1>
 
             {error
@@ -122,7 +122,7 @@ const LoginPage: NextPage<PageProps> = function (props) {
                     </p>
                 )}
         </SitePage>
-    );
+    </SiteDataProvider>);
 };
 
 export default LoginPage;
