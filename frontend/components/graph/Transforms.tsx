@@ -1,6 +1,16 @@
 import { G6RawGraphData } from "components/graph/Graph";
 import { VNID } from "neolace-api";
-import { transformCondenseGraph, transformHideNodesOfType, transformExpandLeaves, createGraphObject, convertGraphToData, GraphType, transformCondenseNodeLeaves, computeCommunities } from "./GraphFunctions";
+import { 
+    transformCondenseGraph, 
+    transformHideNodesOfType, 
+    transformExpandLeaves, 
+    createGraphObject, 
+    convertGraphToData, 
+    GraphType, 
+    transformCondenseNodeLeaves,
+    transformComputeCommunities,
+    transformComputeCliques 
+} from "./GraphFunctions";
 
 export interface Transform {
     id: string;
@@ -14,6 +24,7 @@ export enum Transforms {
     EXPANDLEAF = "expand-leaf",
     COMMUNITY = "community",
     CONDENSENODE = "condense-node",
+    ADDCLIQUES = "add-cliques",
 }
 
 function condenseGraphData(currentData: G6RawGraphData, graph: GraphType) {
@@ -27,13 +38,15 @@ function condenseGraphData(currentData: G6RawGraphData, graph: GraphType) {
 }
 
 
-export function applyTransforms(data: G6RawGraphData, transformList: Transform[]) {
-    const originalDataGraph = createGraphObject(data);
-    let transformedGraph = createGraphObject(data);
+export function applyTransforms(data: G6RawGraphData, transformList: Transform[]): Readonly<G6RawGraphData> {
+    const dataCopy = JSON.parse(JSON.stringify(data));
+    const originalDataGraph = createGraphObject(dataCopy);
+    let transformedGraph = createGraphObject(dataCopy);
+    let comm2id: Map<number, string[]>;
 
     for (const t of transformList) {
         if (t.id === Transforms.CONDENSE) {
-            transformedGraph = condenseGraphData(data, transformedGraph);
+            transformedGraph = condenseGraphData(dataCopy, transformedGraph);
         } else if (t.id === Transforms.HIDETYPE) {
             transformedGraph = transformHideNodesOfType(transformedGraph, VNID(t.params.nodeType as string));
         } else if (t.id === Transforms.EXPANDLEAF) {
@@ -47,11 +60,14 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
             transformedGraph = transformCondenseNodeLeaves(transformedGraph, t.params.nodeToCondense as string);
         } else if (t.id === Transforms.COMMUNITY) {
             // NOTE compute communities needs to be last transform to be applied as all final nodes are needed.
-            transformedGraph = computeCommunities(transformedGraph);
-            // console.log(transformedGraph);
+            const result = transformComputeCommunities(transformedGraph);
+            transformedGraph = result.simpleGraph;
+            comm2id = result.comm2id;
+        } else if (t.id === Transforms.ADDCLIQUES) {
+            if (transformList.includes(Transforms.CONDENSE)) return;
+            transformedGraph = transformComputeCliques(transformedGraph, comm2id);
         }
     }
     const finalData = convertGraphToData(transformedGraph);
-    console.log(finalData);
     return finalData;
 }

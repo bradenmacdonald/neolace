@@ -67,7 +67,7 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
     return data;
 }
 
-function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
+function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData): Readonly<G6RawGraphData> {
     let data: G6RawGraphData = {
         nodes: value.entries.map((n) => (
             { id: n.entryId, label: n.name, entryType: n.entryType, isFocusEntry: n.isFocusEntry }
@@ -258,7 +258,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Set the graph data and render it whenever the data has changed or the graph has been re-initialized:
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        graph.data(originalData);
+        const originalDataCopy = JSON.parse(JSON.stringify(originalData));
+        graph.data(originalDataCopy);
         graph.render();
         // By default, we zoom the graph so that four nodes would fit horizontally.
         graph.zoomTo(graph.getWidth() / (220 * 4), undefined, false);
@@ -278,12 +279,13 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Update the graph data whenever the current data changes
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        graph.changeData(currentData);
+        const currentDataCopy = JSON.parse(JSON.stringify(currentData));
+        graph.changeData(currentDataCopy);
         // ADD COMBOS WHEN NEEDED
         //TODO make this to be a part of combo operation under communities
         // creates lists of ids for combos
         const comboDict: Record<number, string[]> = {};
-        originalData.nodes.forEach((n) => {
+        currentData.nodes.forEach((n) => {
             if (n.clique === undefined) return;
             if (!comboDict[n.clique]) comboDict[n.clique] =[];
             comboDict[n.clique].push(n.id);
@@ -304,9 +306,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             }
         }
         // creates cobmos
-        console.log(comboDict)
         for (const combo in comboDict) {
-            console.log('Creating combo')
             graph.createCombo({
                 id: combo,
                 label: `Community ${combo}`,
@@ -536,13 +536,27 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         if (isCommunized) {
             setTransforms(
                 (prevTransforms) => prevTransforms.filter((t) => (
-                        t.id !== Transforms.COMMUNITY)
+                        t.id !== Transforms.COMMUNITY && t.id !== Transforms.ADDCLIQUES)
                     )
                 );
         } else {
             setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.COMMUNITY, params: {}}]);
         }
     }, [isCommunized, setTransforms]);
+    // Code for detecting cliques toolbar button
+    const areCliquesDetected = transformList.find((t) => t.id === Transforms.ADDCLIQUES) !== undefined;
+    const handleCliquesButton = React.useCallback(() => {
+        if (!isCommunized) return;
+        if (areCliquesDetected) {
+            setTransforms(
+                (prevTransforms) => prevTransforms.filter((t) => (
+                    t.id !== Transforms.ADDCLIQUES
+                ))
+            ) 
+        } else {
+            setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.ADDCLIQUES, params: {}}]);
+        }
+    }, [areCliquesDetected, isCommunized, setTransforms]);
     // Tools:
     const handleSelectToolButton = React.useCallback(() => { setActiveTool(Tool.Select); }, [setActiveTool]);
     const handleExpandLeafButton = React.useCallback(() => { setActiveTool(Tool.CondenseExpandNode); }, [setActiveTool]);
@@ -625,6 +639,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     icon="eraser"
                     enabled={isCommunized}
                 />
+                {isCommunized && <ToolbarButton
+                    onClick={handleCliquesButton}
+                    title={intl.formatMessage({
+                        defaultMessage: "Detect cliques and combine them into combos",
+                        id: "graph.toolbar.detectCliques",
+                    })}
+                    icon="braces-asterisk"
+                    enabled={areCliquesDetected}
+                />}
             </div>
             <div
                 ref={updateGraphHolder}

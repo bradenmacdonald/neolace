@@ -407,35 +407,6 @@ export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphTyp
     return newGraph;
 }
 
-export function computeCommunities(graph: GraphType) {
-    // TODO need to turn graph back from simple type
-    // TODO make resolution parameters part of toolbar.
-    // TODO when collapsing communities, what community should they inherit?
-    const simpleGraph = toUndirected(toSimple(graph))
-    louvain.assign(simpleGraph, {resolution:1.3});
-    // get community partition
-    const id2comm: Record<string, number> = {};
-    const comm2id = new Map<number, string[]>();
-    simpleGraph.forEachNode((n) => {
-        id2comm[n] = simpleGraph.getNodeAttribute(n, 'community') as number;
-        const community = comm2id.get(simpleGraph.getNodeAttribute(n, 'community') as number);
-        if (community) {
-            community.push(n);
-        } else {
-            comm2id.set(simpleGraph.getNodeAttribute(n, 'community') as number, [n]);
-        }
-    })
- 
-    // TODO add option to include or not include cliques?
-    if (simpleGraph.order === 0) return;
-    console.time('maxClique');
-    for (const com of comm2id.keys()) {
-        findCliquesInNodeSubset(simpleGraph, comm2id.get(com) as string[], com);
-    }
-    console.timeEnd('maxClique');
-    return simpleGraph;
-}
-
 /**
  * Find the largest clique in the subgraph defined by the node list and mark nodes as part of the clique.
  * NOTE temporarily we will use community id as the clique id as each community so far has only one clique
@@ -581,5 +552,37 @@ export function transformCondenseNodeLeaves(
 ) {
     let transformedGraph = graph.copy();
     transformedGraph = condenseNodeLeaves(graph, nodeToCondense);
+    return transformedGraph;
+}
+
+export function transformComputeCommunities(graph: GraphType) {
+    // TODO need to turn graph back from simple type
+    // TODO make resolution parameters part of toolbar.
+    // TODO when collapsing communities, what community should they inherit?
+    const simpleGraph = toUndirected(toSimple(graph))
+    louvain.assign(simpleGraph, {resolution:1.3});
+    // get community partition
+    const id2comm: Record<string, number> = {};
+    const comm2id = new Map<number, string[]>();
+    simpleGraph.forEachNode((n) => {
+        id2comm[n] = simpleGraph.getNodeAttribute(n, 'community') as number;
+        const community = comm2id.get(simpleGraph.getNodeAttribute(n, 'community') as number);
+        if (community) {
+            community.push(n);
+        } else {
+            comm2id.set(simpleGraph.getNodeAttribute(n, 'community') as number, [n]);
+        }
+    })
+ 
+    return {simpleGraph, comm2id};
+}
+
+// Assumes that communites are computed for nodes.
+export function transformComputeCliques(graph: GraphType, comm2id: Map<number, string[]>) {
+    const transformedGraph = graph.copy()
+    if (transformedGraph.order === 0) return;
+    for (const com of comm2id.keys()) {
+        findCliquesInNodeSubset(transformedGraph, comm2id.get(com) as string[], com);
+    }
     return transformedGraph;
 }
