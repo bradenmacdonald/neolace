@@ -110,7 +110,7 @@ export async function getEntry(
                 innerValue = new InlineMarkdownStringValue(prop.displayAs.replaceAll("{value}", innerValueAsString));
             }
             return new AnnotatedValue(innerValue, {
-                factId: new StringValue(fact.factId),
+                propertyFactId: new StringValue(fact.propertyFactId),
                 source: new StringValue(fact.source.from === "ThisEntry" ? "ThisEntry" : "AncestorEntry"),
                 note: new InlineMarkdownStringValue(fact.note),
                 rank: new IntegerValue(fact.rank),
@@ -159,13 +159,7 @@ export async function getEntry(
                 }
             }
             const serializedValue = value.toJSON();
-            if (
-                (serializedValue.type === "Page" && serializedValue.values.length === 0) ||
-                (
-                    serializedValue.type === "Annotated" && serializedValue.value.type === "Page" &&
-                    serializedValue.value.values.length === 0
-                )
-            ) {
+            if (serializedValue.type === "Page" && serializedValue.values.length === 0) {
                 // This property value is just an empty result set. Hide it from the result.
                 continue;
             }
@@ -185,10 +179,11 @@ export async function getEntry(
             MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
             WITH prop, pf
             ORDER BY prop.importance, prop.name, pf.rank
-            WITH prop, collect(pf { .valueExpression, .note, .rank, .slot }) AS facts
+            WITH prop, collect(pf { .id, .valueExpression, .note, .rank, .slot }) AS facts
         `.RETURN({
             "prop.id": Field.VNID,
             "facts": Field.List(Field.Record({
+                "id": Field.VNID,
                 "valueExpression": Field.String,
                 "note": Field.String,
                 "rank": Field.Int,

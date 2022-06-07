@@ -334,110 +334,100 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: C,
+                            entryId: C,
                             valueExpression: `[[/entry/${A}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // D is a A
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: D,
+                            entryId: D,
                             valueExpression: `[[/entry/${A}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // D is a B
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: D,
+                            entryId: D,
                             valueExpression: `[[/entry/${B}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // E is a B
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: E,
+                            entryId: E,
                             valueExpression: `[[/entry/${B}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // F is a C
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: F,
+                            entryId: F,
                             valueExpression: `[[/entry/${C}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // F is a D
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: F,
+                            entryId: F,
                             valueExpression: `[[/entry/${D}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // H is a F
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: H,
+                            entryId: H,
                             valueExpression: `[[/entry/${F}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // H is a E
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: H,
+                            entryId: H,
                             valueExpression: `[[/entry/${E}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // I is a E
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: I,
+                            entryId: I,
                             valueExpression: `[[/entry/${E}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // I is a G
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: I,
+                            entryId: I,
                             valueExpression: `[[/entry/${G}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                 ],
@@ -511,55 +501,50 @@ group("ancestors.ts", () => {
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: B,
+                            entryId: B,
                             valueExpression: `[[/entry/${A}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // C is a A
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: C,
+                            entryId: C,
                             valueExpression: `[[/entry/${A}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // D is a B
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: D,
+                            entryId: D,
                             valueExpression: `[[/entry/${B}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // D is a C
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: D,
+                            entryId: D,
                             valueExpression: `[[/entry/${C}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                     // A is a D
                     {
                         code: "AddPropertyValue",
                         data: {
-                            entry: A,
+                            entryId: A,
                             valueExpression: `[[/entry/${D}]]`,
-                            property: entryIsA,
+                            propertyId: entryIsA,
                             propertyFactId: VNID(),
-                            note: "",
                         },
                     },
                 ],

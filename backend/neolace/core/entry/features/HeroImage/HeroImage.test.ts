@@ -203,8 +203,8 @@ group("HeroImage.ts", () => {
                 {
                     code: "AddPropertyValue",
                     data: {
-                        entry: entryId,
-                        property: hasFeatureImage,
+                        entryId: entryId,
+                        propertyId: hasFeatureImage,
                         propertyFactId: VNID(),
                         valueExpression: `[[/entry/${imageId}]]`,
                         note: caption,

@@ -5,6 +5,7 @@ import { Editable, RenderLeafProps, Slate } from 'slate-react';
 import { emptyDocument, EscapeMode, parseMdtStringToSlateDoc, slateDocToStringValue, stringValueToSlateDoc, useNeolaceSlateEditor } from 'components/utils/slate';
 import { ToolbarButton } from './Button';
 import { renderElement } from 'components/utils/slate-mdt';
+import { defineMessage } from 'components/utils/i18n';
 
 
 interface Props {
@@ -135,20 +136,20 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={emptyDocument} onChange={handleChange}>
         <div
-            className="border-2 border-gray-500 rounded-md focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full"
+            className="border border-gray-500 rounded-md focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full"
             ref={rootDiv}
         >
             {/* The Toolbar */}
             <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
                 <ToolbarButton
                     onClick={insertLookupExpression}
-                    title={intl.formatMessage({id: "ui.component.mdtEditor.toolbar.insertLookup", defaultMessage: "Insert lookup expression"})}
+                    tooltip={defineMessage({id: 'mFU1yM', defaultMessage: "Insert lookup expression"})}
                     icon="braces-asterisk"
                 />
                 <ToolbarButton
                     enabled={sourceMode}
                     onClick={toggleSourceMode}
-                    title={intl.formatMessage({id: "ui.component.mdtEditor.toolbar.sourceMode", defaultMessage: "Edit source"})}
+                    tooltip={defineMessage({id: 'mA1RDm', defaultMessage: "Edit source"})}
                     icon="code"
                 />
             </div>

@@ -500,8 +500,8 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                     edits.push({
                         code: api.AddPropertyValue.code,
                         data: {
-                            entry: entryId,
-                            property: idMap[humanKey] as VNID,
+                            entryId,
+                            propertyId: idMap[humanKey] as VNID,
                             propertyFactId: VNID(),
                             valueExpression: replaceIdsInMarkdownAndLookupExpressions(idMap, fact.valueExpression),
                             note: fact.note ?? "",
@@ -515,7 +515,11 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
             try {
                 await pushEditsIfNeeded(edits);
             } catch (err) {
-                throw new Error(`Failed to set properties of entry ${friendlyId}.`, {cause: err});
+                if (err instanceof api.InvalidEdit) {
+                    throw new Error(`Failed to set properties of entry (${JSON.stringify(err.context)})`, {cause: err});
+                } else {
+                    throw new Error(`Failed to set properties of entry`, {cause: err});
+                }
             }
         }
         await pushEdits(edits);

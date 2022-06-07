@@ -38,6 +38,17 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         return <p>[ERROR INVALID VALUE, NO TYPE INFORMATION]</p>;  // Doesn't need i18n, internal error message shouldn't be seen
     }
 
+    if (value.annotations?.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
+        const {note, ...annotationsWithoutNote} = value.annotations;
+        const valueWithoutNote = {...value, annotations: annotationsWithoutNote};
+        return <>
+            <LookupValue value={valueWithoutNote} mdtContext={props.mdtContext} hideShowMoreLink={props.hideShowMoreLink} />
+            <HoverClickNote>
+                <p className="text-sm"><InlineMDT mdt={note.value} context={props.mdtContext} /></p>
+            </HoverClickNote>
+        </>;
+    }
+
     switch (value.type) {
         case "Page": {
 
@@ -49,7 +60,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             if (numRemaining > 0 && !props.hideShowMoreLink) {
                 let moreLink = <FormattedMessage
                     key="more"
-                    id="common.list.xmore"
+                    id="hAv0cA"
                     defaultMessage="{extraCount, plural, one {# more…} other {# more…}}"
                     values={{extraCount: numRemaining}}
                     description="How many more items there are (at the end of a list)"
@@ -64,14 +75,11 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             // FIXME: Temporary hack, replace with transform+annotate to give display hint https://app.clickup.com/t/23uvf0q
             if (site.shortId === "cams" && listValues.length > 2) {
                 const firstValue = value.values[0];
-                if (firstValue.type === "Annotated") {
-                    const innerValue = firstValue.value;
-                    if (innerValue.type === "Entry") {
-                        if (props.mdtContext.refCache.entries[innerValue.id]?.entryType.id === "_42oypp3JCf4wpJRru0El17") {
-                            return <ul>
-                                {listValues.map((v, idx) => <li key={idx}>{v}</li>)}
-                            </ul>;
-                        }
+                if (firstValue.type === "Entry") {
+                    if (props.mdtContext.refCache.entries[firstValue.id]?.entryType.id === "_42oypp3JCf4wpJRru0El17") {
+                        return <ul>
+                            {listValues.map((v, idx) => <li key={idx}>{v}</li>)}
+                        </ul>;
                     }
                 }
             }
@@ -112,6 +120,14 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 {attribs => <span {...attribs}>{prop.name}</span>}
             </Tooltip>
         }
+        case "Boolean":
+            return <>{
+                value.value
+                ? <FormattedMessage id="KKkUks" defaultMessage="True"/>
+                : <FormattedMessage id="rxqs5U" defaultMessage="False"/>
+            }</>
+        case "Integer":
+            return <>{value.value}</>
         case "String":
             // Temporary special case hack for the TechNotes hompage until we support video:
             if (value.value === "$TN_HOME_VIDEO$") {
@@ -127,21 +143,11 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Error":
             return <ErrorMessage>
                 <FormattedMessage 
-                    id="common.lookup-expression.error"
+                    id="I9OUIM"
                     defaultMessage="Error ({errorType}): {errorMessage}"
                     values={{errorType: value.errorClass, errorMessage: value.message}}
                 />
             </ErrorMessage>
-        case "Annotated":
-            if (value.annotations.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
-                return <>
-                    <LookupValue value={value.value} mdtContext={props.mdtContext} />
-                    <HoverClickNote>
-                        <p className="text-sm"><InlineMDT mdt={value.annotations.note.value} context={props.mdtContext} /></p>
-                    </HoverClickNote>
-                </>;
-            }
-            return <LookupValue value={value.value} mdtContext={props.mdtContext} hideShowMoreLink={props.hideShowMoreLink} />
         case "Null":
             return <></>;
         default: {

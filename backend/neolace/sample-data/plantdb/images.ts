@@ -45,19 +45,18 @@ export async function createImages(siteId: VNID) {
             {
                 code: "AddPropertyValue",
                 data: {
-                    entry: entryData.imgPonderosaTrunk.id,
-                    property: schema.properties._imgRelTo.id,
+                    entryId: entryData.imgPonderosaTrunk.id,
+                    propertyId: schema.properties._imgRelTo.id,
                     valueExpression: `[[/entry/${entryData.ponderosaPine.id}]]`,
                     propertyFactId: VNID(),
-                    note: "",
                 },
             },
             // This image is used as the hero image for the ponderosa pine
             {
                 code: "AddPropertyValue",
                 data: {
-                    entry: entryData.ponderosaPine.id,
-                    property: schema.properties._hasHeroImage.id,
+                    entryId: entryData.ponderosaPine.id,
+                    propertyId: schema.properties._hasHeroImage.id,
                     valueExpression: `[[/entry/${entryData.imgPonderosaTrunk.id}]]`,
                     propertyFactId: VNID(),
                     note: "a ponderosa pine trunk in Lassen Volcanic National Park",

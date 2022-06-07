@@ -30,6 +30,7 @@ export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
 export const RawPropertySchema = Schema({
     propertyId: vnidString,
     facts: array.of(Schema({
+        id: vnidString,
         valueExpression: string,
         note: string,
         rank: number,

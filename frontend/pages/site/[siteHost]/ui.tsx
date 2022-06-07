@@ -1,6 +1,5 @@
 import React from "react";
 import { NextPage } from "next";
-import { useIntl } from "react-intl";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -15,9 +14,9 @@ import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { AutoControl, Control, Form } from "components/widgets/Form";
 import { MDTEditor } from "components/widgets/MDTEditor";
-
-// interface PageProps {
-// }
+import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
+import { SelectBox } from "components/widgets/SelectBox";
+import { Tab, TabBarRouter } from "components/widgets/Tabs";
 
 const UIDemo = (props: { label: string; children: React.ReactNode }) => {
     return (
@@ -29,21 +28,19 @@ const UIDemo = (props: { label: string; children: React.ReactNode }) => {
 };
 
 const UiDemoPage: NextPage = function (props) {
-    const intl = useIntl();
     const [selectedIcon, setSelectedIcon] = React.useState<IconId>("search");
     const [searchDemoText, setSearchDemoText] = React.useState("");
     const [lookupDemoText, setLookupDemoText] = React.useState("");
     const [mdtDemoText, setMDTDemoText] = React.useState("This has **bold**, *italic*, and a { lookup expression }.");
+    const [selectBoxItem, setSelectBoxItem] = React.useState("");
+    const [selectBox2Item, setSelectBox2Item] = React.useState("");
 
     if (process.env.NODE_ENV === "production") {
         return <FourOhFour />;
     }
 
     return (
-        <SitePage
-            title="UI Demos"
-            sitePreloaded={null}
-        >
+        <SitePage title="UI Demos">
             <h1 className="text-3xl font-semibold">UI Demos</h1>
 
             <p>This page (for development only) provides a demo of the various Neolace UI components.</p>
@@ -53,14 +50,14 @@ const UiDemoPage: NextPage = function (props) {
             <p>Here is an example of our form component.</p>
 
             <Form>
-                <Control id="form-email" label={{ id: "ui.demo.form.email", defaultMessage: "Your Email" }}>
+                <Control id="form-email" label={defineMessage({ id: 'SqR1My', defaultMessage: "Your Email" })}>
                     <TextInput />
                 </Control>
                 <Control
                     id="form-lookup-expr"
-                    label={{ id: "ui.demo.form.lookup", defaultMessage: "Lookup Expression" }}
-                    hint={intl.formatMessage({
-                        id: "ui.demo.form.lookupHint",
+                    label={defineMessage({ id: 'UkgQ/N', defaultMessage: "Lookup Expression" })}
+                    hint={defineMessage({
+                        id: 'S02xzc',
                         defaultMessage:
                             "Try using SHIFT-ENTER to create multiple lines, or entering a long string to see the box expand.",
                     })}
@@ -68,14 +65,14 @@ const UiDemoPage: NextPage = function (props) {
                     <LookupExpressionInput
                         value={lookupDemoText}
                         onChange={setLookupDemoText}
-                        placeholder={"Enter a lookup expression"}
+                        placeholder={defineMessage({defaultMessage: 'Enter a lookup expression', id: '18J4sF'})}
                     />
                 </Control>
                 <AutoControl
                     id="form-mdt-editor"
-                    label={{ id: "ui.demo.form.lookup", defaultMessage: "MDT (Markdown / rich text) editor" }}
-                    hint={intl.formatMessage({
-                        id: "ui.demo.form.toolbar",
+                    label={defineMessage({ id: '2clcRr', defaultMessage: "MDT (Markdown / rich text) editor" })}
+                    hint={defineMessage({
+                        id: 'XR+5Ez',
                         defaultMessage: "This also shows our <ToolbarButton/> component used to make a toolbar.",
                     })}
                     onChangeFinished={setMDTDemoText}
@@ -91,7 +88,7 @@ const UiDemoPage: NextPage = function (props) {
                 {_allIcons.map((id) => (
                     <div
                         key={id}
-                        className="inline-block w-32 h-32 border-2 m-2 text-center text-4xl pt-6 hover:border-theme-link-color"
+                        className="inline-block w-32 h-32 border rounded m-2 text-center text-4xl pt-6 hover:border-theme-link-color"
                         onClick={() => setSelectedIcon(id)}
                     >
                         <Icon key={id} icon={id} />
@@ -109,8 +106,7 @@ const UiDemoPage: NextPage = function (props) {
                 See details about{" "}
                 <a href={`https://icons.getbootstrap.com/icons/${selectedIcon}/`}>
                     "{selectedIcon}" at Bootstrap Icons
-                </a>, or <a href="https://icons.getbootstrap.com/">get more icons</a> (add to
-                <code>Icon.tsx</code>).
+                </a>, or <a href="https://icons.getbootstrap.com/">get more icons</a> (add to <code>Icon.tsx</code>).
             </p>
 
             <br />
@@ -127,11 +123,69 @@ const UiDemoPage: NextPage = function (props) {
                             <Breadcrumb>This Entry</Breadcrumb>
                         </Breadcrumbs>
                     </UIDemo>
+                    <UIDemo label="Tab Bar">
+                        <TabBarRouter>
+                            <Tab
+                                id="main"
+                                icon="info-circle"
+                                name={defineMessage({ defaultMessage: "Main", id: 'EFTSMc' })}
+                            >
+                                This is the main tab content.
+                            </Tab>
+                            <Tab
+                                id="properties"
+                                icon="diamond-fill"
+                                name={defineMessage({
+                                    defaultMessage: "Properties",
+                                    id: 'aI80kg',
+                                })}
+                            >
+                                This is the properties tab.
+                            </Tab>
+                            <Tab
+                                id="changes"
+                                icon="list"
+                                badge={"3"}
+                                name={defineMessage({ defaultMessage: "Changes", id: 'dgqhUM' })}
+                            >
+                                This is the changes tab, with a "badge" that says "3".
+                            </Tab>
+                        </TabBarRouter>
+                    </UIDemo>
                     <UIDemo label="Spinner">
                         <Spinner />
                     </UIDemo>
                     <UIDemo label="Button">
                         <Button>I'm a button</Button>
+                    </UIDemo>
+                    <UIDemo label="Select box">
+                        <SelectBox
+                            value={selectBoxItem}
+                            onChange={setSelectBoxItem}
+                            options={[
+                                {
+                                    id: "first",
+                                    label: defineMessage({ defaultMessage: "First item", id: 'c6B/JF' }),
+                                },
+                                {
+                                    id: "second",
+                                    label: defineMessage({ defaultMessage: "Second item", id: 'L9aUV9' }),
+                                },
+                                {
+                                    id: "third",
+                                    label: defineMessage({ defaultMessage: "Third item", id: 'hDD9II' }),
+                                },
+                            ]}
+                        />
+                    </UIDemo>
+                    <UIDemo label="Select box with icons and many items">
+                        <SelectBox
+                            value={selectBox2Item}
+                            onChange={setSelectBox2Item}
+                            options={_allIcons.map((id) => (
+                                { id, label: noTranslationNeeded(id), icon: id }
+                            ))}
+                        />
                     </UIDemo>
                     <UIDemo label="Tooltip">
                         <Tooltip

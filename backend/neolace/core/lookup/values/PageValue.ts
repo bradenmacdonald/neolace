@@ -40,7 +40,8 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
     }
 
     protected serialize() {
-        const v: Omit<api.PageValue, "type"> = {
+        const v: api.PageValue = {
+            type: "Page",
             values: this.values.map((v) => v.toJSON()),
             startedAt: Number(this.startedAt),
             pageSize: Number(this.pageSize),

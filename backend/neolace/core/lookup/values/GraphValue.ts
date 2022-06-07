@@ -27,8 +27,9 @@ export class GraphValue extends ConcreteValue {
         return undefined; // There is no literal expression for a graph
     }
 
-    protected serialize(): Omit<api.GraphValue, "type"> {
+    protected serialize(): api.GraphValue {
         return {
+            type: "Graph",
             entries: this.entries,
             rels: this.rels,
         };

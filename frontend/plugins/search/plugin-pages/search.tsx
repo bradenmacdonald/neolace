@@ -5,12 +5,15 @@ import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
 import { InstantSearch } from "react-instantsearch-hooks-web";
 import { InfiniteHits } from "../components/Hits";
 import { SearchBox } from "../components/SearchBox";
+import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { Spinner } from "components/widgets/Spinner";
+import { SitePage } from "components/SitePage";
+import { PluginPageProps } from "components/utils/ui-plugins";
 
-const SiteSearchPage: React.FunctionComponent = function (props) {
-    const { site } = useSiteData();
-
+const SiteSearchPage: React.FunctionComponent<PluginPageProps> = function (props) {
+    const { site, siteError } = useSiteData();
     const [connectionData, setConnectionData] = React.useState<api.SiteSearchConnectionData | undefined>();
+    const [connectionError, setConnectionError] = React.useState<api.ApiError | undefined>();
 
     React.useEffect(() => {
         if (!site.shortId) {
@@ -22,6 +25,9 @@ const SiteSearchPage: React.FunctionComponent = function (props) {
             if (!cancelled) {
                 setConnectionData(sc);
             }
+        }, (err) => {
+            if (err instanceof api.ApiError) setConnectionError(err);
+            else throw err;
         });
         return function cleanup() {
             cancelled = true;
@@ -57,18 +63,18 @@ const SiteSearchPage: React.FunctionComponent = function (props) {
         }
     }, [connectionData]);
 
-    if (!adapter || !connectionData) {
-        return <Spinner />;
-    }
-
     return (
-        <>
+        <SitePage title="Search">
             <h1 className="text-3xl font-semibold">Search {site.name}</h1>
-            <InstantSearch indexName={connectionData.siteEntriesCollection} searchClient={adapter.searchClient}>
-                <SearchBox />
-                <InfiniteHits />
-            </InstantSearch>
-        </>
+            {(!adapter || !connectionData)
+                ? (connectionError ? <ErrorMessage>{connectionError.message}</ErrorMessage> : <Spinner />)
+                : (
+                    <InstantSearch indexName={connectionData.siteEntriesCollection} searchClient={adapter.searchClient}>
+                        <SearchBox />
+                        <InfiniteHits />
+                    </InstantSearch>
+                )}
+        </SitePage>
     );
 };
 

@@ -50,7 +50,7 @@ export class DateValue extends ConcreteValue {
     }
 
     protected serialize() {
-        return { value: this.asIsoString() };
+        return { type: "Date" as const, value: this.asIsoString() };
     }
 
     protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {

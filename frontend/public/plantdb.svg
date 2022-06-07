@@ -81,6 +81,6 @@
    <path stroke="null" id="svg_13" fill="url(#r)" d="m33.88061,468.90667c15.41506,-38.90468 35.23443,-30.83012 85.63923,-38.66c-50.77183,5.2607 -71.69227,-3.91494 -85.63923,38.66z"/>
    <path stroke="null" id="svg_14" fill="url(#s)" d="m143.62117,140.5414c87.10733,-18.59595 137.87916,-81.84664 147.42182,-114.75657c-9.54266,32.90993 -67.04328,93.22442 -154.02827,111.82037c-94.08081,20.18639 -121.24068,113.16612 -117.69277,181.55517c0.85639,15.17038 9.29797,61.29322 13.45759,153.78359c-4.15962,-92.49037 -5.99475,-135.79935 -6.7288,-150.96973c-3.67025,-68.2667 23.36728,-161.36878 117.57043,-181.43282z"/>
   </g>
-  <text transform="matrix(3.47031 0 0 3.47031 -1150.74 -404.204)" stroke="null" font-style="normal" font-weight="bold" xml:space="preserve" text-anchor="start" font-family="sans-serif" font-size="72" stroke-width="0" id="svg_16" y="218.3824" x="450.01224" fill="#ffffff">PlantDB</text>
+  <text transform="matrix(3.47031 0 0 3.47031 -1150.74 -404.204)" stroke="null" font-style="normal" font-weight="bold" xml:space="preserve" text-anchor="start" font-family="sans-serif" font-size="72" stroke-width="0" id="svg_16" y="218.3824" x="450.01224" fill="#2C6B35">PlantDB</text>
  </g>
 </svg>

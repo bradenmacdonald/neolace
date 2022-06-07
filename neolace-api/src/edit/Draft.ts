@@ -1,4 +1,5 @@
 import { Schema, Type, string, vnidString, nullable, array, DateType, object, } from "../api-schemas.ts";
+import type { AnyEdit } from "./AnyEdit.ts";
 import { EditChangeType } from "./Edit.ts";
 
 export enum DraftStatus {
@@ -11,7 +12,7 @@ export enum GetDraftFlags {
     IncludeEdits = "edits",
 }
 
-export const CreateEditSchema = Schema({code: string, data: object});
+export const CreateEditSchema = Schema({code: string, data: object}).transform(e => e as AnyEdit);
 
 /**
  * Parameters used when creating a new draft.

@@ -1,12 +1,11 @@
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
-import Link from 'next/link';
 import { ParsedUrlQuery } from 'querystring';
 import { getSiteData, SiteData, api, client } from 'lib/api-client';
 
-import { SitePage } from 'components/SitePage';
-import { UserContext, UserStatus } from 'components/user/UserContext';
+import { SiteDataProvider, SitePage } from "components/SitePage";
+import { UserContext } from 'components/user/UserContext';
 import { MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 
 interface PageProps {
@@ -28,11 +27,8 @@ const HomePage: NextPage<PageProps> = function(props) {
     }), [props.refCache]);
     const user = React.useContext(UserContext);
 
-    return (
-        <SitePage
-            title={props.site.name}
-            sitePreloaded={props.site}
-        >
+    return (<SiteDataProvider sitePreloaded={props.site}>
+        <SitePage title={props.site.name}>
             {/* Below, 100vh-11.6rem pushes the footer down to the bottom of the screen but prevents scrolling if there's only a single line in the footer */}
             <div className="max-w-6xl mx-auto neo-typography md:min-h-[calc(100vh-11.6rem)]">
                 {props.homepageMD ?
@@ -40,11 +36,11 @@ const HomePage: NextPage<PageProps> = function(props) {
                 :
                     <>
                         <h1>
-                            <FormattedMessage id="site.home.defaultTitle" defaultMessage="Welcome to {siteName}" values={{siteName: props.site.name}}/>
+                            <FormattedMessage id="vfakHv" defaultMessage="Welcome to {siteName}" values={{siteName: props.site.name}}/>
                         </h1>
                         <p>
                             <FormattedMessage
-                                id="site.home"
+                                id="Gb43IT"
                                 defaultMessage="This site is powered by Neolace. If this is your site, you should customize this home page to say what you'd like."
                                 description="A default homepage description, if no home page text has been set."
                             />
@@ -53,7 +49,7 @@ const HomePage: NextPage<PageProps> = function(props) {
                 }
             </div>
         </SitePage>
-    );
+    </SiteDataProvider>);
 }
 
 export default HomePage;

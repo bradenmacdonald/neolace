@@ -21,6 +21,6 @@ export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpressi
     }
 
     protected serialize() {
-        return { id: this.id };
+        return { type: "EntryType" as const, id: this.id };
     }
 }

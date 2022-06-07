@@ -38,7 +38,17 @@ export const CreateEntry = ContentEditType({
         }
         return baseEntry;
     },
-    describe: (data) => `Created \`Entry ${data.id}\``,
+    describe: (data) => `Created \`Entry ${data.id}\` "${data.name}"`,
+    consolidate(thisEdit, earlierEdit) {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.id === thisEdit.data.id) {
+            // There can only be one "Create Entry" for each entry, and the latest one wins.
+            return thisEdit;
+        } else if (earlierEdit.data.entryId === thisEdit.data.id) {
+            // Some other edit took place before this entry was even created? Overwrite that with this.
+            return thisEdit;
+        }
+        return undefined;
+    },
 });
 
 export const SetEntryName = ContentEditType({
@@ -53,6 +63,40 @@ export const SetEntryName = ContentEditType({
         return updatedEntry;
     },
     describe: (data) => `Renamed \`Entry ${data.entryId}\` to "${data.name}"`,
+    consolidate(thisEdit, earlierEdit) {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
+            // This rename overwrites the previous rename.
+            return thisEdit;
+        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.id === thisEdit.data.entryId) {
+            // Just update the "CreateEntry" to include this name
+            return {code: CreateEntry.code, data: {...earlierEdit.data, name: thisEdit.data.name}};
+        }
+        return undefined;
+    },
+});
+
+export const SetEntryFriendlyId = ContentEditType({
+    changeType: EditChangeType.Content,
+    code: "SetEntryFriendlyId",
+    dataSchema: Schema({ entryId: vnidString, friendlyId: string, }),
+    apply: (baseEntry, data) => {
+        const updatedEntry = {...baseEntry}
+        if (baseEntry.id === data.entryId) {
+            updatedEntry.friendlyId = data.friendlyId;
+        }
+        return updatedEntry;
+    },
+    describe: (data) => `Change \`Entry ${data.entryId}\` ID to "${data.friendlyId}"`,
+    consolidate(thisEdit, earlierEdit) {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
+            // This rename overwrites the previous ID change.
+            return thisEdit;
+        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.id === thisEdit.data.entryId) {
+            // Just update the "CreateEntry" to include this ID
+            return {code: CreateEntry.code, data: {...earlierEdit.data, friendlyId: thisEdit.data.friendlyId}};
+        }
+        return undefined;
+    },
 });
 
 export const SetEntryDescription = ContentEditType({
@@ -67,6 +111,16 @@ export const SetEntryDescription = ContentEditType({
         return updatedEntry;
     },
     describe: (data) => `Edited description of \`Entry ${data.entryId}\``,
+    consolidate(thisEdit, earlierEdit) {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
+            // This rename overwrites the previous description edit.
+            return thisEdit;
+        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.id === thisEdit.data.entryId) {
+            // Just update the "CreateEntry" to include this ID
+            return {code: CreateEntry.code, data: {...earlierEdit.data, description: thisEdit.data.description}};
+        }
+        return undefined;
+    },
 });
 
 export const UpdateEntryArticleSchema = Schema({
@@ -126,15 +180,15 @@ export const AddPropertyValue = ContentEditType({
     code: "AddPropertyValue",
     dataSchema: Schema({
         /** The Entry where we are adding a new property value */
-        entry: vnidString,
+        entryId: vnidString,
         /** The Property in question. */
-        property: vnidString,
+        propertyId: vnidString,
         /** The ID of this new property fact */
         propertyFactId: vnidString,
         /** Value expression: a lookup expression giving the value */
         valueExpression: string,
         /** An optional markdown note clarifying details of the property value */
-        note: string,
+        note: string.strictOptional(),
         /** Rank determines the order in which values are listed if there are multiple values for one property */
         rank: number.strictOptional(),
         /**
@@ -143,10 +197,30 @@ export const AddPropertyValue = ContentEditType({
          */
         slot: string.strictOptional(),
     }),
-    apply: () => {
-        throw new Error("This edit type is not implemented yet.");
+    apply: (baseEntry, data) => {
+        if (baseEntry.id !== data.entryId) {
+            return baseEntry;  // This wasn't the entry we're changing.
+        }
+        const newPropertyFact = {
+            id: data.propertyFactId,
+            valueExpression: data.valueExpression,
+            note: data.note ?? "",
+            rank: data.rank ?? 1,
+            slot: data.slot ?? "",
+        };
+        const updatedEntry: EditableEntryData = {...baseEntry, propertiesRaw: [...baseEntry.propertiesRaw]};
+        const propertyIndex = baseEntry.propertiesRaw.findIndex((p) => p.propertyId === data.propertyId);
+        if (propertyIndex === -1) {
+            // We're adding a value for a property that has no values/facts yet:
+            updatedEntry.propertiesRaw.push({propertyId: data.propertyId, facts: [newPropertyFact]});
+        } else {
+            // We're adding an additional value/fact to a property that already has one or more values/facts:
+            const prop = updatedEntry.propertiesRaw[propertyIndex];
+            prop.facts = [...prop.facts, newPropertyFact];
+        }
+        return updatedEntry;
     },
-    describe: (data) => `Added value for \`Property ${data.property}\` property on \`Entry ${data.entry}\``,
+    describe: (data) => `Added value for \`Property ${data.propertyId}\` property on \`Entry ${data.entryId}\``,
 });
 
 export const UpdatePropertyValue = ContentEditType({
@@ -155,22 +229,55 @@ export const UpdatePropertyValue = ContentEditType({
     dataSchema: Schema({
         /** The ID of the property fact to change */
         propertyFactId: vnidString,
-        /** Value expression: a lookup expression giving the new value */
-        valueExpression: string,
-        /** An optional markdown note clarifying details of the property value */
-        note: string,
-        /** Change the rank of this property */
+        /**
+         * Value expression: a lookup expression giving the new value
+         * Use undefined to not change the value expression.
+         */
+        valueExpression: string.strictOptional(),
+        /**
+         * An optional markdown note clarifying details of the property value.
+         * Use a blank string for "no slot", and undefined to leave the slot unchanged.
+         */
+        note: string.strictOptional(),
+        /**
+         * Change the rank of this property fact. Lower ranks will come first. The first property value has a rank of 1.
+         * Changing this property fact's rank will not automatically change the rank of other property facts.
+         * Leave undefined to not change the rank.
+         */
         rank: number.strictOptional(),
         /**
          * If the property enables "slots", this can be used to selectively override inherited values (only values with
          * the same slot get overridden).
+         * Use a blank string for "no slot", and undefined to leave the slot unchanged.
          */
         slot: string.strictOptional(),
     }),
-    apply: () => {
-        throw new Error("This edit type is not implemented yet.");
+    apply: (baseEntry, data) => {
+        const updatedEntry: EditableEntryData = {...baseEntry, propertiesRaw: [...baseEntry.propertiesRaw]};
+        const propertyIndex = baseEntry.propertiesRaw.findIndex((p) => p.facts.map((f) => f.id).includes(data.propertyFactId));
+        if (propertyIndex !== -1) {
+            const baseFacts = baseEntry.propertiesRaw[propertyIndex].facts;
+            const factIndex = baseFacts.findIndex((f) => f.id === data.propertyFactId);
+            const newFacts = [...baseFacts];
+            newFacts[factIndex] = {...baseFacts[factIndex]};
+            if (data.valueExpression !== undefined) { newFacts[factIndex].valueExpression = data.valueExpression; }
+            if (data.note !== undefined) { newFacts[factIndex].note = data.note; }
+            if (data.rank !== undefined) { newFacts[factIndex].rank = data.rank; }
+            if (data.slot !== undefined) { newFacts[factIndex].slot = data.slot; }
+        }
+        return updatedEntry;
     },
     describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value`,
+    consolidate(thisEdit, earlierEdit) {
+        // This can be consolidated with a previous UpdatePropertyValue or AddPropertyValue edit.
+        if (
+            (earlierEdit.code === thisEdit.code || earlierEdit.code === AddPropertyValue.code) &&
+            earlierEdit.data.propertyFactId === thisEdit.data.propertyFactId
+        ) {
+            return {code: earlierEdit.code, data: {...earlierEdit.data, ...thisEdit.data}};
+        }
+        return undefined;
+    },
 });
 
 export const DeletePropertyValue = ContentEditType({
@@ -189,6 +296,7 @@ export const DeletePropertyValue = ContentEditType({
 export const _allContentEditTypes = {
     CreateEntry,
     SetEntryName,
+    SetEntryFriendlyId,
     SetEntryDescription,
     UpdateEntryFeature,
     AddPropertyValue,
@@ -199,6 +307,7 @@ export const _allContentEditTypes = {
 export type AnyContentEdit = (
     | Edit<typeof CreateEntry>
     | Edit<typeof SetEntryName>
+    | Edit<typeof SetEntryFriendlyId>
     | Edit<typeof SetEntryDescription>
     | Edit<typeof UpdateEntryFeature>
     | Edit<typeof AddPropertyValue>

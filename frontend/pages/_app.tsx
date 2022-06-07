@@ -5,7 +5,6 @@ import React from "react";
 import { IntlProvider } from "react-intl";
 
 import { UserProvider } from "components/user/UserContext";
-import { AllPluginsProvider } from "components/utils/ui-plugins";
 // Import global CSS (Tailwind-based)
 import "../global-styles.css";
 
@@ -29,7 +28,17 @@ const DynamicIntlProviders = {
             (props: ProviderProps) => <IntlProvider locale="fr" messages={data.default}>{props.children}</IntlProvider>
         )
     ),
+    ru: dynamic<ProviderProps>(() =>
+    import("../content/compiled-locales/ru.json").then((data) =>
+            // eslint-disable-next-line react/display-name
+            (props: ProviderProps) => <IntlProvider locale="ru" messages={data.default}>{props.children}</IntlProvider>
+        )
+    ),
 };
+
+export const AvailablePluginsProvider = dynamic<{children: React.ReactNode}>(
+    import('components/utils/ui-plugins-loader').then((mod) => mod.AvailablePluginsProvider)
+);
 
 export default function NeolaceApp({ Component, pageProps }: AppProps) {
     const { locale, events: routerEvents } = useRouter();
@@ -37,23 +46,12 @@ export default function NeolaceApp({ Component, pageProps }: AppProps) {
     const LoadIntlProvider = DynamicIntlProviders[locale as keyof typeof DynamicIntlProviders] ??
         DynamicIntlProviders.en;
 
-    // Fix scrolling: when Next.js does a client-side page load, it scrolls the root element, but our root element doesn't scroll.
-    // We need to scroll a different element so that the page scrolls back to top when a link is clicked.
-    React.useEffect(() => {
-        // TODO: fix this by making it so that the root 'window' element scrolls, not this child .scroll-root.
-        // Then we can remove this custom code and rely on Next.js's default support, which will work better because
-        // it preserves the scroll position when you go back. This currently resets the scroll on back.
-        routerEvents.on("routeChangeComplete", () => {
-            document.querySelector(".scroll-root")?.scroll({ top: 0, left: 0, behavior: "auto" });
-        });
-    });
-
     return (
         <UserProvider>
             <LoadIntlProvider>
-                <AllPluginsProvider>
+                <AvailablePluginsProvider>
                     <Component {...pageProps} />
-                </AllPluginsProvider>
+                </AvailablePluginsProvider>
             </LoadIntlProvider>
         </UserProvider>
     );

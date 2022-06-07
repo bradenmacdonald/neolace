@@ -1,5 +1,13 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { assertEquals, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
+import {
+    assertEquals,
+    assertInstanceOf,
+    assertRejects,
+    assertStringIncludes,
+    group,
+    setTestIsolation,
+    test,
+} from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
@@ -68,8 +76,10 @@ group("schema.ts", () => {
                             { code: "CreateEntryType", data: { id, name } },
                         ],
                     })),
-                undefined,
-                "already exists with label `VNode` and property `id`",
+                (err: unknown) => {
+                    assertInstanceOf(err, Error);
+                    assertStringIncludes(err.message, "already exists with label `VNode` and property `id`");
+                },
             );
         });
     });

@@ -6,7 +6,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
 
 import { client, getSiteData, SiteData } from "lib/api-client";
-import { SitePage } from "components/SitePage";
+import { SiteDataProvider, SitePage } from "components/SitePage";
 import { UserContext, UserStatus } from "components/user/UserContext";
 import { Button } from "components/widgets/Button";
 import { Redirect } from "components/utils/Redirect";
@@ -68,34 +68,34 @@ const LoginPage: NextPage<PageProps> = function (props) {
     }, [data, props.verificationToken]);
 
     if (finalizeAccount) {
-        const title = intl.formatMessage({ id: "site.register.finalize", defaultMessage: "Finalize your account" });
-        return (
-            <SitePage title={title} sitePreloaded={props.site}>
+        const title = intl.formatMessage({ id: '/B3THW', defaultMessage: "Finalize your account" });
+        return (<SiteDataProvider sitePreloaded={props.site}>
+            <SitePage title={title}>
                 <h1 className="text-3xl font-semibold">{title}</h1>
 
                 <SuccessMessage>
                     <FormattedMessage
-                        id="site.register.complete"
+                        id="ksbTy8"
                         defaultMessage="Your account has been created, and you are now logged in."
                     />
                 </SuccessMessage>
             </SitePage>
-        );
+        </SiteDataProvider>);
     } else if (user.status === UserStatus.LoggedIn) {
         return <Redirect to="/" />;
     }
 
-    const title = intl.formatMessage({ id: "site.register.confirm", defaultMessage: "Confirm your account" });
+    const title = intl.formatMessage({ id: 'wG7BjX', defaultMessage: "Confirm your account" });
 
-    return (
-        <SitePage title={title} sitePreloaded={props.site}>
+    return (<SiteDataProvider sitePreloaded={props.site}>
+        <SitePage title={title}>
             <h1 className="text-3xl font-semibold">{title}</h1>
 
             {error
                 ? (
                     <ErrorMessage>
                         <FormattedMessage
-                            id="site.register.error.invalidToken"
+                            id="ZrwLkD"
                             defaultMessage="The link you clicked has expired or was invalid. Please try creating your account again."
                         />
                     </ErrorMessage>
@@ -115,14 +115,14 @@ const LoginPage: NextPage<PageProps> = function (props) {
                 : (
                     <p>
                         <FormattedMessage
-                            id="site.register.checkingToken"
+                            id="qNBuoM"
                             defaultMessage="Checking validation token."
                         />{" "}
                         <Spinner />
                     </p>
                 )}
         </SitePage>
-    );
+    </SiteDataProvider>);
 };
 
 export default LoginPage;

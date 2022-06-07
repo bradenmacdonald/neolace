@@ -3,13 +3,14 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
 import Link from 'next/link';
 import { ParsedUrlQuery } from 'querystring';
-import { client, api, getSiteData, SiteData } from 'lib/api-client';
+import { client, api, getSiteData } from 'lib/api-client';
 
-import { SitePage } from 'components/SitePage';
+import { SiteDataProvider, SitePage } from "components/SitePage";
 import { LookupExpressionInput } from 'components/widgets/LookupExpressionInput';
 import { useRouter } from 'next/router';
 import { LookupEvaluatorWithPagination } from 'components/LookupEvaluator';
 import { MDTContext } from 'components/markdown-mdt/mdt';
+import { defineMessage } from 'components/utils/i18n';
 
 interface PageProps {
     entry: api.EntryData;
@@ -22,7 +23,6 @@ interface PageUrlQuery extends ParsedUrlQuery {
 
 const EvaluateLookupPage: NextPage<PageProps> = function(props) {
 
-    const intl = useIntl();
     const router = useRouter();
 
     // The lookup expression that we're currently displaying, if any - comes from the URL or if the user types in a new one and presses ENTER
@@ -50,9 +50,8 @@ const EvaluateLookupPage: NextPage<PageProps> = function(props) {
         refCache: props.entry.referenceCache,
     }), [props.entry.id, props.entry.referenceCache]);
 
-    return (
+    return (<SiteDataProvider sitePreloaded={props.sitePreloaded}>
         <SitePage
-            sitePreloaded={props.sitePreloaded}
             leftNavTopSlot={[
                 {id: "entryName", priority: 20, content: <>
                     <br/>
@@ -63,8 +62,8 @@ const EvaluateLookupPage: NextPage<PageProps> = function(props) {
                 </>},
                 {id: "tableOfContents", priority: 50, content: <>
                     <ul id="left-toc-headings">
-                        <li><Link  href={`/entry/${props.entry.friendlyId}#summary`}><a><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></Link></li>
-                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><a><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></Link></li>
+                        <li><Link  href={`/entry/${props.entry.friendlyId}#summary`}><a><FormattedMessage id="RrCui3" defaultMessage="Summary"/></a></Link></li>
+                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><a><FormattedMessage id="aI80kg" defaultMessage="Properties"/></a></Link></li>
                         {
                             props.entry.features?.Article?.headings.map(heading =>
                                 <li key={heading.id}><Link href={`/entry/${props.entry.friendlyId}#h-${heading.id}`}><a>{heading.title}</a></Link></li>
@@ -81,20 +80,20 @@ const EvaluateLookupPage: NextPage<PageProps> = function(props) {
                 value={editingLookupExpression}
                 onChange={handleLookupExpressionChange}
                 onFinishedEdits={handleFinishedChangingLookupExpression}
-                placeholder={intl.formatMessage({id: "site.entry.queryInputPlaceholder", defaultMessage: "Enter a lookup expression..."})}
+                placeholder={defineMessage({id: 'Uowwem', defaultMessage: "Enter a lookup expression..."})}
             />
 
-            <p><FormattedMessage id="site.entry.lookupResultHeading" defaultMessage="Result:" /></p>
+            <p><FormattedMessage id="vBiQpy" defaultMessage="Result:" /></p>
             <div className={activeLookupExpression !== editingLookupExpression ? `opacity-50` : ``}>
                 {
                     activeLookupExpression ?
                         <LookupEvaluatorWithPagination expr={activeLookupExpression} mdtContext={mdtContext} />
                     :
-                        <FormattedMessage id="site.entry.lookupExpressionMissing" defaultMessage="Enter a lookup expression above to see the result." />
+                        <FormattedMessage id="++0Uwo" defaultMessage="Enter a lookup expression above to see the result." />
                 }
             </div>
         </SitePage>
-    );
+    </SiteDataProvider>);
 }
 
 export default EvaluateLookupPage;
@@ -109,13 +108,14 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
 }
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
+    if (!context.params) { throw new Error("Internal error - missing URL params."); }  // Make TypeScript happy
 
     // Look up the Neolace site by domain:
-    const site = await getSiteData(context.params!.siteHost);
+    const site = await getSiteData(context.params.siteHost);
     if (site === null) { return {notFound: true}; }
     let entry: api.EntryData;
     try {
-        entry = await client.getEntry(context.params!.entryLookup, {siteId: site.shortId, flags: [
+        entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [
             api.GetEntryFlags.IncludeFeatures,  // We need the article headings
             api.GetEntryFlags.IncludePropertiesSummary,  // To know if we show the "Properties" nav link or not
             api.GetEntryFlags.IncludeReferenceCache,
@@ -127,7 +127,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         throw err;
     }
 
-    if (entry.friendlyId !== context.params!.entryLookup) {
+    if (entry.friendlyId !== context.params.entryLookup) {
         // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
         return {
             redirect: {

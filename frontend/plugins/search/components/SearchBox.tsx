@@ -50,7 +50,7 @@ export const SearchBox: React.FunctionComponent<UseSearchBoxProps> = (props) => 
                 value={value}
                 onChange={handleChange}
                 placeholder={intl.formatMessage({
-                    id: "plugin.search.searchBoxPlaceholder",
+                    id: 'mN/13p',
                     defaultMessage: "Enter a search term",
                 })}
                 inputRef={inputEl}
@@ -59,7 +59,7 @@ export const SearchBox: React.FunctionComponent<UseSearchBoxProps> = (props) => 
             {isSearchStalled && query && (
                 <div>
                     <FormattedMessage
-                        id="plugin.search.stalledWarning"
+                        id="LBcdAi"
                         defaultMessage="Search has stalled or an error occurred."
                     />
                 </div>

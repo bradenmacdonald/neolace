@@ -1,3 +1,4 @@
+import type * as api from "neolace/deps/neolace-api.ts";
 import { ConcreteValue } from "./base.ts";
 
 /**
@@ -19,7 +20,7 @@ export class BooleanValue extends ConcreteValue {
         return this.value ? "true" : "false";
     }
 
-    protected serialize() {
-        return { value: this.value };
+    protected serialize(): api.BooleanValue {
+        return { type: "Boolean" as const, value: this.value };
     }
 }

@@ -14,6 +14,7 @@ import { useStateRef } from "../utils/stateRefHook";
 import { applyTransforms, Transform, Transforms } from "./Transforms";
 import { Modal } from "../widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
+import { defineMessage } from "components/utils/i18n";
 
 export interface GraphProps {
     value: api.GraphValue;
@@ -565,40 +566,40 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     const contents = (
         <>
-            <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
+            <div className="block rounded-t w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
                 <ToolbarButton
                     onClick={handleExpandCanvasButton}
-                    title={intl.formatMessage({ defaultMessage: "Toggle expanded view", id: "graph.toolbar.expand" })}
+                    tooltip={defineMessage({ defaultMessage: "Toggle expanded view", id: 'k4UVvX' })}
                     icon={expanded ? "arrows-angle-contract" : "arrows-angle-expand"}
                 />
                 <ToolbarButton
                     onClick={handleZoomInButton}
-                    title={intl.formatMessage({ defaultMessage: "Zoom in", id: "graph.toolbar.zoomIn" })}
+                    tooltip={defineMessage({ defaultMessage: "Zoom in", id: 'xbi38c' })}
                     icon="zoom-in"
                 />
                 <ToolbarButton
                     onClick={handleZoomOutButton}
-                    title={intl.formatMessage({ defaultMessage: "Zoom out", id: "graph.toolbar.zoomOut" })}
+                    tooltip={defineMessage({ defaultMessage: "Zoom out", id: '/UnJ3S' })}
                     icon="zoom-out"
                 />
                 <ToolbarButton
                     onClick={handleFitViewButton}
-                    title={intl.formatMessage({ defaultMessage: "Fit graph to view", id: "graph.toolbar.fitView" })}
+                    tooltip={defineMessage({ defaultMessage: "Fit graph to view", id: 'KW0LBg' })}
                     icon="aspect-ratio"
                 />
                 <ToolbarButton
                     onClick={handleDownloadImageButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Download entire graph as an image",
-                        id: "graph.toolbar.downloadImage",
+                        id: 'ZXv6xf',
                     })}
                     icon="image"
                 />
                 <ToolbarButton
                     onClick={handleCondenseNodesButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Condense leaves and intermediate nodes",
-                        id: "graph.toolbar.condenseNodes",
+                        id: 'r/Qe/+',
                     })}
                     icon="chevron-contract"
                     enabled={isCondensed}
@@ -606,45 +607,45 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 <ToolbarSeparator />
                 <ToolbarButton
                     onClick={handleSelectToolButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Select tool: click on an entry/node to select it. Double-click to see its neighbors.",
-                        id: "graph.toolbar.selectTool",
+                        id: '5T8hcS',
                     })}
                     icon="cursor-left-fill"
                     enabled={activeTool === Tool.Select}
                 />
                 <ToolbarButton
                     onClick={handleHideArticlesButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Hide entries tool: click on an entry to hide all entries of that type.",
-                        id: "graph.toolbar.hideNodesTool",
+                        id: 'UNBVo0',
                     })}
                     icon="eraser"
                     enabled={activeTool === Tool.HideNodes}
                 />
                 <ToolbarButton
                     onClick={handleExpandLeafButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Expand leaf tool: Click on previously collapsed nodes to expand them again.",
-                        id: "graph.toolbar.expandNodes",
+                        id: 'ZT3+GQ',
                     })}
                     icon="chevron-expand"
                     enabled={activeTool === Tool.CondenseExpandNode}
                 />
                 <ToolbarButton
                     onClick={handleCommunityButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Detect communities",
-                        id: "graph.toolbar.detectCommunities",
+                        id: 'MswTjB',
                     })}
-                    icon="eraser"
+                    icon="bounding-box"
                     enabled={isCommunized}
                 />
                 {isCommunized && <ToolbarButton
                     onClick={handleCliquesButton}
-                    title={intl.formatMessage({
+                    tooltip={defineMessage({
                         defaultMessage: "Detect cliques and combine them into combos",
-                        id: "graph.toolbar.detectCliques",
+                        id: 'xgjVKC',
                     })}
                     icon="braces-asterisk"
                     enabled={areCliquesDetected}
@@ -652,7 +653,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             </div>
             <div
                 ref={updateGraphHolder}
-                className="relative bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
+                className="relative rounded-b bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
                 style={activeTool === Tool.HideNodes ? { cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z'/%3E%3C/svg%3E") 3 16, crosshair` } : {}}
             >
                 {/* in here is 'graphContainer', and which holds a <canvas> element. */}
@@ -673,7 +674,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             <Modal
                 onClose={handleExpandCanvasButton}
                 className={`
-                    flex flex-col rounded border-2 border-gray-200 w-auto h-auto
+                    flex flex-col rounded border border-gray-300 w-auto h-auto
                     max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]
                 `}
             >
@@ -685,7 +686,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         // on an aspect ratio (square on mobile, 16:9 on desktop)
         return (
             <div className={`
-                flex flex-col rounded border-2 border-gray-200 w-auto h-auto
+                flex flex-col rounded border border-gray-300 w-auto h-auto
                 aspect-square md:aspect-video max-w-full
             `}>
                 {contents}

@@ -96,14 +96,25 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
     const router = useRouter();
     // router.query.siteHost gives the site's domain name because of how we have the Next.js URL rewriting configured.
     const domain = router.query.siteHost as string;
-    const { data, error } = useSWR(`site:${domain}`, async () => {
+    // eslint-disable-next-line prefer-const
+    let { data, error } = useSWR(`site:${domain}`, async () => {
         if (domain) {
             return await client.getSite({domain});
         } else {
             throw new Error("Can't load site yet because domain is unknown.");
         }
     }, {
-        fallbackData: (options.fallback && options.fallback.domain === domain) ? options.fallback : {
+        refreshInterval: 10 * 60_000,  // Reload the site data every 10 minutes in case anything was changed.
+    });
+    if (data === undefined) {
+        // If data is undefined at this point, it means that it hasn't yet been loaded from the API (or couldn't be),
+        // AND that the data is not available from a parent <SiteDataProvider> (which usually should be the source of
+        // preloaded site data for most pages in Neolace.)
+        // Fallback to a default while we wait for the data to load:
+        // Note that we cannot use this as a 'fallbackData' parameter in the useSWR call above, because then it would
+        // overwrite the data coming from <SiteDataProvider>, which makes the preloaded site data available as a
+        // global fallback.
+        data = options.fallback ?? {
             name: "━━━━━━━━━━━━━━",
             description: "",
             domain,
@@ -114,10 +125,8 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
             isHomeSite: false,
             homeSiteName: "━━━━━━━━━━━━━━",
             homeSiteUrl: "",
-        },
-        refreshInterval: 10 * 60_000,  // Reload the site data every 10 minutes in case anything was changed.
-    });
-    if (data === undefined) { throw "fallbackError"; }  // Tell TypeScript data is always defined due to the fallback above.
+        }
+    }
     return {site: data, siteError: error};
 }
 
@@ -215,7 +224,7 @@ export function useDraft(draftId: VNID|"_"): [data: DraftDataWithEdits|undefined
  * React hook to get the currently published version of an entry, to use as a basis for making edits.
  * @returns 
  */
-export function useEditableEntry(entryId: VNID): [data: api.EditableEntryData|undefined, error: ApiError|undefined, mutate: KeyedMutator<api.EditableEntryData|undefined>] {
+export function useEditableEntry(entryId: VNID | {newEntryWithId: VNID}): [data: api.EditableEntryData|undefined, error: ApiError|undefined, mutate: KeyedMutator<api.EditableEntryData|undefined>] {
     const {site, siteError} = useSiteData();
 
     // TODO: Change "no-draft" below to the ID of the current draft, if any, from a <DraftContext> provider.
@@ -224,22 +233,11 @@ export function useEditableEntry(entryId: VNID): [data: api.EditableEntryData|un
         if (siteError) {
             throw new ApiError(500, "Site Error");
         }
-        if (!site.shortId) {
-            return undefined; // We need to wait for the siteId before we can load the entry
-        }
-        if (!isVNID(entryId)) {
-            throw new ApiError(500, "Not a valid VNID");
-        }
-        try {
-            const data: api.EditableEntryData = await client.getEntry(entryId, {flags: [
-                api.GetEntryFlags.IncludeFeatures,
-                api.GetEntryFlags.IncludeRawProperties,
-            ] as const, siteId: site.shortId});
-            return data;
-        } catch (err) {
-            if (err instanceof api.NotFound) {
+        if (typeof entryId === "object") {
+            if (isVNID(entryId.newEntryWithId)) {
+                // We are creating a new entry, and it has been assigned a temporary new VNID:
                 const blankEntry: api.EditableEntryData = {
-                    id: entryId,
+                    id: entryId.newEntryWithId,
                     friendlyId: "",
                     name: "",
                     description: "",
@@ -249,9 +247,20 @@ export function useEditableEntry(entryId: VNID): [data: api.EditableEntryData|un
                 };
                 return blankEntry;
             } else {
-                throw err;
+                throw new ApiError(500, "Not a valid entry ID.");
             }
         }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the entry
+        }
+        if (!isVNID(entryId)) {
+            throw new ApiError(500, `"${entryId}" is not a valid VNID`);
+        }
+        const data: api.EditableEntryData = await client.getEntry(entryId, {flags: [
+            api.GetEntryFlags.IncludeFeatures,
+            api.GetEntryFlags.IncludeRawProperties,
+        ] as const, siteId: site.shortId});
+        return data;
     }, {
 
         // refreshInterval: 10 * 60_000,

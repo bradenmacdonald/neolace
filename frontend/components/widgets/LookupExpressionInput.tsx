@@ -1,8 +1,10 @@
 import React from 'react';
+import { useIntl } from 'react-intl';
 import { type Descendant } from 'slate'
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate } from 'slate-react';
 import { EscapeMode, slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor, VoidPropNode } from 'components/utils/slate';
 import { PropertyVoid } from 'components/utils/slate-mdt';
+import { displayString, TranslatableString } from 'components/utils/i18n';
 
 
 interface Props {
@@ -12,7 +14,7 @@ interface Props {
     onChange: (newValue: string) => void;
     /** Event handler, called when the user has made changes and then pressed ENTER or blurred this input. */
     onFinishedEdits?: (newValue: string) => void;
-    placeholder?: string;
+    placeholder?: TranslatableString;
     /** ID for the underlying textarea, used to focus on it with a label */
     id?: string;
     /** Override the display of this element */
@@ -24,6 +26,7 @@ interface Props {
  */
 export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => {
 
+    const intl = useIntl();
     const renderLeaf = React.useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
 
@@ -68,7 +71,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
 
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={parsedValue} onChange={handleChange}>
-        <div className={`border-2 border-gray-500 rounded-md inline-flex items-center focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full md:w-auto md:min-w-[600px] max-w-full ${props.className ?? ""}`}>
+        <div className={`border border-gray-500 rounded-md inline-flex items-center focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full md:w-auto md:min-w-[600px] max-w-full ${props.className ?? ""}`}>
             {/* toolbar and custom buttons etc. can go here. within the box. */}
             <Editable
                 id={props.id}
@@ -78,7 +81,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
                 /* decorate={decorate}*/
                 renderLeaf={renderLeaf}
                 renderElement={renderElement}
-                placeholder={props.placeholder}
+                placeholder={props.placeholder ? displayString(intl, props.placeholder) : undefined}
             />
         </div>
   </Slate>

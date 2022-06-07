@@ -26,6 +26,9 @@ group("find.ts", () => {
                             enabled: true,
                         },
                     },
+                    plugins: {
+                        search: {},
+                    },
                 },
                 homeSiteName: "Neolace Development",
                 homeSiteUrl: "http://home.local.neolace.net:4445",

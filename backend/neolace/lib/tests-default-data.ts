@@ -53,6 +53,12 @@ const data = {
         adminsGroupId: undefined as any as VNID, // will be set once created.
         usersGroupId: undefined as any as VNID, // will be set once created.
     },
+    otherSite: {
+        // A site with no content, but can be used for checking that edits are restricted to one site
+        // (e.g. try submitting an edit using the ID of a plantDB entry, while the client is scoped to otherSite)
+        id: undefined as any as VNID, // will be set below once created.
+        shortId: "home",
+    },
     schema,
     entries: entryData,
 };
@@ -119,7 +125,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     await graph.runAsSystem(CreateSite({
         name: "Neolace Development",
         domain: "home.local.neolace.net",
-        slugId: `site-home`, // The shortId of this site is "main"
+        slugId: `site-home`, // The shortId of this site is "home"
         adminUser: data.users.admin.id,
         accessMode: AccessMode.PublicReadOnly,
         homePageMD: dedent`
@@ -140,6 +146,11 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             There is a system administrator user already created. Use the email address **\`admin@example.com\`** to
             [log in](/account/login). Once you enter that email address into the login form, you'll have to check the
             "backend" console to get the passwordless login link in order to complete the login.
+
+            ## Developer Resources
+
+            * [**User Interface Demo Page**](/ui): Shows various UI components that can be used to develop the Neolace
+              frontend and/or frontend plugins.
         `,
         footerMD: `Powered by [Neolace](https://www.neolace.com/).`,
         frontendConfig: {
@@ -149,8 +160,11 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             features: {
                 hoverPreview: { enabled: true },
             },
+            plugins: {},
         },
-    }));
+    })).then((result) => {
+        data.otherSite.id = result.id;
+    });
 
     await graph.runAsSystem(CreateSite({
         name: data.site.name,
@@ -175,6 +189,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             ],
             features: {
                 hoverPreview: { enabled: true },
+            },
+            plugins: {
+                search: {},
             },
         },
     })).then((result) => {

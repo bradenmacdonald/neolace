@@ -3,7 +3,7 @@ import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
 
 import { getSiteData, SiteData } from "lib/api-client";
-import { SitePage } from "components/SitePage";
+import { SiteDataProvider, SitePage } from "components/SitePage";
 import { UserContext, UserStatus } from "components/user/UserContext";
 import { Redirect } from "components/utils/Redirect";
 
@@ -84,14 +84,13 @@ const PasswordlessLoginPage: NextPage<PageProps> = function (props) {
     }
 
     return (
-        <SitePage
-            title={`Log in to ${props.site.name}`}
-            sitePreloaded={props.site}
-        >
-            <h1 className="text-3xl font-semibold">Log in to {props.site.name}</h1>
+        <SiteDataProvider sitePreloaded={props.site}>
+            <SitePage title={`Log in to ${props.site.name}`}>
+                <h1 className="text-3xl font-semibold">Log in to {props.site.name}</h1>
 
-            <p className="my-4">{detail}</p>
-        </SitePage>
+                <p className="my-4">{detail}</p>
+            </SitePage>
+        </SiteDataProvider>
     );
 };
 

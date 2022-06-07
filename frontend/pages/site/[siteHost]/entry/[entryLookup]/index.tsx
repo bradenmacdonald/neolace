@@ -7,7 +7,7 @@ import { ParsedUrlQuery } from 'querystring';
 import { Blurhash } from "react-blurhash";
 import { client, api, getSiteData, SiteData } from 'lib/api-client';
 
-import { SitePage } from 'components/SitePage';
+import { SiteDataProvider, SitePage } from "components/SitePage";
 import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 import { LookupValue } from 'components/LookupValue';
 import { EntryLink } from 'components/EntryLink';
@@ -28,13 +28,12 @@ const EntryPage: NextPage<PageProps> = function(props) {
     const mdtContext = React.useMemo(() => new MDTContext({
         entryId: props.entry.id,
         refCache: props.entry.referenceCache,
-    }), [props.entry.id]);
+    }), [props.entry.id, props.entry.referenceCache]);
     //const user = React.useContext(UserContext);
     const hasProps = props.entry.propertiesSummary?.length ?? 0 > 0;
 
-    return (
+    return (<SiteDataProvider sitePreloaded={props.sitePreloaded}>
         <SitePage
-            sitePreloaded={props.sitePreloaded}
             leftNavTopSlot={[
                 {id: "entryName", priority: 20, content: <>
                     <strong className="block mt-2">{props.entry.name}</strong>
@@ -44,8 +43,8 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 </>},
                 {id: "tableOfContents", priority: 50, content: <>
                     <ul id="left-toc-headings">
-                        <li><Link href={`/entry/${props.entry.friendlyId}#summary`}><a><FormattedMessage id="site.entry.summaryLink" defaultMessage="Summary"/></a></Link></li>
-                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><a><FormattedMessage id="site.entry.propertiesLink" defaultMessage="Properties"/></a></Link></li>
+                        <li><Link href={`/entry/${props.entry.friendlyId}#summary`}><a><FormattedMessage id="RrCui3" defaultMessage="Summary"/></a></Link></li>
+                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><a><FormattedMessage id="aI80kg" defaultMessage="Properties"/></a></Link></li>
                         {
                             props.entry.features?.Article?.headings.map(heading =>
                                 <li key={heading.id}><Link href={`/entry/${props.entry.friendlyId}#h-${heading.id}`}><a>{heading.title}</a></Link></li>
@@ -56,7 +55,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 ...(DEVELOPMENT_MODE ? [
                     {id: "entryActions", priority: 60, content: <>
                     <ul id="entry-actions" className="mt-4">
-                        <li><Link href={`/draft/_/entry/${props.entry.id}/edit`}><a><FormattedMessage id="site.entry.editEntry" defaultMessage="Edit"/></a></Link></li>
+                        <li><Link href={`/draft/_/entry/${props.entry.id}/edit`}><a><FormattedMessage id="wEQDC6" defaultMessage="Edit"/></a></Link></li>
                     </ul>
                 </>},
                 ] : [])
@@ -93,7 +92,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                         {props.entry.features.HeroImage.caption ?
                             <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
                                 <EntryLink entryKey={props.entry.features.HeroImage.entryId} mdtContext={mdtContext}>
-                                    <FormattedMessage id="site.entry.heroImageCaptionPrefix" defaultMessage="Image:"/>
+                                    <FormattedMessage id="lr4lXN" defaultMessage="Image:"/>
                                 </EntryLink>&nbsp;
                                 <InlineMDT mdt={props.entry.features.HeroImage.caption} context={mdtContext} />
                             </div>
@@ -108,7 +107,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
             {/* Properties */}
             <div className={`flex flex-wrap xl:flex-nowrap ${hasProps || "hidden"}`}>
                 <div id="properties" className="flex-auto">
-                    <h2><FormattedMessage id="site.entry.propertiesHeading" defaultMessage="Properties"/></h2>
+                    <h2><FormattedMessage id="aI80kg" defaultMessage="Properties"/></h2>
                     <table className="w-full table-fixed">
                         <colgroup>
                             <col className="w-full md:w-1/4" />
@@ -141,7 +140,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 {
                     props.entry.features?.Image ?
                         <>
-                            <h2><FormattedMessage id="site.entry.imageHeading" defaultMessage="Image"/></h2>
+                            <h2><FormattedMessage id="+0zv6g" defaultMessage="Image"/></h2>
                             <img src={props.entry.features.Image.imageUrl} />
                         </>
                     : null
@@ -155,7 +154,7 @@ const EntryPage: NextPage<PageProps> = function(props) {
                 }
             </div>
         </SitePage>
-    );
+    </SiteDataProvider>);
 }
 
 export default EntryPage;
@@ -170,13 +169,14 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
 }
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
+    if (!context.params) { throw new Error("Internal error - missing URL params."); }  // Make TypeScript happy
 
     // Look up the Neolace site by domain:
-    const site = await getSiteData(context.params!.siteHost);
+    const site = await getSiteData(context.params.siteHost);
     if (site === null) { return {notFound: true}; }
     let entry: api.EntryData;
     try {
-        entry = await client.getEntry(context.params!.entryLookup, {siteId: site.shortId, flags: [
+        entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [
             api.GetEntryFlags.IncludePropertiesSummary,
             api.GetEntryFlags.IncludeReferenceCache,
             api.GetEntryFlags.IncludeFeatures,
@@ -188,7 +188,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         throw err;
     }
 
-    if (entry.friendlyId !== context.params!.entryLookup) {
+    if (entry.friendlyId !== context.params.entryLookup) {
         // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
         return {
             redirect: {

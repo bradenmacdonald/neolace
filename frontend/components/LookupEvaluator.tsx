@@ -27,7 +27,7 @@ export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
         if (error instanceof api.InvalidRequest && error.reason === api.InvalidRequestReason.LookupExpressionParseError) {
             return <ErrorMessage>
                 <FormattedMessage
-                    id="components.lookupEvaluator.parseError"
+                    id="Y7XZ3q"
                     defaultMessage="The expression could not be parsed: {explanation}"
                     values={{explanation: error.message}}
                 />
@@ -37,7 +37,7 @@ export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
             // error value, not an error response from the API.
             return <ErrorMessage>
                 <FormattedMessage
-                    id="components.lookupEvaluator.otherError"
+                    id="pntWdV"
                     defaultMessage="An unexpected error occurred: {explanation}"
                     values={{
                         explanation: error.message,
@@ -68,11 +68,7 @@ export const LookupEvaluatorWithPagination: React.FunctionComponent<PropsWithPag
     // SWR will ensure that the inner <LookupEvaluator> doesn't send additional API requests for the same lookup expression.
     const {result, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId});
 
-    const pageData = (
-        result?.resultValue.type === "Page" ? result.resultValue :
-        result?.resultValue.type === "Annotated" && result.resultValue.value.type === "Page" ? result.resultValue.value :
-        undefined
-    );
+    const pageData = result?.resultValue.type === "Page" ? result.resultValue : undefined;
 
     if (pageData) {
         const numValuesPerPage = pageData.pageSize;
@@ -88,14 +84,14 @@ export const LookupEvaluatorWithPagination: React.FunctionComponent<PropsWithPag
                 numPagesDisplayed < numPagesTotal &&
                     <Button icon="plus-lg" bold={true} onClick={() => { setNumPages(numPagesDisplayed + 1); }}>
                         <FormattedMessage
-                            id="lookup.showMoreResults"
+                            id="ntuqQX"
                             defaultMessage="Show more results"
                         />
                     </Button>
             }
             <p className="text-sm">
                 <FormattedMessage
-                    id="lookup.resultsCount"
+                    id="x3bfoo"
                     defaultMessage="Showing {numShowing, plural, one {# result} other {# results}} out of {numTotal} total."
                     values={{
                         numShowing: Math.min(numPagesDisplayed * numValuesPerPage, pageData.totalCount),

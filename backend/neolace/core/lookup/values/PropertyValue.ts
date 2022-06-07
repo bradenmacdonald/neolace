@@ -21,6 +21,6 @@ export class PropertyValue extends ConcreteValue implements IHasLiteralExpressio
     }
 
     protected serialize() {
-        return { id: this.id };
+        return { type: "Property" as const, id: this.id };
     }
 }
