@@ -24,7 +24,7 @@ const themeColorFromRbgTupleVar = (runtimeCssVariableName) => ({ opacityVariable
 
 module.exports = {
     // Tell Tailwind how to check which styles are used and which can be removed in production:
-    content: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}', './plugins/*/{components,pages,plugin-ui}/*.{js,ts,jsx,tsx}'],
+    content: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}', './plugins/**/*.{js,ts,jsx,tsx}'],
     // Neolace theme:
     theme: {
         extend: {

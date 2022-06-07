@@ -5,7 +5,7 @@ import { SWRConfig } from 'swr';
 
 import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData, useSiteData, api } from 'lib/api-client';
-import { UISlot, UISlotWidget, defaultRender } from './widgets/UISlot';
+import { UISlot, UISlotWidget, defaultRender, DefaultUISlot } from './widgets/UISlot';
 import FourOhFour from 'pages/404';
 import { MDTContext, RenderMDT } from './markdown-mdt/mdt';
 import { Icon, IconId } from './widgets/Icon';
@@ -192,6 +192,9 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             :null}
         </Head>
 
+        {/* If plugins want to render a header (e.g. for theming purposes), they can. By default there is no full-width header. */}
+        <DefaultUISlot slotId="globalHeader"/>
+
         {/* Container that wraps the left nav column (on desktop) and the article text/content */}
         <div className="flex flex-row justify-center mx-auto shadow-lg w-screen md:max-w-[1280px]">
 
@@ -213,15 +216,17 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             >
 
                 {/* Site name/logo */}
-                <Link href="/">
-                    {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
-                    <a className="flex-none p-1 mr-1 flex items-center mb-3">
-                        {
-                            // eslint-disable-next-line @next/next/no-img-element
-                            site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
-                        }
-                    </a>
-                </Link>
+                <DefaultUISlot slotId="siteLogo">
+                    <Link href="/">
+                        {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
+                        <a className="flex-none p-1 mr-1 flex items-center mb-3">
+                            {
+                                // eslint-disable-next-line @next/next/no-img-element
+                                site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
+                            }
+                        </a>
+                    </Link>
+                </DefaultUISlot>
 
                 <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavTopSlot ?? []), {
                     id: "siteLinks",
@@ -245,6 +250,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             {/* The main content of this entry */}
             <main role="main" id="content" className="w-full left-0 top-0 md:w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] neo-typography" onClick={handleArticleClick}>{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                 <div className="md:min-h-[calc(100vh-11.5rem)]"> {/* Push the footer down to the bottom if the page content is very short */}
+                    <DefaultUISlot slotId="preContent"/>
                     {props.children}
                 </div>
                 <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 clear-both">

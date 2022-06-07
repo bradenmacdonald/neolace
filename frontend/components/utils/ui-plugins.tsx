@@ -2,7 +2,14 @@ import { api, SiteData } from "lib/api-client";
 import React, { useContext } from "react";
 import type { UiSlotChange } from "components/widgets/UISlot";
 
-export type UiSlotId = "systemLinks" | "leftNavBottom" | `plugin:${string}`;
+export type UiSlotId = (
+    | "systemLinks"
+    | "leftNavBottom"
+    | "globalHeader"
+    | "siteLogo"
+    | "preContent"
+    | `plugin:${string}`
+);
 
 export interface PluginPageProps {
     path: string;

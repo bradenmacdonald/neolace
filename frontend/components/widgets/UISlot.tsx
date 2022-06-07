@@ -74,3 +74,14 @@ export const UISlot = function <ContentType = React.ReactElement>(props: Props<C
         </>
     );
 };
+
+/**
+ * A UI slot is a placeholder in the user interface that can be filled with various content/widgets, and in particular
+ * which plugins can modify. This particular type of UI slot just wraps any React component and allows plugins to insert
+ * HTML before it or after it, or to hide it.
+ */
+ export const DefaultUISlot: React.FunctionComponent<{slotId: string; children?: React.ReactNode}> = (props) => {
+    return <UISlot slotId={props.slotId} renderWidget={defaultRender} defaultContents={
+        props.children ? [{id: "content", priority: 50, content: <>{props.children}</>}] : []
+    } />
+};
