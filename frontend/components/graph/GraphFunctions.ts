@@ -1,10 +1,10 @@
-import Graph from 'graphology';
-import { VNID } from 'neolace-api';
-import type { G6RawGraphData } from './Graph'
-import toSimple from 'graphology-operators/to-simple';
-import toUndirected from 'graphology-operators/to-undirected';
-import louvain from 'graphology-communities-louvain';
-import {subgraph} from 'graphology-operators';
+import Graph from "graphology";
+import { VNID } from "neolace-api";
+import type { G6RawGraphData } from "./Graph";
+import toSimple from "graphology-operators/to-simple";
+import toUndirected from "graphology-operators/to-undirected";
+import louvain from "graphology-communities-louvain";
+import { subgraph } from "graphology-operators";
 
 interface NodeAttributes {
     label: string;
@@ -40,11 +40,13 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
     const data: G6RawGraphData = {
         nodes: graph.mapNodes((nodeKey) => ({
             id: VNID(nodeKey),
-            label: graph.getNodeAttribute(nodeKey, 'clique') !== undefined ? `CLIQUE ${graph.getNodeAttribute(nodeKey, 'clique')}` : graph.getNodeAttribute(nodeKey, "label") as string,
+            label: graph.getNodeAttribute(nodeKey, "clique") !== undefined
+                ? `CLIQUE ${graph.getNodeAttribute(nodeKey, "clique")}`
+                : graph.getNodeAttribute(nodeKey, "label") as string,
             entryType: VNID(graph.getNodeAttribute(nodeKey, "entryType")),
             ...(graph.hasNodeAttribute(nodeKey, "isFocusEntry") && { isFocusEntry: true }),
-            ...(graph.hasNodeAttribute(nodeKey, 'community') 
-            && {community: graph.getNodeAttribute(nodeKey, 'community')}),
+            ...(graph.hasNodeAttribute(nodeKey, "community") &&
+                { community: graph.getNodeAttribute(nodeKey, "community") }),
             ...(graph.hasNodeAttribute(nodeKey, "nodesCondensed") &&
                 { nodesCondensed: graph.getNodeAttribute(nodeKey, "nodesCondensed") }),
             ...(graph.hasNodeAttribute(nodeKey, "clique") &&
@@ -73,7 +75,7 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
 function condenseLeaves(graph: GraphType): GraphType {
     const graphCopy = graph.copy();
     let newGraph = graph.copy();
-    graphCopy.forEachNode((node)=> {
+    graphCopy.forEachNode((node) => {
         if (newGraph.hasNode(node)) {
             newGraph = condenseNodeLeaves(newGraph, node);
         }
@@ -305,7 +307,7 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
 /**
  * Removes leaves of the given node and adds a condensed node to the graph. If
  * thre are no leaves to condense, does nothing and return the original graph copy.
- * @param graph 
+ * @param graph
  * @param nodeToCondense node which leaves need condensing
  * @returns Copy of the graph with condensing modifications
  */
@@ -410,29 +412,29 @@ export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphTyp
 /**
  * Find the largest clique in the subgraph defined by the node list and mark nodes as part of the clique.
  * NOTE temporarily we will use community id as the clique id as each community so far has only one clique
- * @param simpleGraph 
- * @param nodeList 
- * @param cliqueId 
- * @returns 
+ * @param simpleGraph
+ * @param nodeList
+ * @param cliqueId
+ * @returns
  */
 function findCliquesInNodeSubset(simpleGraph: GraphType, nodeList: string[], cliqueId: number) {
     if (simpleGraph.order === 0) return;
     // TODO some cliques are also overlapping - like cliques of three. Should I find all of them?
-    console.log('The community is ', cliqueId)
+    console.log("The community is ", cliqueId);
     const comGraph = subgraph(simpleGraph, nodeList);
     const largestClique = maxClique(comGraph);
     // only include cliques of sizes more than indicated
     if (largestClique.length <= 2) return;
     largestClique.forEach((n) => {
-        console.log('Adding to a clique', n)
-        simpleGraph.setNodeAttribute(n, 'clique', cliqueId);
-    })
+        console.log("Adding to a clique", n);
+        simpleGraph.setNodeAttribute(n, "clique", cliqueId);
+    });
 }
 
 /**
  * Check if a subgraph is a clique, i.e. a compelte graph.
- * @param subgraph 
- * @returns 
+ * @param subgraph
+ * @returns
  */
 function isSubgraphClique(subgraph: GraphType): boolean {
     let isClique = true;
@@ -448,7 +450,7 @@ function isSubgraphClique(subgraph: GraphType): boolean {
             isClique = false;
         }
         return;
-    })
+    });
     return isClique;
 }
 
@@ -459,12 +461,12 @@ function maxClique(graph: GraphType) {
         if (graph.neighbors(n).length < 2) {
             graphCopy.dropNode(n);
         }
-    })
+    });
     let largestClique: string[] = [];
     graphCopy.forEachNode((n) => {
         const result = maxCliqueRec(graphCopy, [n]);
         if (result.length > largestClique.length) largestClique = result;
-    })
+    });
     return largestClique;
 }
 
@@ -477,15 +479,15 @@ function isItStillClique(enlargedClique: GraphType, newNodeId: string): boolean 
         if (!enlargedClique.areNeighbors(newNodeId, n)) {
             isItClique = false;
         }
-    })
+    });
     return isItClique;
 }
 
 /**
  * Recursive function to find the maximum clique subgraph and return it.
- * @param graph 
- * @param remainingNodeList 
- * @param currClique 
+ * @param graph
+ * @param remainingNodeList
+ * @param currClique
  * @returns list of node ids corresponding to the largest clique in graph
  */
 function maxCliqueRec(graph: GraphType, currClique: string[]) {
@@ -496,7 +498,7 @@ function maxCliqueRec(graph: GraphType, currClique: string[]) {
         graph.forEachNeighbor(node, (nb) => {
             if (currClique.includes(nb)) return;
             adjacentNodes.add(nb);
-        })
+        });
     }
 
     // check if any vertices can be added among the adjacent nodes
@@ -506,7 +508,7 @@ function maxCliqueRec(graph: GraphType, currClique: string[]) {
         if (isItStillClique(enlargedSubgraph, node)) {
             const cliqueResult = maxCliqueRec(
                 graph,
-                [...currClique, node]
+                [...currClique, node],
             );
             if (cliqueResult.length > largestClique.length) {
                 largestClique = cliqueResult;
@@ -515,7 +517,6 @@ function maxCliqueRec(graph: GraphType, currClique: string[]) {
     }
     return largestClique;
 }
-
 
 // ******************************************TRANSFORM FUNCTIONS********************************************************
 // for now just find all the leaf nodes and for every node that has more than one leaf node:
@@ -559,27 +560,27 @@ export function transformComputeCommunities(graph: GraphType) {
     // TODO need to turn graph back from simple type
     // TODO make resolution parameters part of toolbar.
     // TODO when collapsing communities, what community should they inherit?
-    const simpleGraph = toUndirected(toSimple(graph))
-    louvain.assign(simpleGraph, {resolution:1.3});
+    const simpleGraph = toUndirected(toSimple(graph));
+    louvain.assign(simpleGraph, { resolution: 1.3 });
     // get community partition
     const id2comm: Record<string, number> = {};
     const comm2id = new Map<number, string[]>();
     simpleGraph.forEachNode((n) => {
-        id2comm[n] = simpleGraph.getNodeAttribute(n, 'community') as number;
-        const community = comm2id.get(simpleGraph.getNodeAttribute(n, 'community') as number);
+        id2comm[n] = simpleGraph.getNodeAttribute(n, "community") as number;
+        const community = comm2id.get(simpleGraph.getNodeAttribute(n, "community") as number);
         if (community) {
             community.push(n);
         } else {
-            comm2id.set(simpleGraph.getNodeAttribute(n, 'community') as number, [n]);
+            comm2id.set(simpleGraph.getNodeAttribute(n, "community") as number, [n]);
         }
-    })
- 
-    return {simpleGraph, comm2id};
+    });
+
+    return { simpleGraph, comm2id };
 }
 
 // Assumes that communites are computed for nodes.
 export function transformComputeCliques(graph: GraphType, comm2id: Map<number, string[]>) {
-    const transformedGraph = graph.copy()
+    const transformedGraph = graph.copy();
     if (transformedGraph.order === 0) return;
     for (const com of comm2id.keys()) {
         findCliquesInNodeSubset(transformedGraph, comm2id.get(com) as string[], com);

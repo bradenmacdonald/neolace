@@ -57,7 +57,7 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
             node.color = colourMap.get(attrValue);
             node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
         });
-        return data  
+        return data
     }
     if (transformList.find((t) => t.id === Transforms.COMMUNITY) !== undefined) {
         data = colorGraphByAttribute('community', data, refCache);
@@ -82,7 +82,7 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
             }
         )),
     };
-    
+
     data = colorGraph(data, [], refCache);
     return data;
 }
@@ -217,11 +217,11 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         },
         modes: {
             default: [
-                "drag-canvas", 
-                "click-select", 
-                "zoom-canvas", 
-                'drag-node', 
-                'drag-combo', 
+                "drag-canvas",
+                "click-select",
+                "zoom-canvas",
+                'drag-node',
+                'drag-combo',
                 {
                     type: 'collapse-expand-combo',
                     relayout: false,
@@ -287,7 +287,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         const comboDict: Record<number, string[]> = {};
         currentData.nodes.forEach((n) => {
             if (n.clique === undefined) return;
-            if (!comboDict[n.clique]) comboDict[n.clique] =[];
+            if (!comboDict[n.clique]) comboDict[n.clique] = [];
             comboDict[n.clique].push(n.id);
         })
         // delete relationships within combos
@@ -330,22 +330,24 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     nodeList.forEach((comboNode) => {
                         // get edge
                         const edge = getEdgeIfExists(graph, comboNode, nodeId);
-                            if (edge) {
-                                graph.removeItem(edge);
-                            }
-                        })
-                        addEdge = true;
+                        if (edge) {
+                            graph.removeItem(edge);
+                        }
+                    })
+                    addEdge = true;
                 }
                 if (nodeList.includes(nodeId)) addEdge = true;
-                    
+
                 if (addEdge) {
                     // add edge 
-                    graph.addItem('edge', {id:VNID(), source: combo, target: nodeId, style: {
-                        stroke: edgeColor,
-                    },});
+                    graph.addItem('edge', {
+                        id: VNID(), source: combo, target: nodeId, style: {
+                            stroke: edgeColor,
+                        },
+                    });
                 }
             }
-        });       
+        });
     }, [currentData])
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
@@ -424,7 +426,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     // instead of this node id, get type and parent
                     // should have only one neighbour
                     params: { nodeToCondense: item.getModel().id }
-                }]) 
+                }])
             }
         });
 
@@ -536,11 +538,11 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         if (isCommunized) {
             setTransforms(
                 (prevTransforms) => prevTransforms.filter((t) => (
-                        t.id !== Transforms.COMMUNITY && t.id !== Transforms.ADDCLIQUES)
-                    )
-                );
+                    t.id !== Transforms.COMMUNITY && t.id !== Transforms.ADDCLIQUES)
+                )
+            );
         } else {
-            setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.COMMUNITY, params: {}}]);
+            setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.COMMUNITY, params: {} }]);
         }
     }, [isCommunized, setTransforms]);
     // Code for detecting cliques toolbar button
@@ -552,9 +554,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 (prevTransforms) => prevTransforms.filter((t) => (
                     t.id !== Transforms.ADDCLIQUES
                 ))
-            ) 
+            )
         } else {
-            setTransforms((prevTransforms) => [...prevTransforms, {id: Transforms.ADDCLIQUES, params: {}}]);
+            setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.ADDCLIQUES, params: {} }]);
         }
     }, [areCliquesDetected, isCommunized, setTransforms]);
     // Tools:
@@ -602,7 +604,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     icon="chevron-contract"
                     enabled={isCondensed}
                 />
-                <ToolbarSeparator/>
+                <ToolbarSeparator />
                 <ToolbarButton
                     onClick={handleSelectToolButton}
                     title={intl.formatMessage({

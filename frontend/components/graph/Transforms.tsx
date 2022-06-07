@@ -1,15 +1,15 @@
 import { G6RawGraphData } from "components/graph/Graph";
 import { VNID } from "neolace-api";
-import { 
-    transformCondenseGraph, 
-    transformHideNodesOfType, 
-    transformExpandLeaves, 
-    createGraphObject, 
-    convertGraphToData, 
-    GraphType, 
+import {
+    transformCondenseGraph,
+    transformHideNodesOfType,
+    transformExpandLeaves,
+    createGraphObject,
+    convertGraphToData,
+    GraphType,
     transformCondenseNodeLeaves,
     transformComputeCommunities,
-    transformComputeCliques 
+    transformComputeCliques
 } from "./GraphFunctions";
 
 export interface Transform {
