@@ -134,7 +134,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         });
         // Log out link:
         defaultSystemLinks.push({
-            id: "login-out",
+            id: "logout",
             priority: 60,
             content: {
                 url: site.isHomeSite ? "/account/logout" : `${site.homeSiteUrl}/account/logout?returnSite=${encodeURI(site.shortId)}`,
@@ -145,7 +145,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     } else {
         // Log in link:
         defaultSystemLinks.push({
-            id: "login-out",
+            id: "login",
             priority: 60,
             content: {
                 url: site.isHomeSite ? "/account/login" : `${site.homeSiteUrl}/account/login?returnSite=${encodeURI(site.shortId)}`,

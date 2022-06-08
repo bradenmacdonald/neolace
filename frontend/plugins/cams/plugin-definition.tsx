@@ -6,12 +6,15 @@ export const plugin: PluginDefinition = {
     getPageForPath(_site, path) {
         if (path === "/members-only") {
             return "members-only";
+        } else  if (path === "/members-login") {
+            return "members-login";
         }
         return undefined;
     },
     getUiSlotChanges() {
         return {
             "leftNavBottom": [
+                // Hide the normal system links, because we don't want users clicking "login" and going to the realm home site:
                 {
                     op: UiChangeOperation.Hide,
                     widgetId: "systemLinks",
