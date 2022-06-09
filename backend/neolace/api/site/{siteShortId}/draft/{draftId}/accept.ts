@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { adaptErrors, api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { AcceptDraft, Draft } from "neolace/core/edit/Draft.ts";
 
 export class AcceptDraftResource extends NeolaceHttpResource {
@@ -35,7 +35,7 @@ export class AcceptDraftResource extends NeolaceHttpResource {
             throw new api.InvalidRequest(api.InvalidRequestReason.DraftIsEmpty, "Draft is empty");
         }
 
-        await graph.runAs(userId, AcceptDraft({ id: draftId }));
+        await graph.runAs(userId, AcceptDraft({ id: draftId })).catch(adaptErrors());
 
         // Response:
         return {};

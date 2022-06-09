@@ -273,6 +273,14 @@ export function adaptErrors(...mapping: (string | ConvertErrorPathToField)[]) {
     // validate all the fields of any changed models. If one of those fields is now invalid, we need to
     // map that error back to one of the request fields, if applicable.
     return function (err: unknown) {
+        if (
+            err instanceof Error && err.cause instanceof Error &&
+            // TODO: change vertex to throw a specific error class so we don't have to match on error message strings:
+            (err.message.includes("action failed during transaction validation") ||
+                err.message.includes("action failed during apply() method"))
+        ) {
+            err = err.cause;
+        }
         if (!(err instanceof Error)) {
             throw err;
         }
