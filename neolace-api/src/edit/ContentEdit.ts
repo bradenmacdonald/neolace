@@ -227,6 +227,11 @@ export const UpdatePropertyValue = ContentEditType({
     changeType: EditChangeType.Content,
     code: "UpdatePropertyValue",
     dataSchema: Schema({
+        /**
+         * The ID of the entry this property fact/value is attached to. (This is technically not necessary since it can
+         * be derived from the propertyFactId, but it makes a lot of things easier if the entry ID is included here.)
+         */
+        entryId: vnidString,
         /** The ID of the property fact to change */
         propertyFactId: vnidString,
         /**
@@ -284,6 +289,11 @@ export const DeletePropertyValue = ContentEditType({
     changeType: EditChangeType.Content,
     code: "DeletePropertyValue",
     dataSchema: Schema({
+        /**
+         * The ID of the entry this property fact/value is attached to. (This is technically not necessary since it can
+         * be derived from the propertyFactId, but it makes a lot of things easier if the entry ID is included here.)
+         */
+        entryId: vnidString,
         /** The ID of the property fact to change */
         propertyFactId: vnidString,
     }),

@@ -8,8 +8,10 @@ import * as api from "neolace/deps/neolace-api.ts";
 import { PathError } from "neolace/deps/computed-types.ts";
 
 import { getGraph } from "neolace/core/graph.ts";
-import { Check, CheckContext, permissions } from "neolace/core/permissions.ts";
-import { siteCodeForSite, siteIdFromShortId } from "neolace/core/Site.ts";
+import { ActionObject, ActionSubject } from "neolace/core/permissions/action.ts";
+import { hasPermissions } from "neolace/core/permissions/check.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
+import { getHomeSite, siteCodeForSite, siteIdFromShortId } from "neolace/core/Site.ts";
 
 interface AuthenticatedUserData {
     isBot: boolean;
@@ -182,10 +184,10 @@ export class NeolaceHttpResource extends Drash.Resource {
 
     protected async requirePermission(
         request: NeolaceHttpRequest,
-        check: Check,
-        ...otherChecks: Check[]
+        verb: string | string[],
+        object?: ActionObject,
     ): Promise<void> {
-        const checksPassed = await this.hasPermission(request, check, ...otherChecks);
+        const checksPassed = await this.hasPermission(request, verb, object);
 
         if (!checksPassed) {
             if (request.user?.id === undefined) {
@@ -198,27 +200,24 @@ export class NeolaceHttpResource extends Drash.Resource {
         }
     }
 
+    protected async getPermissionSubject(request: NeolaceHttpRequest): Promise<ActionSubject> {
+        const siteId = request.pathParam("siteShortId")
+            ? (await this.getSiteDetails(request)).siteId
+            : (await getHomeSite()).siteId;
+        const userId = request.user?.id ?? undefined;
+        return { userId, siteId };
+    }
+
     protected async hasPermission(
         request: NeolaceHttpRequest,
-        check: Check,
-        ...otherChecks: Check[]
+        verb: string | string[],
+        object?: ActionObject,
     ): Promise<boolean> {
         if (request.user?.id === SYSTEM_VNID) {
             return true; // The system user is allowed to do anything using the API (dangerous)
         }
-        const siteId = request.pathParam("siteShortId") ? (await this.getSiteDetails(request)).siteId : undefined;
-        const userId = request.user?.id ?? undefined;
-        const graph = await getGraph();
-
-        return await graph.read(async (tx) => {
-            const context: CheckContext = { tx, siteId, userId };
-            for (const c of [check, ...otherChecks]) {
-                if (await c(context) !== true) {
-                    return false; // This check was not passed
-                }
-            }
-            return true; // All checks passed
-        });
+        const subject = await this.getPermissionSubject(request);
+        return hasPermissions(subject, verb, object ?? {});
     }
 
     /**
@@ -358,4 +357,4 @@ function convertStandardErrors(err: Error): void {
     }
 }
 
-export { api, Drash, getGraph, log, permissions };
+export { api, corePerm, Drash, getGraph, log };

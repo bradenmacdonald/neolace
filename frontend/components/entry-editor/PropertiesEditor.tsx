@@ -195,7 +195,7 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
                                     if (newValue !== currentValue) {
                                         addUnsavedEdit({
                                             code: api.UpdatePropertyValue.code,
-                                            data: { propertyFactId: fact.id, valueExpression: newValue },
+                                            data: { entryId, propertyFactId: fact.id, valueExpression: newValue },
                                         });
                                     }
                                 }}

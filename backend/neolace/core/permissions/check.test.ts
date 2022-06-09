@@ -44,7 +44,15 @@ group("getAllRequiredPermissions()", () => {
         assertEquals(corePerm.proposeNewEntry.name, "proposeEdits.entry.new");
         assertSetEquals(
             await getAllRequiredPermissions([corePerm.proposeNewEntry.name]),
-            new Set(["view", "view.entry", "proposeEdits.entry", "proposeEdits.entry.new"]),
+            new Set([
+                "view",
+                "view.entry",
+                "view.entry.property",
+                "view.entry.features",
+                "view.entry.description",
+                "proposeEdits.entry",
+                "proposeEdits.entry.new",
+            ]),
         );
     });
 

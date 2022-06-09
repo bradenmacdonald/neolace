@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects, assertStrictEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { CreateGroup, Group, GroupMaxDepth, UpdateGroup } from "neolace/core/Group.ts";
+import { CreateGroup, Group, GroupMaxDepth, UpdateGroup } from "neolace/core/permissions/Group.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { VNodeKey } from "neolace/deps/vertex-framework.ts";
 
@@ -14,10 +14,7 @@ group("Group.ts", () => {
                 () =>
                     graph.runAs(
                         defaultData.users.admin.id,
-                        CreateGroup({
-                            name: "Site-less group",
-                            ...Group.emptyPermissions,
-                        }),
+                        CreateGroup({ name: "Site-less group", grantStrings: [] }),
                     ),
                 Error,
                 "Required relationship type BELONGS_TO must point to one node, but does not exist.",
@@ -44,7 +41,7 @@ group("Group.ts", () => {
                 CreateGroup({
                     name: "Level 2 Users",
                     belongsTo: usersGroup.id,
-                    ...Group.emptyPermissions,
+                    grantStrings: [],
                 }),
             ).then((cr) => getGroup(cr.id));
             assertStrictEquals(level2group.name, "Level 2 Users");
@@ -57,7 +54,7 @@ group("Group.ts", () => {
                 CreateGroup({
                     name: "Level 3 Users",
                     belongsTo: level2group.id,
-                    ...Group.emptyPermissions,
+                    grantStrings: [],
                 }),
             ).then((cr) => getGroup(cr.id));
             assertStrictEquals(level3group.name, "Level 3 Users");
@@ -70,7 +67,7 @@ group("Group.ts", () => {
                 CreateGroup({
                     name: "Level 4 Users",
                     belongsTo: level3group.id,
-                    ...Group.emptyPermissions,
+                    grantStrings: [],
                 }),
             ).then((cr) => getGroup(cr.id));
             assertStrictEquals(level4group.name, "Level 4 Users");
@@ -85,7 +82,7 @@ group("Group.ts", () => {
                         CreateGroup({
                             name: "Level 5 Users",
                             belongsTo: level4group.id,
-                            ...Group.emptyPermissions,
+                            grantStrings: [],
                         }),
                     ),
                 Error,

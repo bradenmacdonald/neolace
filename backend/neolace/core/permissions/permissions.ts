@@ -31,19 +31,9 @@ export const corePerm = definePermissions({
         description: "View the properties of entries.",
         requires: ["view.entry"],
     },
-    viewEntryArticle: {
-        name: "view.entry.article",
-        description: "View the article text of entries.",
-        requires: ["view.entry"],
-    },
-    viewEntryImage: {
-        name: "view.entry.image",
-        description: "View the image attached to image entries.",
-        requires: ["view.entry"],
-    },
-    viewEntryFile: {
-        name: "view.entry.file",
-        description: "View the file(s) attached to entries.",
+    viewEntryFeatures: {
+        name: "view.entry.features",
+        description: "View the article text, image, files, or other content features of entries.",
         requires: ["view.entry"],
     },
     // TODO: permission to view change history of an entry
@@ -52,7 +42,7 @@ export const corePerm = definePermissions({
     proposeEditToEntry: {
         name: "proposeEdits.entry",
         description: "Propose edits to entries (by creating a draft)",
-        requires: ["view.entry"],
+        requires: ["view.entry", "view.entry.property", "view.entry.features", "view.entry.description"],
     },
     proposeNewEntry: {
         name: "proposeEdits.entry.new",
@@ -65,7 +55,7 @@ export const corePerm = definePermissions({
         description: "Can the user propose edits to the site's schema (by creating a draft)",
         requires: ["view.schema"],
     },
-    applyEditsToEntry: {
+    applyEditsToEntries: {
         name: "applyEdits.entry",
         description: "Can the user approve/accept/apply edits to entries",
         requires: ["view.entry"], // Does not necessarily require proposeEdits

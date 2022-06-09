@@ -1,4 +1,4 @@
-import { api, NeolaceHttpResource, permissions, realmConfig } from "neolace/plugins/api.ts";
+import { api, corePerm, NeolaceHttpResource, realmConfig } from "neolace/plugins/api.ts";
 import { thisPlugin } from "./mod.ts";
 import { getSiteCollectionAlias, getSiteSpecificApiKey } from "./site-collection.ts";
 import { getTypeSenseClient } from "./typesense-client.ts";
@@ -17,7 +17,7 @@ export class SearchConnectionResource extends NeolaceHttpResource {
         description: "Get connection details for the site's search API endpoint (TypeSense)",
     }, async ({ request }) => {
         // Permissions and parameters:
-        await this.requirePermission(request, permissions.CanViewEntries);
+        await this.requirePermission(request, corePerm.viewSite.name);
         const { siteId } = await this.getSiteDetails(request);
         if (!(await thisPlugin.isEnabledForSite(siteId))) {
             throw new api.NotFound("Search is not enabled for that site");

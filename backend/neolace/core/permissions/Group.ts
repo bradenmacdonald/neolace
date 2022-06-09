@@ -22,42 +22,14 @@ export const GroupRef: typeof Group = VNodeTypeRef();
 import { Site } from "neolace/core/Site.ts";
 import { User } from "neolace/core/User.ts";
 
-export const enum PermissionGrant {
-    administerSite = "administerSite",
-    administerGroups = "administerGroups",
-    approveSchemaChanges = "approveSchemaChanges",
-    approveEntryEdits = "approveEntryEdits",
-    proposeSchemaChanges = "proposeSchemaChanges",
-    proposeEntryEdits = "proposeEntryEdits",
-}
-
 export class Group extends VNodeType {
     static readonly label = "Group";
     static readonly properties = {
         ...VNodeType.properties,
         // Name of this group
         name: Field.String,
-        // Admin-level permissions:
-        [PermissionGrant.administerSite]: Field.Boolean, // Can set properties of the site like domain name, name, private/public, etc.
-        [PermissionGrant.administerGroups]: Field.Boolean, // Can administer users and groups on this site:
-        // Editor level permissions:
-        [PermissionGrant.approveSchemaChanges]: Field.Boolean, // Can approve change requests related to the site schema
-        [PermissionGrant.approveEntryEdits]: Field.Boolean, // Can approve change requests related to the site content
-        // Normal user level permissions:
-        [PermissionGrant.proposeSchemaChanges]: Field.Boolean,
-        [PermissionGrant.proposeEntryEdits]: Field.Boolean,
-        // future permission: participate in discussions
-
-        // Membership in _any_ group grants permission to view entries and schema on the site
-    };
-
-    static readonly emptyPermissions = {
-        [PermissionGrant.administerSite]: false,
-        [PermissionGrant.administerGroups]: false,
-        [PermissionGrant.approveSchemaChanges]: false,
-        [PermissionGrant.approveEntryEdits]: false,
-        [PermissionGrant.proposeSchemaChanges]: false,
-        [PermissionGrant.proposeEntryEdits]: false,
+        // What permissions grants this group has (can be conditional), serialized as strings. TODO: Remove "NullOr"
+        grantStrings: Field.NullOr.List(Field.String),
     };
 
     static async validate(dbObject: RawVNode<typeof Group>, tx: WrappedTransaction): Promise<void> {
@@ -70,6 +42,9 @@ export class Group extends VNodeType {
                 throw new Error(`User groups cannot be nested more than ${GroupMaxDepth} levels deep.`);
             }
         });
+        if (dbObject.grantStrings === null) {
+            throw new ValidationError("Group grantStrings should not be null for new or updated groups.");
+        }
     }
 
     static readonly rel = this.hasRelationshipsFromThisTo(() => ({
@@ -101,15 +76,7 @@ export class Group extends VNodeType {
 
 VNodeTypeRef.resolve(GroupRef, Group);
 
-export const UpdateGroup = defaultUpdateFor(Group, (g) =>
-    g
-        .name
-        .administerSite
-        .administerGroups
-        .approveSchemaChanges
-        .approveEntryEdits
-        .proposeSchemaChanges
-        .proposeEntryEdits, {
+export const UpdateGroup = defaultUpdateFor(Group, (g) => g.name, {
     otherUpdates: async (
         args: {
             // VNID or slugId of a Site or Group that this Group belongs to.
@@ -118,11 +85,25 @@ export const UpdateGroup = defaultUpdateFor(Group, (g) =>
             addUsers?: VNID[];
             // Remove some users from this group:
             removeUsers?: VNID[];
+            // Add permission grants to this group
+            addPermissionGrants?: string[];
+            // Remove permission grants from this group (by value)
+            removePermissionGrants?: string[];
         },
         tx,
         nodeSnapshot,
     ) => {
         const id = nodeSnapshot.id;
+
+        if (args.removePermissionGrants || args.addPermissionGrants) {
+            tx.queryOne(C`
+                MATCH (group:${Group} {id: ${id}})
+                SET group.grantStrings = [
+                    g in coalesce(group.grantStrings, [])
+                    where not g in ${args.removePermissionGrants ?? []}
+                ] + ${args.addPermissionGrants ?? []}
+            `.RETURN({}));
+        }
 
         // Relationship updates:
 
@@ -187,12 +168,4 @@ export const UpdateGroup = defaultUpdateFor(Group, (g) =>
 
 export const DeleteGroup = defaultDeleteFor(Group);
 
-export const CreateGroup = defaultCreateFor(Group, (g) =>
-    g
-        .name
-        .administerSite
-        .administerGroups
-        .approveSchemaChanges
-        .approveEntryEdits
-        .proposeSchemaChanges
-        .proposeEntryEdits, UpdateGroup);
+export const CreateGroup = defaultCreateFor(Group, (g) => g.name.grantStrings, UpdateGroup);

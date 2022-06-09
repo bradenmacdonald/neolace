@@ -1,3 +1,4 @@
+import * as log from "std/log/mod.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { AccessMode, Site } from "neolace/core/Site.ts";
@@ -37,8 +38,14 @@ export const defaultGrants: Record<AccessMode, PermissionGrant[]> = Object.freez
  */
 export async function getSitePublicGrants(siteId: VNID) {
     const graph = await getGraph();
-    const site = await graph.pullOne(Site, (s) => s.accessMode, { key: siteId });
+    const site = await graph.pullOne(Site, (s) => s.accessMode.publicGrantStrings.shortId(), { key: siteId });
     const grants = defaultGrants[site.accessMode as AccessMode] ?? [];
-    // TODO: also pull in a 'public grants' field from the site with additional permissions that everyone gets.
+    for (const publicGrantString of (site.publicGrantStrings ?? [])) {
+        try {
+            grants.push(PermissionGrant.parse(publicGrantString));
+        } catch (err) {
+            log.error(`Unable to parse public grant string "${publicGrantString}" for site ${site.shortId}`, err);
+        }
+    }
     return grants;
 }

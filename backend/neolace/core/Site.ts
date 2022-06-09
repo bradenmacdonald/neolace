@@ -21,7 +21,7 @@ import { getGraph } from "neolace/core/graph.ts";
 // Forward reference
 export const SiteRef: typeof Site = VNodeTypeRef();
 
-import { CreateGroup, Group, GroupMaxDepth } from "./Group.ts";
+import { CreateGroup, Group, GroupMaxDepth } from "./permissions/Group.ts";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Constants for "site codes" - See arch-decisions/007-sites-multitenancy for details.
@@ -104,8 +104,11 @@ export class Site extends VNodeType {
          */
         footerMD: Field.String.Check(check.string.max(10_000)),
 
-        // Access Mode: Determines what parts of the site are usable without logging in
+        /** Access Mode: Determines what parts of the site are usable without logging in */
         accessMode: Field.String.Check(check.Schema.enum(AccessMode)),
+
+        /** Additional permissions that apply to everyone, including users who aren't logged in */
+        publicGrantStrings: Field.NullOr.List(Field.String),
 
         /**
          * Configuration related to the frontend, such as:
@@ -278,17 +281,21 @@ export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Action to make changes to an existing Site:
-export const UpdateSite = defaultUpdateFor(Site, (s) => s.slugId.description.homePageMD.footerMD.domain.accessMode, {
-    otherUpdates: async (args: { frontendConfig?: FrontendConfigData }, tx, nodeSnapshot) => {
-        if (args.frontendConfig) {
-            await tx.queryOne(C`
+export const UpdateSite = defaultUpdateFor(
+    Site,
+    (s) => s.slugId.description.homePageMD.footerMD.domain.accessMode.publicGrantStrings,
+    {
+        otherUpdates: async (args: { frontendConfig?: FrontendConfigData }, tx, nodeSnapshot) => {
+            if (args.frontendConfig) {
+                await tx.queryOne(C`
                 MATCH (site:${Site} {id: ${nodeSnapshot.id}})
                 SET site.frontendConfigJSON = ${JSON.stringify(args.frontendConfig)}
             `.RETURN({}));
-        }
-        return {};
+            }
+            return {};
+        },
     },
-});
+);
 
 export const DeleteSite = defaultDeleteFor(Site);
 
@@ -306,6 +313,7 @@ export const CreateSite = defineAction({
         adminUser?: VNID;
         accessMode?: AccessMode;
         frontendConfig?: FrontendConfigData;
+        publicGrantStrings?: string[];
     },
     resultData: {} as {
         id: VNID;
@@ -344,7 +352,8 @@ export const CreateSite = defineAction({
                 footerMD: ${data.footerMD || ""},
                 domain: ${data.domain},
                 accessMode: ${data.accessMode ?? AccessMode.PublicContributions},
-                frontendConfigJSON: ${JSON.stringify(data.frontendConfig ?? {})}
+                frontendConfigJSON: ${JSON.stringify(data.frontendConfig ?? {})},
+                publicGrantStrings: ${data.publicGrantStrings ?? []}
             })
         `.RETURN({}));
 
@@ -353,12 +362,7 @@ export const CreateSite = defineAction({
             const newGroupResult = await CreateGroup.apply(tx, {
                 name: "Administrators",
                 belongsTo: id,
-                administerSite: true,
-                administerGroups: true,
-                approveEntryEdits: true,
-                approveSchemaChanges: true,
-                proposeEntryEdits: true,
-                proposeSchemaChanges: true,
+                grantStrings: ["*"],
                 addUsers: [data.adminUser],
             });
             resultData.adminGroup = newGroupResult.resultData.id;

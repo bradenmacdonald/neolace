@@ -3,7 +3,7 @@ import { C, CypherQuery, Field, SYSTEM_VNID, VNID, WrappedTransaction } from "ne
 import { getGraph } from "neolace/core/graph.ts";
 import { ActionObject, ActionSubject } from "./action.ts";
 import { getPerm, PermissionName } from "./permissions.ts";
-import { Group, GroupMaxDepth } from "neolace/core/Group.ts";
+import { Group, GroupMaxDepth } from "neolace/core/permissions/Group.ts";
 import { BotUser, User } from "neolace/core/User.ts";
 import { Site } from "neolace/core/Site.ts";
 import { AllOfCondition, Always, GrantCondition, OneOfCondition, PermissionGrant } from "./grant.ts";
@@ -11,7 +11,7 @@ import { getSitePublicGrants } from "./default-grants.ts";
 
 export async function hasPermissions(
     subject: ActionSubject,
-    verb: PermissionName | PermissionName[],
+    verb: PermissionName | readonly PermissionName[],
     object: ActionObject,
 ): Promise<boolean> {
     // Get the complete list of permissions needed:
@@ -109,8 +109,8 @@ async function preChecks(
     // At this point, 'needed' is the set of remaining permissions that the user still requires to do this action.
 
     // Check what permisison grants the user has from any groups that they may belong to:
-    const _groups = await getUserGroups(subject);
-    const groupGrants: PermissionGrant[] = []; // TODO: implement this
+    const groups = await getUserGroups(subject);
+    const groupGrants: PermissionGrant[] = (await Promise.all(groups.map((g) => getGroupGrants(g)))).flat();
     resolveUnconditionalGrants(groupGrants);
     if (needed.size === 0) {
         // The unconditional default grants have already provided the required permissions
@@ -159,9 +159,30 @@ async function getUserGroups(subject: ActionSubject): Promise<VNID[]> {
             // if the user is a bot inheriting permissions from its owner who is in one of those groups
             MATCH (group)-[:${Group.rel.HAS_USER}]->(userOrOwner:${User})<-[:${BotUser.rel.OWNED_BY}*0..1 {inheritPermissions: true}]-(user)
             RETURN group.id AS id
-        `.RETURN({ id: Field.VNID }))
+        `.givesShape({ id: Field.VNID }))
     );
     return result.map((r) => r.id);
+}
+
+/**
+ * Get the permission grants given by a particular group.
+ * TODO: cache this in Redis or local memory (Stale While Revalidate)
+ */
+async function getGroupGrants(groupId: VNID): Promise<PermissionGrant[]> {
+    const graph = await getGraph();
+    const groupData = await graph.pullOne(Group, (g) => g.grantStrings, { key: groupId });
+    if (groupData.grantStrings === null) {
+        return [];
+    }
+    const result: PermissionGrant[] = [];
+    for (const grantString of groupData.grantStrings) {
+        try {
+            result.push(PermissionGrant.parse(grantString));
+        } catch (err) {
+            log.error(`Unable to parse group ${groupId}'s grant string "${grantString}"`, err);
+        }
+    }
+    return result;
 }
 
 async function doPluginOverrides(

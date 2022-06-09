@@ -6,7 +6,7 @@ import { PropertyType } from "neolace/deps/neolace-api.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateBot, CreateUser } from "../core/User.ts";
 import { AccessMode, CreateSite } from "neolace/core/Site.ts";
-import { CreateGroup } from "neolace/core/Group.ts";
+import { CreateGroup } from "neolace/core/permissions/Group.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
 import { __forScriptsOnly as objStoreUtils } from "neolace/core/objstore/objstore.ts";
@@ -203,12 +203,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         name: "Users",
         belongsTo: data.site.id,
         addUsers: [data.users.regularUser.id],
-        administerSite: false,
-        administerGroups: false,
-        approveEntryEdits: false,
-        approveSchemaChanges: false,
-        proposeEntryEdits: true,
-        proposeSchemaChanges: true,
+        grantStrings: [],
     })).then((result) => data.site.usersGroupId = result.id);
 
     // Import the schema

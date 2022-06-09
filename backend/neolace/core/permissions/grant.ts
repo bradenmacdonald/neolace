@@ -41,7 +41,7 @@ export class PermissionGrant {
     /** Serialize this permission grant as a string */
     public serialize(): string {
         const permsPart = this.permissions.join(",");
-        if (permsPart.includes(" ")) { throw new Error(`Invalid permissions string "${permsPart}"`) }
+        if (permsPart.includes(" ")) throw new Error(`Invalid permissions string "${permsPart}"`);
         const conditionPart = this.isConditional ? ` if ${this.condition.serialize()}` : "";
         return permsPart + conditionPart;
     }

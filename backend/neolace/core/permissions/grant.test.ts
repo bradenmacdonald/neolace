@@ -52,13 +52,15 @@ group("PermissionGrant", () => {
             assertEquals(g, PermissionGrant.parse(g.serialize()));
 
         assertRoundTripSerialization(new PermissionGrant(Always, ["view.entry"]));
-        assertRoundTripSerialization(new PermissionGrant(
-            new OneOfCondition([
-                new AllOfCondition([new TestCondition("A"), new TestCondition("B")]),
-                new AllOfCondition([new TestCondition("[C]"), new TestCondition("[D]")]),
-            ]),
-            ["view.entry", "edit*", "admin.site.all"],
-        ));
+        assertRoundTripSerialization(
+            new PermissionGrant(
+                new OneOfCondition([
+                    new AllOfCondition([new TestCondition("A"), new TestCondition("B")]),
+                    new AllOfCondition([new TestCondition("[C]"), new TestCondition("[D]")]),
+                ]),
+                ["view.entry", "edit*", "admin.site.all"],
+            ),
+        );
     });
 });
 

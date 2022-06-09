@@ -4,7 +4,7 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 import { environment } from "neolace/app/config.ts";
 import { getGraph, stopGraphDatabaseConnection } from "neolace/core/graph.ts";
 import { stopRedis } from "neolace/core/redis.ts";
-import { CreateGroup, PermissionGrant } from "neolace/core/Group.ts";
+import { CreateGroup } from "neolace/core/permissions/Group.ts";
 import { CreateBot, CreateUser } from "neolace/core/User.ts";
 import {
     fixRelationshipIdsAfterRestoringSnapshot,
@@ -16,6 +16,7 @@ import { ConcreteValue, ErrorValue, LookupValue } from "neolace/core/lookup/valu
 import { LookupContext } from "neolace/core/lookup/context.ts";
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, it, ItDefinition } from "std/testing/bdd.ts";
+import { PermissionGrant } from "../core/permissions/grant.ts";
 
 // Exports:
 export * from "std/testing/asserts.ts";
@@ -165,7 +166,7 @@ let _userCounter = 0; // A counter used by createUserWithPermissions
  * @param permissions
  */
 export async function createUserWithPermissions(
-    permissions: Set<PermissionGrant>,
+    ...permissionGrants: PermissionGrant[]
 ): Promise<{ userId: VNID; groupId: VNID; userData: { bot: { authToken: string } } }> {
     const graph = await getGraph();
     const userNumber = ++_userCounter;
@@ -191,12 +192,7 @@ export async function createUserWithPermissions(
         name: `TestGroup${userNumber}`,
         belongsTo: data.site.id,
         addUsers: [userId],
-        administerSite: permissions.has(PermissionGrant.administerSite),
-        administerGroups: permissions.has(PermissionGrant.administerGroups),
-        approveEntryEdits: permissions.has(PermissionGrant.approveEntryEdits),
-        approveSchemaChanges: permissions.has(PermissionGrant.approveSchemaChanges),
-        proposeEntryEdits: permissions.has(PermissionGrant.proposeEntryEdits),
-        proposeSchemaChanges: permissions.has(PermissionGrant.proposeSchemaChanges),
+        grantStrings: permissionGrants.map((pg) => pg.serialize()),
     }));
 
     return { userId, groupId, userData: { bot: { authToken: botAuthToken } } };
