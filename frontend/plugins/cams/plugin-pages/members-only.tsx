@@ -2,20 +2,19 @@ import React from "react";
 
 import { PluginPageProps } from "components/utils/ui-plugins";
 import { SitePage } from "components/SitePage";
-import { UserContext, UserStatus } from "components/user/UserContext";
 import { Spinner } from "components/widgets/Spinner";
 import { Redirect } from "components/utils/Redirect";
-import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
+import { UserStatus, useUser } from "lib/authentication";
 
 
 const MembersOnlyPage: React.FunctionComponent<PluginPageProps> = function (props) {
 
-    const user = React.useContext(UserContext);
+    const user = useUser();
 
     const handleLogout = React.useCallback((event: React.MouseEvent) => {
         event.preventDefault();
-        KeratinAuthN.logout().then(() => location.href = '/');
-    }, []);
+        user.authApi.logout().then(() => location.href = '/');
+    }, [user.authApi]);
 
     if (user.status === UserStatus.Anonymous) {
         return <Redirect to="/members-login" replace={true} />;

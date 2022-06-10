@@ -4,17 +4,16 @@ import { PluginPageProps } from "components/utils/ui-plugins";
 import { SitePage } from "components/SitePage";
 import { Control, Form } from "components/widgets/Form";
 import { TextInput } from "components/widgets/TextInput";
-import { UserContext, UserStatus } from "components/user/UserContext";
 import { Redirect } from "components/utils/Redirect";
 import { defineMessage } from "components/utils/i18n";
 import { Button } from "components/widgets/Button";
 import { ActionStatus, ActionStatusDisplay, useActionStatus } from "components/widgets/ActionStatusIndicator";
 import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { FormattedMessage } from "react-intl";
-import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
+import { UserStatus, useUser } from "lib/authentication";
 
 const MembersLoginPage: React.FunctionComponent<PluginPageProps> = function (props) {
-    const user = React.useContext(UserContext);
+    const user = useUser();
 
     const [password, setPassword] = React.useState("");
     const handlePasswordChange = React.useCallback(
@@ -24,7 +23,7 @@ const MembersLoginPage: React.FunctionComponent<PluginPageProps> = function (pro
     const [loginStatus, wrapLogin, setLoginStatus] = useActionStatus();
     const handleLogin = React.useCallback(() => {
         // The username below is the VNID of the shared "Cams Member" user account.
-        wrapLogin(KeratinAuthN.login({username: "_camsmember", password}).then(
+        wrapLogin(user.authApi.advanced((authApi) => authApi.login({username: "_camsmember", password})).then(
             () => location.href = "/members-only",
             (err: unknown) => {
                 if (Array.isArray(err) && err.length === 1 && err[0].message === "FAILED" && err[0].field === "credentials") {
@@ -34,7 +33,7 @@ const MembersLoginPage: React.FunctionComponent<PluginPageProps> = function (pro
                 }
             }
         ));
-    }, [password, wrapLogin]);
+    }, [password, wrapLogin, user.authApi]);
 
     if (user.status === UserStatus.LoggedIn) {
         return <Redirect to="/members-only" />;

@@ -4,7 +4,7 @@ import { ParsedUrlQuery } from "querystring";
 
 import { getSiteData, SiteData } from "lib/api-client";
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { UserContext, UserStatus } from "components/user/UserContext";
+import { UserStatus, useUser } from "lib/authentication";
 import { Redirect } from "components/utils/Redirect";
 
 interface PageProps {
@@ -33,7 +33,7 @@ enum TokenStatus {
 }
 
 const PasswordlessLoginPage: NextPage<PageProps> = function (props) {
-    const user = React.useContext(UserContext);
+    const user = useUser();
     const [tokenStatus, setTokenStatus] = React.useState(TokenStatus.Unknown);
 
     // Check the status of the token. This runs only once.
@@ -41,7 +41,7 @@ const PasswordlessLoginPage: NextPage<PageProps> = function (props) {
         const hash = getHash();
         if (hash) {
             setTokenStatus(TokenStatus.ValidatingToken);
-            user.submitPasswordlessLoginToken(hash).then(() => {
+            user.authApi.submitPasswordlessLoginToken(hash).then(() => {
                 setTokenStatus(TokenStatus.TokenValid);
             }).catch((err) => {
                 setTokenStatus(TokenStatus.TokenInvalid);
@@ -49,7 +49,7 @@ const PasswordlessLoginPage: NextPage<PageProps> = function (props) {
         } else {
             setTokenStatus(TokenStatus.NoTokenPresent);
         }
-    }, []);
+    }, [user.authApi]);
 
     let detail: ReactNode = <>Error: unknown status enum value</>;
     switch (tokenStatus) {

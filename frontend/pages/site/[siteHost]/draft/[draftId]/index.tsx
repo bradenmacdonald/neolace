@@ -11,7 +11,7 @@ import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { ParsedUrlQuery } from "querystring";
 import { Spinner } from "components/widgets/Spinner";
 import { Button } from "components/widgets/Button";
-import { UserContext, UserStatus } from "components/user/UserContext";
+import { UserStatus, useUser } from "lib/authentication";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -22,7 +22,7 @@ const DraftDetailsPage: NextPage = function (_props) {
     const intl = useIntl();
     // Look up the Neolace site by domain:
     const { site, siteError } = useSiteData();
-    const user = React.useContext(UserContext);
+    const user = useUser();
     const router = useRouter();
     const query = router.query as PageUrlQuery;
     const draftId = query.draftId as api.VNID | NEW;

@@ -4,8 +4,8 @@ import { ParsedUrlQuery } from 'querystring';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import { api, client, getSiteData, SiteData } from 'lib/api-client';
-import { SitePage } from 'components/SitePage';
-import { UserContext, UserStatus, requestPasswordlessLogin } from 'components/user/UserContext';
+import { SiteDataProvider, SitePage } from 'components/SitePage';
+import { UserStatus, useUser } from "lib/authentication";
 import { Control, Form } from 'components/widgets/Form';
 import { TextInput } from 'components/widgets/TextInput';
 import { Button } from 'components/widgets/Button';
@@ -25,7 +25,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
 const LoginPage: NextPage<PageProps> = function(props) {
 
     const intl = useIntl();
-    const user = React.useContext(UserContext);
+    const user = useUser();
 
     const [userFullName, setUserFullName] = React.useState("");
     const userFullNameChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +62,7 @@ const LoginPage: NextPage<PageProps> = function(props) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [userFullName, userEmail]);
+    }, [userFullName, userEmail, props.site.shortId]);
 
     if (user.status === UserStatus.LoggedIn) {
         return <Redirect to="/" />;
@@ -70,8 +70,8 @@ const LoginPage: NextPage<PageProps> = function(props) {
 
     const title = intl.formatMessage({id: '0vL5u1', defaultMessage: "Create an account"});
 
-    return (
-        <SitePage title={title} sitePreloaded={props.site} >
+    return (<SiteDataProvider sitePreloaded={props.site}>
+        <SitePage title={title}>
             <h1 className="text-3xl font-semibold">{title}</h1>
 
             <p>
@@ -119,7 +119,7 @@ const LoginPage: NextPage<PageProps> = function(props) {
             </Form>
 
         </SitePage>
-    );
+    </SiteDataProvider>);
 }
 
 export default LoginPage;
@@ -134,8 +134,10 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
 }
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
+    if (!context.params) { throw new Error("Internal error - missing URL params."); }  // Make TypeScript happy
+
     // Look up the Neolace site by domain:
-    const site = await getSiteData(context.params!.siteHost);
+    const site = await getSiteData(context.params.siteHost);
     if (site === null) { return {notFound: true}; }
 
     return {

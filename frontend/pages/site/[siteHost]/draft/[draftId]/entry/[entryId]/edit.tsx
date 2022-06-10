@@ -13,12 +13,12 @@ import { Control, Form } from "components/widgets/Form";
 import { TextInput } from "components/widgets/TextInput";
 import { Button } from "components/widgets/Button";
 import { IN_BROWSER } from "lib/config";
-import { UserContext, UserStatus } from "components/user/UserContext";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
 import { PropertiesEditor } from "components/entry-editor/PropertiesEditor";
 import { MainEditor } from "components/entry-editor/MainEditor";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
+import { UserStatus, useUser } from "lib/authentication";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -34,7 +34,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
     const { site, siteError } = useSiteData();
     const [baseSchema] = useSiteSchema();
     const router = useRouter();
-    const user = React.useContext(UserContext);
+    const user = useUser();
     const query = router.query as PageUrlQuery;
     const draftId = query.draftId as api.VNID | NEW;
     const [draft, draftError] = useDraft(draftId);

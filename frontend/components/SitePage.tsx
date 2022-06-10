@@ -3,7 +3,6 @@ import Head from 'next/head'
 import Link from 'next/link';
 import { SWRConfig } from 'swr';
 
-import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData, useSiteData, api } from 'lib/api-client';
 import { UISlot, UISlotWidget, defaultRender, DefaultUISlot } from './widgets/UISlot';
 import FourOhFour from 'pages/404';
@@ -13,6 +12,7 @@ import { FormattedMessage } from 'react-intl';
 import { UiPluginsContext, UiPluginsProvider } from './utils/ui-plugins';
 import { DEVELOPMENT_MODE } from 'lib/config';
 import { ErrorMessage } from './widgets/ErrorMessage';
+import { UserStatus, useUser } from 'lib/authentication';
 
 
 interface SiteDataProviderProps {
@@ -66,7 +66,7 @@ interface Props {
  * Template for a "regular" Neolace page, for a specific site (e.g. foo.neolace.com), as opposed to the Neolace Admin UI
  */
 export const SitePage: React.FunctionComponent<Props> = (props) => {
-    const user = React.useContext(UserContext);
+    const user = useUser();
     const {site, siteError} = useSiteData();
     const pluginsData = React.useContext(UiPluginsContext);
 
