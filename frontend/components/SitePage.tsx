@@ -209,7 +209,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             <div
                 id="left-panel"
                 className={
-                    `${mobileMenuVisible ? `translate-x-0 visible z-[100]` : `-translate-x-[100%] invisible`}
+                    `${mobileMenuVisible ? `translate-x-0 visible z-mobile-menu` : `-translate-x-[100%] invisible`}
                     transition-visibility-transform md:visible md:translate-x-0
                     fixed md:sticky
                     flex

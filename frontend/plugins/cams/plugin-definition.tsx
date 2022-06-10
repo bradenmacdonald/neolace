@@ -27,7 +27,7 @@ export const plugin: PluginDefinition = {
                         id: "cams-header",
                         priority: 1,
                         content: <>
-                            <div className="fixed w-full z-[100] bg-black h-[72px]">
+                            <div className="fixed w-full z-[2] bg-black h-[72px]">
                                 <div className="max-w-[1080px] mx-auto h-full">
                                     <a href="https://cams.mit.edu/">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -122,7 +122,7 @@ export const SelectBox: React.FunctionComponent<Props> = ({onChange, options, va
                     unstyled absolute -mt-[5px] mx-[3px] w-full ${isMenuVisible ? "block" : "hidden"}
                     max-h-64 overflow-auto
                     rounded-md bg-white border border-gray-500 shadow-lg
-                    z-[1]
+                    z-widget
                 `}
                 role="listbox"
                 aria-activedescendant={selectedItem}

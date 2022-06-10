@@ -28,6 +28,12 @@
         */
     }
 
+    /* Z-indexes */
+    .z-widget { @apply z-[1]; } /* Widgets like the dropdown of a select box */
+    .z-modal { @apply z-20; } /* Modal dialogs */
+    .z-tooltip { @apply z-30; } /* Tooltips */
+    .z-mobile-menu { @apply z-50; } /* The menu that can be triggered on mobile, which slides in from the left and must be in front of everything on the page */
+
     /* Typography: apply this class to a section that contains prose, to ensure headings have reasonable size/weight, paragraphs are spaced, etc. */
     .neo-typography h1,
     .neo-typography h2,

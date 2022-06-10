@@ -36,7 +36,7 @@ export const Modal: React.FunctionComponent<ModalProps> = ({onClose, ...props}) 
                         // Modals are centered in the viewport, and not affected by scrolling (fixed):
                         `fixed left-[50vw] top-[50vh] -translate-x-1/2 -translate-y-1/2 ` +
                         // And this is the default appearance of our modals:
-                        `border p-0 rounded bg-white border-gray-800 shadow font-normal z-20 ` +
+                        `border p-0 rounded bg-white border-gray-800 shadow font-normal z-modal ` +
                         (props.className ?? "")
                     }
                 >

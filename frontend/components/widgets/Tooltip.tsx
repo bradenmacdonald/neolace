@@ -74,7 +74,7 @@ export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
                     style={styles.popper}
                     {...attributes.popper}
                     className={`
-                        max-w-[400px] border p-1 rounded border-gray-800 shadow bg-blue-50 z-30
+                        max-w-[400px] border p-1 rounded border-gray-800 shadow bg-blue-50 z-tooltip
                         text-sm font-normal neo-typography
                         ${showTooltip ? "visible opacity-100" : "invisible opacity-0"}
                         transition-opacity duration-500
