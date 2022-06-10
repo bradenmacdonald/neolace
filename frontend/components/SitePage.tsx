@@ -8,11 +8,11 @@ import { UISlot, UISlotWidget, defaultRender, DefaultUISlot } from './widgets/UI
 import FourOhFour from 'pages/404';
 import { MDTContext, RenderMDT } from './markdown-mdt/mdt';
 import { Icon, IconId } from './widgets/Icon';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { UiPluginsContext, UiPluginsProvider } from './utils/ui-plugins';
 import { DEVELOPMENT_MODE } from 'lib/config';
-import { ErrorMessage } from './widgets/ErrorMessage';
 import { UserStatus, useUser } from 'lib/authentication';
+import { displayString, TranslatableString } from './utils/i18n';
 
 
 interface SiteDataProviderProps {
@@ -55,7 +55,7 @@ export interface SystemLink {
 }
 
 interface Props {
-    title: string | typeof DefaultSiteTitle;
+    title: TranslatableString | string | typeof DefaultSiteTitle;
     leftNavTopSlot?: UISlotWidget[];
     leftNavBottomSlot?: UISlotWidget[];
     footerSlot?: UISlotWidget[];
@@ -66,6 +66,7 @@ interface Props {
  * Template for a "regular" Neolace page, for a specific site (e.g. foo.neolace.com), as opposed to the Neolace Admin UI
  */
 export const SitePage: React.FunctionComponent<Props> = (props) => {
+    const intl = useIntl();
     const user = useUser();
     const {site, siteError} = useSiteData();
     const pluginsData = React.useContext(UiPluginsContext);
@@ -174,9 +175,15 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         </ul>
     );
 
+    const title = (
+        props.title === DefaultSiteTitle ? site.name :
+        typeof props.title === "string" ? `${props.title} - ${site.name}` :
+        displayString(intl, props.title) + ` - ${site.name}`
+    );
+
     const content = <div>
         <Head>
-            <title>{props.title === DefaultSiteTitle ? site.name : `${props.title} - ${site.name}`}</title>
+            <title>{title}</title>
             <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
             <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico"/>
             <style>{`

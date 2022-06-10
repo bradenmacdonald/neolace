@@ -8,7 +8,7 @@ import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
 import { ApiError } from 'next/dist/server/api-utils';
 
 import * as api from 'neolace-api';
-import { getSessionToken } from "./authentication";
+import { getSessionToken, useUser } from "./authentication";
 export * as api from 'neolace-api';
 
 /** Use this in URLs in lieu of an ID if there is no ID yet. It's neither a valid VNID nor friendlyId. */
@@ -196,6 +196,41 @@ export function useDraft(draftId: VNID|"_"): [data: DraftDataWithEdits|undefined
 }
 
 
+
+/**
+ * React hook to get the data required to display an entry
+ */
+export function useEntry(entryKey: VNID|string, fallback?: api.EntryData): [data: api.EntryData|undefined, error: ApiError|undefined] {
+    const {site, siteError} = useSiteData();
+    const user = useUser();
+    const userKey = user.username ?? "";
+
+    const key = `entry:${site.shortId}:${entryKey}:${userKey}:no-draft`;
+    const { data, error } = useSWR(key, async () => {
+        if (siteError) {
+            throw new ApiError(500, "Site Error");
+        }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the entry
+        }
+        const data: api.EntryData = await client.getEntry(entryKey, {flags: [
+            api.GetEntryFlags.IncludeFeatures,
+            api.GetEntryFlags.IncludePropertiesSummary,
+            api.GetEntryFlags.IncludeReferenceCache,
+        ] as const, siteId: site.shortId});
+        return data;
+    }, {
+
+        // refreshInterval: 10 * 60_000,
+    });
+    if (!data && !error && fallback) {
+        // Use the public version of the entry until we've loaded the user-specific version.
+        return [fallback, undefined];
+    }
+    return [data, error];
+}
+
+
 /**
  * React hook to get the currently published version of an entry, to use as a basis for making edits.
  * @returns 
@@ -204,7 +239,7 @@ export function useEditableEntry(entryId: VNID | {newEntryWithId: VNID}): [data:
     const {site, siteError} = useSiteData();
 
     // TODO: Change "no-draft" below to the ID of the current draft, if any, from a <DraftContext> provider.
-    const key = `entry:${site.shortId}:no-draft:${entryId}`;
+    const key = `entry-edit:${site.shortId}:no-draft:${entryId}`;
     const { data, error, mutate } = useSWR(key, async () => {
         if (siteError) {
             throw new ApiError(500, "Site Error");
