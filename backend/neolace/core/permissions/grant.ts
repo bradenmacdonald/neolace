@@ -448,11 +448,11 @@ export class AllOfCondition extends BooleanCondition {
 
     public override async appliesTo(context: AppliesToContext) {
         for (const innerCondition of this.innerConditions) {
-            if (await innerCondition.appliesTo(context)) {
-                return true;
+            if (!await innerCondition.appliesTo(context)) {
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     public override asCypherPredicate(context: CypherPredicateContext): CypherQuery {
@@ -585,8 +585,12 @@ export class TestCondition extends GrantCondition {
         super();
     }
 
-    public override async appliesTo(): Promise<boolean> {
-        this.throwError("Unimplemented - for testing only");
+    /**
+     * This condition is considered to match/apply IF and only if the 'object' has 'condStr' in its 'plugin:teststring'
+     * value.
+     */
+    public override async appliesTo(context: AppliesToContext): Promise<boolean> {
+        return (context.object["plugin:teststring"] as string|undefined)?.includes(this.condStr) ?? false;
     }
 
     public override asCypherPredicate(): CypherQuery {

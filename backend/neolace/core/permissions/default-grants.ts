@@ -13,7 +13,7 @@ const coreGrants: PermissionGrant[] = [
 /**
  * Every site has an "Access Mode" that determines the base permission grants applied to that site.
  */
-export const defaultGrants: Record<AccessMode, PermissionGrant[]> = Object.freeze({
+export const defaultGrants: Record<AccessMode, readonly PermissionGrant[]> = Object.freeze({
     [AccessMode.Private]: [
         ...coreGrants,
         // A private site grants absolutely no other permissions at all to any users by default
@@ -39,7 +39,7 @@ export const defaultGrants: Record<AccessMode, PermissionGrant[]> = Object.freez
 export async function getSitePublicGrants(siteId: VNID) {
     const graph = await getGraph();
     const site = await graph.pullOne(Site, (s) => s.accessMode.publicGrantStrings.shortId(), { key: siteId });
-    const grants = defaultGrants[site.accessMode as AccessMode] ?? [];
+    const grants = [...defaultGrants[site.accessMode as AccessMode]] ?? [];
     for (const publicGrantString of (site.publicGrantStrings ?? [])) {
         try {
             grants.push(PermissionGrant.parse(publicGrantString));

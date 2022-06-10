@@ -203,6 +203,28 @@ group("Grant conditions", () => {
 
     // AllOfCondition
 
+    test("AllOfCondition - appliesTo()", async () => {
+        // deno-lint-ignore no-explicit-any
+        const getTx = () => null as any;
+        const subject = {siteId: VNID(), userId: VNID()};
+        assertEquals(
+            await new AllOfCondition([A, B]).appliesTo({getTx, subject, object: {["plugin:teststring"]: "A"}}),
+            false,  // string does not contain A and B
+        );
+        assertEquals(
+            await new AllOfCondition([A, B]).appliesTo({getTx, subject, object: {["plugin:teststring"]: "AB"}}),
+            true,
+        );
+        assertEquals(
+            await new AllOfCondition([A, B, C]).appliesTo({getTx, subject, object: {["plugin:teststring"]: "BBC"}}),
+            false,
+        );
+        assertEquals(
+            await new AllOfCondition([A, B, C, A]).appliesTo({getTx, subject, object: {["plugin:teststring"]: "ABC"}}),
+            true,
+        );
+    });
+
     test("AllOfCondition - equals()", () => {
         // Not equal
         assertCondsNotEqual(new AllOfCondition([A, B]), new AllOfCondition([A, C]));
