@@ -590,7 +590,7 @@ export class TestCondition extends GrantCondition {
      * value.
      */
     public override async appliesTo(context: AppliesToContext): Promise<boolean> {
-        return (context.object["plugin:teststring"] as string|undefined)?.includes(this.condStr) ?? false;
+        return (context.object["plugin:teststring"] as string | undefined)?.includes(this.condStr) ?? false;
     }
 
     public override asCypherPredicate(): CypherQuery {
