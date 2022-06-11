@@ -1,5 +1,9 @@
-import type { PluginDefinition } from "components/utils/ui-plugins"
+import dynamic from "next/dynamic";
+import { PluginDefinition } from "components/utils/ui-plugins"
 import { UiChangeOperation } from "components/widgets/UISlot";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const MembersOnlyNotice = dynamic<any>(() => import(`./plugin-components/MembersOnlyNotice`).then(mod => mod.MembersOnlyNotice));
 
 export const plugin: PluginDefinition = {
     id: "cams",
@@ -54,6 +58,13 @@ export const plugin: PluginDefinition = {
                     op: UiChangeOperation.Insert,
                     widget: { id: "cams-header-spacer", priority: 1, content: <div className="h-[72px]"></div> },
                 }
+            ],
+            "entryPreFeature": [
+                {
+                    op: UiChangeOperation.Insert,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    widget: { id: "cams-members-only-notice", priority: 10, content: <MembersOnlyNotice /> },
+                },
             ],
         };
     },

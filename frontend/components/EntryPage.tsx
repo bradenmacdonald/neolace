@@ -15,6 +15,7 @@ import { DEVELOPMENT_MODE, imgThumbnailLoader } from 'lib/config';
 import { ErrorMessage } from './widgets/ErrorMessage';
 import { defineMessage } from './utils/i18n';
 import { Spinner } from './widgets/Spinner';
+import { UISlot } from './widgets/UISlot';
 //import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface Props {
@@ -163,6 +164,8 @@ export const EntryPage: React.FunctionComponent<Props> = function(props) {
             </div>
 
             <div id="entry-contents">
+                
+                <UISlot slotId="entryPreFeature" defaultContents={[]} renderWidget={(w) => React.cloneElement(w.content, { key: w.id, entry, })} />
 
                 {
                     entry.features?.Image ?
