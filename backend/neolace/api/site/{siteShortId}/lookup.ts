@@ -39,9 +39,10 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
             await this.requirePermission(request, corePerm.viewSite.name);
         }
 
+        const userId = request.user?.id;
         const { resultValue, refCacheData } = await graph.read(async (tx) => {
             const defaultPageSize = 20n;
-            const context = new LookupContext({ tx, siteId, entryId: entry?.id, defaultPageSize });
+            const context = new LookupContext({ tx, siteId, userId, entryId: entry?.id, defaultPageSize });
             // Evaluate the expression. On LookupEvaluationError, this will return an ErrorValue.
             const value = await context.evaluateExpr(lookupString);
             if (value instanceof ErrorValue && value.error instanceof LookupParseError) {

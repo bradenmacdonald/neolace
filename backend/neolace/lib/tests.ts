@@ -225,12 +225,13 @@ export class TestLookupContext {
      * This may return "Lazy" values depending on the expression, which you may not want for test purposes. Use
      * evaluateExprConcrete() in that case to get concete values only.
      */
-    public async evaluateExpr(expr: LookupExpression | string, entryId?: VNID): Promise<LookupValue> {
+    public async evaluateExpr(expr: LookupExpression | string, entryId?: VNID, userId?: VNID): Promise<LookupValue> {
         const graph = await getGraph();
         const result = await graph.read(async (tx) => {
             const tempContext = new LookupContext({
                 tx,
                 siteId: this.siteId,
+                userId: userId,
                 entryId: entryId ?? this.entryId,
                 defaultPageSize: this.defaultPageSize,
             });
@@ -247,7 +248,11 @@ export class TestLookupContext {
      * evaluated. For example, instead of returning a LazyEntrySet representing a yet-unknown set of entries, it will
      * evaluate the query, determine which actual entries are included, and return the first 10 as a PageValue.
      */
-    public async evaluateExprConcrete(expr: LookupExpression | string, entryId?: VNID): Promise<ConcreteValue> {
+    public async evaluateExprConcrete(
+        expr: LookupExpression | string,
+        entryId?: VNID,
+        userId?: VNID,
+    ): Promise<ConcreteValue> {
         // We can't just call evaluateExpr() and then .makeConcrete() because makeConcrete() requires the same
         // transaction, and the transaction gets closed within evaluateExpr().
         const graph = await getGraph();
@@ -255,6 +260,7 @@ export class TestLookupContext {
             const tempContext = new LookupContext({
                 tx,
                 siteId: this.siteId,
+                userId: userId,
                 entryId: entryId ?? this.entryId,
                 defaultPageSize: this.defaultPageSize,
             });

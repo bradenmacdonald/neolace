@@ -118,6 +118,7 @@ export async function getEntry(
     const lookupContext = new LookupContext({
         tx,
         siteId,
+        userId,
         entryId: entryData.id,
         defaultPageSize: BigInt(maxValuesPerProp),
     });
