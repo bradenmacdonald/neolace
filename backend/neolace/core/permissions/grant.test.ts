@@ -154,6 +154,22 @@ group("Grant conditions", () => {
 
     // OneOfCondition
 
+    test("OneOfCondition - asCypherPredicate()", async () => {
+        const subject = { siteId: VNID(), userId: VNID() };
+
+        // All of A and B:
+        const predicate = await new OneOfCondition([A, B]).asCypherPredicate({
+            subject,
+            partialObject: {},
+            cypherVars: ["var"],
+        });
+        let queryString = predicate.queryString;
+        for (const [key, value] of Object.entries(predicate.params)) {
+            queryString = queryString.replaceAll(`$${key}`, value as string);
+        }
+        assertEquals(queryString, "(conditionA) OR (conditionB)");
+    });
+
     test("OneOfCondition - equals()", () => {
         // Not equal
         assertCondsNotEqual(new OneOfCondition([A, B]), new OneOfCondition([A, C]));
@@ -172,6 +188,10 @@ group("Grant conditions", () => {
 
         // "A or A" simplifies to A
         assertEquals(new OneOfCondition([A, A]).simplify(), A);
+        // "A or B or !A" simplifies to Always true
+        assertEquals(new OneOfCondition([A, B, new NotCondition(A)]).simplify(), Always);
+        // "!A or B or A" simplifies to Always true (same as above, just different order)
+        assertEquals(new OneOfCondition([new NotCondition(A), A, B]).simplify(), Always);
         // "A or B or B or A" simplifies to "A or B"
         assertEquals(new OneOfCondition([A, B, B, A]).simplify(), new OneOfCondition([A, B]));
         // "Always or B or C" simplifies to Always:
@@ -227,6 +247,22 @@ group("Grant conditions", () => {
             }),
             true,
         );
+    });
+
+    test("AllOfCondition - asCypherPredicate()", async () => {
+        const subject = { siteId: VNID(), userId: VNID() };
+
+        // All of A and B:
+        const predicate = await new AllOfCondition([A, B]).asCypherPredicate({
+            subject,
+            partialObject: {},
+            cypherVars: ["var"],
+        });
+        let queryString = predicate.queryString;
+        for (const [key, value] of Object.entries(predicate.params)) {
+            queryString = queryString.replaceAll(`$${key}`, value as string);
+        }
+        assertEquals(queryString, "(conditionA) AND (conditionB)");
     });
 
     test("AllOfCondition - equals()", () => {

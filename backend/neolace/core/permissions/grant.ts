@@ -331,8 +331,8 @@ export class NotCondition extends BooleanCondition {
         return !(await this.innerCondition.appliesTo(context));
     }
 
-    public override asCypherPredicate(): CypherQuery {
-        return C`NOT (${this.innerCondition})`;
+    public override asCypherPredicate(context: CypherPredicateContext): CypherQuery {
+        return C`NOT (${this.innerCondition.asCypherPredicate(context)})`;
     }
 
     public override simplify(): GrantCondition {
@@ -396,6 +396,8 @@ export class OneOfCondition extends BooleanCondition {
                 if (conds[x].equals(conds[y])) {
                     conds.splice(y, 1); // Remove the duplicate condition
                     y--; // And continue comparing the next one, which is now in the index where we just deleted one.
+                } else if (conds[x].equals(new NotCondition(conds[y]).simplify())) {
+                    return Always; // (not A) OR (A) is always true
                 }
             }
         }
@@ -458,7 +460,7 @@ export class AllOfCondition extends BooleanCondition {
     public override asCypherPredicate(context: CypherPredicateContext): CypherQuery {
         let p = C`(${this.innerConditions[0].asCypherPredicate(context)})`;
         for (let i = 1; i < this.innerConditions.length; i++) {
-            p = C`${p} OR (${this.innerConditions[i].asCypherPredicate(context)})`;
+            p = C`${p} AND (${this.innerConditions[i].asCypherPredicate(context)})`;
         }
         return p;
     }
@@ -501,7 +503,9 @@ export class AllOfCondition extends BooleanCondition {
             }
         }
 
-        if (conds.length === 1) {
+        if (conds.length === 0) {
+            return Always; // Always and Always will have simplified to nothing in the .filter() at the start of this method, so we return Always True
+        } else if (conds.length === 1) {
             return conds[0]; // We completely eliminated the AND expression, a very nice simplification
         } else if (conds.length < this.innerConditions.length) {
             return new AllOfCondition(conds); // We managed to simplify it a bit
@@ -594,7 +598,7 @@ export class TestCondition extends GrantCondition {
     }
 
     public override asCypherPredicate(): CypherQuery {
-        this.throwError("Unimplemented - for testing only");
+        return C`condition${this.condStr}`; // This is not a valid cypher predicate, but helpful for testing
     }
 
     public override equals(otherCondition: GrantCondition): boolean {
