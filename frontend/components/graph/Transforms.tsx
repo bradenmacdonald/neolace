@@ -43,9 +43,12 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
     const originalDataGraph = createGraphObject(dataCopy);
     let transformedGraph = createGraphObject(dataCopy);
     let comm2id = new Map<number, string[]>();
-
+    
     for (const t of transformList) {
         if (t.id === Transforms.CONDENSE) {
+            // TODO Ideally, we shouldn't need to pass dataCopy into this function, or even make dataCopy at all. 
+            // condenseGraphData seems to only be using it to figure out which node is the "focus node", 
+            // and that attribute should be available on the graphology graph object just as it's available in the G6 data.
             transformedGraph = condenseGraphData(dataCopy, transformedGraph);
         } else if (t.id === Transforms.HIDETYPE) {
             transformedGraph = transformHideNodesOfType(transformedGraph, VNID(t.params.nodeType as string));
@@ -59,7 +62,9 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
         } else if (t.id === Transforms.CONDENSENODE) {
             transformedGraph = transformCondenseNodeLeaves(transformedGraph, t.params.nodeToCondense as string);
         } else if (t.id === Transforms.COMMUNITY) {
-            // compute communities needs to be last transform to be applied as all final nodes are needed.
+            // TODO if there are certain constraints on the order of transforsm, they should be maintained in the 
+            // transform list itself. For example, that cliques must come after communities, and communities must come
+            // after other things. Mya also sort the list in a separate function.
             const result = transformComputeCommunities(transformedGraph);
             transformedGraph = result.simpleGraph;
             comm2id = result.comm2id;

@@ -65,15 +65,14 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
 
 /**
  * Returns a new graph object where leaves are consensed. i.e. if a node has
- * multiple leaves, the leaves are repalced with one leaf that contains label
+ * multiple leaves, the leaves are replaced with one leaf that contains label
  * the number of leaves they substitiuted, as an array of original leaf data
- * @param graph
+ * @param graph readonly
  * @returns a graph with condensed leaves.
  */
 function condenseLeaves(graph: GraphType): GraphType {
-    const graphCopy = graph.copy();
     let newGraph = graph.copy();
-    graphCopy.forEachNode((node) => {
+    graph.forEachNode((node) => {
         if (newGraph.hasNode(node)) {
             newGraph = condenseNodeLeaves(newGraph, node);
         }
@@ -409,7 +408,8 @@ export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphTyp
 
 /**
  * Find the largest clique in the subgraph defined by the node list and mark nodes as part of the clique.
- * NOTE temporarily we will use community id as the clique id as each community so far has only one clique
+ * NOTE for now we will use community id as the clique id as each community so far has only one clique
+ * (in the future there could be more cliques per community and we would need to update this)
  * @param simpleGraph
  * @param nodeList
  * @param cliqueId
@@ -418,19 +418,19 @@ export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphTyp
 function findCliquesInNodeSubset(simpleGraph: GraphType, nodeList: string[], cliqueId: number) {
     if (simpleGraph.order === 0) return;
     // TODO some cliques are also overlapping - like cliques of three. Should I find all of them?
-    console.log("The community is ", cliqueId);
+    // console.log("The community is ", cliqueId);
     const comGraph = subgraph(simpleGraph, nodeList);
     const largestClique = maxClique(comGraph);
     // only include cliques of sizes more than indicated
     if (largestClique.length <= 2) return;
     largestClique.forEach((n) => {
-        console.log("Adding to a clique", n);
+        // console.log("Adding to a clique", n);
         simpleGraph.setNodeAttribute(n, "clique", cliqueId);
     });
 }
 
 /**
- * Check if a subgraph is a clique, i.e. a compelte graph.
+ * Check if a subgraph is a clique, i.e. a complete graph.
  * @param subgraph
  * @returns
  */

@@ -47,7 +47,7 @@ export interface G6RawGraphData {
 
 
 function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: api.ReferenceCacheData) {
-    function colorGraphByAttribute(attr: string, data: G6RawGraphData, refCache: api.ReferenceCacheData) {
+    function colorGraphByAttribute(attr: string) {
         data.nodes.forEach((node: NodeConfig) => {
             const attrValue: VNID | number = node[attr] as VNID | number;
             if (!colourMap.has(attrValue)) {
@@ -60,9 +60,9 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
         return data
     }
     if (transformList.find((t) => t.id === Transforms.COMMUNITY) !== undefined) {
-        data = colorGraphByAttribute('community', data, refCache);
+        data = colorGraphByAttribute('community');
     } else {
-        data = colorGraphByAttribute('entryType', data, refCache);
+        data = colorGraphByAttribute('entryType');
     }
     return data;
 }
@@ -164,16 +164,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Our G6 Graph configuration
     const graphConfig: Partial<GraphOptions> = React.useMemo(() => ({
         plugins: [],
-        layout: {
-            // type: 'comboCombined',
-            // center: [ 200, 200 ],     // The center of the graph by default
-
-            // type: 'comboForce',
-            // preventOverlap: true,
-            // nodeSize: [200, 50],
-            // nodeSpacing: 60,   
-            // preventComboOverlap: true,   
-            // comboCollideStrength: 1,      
+        layout: {  
             type: 'force',
             preventOverlap: true,
             nodeSize: [200, 50],
@@ -196,8 +187,6 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 },
                 lineWidth: 2,
                 stroke: "#ddd",
-                /* and other styles */
-                // stroke: '#F6BD16',
             },
         },
         defaultCombo: {
@@ -208,7 +197,6 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     fontSize: 18,
                 },
             },
-            /* The minimum size of the combo. combo 最小大小 */
             /* style for the keyShape */
             style: {
                 fill: '#cffafe',
@@ -305,49 +293,52 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 })
             }
         }
-        // creates cobmos
+        // creates cobmos (cliques)
         for (const combo in comboDict) {
             graph.createCombo({
                 id: combo,
-                label: `Community ${combo}`,
+                label: `Largest clique of community ${combo}`,
             }, comboDict[combo]);
         }
 
         // optimize edges to combos
-        graph.getNodes().forEach((n) => {
-            const nodeId = n.getModel().id as string;
-            for (const combo in comboDict) {
-                let addEdge = false;
-                const nodeList = comboDict[combo];
-                const edgeColor = nodeList.includes(nodeId) ? 'red' : 'blue';
-                let doesCover = true;
-                nodeList.forEach((i) => {
-                    doesCover = graph.getNeighbors(i).map((nb) => nb.getModel().id).includes(nodeId);
-                });
-                // if the node covers an entire combo, exchange all the edges by a single edge to the combo
-                if (doesCover) {
-                    // remove all the edges
-                    nodeList.forEach((comboNode) => {
-                        // get edge
-                        const edge = getEdgeIfExists(graph, comboNode, nodeId);
-                        if (edge) {
-                            graph.removeItem(edge);
-                        }
-                    })
-                    addEdge = true;
-                }
-                if (nodeList.includes(nodeId)) addEdge = true;
-
-                if (addEdge) {
-                    // add edge 
-                    graph.addItem('edge', {
-                        id: VNID(), source: combo, target: nodeId, style: {
-                            stroke: edgeColor,
-                        },
+        // TODO think about merging this code with clique detection code
+        if (Object.keys(comboDict).length > 0) {
+            graph.getNodes().forEach((n) => {
+                const nodeId = n.getModel().id as string;
+                for (const combo in comboDict) {
+                    let addEdge = false;
+                    const nodeList = comboDict[combo];
+                    const edgeColor = nodeList.includes(nodeId) ? 'red' : 'blue';
+                    let doesCover = true;
+                    nodeList.forEach((i) => {
+                        doesCover = graph.getNeighbors(i).map((nb) => nb.getModel().id).includes(nodeId);
                     });
+                    // if the node covers an entire combo, exchange all the edges by a single edge to the combo
+                    if (doesCover) {
+                        // remove all the edges
+                        nodeList.forEach((comboNode) => {
+                            // get edge
+                            const edge = getEdgeIfExists(graph, comboNode, nodeId);
+                            if (edge) {
+                                graph.removeItem(edge);
+                            }
+                        })
+                        addEdge = true;
+                    }
+                    if (nodeList.includes(nodeId)) addEdge = true;
+    
+                    if (addEdge) {
+                        // add edge 
+                        graph.addItem('edge', {
+                            id: VNID(), source: combo, target: nodeId, style: {
+                                stroke: edgeColor,
+                            },
+                        });
+                    }
                 }
-            }
-        });
+            });
+        }
     }, [currentData])
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
@@ -641,7 +632,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     icon="bounding-box"
                     enabled={isCommunized}
                 />
-                {isCommunized && <ToolbarButton
+                <ToolbarButton
                     onClick={handleCliquesButton}
                     tooltip={defineMessage({
                         defaultMessage: "Detect cliques and combine them into combos",
@@ -649,7 +640,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     })}
                     icon="braces-asterisk"
                     enabled={areCliquesDetected}
-                />}
+                    disabled={!isCommunized}
+                />
             </div>
             <div
                 ref={updateGraphHolder}
