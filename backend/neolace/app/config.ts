@@ -53,8 +53,9 @@ export const config = (() => {
         typeSensePublicEndpoint: "http://localhost:5556",
         // Should debug logs be printed to stdout?
         debugLogging: defaultTo(true, { production: false }),
-        // Public URL of the authentication microservice (Keratin AuthN)
-        authnUrl: defaultTo("http://local.neolace.net:5552", { test: "http://localhost:5552" }),
+        // Public URL of the authentication microservice (Keratin AuthN). Note it doesn't actually use HTTPS for local
+        // dev, but it does use secure cookies, and browsers treat it as secure since it's localhost.
+        authnUrl: defaultTo("https://local.neolace.net:5552", { test: "http://localhost:5552" }),
         // Private URL of the authentication microservice (Keratin AuthN)
         authnPrivateUrl: defaultTo("http://localhost:5559", { test: "http://localhost:4449" }),
         // Username for making private API requests to the authentication microservice (Keratin AuthN)
