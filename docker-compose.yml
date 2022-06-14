@@ -51,7 +51,7 @@ x-service-templates:
       HTTP_AUTH_USERNAME: authn
       HTTP_AUTH_PASSWORD: neolace
       REDIS_URL: redis://:devpassword@redis:6379/8
-      USERNAME_IS_EMAIL: "true"
+      USERNAME_IS_EMAIL: "false"
       PASSWORD_CHANGE_LOGOUT: "true"  # user password changes will expire all other sessions
       # Public URL as reachable by end users. NOTE: it's not really https for local dev! But usings https tells AuthN to
       # set the required 'Secure' attribute on the cookie, and Firefox and Chrome treat local dev sites as secure.
