@@ -51,10 +51,16 @@ x-service-templates:
       HTTP_AUTH_USERNAME: authn
       HTTP_AUTH_PASSWORD: neolace
       REDIS_URL: redis://:devpassword@redis:6379/8
-      USERNAME_IS_EMAIL: "true"
+      USERNAME_IS_EMAIL: "false"
       PASSWORD_CHANGE_LOGOUT: "true"  # user password changes will expire all other sessions
-      AUTHN_URL: http://local.neolace.net:5552  # Public URL as reachable by end users
+      # Public URL as reachable by end users. NOTE: it's not really https for local dev! But usings https tells AuthN to
+      # set the required 'Secure' attribute on the cookie, and Firefox and Chrome treat local dev sites as secure.
+      AUTHN_URL: https://local.neolace.net:5552
       APP_DOMAINS: "*.local.neolace.net:5555"
+      # We create users via the private 'import' flow, not the public 'signup' flow
+      ENABLE_SIGNUP: "false"
+      # Since authn runs on a separate domain, we need same site "none" -see https://github.com/keratin/authn-server/blob/main/docs/config.md#same_site
+      SAME_SITE: "NONE"
     entrypoint: ["/bin/sh", "-c", "./authn migrate && ./authn server"]  # Override to ensure migrations get run
 
 
