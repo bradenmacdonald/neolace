@@ -135,7 +135,7 @@ group("Site.ts", () => {
             const siteResult = await graph.pullOne(Site, (s) => s.groupsFlat((g) => g.allProps), { key: "site-test1" });
             assertStrictEquals(siteResult.groupsFlat.length, 1);
             assertStrictEquals(siteResult.groupsFlat[0].name, "Administrators");
-            assertStrictEquals(siteResult.groupsFlat[0].administerSite, true);
+            assertEquals(siteResult.groupsFlat[0].grantStrings, ["*"]);
         });
     });
 });

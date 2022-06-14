@@ -3,9 +3,8 @@ import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { getSiteData, SiteData } from "lib/api-client";
+import { client, getSiteData, SiteData } from "lib/api-client";
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { requestPasswordlessLogin, UserContext, UserStatus } from "components/user/UserContext";
 import { Control, Form } from "components/widgets/Form";
 import { TextInput } from "components/widgets/TextInput";
 import { Button } from "components/widgets/Button";
@@ -13,6 +12,7 @@ import { Redirect } from "components/utils/Redirect";
 import { defineMessage } from "components/utils/i18n";
 import { ActionStatus, ActionStatusDisplay, useActionStatus } from "components/widgets/ActionStatusIndicator";
 import { SuccessMessage } from "components/widgets/SuccessMessage";
+import { UserStatus, useUser } from "lib/authentication";
 
 interface PageProps {
     site: SiteData;
@@ -23,7 +23,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
 
 const LoginPage: NextPage<PageProps> = function (props) {
     const intl = useIntl();
-    const user = React.useContext(UserContext);
+    const user = useUser();
 
     const [userEmail, setUserEmail] = React.useState("");
     const userEmailChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,7 +35,8 @@ const LoginPage: NextPage<PageProps> = function (props) {
     // Handler for when user enters their email and clicks "log in"
     const handleLogin = React.useCallback(async (event: React.MouseEvent) => {
         event.preventDefault();
-        if (await wrapLogin(requestPasswordlessLogin(userEmail))) {
+        const result = await wrapLogin(client.requestPasswordlessLogin({email: userEmail}));
+        if (result.requested) {
             setLoginStatus(ActionStatus.Success);
         } else {
             setLoginStatus(ActionStatus.Error, new Error("You don't have an account. Please register first."));

@@ -1,7 +1,7 @@
 import { readableStreamFromIterable } from "std/streams/conversion.ts";
 import { crypto } from "std/crypto/mod.ts";
 import { C, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
-import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getDraft } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { AddFileToDraft } from "neolace/core/edit/Draft.ts";
@@ -22,7 +22,7 @@ export class DraftFileResource extends NeolaceHttpResource {
         const user = this.requireUser(request);
         const { siteId } = await this.getSiteDetails(request);
         const draftId = VNID(request.pathParam("draftId"));
-        await this.requirePermission(request, permissions.CanEditDraft(draftId));
+        await this.requirePermission(request, corePerm.editDraft.name, { draftId });
         const graph = await getGraph();
         // Validate that the draft exists in the site:
         const _draft = await graph.read((tx) => getDraft(draftId, siteId, tx));

@@ -1,6 +1,6 @@
 import { Vertex } from "neolace/deps/vertex-framework.ts";
 // core
-import { Group } from "neolace/core/Group.ts";
+import { Group } from "neolace/core/permissions/Group.ts";
 import { Site } from "neolace/core/Site.ts";
 import { BotUser, HumanUser, User } from "neolace/core/User.ts";
 // core/edit

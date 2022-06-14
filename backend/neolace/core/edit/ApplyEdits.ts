@@ -272,7 +272,7 @@ export const ApplyEdits = defineAction({
                     try {
                         baseData = await tx.queryOne(C`
                             MATCH (pf:${PropertyFact} {id: ${propertyFactId}})-[:${PropertyFact.rel.FOR_PROP}]->(property:${Property})
-                            MATCH (pf)<-[:${Entry.rel.PROP_FACT}]-(e:${Entry})
+                            MATCH (pf)<-[:${Entry.rel.PROP_FACT}]-(e:${Entry} {id: ${edit.data.entryId}})
                             MATCH (e)-[:${Entry.rel.IS_OF_TYPE}]->(et)-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                             WITH pf, e.id AS entryId, e.valueExpression AS originalValue, property.type AS propertyType
                             SET pf += ${updatedFields}
@@ -287,8 +287,8 @@ export const ApplyEdits = defineAction({
                         if (err instanceof EmptyResultError) {
                             throw new InvalidEdit(
                                 UpdatePropertyValue.code,
-                                { propertyFactId: propertyFactId },
-                                `That property fact does not exist on this site.`,
+                                { entryId: edit.data.entryId, propertyFactId: propertyFactId },
+                                `That property fact does not exist on that entry.`,
                             );
                         } else {
                             throw err;
@@ -348,7 +348,7 @@ export const ApplyEdits = defineAction({
                     try {
                         modifiedEntry = await tx.queryOne(C`
                             MATCH (pf:${PropertyFact} {id: ${propertyFactId}})-[:${PropertyFact.rel.FOR_PROP}]->(property:${Property})
-                            MATCH (pf)<-[:${Entry.rel.PROP_FACT}]-(e:${Entry})
+                            MATCH (pf)<-[:${Entry.rel.PROP_FACT}]-(e:${Entry} {id: ${edit.data.entryId}})
                             MATCH (e)-[:${Entry.rel.IS_OF_TYPE}]->(et)-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                             MATCH (e)-[rel]->(e2) WHERE pf.directRelNeo4jId = id(rel)
                             DETACH DELETE pf, rel   
@@ -358,7 +358,7 @@ export const ApplyEdits = defineAction({
                             throw new InvalidEdit(
                                 DeletePropertyValue.code,
                                 { propertyFactId: propertyFactId },
-                                `That property fact does not exist on this site.`,
+                                `That property fact does not exist on that entry.`,
                             );
                         } else {
                             throw err;

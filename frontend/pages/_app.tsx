@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import React from "react";
 import { IntlProvider } from "react-intl";
 
-import { UserProvider } from "components/user/UserContext";
 // Import global CSS (Tailwind-based)
 import "../global-styles.css";
 
@@ -47,12 +46,10 @@ export default function NeolaceApp({ Component, pageProps }: AppProps) {
         DynamicIntlProviders.en;
 
     return (
-        <UserProvider>
-            <LoadIntlProvider>
-                <AvailablePluginsProvider>
-                    <Component {...pageProps} />
-                </AvailablePluginsProvider>
-            </LoadIntlProvider>
-        </UserProvider>
+        <LoadIntlProvider>
+            <AvailablePluginsProvider>
+                <Component {...pageProps} />
+            </AvailablePluginsProvider>
+        </LoadIntlProvider>
     );
 }

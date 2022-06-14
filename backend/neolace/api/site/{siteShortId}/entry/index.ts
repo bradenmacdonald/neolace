@@ -1,9 +1,10 @@
-import { C, Field } from "neolace/deps/vertex-framework.ts";
-import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
+import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { Site, slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { EraseEntries } from "neolace/core/entry/EraseEntriesAction.ts";
+import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 
 export class EntryListResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/entry/"];
@@ -12,20 +13,23 @@ export class EntryListResource extends NeolaceHttpResource {
         responseSchema: api.PaginatedResult(api.EntrySummarySchema),
         description: `Get a list of all entries that the current user can view, optionally filtered by type.
         This API always returns up to date information, but is fairly limited. Use the search API for more
-        complex use caes, such as results sorted by name.`,
+        complex use cases, such as results sorted by name.`,
     }, async ({ request }) => {
-        // Permissions and parameters:
-        await this.requirePermission(request, permissions.CanViewEntries);
         const { siteId } = await this.getSiteDetails(request);
         const graph = await getGraph();
 
-        const entryTypeFilter = request.queryParam("entryType") ? C`{id: ${request.queryParam("entryType")}}` : C``;
+        const onlyEntryType = request.queryParam("entryType") as VNID | undefined;
+        const entryTypeFilter = onlyEntryType ? C`{id: ${onlyEntryType}}` : C``;
+        const subject = await this.getPermissionSubject(request);
+        const permissionsFilter = await makeCypherCondition(subject, corePerm.viewEntry.name, {
+            entryTypeId: onlyEntryType,
+        }, ["entry", "entryType"]);
 
         const baseQuery = C`
             MATCH (site:${Site} {id: ${siteId}})
-            MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType} ${entryTypeFilter})-[:${EntryType.rel.FOR_SITE}]->(site)
+            MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType} ${entryTypeFilter})-[:${EntryType.rel.FOR_SITE}]->(site)
 
-            WITH entry, et
+            WHERE ${permissionsFilter}
         `;
 
         const skipParamName = "_qs"; // This parameter name is subject to change - get the URL of pages from the "nextPageUrl"
@@ -50,7 +54,7 @@ export class EntryListResource extends NeolaceHttpResource {
         const result = await graph.read((tx) =>
             tx.query(C`
             ${baseQuery}
-            RETURN entry.id AS id, entry.name AS name, entry.slugId AS slugId, et.id AS type
+            RETURN entry.id AS id, entry.name AS name, entry.slugId AS slugId, entryType.id AS type
             ORDER BY id
             SKIP ${C(String(skip))} LIMIT ${C(String(limit + 1n))}
         `.givesShape({ "id": Field.VNID, "name": Field.String, "slugId": Field.String, "type": Field.VNID }))
@@ -81,7 +85,7 @@ export class EntryListResource extends NeolaceHttpResource {
             may use this API method. You must pass ?confirm=danger for this method to succeed.`,
     }, async ({ request }) => {
         // Permissions and parameters:
-        await this.requirePermission(request, permissions.CanEraseAllSiteContent);
+        await this.requirePermission(request, "DANGER!!"); // Only a user with the "*" global permission grant will match this
         const { siteId } = await this.getSiteDetails(request);
         const graph = await getGraph();
         const user = this.requireUser(request);

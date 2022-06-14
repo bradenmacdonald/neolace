@@ -2,7 +2,15 @@ import * as log from "std/log/mod.ts";
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { TypeSense } from "neolace/deps/typesense.ts";
 
-import { Entry, entryToIndexDocument, EntryType, getGraph, Site } from "neolace/plugins/api.ts";
+import {
+    corePerm,
+    Entry,
+    entryToIndexDocument,
+    EntryType,
+    getGraph,
+    makeCypherCondition,
+    Site,
+} from "neolace/plugins/api.ts";
 
 import { getTypeSenseClient } from "./typesense-client.ts";
 import { getSiteCollectionAlias } from "./site-collection.ts";
@@ -79,10 +87,17 @@ export async function reindexAllEntries(siteId: VNID) {
     });
     await setCurrentReIndexJobForSite(siteId, newCollectionName);
 
+    // This will filter to only index entries that the current user can see:
+    const permissionsCondition = await makeCypherCondition({ siteId, userId: undefined }, corePerm.viewEntry.name, {}, [
+        "entry",
+        "entryType",
+    ]);
+
     const totalCount = await graph.read(async (tx) =>
         tx.queryOne(C`
         MATCH (site:${Site} {id: ${siteId}})
-        MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+        MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+        WHERE ${permissionsCondition}
     `.RETURN({ "count(entry)": Field.Int }))
     );
 
@@ -97,7 +112,8 @@ export async function reindexAllEntries(siteId: VNID) {
             while (true) {
                 const entriesChunk = await tx.query(C`
                     MATCH (site:${Site} {id: ${siteId}})
-                    MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+                    MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+                    WHERE ${permissionsCondition}
 
                     RETURN entry.id SKIP ${C(offset.toFixed(0))} LIMIT ${C(pageSize.toFixed(0))}
                 `.givesShape({ "entry.id": Field.VNID }));

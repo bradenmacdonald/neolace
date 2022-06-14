@@ -5,7 +5,6 @@ import { ParsedUrlQuery } from 'querystring';
 import { getSiteData, SiteData, api, client } from 'lib/api-client';
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { UserContext } from 'components/user/UserContext';
 import { MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
 
 interface PageProps {
@@ -25,7 +24,6 @@ const HomePage: NextPage<PageProps> = function(props) {
         entryId: undefined,
         refCache: props.refCache,
     }), [props.refCache]);
-    const user = React.useContext(UserContext);
 
     return (<SiteDataProvider sitePreloaded={props.site}>
         <SitePage title={props.site.name}>

@@ -1,5 +1,5 @@
 import * as log from "std/log/mod.ts";
-import { adaptErrors, api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { adaptErrors, api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { CreateDraft } from "neolace/core/edit/Draft.ts";
 import { getDraft } from "./_helpers.ts";
 
@@ -12,10 +12,13 @@ export class DraftIndexResource extends NeolaceHttpResource {
         description: "Create a new draft",
     }, async ({ request, bodyData }) => {
         const graph = await getGraph();
-        // Permissions and parameters:
-        await this.requirePermission(request, permissions.CanCreateDraft);
         const { siteId } = await this.getSiteDetails(request);
         const userId = this.requireUser(request).id;
+
+        // To create any draft at all, the user must have one of these two permissions:
+        if (!await this.hasPermission(request, corePerm.proposeEditToEntry.name)) {
+            await this.requirePermission(request, corePerm.proposeEditToSchema.name);
+        }
 
         // Response:
         const edits = bodyData.edits as api.EditList;
@@ -50,10 +53,10 @@ export class DraftIndexResource extends NeolaceHttpResource {
         }
 
         if (hasEntryChanges) {
-            await this.requirePermission(request, permissions.CanProposeEntryEdits);
+            await this.requirePermission(request, corePerm.proposeEditToEntry.name);
         }
         if (hasSchemaChanges) {
-            await this.requirePermission(request, permissions.CanProposeSchemaChanges);
+            await this.requirePermission(request, corePerm.proposeEditToSchema.name);
         }
 
         const { id } = await graph.runAs(

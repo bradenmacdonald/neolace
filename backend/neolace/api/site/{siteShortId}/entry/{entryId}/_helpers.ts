@@ -1,4 +1,4 @@
-import { api } from "neolace/api/mod.ts";
+import { api, corePerm } from "neolace/api/mod.ts";
 import { C, EmptyResultError, Field, isVNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
@@ -20,6 +20,7 @@ import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-da
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { GetProperty, LiteralExpression, This } from "neolace/core/lookup/expressions.ts";
+import { hasPermissions } from "neolace/core/permissions/check.ts";
 
 /**
  * Helper function to wrap an async function so that it only runs at most once. If you don't need/call it, it won't run
@@ -41,6 +42,8 @@ import { GetProperty, LiteralExpression, This } from "neolace/core/lookup/expres
 export async function getEntry(
     vnidOrFriendlyId: VNID | string,
     siteId: VNID,
+    /** This function will enforce permissions, only displaying as much as this user can see. */
+    userId: VNID | undefined,
     tx: WrappedTransaction,
     flags: Set<api.GetEntryFlags> = new Set(),
 ): Promise<api.EntryData> {
@@ -62,9 +65,40 @@ export async function getEntry(
             }
         });
 
+    // Check permissions:
+    let canViewEntry: boolean;
+    let canViewDescription: boolean;
+    let canViewFeatures: boolean;
+    let canViewProperties: boolean;
+    const permSubject = { userId, siteId };
+    const permObject = { entryId: entryData.id, entryTypeId: entryData.type?.id };
+    const hasAllPerms = await hasPermissions(permSubject, [
+        corePerm.viewEntry.name,
+        corePerm.viewEntryDescription.name,
+        corePerm.viewEntryFeatures.name,
+        corePerm.viewEntryProperty.name,
+    ], permObject);
+    if (hasAllPerms) {
+        // Most common case: the user has all the "view" permissions:
+        canViewEntry = true;
+        canViewDescription = true;
+        canViewFeatures = true;
+        canViewProperties = true;
+    } else {
+        // Check for an unusual mix of permissions:
+        canViewEntry = await hasPermissions(permSubject, corePerm.viewEntry.name, permObject);
+        canViewDescription = await hasPermissions(permSubject, corePerm.viewEntryDescription.name, permObject);
+        canViewFeatures = await hasPermissions(permSubject, corePerm.viewEntryFeatures.name, permObject);
+        canViewProperties = await hasPermissions(permSubject, corePerm.viewEntryProperty.name, permObject);
+    }
+    if (!canViewEntry) {
+        throw new api.NotAuthorized("You do not have permission to view that entry.");
+    }
+
     // Remove the "site" field from the result
     const result: api.EntryData = {
         ...entryData,
+        description: canViewDescription ? entryData.description : "",
         entryType: { id: entryData.type!.id, name: entryData.type!.name },
         propertiesSummary: undefined,
         referenceCache: undefined,
@@ -84,11 +118,12 @@ export async function getEntry(
     const lookupContext = new LookupContext({
         tx,
         siteId,
+        userId,
         entryId: entryData.id,
         defaultPageSize: BigInt(maxValuesPerProp),
     });
 
-    if (flags.has(api.GetEntryFlags.IncludePropertiesSummary)) {
+    if (flags.has(api.GetEntryFlags.IncludePropertiesSummary) && canViewProperties) {
         // Include a summary of property values for this entry (up to 15 importance properties - whose importance is <= 20)
         const properties = await getEntryProperties(entryData.id, { tx, limit: 15, maxImportance: 20 });
 
@@ -172,7 +207,7 @@ export async function getEntry(
         }
     }
 
-    if (flags.has(api.GetEntryFlags.IncludeRawProperties)) {
+    if (flags.has(api.GetEntryFlags.IncludeRawProperties) && canViewProperties) {
         // Include a complete list of all property values directly set on this entry
         const allProps = await tx.query(C`
             MATCH (entry:${Entry} {id: ${entryData.id}})
@@ -196,7 +231,7 @@ export async function getEntry(
         }));
     }
 
-    if (flags.has(api.GetEntryFlags.IncludeFeatures)) {
+    if (flags.has(api.GetEntryFlags.IncludeFeatures) && canViewFeatures) {
         // Include "features" specific to this entry type. A common one is the "article" feature, which has prose text
         // (markdown). Another common one is the "Image" feature which means this entry is an image.
         result.features = await getEntryFeaturesData(entryData.id, { tx, refCache });
@@ -204,7 +239,9 @@ export async function getEntry(
 
     if (flags.has(api.GetEntryFlags.IncludeReferenceCache)) {
         // Extract references from the description of this entry
-        refCache?.extractMarkdownReferences(entryData.description, { currentEntryId: entryData.id });
+        if (canViewDescription) {
+            refCache?.extractMarkdownReferences(entryData.description, { currentEntryId: entryData.id });
+        }
         result.referenceCache = await refCache!.getData(lookupContext);
     }
 

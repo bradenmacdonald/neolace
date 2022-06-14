@@ -11,9 +11,10 @@ import {
     setTestIsolation,
     test,
 } from "neolace/api/tests.ts";
-import { PermissionGrant } from "neolace/core/Group.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
+import { Always, PermissionGrant } from "neolace/core/permissions/grant.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
 
 group("index.ts", () => {
     group("Creating a draft", () => {
@@ -50,7 +51,7 @@ group("index.ts", () => {
 
                 // A user with no particular permissions should not be allowed to create a draft, even an empty one.
                 {
-                    const { userData } = await createUserWithPermissions(new Set());
+                    const { userData } = await createUserWithPermissions();
                     const client = await getClient(userData, defaultData.site.shortId);
                     await assertRejects(
                         () => client.createDraft(createDraftArgs),
@@ -61,14 +62,16 @@ group("index.ts", () => {
                 // A user with either "propose schema changes" or "propose content changes" can create an empty draft though.
                 {
                     const { userData } = await createUserWithPermissions(
-                        new Set([PermissionGrant.proposeSchemaChanges]),
+                        new PermissionGrant(Always, [corePerm.proposeEditToSchema.name]),
                     );
                     const client = await getClient(userData, defaultData.site.shortId);
                     const result = await client.createDraft(createDraftArgs);
                     assert(isVNID(result.id));
                 }
                 {
-                    const { userData } = await createUserWithPermissions(new Set([PermissionGrant.proposeEntryEdits]));
+                    const { userData } = await createUserWithPermissions(
+                        new PermissionGrant(Always, [corePerm.proposeEditToEntry.name]),
+                    );
                     const client = await getClient(userData, defaultData.site.shortId);
                     const result = await client.createDraft(createDraftArgs);
                     assert(isVNID(result.id));
@@ -94,7 +97,7 @@ group("index.ts", () => {
 
                 // A user with no particular permissions should still be allowed to create a draft, even an empty one.
                 {
-                    const { userData } = await createUserWithPermissions(new Set());
+                    const { userData } = await createUserWithPermissions();
                     const client = await getClient(userData, defaultData.site.shortId);
                     const result = await client.createDraft(createDraftArgs);
                     assert(isVNID(result.id));
@@ -188,7 +191,7 @@ group("index.ts", () => {
             test("test permissions - user with no permission grants", async () => {
                 const graph = await getGraph();
                 // If the site is "private" or "public read only", a user without explicit permissions cannot create content edits.
-                const { userData: userWithNoPermissions } = await createUserWithPermissions(new Set());
+                const { userData: userWithNoPermissions } = await createUserWithPermissions();
                 const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.shortId);
                 // Private site shouldn't work:
                 await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
@@ -213,15 +216,36 @@ group("index.ts", () => {
                 // A user with "propose schema changes" can create a draft with schema edits:
                 {
                     const { userData } = await createUserWithPermissions(
-                        new Set([PermissionGrant.proposeSchemaChanges]),
+                        new PermissionGrant(Always, [
+                            corePerm.viewSite.name,
+                            corePerm.viewSchema.name,
+                            corePerm.proposeEditToSchema.name,
+                        ]),
                     );
                     const client = await getClient(userData, defaultData.site.shortId);
                     const result = await client.createDraft(createDraftWithSchemaEdits);
                     assert(isVNID(result.id));
                 }
-                // But "propose entry edits" only does not allow proposing schema edits:
+                // But "propose schema edits" doesn't work without "view schema"
                 {
-                    const { userData } = await createUserWithPermissions(new Set([PermissionGrant.proposeEntryEdits]));
+                    const { userData } = await createUserWithPermissions(
+                        new PermissionGrant(Always, [corePerm.viewSite.name, corePerm.proposeEditToSchema.name]),
+                    );
+                    const client = await getClient(userData, defaultData.site.shortId);
+                    await assertRejects(
+                        () => client.createDraft(createDraftWithSchemaEdits),
+                        api.NotAuthorized,
+                    );
+                }
+                // And "propose **entry** edits" only does not allow proposing schema edits:
+                {
+                    const { userData } = await createUserWithPermissions(
+                        new PermissionGrant(Always, [
+                            corePerm.viewSite.name,
+                            corePerm.viewSchema.name,
+                            corePerm.proposeEditToEntry.name,
+                        ]),
+                    );
                     const client = await getClient(userData, defaultData.site.shortId);
                     await assertRejects(
                         () => client.createDraft(createDraftWithSchemaEdits),
@@ -258,7 +282,7 @@ group("index.ts", () => {
             test("test permissions - user with no permission grants", async () => {
                 const graph = await getGraph();
                 // If the site is "private" or "public read only", a user without explicit permissions cannot create content edits.
-                const { userData: userWithNoPermissions } = await createUserWithPermissions(new Set());
+                const { userData: userWithNoPermissions } = await createUserWithPermissions();
                 const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.shortId);
                 // Private site shouldn't work:
                 await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
@@ -286,14 +310,16 @@ group("index.ts", () => {
                 // A user with only "propose schema changes" cannot propose content edits:
                 {
                     const { userData } = await createUserWithPermissions(
-                        new Set([PermissionGrant.proposeSchemaChanges]),
+                        new PermissionGrant(Always, [corePerm.proposeEditToSchema.name]),
                     );
                     const client = await getClient(userData, defaultData.site.shortId);
                     await assertRejects(() => client.createDraft(createDraftWithContentEdits), api.NotAuthorized);
                 }
                 // But a user with "propose entry edits" permission can:
                 {
-                    const { userData } = await createUserWithPermissions(new Set([PermissionGrant.proposeEntryEdits]));
+                    const { userData } = await createUserWithPermissions(
+                        new PermissionGrant(Always, [corePerm.proposeEditToEntry.name]),
+                    );
                     const client = await getClient(userData, defaultData.site.shortId);
                     const result = await client.createDraft(createDraftWithContentEdits);
                     assert(isVNID(result.id));

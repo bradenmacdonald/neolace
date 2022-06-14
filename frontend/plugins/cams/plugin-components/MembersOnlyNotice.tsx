@@ -1,0 +1,18 @@
+import { ErrorMessage } from "components/widgets/ErrorMessage";
+import { api } from "lib/api-client";
+import { UserStatus, useUser } from "lib/authentication";
+import Link from "next/link";
+import React from "react";
+
+export const MembersOnlyNotice: React.FunctionComponent<{entry: api.EntryData}> = ({entry}) => {
+    const user = useUser();
+    // TODO: change this to check the user's permission on the returned entry
+    if (entry.description === "" && !entry.propertiesSummary?.length && user.status === UserStatus.Anonymous) {
+        return <ErrorMessage>
+            This content is only available to members. Please use the{" "}
+            <Link href="/members-login"><a>Member Login</a></Link> to access it.
+        </ErrorMessage>
+    } else {
+        return null;
+    }
+};

@@ -7,7 +7,7 @@ import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
 
 import { client, getSiteData, SiteData } from "lib/api-client";
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { UserContext, UserStatus } from "components/user/UserContext";
+import { UserStatus, useUser } from "lib/authentication";
 import { Button } from "components/widgets/Button";
 import { Redirect } from "components/utils/Redirect";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
@@ -25,7 +25,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
 
 const LoginPage: NextPage<PageProps> = function (props) {
     const intl = useIntl();
-    const user = React.useContext(UserContext);
+    const user = useUser();
 
     // Check if the verification token is valid
     const key = `register-email-validation-token:${props.verificationToken}`;

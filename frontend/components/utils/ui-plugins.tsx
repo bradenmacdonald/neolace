@@ -1,6 +1,7 @@
 import { api, SiteData } from "lib/api-client";
 import React, { useContext } from "react";
 import type { UiSlotChange } from "components/widgets/UISlot";
+import dynamic from "next/dynamic";
 
 export type UiSlotId = (
     | "systemLinks"
@@ -8,6 +9,11 @@ export type UiSlotId = (
     | "globalHeader"
     | "siteLogo"
     | "preContent"
+    /**
+     * On the entry page, before the feature (article/image/files) of the entry.
+     * This should be a React element that accepts an 'entry' parameter.
+     */
+    | "entryPreFeature"
     | `plugin:${string}`
 );
 
@@ -18,17 +24,17 @@ export interface PluginPageProps {
 export interface PluginDefinition {
     id: string;
     getUiSlotChanges?: (siteConfig: Record<string, unknown>) => Partial<Record<UiSlotId, UiSlotChange[]>>;
-    getPageForPath?: (site: api.SiteDetailsData, path: string) => string|undefined;
+    getPageForPath?: (site: api.SiteDetailsData, path: string) => string | undefined;
 }
 
 export interface EnabledPluginsConfig {
     plugins: {
-        id: string,
+        id: string;
         /** Settings for this plugin, for this specific site */
-        siteConfig: Record<string, unknown>,
-        uiSlotChanges: Partial<Record<UiSlotId, UiSlotChange[]>>,
-    }[],
-    loaded: boolean,
+        siteConfig: Record<string, unknown>;
+        uiSlotChanges: Partial<Record<UiSlotId, UiSlotChange[]>>;
+    }[];
+    loaded: boolean;
 }
 
 /**
@@ -43,16 +49,16 @@ export const UiPluginsContext = React.createContext<EnabledPluginsConfig>({
 
 export const AvailablePluginsContext = React.createContext<PluginDefinition[]>([]);
 
-export const UiPluginsProvider = (props: {site: SiteData, children: React.ReactNode}) => {
+export const UiPluginsProvider = (props: { site: SiteData; children: React.ReactNode }) => {
     const allPlugins = useContext(AvailablePluginsContext);
 
     const enabledPlugins = React.useMemo(() => {
-        const result: EnabledPluginsConfig = {plugins: [], loaded: true};
+        const result: EnabledPluginsConfig = { plugins: [], loaded: true };
         for (const plugin of allPlugins) {
-            const siteConfig = props.site.frontendConfig.plugins?.[plugin.id] as Record<string, unknown>|undefined;
+            const siteConfig = props.site.frontendConfig.plugins?.[plugin.id] as Record<string, unknown> | undefined;
             if (siteConfig !== undefined) {
                 result.plugins.push({
-                    id: plugin.id, 
+                    id: plugin.id,
                     siteConfig,
                     uiSlotChanges: plugin.getUiSlotChanges?.(siteConfig) ?? {},
                 });

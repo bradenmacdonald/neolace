@@ -365,7 +365,7 @@ export type ApplyFlags<
         } & {
             // But conditionally include the fields that _are_ controlled by flags:
             [Key in keyof DataType as Key extends EnumValues<AllFlags> ? Key : never]-?:
-                Key extends ToStringUnion<EnabledFlags> ? DataType[Key] : `requires the ${Key&string} flag`
+                Key extends ToStringUnion<EnabledFlags> ? DataType[Key] : undefined//`requires the ${Key&string} flag`
         }
 );
 

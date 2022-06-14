@@ -1,4 +1,4 @@
-import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
 
@@ -10,7 +10,7 @@ export class SchemaIndexResource extends NeolaceHttpResource {
         description: "Get the site's schema",
     }, async ({ request }) => {
         // Permissions and parameters:
-        await this.requirePermission(request, permissions.CanViewSchema);
+        await this.requirePermission(request, corePerm.viewSchema.name);
         const { siteId } = await this.getSiteDetails(request);
         const graph = await getGraph();
 
@@ -25,7 +25,7 @@ export class SchemaIndexResource extends NeolaceHttpResource {
     }, async ({ request, bodyData }) => {
         // Permissions and parameters:
         const user = this.requireUser(request);
-        await this.requirePermission(request, permissions.CanApproveSchemaChanges);
+        await this.requirePermission(request, corePerm.applyEditsToSchema.name);
         const { siteId } = await this.getSiteDetails(request);
         const graph = await getGraph();
 

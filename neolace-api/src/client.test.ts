@@ -21,12 +21,12 @@ Deno.test("Compile-time tests for typing of client.getEntry()", async () => {
         // Check without including any flags:
         {
             const entryResponse = await client.getEntry("id");
-            let propertiesSummary = entryResponse.propertiesSummary;
-            // Type of propertiesSummary should be: { propertyId: VNID; value: AnyLookupValue; }[] | undefined;
-            checkType<AssertEqual<typeof propertiesSummary, "requires the propertiesSummary flag">>();
+            const propertiesSummary = entryResponse.propertiesSummary;
+            // Type of propertiesSummary should be: never
+            checkType<AssertEqual<typeof propertiesSummary, never>>();
             checkType<AssertNotEqual<typeof propertiesSummary, "some other string value">>()
-            // @ts-expect-error this should fail because propertiesSummary should be of a specific string type, showing that message.
-            propertiesSummary = "other values rejected";
+            // deno-lint-ignore ban-types
+            checkType<AssertNotEqual<typeof propertiesSummary, {}>>()
         }
 
         // Check with runtime flags:
@@ -52,7 +52,7 @@ Deno.test("Compile-time tests for typing of client.getEntry()", async () => {
             checkType<AssertEqual<typeof propertiesSummary, { propertyId: VNID; value: AnyLookupValue; }[]>>();
             checkType<AssertNotEqual<typeof propertiesSummary, { propertyId: VNID; value: AnyLookupValue; }[] | undefined>>();
             // And other fields should be absent:
-            checkType<AssertEqual<typeof entryResponse.propertiesRaw, "requires the propertiesRaw flag">>();
+            checkType<AssertEqual<typeof entryResponse.propertiesRaw, never>>();
         }
     }
 });

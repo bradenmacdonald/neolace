@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { adaptErrors, api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { AcceptDraft, Draft } from "neolace/core/edit/Draft.ts";
 
 export class AcceptDraftResource extends NeolaceHttpResource {
@@ -10,11 +10,13 @@ export class AcceptDraftResource extends NeolaceHttpResource {
         description: "Accept a draft",
     }, async ({ request }) => {
         // Permissions and parameters:
-        await this.requirePermission(request, permissions.CanViewDrafts);
         const userId = this.requireUser(request).id;
         const { siteId } = await this.getSiteDetails(request);
         const draftId = VNID(request.pathParam("draftId") ?? "");
         const graph = await getGraph();
+
+        // First permissions check:
+        await this.requirePermission(request, corePerm.viewDraft.name, { draftId });
 
         // Some permissions depend on whether the draft contains schema changes or not:
         const draft = await graph.pullOne(Draft, (d) => d.site((s) => s.id).hasSchemaChanges().hasContentChanges(), {
@@ -24,16 +26,16 @@ export class AcceptDraftResource extends NeolaceHttpResource {
             throw new api.NotFound(`Draft not found`);
         }
         if (draft.hasContentChanges) {
-            await this.requirePermission(request, permissions.CanApproveEntryEdits);
+            await this.requirePermission(request, corePerm.applyEditsToEntries.name, { draftId });
         }
         if (draft.hasSchemaChanges) {
-            await this.requirePermission(request, permissions.CanApproveSchemaChanges);
+            await this.requirePermission(request, corePerm.applyEditsToSchema.name, { draftId });
         }
         if (!(draft.hasContentChanges) && !(draft.hasSchemaChanges)) {
             throw new api.InvalidRequest(api.InvalidRequestReason.DraftIsEmpty, "Draft is empty");
         }
 
-        await graph.runAs(userId, AcceptDraft({ id: draftId }));
+        await graph.runAs(userId, AcceptDraft({ id: draftId })).catch(adaptErrors());
 
         // Response:
         return {};

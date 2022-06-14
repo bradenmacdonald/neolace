@@ -3,16 +3,16 @@ import Head from 'next/head'
 import Link from 'next/link';
 import { SWRConfig } from 'swr';
 
-import { UserContext, UserStatus } from 'components/user/UserContext';
 import { SiteData, useSiteData, api } from 'lib/api-client';
 import { UISlot, UISlotWidget, defaultRender, DefaultUISlot } from './widgets/UISlot';
 import FourOhFour from 'pages/404';
 import { MDTContext, RenderMDT } from './markdown-mdt/mdt';
 import { Icon, IconId } from './widgets/Icon';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { UiPluginsContext, UiPluginsProvider } from './utils/ui-plugins';
 import { DEVELOPMENT_MODE } from 'lib/config';
-import { ErrorMessage } from './widgets/ErrorMessage';
+import { UserStatus, useUser } from 'lib/authentication';
+import { displayString, TranslatableString } from './utils/i18n';
 
 
 interface SiteDataProviderProps {
@@ -55,7 +55,7 @@ export interface SystemLink {
 }
 
 interface Props {
-    title: string | typeof DefaultSiteTitle;
+    title: TranslatableString | string | typeof DefaultSiteTitle;
     leftNavTopSlot?: UISlotWidget[];
     leftNavBottomSlot?: UISlotWidget[];
     footerSlot?: UISlotWidget[];
@@ -66,7 +66,8 @@ interface Props {
  * Template for a "regular" Neolace page, for a specific site (e.g. foo.neolace.com), as opposed to the Neolace Admin UI
  */
 export const SitePage: React.FunctionComponent<Props> = (props) => {
-    const user = React.useContext(UserContext);
+    const intl = useIntl();
+    const user = useUser();
     const {site, siteError} = useSiteData();
     const pluginsData = React.useContext(UiPluginsContext);
 
@@ -134,7 +135,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         });
         // Log out link:
         defaultSystemLinks.push({
-            id: "login-out",
+            id: "logout",
             priority: 60,
             content: {
                 url: site.isHomeSite ? "/account/logout" : `${site.homeSiteUrl}/account/logout?returnSite=${encodeURI(site.shortId)}`,
@@ -145,7 +146,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     } else {
         // Log in link:
         defaultSystemLinks.push({
-            id: "login-out",
+            id: "login",
             priority: 60,
             content: {
                 url: site.isHomeSite ? "/account/login" : `${site.homeSiteUrl}/account/login?returnSite=${encodeURI(site.shortId)}`,
@@ -174,9 +175,15 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         </ul>
     );
 
+    const title = (
+        props.title === DefaultSiteTitle ? site.name :
+        typeof props.title === "string" ? `${props.title} - ${site.name}` :
+        displayString(intl, props.title) + ` - ${site.name}`
+    );
+
     const content = <div>
         <Head>
-            <title>{props.title === DefaultSiteTitle ? site.name : `${props.title} - ${site.name}`}</title>
+            <title>{title}</title>
             <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
             <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico"/>
             <style>{`
@@ -202,7 +209,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             <div
                 id="left-panel"
                 className={
-                    `${mobileMenuVisible ? `translate-x-0 visible z-[100]` : `-translate-x-[100%] invisible`}
+                    `${mobileMenuVisible ? `translate-x-0 visible z-mobile-menu` : `-translate-x-[100%] invisible`}
                     transition-visibility-transform md:visible md:translate-x-0
                     fixed md:sticky
                     flex

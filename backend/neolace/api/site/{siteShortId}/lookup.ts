@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { api, getGraph, NeolaceHttpResource, permissions } from "neolace/api/mod.ts";
+import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { getEntry } from "./entry/{entryId}/_helpers.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
@@ -14,7 +14,6 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
         description: "Evaluate a lookup expression and return the result",
     }, async ({ request }) => {
         // Permissions and parameters:
-        await this.requirePermission(request, permissions.CanViewEntries);
         const { siteId } = await this.getSiteDetails(request);
         const graph = await getGraph();
 
@@ -30,12 +29,20 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
         const entryKeyStr = request.queryParam("entryKey");
         let entry: { id: VNID } | undefined;
         if (entryKeyStr) {
-            entry = await graph.read((tx) => getEntry(entryKeyStr, siteId, tx));
+            entry = await graph.read((tx) => getEntry(entryKeyStr, siteId, request.user?.id, tx));
         }
 
+        // Check permissions:
+        if (entry) {
+            await this.requirePermission(request, corePerm.viewEntry.name, { entryId: entry.id });
+        } else {
+            await this.requirePermission(request, corePerm.viewSite.name);
+        }
+
+        const userId = request.user?.id;
         const { resultValue, refCacheData } = await graph.read(async (tx) => {
             const defaultPageSize = 20n;
-            const context = new LookupContext({ tx, siteId, entryId: entry?.id, defaultPageSize });
+            const context = new LookupContext({ tx, siteId, userId, entryId: entry?.id, defaultPageSize });
             // Evaluate the expression. On LookupEvaluationError, this will return an ErrorValue.
             const value = await context.evaluateExpr(lookupString);
             if (value instanceof ErrorValue && value.error instanceof LookupParseError) {

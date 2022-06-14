@@ -1,5 +1,6 @@
 import { VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { getPluginsForSite } from "../../plugins/loader.ts";
+import { type ActionSubject } from "neolace/core/permissions/action.ts";
 import { LookupError, LookupParseError } from "./errors.ts";
 
 import type { LookupExpression } from "./expressions/base.ts";
@@ -22,6 +23,7 @@ const _internalCache = Symbol("internalCache");
 export class LookupContext {
     public readonly tx: WrappedTransaction;
     public readonly siteId: VNID;
+    public readonly userId: VNID | undefined;
     /**
      * The "current entry", i.e. the value of "this" in any lookup expression in this context. May not be defined, in
      * cases like the home page which can have lookup expressions but aren't entries themselves.
@@ -34,6 +36,7 @@ export class LookupContext {
     constructor(args: {
         tx: WrappedTransaction;
         siteId: VNID;
+        userId?: VNID;
         entryId?: VNID;
         defaultPageSize?: bigint;
         [_internalCache]?: Map<string, LookupValue>;
@@ -41,9 +44,15 @@ export class LookupContext {
         // protected _cache = new Map<string, LookupValue>(),
         this.tx = args.tx;
         this.siteId = args.siteId;
+        this.userId = args.userId;
         this.entryId = args.entryId;
         this.defaultPageSize = args.defaultPageSize ?? 10n;
         this._cache = args[_internalCache] ?? new Map<string, LookupValue>();
+    }
+
+    /** The Permissions Subject (user and site), used to check permissions */
+    public get subject(): ActionSubject {
+        return { siteId: this.siteId, userId: this.userId };
     }
 
     /**
@@ -54,6 +63,7 @@ export class LookupContext {
         return new LookupContext({
             tx: this.tx,
             siteId: this.siteId,
+            userId: this.userId,
             entryId,
             defaultPageSize: this.defaultPageSize,
             [_internalCache]: this._cache,

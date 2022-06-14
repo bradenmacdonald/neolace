@@ -7,6 +7,8 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { FilesData } from "neolace/core/entry/features/Files/FilesData.ts";
 import { DataFile, publicUrlForDataFile } from "neolace/core/objstore/DataFile.ts";
 import { LookupFunctionOneArg } from "./base.ts";
+import { makeCypherCondition } from "neolace/core/permissions/check.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
 
 /**
  * files([entry or entries])
@@ -27,10 +29,17 @@ export class Files extends LookupFunctionOneArg {
                 `The expression "${this.entriesExpr.toDebugString()}" cannot be used with files().`,
             );
         }
+        // This is an expression that can be used with a WHERE clause to filter to only the entries whose files the
+        // user is allowed to view:
+        const permissionsPredicate = await makeCypherCondition(context.subject, corePerm.viewEntryFeatures.name, {}, [
+            "entry",
+        ]);
         const query = C`
             ${entrySet.cypherQuery}
 
             WITH entry
+            // Enforce permissions
+            WHERE ${permissionsPredicate}
 
             MATCH (entry)-[:${Entry.rel.HAS_FEATURE_DATA}]->(ffd:${FilesData})
             MATCH (ffd)-[rel:${FilesData.rel.HAS_DATA}]->(file:${DataFile})

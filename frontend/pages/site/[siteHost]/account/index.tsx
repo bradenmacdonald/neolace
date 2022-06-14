@@ -5,7 +5,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 import { getSiteData, SiteData } from 'lib/api-client';
 import { SiteDataProvider, SitePage } from 'components/SitePage';
-import { UserContext, UserStatus } from 'components/user/UserContext';
+import { UserStatus, useUser } from "lib/authentication";
 import { Redirect } from 'components/utils/Redirect';
 
 interface PageProps {
@@ -18,7 +18,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
 const AccountPage: NextPage<PageProps> = function(props) {
 
     const intl = useIntl();
-    const user = React.useContext(UserContext);
+    const user = useUser();
 
     if (user.status === UserStatus.Anonymous) {
         return <Redirect to="/account/login" />;

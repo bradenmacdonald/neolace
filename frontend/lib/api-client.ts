@@ -8,6 +8,7 @@ import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
 import { ApiError } from 'next/dist/server/api-utils';
 
 import * as api from 'neolace-api';
+import { getSessionToken, useUser } from "./authentication";
 export * as api from 'neolace-api';
 
 /** Use this in URLs in lieu of an ID if there is no ID yet. It's neither a valid VNID nor friendlyId. */
@@ -16,41 +17,16 @@ export type NEW = typeof NEW;
 
 export type SiteData = SiteDetailsData;
 
-/** Refresh the session token if needed */
-const getSessionPromise = () => {
-    if (IN_BROWSER && KeratinAuthN.session()) {
-        // There is a session token saved locally, but we don't know if it's still valid.
-        return KeratinAuthN.restoreSession().catch(() => {
-            console.error("Session token was invalid, or an error occurred while refreshing it.");
-            // If we're unable to restore/validate the sesion,
-            // clear the session cookie so we don't try to log in again.
-            KeratinAuthN.logout();
-        });
-    }
-    // There is no session saved locally, or we're running on the server; either way, no user is logged in.
-    return Promise.resolve();
-}
-
-/**
- * A promise that will be resolved when the session token is either validated or deleted.
- * Wait for this promise before checking/using KeratinAuthN.session()
- */
-export const apiSessionPromise: Promise<void> = getSessionPromise();
-
 /**
  * Helper that defines how to make authenticated API calls to the Neolace API
  */
 async function getExtraHeadersForRequest(): Promise<Record<string, string>> {
     if (IN_BROWSER) {
         // Validate the API token if needed, then add it to the request:
-        try {
-            await apiSessionPromise;
-        } catch { console.error(`apiSessionPromise rejected; shouldn't happen.`); }
-        if (KeratinAuthN.session()) {
+        const token = await getSessionToken();
+        if (token) {
             // Add the "Authorization" header to every REST API request.
-            return {
-                Authorization: `Bearer ${KeratinAuthN.session()}`,
-            };
+            return { Authorization: `Bearer ${token}` };
         }
     }
     return {};
@@ -220,6 +196,41 @@ export function useDraft(draftId: VNID|"_"): [data: DraftDataWithEdits|undefined
 }
 
 
+
+/**
+ * React hook to get the data required to display an entry
+ */
+export function useEntry(entryKey: VNID|string, fallback?: api.EntryData): [data: api.EntryData|undefined, error: ApiError|undefined] {
+    const {site, siteError} = useSiteData();
+    const user = useUser();
+    const userKey = user.username ?? "";
+
+    const key = `entry:${site.shortId}:${entryKey}:${userKey}:no-draft`;
+    const { data, error } = useSWR(key, async () => {
+        if (siteError) {
+            throw new ApiError(500, "Site Error");
+        }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the entry
+        }
+        const data: api.EntryData = await client.getEntry(entryKey, {flags: [
+            api.GetEntryFlags.IncludeFeatures,
+            api.GetEntryFlags.IncludePropertiesSummary,
+            api.GetEntryFlags.IncludeReferenceCache,
+        ] as const, siteId: site.shortId});
+        return data;
+    }, {
+
+        // refreshInterval: 10 * 60_000,
+    });
+    if (!data && !error && fallback) {
+        // Use the public version of the entry until we've loaded the user-specific version.
+        return [fallback, undefined];
+    }
+    return [data, error];
+}
+
+
 /**
  * React hook to get the currently published version of an entry, to use as a basis for making edits.
  * @returns 
@@ -228,7 +239,7 @@ export function useEditableEntry(entryId: VNID | {newEntryWithId: VNID}): [data:
     const {site, siteError} = useSiteData();
 
     // TODO: Change "no-draft" below to the ID of the current draft, if any, from a <DraftContext> provider.
-    const key = `entry:${site.shortId}:no-draft:${entryId}`;
+    const key = `entry-edit:${site.shortId}:no-draft:${entryId}`;
     const { data, error, mutate } = useSWR(key, async () => {
         if (siteError) {
             throw new ApiError(500, "Site Error");

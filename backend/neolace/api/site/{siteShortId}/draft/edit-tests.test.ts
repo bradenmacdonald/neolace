@@ -197,6 +197,7 @@ group("edit tests", () => {
             await doEdit(client, {
                 code: api.UpdatePropertyValue.code,
                 data: {
+                    entryId,
                     propertyFactId,
                     valueExpression: `"New value"`,
                 },
@@ -233,6 +234,7 @@ group("edit tests", () => {
             await doEdit(client, {
                 code: api.UpdatePropertyValue.code,
                 data: {
+                    entryId,
                     propertyFactId,
                     valueExpression: `[[/entry/${newGenusId}]]`,
                 },
@@ -269,6 +271,7 @@ group("edit tests", () => {
             await doEdit(client, {
                 code: api.DeletePropertyValue.code,
                 data: {
+                    entryId: originalEntry.id,
                     propertyFactId: VNID((propertyFact.value.annotations?.propertyFactId as api.StringValue).value),
                 },
             });
@@ -293,16 +296,44 @@ group("edit tests", () => {
         test("When we delete non-existent relationship, raises an error.", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
-            // make new id which is SUPPOSEDLY not used by any property, or so we are told
+            const entryId = defaultData.entries.ponderosaPine.id;
+            // make new id which is not used by any property
             const newVNID = VNID();
 
-            // now delete the property fact that does not exist:
+            // now delete the property fact that does not exist, on a real entry:
             await assertRejects(
-                () => doEdit(client, { code: api.DeletePropertyValue.code, data: { propertyFactId: (newVNID) } }),
+                () =>
+                    doEdit(client, {
+                        code: api.DeletePropertyValue.code,
+                        data: { entryId, propertyFactId: (newVNID) },
+                    }),
                 (err: unknown) => {
                     assertInstanceOf(err, api.InvalidEdit);
                     assertEquals(err.context.propertyFactId, newVNID);
-                    assertEquals(err.message, `That property fact does not exist on this site.`);
+                    assertEquals(err.message, `That property fact does not exist on that entry.`);
+                },
+            );
+        });
+
+        test("Raise an error if the entry ID doesn't match the property fact ID", async () => {
+            // Get an API client, logged in as a bot that belongs to an admin
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const originalEntry = await client.getEntry(
+                defaultData.entries.genusCupressus.id,
+                { flags: [api.GetEntryFlags.IncludePropertiesSummary] as const },
+            );
+            const propertyFact = originalEntry.propertiesSummary?.find(
+                (e) => e.propertyId === defaultData.schema.properties._parentFamily.id,
+            );
+            assert(propertyFact?.value.type === "Entry");
+            const propertyFactId = VNID((propertyFact.value.annotations?.propertyFactId as api.StringValue).value);
+            // Now delete a property fact that doesn't match with the entry ID:
+            const entryId = defaultData.entries.ponderosaPine.id;
+            await assertRejects(
+                () => doEdit(client, { code: api.DeletePropertyValue.code, data: { entryId, propertyFactId } }),
+                (err: unknown) => {
+                    assertInstanceOf(err, api.InvalidEdit);
+                    assertEquals(err.message, `That property fact does not exist on that entry.`);
                 },
             );
         });
