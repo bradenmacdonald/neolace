@@ -23,7 +23,7 @@ export interface GraphProps {
 }
 
 let nextColor = 0;
-const colourMap = new Map<VNID, EntryColor>();
+const colourMap = new Map<VNID | number, EntryColor>();
 
 export interface G6RawGraphData {
     nodes: {
@@ -31,7 +31,9 @@ export interface G6RawGraphData {
         label: string;
         entryType: VNID;
         isFocusEntry?: boolean;
-        leavesCondensed?: Set<string>;
+        community?: number;
+        nodesCondensed?: Set<string>;
+        clique?: number;
     }[];
     edges: {
         id: VNID;
@@ -44,20 +46,28 @@ export interface G6RawGraphData {
 }
 
 
-function colorGraph(data: G6RawGraphData, refCache: api.ReferenceCacheData) {
-    data.nodes.forEach((node: NodeConfig) => {
-        if (!colourMap.has(node.entryType as VNID)) {
-            colourMap.set(node.entryType as VNID, Object.values(EntryColor)[nextColor]);
-            nextColor = (nextColor + 1) % Object.values(EntryColor).length;
-        }
-        node.color = colourMap.get(node.entryType as VNID);
-        node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
-    });
-
+function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: api.ReferenceCacheData) {
+    function colorGraphByAttribute(attr: string) {
+        data.nodes.forEach((node: NodeConfig) => {
+            const attrValue: VNID | number = node[attr] as VNID | number;
+            if (!colourMap.has(attrValue)) {
+                colourMap.set(attrValue, Object.values(EntryColor)[nextColor]);
+                nextColor = (nextColor + 1) % Object.values(EntryColor).length;
+            }
+            node.color = colourMap.get(attrValue);
+            node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
+        });
+        return data
+    }
+    if (transformList.find((t) => t.id === Transforms.COMMUNITY) !== undefined) {
+        data = colorGraphByAttribute('community');
+    } else {
+        data = colorGraphByAttribute('entryType');
+    }
     return data;
 }
 
-function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData) {
+function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData): Readonly<G6RawGraphData> {
     let data: G6RawGraphData = {
         nodes: value.entries.map((n) => (
             { id: n.entryId, label: n.name, entryType: n.entryType, isFocusEntry: n.isFocusEntry }
@@ -73,8 +83,15 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
         )),
     };
 
-    data = colorGraph(data, refCache);
+    data = colorGraph(data, [], refCache);
     return data;
+}
+
+function getEdgeIfExists(graph: Graph, comboNode: string, nodeId: string) {
+    return graph.find('edge', (edge) => {
+        return ((edge.getModel().source === comboNode && edge.getModel().target === nodeId)
+            || (edge.getModel().target === comboNode && edge.getModel().source === nodeId))
+    })
 }
 
 /** The different "tools" that can be active for manipulating the graph */
@@ -82,8 +99,10 @@ enum Tool {
     // Normal selection tool
     Select,
     HideNodes,
-    ExpandNodes,
+    CondenseExpandNode,
 }
+
+const emptyTransforms: Transform[] = [];
 
 /**
  * Display a graph visualization.
@@ -96,11 +115,11 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const originalData = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
     }, [props.value]);
-    const [transformList, setTransforms, _currentTransforms] = useStateRef<Transform[]>([]);
+    const [transformList, setTransforms] = React.useState<Transform[]>(emptyTransforms);
 
     const currentData = React.useMemo(() => {
         let transformedData = applyTransforms(originalData, transformList);
-        transformedData = colorGraph(transformedData, props.mdtContext.refCache);
+        transformedData = colorGraph(transformedData, transformList, props.mdtContext.refCache);
         return transformedData;
     }, [originalData, transformList, props.mdtContext.refCache])
 
@@ -145,7 +164,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Our G6 Graph configuration
     const graphConfig: Partial<GraphOptions> = React.useMemo(() => ({
         plugins: [],
-        layout: {
+        layout: {  
             type: 'force',
             preventOverlap: true,
             nodeSize: [200, 50],
@@ -168,12 +187,34 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 },
                 lineWidth: 2,
                 stroke: "#ddd",
-                /* and other styles */
-                // stroke: '#F6BD16',
+            },
+        },
+        defaultCombo: {
+            type: 'circle',
+            size: [80],
+            labelCfg: {
+                style: {
+                    fontSize: 18,
+                },
+            },
+            /* style for the keyShape */
+            style: {
+                fill: '#cffafe',
+                opacity: 0.3,
             },
         },
         modes: {
-            default: ["drag-canvas", "click-select", "zoom-canvas", 'drag-node'],
+            default: [
+                "drag-canvas",
+                "click-select",
+                "zoom-canvas",
+                'drag-node',
+                'drag-combo',
+                {
+                    type: 'collapse-expand-combo',
+                    relayout: false,
+                },
+            ],
         },
         edgeStateStyles: {
             selected: {
@@ -205,7 +246,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Set the graph data and render it whenever the data has changed or the graph has been re-initialized:
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        graph.data(originalData);
+        const originalDataCopy = JSON.parse(JSON.stringify(originalData));
+        graph.data(originalDataCopy);
         graph.render();
         // By default, we zoom the graph so that four nodes would fit horizontally.
         graph.zoomTo(graph.getWidth() / (220 * 4), undefined, false);
@@ -225,7 +267,78 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Update the graph data whenever the current data changes
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
-        graph.changeData(currentData);
+        const currentDataCopy = JSON.parse(JSON.stringify(currentData));
+        graph.changeData(currentDataCopy);
+        // ADD COMBOS WHEN NEEDED
+        //TODO make this to be a part of combo operation under communities
+        // creates lists of ids for combos
+        const comboDict: Record<number, string[]> = {};
+        currentData.nodes.forEach((n) => {
+            if (n.clique === undefined) return;
+            if (!comboDict[n.clique]) comboDict[n.clique] = [];
+            comboDict[n.clique].push(n.id);
+        })
+        // delete relationships within combos
+        for (const combo in comboDict) {
+            const nodeList = comboDict[combo];
+            // remove edges within combo
+            for (const comboNode of nodeList) {
+                graph.getNeighbors(comboNode).forEach((n) => {
+                    if (nodeList.includes(n.getModel().id as string)) {
+                        const edge = getEdgeIfExists(graph, comboNode, n.getModel().id as string);
+                        if (edge) {
+                            graph.removeItem(edge);
+                        }
+                    }
+                })
+            }
+        }
+        // creates cobmos (cliques)
+        for (const combo in comboDict) {
+            graph.createCombo({
+                id: combo,
+                label: `Largest clique of community ${combo}`,
+            }, comboDict[combo]);
+        }
+
+        // optimize edges to combos
+        // TODO think about merging this code with clique detection code
+        if (Object.keys(comboDict).length > 0) {
+            graph.getNodes().forEach((n) => {
+                const nodeId = n.getModel().id as string;
+                for (const combo in comboDict) {
+                    let addEdge = false;
+                    const nodeList = comboDict[combo];
+                    const edgeColor = nodeList.includes(nodeId) ? 'red' : 'blue';
+                    let doesCover = true;
+                    nodeList.forEach((i) => {
+                        doesCover = graph.getNeighbors(i).map((nb) => nb.getModel().id).includes(nodeId);
+                    });
+                    // if the node covers an entire combo, exchange all the edges by a single edge to the combo
+                    if (doesCover) {
+                        // remove all the edges
+                        nodeList.forEach((comboNode) => {
+                            // get edge
+                            const edge = getEdgeIfExists(graph, comboNode, nodeId);
+                            if (edge) {
+                                graph.removeItem(edge);
+                            }
+                        })
+                        addEdge = true;
+                    }
+                    if (nodeList.includes(nodeId)) addEdge = true;
+    
+                    if (addEdge) {
+                        // add edge 
+                        graph.addItem('edge', {
+                            id: VNID(), source: combo, target: nodeId, style: {
+                                stroke: edgeColor,
+                            },
+                        });
+                    }
+                }
+            });
+        }
     }, [currentData])
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
@@ -278,7 +391,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 })
                 setActiveTool(Tool.Select);
 
-            } else if (activeToolRef.current === Tool.ExpandNodes && item.getModel().leavesCondensed) {
+            } else if (activeToolRef.current === Tool.CondenseExpandNode && item.getModel().nodesCondensed) {
                 // need to pass parent key as the condensed node id changes with every load
                 if (item.getNeighbors().length === 1) {
                     // expand leaf
@@ -298,6 +411,13 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         }
                     }])
                 }
+            } else if (activeToolRef.current === Tool.CondenseExpandNode && !item.getModel().nodesCondensed) {
+                setTransforms((prevTransforms) => [...prevTransforms, {
+                    id: Transforms.CONDENSENODE,
+                    // instead of this node id, get type and parent
+                    // should have only one neighbour
+                    params: { nodeToCondense: item.getModel().id }
+                }])
             }
         });
 
@@ -395,7 +515,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         if (isCondensed) {
             setTransforms(
                 (prevTransforms) => prevTransforms.filter((t) => (
-                    t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF
+                    t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF && t.id !== Transforms.CONDENSENODE
                 )
             );
         } else {
@@ -403,9 +523,36 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         }
     }, [isCondensed, setTransforms]);
 
+    // Code for detecting communities toolbar button
+    const isCommunized = transformList.find((t) => t.id === Transforms.COMMUNITY) !== undefined;
+    const handleCommunityButton = React.useCallback(() => {
+        if (isCommunized) {
+            setTransforms(
+                (prevTransforms) => prevTransforms.filter((t) => (
+                    t.id !== Transforms.COMMUNITY && t.id !== Transforms.ADDCLIQUES)
+                )
+            );
+        } else {
+            setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.COMMUNITY, params: {} }]);
+        }
+    }, [isCommunized, setTransforms]);
+    // Code for detecting cliques toolbar button
+    const areCliquesDetected = transformList.find((t) => t.id === Transforms.ADDCLIQUES) !== undefined;
+    const handleCliquesButton = React.useCallback(() => {
+        if (!isCommunized) return;
+        if (areCliquesDetected) {
+            setTransforms(
+                (prevTransforms) => prevTransforms.filter((t) => (
+                    t.id !== Transforms.ADDCLIQUES
+                ))
+            )
+        } else {
+            setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.ADDCLIQUES, params: {} }]);
+        }
+    }, [areCliquesDetected, isCommunized, setTransforms]);
     // Tools:
     const handleSelectToolButton = React.useCallback(() => { setActiveTool(Tool.Select); }, [setActiveTool]);
-    const handleExpandLeafButton = React.useCallback(() => { setActiveTool(Tool.ExpandNodes); }, [setActiveTool]);
+    const handleExpandLeafButton = React.useCallback(() => { setActiveTool(Tool.CondenseExpandNode); }, [setActiveTool]);
     const handleHideArticlesButton = React.useCallback(() => { setActiveTool(Tool.HideNodes); }, [setActiveTool]);
 
     const contents = (
@@ -448,7 +595,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     icon="chevron-contract"
                     enabled={isCondensed}
                 />
-                <ToolbarSeparator/>
+                <ToolbarSeparator />
                 <ToolbarButton
                     onClick={handleSelectToolButton}
                     tooltip={defineMessage({
@@ -474,7 +621,26 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: 'ZT3+GQ',
                     })}
                     icon="chevron-expand"
-                    enabled={activeTool === Tool.ExpandNodes}
+                    enabled={activeTool === Tool.CondenseExpandNode}
+                />
+                <ToolbarButton
+                    onClick={handleCommunityButton}
+                    tooltip={defineMessage({
+                        defaultMessage: "Detect communities",
+                        id: 'MswTjB',
+                    })}
+                    icon="bounding-box"
+                    enabled={isCommunized}
+                />
+                <ToolbarButton
+                    onClick={handleCliquesButton}
+                    tooltip={defineMessage({
+                        defaultMessage: "Detect cliques and combine them into combos",
+                        id: 'xgjVKC',
+                    })}
+                    icon="braces-asterisk"
+                    enabled={areCliquesDetected}
+                    disabled={!isCommunized}
                 />
             </div>
             <div

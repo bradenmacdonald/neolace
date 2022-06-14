@@ -1,12 +1,18 @@
 import Graph from "graphology";
 import { VNID } from "neolace-api";
 import type { G6RawGraphData } from "./Graph";
+import toSimple from "graphology-operators/to-simple";
+import toUndirected from "graphology-operators/to-undirected";
+import louvain from "graphology-communities-louvain";
+import { subgraph } from "graphology-operators";
 
 interface NodeAttributes {
     label: string;
     entryType: VNID;
     isFocusEntry?: boolean;
-    leavesCondensed?: Set<string>;
+    community?: number;
+    nodesCondensed?: Set<string>;
+    clique?: number;
 }
 interface EdgeAttributes {
     label: string;
@@ -37,8 +43,12 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
             label: graph.getNodeAttribute(nodeKey, "label") as string,
             entryType: VNID(graph.getNodeAttribute(nodeKey, "entryType")),
             ...(graph.hasNodeAttribute(nodeKey, "isFocusEntry") && { isFocusEntry: true }),
-            ...(graph.hasNodeAttribute(nodeKey, "leavesCondensed") &&
-                { leavesCondensed: graph.getNodeAttribute(nodeKey, "leavesCondensed") }),
+            ...(graph.hasNodeAttribute(nodeKey, "community") &&
+                { community: graph.getNodeAttribute(nodeKey, "community") }),
+            ...(graph.hasNodeAttribute(nodeKey, "nodesCondensed") &&
+                { nodesCondensed: graph.getNodeAttribute(nodeKey, "nodesCondensed") }),
+            ...(graph.hasNodeAttribute(nodeKey, "clique") &&
+                { clique: graph.getNodeAttribute(nodeKey, "clique") }),
         })),
         edges: graph.mapEdges((edge, attributes, source, target) => {
             return {
@@ -55,60 +65,17 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
 
 /**
  * Returns a new graph object where leaves are consensed. i.e. if a node has
- * multiple leaves, the leaves are repalced with one leaf that contains label
+ * multiple leaves, the leaves are replaced with one leaf that contains label
  * the number of leaves they substitiuted, as an array of original leaf data
- * @param graph
+ * @param graph readonly
  * @returns a graph with condensed leaves.
  */
 function condenseLeaves(graph: GraphType): GraphType {
-    const newGraph = graph.copy();
-    const leafyNodes: {
-        nodeKey: string;
-        entryType: VNID;
-        hiddenNodeNumber: number;
-        leavesToDelete: Set<string>;
-    }[] = [];
-    // iterate over nodes and, for each entry type, if a node has many leaves of that type, add them for condensing
-    newGraph.forEachNode((nodeKey) => {
-        const leaves: Record<VNID, string[]> = {};
-        newGraph.forEachNeighbor(nodeKey, (neighborKey) => {
-            const neighborEntryType = graph.getNodeAttribute(neighborKey, "entryType");
-            if (newGraph.neighbors(neighborKey).length === 1) {
-                if (leaves[neighborEntryType]) {
-                    leaves[neighborEntryType].push(neighborKey);
-                } else {
-                    leaves[neighborEntryType] = [neighborKey];
-                }
-            }
-        });
-
-        for (const [entryType, value] of Object.entries(leaves)) {
-            if (value.length > 1) {
-                leafyNodes.push(
-                    {
-                        nodeKey: nodeKey,
-                        entryType: VNID(entryType),
-                        hiddenNodeNumber: value.length,
-                        leavesToDelete: new Set<string>(value),
-                    },
-                );
-            }
+    let newGraph = graph.copy();
+    graph.forEachNode((node) => {
+        if (newGraph.hasNode(node)) {
+            newGraph = condenseNodeLeaves(newGraph, node);
         }
-    });
-    // create condensed leaves
-    leafyNodes.forEach((leafyNode) => {
-        // delete nodes
-        leafyNode.leavesToDelete.forEach((leafKey) => {
-            newGraph.dropNode(leafKey);
-        });
-        // add condensed node and edge to it
-        const newLeafKey = VNID();
-        newGraph.addNode(newLeafKey, {
-            label: `${leafyNode.hiddenNodeNumber} entries condensed`,
-            entryType: leafyNode.entryType,
-            leavesCondensed: leafyNode.leavesToDelete,
-        });
-        newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
     });
     return newGraph;
 }
@@ -132,7 +99,7 @@ function expandLeaf(
     let newGraph = currGraph.copy();
     // find the key of the condensed leaf
     const condensedLeafkey = newGraph.filterNeighbors(parentNodeKey, (_n, attrs) => {
-        if (attrs.leavesCondensed) {
+        if (attrs.nodesCondensed) {
             if (attrs.entryType === entryType) {
                 return true;
             }
@@ -141,9 +108,9 @@ function expandLeaf(
     })[0];
     if (!condenseLeaves) console.log(`The condensed key is ${condensedLeafkey}, something is wrong.`);
 
-    const nodesToAdd = newGraph.getNodeAttribute(condensedLeafkey, "leavesCondensed");
+    const nodesToAdd = newGraph.getNodeAttribute(condensedLeafkey, "nodesCondensed");
     if (nodesToAdd === undefined) {
-        console.log("The condensed leaf does not have leavesCondensed attribute.");
+        console.log("The condensed leaf does not have nodesCondensed attribute.");
     } else {
         nodesToAdd.forEach((leafNode) => {
             // create leaf
@@ -208,7 +175,7 @@ function expandSimplePattern(
     });
     const condensedLeaves = commonNodes.filter((n) => {
         const attrs = newGraph.getNodeAttributes(n);
-        if (attrs.leavesCondensed) {
+        if (attrs.nodesCondensed) {
             if (attrs.entryType === entryType) {
                 return true;
             }
@@ -221,9 +188,9 @@ function expandSimplePattern(
     }
     const condensedLeaf = condensedLeaves[0];
 
-    const nodesToAdd = newGraph.getNodeAttribute(condensedLeaf, "leavesCondensed");
+    const nodesToAdd = newGraph.getNodeAttribute(condensedLeaf, "nodesCondensed");
     if (nodesToAdd === undefined) {
-        console.log("The condensed leaf does not have leavesCondensed attribute.");
+        console.log("The condensed leaf does not have nodesCondensed attribute.");
     } else {
         nodesToAdd.forEach((leafNode) => {
             // create leaf
@@ -259,7 +226,7 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
         nodeKey: string;
         endNodeKey: string;
         middleNodeEType: VNID;
-        leavesCondensed: Set<string>;
+        nodesCondensed: Set<string>;
     }[] = [];
 
     newGraph.forEachNode((nodeKey) => {
@@ -305,7 +272,7 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
                             nodeKey: nodeKey,
                             endNodeKey: endNode,
                             middleNodeEType: VNID(entryType),
-                            leavesCondensed: nodeList,
+                            nodesCondensed: nodeList,
                         },
                     );
                 }
@@ -319,17 +286,75 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
         if (!pairs.has(thisPair)) {
             pairs.add(thisPair);
             // delete nodes
-            pair.leavesCondensed.forEach((middleNodeKey) => newGraph.dropNode(middleNodeKey));
+            pair.nodesCondensed.forEach((middleNodeKey) => newGraph.dropNode(middleNodeKey));
             // add condensed node and edges
             const newLeafKey = VNID();
             newGraph.addNode(newLeafKey, {
-                label: `${pair.leavesCondensed.size} entries condensed`,
+                label: `${pair.nodesCondensed.size} entries condensed`,
                 entryType: pair.middleNodeEType,
-                leavesCondensed: pair.leavesCondensed,
+                nodesCondensed: pair.nodesCondensed,
             });
             newGraph.addEdge(pair.nodeKey, newLeafKey);
             newGraph.addEdge(pair.endNodeKey, newLeafKey);
         }
+    });
+    return newGraph;
+}
+
+/**
+ * Removes leaves of the given node and adds a condensed node to the graph. If
+ * thre are no leaves to condense, does nothing and return the original graph copy.
+ * @param graph
+ * @param nodeToCondense node which leaves need condensing
+ * @returns Copy of the graph with condensing modifications
+ */
+function condenseNodeLeaves(graph: GraphType, nodeToCondense: string) {
+    const newGraph = graph.copy();
+    const leavesPerType: {
+        nodeKey: string;
+        entryType: VNID;
+        hiddenNodeNumber: number;
+        leavesToDelete: Set<string>;
+    }[] = [];
+    // for each entry type, if a node has many leaves of that type, add them for condensing
+    const leaves: Record<VNID, string[]> = {};
+    newGraph.forEachNeighbor(nodeToCondense, (neighborKey) => {
+        const neighborEntryType = graph.getNodeAttribute(neighborKey, "entryType");
+        if (newGraph.neighbors(neighborKey).length === 1) {
+            if (leaves[neighborEntryType]) {
+                leaves[neighborEntryType].push(neighborKey);
+            } else {
+                leaves[neighborEntryType] = [neighborKey];
+            }
+        }
+    });
+
+    for (const [entryType, value] of Object.entries(leaves)) {
+        if (value.length > 1) {
+            leavesPerType.push(
+                {
+                    nodeKey: nodeToCondense,
+                    entryType: VNID(entryType),
+                    hiddenNodeNumber: value.length,
+                    leavesToDelete: new Set<string>(value),
+                },
+            );
+        }
+    }
+    // create condensed leaves, if any
+    leavesPerType.forEach((leafyNode) => {
+        // delete nodes
+        leafyNode.leavesToDelete.forEach((leafKey) => {
+            newGraph.dropNode(leafKey);
+        });
+        // add condensed node and edge to it
+        const newLeafKey = VNID();
+        newGraph.addNode(newLeafKey, {
+            label: `${leafyNode.hiddenNodeNumber} entries condensed`,
+            entryType: leafyNode.entryType,
+            nodesCondensed: leafyNode.leavesToDelete,
+        });
+        newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
     });
     return newGraph;
 }
@@ -381,6 +406,116 @@ export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphTyp
     return newGraph;
 }
 
+/**
+ * Find the largest clique in the subgraph defined by the node list and mark nodes as part of the clique.
+ * NOTE for now we will use community id as the clique id as each community so far has only one clique
+ * (in the future there could be more cliques per community and we would need to update this)
+ * @param simpleGraph
+ * @param nodeList
+ * @param cliqueId
+ * @returns
+ */
+function findCliquesInNodeSubset(simpleGraph: GraphType, nodeList: string[], cliqueId: number) {
+    if (simpleGraph.order === 0) return;
+    // TODO some cliques are also overlapping - like cliques of three. Should I find all of them?
+    // console.log("The community is ", cliqueId);
+    const comGraph = subgraph(simpleGraph, nodeList);
+    const largestClique = maxClique(comGraph);
+    // only include cliques of sizes more than indicated
+    if (largestClique.length <= 2) return;
+    largestClique.forEach((n) => {
+        // console.log("Adding to a clique", n);
+        simpleGraph.setNodeAttribute(n, "clique", cliqueId);
+    });
+}
+
+/**
+ * Check if a subgraph is a clique, i.e. a complete graph.
+ * @param subgraph
+ * @returns
+ */
+function isSubgraphClique(subgraph: GraphType): boolean {
+    let isClique = true;
+    subgraph.forEachNode((n) => {
+        if (subgraph.degree(n) < subgraph.order - 1) {
+            isClique = false;
+            return;
+        }
+        const neighbourSet = new Set<string>(subgraph.neighbors(n));
+        if ((neighbourSet.size === subgraph.order - 1) && !neighbourSet.has(n)) {
+            return;
+        } else {
+            isClique = false;
+        }
+        return;
+    });
+    return isClique;
+}
+
+function maxClique(graph: GraphType) {
+    const graphCopy = graph.copy();
+    // remove leaves
+    graph.forEachNode((n) => {
+        if (graph.neighbors(n).length < 2) {
+            graphCopy.dropNode(n);
+        }
+    });
+    let largestClique: string[] = [];
+    graphCopy.forEachNode((n) => {
+        const result = maxCliqueRec(graphCopy, [n]);
+        if (result.length > largestClique.length) largestClique = result;
+    });
+    return largestClique;
+}
+
+function isItStillClique(enlargedClique: GraphType, newNodeId: string): boolean {
+    // we already know that enlarged clique was a clique before adding new node
+    // check if new node has connection to every other node
+    let isItClique = true;
+    enlargedClique.forEachNode((n) => {
+        if (n === newNodeId) return;
+        if (!enlargedClique.areNeighbors(newNodeId, n)) {
+            isItClique = false;
+        }
+    });
+    return isItClique;
+}
+
+/**
+ * Recursive function to find the maximum clique subgraph and return it.
+ * @param graph
+ * @param remainingNodeList
+ * @param currClique
+ * @returns list of node ids corresponding to the largest clique in graph
+ */
+function maxCliqueRec(graph: GraphType, currClique: string[]) {
+    let largestClique = currClique;
+    // find the vertices that are directly neighboring the largestClique from the remaining nodes
+    const adjacentNodes = new Set<string>();
+    for (const node of currClique) {
+        graph.forEachNeighbor(node, (nb) => {
+            if (currClique.includes(nb)) return;
+            adjacentNodes.add(nb);
+        });
+    }
+
+    // check if any vertices can be added among the adjacent nodes
+    for (const node of adjacentNodes) {
+        // merge the node to the subgraph
+        const enlargedSubgraph = subgraph(graph, [...currClique, node]);
+        if (isItStillClique(enlargedSubgraph, node)) {
+            const cliqueResult = maxCliqueRec(
+                graph,
+                [...currClique, node],
+            );
+            if (cliqueResult.length > largestClique.length) {
+                largestClique = cliqueResult;
+            }
+        }
+    }
+    return largestClique;
+}
+
 // ******************************************TRANSFORM FUNCTIONS********************************************************
 // for now just find all the leaf nodes and for every node that has more than one leaf node:
 // remove the leaf nodes, create one leaf node with label saying how many leaf nodes there are.
@@ -406,6 +541,47 @@ export function transformExpandLeaves(
         transformedGraph = expandLeaf(originalDataGraph, graph, parentKey[0], entryType);
     } else if (parentKey.length === 2) {
         transformedGraph = expandSimplePattern(originalDataGraph, graph, parentKey[0], parentKey[1], entryType);
+    }
+    return transformedGraph;
+}
+
+export function transformCondenseNodeLeaves(
+    graph: GraphType,
+    nodeToCondense: string,
+) {
+    let transformedGraph = graph.copy();
+    transformedGraph = condenseNodeLeaves(graph, nodeToCondense);
+    return transformedGraph;
+}
+
+export function transformComputeCommunities(graph: GraphType) {
+    // TODO need to turn graph back from simple type
+    // TODO make resolution parameters part of toolbar.
+    // TODO when collapsing communities, what community should they inherit?
+    const simpleGraph = toUndirected(toSimple(graph));
+    louvain.assign(simpleGraph, { resolution: 1.3 });
+    // get community partition
+    const id2comm: Record<string, number> = {};
+    const comm2id = new Map<number, string[]>();
+    simpleGraph.forEachNode((n) => {
+        id2comm[n] = simpleGraph.getNodeAttribute(n, "community") as number;
+        const community = comm2id.get(simpleGraph.getNodeAttribute(n, "community") as number);
+        if (community) {
+            community.push(n);
+        } else {
+            comm2id.set(simpleGraph.getNodeAttribute(n, "community") as number, [n]);
+        }
+    });
+
+    return { simpleGraph, comm2id };
+}
+
+// Assumes that communites are computed for nodes.
+export function transformComputeCliques(graph: GraphType, comm2id: Map<number, string[]>) {
+    const transformedGraph = graph.copy();
+    if (transformedGraph.order === 0) return transformedGraph;
+    for (const com of comm2id.keys()) {
+        findCliquesInNodeSubset(transformedGraph, comm2id.get(com) as string[], com);
     }
     return transformedGraph;
 }

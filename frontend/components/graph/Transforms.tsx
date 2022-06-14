@@ -1,6 +1,16 @@
 import { G6RawGraphData } from "components/graph/Graph";
 import { VNID } from "neolace-api";
-import { transformCondenseGraph, transformHideNodesOfType, transformExpandLeaves, createGraphObject, convertGraphToData, GraphType } from "./GraphFunctions";
+import {
+    transformCondenseGraph,
+    transformHideNodesOfType,
+    transformExpandLeaves,
+    createGraphObject,
+    convertGraphToData,
+    GraphType,
+    transformCondenseNodeLeaves,
+    transformComputeCommunities,
+    transformComputeCliques
+} from "./GraphFunctions";
 
 export interface Transform {
     id: string;
@@ -12,6 +22,9 @@ export enum Transforms {
     CONDENSE = "condense",
     HIDETYPE = "hide-type",
     EXPANDLEAF = "expand-leaf",
+    COMMUNITY = "community",
+    CONDENSENODE = "condense-node",
+    ADDCLIQUES = "add-cliques",
 }
 
 function condenseGraphData(currentData: G6RawGraphData, graph: GraphType) {
@@ -25,13 +38,18 @@ function condenseGraphData(currentData: G6RawGraphData, graph: GraphType) {
 }
 
 
-export function applyTransforms(data: G6RawGraphData, transformList: Transform[]) {
-    const originalDataGraph = createGraphObject(data);
-    let transformedGraph = createGraphObject(data);
-
+export function applyTransforms(data: G6RawGraphData, transformList: Transform[]): Readonly<G6RawGraphData> {
+    const dataCopy = JSON.parse(JSON.stringify(data));
+    const originalDataGraph = createGraphObject(dataCopy);
+    let transformedGraph = createGraphObject(dataCopy);
+    let comm2id = new Map<number, string[]>();
+    
     for (const t of transformList) {
         if (t.id === Transforms.CONDENSE) {
-            transformedGraph = condenseGraphData(data, transformedGraph);
+            // TODO Ideally, we shouldn't need to pass dataCopy into this function, or even make dataCopy at all. 
+            // condenseGraphData seems to only be using it to figure out which node is the "focus node", 
+            // and that attribute should be available on the graphology graph object just as it's available in the G6 data.
+            transformedGraph = condenseGraphData(dataCopy, transformedGraph);
         } else if (t.id === Transforms.HIDETYPE) {
             transformedGraph = transformHideNodesOfType(transformedGraph, VNID(t.params.nodeType as string));
         } else if (t.id === Transforms.EXPANDLEAF) {
@@ -41,7 +59,21 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
                 t.params.parentKey as string[],
                 t.params.entryType as string
             );
+        } else if (t.id === Transforms.CONDENSENODE) {
+            transformedGraph = transformCondenseNodeLeaves(transformedGraph, t.params.nodeToCondense as string);
+        } else if (t.id === Transforms.COMMUNITY) {
+            // TODO if there are certain constraints on the order of transforsm, they should be maintained in the 
+            // transform list itself. For example, that cliques must come after communities, and communities must come
+            // after other things. Mya also sort the list in a separate function.
+            const result = transformComputeCommunities(transformedGraph);
+            transformedGraph = result.simpleGraph;
+            comm2id = result.comm2id;
+        } else if (t.id === Transforms.ADDCLIQUES) {
+            // if no community transform -> find cliques transform is not done.
+            if (transformList.find((t) => t.id === Transforms.COMMUNITY) === undefined) continue;
+            transformedGraph = transformComputeCliques(transformedGraph, comm2id);
         }
     }
-    return convertGraphToData(transformedGraph);
+    const finalData = convertGraphToData(transformedGraph);
+    return finalData;
 }

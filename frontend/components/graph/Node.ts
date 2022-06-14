@@ -13,6 +13,12 @@ export enum EntryColor {
     Orange = "orange",
     Violet = "violet",
     Red = "red",
+    Yellow = "yellow",
+    Lime = "lime",
+    Teal = "teal",
+    Indigo = "indigo",
+    Pink = "pink",
+    Rose = "rose",
 }
 
 const colorSets: Record<EntryColor, [backgroundColor: string, darkerBackgroundColor: string, textColor: string]> = {
@@ -25,6 +31,12 @@ const colorSets: Record<EntryColor, [backgroundColor: string, darkerBackgroundCo
     [EntryColor.Cyan]: ["#CFFAFE", "#A5F3FC", "#155E75"],
     [EntryColor.Blue]: ["#DBEAFE", "#BFDBFE", "#3730A3"],
     [EntryColor.Violet]: ["#EDE9FE", "#DDD6FE", "#5B21B6"],
+    [EntryColor.Yellow]: ["#fef9c3", "#fef08a", "#a16207"],
+    [EntryColor.Lime]: ["#ecfccb", "#d9f99d", "#3f6212"],
+    [EntryColor.Teal]: ["#ccfbf1", "#99f6e4", "#115e59"],
+    [EntryColor.Indigo]: ["#e0e7ff", "#c7d2fe", "#3730a3"],
+    [EntryColor.Pink]: ["#fce7f3", "#fce7f3", "#9d174d"],
+    [EntryColor.Rose]: ["#ffe4e6", "#fecdd3", "#9f1239"],
 };
 
 G6.registerNode(
