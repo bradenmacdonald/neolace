@@ -7,7 +7,7 @@ import { HistoryEditor, withHistory } from 'slate-history'
 export type NeolaceSlateEditor = BaseEditor & ReactEditor & HistoryEditor;
 
 /**
- * This node is not part of MDT or lookup expressoins but is used in our editor as a placeholder for a
+ * This node is not part of MDT or lookup expressions but is used in our editor as a placeholder for a
  * '[[/prop/_VNID]]' property identifier, so that we aren't displaying the (unhelpful) VNID to the user, and we can
  * instead display a nice friendly property name.
  */
@@ -17,7 +17,17 @@ export interface VoidPropNode extends api.MDT.CustomInlineNode {
     children: [{type: "text", text: ""}];
 }
 
-export type NeolaceSlateElement = api.MDT.Node | VoidPropNode;
+/**
+ * This node is not part of MDT or lookup expressions but is used in our editor as a placeholder for a
+ * '[[/etype/_VNID]]' entry type identifier.
+ */
+export interface VoidEntryTypeNode extends api.MDT.CustomInlineNode {
+    type: "custom-void-entry-type";
+    entryTypeId: api.VNID;
+    children: [{type: "text", text: ""}];
+}
+
+export type NeolaceSlateElement = api.MDT.Node | VoidPropNode | VoidEntryTypeNode;
 
 export type PlainText = { text: string };
 
@@ -134,10 +144,10 @@ export function useForceUpdate(){
  */
  export function stringValueToSlateDoc(value: string): NeolaceSlateElement[] {
     return value.split("\n").map(line => {
-        const parts: (api.MDT.TextNode|VoidPropNode)[] = [];
+        const parts: (api.MDT.TextNode|VoidPropNode|VoidEntryTypeNode)[] = [];
         // Search the string and replace all '[[/prop/_VNID]]' occurrences with a 'custom-void-property' element.
         while (true) {
-            const nextProp = line.match(/\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]/m);
+            const nextProp = line.match(/\[\[\/(prop|etype)\/(_[0-9A-Za-z]{1,22})\]\]/m);
             if (nextProp === null || !nextProp.index) {
                 parts.push({ type: "text", text: line });
                 break;
@@ -145,7 +155,12 @@ export function useForceUpdate(){
                 if (nextProp.index > 0) {
                     parts.push({ type: "text", text: line.substring(0, nextProp.index) });
                 }
-                parts.push({type: "custom-void-property", propertyId: nextProp[1] as api.VNID, children: [{type: "text", text: ""}]});
+                const type = nextProp[1], id = nextProp[2] as api.VNID;
+                if (type === "prop") {
+                    parts.push({type: "custom-void-property", propertyId: id, children: [{type: "text", text: ""}]});
+                } else if (type === "etype") {
+                    parts.push({type: "custom-void-entry-type", entryTypeId: id, children: [{type: "text", text: ""}]});
+                } else { throw new Error("Bad literal ID type"); }
                 line = line.substring(nextProp.index + nextProp[0].length);
             }
         }
@@ -196,6 +211,8 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
             result += `{ ` + slateDocToStringValue(n.children, EscapeMode.PlainText) + ` }`;
         } else if (n.type === "custom-void-property") {
             result += `[[/prop/${(n as VoidPropNode).propertyId}]]`;
+        } else if (n.type === "custom-void-entry-type") {
+            result += `[[/etype/${(n as VoidEntryTypeNode).entryTypeId}]]`;
         } else {
             throw new Error(`sdtv: unexpected node in slate doc: ${n.type}`);
         }

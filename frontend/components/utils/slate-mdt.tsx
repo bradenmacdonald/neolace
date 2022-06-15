@@ -5,7 +5,7 @@ import { api, useSiteSchema } from "lib/api-client";
 import { type MDT } from "neolace-api";
 import { Transforms } from "slate";
 import { RenderElementProps, useSlate, ReactEditor } from "slate-react";
-import { type VoidPropNode } from "./slate";
+import { VoidEntryTypeNode, type VoidPropNode } from "./slate";
 import './slate.ts';
 
 /**
@@ -17,8 +17,26 @@ export const PropertyVoid = ({ propertyId, attributes, children }: {propertyId: 
     const [schema] = useSiteSchema();
     const propertyName = schema ? (propertyId ? schema.properties[propertyId]?.name : `Unknown property (${propertyId})`) : "Loading...";
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
-        <span className="rounded-l-md py-[3px] px-2 bg-gray-200 text-green-700"><span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="diamond-fill"/></span></span>
+        <span className="rounded-l-md py-[3px] px-2 bg-gray-200 text-green-700">
+            <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="diamond-fill"/></span>
+        </span>
         <span className="rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700">{propertyName}</span>
+        {children /* Slate.js requires this empty text node child inside void elements that aren't editable. */}
+    </span>;
+}
+
+/**
+ * In any of our editors (lookup expression editor, markdown source editor, markdown visual editor), this is a
+ * non-editable element that represents an entry type property, and displays it in a human-readable way.
+ */
+export const EntryTypeVoid = ({ entryTypeId, attributes, children }: {entryTypeId: api.VNID, attributes: Record<string, unknown>, children: React.ReactNode}) => {
+    const [schema] = useSiteSchema();
+    const entryTypeName = schema ? (entryTypeId ? schema.entryTypes[entryTypeId]?.name : `Unknown entry type (${entryTypeId})`) : "Loading...";
+    return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
+        <span className="rounded-l-md py-[3px] px-2 bg-gray-200 text-indigo-700">
+            <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
+        </span>
+        <span className="rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700">{entryTypeName}</span>
         {children /* Slate.js requires this empty text node child inside void elements that aren't editable. */}
     </span>;
 }
@@ -83,6 +101,8 @@ export function renderElement({element, children, attributes}: RenderElementProp
             return <p {...attributes}>{children}</p>;
         case "custom-void-property":
             return <PropertyVoid propertyId={(element as VoidPropNode).propertyId} attributes={attributes}>{children}</PropertyVoid>;
+        case "custom-void-entry-type":
+            return <EntryTypeVoid entryTypeId={(element as VoidEntryTypeNode).entryTypeId} attributes={attributes}>{children}</EntryTypeVoid>;
         default:
             return <span className="border-red-100 border-[1px] text-red-700">{`Unknown MDT node "${element.type}"`}</span>;
     }

@@ -2,8 +2,8 @@ import React from 'react';
 import { useIntl } from 'react-intl';
 import { type Descendant } from 'slate'
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate } from 'slate-react';
-import { EscapeMode, slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor, VoidPropNode } from 'components/utils/slate';
-import { PropertyVoid } from 'components/utils/slate-mdt';
+import { EscapeMode, slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor, VoidEntryTypeNode, VoidPropNode } from 'components/utils/slate';
+import { EntryTypeVoid, PropertyVoid } from 'components/utils/slate-mdt';
 import { displayString, TranslatableString } from 'components/utils/i18n';
 
 
@@ -24,7 +24,7 @@ interface Props {
 /**
  * A lookup expression input. Normally a single-line, but if the user enters newlines (with shift-enter) it will become multi-line.
  */
-export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => {
+export const LookupExpressionInput: React.FunctionComponent<Props> = ({value, onChange, onFinishedEdits, ...props}) => {
 
     const intl = useIntl();
     const renderLeaf = React.useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
@@ -32,23 +32,23 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
 
     const forceUpdate = useForceUpdate();
 
-    const parsedValue: Descendant[] = React.useMemo(() => stringValueToSlateDoc(props.value), [props.value]);
+    const parsedValue: Descendant[] = React.useMemo(() => stringValueToSlateDoc(value), [value]);
 
     React.useEffect(() => {
         // This function should force the editor to update its contents IF "props.value" is changed externally, but
         // should also ignore updates that match the current value that the editor has.
-        if (props.value !== slateDocToStringValue(editor.children, EscapeMode.PlainText)) {
+        if (value !== slateDocToStringValue(editor.children, EscapeMode.PlainText)) {
             editor.children = parsedValue;
             forceUpdate();  // Without this, sometimes React won't update and the UI won't reflect the new state.
         }
-    }, [props.value]);
+    }, [value]);
 
     const handleChange = React.useCallback((newValue: Descendant[]) => {
-        if (props.onChange) {
+        if (onChange) {
             const newLookupValue = slateDocToStringValue(newValue, EscapeMode.PlainText);
-            props.onChange(newLookupValue);
+            onChange(newLookupValue);
         }
-    }, [props.onChange]);
+    }, [onChange]);
 
     const handleKeyDown = React.useCallback((event: React.KeyboardEvent) => {
         if (event.key === "Enter") {
@@ -63,11 +63,11 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (props) => 
     }, [editor]);
 
     const handleBlur = React.useCallback(() => {
-        if (props.onFinishedEdits) {
+        if (onFinishedEdits) {
             const newValue = slateDocToStringValue(editor.children, EscapeMode.PlainText);
-            props.onFinishedEdits(newValue);
+            onFinishedEdits(newValue);
         }
-    }, [editor, props.onFinishedEdits]);
+    }, [editor, onFinishedEdits]);
 
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={parsedValue} onChange={handleChange}>
@@ -94,6 +94,8 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
 export function renderElement({element, children, attributes}: RenderElementProps): JSX.Element {
     if (element.type === "custom-void-property") {
         return <PropertyVoid propertyId={(element as VoidPropNode).propertyId} attributes={attributes}>{children}</PropertyVoid>
+    } else if (element.type === "custom-void-entry-type") {
+        return <EntryTypeVoid entryTypeId={(element as VoidEntryTypeNode).entryTypeId} attributes={attributes}>{children}</EntryTypeVoid>
     } else {
         return <span {...attributes}>{children}</span>
     }
