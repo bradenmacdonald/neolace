@@ -30,10 +30,14 @@ export const EntryPage: React.FunctionComponent<Props> = function(props) {
     const [entry, entryError] = useEntry(props.entrykey, props.publicEntry);
     const intl = useIntl();
 
+    // When the entry page loads, it uses SWR to fetch the latest/user-specific version of the entry from the server,
+    // though in most cases it will be the same. To avoid re-rendering the whole React tree, we need to use
+    // JSON.stringify to compare the reference cache by value.
     const mdtContext = React.useMemo(() => new MDTContext({
         entryId: entry?.id,
         refCache: entry?.referenceCache,
-    }), [entry?.id, entry?.referenceCache]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [entry?.id, JSON.stringify(entry?.referenceCache ?? "")]);
 
     if (entryError) {
         if (entryError instanceof api.NotAuthorized) {

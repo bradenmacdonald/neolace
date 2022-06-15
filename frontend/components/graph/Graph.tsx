@@ -15,6 +15,7 @@ import { applyTransforms, Transform, Transforms } from "./Transforms";
 import { Modal } from "../widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 import { defineMessage } from "components/utils/i18n";
+import { debugLog } from "lib/config";
 
 export interface GraphProps {
     value: api.GraphValue;
@@ -116,10 +117,11 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // The data (nodes and relationships) that we want to display as a graph.
     const originalData = React.useMemo(() => {
         return convertValueToData(props.value, props.mdtContext.refCache);
-    }, [props.value]);
+    }, [props.value, props.mdtContext.refCache]);
     const [transformList, setTransforms] = React.useState<Transform[]>(emptyTransforms);
 
     const currentData = React.useMemo(() => {
+        debugLog(`Computing currentData from originalData + ${transformList.length} transform(s).`);
         let transformedData = applyTransforms(originalData, transformList);
         transformedData = colorGraph(transformedData, transformList, props.mdtContext.refCache);
         return transformedData;
@@ -151,7 +153,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         } else if (graphContainer) {
             newGraphHolderDiv.appendChild(graphContainer);
         }
-    }, []);  // "graphContainer" will never change (we don't define a "set" function), so we don't need to depend on it.
+    }, [graphContainer]);  // But we expect that "graphContainer" should never change (we don't define a "set" function)
 
     // "graph" is the actual G6 graph instance which owns a <canvas> element, and renders the graph.
     // See https://g6.antv.vision/en/docs/api/Graph
@@ -241,6 +243,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             return;  // We can't (re-)initialize the graph yet, 
             // because we don't have a valid reference to the <div> that will hold it.
         }
+        debugLog("Initializing G6 graph");
         const container = graphContainer;
         const width = container.clientWidth;
         const height = container.clientHeight;
@@ -252,34 +255,35 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             }
             return newGraph;
         });
-    }, [graphConfig, graphContainer]);
-
-    // Set the graph data and render it whenever the data has changed or the graph has been re-initialized:
-    React.useEffect(() => {
-        if (!graph || graph.destroyed) { return; }
-        const originalDataCopy = JSON.parse(JSON.stringify(originalData));
-        graph.data(originalDataCopy);
-        graph.render();
         // By default, we zoom the graph so that four nodes would fit horizontally.
-        graph.zoomTo(graph.getWidth() / (220 * 4), undefined, false);
-        graph.on("afterlayout", () => {
-            if (!graph || graph.destroyed) { return; }
-            // Zoom to focus on whatever node came first in the data:
-            const firstNode = graph.getNodes().find((node) => node.getModel().isFocusEntry);
-            if (firstNode) {
-                graph.setItemState(firstNode, "selected", true);
-                graph.focusItem(firstNode, true);
-            }
-        }, true);
+        newGraph.zoomTo(newGraph.getWidth() / (220 * 4), undefined, false);
         // We'll control the cursor using CSS:
-        graph.get('canvas').setCursor('inherit');
-    }, [graph, originalData]);
+        newGraph.get('canvas').setCursor('inherit');
+    }, [graphConfig, graphContainer]);
 
     // Update the graph data whenever the current data changes
     React.useEffect(() => {
         if (!graph || graph.destroyed) { return; }
         const currentDataCopy = JSON.parse(JSON.stringify(currentData));
+        const hadData = graph.getNodes().length > 0;
         graph.changeData(currentDataCopy);
+        if (!hadData) {
+            debugLog("Graph data set for the first time. Will zoom to focus node after layout.");
+            // After the initial layout, zoom to the "focus node":
+            graph.on("afterlayout", () => {
+                if (!graph || graph.destroyed) { return; }
+                // Zoom to focus on the "focus node" after the layout, if there is one:
+                const focusNode = graph.getNodes().find((node) => node.getModel().isFocusEntry);
+                debugLog("layout done. Zooming to focus node.");
+                if (focusNode) {
+                    graph.setItemState(focusNode, "selected", true);
+                    graph.focusItem(focusNode, true);
+                }
+            }, true);
+        } else {
+            debugLog("graph data has changed.");
+        }
+
         // ADD COMBOS WHEN NEEDED
         //TODO make this to be a part of combo operation under communities
         // creates lists of ids for combos
@@ -350,7 +354,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 }
             });
         }
-    }, [currentData])
+    }, [graph, currentData])
 
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
 
@@ -485,6 +489,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         graph.on("node:mouseleave", function (e) {
             e.item?.setState("hover", false);
         });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [graph]);
 
     // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
