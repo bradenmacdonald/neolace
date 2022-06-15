@@ -13,13 +13,14 @@ interface Props {
     mdtContext: MDTContext;
     hideShowMoreLink?: boolean;
     children?: never;
+    pageSize?: number;
 }
 
 /**
  * Evaluate a Lookup Expression and display the resulting value
  */
 export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
-    const {result, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId});
+    const {result, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId, pageSize: props.pageSize});
 
     const mdtContext = React.useMemo(() => props.mdtContext.childContextWith({refCache: result?.referenceCache}), [result?.referenceCache, props.mdtContext])
 
@@ -51,14 +52,10 @@ export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
     return <LookupValue value={result.resultValue} mdtContext={mdtContext} hideShowMoreLink={props.hideShowMoreLink} />;
 };
 
-interface PropsWithPagination extends Props {
-    numValuesPerPage?: number;
-}
-
 /**
  * Evaluate a Lookup Expression and display the resulting value, with pagination / infinite scroll
  */
-export const LookupEvaluatorWithPagination: React.FunctionComponent<PropsWithPagination> = (props) => {
+export const LookupEvaluatorWithPagination: React.FunctionComponent<Props> = (props) => {
     const [numPagesDisplayed, setNumPages] = React.useState(1);
     React.useEffect(() => {
         // Reset to showing only one page if the expression changes.
@@ -66,7 +63,7 @@ export const LookupEvaluatorWithPagination: React.FunctionComponent<PropsWithPag
     }, [props.expr, setNumPages]);
     // Evaluate the expression now to get basic information about it, like whether or not it's a paged value.
     // SWR will ensure that the inner <LookupEvaluator> doesn't send additional API requests for the same lookup expression.
-    const {result, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId});
+    const {result, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId, pageSize: props.pageSize});
 
     const pageData = result?.resultValue.type === "Page" ? result.resultValue : undefined;
 
@@ -76,7 +73,7 @@ export const LookupEvaluatorWithPagination: React.FunctionComponent<PropsWithPag
         const pages = [];
         for (let i = 0; i < numPagesDisplayed; i++) {
             const expr = i === 0 ? props.expr : `slice(${props.expr}, start=${i * numValuesPerPage}, size=${numValuesPerPage})`;
-            pages.push(<LookupEvaluator key={expr} expr={expr} mdtContext={props.mdtContext} hideShowMoreLink={true} />);
+            pages.push(<LookupEvaluator key={expr} expr={expr} mdtContext={props.mdtContext} hideShowMoreLink={true} pageSize={props.pageSize} />);
         }
         return <>
             {pages}
@@ -102,6 +99,6 @@ export const LookupEvaluatorWithPagination: React.FunctionComponent<PropsWithPag
             </p>
         </>;
     } else {
-        return <LookupEvaluator expr={props.expr} mdtContext={props.mdtContext} />
+        return <LookupEvaluator expr={props.expr} mdtContext={props.mdtContext} pageSize={props.pageSize} />
     }
 };

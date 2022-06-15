@@ -111,10 +111,10 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
  * React hook to evaluate a lookup expression
  * @returns 
  */
-export function useLookupExpression(expr: string, options: {entryId?: VNID} = {}): {result: EvaluateLookupData|undefined, error: ApiError} {
+export function useLookupExpression(expr: string, options: {entryId?: VNID, pageSize?: number} = {}): {result: EvaluateLookupData|undefined, error: ApiError} {
     const {site} = useSiteData();
     // TODO: include an entry revision number in this ID
-    const key = `lookup:${site.shortId}:${options.entryId ?? 'none'}:no-draft:${expr}`;
+    const key = `lookup:${site.shortId}:${options.entryId ?? 'none'}:${options.pageSize ?? 'default'}:no-draft:${expr}`;
     const { data, error } = useSWR(key, async () => {
         if (expr.trim() === "") {
             // If there is no expression, don't bother hitting the API:
@@ -124,7 +124,7 @@ export function useLookupExpression(expr: string, options: {entryId?: VNID} = {}
                 referenceCache: { entries: {}, entryTypes: {}, lookups: [], properties: {} },
             };
         } else if (site.shortId) {
-            return await client.evaluateLookupExpression(expr, {entryKey: options.entryId, siteId: site.shortId});
+            return await client.evaluateLookupExpression(expr, {entryKey: options.entryId, siteId: site.shortId, pageSize: options.pageSize});
         } else {
             return undefined;
         }
