@@ -39,6 +39,8 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
         [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]$/, (m) => new LiteralExpression(new V.EntryValue(VNID(m[1])))],
         // [[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]] (Property literal)
         [/^\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]$/, (m) => new LiteralExpression(new V.PropertyValue(VNID(m[1])))],
+        // [[/etype/_6FisU5zxXg5LcDz4Kb3Wmd]] (Entry Type literal)
+        [/^\[\[\/etype\/(_[0-9A-Za-z]{1,22})\]\]$/, (m) => new LiteralExpression(new V.EntryTypeValue(VNID(m[1])))],
 
         // something.function()
         [
