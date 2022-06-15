@@ -20,6 +20,8 @@ export class AllEntries extends LookupFunction {
                 MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
 
                 WITH entry, {} AS annotations
+                ORDER BY entry.name
+                WITH entry, annotations
             `,
             {
                 sourceExpression: this,
