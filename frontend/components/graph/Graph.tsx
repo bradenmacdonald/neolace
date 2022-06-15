@@ -214,7 +214,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     // When not in fullscreen, we don't use the mousewheel to zoom because it's annoying when it zooms
                     // "accidentally" as you try to scroll down while reading the page, not meaning to zoom the graph.
                     // However, if this event is a "touchstart" event (pinch to zoom on mobile), we always zoom.
-                    shouldBegin: (evt?: IG6GraphEvent) => { return evt?.type !== "mousewheel" || expandedRef.current },
+                    shouldBegin: (evt?: IG6GraphEvent) => {
+                        return expandedRef.current || (evt?.type !== "mousewheel" && evt?.type !== "DOMMouseScroll");
+                    },
                 },
                 'drag-node',
                 'drag-combo',
@@ -229,7 +231,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 lineWidth: 3,
                 stroke: '#f00'
             }
-        }
+        },
+        minZoom: 0.05,
     }), [expandedRef]);
 
     // Initialize the G6 graph, once we're ready
@@ -509,12 +512,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Code for "toggle expanded view" toolbar button
     const handleExpandCanvasButton = React.useCallback(() => { setExpanded((wasExpanded) => !wasExpanded); }, [setExpanded]);
     // Code for "zoom" toolbar buttons
-    const zoomRatio = 1.20; // Zoom in by 20% each time
+    const zoomRatio = 1.50; // Zoom in by 50% each time
     const handleZoomInButton = React.useCallback(() => {
-        graph?.zoom(zoomRatio, graph?.getViewPortCenterPoint());
+        graph?.zoom(zoomRatio, {x: graph.getWidth()/2, y: graph.getHeight()/2}, true, {duration: 100});
     }, [graph]);
     const handleZoomOutButton = React.useCallback(() => {
-        graph?.zoom(1 / zoomRatio, graph?.getViewPortCenterPoint());
+        graph?.zoom(1 / zoomRatio, {x: graph.getWidth()/2, y: graph.getHeight()/2}, true, {duration: 100});
     }, [graph]);
     // Code for "fit view" button
     const handleFitViewButton = React.useCallback(() => { graph?.fitView(10, { direction: "both" }); }, [graph]);
