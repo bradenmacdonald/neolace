@@ -152,7 +152,7 @@ export const EntryPage: React.FunctionComponent<Props> = function(props) {
                                         <LookupValue value={{type: "Property", id: p.propertyId}} mdtContext={mdtContext} />
                                     </th>
                                     <td className="block md:table-cell pr-2 pb-1 md:py-1 text-sm md:text-base">
-                                        <LookupValue value={p.value} mdtContext={mdtContext} />
+                                        <LookupValue value={p.value} mdtContext={mdtContext} defaultListMode="compact" />
                                     </td>
                                 </tr>
                             )}
