@@ -12,13 +12,16 @@ group("filter.ts", () => {
 
     test(`x.filter() returns x if x is a LazyEntrySet`, async () => {
         const entries = new AndAncestors(new This());
-        assertEquals(
-            await context.evaluateExprConcrete(entries),
-            await context.evaluateExprConcrete(new Filter(entries, {})),
-        );
+        const orig = await context.evaluateExprConcrete(entries);
+        const filtered = await context.evaluateExprConcrete(new Filter(entries, {}));
+        assertInstanceOf(orig, V.PageValue);
+        assertInstanceOf(filtered, V.PageValue);
+        assertEquals(orig.values, filtered.values);
+        assertEquals(orig.sourceExpression, entries);
+        assertEquals(filtered.sourceExpression, new Filter(entries, {}));
     });
 
-    test(`x.filter() returns only entries of the right type`, async () => {
+    test(`x.filter(entryType=[entry type]) returns only entries of the right type`, async () => {
         const entries = new AndAncestors(new This());
         // Filter "ponderosa pine and its ancestors" to only entries of type "Genus":
         const value = await context.evaluateExprConcrete(new Filter(entries, { entryType: genusType }));
@@ -31,7 +34,7 @@ group("filter.ts", () => {
         ]);
     });
 
-    test(`x.filter() returns only entries of the right type (multiple types)`, async () => {
+    test(`x.filter(entryType=[multiple types]) returns only entries of the right type`, async () => {
         const entries = new AndAncestors(new This());
         // Filter "ponderosa pine and its ancestors" to only entries of type "Genus" or "Order":
         const value = await context.evaluateExprConcrete(
@@ -51,6 +54,38 @@ group("filter.ts", () => {
             new V.AnnotatedValue(new V.EntryValue(defaultData.entries.orderPinales.id), {
                 // The annotation is preserved - order is a distance of 3 from the original species entry:
                 distance: new V.IntegerValue(3),
+            }),
+        ]);
+    });
+
+    test(`x.filter(excludeEntryType=[multiple types]) returns only entries of the right type`, async () => {
+        const entries = new AndAncestors(new This());
+        // Filter "ponderosa pine and its ancestors" to only entries of type "Genus" or "Order":
+        const value = await context.evaluateExprConcrete(
+            new Filter(entries, {
+                excludeEntryType: new List([
+                    genusType,
+                    orderType,
+                ]),
+            }),
+        );
+        assertInstanceOf(value, V.PageValue);
+        assertEquals(value.values, [
+            new V.AnnotatedValue(new V.EntryValue(defaultData.entries.ponderosaPine.id), {
+                // The annotation is preserved - this is the original "this" entry so has distance 0:
+                distance: new V.IntegerValue(0),
+            }),
+            // Genus (distance 1) is excluded
+            new V.AnnotatedValue(new V.EntryValue(defaultData.entries.familyPinaceae.id), {
+                // The annotation is preserved - family is a distance of 2 from the original species entry:
+                distance: new V.IntegerValue(2),
+            }),
+            // Order (distance 3) is excluded
+            new V.AnnotatedValue(new V.EntryValue(defaultData.entries.classPinopsida.id), {
+                distance: new V.IntegerValue(4),
+            }),
+            new V.AnnotatedValue(new V.EntryValue(defaultData.entries.divisionTracheophyta.id), {
+                distance: new V.IntegerValue(5),
             }),
         ]);
     });

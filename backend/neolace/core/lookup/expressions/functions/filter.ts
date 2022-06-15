@@ -23,46 +23,66 @@ export class Filter extends LookupFunctionWithArgs {
     public get entryTypeExpr(): LookupExpression | undefined {
         return this.otherArgs["entryType"];
     }
-
-    protected override validateArgs(): void {
-        this.requireArgs([], { optional: ["entryType"] });
+    /** The entry type(s) to exclude */
+    public get excludeEntryTypeExpr(): LookupExpression | undefined {
+        return this.otherArgs["excludeEntryType"];
     }
 
-    public async getValue(context: LookupContext) {
-        let iterable = await this.iterableExpr.getValueAs(LazyEntrySetValue, context);
+    protected override validateArgs(): void {
+        this.requireArgs([], { optional: ["entryType", "excludeEntryType"] });
+    }
+
+    public async getValue(context: LookupContext): Promise<LazyEntrySetValue> {
+        const iterable = await this.iterableExpr.getValueAs(LazyEntrySetValue, context);
+        let cypherQuery = iterable.cypherQuery;
 
         if (this.entryTypeExpr) {
-            const entryTypesValue = await this.entryTypeExpr.getValueAsOneOf(
-                [EntryTypeValue, LazyIterableValue],
-                context,
-            );
-            const entryTypes = new Set<VNID>();
-            if (entryTypesValue instanceof LazyIterableValue) {
-                for await (const value of entryTypesValue) {
-                    const asEntryType = await value.castTo(EntryTypeValue, context);
-                    if (asEntryType === undefined) {
-                        throw new LookupEvaluationError(`Expected an entry type but got ${value.constructor.name}`);
-                    }
-                    entryTypes.add(asEntryType.id);
-                }
-            } else {
-                entryTypes.add(entryTypesValue.id);
-            }
+            const entryTypes = await getEntryTypesIds(this.entryTypeExpr, context);
 
-            const newQuery = C`
-                ${iterable.cypherQuery}
+            cypherQuery = C`
+                ${cypherQuery}
                 MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
                 WHERE entryType.id IN ${Array.from(entryTypes)}
                 WITH entry, annotations
             `;
-
-            iterable = new LazyEntrySetValue(context, newQuery, {
-                annotations: iterable.annotations,
-                sourceExpression: this,
-                sourceExpressionEntryId: context.entryId,
-            });
         }
 
-        return iterable;
+        if (this.excludeEntryTypeExpr) {
+            const notEntryTypes = await getEntryTypesIds(this.excludeEntryTypeExpr, context);
+
+            cypherQuery = C`
+                ${cypherQuery}
+                MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
+                WHERE NOT entryType.id IN ${Array.from(notEntryTypes)}
+                WITH entry, annotations
+            `;
+        }
+
+        return new LazyEntrySetValue(context, cypherQuery, {
+            annotations: iterable.annotations,
+            sourceExpression: this,
+            sourceExpressionEntryId: context.entryId,
+        });
     }
+}
+
+/**
+ * Given an expression that is either an entry type literal or a list/iterable of entry types, return the unique set
+ * of entry type IDs.
+ */
+async function getEntryTypesIds(expr: LookupExpression, context: LookupContext): Promise<Set<VNID>> {
+    const entryTypesValue = await expr.getValueAsOneOf([EntryTypeValue, LazyIterableValue], context);
+    const entryTypes = new Set<VNID>();
+    if (entryTypesValue instanceof LazyIterableValue) {
+        for await (const value of entryTypesValue) {
+            const asEntryType = await value.castTo(EntryTypeValue, context);
+            if (asEntryType === undefined) {
+                throw new LookupEvaluationError(`Expected an entry type but got ${value.constructor.name}`);
+            }
+            entryTypes.add(asEntryType.id);
+        }
+    } else {
+        entryTypes.add(entryTypesValue.id);
+    }
+    return entryTypes;
 }
