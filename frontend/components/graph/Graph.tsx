@@ -216,9 +216,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     // When not in fullscreen, we don't use the mousewheel to zoom because it's annoying when it zooms
                     // "accidentally" as you try to scroll down while reading the page, not meaning to zoom the graph.
                     // However, if this event is a "touchstart" event (pinch to zoom on mobile), we always zoom.
-                    shouldBegin: (evt?: IG6GraphEvent) => {
-                        return expandedRef.current || (evt?.type !== "mousewheel" && evt?.type !== "DOMMouseScroll");
-                    },
+                    shouldBegin: (evt?: IG6GraphEvent) => expandedRef.current || evt?.type === "touchstart",
                 },
                 'drag-node',
                 'drag-combo',
