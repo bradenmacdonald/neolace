@@ -33,7 +33,12 @@ interface LookupValueProps {
 export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) => {
     const {site} = useSiteData();
 
-    const {value} = props;
+    // When the entry loads, the data gets refreshed from the server but is often identical. This will cause a useless
+    // update of the whole React tree. We can avoid this by using JSON.stringify to check if the value has actually
+    // changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const value = React.useMemo(() => props.value, [JSON.stringify(props.value)]);
+
     if (typeof value !== "object" || value === null || !("type" in value)) {
         return <p>[ERROR INVALID VALUE, NO TYPE INFORMATION]</p>;  // Doesn't need i18n, internal error message shouldn't be seen
     }

@@ -28,6 +28,9 @@ if (typeof API_SERVER_URL !== "string") {
     throw new Error("Environment variables are not set properly.");
 }
 
+/** Log something to the console, but only in a development environment. */
+export const debugLog = DEVELOPMENT_MODE ? console.debug : () => {};
+
 // Are we using imgproxy and a CDN to cache image thumbnails? Or using Next.js's built-in image resizing.
 const imgProxyEnabled = process.env.NEXT_PUBLIC_IMGPROXY_ENABLED;
 
