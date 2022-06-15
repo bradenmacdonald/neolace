@@ -4,7 +4,7 @@
 import React from "react";
 import { api } from "lib/api-client";
 import { MDTContext } from "../markdown-mdt/mdt";
-import G6, { Graph, GraphOptions, INode, NodeConfig } from "@antv/g6";
+import G6, { Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "../utils/resizeObserverHook";
 import { EntryColor, entryNode, pickEntryTypeLetter } from "./Node";
 import { VNID } from "neolace-api";
@@ -110,6 +110,8 @@ const emptyTransforms: Transform[] = [];
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const intl = useIntl();
     const [activeTool, setActiveTool, activeToolRef] = useStateRef(Tool.Select);
+    /** Is the graph currently expanded (displayed in a large modal?) */
+    const [expanded, setExpanded, expandedRef] = useStateRef(false);
 
     // The data (nodes and relationships) that we want to display as a graph.
     const originalData = React.useMemo(() => {
@@ -207,7 +209,13 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             default: [
                 "drag-canvas",
                 "click-select",
-                "zoom-canvas",
+                {
+                    type: "zoom-canvas",
+                    // When not in fullscreen, we don't use the mousewheel to zoom because it's annoying when it zooms
+                    // "accidentally" as you try to scroll down while reading the page, not meaning to zoom the graph.
+                    // However, if this event is a "touchstart" event (pinch to zoom on mobile), we always zoom.
+                    shouldBegin: (evt?: IG6GraphEvent) => { return evt?.type !== "mousewheel" || expandedRef.current },
+                },
                 'drag-node',
                 'drag-combo',
                 {
@@ -222,7 +230,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 stroke: '#f00'
             }
         }
-    }), []);
+    }), [expandedRef]);
 
     // Initialize the G6 graph, once we're ready
     React.useEffect(() => {
@@ -478,10 +486,14 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
     React.useEffect(() => {
-        graphContainer?.addEventListener("MozMousePixelScroll", (e) => {
-            e.preventDefault();
-        }, { passive: false });
-    }, []);
+        // When not in fullscreen, we don't use the mousewheel to zoom because it's annoying when it zooms as you try
+        // to scroll down while reading the page.
+        if (expanded) {
+            const firefoxScrollBlocker = (e: Event) => { e.preventDefault(); };
+            graphContainer?.addEventListener("MozMousePixelScroll", firefoxScrollBlocker, { passive: false });
+            return () => { graphContainer?.removeEventListener("MozMousePixelScroll", firefoxScrollBlocker); }
+        }
+    }, [graphContainer, expanded]);
 
     // Automatically resize the graph if the containing element changes size.
     const handleSizeChange = React.useCallback(() => {
@@ -495,8 +507,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     useResizeObserver(graphContainer, handleSizeChange);
 
     // Code for "toggle expanded view" toolbar button
-    const [expanded, setExpanded] = React.useState(false);
-    const handleExpandCanvasButton = React.useCallback(() => { setExpanded((wasExpanded) => !wasExpanded); }, []);
+    const handleExpandCanvasButton = React.useCallback(() => { setExpanded((wasExpanded) => !wasExpanded); }, [setExpanded]);
     // Code for "zoom" toolbar buttons
     const zoomRatio = 1.20; // Zoom in by 20% each time
     const handleZoomInButton = React.useCallback(() => {
