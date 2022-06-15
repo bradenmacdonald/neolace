@@ -219,11 +219,21 @@ export class NeolaceApiClient {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Lookup API Methods
 
-    public evaluateLookupExpression(expression: string, options: {entryKey?: VNID|string, siteId?: string} = {}): Promise<EvaluateLookupData> {
+    public evaluateLookupExpression(
+        expression: string,
+        options: {
+            entryKey?: VNID|string,
+            siteId?: string,
+            pageSize?: number,
+        } = {}
+    ): Promise<EvaluateLookupData> {
         const siteId = this.getSiteId(options);
         const query = new URLSearchParams({expression,});
         if (options.entryKey) {
             query.set("entryKey", options.entryKey);
+        }
+        if (options.pageSize) {
+            query.set("pageSize", options.pageSize.toString());
         }
         return this.call(`/site/${siteId}/lookup?${query.toString()}`);
     }

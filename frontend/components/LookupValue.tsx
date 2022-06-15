@@ -24,6 +24,12 @@ interface LookupValueProps {
      * does apply to the inner value.)
      */
     hideShowMoreLink?: boolean;
+    /**
+     * Should lists (e.g. of entries) be displayed in compact form ("a, b, c" on one line) or in rows (one per line)?
+     * Compact generally looks better in the "Properties" section, while "rows" looks better on the lookup query page
+     * or inline in markdown documents.
+     */
+    defaultListMode?: "compact"|"rows";
     children?: never;
 }
 
@@ -70,30 +76,29 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                     values={{extraCount: numRemaining}}
                     description="How many more items there are (at the end of a list)"
                 />;
-                if (value.source && value.source.entryId) {
-                    const entryKey = props.mdtContext.refCache.entries[value.source.entryId]?.friendlyId ?? props.mdtContext.entryId;
-                    moreLink = <Link key="more" href={`/entry/${entryKey}/lookup?e=${encodeURIComponent(value.source.expr)}`}><a>{moreLink}</a></Link>;
+                if (value.source) {
+                    if (value.source.entryId) {
+                        const entryKey = props.mdtContext.refCache.entries[value.source.entryId]?.friendlyId ?? props.mdtContext.entryId;
+                        moreLink = <Link key="more" href={`/entry/${entryKey}/lookup?e=${encodeURIComponent(value.source.expr)}`}><a>{moreLink}</a></Link>;
+                    } else {
+                        moreLink = <Link key="more" href={`/lookup?e=${encodeURIComponent(value.source.expr)}`}><a>{moreLink}</a></Link>;
+                    }
                 }
                 listValues.push(moreLink);
             }
 
-            // FIXME: Temporary hack, replace with transform+annotate to give display hint https://app.clickup.com/t/23uvf0q
-            if (site.shortId === "cams" && listValues.length > 2) {
-                const firstValue = value.values[0];
-                if (firstValue.type === "Entry") {
-                    if (props.mdtContext.refCache.entries[firstValue.id]?.entryType.id === "_42oypp3JCf4wpJRru0El17") {
-                        return <ul>
-                            {listValues.map((v, idx) => <li key={idx}>{v}</li>)}
-                        </ul>;
-                    }
-                }
+            // TODO: Need to support controlling this mode via annotations in the future.
+            if (props.defaultListMode === "compact") {
+                return <span className="neo-lookup-paged-values">
+                    <FormattedListParts type="unit" value={listValues}>
+                        {parts => <>{parts.map(p => p.value)}</>}
+                    </FormattedListParts>
+                </span>;
+            } else {
+                return <ul>
+                    {listValues.map((v, idx) => <li key={idx}>{v}</li>)}
+                </ul>;
             }
-
-            return <span className="neo-lookup-paged-values">
-                <FormattedListParts type="unit" value={listValues}>
-                    {parts => <>{parts.map(p => p.value)}</>}
-                </FormattedListParts>
-            </span>;
         }
         case "Entry": {
             const entry = props.mdtContext.refCache.entries[value.id];

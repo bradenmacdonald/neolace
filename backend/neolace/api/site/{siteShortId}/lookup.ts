@@ -25,6 +25,19 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
             }]);
         }
 
+        let defaultPageSize = 20n;
+        const pageSizeParam = request.queryParam("pageSize");
+        if (pageSizeParam) {
+            try {
+                defaultPageSize = BigInt(pageSizeParam);
+            } catch (_err: unknown) {
+                throw new api.InvalidFieldValue([{ fieldPath: "pageSize", message: "Invalid page size." }]);
+            }
+            if (defaultPageSize < 1n || defaultPageSize > 100n) {
+                defaultPageSize = 20n;
+            }
+        }
+
         // Determine the entry that will be the 'this' value in the expression, if any.
         const entryKeyStr = request.queryParam("entryKey");
         let entry: { id: VNID } | undefined;
@@ -41,7 +54,6 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
 
         const userId = request.user?.id;
         const { resultValue, refCacheData } = await graph.read(async (tx) => {
-            const defaultPageSize = 20n;
             const context = new LookupContext({ tx, siteId, userId, entryId: entry?.id, defaultPageSize });
             // Evaluate the expression. On LookupEvaluationError, this will return an ErrorValue.
             const value = await context.evaluateExpr(lookupString);

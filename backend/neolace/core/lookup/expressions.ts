@@ -5,6 +5,7 @@ export { Ancestors, AndAncestors } from "./expressions/functions/ancestors.ts";
 export { Count } from "./expressions/functions/count.ts";
 export { DateExpression } from "./expressions/functions/date.ts";
 export { AndDescendants, Descendants } from "./expressions/functions/descendants.ts";
+export { Filter } from "./expressions/functions/filter.ts";
 export { GetProperty } from "./expressions/functions/get.ts";
 export { Files } from "./expressions/functions/files.ts";
 export { First } from "./expressions/functions/first.ts";

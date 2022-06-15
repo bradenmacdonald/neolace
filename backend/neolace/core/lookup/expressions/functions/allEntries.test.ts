@@ -51,6 +51,6 @@ group("allEntries.ts", () => {
         const result = await otherSiteContext.evaluateExprConcrete(new AllEntries());
         assert(result instanceof PageValue);
         const IDs = result.values.map((v) => (v as EntryValue).id);
-        assertEquals(new Set(IDs), new Set([A, B, C]));
+        assertEquals(IDs, [A, B, C]);
     });
 });

@@ -9,6 +9,8 @@ import { EntryValue } from "./EntryValue.ts";
 import { PageValue } from "./PageValue.ts";
 import { LazyEntrySetValue } from "./LazyEntrySetValue.ts";
 import { LookupEvaluationError } from "../errors.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
+import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 
 /**
  * Some collection of iterable values, or abstract generator that can produce values.
@@ -83,40 +85,38 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
             const entryIds: VNID[] = [];
             const entryQueries: CypherQuery[] = [];
 
-            const pageSize = 100n; // Load 100 values from this iterable at a time.
-            for (let i = 0n; true; i++) {
-                const slice = await this.getSlice(pageSize * i, pageSize);
-                // For each item in this iterable/list:
-                for (const value of slice) {
-                    // Is this a single entry?
-                    const valueAsEntry = await value.castTo(EntryValue, context);
-                    if (valueAsEntry) {
-                        // This value is a single entry. Add it to our set of entry IDs.
-                        entryIds.push(valueAsEntry.id);
-                        continue;
-                    }
-                    // Or is it a set of entries, represented by a query?
-                    const valueAsEntrySet = await value.castTo(LazyEntrySetValue, context);
-                    if (valueAsEntrySet) {
-                        entryQueries.push(valueAsEntrySet.cypherQuery);
-                        continue;
-                    }
-                    // Otherwise, we can't convert this iterable to a set of entries unfortunately.
-                    throw new LookupEvaluationError(
-                        `The iterable contains a value "${value.asLiteral()}" which does not represent an entry or entry set.`,
-                    );
+            for await (const value of this) {
+                // Is this a single entry?
+                const valueAsEntry = await value.castTo(EntryValue, context);
+                if (valueAsEntry) {
+                    // This value is a single entry. Add it to our set of entry IDs.
+                    entryIds.push(valueAsEntry.id);
+                    continue;
                 }
-                if (slice.length < pageSize) {
-                    break;
+                // Or is it a set of entries, represented by a query?
+                const valueAsEntrySet = await value.castTo(LazyEntrySetValue, context);
+                if (valueAsEntrySet) {
+                    entryQueries.push(valueAsEntrySet.cypherQuery);
+                    continue;
                 }
+                // Otherwise, we can't convert this iterable to a set of entries unfortunately.
+                throw new LookupEvaluationError(
+                    `The iterable contains a value "${value.asLiteral()}" which does not represent an entry or entry set.`,
+                );
             }
 
+            // Build a query to fetch all the entries that were individual entry IDs in this iterable. Filter for permissions.
+            const userCanView = await makeCypherCondition(context.subject, corePerm.viewEntry.name, {}, [
+                "entry",
+                "entryType",
+            ]);
             let query = C`
                 CALL {
-                    MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
-                    WHERE entry.id IN ${entryIds}
+                    MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
+                    WHERE entry.id IN ${entryIds} AND ${userCanView}
                     RETURN entry
             `;
+            // Also add on queries for any entry sets that were in this iterable. They should already be filtered for permissions.
             for (const q of entryQueries) {
                 query = C`
                     ${query}
@@ -133,5 +133,27 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
             return new LazyEntrySetValue(context, query);
         }
         return undefined;
+    }
+
+    /** Allow lookup function code to easily iterate over these values */
+    [Symbol.asyncIterator](): AsyncIterator<LookupValue> {
+        const getSlice = this.getSlice;
+        let currentPage: LookupValue[];
+        let numPages = 0n;
+        const pageSize = 50;
+        let currentIdx = 0;
+        return {
+            next() {
+                return (async () => {
+                    if (currentPage === undefined || currentIdx === pageSize) {
+                        // We need to get the next page of values
+                        currentPage = await getSlice(BigInt(pageSize) * numPages++, BigInt(pageSize));
+                        currentIdx = 0;
+                    }
+                    const value = currentPage[currentIdx++];
+                    return { value, done: value === undefined };
+                })();
+            },
+        };
     }
 }
