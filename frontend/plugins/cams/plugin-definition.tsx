@@ -1,9 +1,18 @@
+import React from "react";
 import dynamic from "next/dynamic";
 import { PluginDefinition } from "components/utils/ui-plugins"
 import { UiChangeOperation } from "components/widgets/UISlot";
+import type { HouseOfSecurityProps } from "./plugin-components/HouseOfSecurity";
 
+// These are loaded dynamically to keep the plugin definition script as small as possible, since all plugin definitions
+// are loaded and sent to the browser.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const MembersOnlyNotice = dynamic<any>(() => import(`./plugin-components/MembersOnlyNotice`).then(mod => mod.MembersOnlyNotice));
+// Ideally we shouldn't need 'ssr: false' nor 'loading: ...' here, and we could use
+// <Suspense fallback={<Spinner/>>}<HouseOfSecurity/></Suspense> below, but it currently doesn't seem to be working.
+// https://github.com/vercel/next.js/issues/35728
+// https://stackoverflow.com/questions/71706064/react-18-hydration-failed-because-the-initial-ui-does-not-match-what-was-render
+const HouseOfSecurity = dynamic<HouseOfSecurityProps>(() => import(`./plugin-components/HouseOfSecurity`).then(mod => mod.HouseOfSecurity), {ssr: false, loading: () => <>...</> });
 
 export const plugin: PluginDefinition = {
     id: "cams",
@@ -38,7 +47,7 @@ export const plugin: PluginDefinition = {
                                         <img
                                             className="h-full mx-[4px]"
                                             alt="MIT CAMS"
-                                            src="https://cams.mit.edu/wp-content/uploads/CAMSlogo_Sloanlogo-2.png"
+                                            src="/pl/cams/cams-header-logo.png"
                                         />
                                     </a>
                                 </div>
@@ -67,5 +76,11 @@ export const plugin: PluginDefinition = {
                 },
             ],
         };
+    },
+    overrideLookupValue(config, value) {
+        if (value.type === "String" && value.value === "$CAMS_HOUSE_OF_SECURITY$") {
+            return <><HouseOfSecurity/></>;
+        }
+        return undefined;
     },
 };

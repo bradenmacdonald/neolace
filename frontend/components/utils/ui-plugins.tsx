@@ -25,6 +25,7 @@ export interface PluginDefinition {
     id: string;
     getUiSlotChanges?: (siteConfig: Record<string, unknown>) => Partial<Record<UiSlotId, UiSlotChange[]>>;
     getPageForPath?: (site: api.SiteDetailsData, path: string) => string | undefined;
+    overrideLookupValue?: (siteConfig: Record<string, unknown>, value: api.StringValue) => React.ReactElement|undefined;
 }
 
 export interface EnabledPluginsConfig {
@@ -33,6 +34,7 @@ export interface EnabledPluginsConfig {
         /** Settings for this plugin, for this specific site */
         siteConfig: Record<string, unknown>;
         uiSlotChanges: Partial<Record<UiSlotId, UiSlotChange[]>>;
+        overrideLookupValue?: (siteConfig: Record<string, unknown>, value: api.StringValue) => React.ReactElement|undefined;
     }[];
     loaded: boolean;
 }
@@ -61,6 +63,7 @@ export const UiPluginsProvider = (props: { site: SiteData; children: React.React
                     id: plugin.id,
                     siteConfig,
                     uiSlotChanges: plugin.getUiSlotChanges?.(siteConfig) ?? {},
+                    overrideLookupValue: plugin.overrideLookupValue,
                 });
             }
         }

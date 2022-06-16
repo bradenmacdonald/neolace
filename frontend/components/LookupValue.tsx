@@ -4,7 +4,6 @@ import { FormattedListParts, FormattedMessage } from 'react-intl';
 
 import { Tooltip } from 'components/widgets/Tooltip';
 import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
-import { EntryLink } from './EntryLink';
 import { LookupImage } from './LookupImage';
 import { FormattedFileSize } from './widgets/FormattedFileSize';
 import { HoverClickNote } from './widgets/HoverClickNote';
@@ -13,6 +12,7 @@ import { ErrorMessage } from './widgets/ErrorMessage';
 import { LookupGraph } from "./graph/GraphLoader";
 import { EntryValue } from './widgets/EntryValue';
 import { EntryTypeVoid } from './utils/slate-mdt';
+import { UiPluginsContext } from './utils/ui-plugins';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -47,6 +47,9 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const value = React.useMemo(() => props.value, [JSON.stringify(props.value)]);
 
+    // Some plugins may override the rendering of some lookup values, so we need to be aware of enabled plugins.
+    const pluginsData = React.useContext(UiPluginsContext);
+
     if (typeof value !== "object" || value === null || !("type" in value)) {
         return <p>[ERROR INVALID VALUE, NO TYPE INFORMATION]</p>;  // Doesn't need i18n, internal error message shouldn't be seen
     }
@@ -60,6 +63,15 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 <p className="text-sm"><InlineMDT mdt={note.value} context={props.mdtContext} /></p>
             </HoverClickNote>
         </>;
+    }
+
+    if (value.type === "String") {
+        for (const plugin of pluginsData.plugins) {
+            const override = plugin.overrideLookupValue?.(plugin.siteConfig, value);
+            if (override) {
+                return override;
+            }
+        }
     }
 
     switch (value.type) {
