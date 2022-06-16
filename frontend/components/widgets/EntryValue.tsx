@@ -32,12 +32,21 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
     const colors = api.entryTypeColors[refCache.entryTypes[entry.entryType.id]?.color ?? api.EntryTypeColor.Default];
     const abbrev = refCache.entryTypes[entry.entryType.id]?.abbreviation ?? "";
 
-    const widget = <span className="text-sm font-medium font-sans">
-        <span className="rounded-l-md py-[2px] min-w-[2em] text-center inline-block" style={{backgroundColor: colors[1], color: colors[2]}}>
-            <span className="text-xs inline-block min-w-[1.4em] text-center opacity-40">{abbrev}</span>
+    const widget = (
+        <span
+            className="text-sm font-medium font-sans"
+            style={{
+                "--entry-type-color-0": colors[0],
+                "--entry-type-color-1": colors[1],
+                "--entry-type-color-2": colors[2],
+            } as React.CSSProperties}
+        >
+            <span className="rounded-l-md py-[2px] min-w-[2em] text-center inline-block bg-entry-type-color-1 text-entry-type-color-2">
+                <span className="text-xs inline-block min-w-[1.4em] text-center opacity-40">{abbrev}</span>
+            </span>
+            <span className="rounded-r-md py-[3px] px-2 bg-gray-50 hover:bg-entry-type-color-0 text-black hover:text-entry-type-color-2">{entry.name}</span>
         </span>
-        <span className="rounded-r-md py-[3px] px-2" style={{backgroundColor: colors[0], color: colors[2]}}>{entry.name}</span>
-    </span>;
+    );
 
     if (site.frontendConfig.features?.hoverPreview?.enabled && !props.mdtContext.disableHoverPreview) {
         return <Tooltip tooltipContent={<EntryTooltipContent
