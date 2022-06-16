@@ -31,9 +31,10 @@ export const PropertyVoid = ({ propertyId, attributes, children }: {propertyId: 
  */
 export const EntryTypeVoid = ({ entryTypeId, attributes, children }: {entryTypeId: api.VNID, attributes: Record<string, unknown>, children: React.ReactNode}) => {
     const [schema] = useSiteSchema();
-    const entryTypeName = schema ? (entryTypeId ? schema.entryTypes[entryTypeId]?.name : `Unknown entry type (${entryTypeId})`) : "Loading...";
+    const entryTypeName = schema ? (schema.entryTypes[entryTypeId]?.name ?? `Unknown entry type (${entryTypeId})`) : "Loading...";
+    const entryTypeColor = schema?.entryTypes[entryTypeId]?.color ?? api.EntryTypeColor.Default;
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
-        <span className="rounded-l-md py-[3px] px-2 bg-gray-200 text-indigo-700">
+        <span className="rounded-l-md py-[3px] px-2 bg-gray-200" style={{color: api.entryTypeColors[entryTypeColor][2]}}>
             <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
         </span>
         <span className="rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700">{entryTypeName}</span>
