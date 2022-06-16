@@ -61,10 +61,12 @@ group("schema/index.ts", () => {
                     ...defaultData.schema.entryTypes,
                     _ETSOFTWARE: {
                         id: VNID("_ETSOFTWARE"),
-                        description: null,
+                        description: "",
                         friendlyIdPrefix: null,
                         name: "Software",
                         enabledFeatures: {},
+                        color: api.EntryTypeColor.Default,
+                        abbreviation: "",
                     },
                 },
                 properties: defaultData.schema.properties,

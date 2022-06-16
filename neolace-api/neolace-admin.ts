@@ -221,8 +221,17 @@ function yamlToSchema(yamlString: string): {idMap: Record<string, string>, schem
     for (const prop of friendlySchema.properties) {
         tempSchema.properties[prop.id] = prop;
     }
-    // Convert the friendly IDs back to 
+    // Convert the friendly IDs back to VNIDs
     const {newSchema, newMap} = applyIdMap(friendlySchema.idMap.map, tempSchema, {generateNewIds: true});
+    // Set some defaults
+    for (const entryType of Object.values(newSchema.entryTypes)) {
+        if (entryType.color === undefined) {
+            entryType.color = api.EntryTypeColor.Default;
+        }
+        if (entryType.abbreviation === undefined) {
+            entryType.abbreviation = "";
+        }
+    }
     return {schema: newSchema, idMap: newMap};
 }
 

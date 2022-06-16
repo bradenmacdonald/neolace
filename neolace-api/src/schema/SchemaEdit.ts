@@ -2,7 +2,7 @@
 import { nullable, vnidString, Schema, string, array, Type, number } from "../api-schemas.ts";
 import { boolean, SchemaValidatorFunction } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
-import { SiteSchemaData, PropertyType, PropertyMode } from "./SiteSchemaData.ts";
+import { SiteSchemaData, PropertyType, PropertyMode, EntryTypeColor } from "./SiteSchemaData.ts";
 
 export interface SchemaEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Schema;
@@ -36,6 +36,8 @@ export const CreateEntryType = SchemaEditType({
                     description: null,
                     friendlyIdPrefix: null,
                     enabledFeatures: {},
+                    color: EntryTypeColor.Default,
+                    abbreviation: "",
                 },
             },
         };
@@ -53,6 +55,8 @@ export const UpdateEntryType = SchemaEditType({
         name: string.strictOptional(),
         description: nullable(string).strictOptional(),
         friendlyIdPrefix: nullable(string).strictOptional(),
+        color: Schema.enum(EntryTypeColor).strictOptional(),
+        abbreviation: string.min(0).max(2).strictOptional(),
     }),
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
@@ -65,8 +69,10 @@ export const UpdateEntryType = SchemaEditType({
         }
         const newEntryType = {...originalEntryType};
 
-        for (const key of ["name", "description", "friendlyIdPrefix"] as const) {
-            newEntryType[key] = (data as any)[key];
+        for (const key of ["name", "description", "friendlyIdPrefix", "color", "abbreviation"] as const) {
+            if (data[key] !== undefined) {
+                newEntryType[key] = (data as any)[key];
+            }
         }
 
         newSchema.entryTypes[data.id] = newEntryType;

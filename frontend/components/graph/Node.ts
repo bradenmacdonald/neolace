@@ -1,4 +1,5 @@
 import G6, { IShape } from "@antv/g6";
+import { api } from "lib/api-client";
 
 /**
  * Always use this node type by importing this string, don't hard-code "entryNode" elsewhere,
@@ -6,38 +7,7 @@ import G6, { IShape } from "@antv/g6";
  */
 export const entryNode = "entryNode";
 
-export enum EntryColor {
-    Blue = "blue",
-    Emerald = "emerald",
-    Cyan = "cyan",
-    Orange = "orange",
-    Violet = "violet",
-    Red = "red",
-    Yellow = "yellow",
-    Lime = "lime",
-    Teal = "teal",
-    Indigo = "indigo",
-    Pink = "pink",
-    Rose = "rose",
-}
-
-const colorSets: Record<EntryColor, [backgroundColor: string, darkerBackgroundColor: string, textColor: string]> = {
-    // [overall background color, darker left rectangle color, text color]
-    // These colors come from https://tailwindcss.com/docs/customizing-colors and are typically the
-    // [color-100, color-200, and color-800] variants from that pallete
-    [EntryColor.Red]: ["#FECACA", "#FCA5A5", "#991B1B"],
-    [EntryColor.Orange]: ["#FFEDD5", "#FED7AA", "#9A3412"],
-    [EntryColor.Emerald]: ["#D1FAE5", "#A7F3D0", "##065F46"],
-    [EntryColor.Cyan]: ["#CFFAFE", "#A5F3FC", "#155E75"],
-    [EntryColor.Blue]: ["#DBEAFE", "#BFDBFE", "#3730A3"],
-    [EntryColor.Violet]: ["#EDE9FE", "#DDD6FE", "#5B21B6"],
-    [EntryColor.Yellow]: ["#fef9c3", "#fef08a", "#a16207"],
-    [EntryColor.Lime]: ["#ecfccb", "#d9f99d", "#3f6212"],
-    [EntryColor.Teal]: ["#ccfbf1", "#99f6e4", "#115e59"],
-    [EntryColor.Indigo]: ["#e0e7ff", "#c7d2fe", "#3730a3"],
-    [EntryColor.Pink]: ["#fce7f3", "#fce7f3", "#9d174d"],
-    [EntryColor.Rose]: ["#ffe4e6", "#fecdd3", "#9f1239"],
-};
+const colorSets = api.entryTypeColors;
 
 G6.registerNode(
     entryNode,
@@ -46,7 +16,7 @@ G6.registerNode(
         // Options - specify default options for each node:
         options: {
             style: {
-                color: EntryColor.Red,
+                color: api.EntryTypeColor.Default,
             },
             stateStyles: {
                 hover: {},
@@ -71,7 +41,7 @@ G6.registerNode(
             const fontSize = 16;
             const maxTextWidth = width - leftRectWidth - (textPadding * 2) - 5;  // The 5 is because the text truncation algorithm doesn't work perfectly with our preferred font; with this little fix it always seems good.
 
-            const [bgColor, darkColor, textColor] = (cfg.color && cfg.color in colorSets) ? colorSets[cfg.color as EntryColor] : colorSets[EntryColor.Red];
+            const [bgColor, darkColor, textColor] = (cfg.color && cfg.color in colorSets) ? colorSets[cfg.color as api.EntryTypeColor] : colorSets[api.EntryTypeColor.Default];
 
             // Draw the selection rectangle, which forms an outer border when this node is selected.
             // Most of the time (when not selected), it is invisible.

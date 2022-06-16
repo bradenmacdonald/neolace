@@ -1,5 +1,42 @@
 import { Schema, Type, string, number, vnidString, nullable, array, boolean, Record, } from "../api-schemas.ts";
 
+/** The available color options for each entry */
+export enum EntryTypeColor {
+    Default = "",
+    Slate = "",
+    Red = "red",
+    Orange = "orange",
+    Yellow = "yellow",
+    Lime = "lime",
+    Emerald = "emerald",
+    Teal = "teal",
+    Cyan = "cyan",
+    Blue = "blue",
+    Indigo = "indigo",
+    Violet = "violet",
+    Pink = "pink",
+    Rose = "rose",
+}
+
+export const entryTypeColors: Record<EntryTypeColor, readonly [backgroundColor: string, darkerBackgroundColor: string, textColor: string]> = Object.freeze({
+    // [overall background color, darker left rectangle color, text color]
+    // These colors come from https://tailwindcss.com/docs/customizing-colors and are typically the
+    // [color-100, color-200, and color-800] variants from that pallete
+    [EntryTypeColor.Slate]: ["#F1F5F9", "#CBD5E1", "#0F172A"],
+    [EntryTypeColor.Red]: ["#FECACA", "#FCA5A5", "#991B1B"],
+    [EntryTypeColor.Orange]: ["#FFEDD5", "#FED7AA", "#9A3412"],
+    [EntryTypeColor.Yellow]: ["#FEF9C3", "#FEF08A", "#A16207"],
+    [EntryTypeColor.Lime]: ["#ECFCCB", "#D9F99D", "#3F6212"],
+    [EntryTypeColor.Emerald]: ["#D1FAE5", "#A7F3D0", "##065F46"],
+    [EntryTypeColor.Teal]: ["#CCFBF1", "#99f6e4", "#115E59"],
+    [EntryTypeColor.Cyan]: ["#CFFAFE", "#A5F3FC", "#155E75"],
+    [EntryTypeColor.Blue]: ["#DBEAFE", "#BFDBFE", "#3730A3"],
+    [EntryTypeColor.Indigo]: ["#E0E7FF", "#C7D2FE", "#3730A3"],
+    [EntryTypeColor.Violet]: ["#EDE9FE", "#DDD6FE", "#5B21B6"],
+    [EntryTypeColor.Pink]: ["#FCE7F3", "#FBCFE8", "#9D174D"],
+    [EntryTypeColor.Rose]: ["#FFE4E6", "#FECDD3", "#9F1239"],
+});
+
 
 export const EntryTypeSchema = Schema({
     id: vnidString,
@@ -8,6 +45,10 @@ export const EntryTypeSchema = Schema({
     description: nullable(string),
     /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
     friendlyIdPrefix: nullable(string),
+    /** Color to represent this entry type */
+    color: Schema.enum(EntryTypeColor),
+    /** One or two letters used to represent this entry as an abbreviation */
+    abbreviation: string.min(0).max(2),
 
     enabledFeatures: Schema({
         Article: Schema({
