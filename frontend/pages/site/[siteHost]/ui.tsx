@@ -17,6 +17,9 @@ import { MDTEditor } from "components/widgets/MDTEditor";
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
 import { SelectBox } from "components/widgets/SelectBox";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
+import { LookupValue } from "components/LookupValue";
+import { api } from "lib/api-client";
+import { MDTContext } from "components/markdown-mdt/mdt";
 
 const UIDemo = (props: { label: string; children: React.ReactNode }) => {
     return (
@@ -38,6 +41,30 @@ const UiDemoPage: NextPage = function (props) {
     if (process.env.NODE_ENV === "production") {
         return <FourOhFour />;
     }
+
+    const demoMDTContext = new MDTContext({
+        refCache: {
+            entries: {
+                "_12345": {
+                    id: api.VNID("_12345"),
+                    description: "Description of the entry goes here.",
+                    entryType: {id: api.VNID("_demoType")},
+                    friendlyId: "demo-entry",
+                    name: "Demo Entry"
+                },
+            },
+            entryTypes: {
+                "_demoType": {
+                    id: api.VNID("_demoType"),
+                    name: "Type goes here",
+                    abbreviation: "D",
+                    color: api.EntryTypeColor.Cyan,
+                }
+            },
+            properties: {},
+            lookups: [],
+        },
+    })
 
     return (
         <SitePage title="UI Demos">
@@ -213,6 +240,19 @@ const UiDemoPage: NextPage = function (props) {
                             onChange={(event) => setSearchDemoText(event.currentTarget.value)}
                             placeholder={"Example of a search input"}
                         />
+                    </UIDemo>
+                </tbody>
+            </table>
+
+            <h2>Lookup Values</h2>
+
+            <table>
+                <tbody>
+                    <UIDemo label="Entry Type">
+                        <LookupValue value={{type: "Entry", id: api.VNID("_12345")}} mdtContext={demoMDTContext} />
+                    </UIDemo>
+                    <UIDemo label="Property Type">
+                        <LookupExpressionInput value="this.reverse(prop=[[/prop/_demoProp]])" onChange={() => null} />
                     </UIDemo>
                 </tbody>
             </table>
