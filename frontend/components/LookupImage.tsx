@@ -11,6 +11,7 @@ import { RatioBox } from './widgets/ratio-box';
 import { LookupValue } from './LookupValue';
 import Link from 'next/link';
 import { imgThumbnailLoader } from 'lib/config';
+import { ImageDisplayFormat } from 'neolace-api';
 
 /** Renders either an <a> or a <span> with the given class. */
 const OptionalLink = (props: {children: React.ReactNode; href?: api.EntryValue|api.StringValue; mdtContext: MDTContext; className: string;}) => {
@@ -86,6 +87,23 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                 }
             </div>
         </>
+    } else if (value.format === ImageDisplayFormat.Normal) {
+        // Thumbnail:
+        return <OptionalLink href={value.link} mdtContext={props.mdtContext} className="block max-w-full relative">
+            {/* A blurry representation of the image, shown while it is loading. */}
+            <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" className="opacity-30" />
+            {/* the image: */}
+            <Image
+                src={value.imageUrl}
+                loader={imgThumbnailLoader}
+                alt={value.altText}
+                layout="intrinsic"
+                width={value.width}
+                height={value.height}
+                sizes={"1000px" /* We're displaying these small thumbnails at only < 100px wide, so use a small image */}
+                objectFit={value.sizing}
+            />
+        </OptionalLink>;
     } else {
         // Thumbnail:
         return <OptionalLink href={value.link} mdtContext={props.mdtContext} className="inline-block h-20 w-20 border-2 border-gray-500 rounded-md relative">
