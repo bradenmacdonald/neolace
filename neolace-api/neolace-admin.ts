@@ -565,7 +565,12 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
     // Set images and other files
     {
         log.info("Setting entry files...");
-        const {id: draftId} = await client.createDraft({title: `Import Part ${part++}`, description: "", edits: []}, {siteId});
+
+        let draftId: VNID|undefined;
+        const getDraftId = async (): Promise<VNID> => draftId ?? await client.createDraft(
+            {title: `Import Part ${part++}`, description: "", edits: [],
+        }, {siteId}).then((d) => draftId = d.id);
+
         let numFiles = 0;
         for await (const {metadata, friendlyId, folder} of iterateEntries()) {
             const entryId = metadata.id ?? idMap[friendlyId];
@@ -573,7 +578,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                 const fileContents = await Deno.readFile(folder + "/" + metadata.image);
                 const extension = metadata.image.split(".").pop()
                 const fileBlob = new Blob([fileContents], {type: contentTypeFromExtension(extension)});
-                const draftFile = await client.uploadFileToDraft(fileBlob, {draftId, siteId});
+                const draftFile = await client.uploadFileToDraft(fileBlob, {draftId: await getDraftId(), siteId});
                 await client.addEditToDraft({
                     code: api.UpdateEntryFeature.code,
                     data: {
@@ -584,7 +589,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                             ...(metadata.imageSizing ? {setSizing: metadata.imageSizing} : {}),
                         },
                     },
-                }, {draftId, siteId});
+                }, {draftId: await getDraftId(), siteId});
                 numFiles++;
             }
             if (metadata.files) {
@@ -595,7 +600,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                         throw new Error(`Failed to open file ${fullFilePath}`, {cause: err});
                     });
                     const fileBlob = new Blob([fileContents], {type: contentTypeFromExtension(extension)});
-                    const draftFile = await client.uploadFileToDraft(fileBlob, {draftId, siteId});
+                    const draftFile = await client.uploadFileToDraft(fileBlob, {draftId: await getDraftId(), siteId});
                     await client.addEditToDraft({
                         code: api.UpdateEntryFeature.code,
                         data: {
@@ -607,13 +612,17 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                                 draftFileId: draftFile.draftFileId,
                             },
                         },
-                    }, {draftId, siteId});
+                    }, {draftId: await getDraftId(), siteId});
                     numFiles++;
                 }
             }
         }
-        await client.acceptDraft(draftId, {siteId});
-        log.info(`${numFiles} files updated`);
+        if (draftId !== undefined) {
+            await client.acceptDraft(draftId, {siteId});
+            log.info(`${numFiles} files updated`);
+        } else {
+            log.info(`No files to update.`);
+        }
     }
 }
 
