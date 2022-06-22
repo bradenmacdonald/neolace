@@ -11,6 +11,7 @@ import { HoverClickNote } from './widgets/HoverClickNote';
 import Link from 'next/link';
 import { ErrorMessage } from './widgets/ErrorMessage';
 import { LookupGraph } from "./graph/GraphLoader";
+import { EntryValue } from './widgets/EntryValue';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -101,9 +102,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             }
         }
         case "Entry": {
-            const entry = props.mdtContext.refCache.entries[value.id];
-            const linkText = entry ? entry.name : value.id;
-            return <EntryLink entryKey={value.id} mdtContext={props.mdtContext}>{linkText}</EntryLink>
+            return <EntryValue entryId={value.id} mdtContext={props.mdtContext} />;
         }
         case "Image": {
             return <LookupImage value={value} mdtContext={props.mdtContext} />;

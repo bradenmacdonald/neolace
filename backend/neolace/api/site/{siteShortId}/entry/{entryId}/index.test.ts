@@ -231,34 +231,50 @@ group("entry/index.test.ts", () => {
                     [defaultData.schema.entryTypes._ETDIVISION.id]: {
                         id: defaultData.schema.entryTypes._ETDIVISION.id,
                         name: defaultData.schema.entryTypes._ETDIVISION.name,
+                        color: defaultData.schema.entryTypes._ETDIVISION.color,
+                        abbreviation: defaultData.schema.entryTypes._ETDIVISION.abbreviation,
                     },
                     [defaultData.schema.entryTypes._ETCLASS.id]: {
                         id: defaultData.schema.entryTypes._ETCLASS.id,
                         name: defaultData.schema.entryTypes._ETCLASS.name,
+                        color: defaultData.schema.entryTypes._ETCLASS.color,
+                        abbreviation: defaultData.schema.entryTypes._ETCLASS.abbreviation,
                     },
                     [defaultData.schema.entryTypes._ETORDER.id]: {
                         id: defaultData.schema.entryTypes._ETORDER.id,
                         name: defaultData.schema.entryTypes._ETORDER.name,
+                        color: defaultData.schema.entryTypes._ETORDER.color,
+                        abbreviation: defaultData.schema.entryTypes._ETORDER.abbreviation,
                     },
                     [defaultData.schema.entryTypes._ETFAMILY.id]: {
                         id: defaultData.schema.entryTypes._ETFAMILY.id,
                         name: defaultData.schema.entryTypes._ETFAMILY.name,
+                        color: defaultData.schema.entryTypes._ETFAMILY.color,
+                        abbreviation: defaultData.schema.entryTypes._ETFAMILY.abbreviation,
                     },
                     [defaultData.schema.entryTypes._ETGENUS.id]: {
                         id: defaultData.schema.entryTypes._ETGENUS.id,
                         name: defaultData.schema.entryTypes._ETGENUS.name,
+                        color: defaultData.schema.entryTypes._ETGENUS.color,
+                        abbreviation: defaultData.schema.entryTypes._ETGENUS.abbreviation,
                     },
                     [defaultData.schema.entryTypes._ETSPECIES.id]: {
                         id: defaultData.schema.entryTypes._ETSPECIES.id,
                         name: defaultData.schema.entryTypes._ETSPECIES.name,
+                        color: defaultData.schema.entryTypes._ETSPECIES.color,
+                        abbreviation: defaultData.schema.entryTypes._ETSPECIES.abbreviation,
                     },
                     [defaultData.schema.entryTypes._ETPLANTPART.id]: {
                         id: defaultData.schema.entryTypes._ETPLANTPART.id,
                         name: defaultData.schema.entryTypes._ETPLANTPART.name,
+                        color: defaultData.schema.entryTypes._ETPLANTPART.color,
+                        abbreviation: defaultData.schema.entryTypes._ETPLANTPART.abbreviation,
                     },
                     [defaultData.schema.entryTypes._ETIMAGE.id]: {
                         id: defaultData.schema.entryTypes._ETIMAGE.id,
                         name: defaultData.schema.entryTypes._ETIMAGE.name,
+                        color: defaultData.schema.entryTypes._ETIMAGE.color,
+                        abbreviation: defaultData.schema.entryTypes._ETIMAGE.abbreviation,
                     },
                 },
                 entries: {
@@ -373,19 +389,27 @@ group("entry/index.test.ts", () => {
                     [defaultData.schema.entryTypes._ETIMAGE.id]: {
                         id: defaultData.schema.entryTypes._ETIMAGE.id,
                         name: defaultData.schema.entryTypes._ETIMAGE.name,
+                        color: defaultData.schema.entryTypes._ETIMAGE.color,
+                        abbreviation: defaultData.schema.entryTypes._ETIMAGE.abbreviation,
                     },
                     // The text only mentions these entries:
                     [defaultData.schema.entryTypes._ETCLASS.id]: {
                         id: defaultData.schema.entryTypes._ETCLASS.id,
                         name: defaultData.schema.entryTypes._ETCLASS.name,
+                        color: defaultData.schema.entryTypes._ETCLASS.color,
+                        abbreviation: defaultData.schema.entryTypes._ETCLASS.abbreviation,
                     },
                     [defaultData.schema.entryTypes._ETGENUS.id]: {
                         id: defaultData.schema.entryTypes._ETGENUS.id,
                         name: defaultData.schema.entryTypes._ETGENUS.name,
+                        color: defaultData.schema.entryTypes._ETGENUS.color,
+                        abbreviation: defaultData.schema.entryTypes._ETGENUS.abbreviation,
                     },
                     [defaultData.schema.entryTypes._ETSPECIES.id]: {
                         id: defaultData.schema.entryTypes._ETSPECIES.id,
                         name: defaultData.schema.entryTypes._ETSPECIES.name,
+                        color: defaultData.schema.entryTypes._ETSPECIES.color,
+                        abbreviation: defaultData.schema.entryTypes._ETSPECIES.abbreviation,
                     },
                 },
                 entries: {

@@ -6,6 +6,7 @@ import {
     CreateProperty,
     DeletePropertyValue,
     EditList,
+    EntryTypeColor,
     getEditType,
     InvalidEdit,
     PropertyMode,
@@ -377,6 +378,9 @@ export const ApplyEdits = defineAction({
                         CREATE (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site)
                         SET et += ${{
                         name: edit.data.name,
+                        description: "",
+                        color: EntryTypeColor.Default,
+                        abbreviation: "",
                     }}
                     `.RETURN({}));
                     modifiedNodes.add(edit.data.id);
@@ -389,11 +393,16 @@ export const ApplyEdits = defineAction({
                     if (edit.data.name !== undefined) changes.name = edit.data.name;
                     if (edit.data.description !== undefined) changes.description = edit.data.description;
                     if (edit.data.friendlyIdPrefix !== undefined) changes.friendlyIdPrefix = edit.data.friendlyIdPrefix;
+                    if (edit.data.color !== undefined) changes.color = edit.data.color;
+                    if (edit.data.abbreviation !== undefined) changes.abbreviation = edit.data.abbreviation;
 
                     // The following query will also validate that the entry type exists and is linked to the site.
                     await tx.queryOne(C`
                         MATCH (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         SET et += ${changes}
+                        // Temporary code while we have old data in the database with these values NULL:
+                        SET et.color = coalesce(et.color, "")
+                        SET et.abbreviation = coalesce(et.abbreviation, "")
                     `.RETURN({}));
                     modifiedNodes.add(edit.data.id);
                     break;

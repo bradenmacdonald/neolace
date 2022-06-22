@@ -1,6 +1,7 @@
 import { equal } from "std/testing/asserts.ts";
 import {
     EditList,
+    EntryTypeColor,
     EntryTypeData,
     PropertyData,
     PropertyMode,
@@ -24,7 +25,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
 
     const entryTypes = await tx.pull(
         EntryType,
-        (et) => et.id.name.description.friendlyIdPrefix,
+        (et) => et.id.name.description.friendlyIdPrefix.color.abbreviation,
         { where: siteFilter },
     );
 
@@ -34,6 +35,8 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             name: et.name,
             description: et.description,
             friendlyIdPrefix: et.friendlyIdPrefix,
+            color: et.color as EntryTypeColor ?? EntryTypeColor.Default,
+            abbreviation: et.abbreviation ?? "",
             enabledFeatures: {/* set below by contributeToSchema() */},
         };
     });
@@ -147,7 +150,7 @@ export function diffSchema(
             const newET = newSchema.entryTypes[entryTypeId];
             // deno-lint-ignore no-explicit-any
             const changes: any = {};
-            for (const key of ["name", "description", "friendlyIdPrefix"] as const) {
+            for (const key of ["name", "description", "friendlyIdPrefix", "color", "abbreviation"] as const) {
                 if (key === "name" && addedEntryTypeIds.has(entryTypeId)) {
                     continue; // Name was already set during the Create step, so skip that property
                 }

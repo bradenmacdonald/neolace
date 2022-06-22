@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { PropertyMode, PropertyType, SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { EntryTypeColor, PropertyMode, PropertyType, SiteSchemaData } from "neolace/deps/neolace-api.ts";
 
 // Type helper to ensure that the schema is a valid SiteSchemaData without
 // collapsing the type down to just "SiteSchemaData"
@@ -16,6 +16,8 @@ export const schema = ValidateSiteSchema({
             description:
                 "A division (also called Phylum outside of botany) is the main taxonomic classification within the Plant Kingdom.",
             friendlyIdPrefix: "d-",
+            color: EntryTypeColor.Red,
+            abbreviation: "D",
             enabledFeatures: {},
         },
         "_ETCLASS": {
@@ -23,6 +25,8 @@ export const schema = ValidateSiteSchema({
             name: "Class",
             description: "A class is a level of taxonomic classification between Division/Phylum and Order.",
             friendlyIdPrefix: "c-",
+            color: EntryTypeColor.Violet,
+            abbreviation: "C",
             enabledFeatures: {},
         },
         "_ETORDER": {
@@ -30,6 +34,8 @@ export const schema = ValidateSiteSchema({
             name: "Order",
             description: "An order is a level of taxonomic classification between Class and Family.",
             friendlyIdPrefix: "o-",
+            color: EntryTypeColor.Orange,
+            abbreviation: "O",
             enabledFeatures: {},
         },
         "_ETFAMILY": {
@@ -37,6 +43,8 @@ export const schema = ValidateSiteSchema({
             name: "Family",
             description: "A family is a level of taxonomic classification between Order and Genus.",
             friendlyIdPrefix: "f-",
+            color: EntryTypeColor.Cyan,
+            abbreviation: "F",
             enabledFeatures: {},
         },
         "_ETGENUS": {
@@ -44,6 +52,8 @@ export const schema = ValidateSiteSchema({
             name: "Genus",
             description: "A genus is a level of taxonomic classification between Family and Species.",
             friendlyIdPrefix: "g-",
+            color: EntryTypeColor.Emerald,
+            abbreviation: "G",
             enabledFeatures: {},
         },
         "_ETSPECIES": {
@@ -51,6 +61,8 @@ export const schema = ValidateSiteSchema({
             name: "Species",
             description: "A species is a basic unit of classifying life.",
             friendlyIdPrefix: "s-",
+            color: EntryTypeColor.Blue,
+            abbreviation: "S",
             enabledFeatures: {
                 Article: {},
                 HeroImage: {
@@ -63,6 +75,8 @@ export const schema = ValidateSiteSchema({
             name: "Plant Part",
             description: "Describes a part of a plant.",
             friendlyIdPrefix: "pp-",
+            color: EntryTypeColor.Yellow,
+            abbreviation: "PP",
             enabledFeatures: {},
         },
         "_ETIMAGE": {
@@ -70,6 +84,8 @@ export const schema = ValidateSiteSchema({
             name: "Image",
             description: "An image, such as a photo of a plant",
             friendlyIdPrefix: "img-",
+            color: EntryTypeColor.Slate,
+            abbreviation: "IM",
             enabledFeatures: {
                 Image: {},
             },

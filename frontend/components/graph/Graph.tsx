@@ -6,7 +6,7 @@ import { api } from "lib/api-client";
 import { MDTContext } from "../markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "../utils/resizeObserverHook";
-import { EntryColor, entryNode, pickEntryTypeLetter } from "./Node";
+import { entryNode, pickEntryTypeLetter } from "./Node";
 import { VNID } from "neolace-api";
 import { ToolbarButton, ToolbarSeparator } from "../widgets/Button";
 import { useIntl } from "react-intl";
@@ -24,7 +24,7 @@ export interface GraphProps {
 }
 
 let nextColor = 0;
-const colourMap = new Map<VNID | number, EntryColor>();
+const colourMap = new Map<VNID | number, api.EntryTypeColor>();
 
 export interface G6RawGraphData {
     nodes: {
@@ -35,6 +35,8 @@ export interface G6RawGraphData {
         community?: number;
         nodesCondensed?: Set<string>;
         clique?: number;
+        color?: api.EntryTypeColor;
+        leftLetter?: string;
     }[];
     edges: {
         id: VNID;
@@ -52,8 +54,8 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
         data.nodes.forEach((node: NodeConfig) => {
             const attrValue: VNID | number = node[attr] as VNID | number;
             if (!colourMap.has(attrValue)) {
-                colourMap.set(attrValue, Object.values(EntryColor)[nextColor]);
-                nextColor = (nextColor + 1) % Object.values(EntryColor).length;
+                colourMap.set(attrValue, Object.values(api.EntryTypeColor)[nextColor]);
+                nextColor = (nextColor + 1) % Object.values(api.EntryTypeColor).length;
             }
             node.color = colourMap.get(attrValue);
             node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
@@ -63,7 +65,10 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
     if (transformList.find((t) => t.id === Transforms.COMMUNITY) !== undefined) {
         data = colorGraphByAttribute('community');
     } else {
-        data = colorGraphByAttribute('entryType');
+        data.nodes.forEach((node) => {
+            node.color = refCache.entryTypes[node.entryType]?.color ?? api.EntryTypeColor.Default;
+            node.leftLetter = refCache.entryTypes[node.entryType]?.abbreviation ?? "";
+        });
     }
     return data;
 }

@@ -31,6 +31,8 @@ group("home.ts", () => {
             [speciesEntryType.id]: {
                 id: speciesEntryType.id,
                 name: speciesEntryType.name,
+                color: speciesEntryType.color,
+                abbreviation: speciesEntryType.abbreviation,
             },
         });
     });

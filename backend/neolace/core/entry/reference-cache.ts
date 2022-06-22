@@ -1,6 +1,6 @@
 import { api } from "neolace/api/mod.ts";
 import { C, isVNID, VNID } from "neolace/deps/vertex-framework.ts";
-import { PropertyType, ReferenceCacheData } from "neolace/deps/neolace-api.ts";
+import { EntryTypeColor, PropertyType, ReferenceCacheData } from "neolace/deps/neolace-api.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
@@ -75,7 +75,7 @@ export class ReferenceCache {
         // Entries referenced:
         const entryReferences = await lookupContext.tx.pull(
             Entry,
-            (e) => e.id.name.description.friendlyId().type((et) => et.id.name.site((s) => s.id)),
+            (e) => e.id.name.description.friendlyId().type((et) => et.id.name.color.abbreviation.site((s) => s.id)),
             {
                 where: C`@this.id IN ${Array.from(this.entryIdsUsed)} OR @this.slugId IN ${
                     Array.from(this.friendlyIdsUsed).map((friendlyId) => siteCode + friendlyId)
@@ -103,6 +103,9 @@ export class ReferenceCache {
                 data.entryTypes[reference.type.id] = {
                     id: reference.type.id,
                     name: reference.type.name,
+                    // The ?? below are temporary because older versions of the database schema didn't have color/abbreviation
+                    color: reference.type.color as EntryTypeColor ?? EntryTypeColor.Default,
+                    abbreviation: reference.type.abbreviation ?? "",
                 };
             }
         }

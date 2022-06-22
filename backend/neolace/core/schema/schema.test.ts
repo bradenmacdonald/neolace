@@ -12,7 +12,7 @@ import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
-import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { EntryTypeColor, SiteSchemaData } from "neolace/deps/neolace-api.ts";
 
 group("schema.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
@@ -42,9 +42,11 @@ group("schema.ts", () => {
                     [id]: {
                         id,
                         name,
-                        description: null,
+                        description: "",
                         friendlyIdPrefix: null,
                         enabledFeatures: {},
+                        color: EntryTypeColor.Default,
+                        abbreviation: "",
                     },
                 },
                 properties: defaultData.schema.properties,
