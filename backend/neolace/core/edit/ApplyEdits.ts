@@ -375,7 +375,8 @@ export const ApplyEdits = defineAction({
                 case CreateEntryType.code: { // Create a new EntryType
                     await tx.queryOne(C`
                         MATCH (site:${Site} {id: ${siteId}})
-                        CREATE (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site)
+                        CREATE (et:${EntryType} {id: ${edit.data.id}})
+                        CREATE (et)-[:${EntryType.rel.FOR_SITE}]->(site)
                         SET et += ${{
                         name: edit.data.name,
                         description: "",
