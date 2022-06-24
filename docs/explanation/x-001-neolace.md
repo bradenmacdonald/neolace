@@ -14,9 +14,9 @@ Every Neolace Site is primarily a collection of **Entries**. Each Entry usually 
 
 Each Entry has **Properties**; for example an entry about "Canada" would state that it has a "Total Area" of "9,984,670 km^2^" - in this case, "Total Area" is the Property and "9,984,670 km^2^" is the Property Value. Property Values can also be relationships; in the Canada example, it could have the "Capital" property with the value "Ottawa, Ontario" where "Ottawa, Ontario" is another entry.
 
-Every Neolace Site has a **Schema**, which determines what Entry Types and Properties are allowed, and how they relate to each other. Every **Entry** is of exactly one **Entry Type**, and its Entry Type determines which Properties it can have. The Entry Type of this Entry you are reading right now is { [[/etype/_7TZIMnSQGqTSn1g1Y7jANc]] }.
+Every Neolace Site has a **Schema**, which determines what Entry Types and Properties are allowed, and how they relate to each other. Every **Entry** is of exactly one **Entry Type**, and its Entry Type determines which Properties it can have. The Entry Type of this Entry you are reading right now is { this.entryType() }.
 
-Each Entry can also have **Content Features**, depending on its Entry Type. Content Features include **Article Text**, **Image**, **Hero Image**, and **Files**. The most important one is Article Text, which gives each entry a long-form article in Markdown format. The text you are reading right now is the Article Text of { this }, because this Entry's Entry Type ({ [[/etype/_7TZIMnSQGqTSn1g1Y7jANc]] }) specifies that every Explanation Entry should contain Article Text.
+Each Entry can also have **Content Features**, depending on its Entry Type. Content Features include **Article Text**, **Image**, **Hero Image**, and **Files**. The most important one is Article Text, which gives each entry a long-form article in Markdown format. The text you are reading right now is the Article Text of { this }, because this Entry's Entry Type ({ this.entryType() }) specifies that every Explanation Entry should contain Article Text.
 
 # Neolace is Semantic
 
