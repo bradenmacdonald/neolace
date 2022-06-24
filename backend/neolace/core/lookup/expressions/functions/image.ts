@@ -41,7 +41,7 @@ export class Image extends LookupFunctionWithArgs {
     public get formatExpr(): LookupExpression {
         return this.otherArgs["format"] ?? Image.defaultFormat;
     }
-    public static readonly defaultFormat = new LiteralExpression(new StringValue("thumb"));
+    public static readonly defaultFormat = new LiteralExpression(new StringValue("normal"));
 
     /** Optional paramater - URL to link to. Only valid for "logo" format. */
     public get linkExpr(): LookupExpression | undefined {
@@ -64,13 +64,10 @@ export class Image extends LookupFunctionWithArgs {
 
     public async getValue(context: LookupContext): Promise<ImageValue | NullValue | LazyIterableValue> {
         const formatArgValue = await this.formatExpr.getValueAs(StringValue, context);
-        const format: ImageDisplayFormat = (
-            formatArgValue.value === "right"
-                ? ImageDisplayFormat.RightAligned
-                : formatArgValue.value === "logo"
-                ? ImageDisplayFormat.PlainLogo
-                : ImageDisplayFormat.Thumbnail
-        );
+        const format: ImageDisplayFormat =
+            Object.values(ImageDisplayFormat).includes(formatArgValue.value as ImageDisplayFormat)
+                ? formatArgValue.value as ImageDisplayFormat
+                : ImageDisplayFormat.Normal;
 
         const entryToImageValue = async (entry: EntryValue) => {
             const imageData = await getEntryFeatureData(entry.id, { featureType: "Image", tx: context.tx });

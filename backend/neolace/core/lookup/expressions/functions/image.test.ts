@@ -48,7 +48,7 @@ group("image.ts", () => {
             altText: defaultData.entries.imgPonderosaTrunk.name,
             caption: undefined,
             contentType: "image/webp",
-            format: api.ImageDisplayFormat.Thumbnail,
+            format: api.ImageDisplayFormat.Normal,
             imageUrl: result.data.imageUrl,
             blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
             borderColor: undefined,

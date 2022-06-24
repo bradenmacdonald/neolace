@@ -39,9 +39,13 @@ export interface PropertyValue extends LookupValue {
 }
 
 export enum ImageDisplayFormat {
+    /** The image is shown at its normal/natural size, or resized to fit the width of the page, whichever is smaller */
+    Normal = "normal",
+    /** The image is shown as a small thumbnail, and users need to click on it to see it. */
     Thumbnail = "thumb",
+    /** The image floats to the right, at a medium-size. */
     RightAligned = "right",
-    PlainLogo = "plain",
+    PlainLogo = "logo",
 }
 
 /** A file attached to an entry */

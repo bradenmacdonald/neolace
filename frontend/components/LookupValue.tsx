@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { ErrorMessage } from './widgets/ErrorMessage';
 import { LookupGraph } from "./graph/GraphLoader";
 import { EntryValue } from './widgets/EntryValue';
+import { EntryTypeVoid } from './utils/slate-mdt';
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -103,6 +104,10 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         }
         case "Entry": {
             return <EntryValue entryId={value.id} mdtContext={props.mdtContext} />;
+        }
+        case "EntryType": {
+            // eslint-disable-next-line react/no-children-prop
+            return <EntryTypeVoid entryTypeId={value.id} attributes={{}} children={null} />
         }
         case "Image": {
             return <LookupImage value={value} mdtContext={props.mdtContext} />;
