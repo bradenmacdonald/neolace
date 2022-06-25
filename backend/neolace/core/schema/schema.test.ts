@@ -70,19 +70,16 @@ group("schema.ts", () => {
             }));
 
             // Now try to create an entry with the same ID in the default site:
-            await assertRejects(
-                () =>
-                    graph.runAsSystem(ApplyEdits({
-                        siteId: defaultData.site.id,
-                        edits: [
-                            { code: "CreateEntryType", data: { id, name } },
-                        ],
-                    })),
-                (err: unknown) => {
-                    assertInstanceOf(err, Error);
-                    assertStringIncludes(err.message, "already exists with label `VNode` and property `id`");
-                },
+            const err = await assertRejects(() =>
+                graph.runAsSystem(ApplyEdits({
+                    siteId: defaultData.site.id,
+                    edits: [
+                        { code: "CreateEntryType", data: { id, name } },
+                    ],
+                }))
             );
+            assertInstanceOf(err, Error);
+            assertStringIncludes(err.message, "already exists with label `VNode` and property `id`");
         });
     });
 });

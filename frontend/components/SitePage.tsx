@@ -92,7 +92,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
 
     const themeColor = (name: keyof NonNullable<typeof site.frontendConfig.theme>, defaultColor: [number, number, number])=> {
         const color: [number, number, number] = site.frontendConfig.theme?.[name] ?? defaultColor;
-        return color.join(", ");
+        return color.join(" ");
     };
 
     const defaultSystemLinks: UISlotWidget<SystemLink>[] = [];
@@ -188,7 +188,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             <link rel="icon" type="image/vnd.microsoft.icon" href="/favicon.ico"/>
             <style>{`
                 :root {
-                    --site-primary-color: 0, 255, 0;
+                    --site-primary-color: 0 255 0;
                     --site-link-color: ${themeColor("linkColor", [0, 0, 0])};
                     --site-heading-color: ${themeColor("headingColor", [0, 0, 0])};
                 }

@@ -44,35 +44,29 @@ group("edit tests", () => {
         test("We can NOT change another site's entry's name", async () => {
             // Get an API client, logged in to the *home site*, not to plant DB
             const client = await getClient(defaultData.users.admin, defaultData.otherSite.shortId);
-            await assertRejects(
-                () =>
-                    doEdit(client, {
-                        code: api.SetEntryName.code,
-                        data: { entryId: ponderosaEntryId, name: "New Name 👍" },
-                    }),
-                (err: unknown) => {
-                    assertInstanceOf(err, api.InvalidEdit);
-                    assertEquals(err.context.entryId, ponderosaEntryId);
-                    assertEquals(err.message, `Cannot set change the entry's name - entry does not exist.`);
-                },
+            const err = await assertRejects(() =>
+                doEdit(client, {
+                    code: api.SetEntryName.code,
+                    data: { entryId: ponderosaEntryId, name: "New Name 👍" },
+                })
             );
+            assertInstanceOf(err, api.InvalidEdit);
+            assertEquals(err.context.entryId, ponderosaEntryId);
+            assertEquals(err.message, `Cannot set change the entry's name - entry does not exist.`);
         });
 
         test("We can NOT change another site's entry's description", async () => {
             // Get an API client, logged in to the *home site*, not to plant DB
             const client = await getClient(defaultData.users.admin, defaultData.otherSite.shortId);
-            await assertRejects(
-                () =>
-                    doEdit(client, {
-                        code: api.SetEntryDescription.code,
-                        data: { entryId: ponderosaEntryId, description: "Desc 👍" },
-                    }),
-                (err: unknown) => {
-                    assertInstanceOf(err, api.InvalidEdit);
-                    assertEquals(err.context.entryId, ponderosaEntryId);
-                    assertEquals(err.message, `Cannot set change the entry's description - entry does not exist.`);
-                },
+            const err = await assertRejects(() =>
+                doEdit(client, {
+                    code: api.SetEntryDescription.code,
+                    data: { entryId: ponderosaEntryId, description: "Desc 👍" },
+                })
             );
+            assertInstanceOf(err, api.InvalidEdit);
+            assertEquals(err.context.entryId, ponderosaEntryId);
+            assertEquals(err.message, `Cannot set change the entry's description - entry does not exist.`);
         });
     });
 
@@ -145,28 +139,25 @@ group("edit tests", () => {
             const propertyId = defaultData.schema.properties._hasPart.id;
 
             // delete a property fact that does not exist:
-            await assertRejects(
-                () =>
-                    doEdit(client, {
-                        code: api.AddPropertyValue.code,
-                        data: {
-                            entryId: ponderosaEntryId,
-                            propertyId,
-                            propertyFactId: VNID(),
-                            /** Value expression: a lookup expression giving the value */
-                            valueExpression: "[[/entry/_FOOBAR]]",
-                        },
-                    }),
-                (err: unknown) => {
-                    assertInstanceOf(err, api.InvalidEdit);
-                    assertEquals(err.context.propertyId, propertyId);
-                    assertEquals(err.context.toEntryId, VNID("_FOOBAR"));
-                    assertEquals(err.context.fromEntryId, ponderosaEntryId);
-                    assertEquals(
-                        err.message,
-                        `Target entry not found - cannot set that non-existent entry as a relationship property value.`,
-                    );
-                },
+            const err = await assertRejects(() =>
+                doEdit(client, {
+                    code: api.AddPropertyValue.code,
+                    data: {
+                        entryId: ponderosaEntryId,
+                        propertyId,
+                        propertyFactId: VNID(),
+                        /** Value expression: a lookup expression giving the value */
+                        valueExpression: "[[/entry/_FOOBAR]]",
+                    },
+                })
+            );
+            assertInstanceOf(err, api.InvalidEdit);
+            assertEquals(err.context.propertyId, propertyId);
+            assertEquals(err.context.toEntryId, VNID("_FOOBAR"));
+            assertEquals(err.context.fromEntryId, ponderosaEntryId);
+            assertEquals(
+                err.message,
+                `Target entry not found - cannot set that non-existent entry as a relationship property value.`,
             );
         });
     });
@@ -301,18 +292,15 @@ group("edit tests", () => {
             const newVNID = VNID();
 
             // now delete the property fact that does not exist, on a real entry:
-            await assertRejects(
-                () =>
-                    doEdit(client, {
-                        code: api.DeletePropertyValue.code,
-                        data: { entryId, propertyFactId: (newVNID) },
-                    }),
-                (err: unknown) => {
-                    assertInstanceOf(err, api.InvalidEdit);
-                    assertEquals(err.context.propertyFactId, newVNID);
-                    assertEquals(err.message, `That property fact does not exist on that entry.`);
-                },
+            const err = await assertRejects(() =>
+                doEdit(client, {
+                    code: api.DeletePropertyValue.code,
+                    data: { entryId, propertyFactId: (newVNID) },
+                })
             );
+            assertInstanceOf(err, api.InvalidEdit);
+            assertEquals(err.context.propertyFactId, newVNID);
+            assertEquals(err.message, `That property fact does not exist on that entry.`);
         });
 
         test("Raise an error if the entry ID doesn't match the property fact ID", async () => {
@@ -329,13 +317,11 @@ group("edit tests", () => {
             const propertyFactId = VNID((propertyFact.value.annotations?.propertyFactId as api.StringValue).value);
             // Now delete a property fact that doesn't match with the entry ID:
             const entryId = defaultData.entries.ponderosaPine.id;
-            await assertRejects(
+            const err = await assertRejects(
                 () => doEdit(client, { code: api.DeletePropertyValue.code, data: { entryId, propertyFactId } }),
-                (err: unknown) => {
-                    assertInstanceOf(err, api.InvalidEdit);
-                    assertEquals(err.message, `That property fact does not exist on that entry.`);
-                },
             );
+            assertInstanceOf(err, api.InvalidEdit);
+            assertEquals(err.message, `That property fact does not exist on that entry.`);
         });
     });
 });

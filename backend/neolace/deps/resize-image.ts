@@ -3,7 +3,7 @@
 
 // We need this in order to speed up the blurhash algorithm, which is extremely slow to use on large images.
 
-import { Resize } from "https://deno.land/x/deno_image@v0.0.3/lib/resize/resize.js";
+import { Resize } from "https://deno.land/x/deno_image@0.0.4/lib/resize/resize.js";
 
 /**
  * Resize an image, which has already been decoded in memory as an RGB or RGBA array (doesn't matter)

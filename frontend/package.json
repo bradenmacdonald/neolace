@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "predev": "npm install && npm run compile:i18n && cd ../neolace-api && deno run --allow-read --allow-run --allow-write --allow-env --no-check _compile.ts && cd - && node ./copy-plugin-public-files.mjs",
+    "predev": "npm install && npm run compile:i18n && cd ../neolace-api && deno run --allow-read --allow-run --allow-write --allow-env _compile.ts && cd - && node ./copy-plugin-public-files.mjs",
     "dev": "next dev -p 5555",
     "prebuild": "node ./copy-plugin-public-files.mjs",
     "build": "next build",
@@ -15,7 +15,7 @@
     "i18n": "npm run extract:i18n && npm run compile:i18n"
   },
   "dependencies": {
-    "@antv/g6": "4.6.4",
+    "@antv/g6": "4.6.8",
     "@popperjs/core": "2.11.5",
     "blurhash": "1.1.5",
     "graphology": "0.24.1",
@@ -26,30 +26,30 @@
     "neolace-api": "file:../neolace-api/dist/",
     "neolace-search-frontend": "file:./plugins/search/",
     "next": "12.1.6",
-    "react": "18.1.0",
+    "react": "18.2.0",
     "react-blurhash": "0.1.3",
-    "react-dom": "18.1.0",
-    "react-intl": "6.0.3",
+    "react-dom": "18.2.0",
+    "react-intl": "6.0.4",
     "react-popper": "2.3.0",
-    "slate": "0.80.0",
+    "slate": "0.81.1",
     "slate-history": "0.66.0",
-    "slate-react": "0.80.0",
+    "slate-react": "0.81.0",
     "swr": "1.3.0"
   },
   "devDependencies": {
-    "@formatjs/cli": "5.0.1",
+    "@formatjs/cli": "5.0.2",
     "@next/bundle-analyzer": "12.1.6",
     "@types/node": "15.12.5",
-    "@types/react": "18.0.10",
+    "@types/react": "18.0.14",
     "@types/react-dom": "18.0.5",
-    "@typescript-eslint/eslint-plugin": "5.27.0",
-    "@typescript-eslint/parser": "5.27.0",
+    "@typescript-eslint/eslint-plugin": "5.29.0",
+    "@typescript-eslint/parser": "5.29.0",
     "autoprefixer": "10.4.7",
-    "eslint": "8.16.0",
+    "eslint": "8.18.0",
     "eslint-config-next": "12.1.6",
-    "eslint-plugin-formatjs": "3.1.4",
+    "eslint-plugin-formatjs": "4.0.1",
     "postcss": "8.4.14",
-    "tailwindcss": "3.0.24",
-    "typescript": "4.6.4"
+    "tailwindcss": "3.1.4",
+    "typescript": "4.7.4"
   }
 }

@@ -19,4 +19,4 @@ RUN deno cache --import-map=import_map.json neolace/plugins/*/mod.ts
 EXPOSE 5554
 
 # Start the server
-CMD ["deno", "run", "--no-check", "--import-map=import_map.json", "--allow-net", "--allow-env", "--allow-read", "neolace/api/server.ts"]
+CMD ["deno", "run", "--allow-net", "--allow-env", "--allow-read", "neolace/api/server.ts"]

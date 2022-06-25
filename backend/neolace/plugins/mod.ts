@@ -27,7 +27,7 @@ export function definePlugin(definition: NeolacePluginDefinition): NeolacePlugin
         async isEnabledForSite(_siteId: VNID) {
             return true;
         },
-        [_isPluginSymbol]: true,
+        [_isPluginSymbol]: true as const,
     });
 }
 

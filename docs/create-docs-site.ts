@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run --allow-net --allow-read --allow-env --no-check
+#!/usr/bin/env deno run --allow-net --allow-read --allow-env
 // TODO: once we have a REST API to create/update sites, change this to use the REST API only.
 
 import * as log from "std/log/mod.ts";
