@@ -125,7 +125,7 @@ export interface IIterableValue {
     getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]>;
 }
 
-export function isIterableValue(value: unknown): value is (LookupValue & IIterableValue) {
+export function isIterableValue(value: unknown): value is LookupValue & IIterableValue {
     return value instanceof LookupValue && (value as unknown as IIterableValue).isIterable === true;
 }
 
@@ -138,7 +138,7 @@ export interface IHasLiteralExpression {
     asLiteral(): string;
 }
 
-export function hasLiteralExpression(value: LookupValue): value is (LookupValue & IHasLiteralExpression) {
+export function hasLiteralExpression(value: LookupValue): value is LookupValue & IHasLiteralExpression {
     return value instanceof LookupValue && value.asLiteral() !== undefined;
 }
 
