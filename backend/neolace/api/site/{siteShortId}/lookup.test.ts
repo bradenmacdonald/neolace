@@ -67,12 +67,9 @@ group("lookup.ts", () => {
     test("It gives a parse error when the expression cannot be parsed", async () => {
         const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
-        await assertRejects(async () => {
-            await client.evaluateLookupExpression("this won't parse.");
-        }, (err: unknown) => {
-            assertInstanceOf(err, api.InvalidRequest);
-            assertEquals(err.reason, api.InvalidRequestReason.LookupExpressionParseError);
-        });
+        const err = await assertRejects(() => client.evaluateLookupExpression("this won't parse."));
+        assertInstanceOf(err, api.InvalidRequest);
+        assertEquals(err.reason, api.InvalidRequestReason.LookupExpressionParseError);
     });
 
     test("It gives an evaluation error when the expression can be parsed but is invalid", async () => {

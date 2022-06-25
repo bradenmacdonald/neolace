@@ -108,55 +108,44 @@ group("index.ts", () => {
         group("Invalid draft data", () => {
             test("cannot create a draft with an empty title", async () => {
                 const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
-                await assertRejects(
+                const err = await assertRejects(
                     () => client.createDraft({ title: "", description: null, edits: [] }),
-                    (err: Error) => {
-                        assertInstanceOf(err, api.InvalidFieldValue);
-                        assertEquals(err.fieldErrors[0].fieldPath, "title");
-                    },
                 );
+                assertInstanceOf(err, api.InvalidFieldValue);
+                assertEquals(err.fieldErrors[0].fieldPath, "title");
             });
 
             test("cannot create a draft with invalid edits", async () => {
                 const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
                 // Try creating a draft with an invalid edit code:
-                await assertRejects(
-                    () =>
-                        client.createDraft({
-                            title: "Invalid edits",
-                            description: null,
-                            edits: [
-                                {
-                                    code: "FOOBAR",
-                                    data: {},
-                                    // deno-lint-ignore no-explicit-any
-                                } as any,
-                            ],
-                        }),
-                    (err: Error) => {
-                        assertInstanceOf(err, api.InvalidFieldValue);
-                        assertEquals(err.fieldErrors[0].fieldPath, "edits.0.code");
-                    },
+                const err = await assertRejects(() =>
+                    client.createDraft({
+                        title: "Invalid edits",
+                        description: null,
+                        edits: [
+                            // deno-lint-ignore no-explicit-any
+                            { code: "FOOBAR", data: {} } as any,
+                        ],
+                    })
                 );
+                assertInstanceOf(err, api.InvalidFieldValue);
+                assertEquals(err.fieldErrors[0].fieldPath, "edits.0.code");
                 // Try creating a draft with a valid edit code but invalid data:
-                await assertRejects(
-                    () =>
-                        client.createDraft({
-                            title: "Invalid edits",
-                            description: null,
-                            edits: [
-                                {
-                                    code: api.CreateEntry.code,
-                                    // deno-lint-ignore no-explicit-any
-                                    data: { foo: "bar" } as any,
-                                },
-                            ],
-                        }),
-                    (err: Error) => {
-                        assertInstanceOf(err, api.InvalidFieldValue);
-                        assertEquals(err.fieldErrors[0].fieldPath, "edits.0.data");
-                    },
+                const err2 = await assertRejects(() =>
+                    client.createDraft({
+                        title: "Invalid edits",
+                        description: null,
+                        edits: [
+                            {
+                                code: api.CreateEntry.code,
+                                // deno-lint-ignore no-explicit-any
+                                data: { foo: "bar" } as any,
+                            },
+                        ],
+                    })
                 );
+                assertInstanceOf(err2, api.InvalidFieldValue);
+                assertEquals(err2.fieldErrors[0].fieldPath, "edits.0.data");
             });
         });
 
