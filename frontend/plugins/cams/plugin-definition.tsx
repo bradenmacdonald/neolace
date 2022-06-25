@@ -9,7 +9,7 @@ import type { HouseOfSecurityProps } from "./plugin-components/HouseOfSecurity";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const MembersOnlyNotice = dynamic<any>(() => import(`./plugin-components/MembersOnlyNotice`).then(mod => mod.MembersOnlyNotice));
 // Ideally we shouldn't need 'ssr: false' nor 'loading: ...' here, and we could use
-// <Suspense fallback={<Spinner/>>}<HouseOfSecurity/></Suspense> below, but it currently doesn't seem to be working.
+// <React.Suspense fallback={<Spinner/>}><HouseOfSecurity/></React.Suspense> below, but it currently doesn't seem to be working.
 // https://github.com/vercel/next.js/issues/35728
 // https://stackoverflow.com/questions/71706064/react-18-hydration-failed-because-the-initial-ui-does-not-match-what-was-render
 const HouseOfSecurity = dynamic<HouseOfSecurityProps>(() => import(`./plugin-components/HouseOfSecurity`).then(mod => mod.HouseOfSecurity), {ssr: false, loading: () => <>...</> });
