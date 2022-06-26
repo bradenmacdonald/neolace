@@ -5,7 +5,7 @@ import { api, useSiteSchema } from "lib/api-client";
 import { type MDT } from "neolace-api";
 import { Transforms } from "slate";
 import { RenderElementProps, useSlate, ReactEditor } from "slate-react";
-import { VoidEntryTypeNode, type VoidPropNode } from "./slate";
+import type { VoidEntryNode, VoidEntryTypeNode, VoidPropNode } from "./slate";
 import './slate.ts';
 
 /**
@@ -27,7 +27,7 @@ export const PropertyVoid = ({ propertyId, attributes, children }: {propertyId: 
 
 /**
  * In any of our editors (lookup expression editor, markdown source editor, markdown visual editor), this is a
- * non-editable element that represents an entry type property, and displays it in a human-readable way.
+ * non-editable element that represents an entry type, and displays it in a human-readable way.
  */
 export const EntryTypeVoid = ({ entryTypeId, attributes, children }: {entryTypeId: api.VNID, attributes: Record<string, unknown>, children: React.ReactNode}) => {
     const [schema] = useSiteSchema();
@@ -40,6 +40,36 @@ export const EntryTypeVoid = ({ entryTypeId, attributes, children }: {entryTypeI
         <span className="rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700">{entryTypeName}</span>
         {children /* Slate.js requires this empty text node child inside void elements that aren't editable. */}
     </span>;
+}
+
+/**
+ * In any of our editors (lookup expression editor, markdown source editor, markdown visual editor), this is a
+ * non-editable element that represents an entry. This allows us to store the
+ * property VNID in the actual markdown/lookup code, but display it to the user as a nice friendly property name.
+ */
+export const EntryVoid = ({ entryId, attributes, children }: {entryId: api.VNID, attributes: Record<string, unknown>, children: React.ReactNode}) => {
+    // TBD: we need a hook to get the current draft OR current entry + refCache
+    const entryName = `Entry ${entryId}`;
+    const colors = api.entryTypeColors[api.EntryTypeColor.Default];
+    const abbrev = "";
+    return (
+        <span
+            contentEditable={false}
+            {...attributes}
+            className="text-sm font-medium font-sans"
+            style={{
+                "--entry-type-color-0": colors[0],
+                "--entry-type-color-1": colors[1],
+                "--entry-type-color-2": colors[2],
+            } as React.CSSProperties}
+        >
+            <span className="rounded-l-md py-[2px] min-w-[2em] text-center inline-block bg-entry-type-color-1 text-entry-type-color-2">
+                <span className="text-xs inline-block min-w-[1.4em] text-center opacity-40">{abbrev}</span>
+            </span>
+            <span className="rounded-r-md py-[3px] px-2 bg-gray-50 hover:bg-entry-type-color-0 text-black hover:text-entry-type-color-2">{entryName}</span>
+            {children /* Slate.js requires this empty text node child inside void elements that aren't editable. */}
+        </span>
+    );
 }
 
 /**
@@ -100,6 +130,8 @@ export function renderElement({element, children, attributes}: RenderElementProp
 
         case "paragraph":
             return <p {...attributes}>{children}</p>;
+        case "custom-void-entry":
+            return <EntryVoid entryId={(element as VoidEntryNode).entryId} attributes={attributes}>{children}</EntryVoid>;
         case "custom-void-property":
             return <PropertyVoid propertyId={(element as VoidPropNode).propertyId} attributes={attributes}>{children}</PropertyVoid>;
         case "custom-void-entry-type":
