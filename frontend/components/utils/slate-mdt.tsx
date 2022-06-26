@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "components/widgets/Icon";
 import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
-import { api, useSiteSchema } from "lib/api-client";
+import { api, useLookupExpression, useSiteSchema } from "lib/api-client";
 import { type MDT } from "neolace-api";
 import { Transforms } from "slate";
 import { RenderElementProps, useSlate, ReactEditor } from "slate-react";
@@ -49,9 +49,12 @@ export const EntryTypeVoid = ({ entryTypeId, attributes, children }: {entryTypeI
  */
 export const EntryVoid = ({ entryId, attributes, children }: {entryId: api.VNID, attributes: Record<string, unknown>, children: React.ReactNode}) => {
     // TBD: we need a hook to get the current draft OR current entry + refCache
-    const entryName = `Entry ${entryId}`;
-    const colors = api.entryTypeColors[api.EntryTypeColor.Default];
-    const abbrev = "";
+    const lookupData = useLookupExpression(`[[/entry/${entryId}]]`);
+    const entryData = lookupData.result?.referenceCache.entries[entryId];
+    const entryName = entryData?.name ?? `Entry ${entryId}`;
+    const entryTypeData = lookupData.result?.referenceCache.entryTypes[entryData?.entryType.id ?? ""];
+    const colors = api.entryTypeColors[entryTypeData?.color ?? api.EntryTypeColor.Default];
+    const abbrev = entryTypeData?.abbreviation ?? "";
     return (
         <span
             contentEditable={false}
