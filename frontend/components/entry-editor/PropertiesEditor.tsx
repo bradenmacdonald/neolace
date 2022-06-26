@@ -13,6 +13,7 @@ import { LookupExpressionInput } from "components/widgets/LookupExpressionInput"
 import { Icon } from "components/widgets/Icon";
 import { Button, ToolbarButton } from "components/widgets/Button";
 import { Tooltip } from "components/widgets/Tooltip";
+import { InlineMDT, MDTContext } from "components/markdown-mdt/mdt";
 
 // We have to declare this empty object outside of the function below so it doesn't change on every call.
 const emptyPropsRawArray: api.EditableEntryData["propertiesRaw"] = [];
@@ -182,7 +183,7 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
                     // const isLast = (idx === facts.length - 1);
                     const currentValue = fact.valueExpression;
                     return (
-                        <div key={idx} className="flex w-full min-w-0">
+                        <div key={idx} className="flex w-full min-w-0 flex-wrap">
                             {
                                 /*
                                 In the future, for simple values we can show the actual computed value, and not show
@@ -208,6 +209,11 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
                                     id: '6d1F0k',
                                 })}
                             />
+                            {fact.note ?// TODO: We need an editor for notes and a better way to handle MDTContext here
+                                <div className="w-full text-sm">
+                                    Note: <InlineMDT mdt={fact.note} context={new MDTContext({})} />
+                                </div>
+                            :null}
                         </div>
                     );
                 })}
