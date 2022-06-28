@@ -22,6 +22,8 @@ import {
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
+import { hasPermissions, makeCypherCondition } from "neolace/core/permissions/check.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
 
 /**
  * Helper function to read annotated rank values from a database query result
@@ -122,6 +124,14 @@ export class GetProperty extends LookupFunctionWithArgs {
         } else if (propType === PropertyType.RelIsA || propType === PropertyType.RelOther) {
             // This is a relationship property.
             const startingEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
+            // Get the cypher clause/predicate that we can use to filter out entries that the user is not allowed to see.
+            const canViewProperties = await makeCypherCondition(
+                context.subject,
+                corePerm.viewEntryProperty.name,
+                {},
+                ["entry"],
+            );
+            const canViewEntry = await makeCypherCondition(context.subject, corePerm.viewEntry.name, {}, ["entry"]);
             // Using a simplified version of our "get property value" code, we are finding all the entries that are
             // related via a specific property to the source entry/entries.
             return new LazyEntrySetValue(
@@ -129,6 +139,8 @@ export class GetProperty extends LookupFunctionWithArgs {
                 C`
                 ${startingEntrySet.cypherQuery}
 
+                // Make sure that the user has permission to view the properties of this entry:
+                WITH entry WHERE ${canViewProperties}
                 WITH entry AS fromEntry  // Continue the existing entry query, discard annotations if present
 
                 // Get the property that we're looking for, and double-check it applies to this specific entry...
@@ -157,6 +169,8 @@ export class GetProperty extends LookupFunctionWithArgs {
                 WITH toEntry AS entry, {note: pf.note, rank: pf.rank, slot: slot} AS annotations
 
                 WITH entry, annotations
+                WHERE ${canViewEntry}
+                WITH entry, annotations
                 ORDER BY annotations.rank, entry.name
             `,
                 {
@@ -170,6 +184,13 @@ export class GetProperty extends LookupFunctionWithArgs {
             const forEntry = await (await this.fromEntriesExpr.getValue(context)).castTo(EntryValue, context);
             if (forEntry !== undefined) {
                 // Yes, we are looking up this value for a single entry.
+
+                // Does the user have permission?
+                if (!await hasPermissions(context.subject, corePerm.viewEntryProperty.name, { entryId: forEntry.id })) {
+                    throw new LookupEvaluationError("You do not have permission to view that property.");
+                }
+
+                // Get the value
                 const propFacts = await getEntryProperty({
                     entryId: forEntry.id,
                     propertyId: propValue.id,
