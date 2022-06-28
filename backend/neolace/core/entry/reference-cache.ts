@@ -5,6 +5,7 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import type { LookupContext } from "neolace/core/lookup/context.ts";
+import { EntryType } from "neolace/core/schema/EntryType.ts";
 
 /**
  * A reference cache contains:
@@ -19,6 +20,7 @@ export class ReferenceCache {
     private _entryIdsUsed = new Set<VNID>();
     private _friendlyIdsUsed = new Set<string>();
     private _propertyIdsUsed = new Set<VNID>();
+    private _entryTypeIdsUsed = new Set<VNID>();
     private _lookupExpressions: Array<{ entryContext?: VNID; lookupExpression: string }> = [];
     readonly siteId: VNID;
 
@@ -75,7 +77,7 @@ export class ReferenceCache {
         // Entries referenced:
         const entryReferences = await lookupContext.tx.pull(
             Entry,
-            (e) => e.id.name.description.friendlyId().type((et) => et.id.name.color.abbreviation.site((s) => s.id)),
+            (e) => e.id.name.description.friendlyId().type((et) => et.id.site((s) => s.id)),
             {
                 where: C`@this.id IN ${Array.from(this.entryIdsUsed)} OR @this.slugId IN ${
                     Array.from(this.friendlyIdsUsed).map((friendlyId) => siteCode + friendlyId)
@@ -99,15 +101,7 @@ export class ReferenceCache {
             };
             this.extractMarkdownReferences(reference.description, { currentEntryId: reference.id });
 
-            if (data.entryTypes[reference.type.id] === undefined) {
-                data.entryTypes[reference.type.id] = {
-                    id: reference.type.id,
-                    name: reference.type.name,
-                    // The ?? below are temporary because older versions of the database schema didn't have color/abbreviation
-                    color: reference.type.color as EntryTypeColor ?? EntryTypeColor.Default,
-                    abbreviation: reference.type.abbreviation ?? "",
-                };
-            }
+            this._entryTypeIdsUsed.add(reference.type.id);
         }
         // Now, the descriptions of referenced entries may contain lookup expressions that we need to evaluate:
         // TODO: remove this, and fetch descriptions in real time. This is too much like recursion
@@ -115,6 +109,25 @@ export class ReferenceCache {
             await evaluateLookupExpressions(lookup);
         }
 
+        // Entry types referenced:
+        const entryTypeReferences = await lookupContext.tx.pull(
+            EntryType,
+            (et) => et.id.name.color.abbreviation.site((s) => s.id),
+            {
+                where: C`@this.id IN ${Array.from(this._entryTypeIdsUsed)}`,
+            },
+        );
+        for (const reference of entryTypeReferences) {
+            data.entryTypes[reference.id] = {
+                id: reference.id,
+                name: reference.name,
+                // The ?? below are temporary because older versions of the database schema didn't have color/abbreviation
+                color: reference.color as EntryTypeColor ?? EntryTypeColor.Default,
+                abbreviation: reference.abbreviation ?? "",
+            };
+        }
+
+        // Properties referenced:
         const propertyReferences = await lookupContext.tx.pull(
             Property,
             (p) => p.id.name.type.descriptionMD.standardURL.importance.displayAs.site((s) => s.id),
@@ -185,7 +198,11 @@ export class ReferenceCache {
                 return;
             }
             case "EntryType": {
-                // TODO: store the entry type?
+                this._entryTypeIdsUsed.add(value.id);
+                return;
+            }
+            case "Property": {
+                this._propertyIdsUsed.add(value.id);
                 return;
             }
             case "Image": {
