@@ -1,0 +1,184 @@
+import {
+    assertEquals,
+    assertInstanceOf,
+    assertRejects,
+    createUserWithPermissions,
+    group,
+    setTestIsolation,
+    test,
+    TestLookupContext,
+} from "neolace/lib/tests.ts";
+import { EntryTypeValue, EntryValue, IntegerValue, PageValue, PropertyValue, StringValue } from "../../values.ts";
+import { LiteralExpression } from "../literal-expr.ts";
+import { LookupEvaluationError } from "../../errors.ts";
+import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
+import { Always, EntryTypesCondition, PermissionGrant } from "neolace/core/permissions/grant.ts";
+import { BasicSearch } from "./basicSearch.ts";
+import { getGraph } from "neolace/core/graph.ts";
+
+group("basicSearch.ts", () => {
+    const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
+    const siteId = defaultData.site.id;
+    const context = new TestLookupContext({ siteId, defaultPageSize: 5n });
+
+    test(`It can match on entry names (case insensitive)`, async () => {
+        // basicSearch("pINe")
+        const expr = new BasicSearch(new LiteralExpression(new StringValue("pINe")));
+
+        const result = await context.evaluateExprConcrete(expr);
+        assertEquals(
+            result,
+            new PageValue([
+                // These are currently the first five entries with "pine" in their name in the default PlantDB data set,
+                // in alphabetical order:
+                new EntryValue(defaultData.entries.jackPine.id),
+                new EntryValue(defaultData.entries.japaneseRedPine.id),
+                new EntryValue(defaultData.entries.japaneseWhitePine.id),
+                new EntryValue(defaultData.entries.jeffreyPine.id),
+                new EntryValue(defaultData.entries.pinyonPine.id),
+            ], { pageSize: 5n, startedAt: 0n, totalCount: 9n, sourceExpression: expr }),
+        );
+    });
+
+    test(`It can match on entry friendly IDs (case insensitive)`, async () => {
+        // basicSearch("Pinus-P")
+        const expr = new BasicSearch(new LiteralExpression(new StringValue("Pinus-P")));
+
+        const result = await context.evaluateExprConcrete(expr);
+        assertEquals(
+            result,
+            new PageValue([
+                // These are currently the only three entries with "pinus-p" in their friendly ID:
+                new EntryValue(defaultData.entries.japaneseWhitePine.id), // friendlyId: "s-pinus-parviflora"
+                new EntryValue(defaultData.entries.ponderosaPine.id), // friendlyId: "s-pinus-ponderosa"
+                new EntryValue(defaultData.entries.stonePine.id), // friendlyId: "s-pinus-pinea"
+            ], { pageSize: 5n, startedAt: 0n, totalCount: 3n, sourceExpression: expr }),
+        );
+    });
+
+    test(`It can match on property names (case insensitive)`, async () => {
+        // basicSearch("NAME")
+        const expr = new BasicSearch(new LiteralExpression(new StringValue("NAME")));
+
+        const result = await context.evaluateExprConcrete(expr);
+        assertEquals(
+            result,
+            new PageValue([
+                // These are currently the only two properties with "name" in their property name:
+                new PropertyValue(defaultData.schema.properties._propOtherNames.id),
+                new PropertyValue(defaultData.schema.properties._propScientificName.id),
+            ], { pageSize: 5n, startedAt: 0n, totalCount: 2n, sourceExpression: expr }),
+        );
+    });
+
+    test(`It can match on entry type names (case insensitive)`, async () => {
+        // basicSearch("species")
+        const expr = new BasicSearch(new LiteralExpression(new StringValue("species")));
+
+        const result = await context.evaluateExprConcrete(expr);
+        assertEquals(
+            result,
+            new PageValue([
+                // In this case, we match both an entry type and a property:
+                new EntryTypeValue(defaultData.schema.entryTypes._ETSPECIES.id),
+                new PropertyValue(defaultData.schema.properties._genusSpecies.id),
+            ], { pageSize: 5n, startedAt: 0n, totalCount: 2n, sourceExpression: expr }),
+        );
+    });
+
+    test(`It gives an error message when given a non-string`, async () => {
+        const expression = new BasicSearch(new LiteralExpression(new IntegerValue(13)));
+
+        await assertRejects(
+            () => context.evaluateExpr(expression),
+            LookupEvaluationError,
+            `The expression "13" is not of the right type.`,
+        );
+    });
+
+    test(`toString()`, async () => {
+        assertEquals(new BasicSearch(new LiteralExpression(new StringValue("foo"))).toString(), `basicSearch("foo")`);
+    });
+});
+
+group("basicSearch.ts - permissions", () => {
+    const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
+    const siteId = defaultData.site.id;
+    const context = new TestLookupContext({ siteId, defaultPageSize: 5n });
+
+    test(`It enforces permissions`, async () => {
+        // First make the PlantDB site private:
+        const graph = await getGraph();
+        await graph.runAsSystem(UpdateSite({
+            key: defaultData.site.id,
+            accessMode: AccessMode.Private,
+        }));
+
+        // First, test this search, which will return schema results:
+        // basicSearch("species")
+        {
+            const expression = new BasicSearch(new LiteralExpression(new StringValue("species")));
+
+            // A user who is not logged in at all:
+            {
+                const result = await context.evaluateExprConcrete(expression);
+                assertInstanceOf(result, PageValue);
+                assertEquals(result.values.length, 0);
+            }
+
+            // A user with permission to view the schema:
+            {
+                const user = await createUserWithPermissions(
+                    new PermissionGrant(Always, [corePerm.viewSite.name, corePerm.viewSchema.name]),
+                );
+                const result = await context.evaluateExprConcrete(expression, undefined, user.userId);
+                assertInstanceOf(result, PageValue);
+                assertEquals(
+                    result,
+                    new PageValue([
+                        // In this case, we match both an entry type and a property:
+                        new EntryTypeValue(defaultData.schema.entryTypes._ETSPECIES.id),
+                        new PropertyValue(defaultData.schema.properties._genusSpecies.id),
+                    ], { pageSize: 5n, startedAt: 0n, totalCount: 2n, sourceExpression: expression }),
+                );
+            }
+        }
+
+        // Now test a search for entries:
+        // basicSearch("pin")
+        {
+            const expression = new BasicSearch(new LiteralExpression(new StringValue("pin")));
+
+            // A user who is not logged in at all:
+            {
+                const result = await context.evaluateExprConcrete(expression);
+                assertInstanceOf(result, PageValue);
+                assertEquals(result.values.length, 0);
+            }
+
+            // A user with permission to view *genus* and *order* entries only:
+            {
+                const user = await createUserWithPermissions(
+                    new PermissionGrant(
+                        new EntryTypesCondition([
+                            defaultData.schema.entryTypes._ETGENUS.id,
+                            defaultData.schema.entryTypes._ETORDER.id,
+                        ]),
+                        [corePerm.viewSite.name, corePerm.viewEntry.name],
+                    ),
+                );
+                const result = await context.evaluateExprConcrete(expression, undefined, user.userId);
+                assertInstanceOf(result, PageValue);
+                assertEquals(
+                    result,
+                    new PageValue([
+                        new EntryValue(defaultData.entries.orderPinales.id),
+                        new EntryValue(defaultData.entries.genusPinus.id),
+                        // Not matched due to permissions: "pinyonPine", "familyPinaceae", etc.
+                    ], { pageSize: 5n, startedAt: 0n, totalCount: 2n, sourceExpression: expression }),
+                );
+            }
+        }
+    });
+});
