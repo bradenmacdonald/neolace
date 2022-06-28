@@ -5,6 +5,8 @@ import { Site } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { directRelTypeForPropertyType, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
+import { makeCypherCondition } from "neolace/core/permissions/check.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
 
 import { LookupExpression } from "../base.ts";
 import {
@@ -107,6 +109,22 @@ export class ReverseProperty extends LookupFunctionWithArgs {
 
         const startingEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
 
+        // Permissions check:
+        const canViewEntry = await makeCypherCondition(
+            context.subject,
+            [
+                // If A "has author" B, where "has author" is a property, then to reverse the "has author" from B to A
+                // (show me all papers authored by B), the user needs permission to view A including view its properties
+                // (in this case "view author").
+                // We can assume that B (the argument to this reverse() function) is an entry the user has permission to
+                // view so we only need to check A.
+                corePerm.viewEntry.name,
+                corePerm.viewEntryProperty.name,
+            ],
+            {},
+            ["entry"],
+        );
+
         // Find all the entries that are related via the specified property to the source entry/entries.
         return new LazyEntrySetValue(
             context,
@@ -132,6 +150,8 @@ export class ReverseProperty extends LookupFunctionWithArgs {
                 slot: CASE WHEN prop.enableSlots THEN pf.slot ELSE null END
             } AS annotations
 
+            WITH entry, annotations
+            WHERE ${canViewEntry}
             WITH entry, annotations
             ORDER BY annotations.rank, entry.name
         `,

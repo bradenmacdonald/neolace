@@ -6,6 +6,8 @@ import { IntegerValue, LazyEntrySetValue, LookupValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionOneArg } from "./base.ts";
+import { makeCypherCondition } from "neolace/core/permissions/check.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
 
 const MAX_DEPTH = 50;
 
@@ -33,6 +35,11 @@ export class Ancestors extends LookupFunctionOneArg {
     public async getValue(context: LookupContext): Promise<LookupValue> {
         const startingEntry = await this.entryExpr.getValueAs(LazyEntrySetValue, context);
 
+        // Cypher clause/predicate that we can use to filter out entries that the user is not allowed to see.
+        const entryPermissionPredicate = await makeCypherCondition(context.subject, corePerm.viewEntry.name, {}, [
+            "entry",
+        ]);
+
         return new LazyEntrySetValue(
             context,
             C`
@@ -44,6 +51,7 @@ export class Ancestors extends LookupFunctionOneArg {
             ORDER BY distance, ancestor.name
 
             WITH ancestor AS entry, {distance: distance} AS annotations
+            WHERE ${entryPermissionPredicate}
         `,
             {
                 annotations: { distance: dbDistanceToValue },
@@ -67,6 +75,11 @@ export class AndAncestors extends LookupFunctionOneArg {
     public async getValue(context: LookupContext): Promise<LookupValue> {
         const startingEntry = await this.entryExpr.getValueAs(LazyEntrySetValue, context);
 
+        // Cypher clause/predicate that we can use to filter out entries that the user is not allowed to see.
+        const entryPermissionPredicate = await makeCypherCondition(context.subject, corePerm.viewEntry.name, {}, [
+            "entry",
+        ]);
+
         return new LazyEntrySetValue(
             context,
             C`
@@ -76,6 +89,7 @@ export class AndAncestors extends LookupFunctionOneArg {
             ORDER BY distance, ancestor.name
 
             WITH ancestor AS entry, {distance: distance} AS annotations
+            WHERE ${entryPermissionPredicate}
         `,
             {
                 annotations: { distance: dbDistanceToValue },

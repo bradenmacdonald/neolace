@@ -1,5 +1,16 @@
-import { assertEquals, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import {
+    assertEquals,
+    assertInstanceOf,
+    assertRejects,
+    createUserWithPermissions,
+    group,
+    setTestIsolation,
+    test,
+    TestLookupContext,
+} from "neolace/lib/tests.ts";
+import {
+    AnnotatedValue,
+    EntryValue,
     InlineMarkdownStringValue,
     IntegerValue,
     MakeAnnotatedEntryValue,
@@ -12,6 +23,11 @@ import { GetProperty } from "./get.ts";
 import { This } from "../this.ts";
 import { LiteralExpression } from "../literal-expr.ts";
 import { ReverseProperty } from "./reverse.ts";
+import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
+import { Always, EntryTypesCondition, PermissionGrant } from "neolace/core/permissions/grant.ts";
+import { getGraph } from "neolace/core/graph.ts";
+import { LookupEvaluationError } from "../../errors.ts";
 
 group("get.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
@@ -127,5 +143,152 @@ group("get.ts", () => {
                 }),
             );
         });
+    });
+});
+
+group("get.ts - permissions", () => {
+    const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
+    const siteId = defaultData.site.id;
+    const context = new TestLookupContext({ siteId, entryId: defaultData.entries.ponderosaPine.id });
+
+    // Literal expressions referencing some properties in the default PlantDB data set:
+    const scientificName = new LiteralExpression(
+        new PropertyValue(defaultData.schema.properties._propScientificName.id),
+    );
+    const parentGenus = new LiteralExpression(new PropertyValue(defaultData.schema.properties._parentGenus.id));
+
+    test(`It enforces permissions for basic property values`, async () => {
+        // First make the PlantDB site private:
+        const graph = await getGraph();
+        await graph.runAsSystem(UpdateSite({
+            key: defaultData.site.id,
+            accessMode: AccessMode.Private,
+        }));
+
+        // One can only get a basic property value if one has 'view properties' permission
+        // this.get(prop=[scientific name])
+        {
+            const expression = new GetProperty(new This(), { prop: scientificName });
+
+            // A user who is not logged in at all:
+            {
+                await assertRejects(
+                    () => context.evaluateExprConcrete(expression),
+                    LookupEvaluationError,
+                    "You do not have permission to view that property.",
+                );
+            }
+
+            // A user with permission to view the site, entry and schema, but not "view properties":
+            {
+                const user = await createUserWithPermissions(
+                    new PermissionGrant(Always, [
+                        corePerm.viewSite.name,
+                        corePerm.viewEntry.name,
+                        corePerm.viewSchema.name,
+                    ]),
+                );
+                await assertRejects(
+                    () => context.evaluateExprConcrete(expression, undefined, user.userId),
+                    LookupEvaluationError,
+                    "You do not have permission to view that property.",
+                );
+            }
+
+            // A user with "view properties" for "species" entries (and view entry etc. for all enrties):
+            {
+                const user = await createUserWithPermissions(
+                    new PermissionGrant(Always, [
+                        corePerm.viewSite.name,
+                        corePerm.viewEntry.name,
+                        corePerm.viewSchema.name,
+                    ]),
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETSPECIES.id]), [
+                        corePerm.viewEntryProperty.name,
+                    ]),
+                );
+                const result = await context.evaluateExprConcrete(expression, undefined, user.userId);
+                assertInstanceOf(result, StringValue);
+                assertEquals(result.value, "Pinus ponderosa");
+            }
+        }
+    });
+
+    test(`It enforces permissions for relationship property values`, async () => {
+        // First make the PlantDB site private:
+        const graph = await getGraph();
+        await graph.runAsSystem(UpdateSite({
+            key: defaultData.site.id,
+            accessMode: AccessMode.Private,
+        }));
+
+        // One can only get a relationship value if one has 'view properties' permission for the current entry and
+        // 'view entry' for the related entry.
+
+        // this.get(prop=[parent genus])
+        {
+            const expression = new GetProperty(new This(), { prop: parentGenus });
+
+            // A user who is not logged in at all:
+            {
+                const result = await context.evaluateExprConcrete(expression);
+                assertInstanceOf(result, PageValue);
+                assertEquals(result.values.length, 0);
+            }
+
+            // A user with permission to view properties of species but not view genus entries:
+            {
+                const user = await createUserWithPermissions(
+                    new PermissionGrant(Always, [
+                        corePerm.viewSite.name,
+                        corePerm.viewSchema.name,
+                    ]),
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETSPECIES.id]), [
+                        corePerm.viewEntry.name,
+                        corePerm.viewEntryProperty.name,
+                    ]),
+                );
+                const result = await context.evaluateExprConcrete(expression, undefined, user.userId);
+                assertInstanceOf(result, PageValue);
+                assertEquals(result.values.length, 0);
+            }
+
+            // A user with permission to view genus entries but not properties of species:
+            {
+                const user = await createUserWithPermissions(
+                    new PermissionGrant(Always, [
+                        corePerm.viewSite.name,
+                        corePerm.viewSchema.name,
+                        corePerm.viewEntry.name,
+                    ]),
+                );
+                const result = await context.evaluateExprConcrete(expression, undefined, user.userId);
+                assertInstanceOf(result, PageValue);
+                assertEquals(result.values.length, 0);
+            }
+
+            // A user with permission to view properties of species and view genus entries. This should work:
+            {
+                const user = await createUserWithPermissions(
+                    new PermissionGrant(Always, [
+                        corePerm.viewSite.name,
+                        corePerm.viewSchema.name,
+                    ]),
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETSPECIES.id]), [
+                        corePerm.viewEntry.name,
+                        corePerm.viewEntryProperty.name,
+                    ]),
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETGENUS.id]), [
+                        corePerm.viewEntry.name,
+                    ]),
+                );
+                const result = await context.evaluateExprConcrete(expression, undefined, user.userId);
+                assertInstanceOf(result, PageValue);
+                assertEquals(result.values.length, 1);
+                assertInstanceOf(result.values[0], AnnotatedValue);
+                assertInstanceOf(result.values[0].value, EntryValue);
+                assertEquals(result.values[0].value.id, defaultData.entries.genusPinus.id);
+            }
+        }
     });
 });
