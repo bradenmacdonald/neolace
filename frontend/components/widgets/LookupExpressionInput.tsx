@@ -3,9 +3,11 @@ import { useIntl } from "react-intl";
 import { type Descendant } from "slate";
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate } from "slate-react";
 import {
+    checkForAutocompletion,
     EscapeMode,
     slateDocToStringValue,
     stringValueToSlateDoc,
+    useAutocompletionState,
     useForceUpdate,
     useNeolaceSlateEditor,
     VoidEntryNode,
@@ -14,6 +16,7 @@ import {
 } from "components/utils/slate";
 import { EntryTypeVoid, EntryVoid, PropertyVoid } from "components/utils/slate-mdt";
 import { displayString, TranslatableString } from "components/utils/i18n";
+import { Portal } from "components/utils/Portal";
 
 interface Props {
     /** The lookup value that is currently being edited */
@@ -38,8 +41,8 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
     const intl = useIntl();
     const renderLeaf = React.useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
-
     const forceUpdate = useForceUpdate();
+    const [autocompletion, setAutocompletion] = useAutocompletionState();
 
     const parsedValue: Descendant[] = React.useMemo(() => stringValueToSlateDoc(value), [value]);
 
@@ -57,7 +60,8 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
             const newLookupValue = slateDocToStringValue(newValue, EscapeMode.PlainText);
             onChange(newLookupValue);
         }
-    }, [onChange]);
+        setAutocompletion(checkForAutocompletion(editor));
+    }, [editor, onChange, setAutocompletion]);
 
     const handleKeyDown = React.useCallback((event: React.KeyboardEvent) => {
         if (event.key === "Enter") {
@@ -92,6 +96,19 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
                 renderElement={renderElement}
                 placeholder={props.placeholder ? displayString(intl, props.placeholder) : undefined}
             />
+            {/* Autocompletion dropdown */}
+            {
+                autocompletion.type ?
+                    <Portal>
+                        <div
+                            className="absolute border rounded bg-white border-slate-700"
+                            style={{left: autocompletion.position[0], top: autocompletion.position[1]}}
+                        >
+                            Autocompleting "{autocompletion.search}".
+                        </div>
+                    </Portal>
+                : null
+            }
         </div>
   </Slate>
 }

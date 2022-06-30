@@ -8,7 +8,9 @@ interface Props {
 }
 
 /**
- * Use a React portal to render elements at the end of the <body>. Based on https://stackoverflow.com/a/59154364
+ * Use a React portal to render elements at the end of the HTML `<body>`.
+ * Based on https://stackoverflow.com/a/59154364
+ *
  * @param children Child elements
  * @param className CSS classname
  * @param el HTML element to create.  default: div
