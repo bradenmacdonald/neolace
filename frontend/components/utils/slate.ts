@@ -163,9 +163,9 @@ export function useForceUpdate(){
                 parts.push({ type: "text", text: line });
                 break;
             } else {
-                if (nextProp.index > 0) {
-                    parts.push({ type: "text", text: line.substring(0, nextProp.index) });
-                }
+                // First add any text that comes before the prop/entry/entryType void. This may be an empty string but
+                // we still need that so that the user can position their cursor before the void.
+                parts.push({ type: "text", text: line.substring(0, nextProp.index) });
                 const type = nextProp[1], id = nextProp[2] as api.VNID;
                 if (type === "entry") {
                     parts.push({type: "custom-void-entry", entryId: id, children: [{type: "text", text: ""}]});

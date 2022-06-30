@@ -4,9 +4,25 @@ import { LookupExpressionInput } from "components/widgets/LookupExpressionInput"
 import { api, useLookupExpression, useSiteSchema } from "lib/api-client";
 import { type MDT } from "neolace-api";
 import { Transforms } from "slate";
-import { RenderElementProps, useSlate, ReactEditor } from "slate-react";
+import { RenderElementProps, useSlate, ReactEditor, useSelected, useFocused } from "slate-react";
 import type { VoidEntryNode, VoidEntryTypeNode, VoidPropNode } from "./slate";
 import './slate.ts';
+
+const useVoidSelectionStatus = () => {
+    const _selected = useSelected();
+    const _slateEditorFocused = useFocused();
+    const selected = _selected && _slateEditorFocused;
+    const editor = useSlate();
+    // Is the selection just on this void itself or is a larger block of text selected?
+    // We want the colors to match the hover state when the cursor is just inside this void, but we want it to be
+    // rendered blue to match other selections when it's part of a larger selection.
+    const exclusivelySelected = (
+        selected &&
+        editor.selection?.anchor.path.toString() === editor.selection?.focus.path.toString() &&
+        editor.selection?.anchor.offset === editor.selection?.focus.offset
+    );
+    return [selected, exclusivelySelected];
+};
 
 /**
  * In any of our editors (lookup expression editor, markdown source editor, markdown visual editor), this is a
@@ -14,13 +30,14 @@ import './slate.ts';
  * property VNID in the actual markdown/lookup code, but display it to the user as a nice friendly property name.
  */
 export const PropertyVoid = ({ propertyId, attributes, children }: {propertyId: api.VNID, attributes: Record<string, unknown>, children: React.ReactNode}) => {
+    const [selected] = useVoidSelectionStatus();
     const [schema] = useSiteSchema();
     const propertyName = schema ? (propertyId ? schema.properties[propertyId]?.name : `Unknown property (${propertyId})`) : "Loading...";
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
-        <span className="rounded-l-md py-[3px] px-2 bg-gray-200 text-green-700">
+        <span className={`rounded-l-md py-[3px] px-2 bg-gray-200 text-green-700 ${selected ? '!bg-sky-300 !text-gray-700' : ''}`}>
             <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="diamond-fill"/></span>
         </span>
-        <span className="rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700">{propertyName}</span>
+        <span className={`rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700 ${selected ? '!bg-sky-200' : ''}`}>{propertyName}</span>
         {children /* Slate.js requires this empty text node child inside void elements that aren't editable. */}
     </span>;
 }
@@ -30,14 +47,15 @@ export const PropertyVoid = ({ propertyId, attributes, children }: {propertyId: 
  * non-editable element that represents an entry type, and displays it in a human-readable way.
  */
 export const EntryTypeVoid = ({ entryTypeId, attributes, children }: {entryTypeId: api.VNID, attributes: Record<string, unknown>, children: React.ReactNode}) => {
+    const [selected] = useVoidSelectionStatus();
     const [schema] = useSiteSchema();
     const entryTypeName = schema ? (schema.entryTypes[entryTypeId]?.name ?? `Unknown entry type (${entryTypeId})`) : "Loading...";
     const entryTypeColor = schema?.entryTypes[entryTypeId]?.color ?? api.EntryTypeColor.Default;
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
-        <span className="rounded-l-md py-[3px] px-2 bg-gray-200" style={{color: api.entryTypeColors[entryTypeColor][2]}}>
+        <span className={`rounded-l-md py-[3px] px-2 bg-gray-200 ${selected ? '!bg-sky-300' : ''}`} style={{color: api.entryTypeColors[entryTypeColor][2]}}>
             <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
         </span>
-        <span className="rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700">{entryTypeName}</span>
+        <span className={`rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700 ${selected ? '!bg-sky-200' : ''}`}>{entryTypeName}</span>
         {children /* Slate.js requires this empty text node child inside void elements that aren't editable. */}
     </span>;
 }
@@ -48,6 +66,7 @@ export const EntryTypeVoid = ({ entryTypeId, attributes, children }: {entryTypeI
  * property VNID in the actual markdown/lookup code, but display it to the user as a nice friendly property name.
  */
 export const EntryVoid = ({ entryId, attributes, children }: {entryId: api.VNID, attributes: Record<string, unknown>, children: React.ReactNode}) => {
+    const [selected, exclusivelySelected] = useVoidSelectionStatus();
     // TBD: we need a hook to get the current draft OR current entry + refCache
     const lookupData = useLookupExpression(`[[/entry/${entryId}]]`);
     const entryData = lookupData.result?.referenceCache.entries[entryId];
@@ -59,17 +78,27 @@ export const EntryVoid = ({ entryId, attributes, children }: {entryId: api.VNID,
         <span
             contentEditable={false}
             {...attributes}
-            className="text-sm font-medium font-sans"
+            className="text-sm font-medium font-sans select-none"
             style={{
                 "--entry-type-color-0": colors[0],
                 "--entry-type-color-1": colors[1],
                 "--entry-type-color-2": colors[2],
             } as React.CSSProperties}
         >
-            <span className="rounded-l-md py-[2px] min-w-[2em] text-center inline-block bg-entry-type-color-1 text-entry-type-color-2">
-                <span className="text-xs inline-block min-w-[1.4em] text-center opacity-40">{abbrev}</span>
+            <span className={`
+                rounded-l-md py-[2px] min-w-[2em] text-center inline-block
+                ${selected && !exclusivelySelected ? 'bg-sky-300' : 'bg-entry-type-color-1 text-entry-type-color-2'}
+            `}>
+                <span className="text-xs inline-block min-w-[1.4em] text-center opacity-40 selection:bg-transparent">{abbrev}</span>
             </span>
-            <span className="rounded-r-md py-[3px] px-2 bg-gray-50 hover:bg-entry-type-color-0 text-black hover:text-entry-type-color-2">{entryName}</span>
+            <span className={`
+                rounded-r-md py-[3px] px-2 bg-gray-50 text-black selection:bg-transparent
+                ${
+                    exclusivelySelected ? 'bg-entry-type-color-0 text-entry-type-color-2' :
+                    (selected ? 'bg-sky-200' :
+                    'hover:bg-entry-type-color-0 hover:text-entry-type-color-2')
+                }
+            `}>{entryName}</span>
             {children /* Slate.js requires this empty text node child inside void elements that aren't editable. */}
         </span>
     );

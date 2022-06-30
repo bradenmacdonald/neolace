@@ -136,7 +136,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({value = '', ...props}
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={emptyDocument} onChange={handleChange}>
         <div
-            className="border border-gray-500 rounded-md focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full"
+            className="border border-gray-500 rounded-md focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full selection:bg-sky-200"
             ref={rootDiv}
         >
             {/* The Toolbar */}
