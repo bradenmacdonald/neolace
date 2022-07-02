@@ -16,7 +16,7 @@ import {
 } from "components/utils/slate";
 import { EntryTypeVoid, EntryVoid, PropertyVoid } from "components/utils/slate-mdt";
 import { displayString, TranslatableString } from "components/utils/i18n";
-import { Portal } from "components/utils/Portal";
+import { AutocompletionMenu } from "./AutocompleteMenu";
 
 interface Props {
     /** The lookup value that is currently being edited */
@@ -98,15 +98,12 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
             />
             {/* Autocompletion dropdown */}
             {
-                autocompletion.type ?
-                    <Portal>
-                        <div
-                            className="absolute border rounded bg-white border-slate-700"
-                            style={{left: autocompletion.position[0], top: autocompletion.position[1]}}
-                        >
-                            Autocompleting "{autocompletion.search}".
-                        </div>
-                    </Portal>
+                autocompletion.type === "entityReference" ?
+                    <AutocompletionMenu
+                        searchTerm={autocompletion.search}
+                        positionLeft={autocompletion.position[0]}
+                        positionTop={autocompletion.position[1]}
+                    />
                 : null
             }
         </div>

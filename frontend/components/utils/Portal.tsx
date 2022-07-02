@@ -17,7 +17,7 @@ interface Props {
  */
 export const Portal: React.FC<Props> = ({
     children,
-    className = "fixed root-portal top-0 left-0 w-full z-modal",
+    className = "root-portal top-0 left-0 w-full z-modal",
     el = "div",
 }) => {
     const [container, setContainer] = React.useState<HTMLElement | null>(null);
