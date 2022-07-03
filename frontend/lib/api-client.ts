@@ -1,15 +1,15 @@
-import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
-import useSWR, { KeyedMutator } from 'swr';
-import { AsyncCache } from './async-cache';
-import { useRouter } from 'next/router';
-import { EvaluateLookupData, isVNID, NeolaceApiClient, NotFound, SiteDetailsData, VNID } from 'neolace-api';
+import "lib/keratin-authn/keratin-authn.min";
+import useSWR, { KeyedMutator } from "swr";
+import { AsyncCache } from "./async-cache";
+import { useRouter } from "next/router";
+import { EvaluateLookupData, isVNID, NeolaceApiClient, NotFound, SiteDetailsData, VNID } from "neolace-api";
 
-import { API_SERVER_URL, IN_BROWSER } from 'lib/config';
-import { ApiError } from 'next/dist/server/api-utils';
+import { API_SERVER_URL, IN_BROWSER } from "lib/config";
+import { ApiError } from "next/dist/server/api-utils";
 
-import * as api from 'neolace-api';
+import * as api from "neolace-api";
 import { getSessionToken, useUser } from "./authentication";
-export * as api from 'neolace-api';
+export * as api from "neolace-api";
 
 /** Use this in URLs in lieu of an ID if there is no ID yet. It's neither a valid VNID nor friendlyId. */
 export const NEW = "_";
@@ -40,12 +40,12 @@ export const client = new NeolaceApiClient({
 
 const siteDataCache = new AsyncCache<string, SiteDetailsData>(
     async (domain) => {
-        return await client.getSite({domain,});
+        return await client.getSite({ domain });
     },
-    5 * 60_000,  // timeout is 5 minutes
+    5 * 60_000, // timeout is 5 minutes
 );
 
-export async function getSiteData(domain: string): Promise<SiteDetailsData|null> {
+export async function getSiteData(domain: string): Promise<SiteDetailsData | null> {
     try {
         // If the site has been previously retrieved, this cache will always return the cached value immediately.
         // (Occasionally it will be refreshed in the background, but we still get an immediate result here.)
@@ -66,21 +66,21 @@ if (IN_BROWSER) {
 
 /**
  * React hook to get basic data about the current site.
- * @returns 
+ * @returns
  */
-export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteData, siteError: ApiError} {
+export function useSiteData(options: { fallback?: SiteData } = {}): { site: SiteData; siteError: ApiError } {
     const router = useRouter();
     // router.query.siteHost gives the site's domain name because of how we have the Next.js URL rewriting configured.
     const domain = router.query.siteHost as string;
     // eslint-disable-next-line prefer-const
     let { data, error } = useSWR(`site:${domain}`, async () => {
         if (domain) {
-            return await client.getSite({domain});
+            return await client.getSite({ domain });
         } else {
             throw new Error("Can't load site yet because domain is unknown.");
         }
     }, {
-        refreshInterval: 10 * 60_000,  // Reload the site data every 10 minutes in case anything was changed.
+        refreshInterval: 10 * 60_000, // Reload the site data every 10 minutes in case anything was changed.
     });
     if (data === undefined) {
         // If data is undefined at this point, it means that it hasn't yet been loaded from the API (or couldn't be),
@@ -101,46 +101,51 @@ export function useSiteData(options: {fallback?: SiteData} = {}): {site: SiteDat
             isHomeSite: false,
             homeSiteName: "━━━━━━━━━━━━━━",
             homeSiteUrl: "",
-        }
+        };
     }
-    return {site: data, siteError: error};
+    return { site: data, siteError: error };
 }
-
 
 /**
  * React hook to evaluate a lookup expression
- * @returns 
+ * @returns
  */
-export function useLookupExpression(expr: string, options: {entryId?: VNID, pageSize?: number} = {}): {result: EvaluateLookupData|undefined, error: ApiError} {
-    const {site} = useSiteData();
+export function useLookupExpression(
+    expr: string,
+    options: { entryId?: VNID; pageSize?: number } = {},
+): { result: EvaluateLookupData | undefined; error: ApiError } {
+    const { site } = useSiteData();
     // TODO: include an entry revision number in this ID
-    const key = `lookup:${site.shortId}:${options.entryId ?? 'none'}:${options.pageSize ?? 'default'}:no-draft:${expr}`;
+    const key = `lookup:${site.shortId}:${options.entryId ?? "none"}:${options.pageSize ?? "default"}:no-draft:${expr}`;
     const { data, error } = useSWR(key, async () => {
         if (expr.trim() === "") {
             // If there is no expression, don't bother hitting the API:
             return {
-                resultValue: {type: "Null" as const},
+                resultValue: { type: "Null" as const },
                 entryContext: options.entryId,
                 referenceCache: { entries: {}, entryTypes: {}, lookups: [], properties: {} },
             };
         } else if (site.shortId) {
-            return await client.evaluateLookupExpression(expr, {entryKey: options.entryId, siteId: site.shortId, pageSize: options.pageSize});
+            return await client.evaluateLookupExpression(expr, {
+                entryKey: options.entryId,
+                siteId: site.shortId,
+                pageSize: options.pageSize,
+            });
         } else {
             return undefined;
         }
     }, {
-
         // refreshInterval: 10 * 60_000,
     });
-    return {result: data, error};
+    return { result: data, error };
 }
 
 /**
  * React hook to get the current site's schema
- * @returns 
+ * @returns
  */
-export function useSiteSchema(): [data: api.SiteSchemaData|undefined, error: ApiError|undefined] {
-    const {site, siteError} = useSiteData();
+export function useSiteSchema(): [data: api.SiteSchemaData | undefined, error: ApiError | undefined] {
+    const { site, siteError } = useSiteData();
 
     const key = `siteSchema:${site.shortId}:no-draft`;
     const { data, error } = useSWR(key, async () => {
@@ -150,9 +155,8 @@ export function useSiteSchema(): [data: api.SiteSchemaData|undefined, error: Api
         if (!site.shortId) {
             return undefined; // We need to wait for the siteId before we can load the entry
         }
-        return await client.getSiteSchema({siteId: site.shortId});
+        return await client.getSiteSchema({ siteId: site.shortId });
     }, {
-
         // refreshInterval: 10 * 60_000,
     });
     return [data, error];
@@ -162,13 +166,19 @@ type DraftDataWithEdits = Required<api.DraftData>;
 
 /**
  * React hook to get the currently published version of an entry, to use as a basis for making edits.
- * @returns 
+ * @returns
  */
-export function useDraft(draftId: VNID|"_"): [data: DraftDataWithEdits|undefined, error: ApiError|undefined, mutate: KeyedMutator<DraftDataWithEdits|undefined>] {
-    const {site, siteError} = useSiteData();
+export function useDraft(
+    draftId: VNID | "_",
+): [
+    data: DraftDataWithEdits | undefined,
+    error: ApiError | undefined,
+    mutate: KeyedMutator<DraftDataWithEdits | undefined>,
+] {
+    const { site, siteError } = useSiteData();
 
     const key = `draft:${site.shortId}:${draftId}`;
-    const { data, error, mutate } = useSWR(key, async (): Promise<DraftDataWithEdits|undefined> => {
+    const { data, error, mutate } = useSWR(key, async (): Promise<DraftDataWithEdits | undefined> => {
         if (siteError) {
             throw new ApiError(500, "Site Error");
         }
@@ -195,13 +205,14 @@ export function useDraft(draftId: VNID|"_"): [data: DraftDataWithEdits|undefined
     return [data, error, mutate];
 }
 
-
-
 /**
  * React hook to get the data required to display an entry
  */
-export function useEntry(entryKey: VNID|string, fallback?: api.EntryData): [data: api.EntryData|undefined, error: ApiError|undefined] {
-    const {site, siteError} = useSiteData();
+export function useEntry(
+    entryKey: VNID | string,
+    fallback?: api.EntryData,
+): [data: api.EntryData | undefined, error: ApiError | undefined] {
+    const { site, siteError } = useSiteData();
     const user = useUser();
     const userKey = user.username ?? "";
 
@@ -213,14 +224,16 @@ export function useEntry(entryKey: VNID|string, fallback?: api.EntryData): [data
         if (!site.shortId) {
             return undefined; // We need to wait for the siteId before we can load the entry
         }
-        const data: api.EntryData = await client.getEntry(entryKey, {flags: [
-            api.GetEntryFlags.IncludeFeatures,
-            api.GetEntryFlags.IncludePropertiesSummary,
-            api.GetEntryFlags.IncludeReferenceCache,
-        ] as const, siteId: site.shortId});
+        const data: api.EntryData = await client.getEntry(entryKey, {
+            flags: [
+                api.GetEntryFlags.IncludeFeatures,
+                api.GetEntryFlags.IncludePropertiesSummary,
+                api.GetEntryFlags.IncludeReferenceCache,
+            ] as const,
+            siteId: site.shortId,
+        });
         return data;
     }, {
-
         // refreshInterval: 10 * 60_000,
     });
     if (!data && !error && fallback) {
@@ -230,13 +243,18 @@ export function useEntry(entryKey: VNID|string, fallback?: api.EntryData): [data
     return [data, error];
 }
 
-
 /**
  * React hook to get the currently published version of an entry, to use as a basis for making edits.
- * @returns 
+ * @returns
  */
-export function useEditableEntry(entryId: VNID | {newEntryWithId: VNID}): [data: api.EditableEntryData|undefined, error: ApiError|undefined, mutate: KeyedMutator<api.EditableEntryData|undefined>] {
-    const {site, siteError} = useSiteData();
+export function useEditableEntry(
+    entryId: VNID | { newEntryWithId: VNID },
+): [
+    data: api.EditableEntryData | undefined,
+    error: ApiError | undefined,
+    mutate: KeyedMutator<api.EditableEntryData | undefined>,
+] {
+    const { site, siteError } = useSiteData();
 
     // TODO: Change "no-draft" below to the ID of the current draft, if any, from a <DraftContext> provider.
     const key = `entry-edit:${site.shortId}:no-draft:${entryId}`;
@@ -252,7 +270,7 @@ export function useEditableEntry(entryId: VNID | {newEntryWithId: VNID}): [data:
                     friendlyId: "",
                     name: "",
                     description: "",
-                    entryType: {id: "" as VNID, name: ""},
+                    entryType: { id: "" as VNID, name: "" },
                     features: {},
                     propertiesRaw: [],
                 };
@@ -267,13 +285,15 @@ export function useEditableEntry(entryId: VNID | {newEntryWithId: VNID}): [data:
         if (!isVNID(entryId)) {
             throw new ApiError(500, `"${entryId}" is not a valid VNID`);
         }
-        const data: api.EditableEntryData = await client.getEntry(entryId, {flags: [
-            api.GetEntryFlags.IncludeFeatures,
-            api.GetEntryFlags.IncludeRawProperties,
-        ] as const, siteId: site.shortId});
+        const data: api.EditableEntryData = await client.getEntry(entryId, {
+            flags: [
+                api.GetEntryFlags.IncludeFeatures,
+                api.GetEntryFlags.IncludeRawProperties,
+            ] as const,
+            siteId: site.shortId,
+        });
         return data;
     }, {
-
         // refreshInterval: 10 * 60_000,
     });
     return [data, error, mutate];

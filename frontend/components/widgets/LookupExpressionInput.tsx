@@ -1,11 +1,19 @@
-import React from 'react';
-import { useIntl } from 'react-intl';
-import { type Descendant } from 'slate'
-import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate } from 'slate-react';
-import { EscapeMode, slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor, VoidEntryNode, VoidEntryTypeNode, VoidPropNode } from 'components/utils/slate';
-import { EntryTypeVoid, EntryVoid, PropertyVoid } from 'components/utils/slate-mdt';
-import { displayString, TranslatableString } from 'components/utils/i18n';
-
+import React from "react";
+import { useIntl } from "react-intl";
+import { type Descendant } from "slate";
+import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate } from "slate-react";
+import {
+    EscapeMode,
+    slateDocToStringValue,
+    stringValueToSlateDoc,
+    useForceUpdate,
+    useNeolaceSlateEditor,
+    VoidEntryNode,
+    VoidEntryTypeNode,
+    VoidPropNode,
+} from "components/utils/slate";
+import { EntryTypeVoid, EntryVoid, PropertyVoid } from "components/utils/slate-mdt";
+import { displayString, TranslatableString } from "components/utils/i18n";
 
 interface Props {
     /** The lookup value that is currently being edited */
@@ -24,8 +32,9 @@ interface Props {
 /**
  * A lookup expression input. Normally a single-line, but if the user enters newlines (with shift-enter) it will become multi-line.
  */
-export const LookupExpressionInput: React.FunctionComponent<Props> = ({value, onChange, onFinishedEdits, ...props}) => {
-
+export const LookupExpressionInput: React.FunctionComponent<Props> = (
+    { value, onChange, onFinishedEdits, ...props },
+) => {
     const intl = useIntl();
     const renderLeaf = React.useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
@@ -39,7 +48,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = ({value, on
         // should also ignore updates that match the current value that the editor has.
         if (value !== slateDocToStringValue(editor.children, EscapeMode.PlainText)) {
             editor.children = parsedValue;
-            forceUpdate();  // Without this, sometimes React won't update and the UI won't reflect the new state.
+            forceUpdate(); // Without this, sometimes React won't update and the UI won't reflect the new state.
         }
     }, [value]);
 
@@ -89,16 +98,24 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = ({value, on
 
 const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
     return <span {...attributes} className="">{children}</span>;
-}
+};
 
-export function renderElement({element, children, attributes}: RenderElementProps): JSX.Element {
+export function renderElement({ element, children, attributes }: RenderElementProps): JSX.Element {
     if (element.type === "custom-void-entry") {
-        return <EntryVoid entryId={(element as VoidEntryNode).entryId} attributes={attributes}>{children}</EntryVoid>
+        return <EntryVoid entryId={(element as VoidEntryNode).entryId} attributes={attributes}>{children}</EntryVoid>;
     } else if (element.type === "custom-void-property") {
-        return <PropertyVoid propertyId={(element as VoidPropNode).propertyId} attributes={attributes}>{children}</PropertyVoid>
+        return (
+            <PropertyVoid propertyId={(element as VoidPropNode).propertyId} attributes={attributes}>
+                {children}
+            </PropertyVoid>
+        );
     } else if (element.type === "custom-void-entry-type") {
-        return <EntryTypeVoid entryTypeId={(element as VoidEntryTypeNode).entryTypeId} attributes={attributes}>{children}</EntryTypeVoid>
+        return (
+            <EntryTypeVoid entryTypeId={(element as VoidEntryTypeNode).entryTypeId} attributes={attributes}>
+                {children}
+            </EntryTypeVoid>
+        );
     } else {
-        return <span {...attributes}>{children}</span>
+        return <span {...attributes}>{children}</span>;
     }
 }

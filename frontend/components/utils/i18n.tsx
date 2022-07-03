@@ -13,21 +13,19 @@ interface CustomMessage extends MessageDescriptor {
  * UI, anywhere that JSX/HTML objects are supported. The UI component should use displayText() to convert this to a
  * <FormattedMessage/> object, which will actually translate it.
  */
-export type TranslatableText = (
+export type TranslatableText =
     | CustomMessage
     | { msg: CustomMessage; values: Record<string, React.ReactNode> }
-    | { custom: React.ReactNode }
-);
+    | { custom: React.ReactNode };
 
 /**
  * Use this when defining a custom UI component that needs to accept a text string as a property, and use it as a plain
  * text string, e.g. when setting an HTML attribute. The UI component should use
  * `const intl = useIntl()` and `intl.formatMessage(...)`
  */
-export type TranslatableString = (
+export type TranslatableString =
     | CustomMessage
-    | { msg: CustomMessage; values: Record<string, string> }
-);
+    | { msg: CustomMessage; values: Record<string, string> };
 
 /** Use this function to indicate which text should be translated. */
 export function defineMessage(md: MessageDescriptor | CustomMessage): CustomMessage {

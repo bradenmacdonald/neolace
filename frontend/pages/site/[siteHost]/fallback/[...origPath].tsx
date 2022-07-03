@@ -23,8 +23,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
  * fallback. It checks if the URL is configured as a site-specific redirect; if so, the user is redirected. If not, we
  * check if a plugin wants to serve this page; if so, we use the plugin. Otherwise we throw a 404.
  */
-const FallbackPage: NextPage<PageProps> = function ({pluginId, pluginPage, ...props}) {
-
+const FallbackPage: NextPage<PageProps> = function ({ pluginId, pluginPage, ...props }) {
     // If we get here, then a plugin is being used:
 
     const PluginComponent = dynamic<PluginPageProps>(
@@ -35,7 +34,13 @@ const FallbackPage: NextPage<PageProps> = function ({pluginId, pluginPage, ...pr
         // down the frontend build.
         () => import(`../../../../plugins/${pluginId}/plugin-pages/${pluginPage}`),
         {
-            loading: () => <SiteDataProvider sitePreloaded={props.site}><SitePage title={"Loading..."}><Spinner/></SitePage></SiteDataProvider>,
+            loading: () => (
+                <SiteDataProvider sitePreloaded={props.site}>
+                    <SitePage title={"Loading..."}>
+                        <Spinner />
+                    </SitePage>
+                </SiteDataProvider>
+            ),
         },
     );
 
@@ -58,7 +63,7 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
 };
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
-    if (!context.params) { throw new Error("Internal error - missing URL params."); }  // Make TypeScript happy
+    if (!context.params) throw new Error("Internal error - missing URL params."); // Make TypeScript happy
 
     // Look up the Neolace site by domain:
     const site = await getSiteData(context.params.siteHost);
@@ -83,10 +88,10 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         if (enabledPluginIds.includes(plugin.id)) {
             const pageName = plugin.getPageForPath?.(site, origPath);
             if (pageName) {
-                return {props: {site, path: origPath, pluginId: plugin.id, pluginPage: pageName}};
+                return { props: { site, path: origPath, pluginId: plugin.id, pluginPage: pageName } };
             }
         }
     }
-    
-    return {notFound: true};
+
+    return { notFound: true };
 };

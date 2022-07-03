@@ -1,7 +1,7 @@
-import type { VirtualElement } from '@popperjs/core';
-import { Portal } from 'components/utils/Portal';
-import React from 'react';
-import { usePopper } from 'react-popper';
+import type { VirtualElement } from "@popperjs/core";
+import { Portal } from "components/utils/Portal";
+import React from "react";
+import { usePopper } from "react-popper";
 
 interface TooltipProps {
     tooltipContent: React.ReactNode;
@@ -21,22 +21,26 @@ function isVirtualElement(obj: unknown): obj is VirtualElement {
 export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
     const tooltipId = React.useId();
     const [isElementHovered, setElementHovered] = React.useState(false);
-    const [referenceElement, setReferenceElement] = React.useState<HTMLElement|null>(null);
-    const [popperElement, setPopperElement] = React.useState<HTMLSpanElement|null>(null);
+    const [referenceElement, setReferenceElement] = React.useState<HTMLElement | null>(null);
+    const [popperElement, setPopperElement] = React.useState<HTMLSpanElement | null>(null);
     const showTooltip = isElementHovered || props.forceVisible || false;
-    const { styles, attributes } = usePopper(isVirtualElement(props.children) ? props.children : referenceElement, popperElement, {
-        placement: "bottom-start",
-        modifiers: [
-            { name: 'offset', options: { offset: [0, 8] } },
-            // Optimize performance by only updating the tooltip position while it's visible:
-            { name: 'eventListeners', enabled: showTooltip },
-        ],
-    });
+    const { styles, attributes } = usePopper(
+        isVirtualElement(props.children) ? props.children : referenceElement,
+        popperElement,
+        {
+            placement: "bottom-start",
+            modifiers: [
+                { name: "offset", options: { offset: [0, 8] } },
+                // Optimize performance by only updating the tooltip position while it's visible:
+                { name: "eventListeners", enabled: showTooltip },
+            ],
+        },
+    );
 
     const makeVisible = React.useCallback(() => { setElementHovered(true) }, [setElementHovered]);
     const makeHidden = React.useCallback(() => { setElementHovered(false) }, [setElementHovered]);
     // A general click event handler to watch for "click outside of tooltip" events
-    const {onClickOutsideTooltip} = props;
+    const { onClickOutsideTooltip } = props;
     const handleClickOutside = React.useCallback((event: MouseEvent) => {
         if (onClickOutsideTooltip && popperElement && !popperElement.contains(event.target as Node)) {
             onClickOutsideTooltip();

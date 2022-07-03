@@ -30,11 +30,11 @@ const DraftDetailsPage: NextPage = function (_props) {
 
     const [isUpdatingDraft, setUpdatingDraft] = React.useState(false);
     const acceptDraft = React.useCallback(async () => {
-        if (!draft || !site || draft.status !== api.DraftStatus.Open) { return; }
+        if (!draft || !site || draft.status !== api.DraftStatus.Open) return;
         setUpdatingDraft(true);
-        await client.acceptDraft(draft.id, {siteId: site.shortId});
+        await client.acceptDraft(draft.id, { siteId: site.shortId });
         // Optimistically mark this as accepted:
-        await mutateDraft({...draft, status: api.DraftStatus.Accepted});
+        await mutateDraft({ ...draft, status: api.DraftStatus.Accepted });
         setUpdatingDraft(false);
     }, [draft, site, mutateDraft]);
 
@@ -117,8 +117,8 @@ const DraftDetailsPage: NextPage = function (_props) {
     return (
         <SitePage
             title={draft
-                ? intl.formatMessage({ id: 'Z2/PbO', defaultMessage: `Draft: {title}` }, { title: draft.title })
-                : intl.formatMessage({ id: 'f4NTf1', defaultMessage: `Loading draft` })}
+                ? intl.formatMessage({ id: "Z2/PbO", defaultMessage: `Draft: {title}` }, { title: draft.title })
+                : intl.formatMessage({ id: "f4NTf1", defaultMessage: `Loading draft` })}
             leftNavTopSlot={[]}
         >
             {content}

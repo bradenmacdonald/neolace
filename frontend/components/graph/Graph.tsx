@@ -48,7 +48,6 @@ export interface G6RawGraphData {
     }[];
 }
 
-
 function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: api.ReferenceCacheData) {
     function colorGraphByAttribute(attr: string) {
         data.nodes.forEach((node: NodeConfig) => {
@@ -60,10 +59,10 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
             node.color = colourMap.get(attrValue);
             node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
         });
-        return data
+        return data;
     }
     if (transformList.find((t) => t.id === Transforms.COMMUNITY) !== undefined) {
-        data = colorGraphByAttribute('community');
+        data = colorGraphByAttribute("community");
     } else {
         data.nodes.forEach((node) => {
             node.color = refCache.entryTypes[node.entryType]?.color ?? api.EntryTypeColor.Default;
@@ -130,7 +129,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         let transformedData = applyTransforms(originalData, transformList);
         transformedData = colorGraph(transformedData, transformList, props.mdtContext.refCache);
         return transformedData;
-    }, [originalData, transformList, props.mdtContext.refCache])
+    }, [originalData, transformList, props.mdtContext.refCache]);
 
     // In order to preserve our G6 graph when we move it to a modal (when expanding the view), the <div> that contains
     // it must not be destroyed and re-created. React will normally try to destroy and re-create it, not realizing that
@@ -158,7 +157,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         } else if (graphContainer) {
             newGraphHolderDiv.appendChild(graphContainer);
         }
-    }, [graphContainer]);  // But we expect that "graphContainer" should never change (we don't define a "set" function)
+    }, [graphContainer]); // But we expect that "graphContainer" should never change (we don't define a "set" function)
 
     // "graph" is the actual G6 graph instance which owns a <canvas> element, and renders the graph.
     // See https://g6.antv.vision/en/docs/api/Graph
@@ -173,8 +172,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Our G6 Graph configuration
     const graphConfig: Partial<GraphOptions> = React.useMemo(() => ({
         plugins: [],
-        layout: {  
-            type: 'force',
+        layout: {
+            type: "force",
             preventOverlap: true,
             nodeSize: [200, 50],
             nodeSpacing: 60,
@@ -199,7 +198,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             },
         },
         defaultCombo: {
-            type: 'circle',
+            type: "circle",
             size: [80],
             labelCfg: {
                 style: {
@@ -208,7 +207,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             },
             /* style for the keyShape */
             style: {
-                fill: '#cffafe',
+                fill: "#cffafe",
                 opacity: 0.3,
             },
         },
@@ -223,10 +222,10 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     // However, if this event is a "touchstart" event (pinch to zoom on mobile), we always zoom.
                     shouldBegin: (evt?: IG6GraphEvent) => expandedRef.current || evt?.type === "touchstart",
                 },
-                'drag-node',
-                'drag-combo',
+                "drag-node",
+                "drag-combo",
                 {
-                    type: 'collapse-expand-combo',
+                    type: "collapse-expand-combo",
                     relayout: false,
                 },
             ],
@@ -234,8 +233,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         edgeStateStyles: {
             selected: {
                 lineWidth: 3,
-                stroke: '#f00'
-            }
+                stroke: "#f00",
+            },
         },
         minZoom: 0.05,
     }), [expandedRef]);
@@ -243,7 +242,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Initialize the G6 graph, once we're ready
     React.useEffect(() => {
         if (!graphContainer) {
-            return;  // We can't (re-)initialize the graph yet, 
+            return; // We can't (re-)initialize the graph yet,
             // because we don't have a valid reference to the <div> that will hold it.
         }
         debugLog("Initializing G6 graph");
@@ -261,12 +260,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         // By default, we zoom the graph so that four nodes would fit horizontally.
         newGraph.zoomTo(newGraph.getWidth() / (220 * 4), undefined, false);
         // We'll control the cursor using CSS:
-        newGraph.get('canvas').setCursor('inherit');
+        newGraph.get("canvas").setCursor("inherit");
     }, [graphConfig, graphContainer]);
 
     // Update the graph data whenever the current data changes
     React.useEffect(() => {
-        if (!graph || graph.destroyed) { return; }
+        if (!graph || graph.destroyed) return;
         const currentDataCopy = JSON.parse(JSON.stringify(currentData));
         const hadData = graph.getNodes().length > 0;
         graph.changeData(currentDataCopy);
@@ -274,7 +273,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             debugLog("Graph data set for the first time. Will zoom to focus node after layout.");
             // After the initial layout, zoom to the "focus node":
             graph.on("afterlayout", () => {
-                if (!graph || graph.destroyed) { return; }
+                if (!graph || graph.destroyed) return;
                 // Zoom to focus on the "focus node" after the layout, if there is one:
                 const focusNode = graph.getNodes().find((node) => node.getModel().isFocusEntry);
                 debugLog("layout done. Zooming to focus node.");
@@ -295,7 +294,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             if (n.clique === undefined) return;
             if (!comboDict[n.clique]) comboDict[n.clique] = [];
             comboDict[n.clique].push(n.id);
-        })
+        });
         // delete relationships within combos
         for (const combo in comboDict) {
             const nodeList = comboDict[combo];
@@ -308,7 +307,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                             graph.removeItem(edge);
                         }
                     }
-                })
+                });
             }
         }
         // creates cobmos (cliques)
@@ -327,7 +326,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 for (const combo in comboDict) {
                     let addEdge = false;
                     const nodeList = comboDict[combo];
-                    const edgeColor = nodeList.includes(nodeId) ? 'red' : 'blue';
+                    const edgeColor = nodeList.includes(nodeId) ? "red" : "blue";
                     let doesCover = true;
                     nodeList.forEach((i) => {
                         doesCover = graph.getNeighbors(i).map((nb) => nb.getModel().id).includes(nodeId);
@@ -341,15 +340,18 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                             if (edge) {
                                 graph.removeItem(edge);
                             }
-                        })
+                        });
                         addEdge = true;
                     }
                     if (nodeList.includes(nodeId)) addEdge = true;
-    
+
                     if (addEdge) {
-                        // add edge 
-                        graph.addItem('edge', {
-                            id: VNID(), source: combo, target: nodeId, style: {
+                        // add edge
+                        graph.addItem("edge", {
+                            id: VNID(),
+                            source: combo,
+                            target: nodeId,
+                            style: {
                                 stroke: edgeColor,
                             },
                         });
@@ -357,13 +359,16 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 }
             });
         }
-    }, [graph, currentData])
+    }, [graph, currentData]);
 
-    const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(graph, graphContainer);
+    const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(
+        graph,
+        graphContainer,
+    );
 
     // Set up G6 event handlers whenever the graph has been initialized for the first time or re-initialized
     React.useEffect(() => {
-        if (!graph || graph.destroyed) { return; }
+        if (!graph || graph.destroyed) return;
 
         //  when a node is selected, show the neighbouring nodes and connecting edges as selected.
         // NOTE the built in node and edge states are: active, inactive, selected, highlight, disable
@@ -373,15 +378,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             // if it is this node or connected node, then highlight
             graph.getNodes().forEach((node) => {
                 if (node === item) {
-                    graph.setItemState(node, 'disabled', false);
-                    graph.setItemState(node, 'selected', true);
+                    graph.setItemState(node, "disabled", false);
+                    graph.setItemState(node, "selected", true);
                 } else if (item.getNeighbors().includes(node)) {
-                    graph.setItemState(node, 'disabled', false);
-                    graph.setItemState(node, 'selected', true);
+                    graph.setItemState(node, "disabled", false);
+                    graph.setItemState(node, "selected", true);
                 } else {
-                    graph.setItemState(node, 'disabled', true);
+                    graph.setItemState(node, "disabled", true);
                 }
-            })
+            });
 
             // if it is a connected edge, then highlight:
             graph.getEdges().forEach((edge) => {
@@ -389,13 +394,13 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     ((edge.getSource().getID() === item.getID()) ||
                         (edge.getTarget().getID() === item.getID()))
                 ) {
-                    graph.setItemState(edge, 'selected', true);
-                    graph.setItemState(edge, 'disabled', false);
+                    graph.setItemState(edge, "selected", true);
+                    graph.setItemState(edge, "disabled", false);
                 } else {
-                    graph.setItemState(edge, 'disabled', true);
-                    graph.setItemState(edge, 'selected', false);
+                    graph.setItemState(edge, "disabled", true);
+                    graph.setItemState(edge, "selected", false);
                 }
-            })
+            });
         });
 
         graph.on("node:click", function (e) {
@@ -404,11 +409,10 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 setTransforms((t) => {
                     return t.concat({
                         id: Transforms.HIDETYPE,
-                        params: { 'nodeType': item.getModel().entryType as string },
+                        params: { "nodeType": item.getModel().entryType as string },
                     });
-                })
+                });
                 setActiveTool(Tool.Select);
-
             } else if (activeToolRef.current === Tool.CondenseExpandNode && item.getModel().nodesCondensed) {
                 // need to pass parent key as the condensed node id changes with every load
                 if (item.getNeighbors().length === 1) {
@@ -417,25 +421,28 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: Transforms.EXPANDLEAF,
                         // instead of this node id, get type and parent
                         // should have only one neighbour
-                        params: { parentKey: [item.getNeighbors()[0].getModel().id], entryType: item.getModel().entryType }
-                    }])
+                        params: {
+                            parentKey: [item.getNeighbors()[0].getModel().id],
+                            entryType: item.getModel().entryType,
+                        },
+                    }]);
                 } else if (item.getNeighbors().length === 2) {
                     // expand simple pattern
                     setTransforms((prevTransforms) => [...prevTransforms, {
                         id: Transforms.EXPANDLEAF,
                         params: {
                             parentKey: [item.getNeighbors()[0].getModel().id, item.getNeighbors()[1].getModel().id],
-                            entryType: item.getModel().entryType
-                        }
-                    }])
+                            entryType: item.getModel().entryType,
+                        },
+                    }]);
                 }
             } else if (activeToolRef.current === Tool.CondenseExpandNode && !item.getModel().nodesCondensed) {
                 setTransforms((prevTransforms) => [...prevTransforms, {
                     id: Transforms.CONDENSENODE,
                     // instead of this node id, get type and parent
                     // should have only one neighbour
-                    params: { nodeToCondense: item.getModel().id }
-                }])
+                    params: { nodeToCondense: item.getModel().id },
+                }]);
             }
         });
 
@@ -459,24 +466,24 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         });
 
         // allow selection of edges
-        graph.on('edge:mouseenter', (e) => {
-            if (!e.item) { return; }
+        graph.on("edge:mouseenter", (e) => {
+            if (!e.item) return;
             const { item } = e;
-            graph.setItemState(item, 'active', true);
+            graph.setItemState(item, "active", true);
         });
 
-        graph.on('edge:mouseleave', (e) => {
-            if (!e.item) { return; }
+        graph.on("edge:mouseleave", (e) => {
+            if (!e.item) return;
             const { item } = e;
-            graph.setItemState(item, 'active', false);
+            graph.setItemState(item, "active", false);
         });
 
-        graph.on('edge:click', (e) => {
-            if (!e.item) { return; }
+        graph.on("edge:click", (e) => {
+            if (!e.item) return;
             const { item } = e;
-            graph.setItemState(item, 'selected', true);
+            graph.setItemState(item, "selected", true);
         });
-        graph.on('canvas:click', (e) => {
+        graph.on("canvas:click", (e) => {
             graph.getEdges().forEach((edge) => {
                 graph.clearItemStates(edge);
             });
@@ -492,7 +499,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         graph.on("node:mouseleave", function (e) {
             e.item?.setState("hover", false);
         });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [graph]);
 
     // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
@@ -500,9 +507,13 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         // When not in fullscreen, we don't use the mousewheel to zoom because it's annoying when it zooms as you try
         // to scroll down while reading the page.
         if (expanded) {
-            const firefoxScrollBlocker = (e: Event) => { e.preventDefault(); };
+            const firefoxScrollBlocker = (e: Event) => {
+                e.preventDefault();
+            };
             graphContainer?.addEventListener("MozMousePixelScroll", firefoxScrollBlocker, { passive: false });
-            return () => { graphContainer?.removeEventListener("MozMousePixelScroll", firefoxScrollBlocker); }
+            return () => {
+                graphContainer?.removeEventListener("MozMousePixelScroll", firefoxScrollBlocker);
+            };
         }
     }, [graphContainer, expanded]);
 
@@ -518,27 +529,36 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     useResizeObserver(graphContainer, handleSizeChange);
 
     // Code for "toggle expanded view" toolbar button
-    const handleExpandCanvasButton = React.useCallback(() => { setExpanded((wasExpanded) => !wasExpanded); }, [setExpanded]);
+    const handleExpandCanvasButton = React.useCallback(() => {
+        setExpanded((wasExpanded) => !wasExpanded);
+    }, [setExpanded]);
     // Code for "zoom" toolbar buttons
     const zoomRatio = 1.50; // Zoom in by 50% each time
     const handleZoomInButton = React.useCallback(() => {
-        graph?.zoom(zoomRatio, {x: graph.getWidth()/2, y: graph.getHeight()/2}, true, {duration: 100});
+        graph?.zoom(zoomRatio, { x: graph.getWidth() / 2, y: graph.getHeight() / 2 }, true, { duration: 100 });
     }, [graph]);
     const handleZoomOutButton = React.useCallback(() => {
-        graph?.zoom(1 / zoomRatio, {x: graph.getWidth()/2, y: graph.getHeight()/2}, true, {duration: 100});
+        graph?.zoom(1 / zoomRatio, { x: graph.getWidth() / 2, y: graph.getHeight() / 2 }, true, { duration: 100 });
     }, [graph]);
     // Code for "fit view" button
-    const handleFitViewButton = React.useCallback(() => { graph?.fitView(10, { direction: "both" }); }, [graph]);
+    const handleFitViewButton = React.useCallback(() => {
+        graph?.fitView(10, { direction: "both" });
+    }, [graph]);
     // Code for "download as image" toolbar button
-    const handleDownloadImageButton = React.useCallback(() => { graph?.downloadFullImage(); }, [graph]);
+    const handleDownloadImageButton = React.useCallback(() => {
+        graph?.downloadFullImage();
+    }, [graph]);
     // Code for "Condense leaves" toolbar button
     const isCondensed = transformList.find((t) => t.id === Transforms.CONDENSE) !== undefined;
     const handleCondenseNodesButton = React.useCallback(() => {
         if (isCondensed) {
             setTransforms(
-                (prevTransforms) => prevTransforms.filter((t) => (
-                    t.id !== Transforms.CONDENSE) && t.id !== Transforms.EXPANDLEAF && t.id !== Transforms.CONDENSENODE
-                )
+                (prevTransforms) =>
+                    prevTransforms.filter((t) =>
+                        (
+                            t.id !== Transforms.CONDENSE
+                        ) && t.id !== Transforms.EXPANDLEAF && t.id !== Transforms.CONDENSENODE
+                    ),
             );
         } else {
             setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.CONDENSE, params: {} }]);
@@ -550,9 +570,10 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const handleCommunityButton = React.useCallback(() => {
         if (isCommunized) {
             setTransforms(
-                (prevTransforms) => prevTransforms.filter((t) => (
-                    t.id !== Transforms.COMMUNITY && t.id !== Transforms.ADDCLIQUES)
-                )
+                (prevTransforms) =>
+                    prevTransforms.filter((t) => (
+                        t.id !== Transforms.COMMUNITY && t.id !== Transforms.ADDCLIQUES
+                    )),
             );
         } else {
             setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.COMMUNITY, params: {} }]);
@@ -564,47 +585,54 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         if (!isCommunized) return;
         if (areCliquesDetected) {
             setTransforms(
-                (prevTransforms) => prevTransforms.filter((t) => (
-                    t.id !== Transforms.ADDCLIQUES
-                ))
-            )
+                (prevTransforms) =>
+                    prevTransforms.filter((t) => (
+                        t.id !== Transforms.ADDCLIQUES
+                    )),
+            );
         } else {
             setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.ADDCLIQUES, params: {} }]);
         }
     }, [areCliquesDetected, isCommunized, setTransforms]);
     // Tools:
-    const handleSelectToolButton = React.useCallback(() => { setActiveTool(Tool.Select); }, [setActiveTool]);
-    const handleExpandLeafButton = React.useCallback(() => { setActiveTool(Tool.CondenseExpandNode); }, [setActiveTool]);
-    const handleHideArticlesButton = React.useCallback(() => { setActiveTool(Tool.HideNodes); }, [setActiveTool]);
+    const handleSelectToolButton = React.useCallback(() => {
+        setActiveTool(Tool.Select);
+    }, [setActiveTool]);
+    const handleExpandLeafButton = React.useCallback(() => {
+        setActiveTool(Tool.CondenseExpandNode);
+    }, [setActiveTool]);
+    const handleHideArticlesButton = React.useCallback(() => {
+        setActiveTool(Tool.HideNodes);
+    }, [setActiveTool]);
 
     const contents = (
         <>
             <div className="block rounded-t w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
                 <ToolbarButton
                     onClick={handleExpandCanvasButton}
-                    tooltip={defineMessage({ defaultMessage: "Toggle expanded view", id: 'k4UVvX' })}
+                    tooltip={defineMessage({ defaultMessage: "Toggle expanded view", id: "k4UVvX" })}
                     icon={expanded ? "arrows-angle-contract" : "arrows-angle-expand"}
                 />
                 <ToolbarButton
                     onClick={handleZoomInButton}
-                    tooltip={defineMessage({ defaultMessage: "Zoom in", id: 'xbi38c' })}
+                    tooltip={defineMessage({ defaultMessage: "Zoom in", id: "xbi38c" })}
                     icon="zoom-in"
                 />
                 <ToolbarButton
                     onClick={handleZoomOutButton}
-                    tooltip={defineMessage({ defaultMessage: "Zoom out", id: '/UnJ3S' })}
+                    tooltip={defineMessage({ defaultMessage: "Zoom out", id: "/UnJ3S" })}
                     icon="zoom-out"
                 />
                 <ToolbarButton
                     onClick={handleFitViewButton}
-                    tooltip={defineMessage({ defaultMessage: "Fit graph to view", id: 'KW0LBg' })}
+                    tooltip={defineMessage({ defaultMessage: "Fit graph to view", id: "KW0LBg" })}
                     icon="aspect-ratio"
                 />
                 <ToolbarButton
                     onClick={handleDownloadImageButton}
                     tooltip={defineMessage({
                         defaultMessage: "Download entire graph as an image",
-                        id: 'ZXv6xf',
+                        id: "ZXv6xf",
                     })}
                     icon="image"
                 />
@@ -612,7 +640,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     onClick={handleCondenseNodesButton}
                     tooltip={defineMessage({
                         defaultMessage: "Condense leaves and intermediate nodes",
-                        id: 'r/Qe/+',
+                        id: "r/Qe/+",
                     })}
                     icon="chevron-contract"
                     enabled={isCondensed}
@@ -621,8 +649,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 <ToolbarButton
                     onClick={handleSelectToolButton}
                     tooltip={defineMessage({
-                        defaultMessage: "Select tool: click on an entry/node to select it. Double-click to see its neighbors.",
-                        id: '5T8hcS',
+                        defaultMessage:
+                            "Select tool: click on an entry/node to select it. Double-click to see its neighbors.",
+                        id: "5T8hcS",
                     })}
                     icon="cursor-left-fill"
                     enabled={activeTool === Tool.Select}
@@ -631,7 +660,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     onClick={handleHideArticlesButton}
                     tooltip={defineMessage({
                         defaultMessage: "Hide entries tool: click on an entry to hide all entries of that type.",
-                        id: 'UNBVo0',
+                        id: "UNBVo0",
                     })}
                     icon="eraser"
                     enabled={activeTool === Tool.HideNodes}
@@ -640,7 +669,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     onClick={handleExpandLeafButton}
                     tooltip={defineMessage({
                         defaultMessage: "Expand leaf tool: Click on previously collapsed nodes to expand them again.",
-                        id: 'ZT3+GQ',
+                        id: "ZT3+GQ",
                     })}
                     icon="chevron-expand"
                     enabled={activeTool === Tool.CondenseExpandNode}
@@ -649,7 +678,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     onClick={handleCommunityButton}
                     tooltip={defineMessage({
                         defaultMessage: "Detect communities",
-                        id: 'MswTjB',
+                        id: "MswTjB",
                     })}
                     icon="bounding-box"
                     enabled={isCommunized}
@@ -658,7 +687,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     onClick={handleCliquesButton}
                     tooltip={defineMessage({
                         defaultMessage: "Detect cliques and combine them into combos",
-                        id: 'xgjVKC',
+                        id: "xgjVKC",
                     })}
                     icon="braces-asterisk"
                     enabled={areCliquesDetected}
@@ -668,7 +697,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             <div
                 ref={updateGraphHolder}
                 className="relative rounded-b bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
-                style={activeTool === Tool.HideNodes ? { cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z'/%3E%3C/svg%3E") 3 16, crosshair` } : {}}
+                style={activeTool === Tool.HideNodes
+                    ? {
+                        cursor:
+                            `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z'/%3E%3C/svg%3E") 3 16, crosshair`,
+                    }
+                    : {}}
             >
                 {/* in here is 'graphContainer', and which holds a <canvas> element. */}
             </div>
@@ -699,10 +733,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         // Display the graph in our parent element, making it as wide as possible, and setting the height based
         // on an aspect ratio (square on mobile, 16:9 on desktop)
         return (
-            <div className={`
+            <div
+                className={`
                 flex flex-col rounded border border-gray-300 w-auto h-auto
                 aspect-square md:aspect-video max-w-full
-            `}>
+            `}
+            >
                 {contents}
             </div>
         );

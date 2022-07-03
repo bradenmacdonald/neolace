@@ -3,7 +3,7 @@ import { NextPage } from "next";
 import { FormattedMessage, useIntl } from "react-intl";
 import { api, client, NEW, useDraft, useEditableEntry, useSiteData, useSiteSchema } from "lib/api-client";
 
-import { SiteDataProvider, SitePage } from "components/SitePage";
+import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
@@ -85,7 +85,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
             // We're creating a new draft:
             await client.createDraft({
                 title: newDraftTitle.trim() ||
-                    intl.formatMessage({ id: 'TUzKsg', defaultMessage: `Edited {title}` }, {title: baseEntry?.name ?? ""}),
+                    intl.formatMessage({id: "TUzKsg", defaultMessage: `Edited {title}` }, { title: baseEntry?.name ?? "" }),
                 description: "",
                 edits: unsavedEdits,
             }, { siteId: site.shortId }).then(
@@ -98,7 +98,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                     console.error(error);
                     alert(
                         intl.formatMessage({
-                            id: 'uAFusW',
+                            id: "uAFusW",
                             defaultMessage: `Failed to save draft: {error}`,
                         }, { error: String(error?.message ?? error) }),
                     );
@@ -140,15 +140,13 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         {draft ? draft.title : <FormattedMessage id="CaAyve" defaultMessage="New Draft" />}
                     </Breadcrumb>
                     <Breadcrumb>
-                        {isNewEntry
-                            ? <FormattedMessage defaultMessage="New Entry" id="mgA3Ec" />
-                            : (
-                                <FormattedMessage
-                                    defaultMessage='Edit "{entryName}"'
-                                    id="JbG3yV"
-                                    values={{ entryName: entry?.name }}
-                                />
-                            )}
+                        {isNewEntry ? <FormattedMessage defaultMessage="New Entry" id="mgA3Ec" /> : (
+                            <FormattedMessage
+                                defaultMessage='Edit "{entryName}"'
+                                id="JbG3yV"
+                                values={{ entryName: entry?.name }}
+                            />
+                        )}
                     </Breadcrumb>
                 </Breadcrumbs>
 
@@ -168,14 +166,19 @@ const DraftEntryEditPage: NextPage = function (_props) {
                     <Tab
                         id="main"
                         icon="info-circle"
-                        name={defineMessage({ defaultMessage: "Main", id: 'EFTSMc' })}
+                        name={defineMessage({ defaultMessage: "Main", id: "EFTSMc" })}
                     >
-                        <MainEditor entry={entry} schema={schema} addUnsavedEdit={addUnsavedEdit} isNewEntry={isNewEntry} />
+                        <MainEditor
+                            entry={entry}
+                            schema={schema}
+                            addUnsavedEdit={addUnsavedEdit}
+                            isNewEntry={isNewEntry}
+                        />
                     </Tab>
                     <Tab
                         id="properties"
                         icon="diamond-fill"
-                        name={defineMessage({ defaultMessage: "Properties", id: 'aI80kg' })}
+                        name={defineMessage({ defaultMessage: "Properties", id: "aI80kg" })}
                     >
                         <PropertiesEditor entry={entry} schema={schema} addUnsavedEdit={addUnsavedEdit} />
                     </Tab>
@@ -183,7 +186,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         id="changes"
                         icon="list"
                         badge={unsavedEdits.length ? unsavedEdits.length.toString() : undefined}
-                        name={defineMessage({ defaultMessage: "Changes", id: 'dgqhUM' })}
+                        name={defineMessage({ defaultMessage: "Changes", id: "dgqhUM" })}
                     >
                         {unsavedEdits.length > 0
                             ? (
@@ -222,7 +225,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                     <Tab
                         id="save"
                         icon="check-circle-fill"
-                        name={defineMessage({ defaultMessage: "Save", id: 'jvo0vs' })}
+                        name={defineMessage({ defaultMessage: "Save", id: "jvo0vs" })}
                     >
                         <h3>
                             <FormattedMessage id="X0ha1a" defaultMessage="Save changes" />
@@ -246,7 +249,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                     <Control
                                         id="draft-desc"
                                         label={defineMessage({
-                                            id: 'I72/UY',
+                                            id: "I72/UY",
                                             defaultMessage: "Provide a brief description of what you changed:",
                                         })}
                                     >
@@ -273,10 +276,10 @@ const DraftEntryEditPage: NextPage = function (_props) {
     return (
         <SitePage
             title={entry?.name
-                ? intl.formatMessage({ id: 'JQqknm', defaultMessage: `Edit "{name}"` }, {
+                ? intl.formatMessage({ id: "JQqknm", defaultMessage: `Edit "{name}"` }, {
                     name: entry.name,
                 })
-                : intl.formatMessage({ id: 'wEQDC6', defaultMessage: `Edit` })}
+                : intl.formatMessage({ id: "wEQDC6", defaultMessage: `Edit` })}
             leftNavTopSlot={[]}
         >
             {content}

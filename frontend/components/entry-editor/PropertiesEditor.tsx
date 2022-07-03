@@ -3,16 +3,12 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { VNID } from "neolace-api";
 
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
-import { api, useSiteSchema } from "lib/api-client";
-import { ErrorMessage } from "components/widgets/ErrorMessage";
+import { api } from "lib/api-client";
 import { Spinner } from "components/widgets/Spinner";
-import { entryNode } from "components/graph/Node";
 import { Control } from "components/widgets/Form";
 import { SelectBox } from "components/widgets/SelectBox";
 import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
-import { Icon } from "components/widgets/Icon";
-import { Button, ToolbarButton } from "components/widgets/Button";
-import { Tooltip } from "components/widgets/Tooltip";
+import { ToolbarButton } from "components/widgets/Button";
 import { InlineMDT, MDTContext } from "components/markdown-mdt/mdt";
 
 // We have to declare this empty object outside of the function below so it doesn't change on every call.
@@ -120,7 +116,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema
             </table>
             <Control
                 id="addOtherProperty"
-                label={defineMessage({ defaultMessage: "Add another property:", id: 'wlyMMP' })}
+                label={defineMessage({ defaultMessage: "Add another property:", id: "wlyMMP" })}
             >
                 <SelectBox
                     options={unsetProps.map((p) => ({ id: p.id, label: noTranslationNeeded(p.name) }))}
@@ -159,7 +155,7 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
                 tooltip={{
                     msg: defineMessage({
                         defaultMessage: 'Add property value for "{propName}"',
-                        id: 's7agyK',
+                        id: "s7agyK",
                     }),
                     values: { propName: prop.name },
                 }}
@@ -206,7 +202,7 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
                                 icon="plus-lg"
                                 tooltip={defineMessage({
                                     defaultMessage: "Add another property value",
-                                    id: '6d1F0k',
+                                    id: "6d1F0k",
                                 })}
                             />
                             {fact.note ?// TODO: We need an editor for notes and a better way to handle MDTContext here

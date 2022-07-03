@@ -1,32 +1,29 @@
-import React from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
-import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
-import Link from 'next/link';
-import Image from 'next/image';
-import { ParsedUrlQuery } from 'querystring';
+import React from "react";
+import { FormattedMessage, useIntl } from "react-intl";
+import Link from "next/link";
+import Image from "next/image";
 import { Blurhash } from "react-blurhash";
-import { client, api, getSiteData, SiteData, useEntry } from 'lib/api-client';
+import { api, useEntry } from "lib/api-client";
 
-import { SiteDataProvider, SitePage } from "components/SitePage";
-import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
-import { LookupValue } from 'components/LookupValue';
-import { EntryLink } from 'components/EntryLink';
-import { DEVELOPMENT_MODE, imgThumbnailLoader } from 'lib/config';
-import { ErrorMessage } from './widgets/ErrorMessage';
-import { defineMessage } from './utils/i18n';
-import { Spinner } from './widgets/Spinner';
-import { UISlot } from './widgets/UISlot';
+import { SitePage } from "components/SitePage";
+import { InlineMDT, MDTContext, RenderMDT } from "components/markdown-mdt/mdt";
+import { LookupValue } from "components/LookupValue";
+import { EntryLink } from "components/EntryLink";
+import { DEVELOPMENT_MODE, imgThumbnailLoader } from "lib/config";
+import { ErrorMessage } from "./widgets/ErrorMessage";
+import { defineMessage } from "./utils/i18n";
+import { Spinner } from "./widgets/Spinner";
+import { UISlot } from "./widgets/UISlot";
 //import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface Props {
     /** The entry key (either its friendlyId or VNID) */
-    entrykey: api.VNID|string;
+    entrykey: api.VNID | string;
     /** The entry, as visible to the public (to a user with no permissions) */
     publicEntry?: api.EntryData;
 }
 
-export const EntryPage: React.FunctionComponent<Props> = function(props) {
-
+export const EntryPage: React.FunctionComponent<Props> = function (props) {
     const [entry, entryError] = useEntry(props.entrykey, props.publicEntry);
     const intl = useIntl();
 
@@ -41,25 +38,40 @@ export const EntryPage: React.FunctionComponent<Props> = function(props) {
 
     if (entryError) {
         if (entryError instanceof api.NotAuthorized) {
-            return <SitePage title={defineMessage({defaultMessage: 'Not Authorized', id: 'ZY2CvS'})}>
-                <ErrorMessage>
-                    <FormattedMessage defaultMessage="You don't have permission to view this entry." id="mSFck0" />
-                </ErrorMessage>
-            </SitePage>;
+            return (
+                <SitePage title={defineMessage({ defaultMessage: "Not Authorized", id: "ZY2CvS" })}>
+                    <ErrorMessage>
+                        <FormattedMessage defaultMessage="You don't have permission to view this entry." id="mSFck0" />
+                    </ErrorMessage>
+                </SitePage>
+            );
         } else if (entryError instanceof api.NotAuthenticated) {
-            return <SitePage title={defineMessage({defaultMessage: 'Login required', id: '5ZX5lS'})}>
-                <ErrorMessage>
-                    <FormattedMessage defaultMessage="You need to log in before you can view this entry." id="xEuD2+" />
-                </ErrorMessage>
-            </SitePage>;
+            return (
+                <SitePage title={defineMessage({ defaultMessage: "Login required", id: "5ZX5lS" })}>
+                    <ErrorMessage>
+                        <FormattedMessage
+                            defaultMessage="You need to log in before you can view this entry."
+                            id="xEuD2+"
+                        />
+                    </ErrorMessage>
+                </SitePage>
+            );
         } else {
-            return <SitePage title={defineMessage({defaultMessage: 'Error', id: 'KN7zKn'})}>
-                <ErrorMessage><FormattedMessage defaultMessage="An error occurred while loading this entry." id="3pC0DV" /></ErrorMessage>
-            </SitePage>
+            return (
+                <SitePage title={defineMessage({ defaultMessage: "Error", id: "KN7zKn" })}>
+                    <ErrorMessage>
+                        <FormattedMessage defaultMessage="An error occurred while loading this entry." id="3pC0DV" />
+                    </ErrorMessage>
+                </SitePage>
+            );
         }
     } else if (entry === undefined) {
         // The public doesn't have permission to view this entry, but the current user might. Display a spinner while loading...
-        return <SitePage title={defineMessage({defaultMessage: 'Loading', id: 'iFsDVR'})}><Spinner /></SitePage>;
+        return (
+            <SitePage title={defineMessage({ defaultMessage: "Loading", id: "iFsDVR" })}>
+                <Spinner />
+            </SitePage>
+        );
     }
 
     const hasProps = entry.propertiesSummary?.length ?? 0 > 0;

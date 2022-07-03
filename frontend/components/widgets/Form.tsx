@@ -1,7 +1,8 @@
+import React from "react";
+import { FormattedMessage, useIntl } from "react-intl";
+
 import { displayText, TranslatableText } from "components/utils/i18n";
 import { useStateRef } from "components/utils/stateRefHook";
-import React from "react";
-import { FormattedMessage, MessageDescriptor, useIntl } from "react-intl";
 
 interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
     children: React.ReactNode;

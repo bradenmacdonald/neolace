@@ -7,10 +7,9 @@ export enum UiChangeOperation {
     Hide = "hide",
 }
 
-export type UiSlotChange = 
-    |{op: UiChangeOperation.Insert, widget: UISlotWidget<unknown>}
-    |{op: UiChangeOperation.Hide, widgetId: string}
-;
+export type UiSlotChange =
+    | { op: UiChangeOperation.Insert; widget: UISlotWidget<unknown> }
+    | { op: UiChangeOperation.Hide; widgetId: string };
 
 /**
  * Some widget that appears in a UI slot
@@ -80,8 +79,12 @@ export const UISlot = function <ContentType = React.ReactElement>(props: Props<C
  * which plugins can modify. This particular type of UI slot just wraps any React component and allows plugins to insert
  * HTML before it or after it, or to hide it.
  */
- export const DefaultUISlot: React.FunctionComponent<{slotId: string; children?: React.ReactNode}> = (props) => {
-    return <UISlot slotId={props.slotId} renderWidget={defaultRender} defaultContents={
-        props.children ? [{id: "content", priority: 50, content: <>{props.children}</>}] : []
-    } />
+export const DefaultUISlot: React.FunctionComponent<{ slotId: string; children?: React.ReactNode }> = (props) => {
+    return (
+        <UISlot
+            slotId={props.slotId}
+            renderWidget={defaultRender}
+            defaultContents={props.children ? [{ id: "content", priority: 50, content: <>{props.children}</> }] : []}
+        />
+    );
 };

@@ -50,7 +50,7 @@ export const SearchBox: React.FunctionComponent<UseSearchBoxProps> = (props) => 
                 value={value}
                 onChange={handleChange}
                 placeholder={intl.formatMessage({
-                    id: 'mN/13p',
+                    id: "mN/13p",
                     defaultMessage: "Enter a search term",
                 })}
                 inputRef={inputEl}

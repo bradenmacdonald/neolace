@@ -1,6 +1,6 @@
 /**
  * A simple in-memory cache that can be used server-side or client side.
- * 
+ *
  * Give it a function that can fetch any value based on its key.
  * When you first call get(...) for a given key, it will be fetched using the provided function.
  * On subsequent calls, get(...) will always immediately return the cached version, but after the configurable timeout,
@@ -24,7 +24,7 @@ export class AsyncCache<KeyType, ValueType> {
             if (this.staleEntries.has(key)) {
                 // Mark the entry as un-stale temporarily to avoid multiple re-fetches:
                 this.staleEntries.delete(key);
-                this.fetcher(key).then(newValue => this.cache.set(key, newValue)).catch(err => {
+                this.fetcher(key).then((newValue) => this.cache.set(key, newValue)).catch((err) => {
                     // The entry could not be re-fetched; keep serving the stale version for now, but try fetching again very soon (one second)
                     setTimeout(() => this.staleEntries.add(key), 1_000);
                     console.error(`Unable to refresh cached value with key ${key}:`, err);

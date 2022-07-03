@@ -1,7 +1,7 @@
 import React from "react";
 import { NextPage } from "next";
 import { FormattedMessage, useIntl } from "react-intl";
-import { api, useSiteData } from "lib/api-client";
+import { useSiteData } from "lib/api-client";
 
 import { SitePage } from "components/SitePage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";

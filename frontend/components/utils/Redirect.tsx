@@ -1,5 +1,5 @@
-import React from 'react';
-import Router from 'next/router';
+import React from "react";
+import Router from "next/router";
 
 export const Redirect: React.FunctionComponent<{to: string, replace?: boolean, children?: React.ReactNode}> = function(props) {
     // When this components first renders, tell the Router to redirect.

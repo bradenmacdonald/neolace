@@ -1,10 +1,8 @@
-import React, { JSXElementConstructor } from "react";
+import React from "react";
 
 import { displayText, TranslatableText } from "components/utils/i18n";
 import { Icon, IconId } from "./Icon";
-import { Tooltip } from "./Tooltip";
-import { Button } from "./Button";
-import { useClickOutsideHandler, useKeyHandler } from "components/utils/events";
+import { useClickOutsideHandler } from "components/utils/events";
 
 export interface SelectOption {
     id: string;
@@ -37,7 +35,7 @@ function defaultRender(option: SelectOption) {
 /**
  * Our version of a <select> element.
  */
-export const SelectBox: React.FunctionComponent<Props> = ({onChange, options, value: selectedItem, ...props}) => {
+export const SelectBox: React.FunctionComponent<Props> = ({ onChange, options, value: selectedItem, ...props }) => {
     const [isMenuVisible, setMenuVisible] = React.useState(false);
     const outerDiv = React.useRef<HTMLDivElement>(null);
 
@@ -58,7 +56,7 @@ export const SelectBox: React.FunctionComponent<Props> = ({onChange, options, va
     // Handle when the user clicks on an option to select it
     const handleItemClick = React.useCallback((event: React.MouseEvent<HTMLLIElement>) => {
         const id = event.currentTarget.getAttribute("id");
-        if (onChange && id) { onChange(id); }
+        if (onChange && id) onChange(id);
         setMenuVisible(false);
     }, [onChange]);
 

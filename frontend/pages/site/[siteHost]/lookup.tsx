@@ -45,7 +45,7 @@ const EvaluateLookupPage: NextPage<PageProps> = function (props) {
 
     const mdtContext = React.useMemo(() => new MDTContext({ entryId: undefined, refCache: undefined }), []);
 
-    const title = intl.formatMessage({defaultMessage: "Lookup", id: 'VzW9jr'});
+    const title = intl.formatMessage({ defaultMessage: "Lookup", id: "VzW9jr" });
 
     return (
         <SiteDataProvider sitePreloaded={props.sitePreloaded}>

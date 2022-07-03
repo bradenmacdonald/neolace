@@ -1,9 +1,8 @@
 import { api, SiteData } from "lib/api-client";
 import React, { useContext } from "react";
 import type { UiSlotChange } from "components/widgets/UISlot";
-import dynamic from "next/dynamic";
 
-export type UiSlotId = (
+export type UiSlotId =
     | "systemLinks"
     | "leftNavBottom"
     | "globalHeader"
@@ -14,8 +13,7 @@ export type UiSlotId = (
      * This should be a React element that accepts an 'entry' parameter.
      */
     | "entryPreFeature"
-    | `plugin:${string}`
-);
+    | `plugin:${string}`;
 
 export interface PluginPageProps {
     path: string;
@@ -25,7 +23,10 @@ export interface PluginDefinition {
     id: string;
     getUiSlotChanges?: (siteConfig: Record<string, unknown>) => Partial<Record<UiSlotId, UiSlotChange[]>>;
     getPageForPath?: (site: api.SiteDetailsData, path: string) => string | undefined;
-    overrideLookupValue?: (siteConfig: Record<string, unknown>, value: api.StringValue) => React.ReactElement|undefined;
+    overrideLookupValue?: (
+        siteConfig: Record<string, unknown>,
+        value: api.StringValue,
+    ) => React.ReactElement | undefined;
 }
 
 export interface EnabledPluginsConfig {
@@ -34,7 +35,10 @@ export interface EnabledPluginsConfig {
         /** Settings for this plugin, for this specific site */
         siteConfig: Record<string, unknown>;
         uiSlotChanges: Partial<Record<UiSlotId, UiSlotChange[]>>;
-        overrideLookupValue?: (siteConfig: Record<string, unknown>, value: api.StringValue) => React.ReactElement|undefined;
+        overrideLookupValue?: (
+            siteConfig: Record<string, unknown>,
+            value: api.StringValue,
+        ) => React.ReactElement | undefined;
     }[];
     loaded: boolean;
 }
