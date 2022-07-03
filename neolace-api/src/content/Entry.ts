@@ -1,4 +1,4 @@
-import { Schema, Type, string, vnidString, nullable, array, number, Validator } from "../api-schemas.ts";
+import { Schema, Type, string, vnidString, array, number, Validator } from "../api-schemas.ts";
 import { LookupValueSchema } from "./lookup-value.ts";
 import { ReferenceCacheSchema } from "./reference-cache.ts";
 
@@ -94,7 +94,7 @@ export type EntryFeaturesData = Type<typeof EntryFeaturesSchema>;
 export const BaseEntrySchema = Schema({
     id: vnidString,
     name: string,
-    description: nullable(string),
+    description: string,
     friendlyId: string,
     entryType: Schema({
         id: vnidString,

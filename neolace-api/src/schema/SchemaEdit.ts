@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { nullable, vnidString, Schema, string, array, Type, number } from "../api-schemas.ts";
+import { vnidString, Schema, string, array, Type, number } from "../api-schemas.ts";
 import { boolean, SchemaValidatorFunction } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
 import { SiteSchemaData, PropertyType, PropertyMode, EntryTypeColor } from "./SiteSchemaData.ts";
@@ -33,8 +33,8 @@ export const CreateEntryType = SchemaEditType({
                 [data.id]: {
                     id: data.id,
                     name: data.name,
-                    description: null,
-                    friendlyIdPrefix: null,
+                    description: "",
+                    friendlyIdPrefix: "",
                     enabledFeatures: {},
                     color: EntryTypeColor.Default,
                     abbreviation: "",
@@ -53,8 +53,8 @@ export const UpdateEntryType = SchemaEditType({
     dataSchema: Schema({
         id: vnidString,
         name: string.strictOptional(),
-        description: nullable(string).strictOptional(),
-        friendlyIdPrefix: nullable(string).strictOptional(),
+        description: string.strictOptional(),
+        friendlyIdPrefix: string.strictOptional(),
         color: Schema.enum(EntryTypeColor).strictOptional(),
         abbreviation: string.min(0).max(2).strictOptional(),
     }),
@@ -190,17 +190,19 @@ export const UpdateProperty = SchemaEditType({
 
         // Booleans
         for (const field of ["inheritable", "enableSlots"] as const) {
-            if (data[field] !== undefined) {
-                (newProp as any)[field] = data[field];
+            const value = data[field];
+            if (value !== undefined) {
+                newProp[field] = value;
             }
         }
 
         for (const field of ["valueConstraint", "default", "standardURL", "editNoteMD", "displayAs"] as const) {
-            if (data[field] !== undefined) {
-                if (data[field] === "") {
+            const value = data[field];
+            if (value !== undefined) {
+                if (value === "") {
                     newProp[field] = undefined;
                 } else {
-                    newProp[field] = data[field];
+                    newProp[field] = value;
                 }
             }
         }

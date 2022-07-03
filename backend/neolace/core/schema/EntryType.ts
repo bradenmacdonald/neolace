@@ -1,6 +1,6 @@
 import * as check from "neolace/deps/computed-types.ts";
 import * as api from "neolace/deps/neolace-api.ts";
-import { C, Field, VirtualPropType, VNodeType } from "neolace/deps/vertex-framework.ts";
+import { C, Field, validateValue, VirtualPropType, VNodeType } from "neolace/deps/vertex-framework.ts";
 import { Site } from "neolace/core/Site.ts";
 
 import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
@@ -15,9 +15,13 @@ export class EntryType extends VNodeType {
         /** The name of this entry type */
         name: Field.String,
         /** Description: Short, rich text summary of the entry type  */
-        description: Field.NullOr.String.Check(check.string.trim().max(5_000)),
-        /** FriendlyId prefix for entries of this type. Can be an empty string */
-        friendlyIdPrefix: Field.NullOr.Slug,
+        description: Field.String.Check(check.string.trim().max(5_000)),
+        /** FriendlyId prefix for entries of this type. */
+        friendlyIdPrefix: Field.String.Check((value) => {
+            // This is really a Field.Slug but Field.Slug doesn't allow empty strings, so we have to do this to
+            // enforce slug validation but also allow empty strings:
+            return value === "" ? "" : validateValue(Field.Slug, value);
+        }),
         /** Color to represent this entry type */
         color: Field.String.Check(check.Schema.enum(api.EntryTypeColor)),
         /** One or two letters used to represent this entry as an abbreviation */

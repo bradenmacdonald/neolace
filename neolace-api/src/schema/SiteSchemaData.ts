@@ -1,4 +1,4 @@
-import { Schema, Type, string, number, vnidString, nullable, array, boolean, Record, } from "../api-schemas.ts";
+import { Schema, Type, string, number, vnidString, array, boolean, Record, } from "../api-schemas.ts";
 
 /** The available color options for each entry */
 export enum EntryTypeColor {
@@ -42,9 +42,9 @@ export const EntryTypeSchema = Schema({
     id: vnidString,
     /** Name of this entry type, e.g. "Note", "Task", "Contact", "License", etc. Doesn't need to be unique. */
     name: string,
-    description: nullable(string),
+    description: string,
     /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
-    friendlyIdPrefix: nullable(string),
+    friendlyIdPrefix: string,
     /** Color to represent this entry type */
     color: Schema.enum(EntryTypeColor),
     /** One or two letters used to represent this entry as an abbreviation */

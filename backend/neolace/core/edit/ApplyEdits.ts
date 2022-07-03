@@ -380,6 +380,7 @@ export const ApplyEdits = defineAction({
                         SET et += ${{
                         name: edit.data.name,
                         description: "",
+                        friendlyIdPrefix: "",
                         color: EntryTypeColor.Default,
                         abbreviation: "",
                     }}
@@ -401,9 +402,6 @@ export const ApplyEdits = defineAction({
                     await tx.queryOne(C`
                         MATCH (et:${EntryType} {id: ${edit.data.id}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         SET et += ${changes}
-                        // Temporary code while we have old data in the database with these values NULL:
-                        SET et.color = coalesce(et.color, "")
-                        SET et.abbreviation = coalesce(et.abbreviation, "")
                     `.RETURN({}));
                     modifiedNodes.add(edit.data.id);
                     break;
@@ -454,6 +452,7 @@ export const ApplyEdits = defineAction({
                         editNoteMD: "",
                         displayAs: "",
                         default: "",
+                        valueConstraint: "",
                         enableSlots: false,
                     }}
                     `.RETURN({}));

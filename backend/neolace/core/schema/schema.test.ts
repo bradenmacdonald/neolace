@@ -43,7 +43,7 @@ group("schema.ts", () => {
                         id,
                         name,
                         description: "",
-                        friendlyIdPrefix: null,
+                        friendlyIdPrefix: "",
                         enabledFeatures: {},
                         color: EntryTypeColor.Default,
                         abbreviation: "",

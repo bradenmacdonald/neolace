@@ -62,7 +62,7 @@ group("schema/index.ts", () => {
                     _ETSOFTWARE: {
                         id: VNID("_ETSOFTWARE"),
                         description: "",
-                        friendlyIdPrefix: null,
+                        friendlyIdPrefix: "",
                         name: "Software",
                         enabledFeatures: {},
                         color: api.EntryTypeColor.Default,

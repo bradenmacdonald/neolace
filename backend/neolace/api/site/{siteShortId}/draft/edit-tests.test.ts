@@ -13,7 +13,7 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 
 /** Helper function to apply edits for this test case, using an API client. */
 async function doEdit(client: api.NeolaceApiClient, ...edits: api.AnyEdit[]): Promise<void> {
-    const draftDefaults = { title: "A Test Draft", description: null };
+    const draftDefaults = { title: "A Test Draft" };
     return client.createDraft({
         ...draftDefaults,
         edits,

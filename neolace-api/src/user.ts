@@ -1,4 +1,4 @@
-import { Schema, string, nullable, boolean, normalString, object } from "./api-schemas.ts";
+import { Schema, string, boolean, normalString, object } from "./api-schemas.ts";
 
 export interface PasswordlessLoginResponse {
     /** Determines whether or not the user's passwordless login request succeeded */
@@ -9,13 +9,13 @@ export const UserDataResponse = Schema.either(
     {
         isBot: boolean.equals(false),
         username: normalString,
-        fullName: nullable(normalString),
+        fullName: normalString,
     },
     {
         isBot: boolean.equals(true),
         ownedByUsername: string,
         username: normalString,
-        fullName: nullable(normalString),
+        fullName: normalString,
     }
 );
 

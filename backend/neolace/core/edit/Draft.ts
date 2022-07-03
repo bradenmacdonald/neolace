@@ -107,7 +107,7 @@ export class Draft extends VNodeType {
     static readonly properties = {
         ...VNodeType.properties,
         title: Field.String.Check(check.string.min(1).max(1_000)),
-        description: Field.NullOr.String,
+        description: Field.String,
         created: Field.DateTime,
         status: Field.Int.Check(check.Schema.enum(DraftStatus)),
     };
@@ -284,7 +284,7 @@ export const CreateDraft = defineAction({
         authorId: VNID;
         edits: EditList;
         title: string;
-        description: string | null;
+        description?: string;
     },
     resultData: {} as { id: VNID },
     apply: async (tx, data) => {
@@ -295,7 +295,7 @@ export const CreateDraft = defineAction({
             MATCH (author:${User} {id: ${data.authorId}})
             CREATE (draft:${Draft} {id: ${id}})
             SET draft.title = ${data.title}
-            SET draft.description = ${data.description}
+            SET draft.description = ${data.description ?? ""}
             SET draft.status = ${DraftStatus.Open}
             SET draft.created = datetime()
             CREATE (draft)-[:${Draft.rel.FOR_SITE}]->(site)

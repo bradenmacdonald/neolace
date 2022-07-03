@@ -94,11 +94,11 @@ export class Site extends VNodeType {
          * Description: a public description of the website, displayed to users in a few different places as well as to
          * search engines.
          */
-        description: Field.NullOr.String.Check(check.string.max(5_000)),
+        description: Field.String.Check(check.string.max(5_000)),
         /**
          * Markdown text for the home page. This defines the content of the home page.
          */
-        homePageMD: Field.NullOr.String.Check(check.string.max(100_000)),
+        homePageMD: Field.String.Check(check.string.max(100_000)),
         /**
          * Markdown text for the footer, shown on all pages.
          */
@@ -347,8 +347,8 @@ export const CreateSite = defineAction({
                 name: ${data.name},
                 slugId: ${data.slugId},
                 siteCode: ${siteCode},
-                description: ${data.description || null},
-                homePageMD: ${data.homePageMD || null},
+                description: ${data.description || ""},
+                homePageMD: ${data.homePageMD || ""},
                 footerMD: ${data.footerMD || ""},
                 domain: ${data.domain},
                 accessMode: ${data.accessMode ?? AccessMode.PublicContributions},
