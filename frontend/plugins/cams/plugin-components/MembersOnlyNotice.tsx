@@ -15,7 +15,7 @@ export const MembersOnlyNotice: React.FunctionComponent<{ entry: api.EntryData }
             <ErrorMessage>
                 This content is only available to members. Please use the{" "}
                 <Link href="/members-login">
-                    <a>Member Login</a>
+                    Member Login
                 </Link>{" "}
                 to access it.
             </ErrorMessage>

@@ -27,8 +27,8 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
         // In development, we want to highlight links that should be in the reference cache, but are not.
         const textColorClass = DEVELOPMENT_MODE ? "text-red-600 font-bold" : "";
         return (
-            <Link href={`/entry/${props.entryId}`}>
-                <a className={textColorClass}>Entry {props.entryId}</a>
+            <Link href={`/entry/${props.entryId}`} className={textColorClass}>
+                Entry {props.entryId}
             </Link>
         );
     }
@@ -68,16 +68,16 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
                 }
             >
                 {(attribs) => (
-                    <Link href={`/entry/${entry.friendlyId}`}>
-                        <a className="unstyled" {...attribs}>{widget}</a>
+                    <Link href={`/entry/${entry.friendlyId}`} className="unstyled" {...attribs}>
+                        {widget}
                     </Link>
                 )}
             </Tooltip>
         );
     } else {
         return (
-            <Link href={`/entry/${entry.friendlyId}`}>
-                <a className="unstyled">{widget}</a>
+            <Link href={`/entry/${entry.friendlyId}`} className="unstyled">
+                {widget}
             </Link>
         );
     }

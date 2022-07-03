@@ -87,11 +87,11 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                 </>},
                 {id: "tableOfContents", priority: 50, content: <>
                     <ul id="left-toc-headings">
-                        <li><Link href={`/entry/${entry.friendlyId}#summary`}><a><FormattedMessage id="RrCui3" defaultMessage="Summary"/></a></Link></li>
-                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${entry.friendlyId}#properties`}><a><FormattedMessage id="aI80kg" defaultMessage="Properties"/></a></Link></li>
+                        <li><Link href={`/entry/${entry.friendlyId}#summary`}><FormattedMessage id="RrCui3" defaultMessage="Summary"/></Link></li>
+                        <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${entry.friendlyId}#properties`}><FormattedMessage id="aI80kg" defaultMessage="Properties"/></Link></li>
                         {
                             entry.features?.Article?.headings.map(heading =>
-                                <li key={heading.id}><Link href={`/entry/${entry.friendlyId}#h-${heading.id}`}><a>{heading.title}</a></Link></li>
+                                <li key={heading.id}><Link href={`/entry/${entry.friendlyId}#h-${heading.id}`}>{heading.title}</Link></li>
                             )
                         }
                     </ul>
@@ -99,7 +99,7 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                 ...(DEVELOPMENT_MODE ? [
                     {id: "entryActions", priority: 60, content: <>
                     <ul id="entry-actions" className="mt-4">
-                        <li><Link href={`/draft/_/entry/${entry.id}/edit`}><a><FormattedMessage id="wEQDC6" defaultMessage="Edit"/></a></Link></li>
+                        <li><Link href={`/draft/_/entry/${entry.id}/edit`}><FormattedMessage id="wEQDC6" defaultMessage="Edit"/></Link></li>
                     </ul>
                 </>},
                 ] : [])

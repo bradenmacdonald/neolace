@@ -27,14 +27,14 @@ const OptionalLink = (
             const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) = props.mdtContext.refCache.entries[props.href.id];
             const url = "/entry/" + (entry?.friendlyId || props.href.id);
             return (
-                <Link href={url}>
-                    <a className={props.className}>{props.children}</a>
+                <Link href={url} className={props.className}>
+                    {props.children}
                 </Link>
             );
         } else if (props.href.type === "String") {
             return (
-                <Link href={props.href.value}>
-                    <a className={props.className}>{props.children}</a>
+                <Link href={props.href.value} className={props.className}>
+                    {props.children}
                 </Link>
             );
         }

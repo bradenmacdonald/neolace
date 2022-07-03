@@ -21,10 +21,12 @@ module.exports = (phase, { defaultConfig }) => {
             locales: ["en", "fr", "ru"],
             defaultLocale: "en",
         },
-        // Don't transform ES6 to ES5 for older browsers:
         experimental: {
+            // Don't transform ES6 to ES5 for older browsers:
             browsersListForSwc: true,
             legacyBrowsers: false,
+            // Don't require <a> inside <Link>
+            newNextLinkBehavior: true,
         },
         // deno-lint-ignore require-await
         rewrites: async () => {
