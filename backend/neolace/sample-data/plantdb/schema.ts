@@ -99,7 +99,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Optional,
             appliesTo: [],
             descriptionMD: `The parent taxon of this entry.`,
-            importance: 0,
+            rank: 0,
         },
         "_parentDivision": {
             id: VNID("_parentDivision"),
@@ -110,7 +110,7 @@ export const schema = ValidateSiteSchema({
             valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETDIVISION"))`,
             mode: PropertyMode.Required,
             descriptionMD: `The parent division of this class.`,
-            importance: 0,
+            rank: 0,
         },
         "_parentClass": {
             id: VNID("_parentClass"),
@@ -121,7 +121,7 @@ export const schema = ValidateSiteSchema({
             valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETCLASS"))`,
             mode: PropertyMode.Required,
             descriptionMD: `The parent class of this order.`,
-            importance: 0,
+            rank: 0,
         },
         "_parentOrder": {
             id: VNID("_parentOrder"),
@@ -132,7 +132,7 @@ export const schema = ValidateSiteSchema({
             valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETORDER"))`,
             mode: PropertyMode.Required,
             descriptionMD: `The parent order of this family.`,
-            importance: 0,
+            rank: 0,
         },
         "_parentFamily": {
             id: VNID("_parentFamily"),
@@ -143,7 +143,7 @@ export const schema = ValidateSiteSchema({
             valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETFAMILY"))`,
             mode: PropertyMode.Required,
             descriptionMD: `The parent family of this genus.`,
-            importance: 0,
+            rank: 0,
         },
         "_parentGenus": {
             id: VNID("_parentGenus"),
@@ -154,7 +154,7 @@ export const schema = ValidateSiteSchema({
             valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETGENUS"))`,
             mode: PropertyMode.Required,
             descriptionMD: `The parent genus of this species.`,
-            importance: 0,
+            rank: 0,
         },
         "_divClasses": {
             id: VNID("_divClasses"),
@@ -164,7 +164,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_parentDivision]])`,
             descriptionMD: `Classes that are part of this division.`,
-            importance: 3,
+            rank: 3,
         },
         "_classOrders": {
             id: VNID("_classOrders"),
@@ -174,7 +174,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_parentClass]])`,
             descriptionMD: `Orders that are part of this class.`,
-            importance: 3,
+            rank: 3,
         },
         "_orderFamilies": {
             id: VNID("_orderFamilies"),
@@ -184,7 +184,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_parentOrder]])`,
             descriptionMD: `Families that are part of this order.`,
-            importance: 3,
+            rank: 3,
         },
         "_familyGenera": {
             id: VNID("_familyGenera"),
@@ -194,7 +194,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_parentFamily]])`,
             descriptionMD: `Genera (genuses) that are part of this family.`,
-            importance: 3,
+            rank: 3,
         },
         "_genusSpecies": {
             id: VNID("_genusSpecies"),
@@ -204,7 +204,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_parentGenus]])`,
             descriptionMD: `Species that are part of this genus.`,
-            importance: 3,
+            rank: 3,
         },
         "_taxonomy": {
             id: VNID("_taxonomy"),
@@ -221,7 +221,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Auto,
             default: `this.ancestors()`,
             descriptionMD: `The full taxonomy of this PlantDB entry.`,
-            importance: 5,
+            rank: 5,
         },
         // An image RELATES TO [an entry]
         "_imgRelTo": {
@@ -233,7 +233,7 @@ export const schema = ValidateSiteSchema({
                 `(targetEntry -> targetEntry.type() in [entryType("_ETCLASS"), entryType("_ETDIVISION"), entryType("_ETFAMILY"), entryType("_ETGENUS"), entryType("_ETORDER"), entryType("_ETPLANTPART"), entryType("_ETSPECIES")])`,
             mode: PropertyMode.Recommended,
             descriptionMD: `Lists PlantDB entries that this images relates to.`,
-            importance: 8,
+            rank: 8,
         },
         // Related images
         "_relImages": {
@@ -252,7 +252,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Auto,
             default: `this.andDescendants().reverse(prop=[[/prop/_imgRelTo]]).image(format="thumb")`,
             descriptionMD: `Images related to this entry.`,
-            importance: 10,
+            rank: 10,
         },
         // Has hero image
         "_hasHeroImage": {
@@ -270,7 +270,7 @@ export const schema = ValidateSiteSchema({
             ],
             mode: PropertyMode.Recommended,
             descriptionMD: `Hero image used for this entry`,
-            importance: 21,
+            rank: 60,
         },
         // Has part
         "_hasPart": {
@@ -288,7 +288,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Optional,
             valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETPLANTPART"))`,
             descriptionMD: `This [species/genus/etc.] has this part(s).`,
-            importance: 10,
+            rank: 10,
             inheritable: true,
             enableSlots: true,
         },
@@ -301,7 +301,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Auto,
             default: `this.andDescendants().reverse(prop=[[/prop/_hasPart]])`,
             descriptionMD: `This plant part is found in these species/genera/etc.`,
-            importance: 10,
+            rank: 10,
         },
         // Plant part is a type of plant part
         "_partIsAPart": {
@@ -311,7 +311,7 @@ export const schema = ValidateSiteSchema({
             appliesTo: [{ entryType: VNID("_ETPLANTPART") }],
             mode: PropertyMode.Recommended,
             descriptionMD: `The more general class of this plant part.`,
-            importance: 0,
+            rank: 0,
         },
         "_partHasTypes": {
             id: VNID("_partHasTypes"),
@@ -321,7 +321,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Auto,
             default: `this.reverse(prop=[[/prop/_partIsAPart]])`,
             descriptionMD: `Sub-types of this plant part`,
-            importance: 3,
+            rank: 3,
         },
         ////////////////////////////////////////////////////////////////////////////////////////
         ///////// Value properties:
@@ -335,7 +335,7 @@ export const schema = ValidateSiteSchema({
             mode: PropertyMode.Required,
             descriptionMD:
                 "The **scientific name**, sometimes called the **binomial name** or **latin name** is an unambiguous species identifier.",
-            importance: 3,
+            rank: 3,
             displayAs: "*{value}*",
         },
         // An entry's Wikidata Entry ID
@@ -353,7 +353,7 @@ export const schema = ValidateSiteSchema({
             ],
             mode: PropertyMode.Optional,
             descriptionMD: "ID of this item on Wikidata, the free knowledge base that anyone can edit.",
-            importance: 15,
+            rank: 15,
             displayAs: "[{value}](https://www.wikidata.org/wiki/{value})",
         },
         // Other names for a plant
@@ -364,7 +364,7 @@ export const schema = ValidateSiteSchema({
             appliesTo: [{ entryType: VNID("_ETSPECIES") }],
             mode: PropertyMode.Optional,
             descriptionMD: "Other common names for this species.",
-            importance: 5,
+            rank: 5,
         },
     },
 });

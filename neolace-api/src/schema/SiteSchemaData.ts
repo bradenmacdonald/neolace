@@ -166,10 +166,11 @@ export const PropertySchema = Schema({
     /** The Wikidata P ID for this property, if applicable, e.g. P569 for "date of birth" */
     //wikidataPID: string.strictOptional(),
     /**
-     * Default importance of this property, 0 being most important, 99 being least.
-     * Properties with importance < 20 are not shown on entry pages by default.
+     * Default rank of this property, 0 being most important, 99 being least.
+     * Only properties with rank < 50 are shown on entry pages by default, while higher ranks (less important)
+     * properties are put onto a "see more" page.
      */
-    importance: number,
+    rank: number,
     /**
      * Markdown template for formatting this value in a particular way.
      * e.g. use `[{value}](https://www.wikidata.org/wiki/{value})` to format a Wikidata Q ID as a link.

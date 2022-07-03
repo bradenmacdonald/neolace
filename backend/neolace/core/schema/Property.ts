@@ -46,10 +46,10 @@ export class Property extends VNodeType {
         /** The standard URL for this property, e.g. "https://schema.org/birthDate" for "date of birth" */
         standardURL: Field.String,
         /**
-         * Default importance of this property, 0 being most important, 99 being least.
-         * Properties with importance < 20 are not shown on entry pages by default.
+         * Default rank of this property, 0 being most important, 99 being least.
+         * Only properties with rank < 50 are shown on entry pages by default.
          */
-        importance: Field.Int.Check(check.number.min(0).max(99)),
+        rank: Field.Int.Check(check.number.min(0).max(99)),
         /**
          * Markdown template for formatting this value in a particular way.
          * e.g. use `[{value}](https://www.wikidata.org/wiki/{value})` to format a Wikidata Q ID as a link.

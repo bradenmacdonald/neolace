@@ -61,7 +61,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
                 .inheritable
                 .enableSlots
                 .standardURL
-                .importance
+                .rank
                 .editNoteMD
                 .displayAs
                 .appliesTo((et) => et.id)
@@ -77,7 +77,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             descriptionMD: p.descriptionMD,
             type: p.type as PropertyType,
             mode: p.mode as PropertyMode,
-            importance: p.importance,
+            rank: p.rank,
             appliesTo: appliesToSorted.map((at) => ({ entryType: at.id })),
             ...(p.parentProperties.length > 0 && { isA: p.parentProperties.map((pp) => pp.id).sort() }),
             ...(p.default && { default: p.default }),
@@ -246,7 +246,7 @@ export function diffSchema(
                     "valueConstraint",
                     "default",
                     "standardURL",
-                    "importance",
+                    "rank",
                     "editNoteMD",
                     "displayAs",
                     "inheritable",

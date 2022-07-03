@@ -240,7 +240,7 @@ group("properties.ts", () => {
                     {
                         property: {
                             id: prop1,
-                            importance: 15,
+                            rank: 15,
                             name: "Property 1",
                             default: null,
                         },
@@ -296,7 +296,7 @@ group("properties.ts", () => {
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
                                 descriptionMD: "",
-                                importance: 1,
+                                rank: 1,
                             },
                         },
                         // Create the automatic reverse property of "is a / type of":
@@ -309,7 +309,7 @@ group("properties.ts", () => {
                                 mode: PropertyMode.Auto,
                                 appliesTo: [{ entryType }],
                                 descriptionMD: "",
-                                importance: 1,
+                                rank: 1,
                                 default: `this.reverse(prop=[[/prop/${entryIsA}]])`,
                             },
                         },
@@ -340,7 +340,7 @@ group("properties.ts", () => {
                     {
                         property: {
                             id: propHasTypes,
-                            importance: 1,
+                            rank: 1,
                             name: "Has types",
                             default: `this.reverse(prop=[[/prop/${entryIsA}]])`,
                         },
@@ -376,7 +376,7 @@ group("properties.ts", () => {
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
                                 descriptionMD: "",
-                                importance: 1,
+                                rank: 1,
                             },
                         },
                         {
@@ -505,7 +505,7 @@ group("properties.ts", () => {
                     return {
                         property: {
                             id: propId,
-                            importance: 15,
+                            rank: 15,
                             name: `Property ${
                                 propId === prop1 ? "1" : propId === prop2 ? "2" : propId === prop3 ? "3" : "X"
                             }`,
@@ -532,7 +532,7 @@ group("properties.ts", () => {
                 assertEquals(await graph.read((tx) => getEntryProperties(B, { tx })), [
                     // B is an A
                     {
-                        property: { id: entryIsA, importance: 1, name: "Type of", default: null },
+                        property: { id: entryIsA, rank: 1, name: "Type of", default: null },
                         facts: [{
                             propertyFactId: pfBisA,
                             note: "B is an A",
@@ -552,7 +552,7 @@ group("properties.ts", () => {
                 assertEquals(await graph.read((tx) => getEntryProperties(C, { tx })), [
                     // C is a B
                     {
-                        property: { id: entryIsA, importance: 1, name: "Type of", default: null },
+                        property: { id: entryIsA, rank: 1, name: "Type of", default: null },
                         facts: [{
                             propertyFactId: pfCisB,
                             note: "C is a B",
@@ -593,7 +593,7 @@ group("properties.ts", () => {
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
                                 descriptionMD: "",
-                                importance: 1,
+                                rank: 1,
                             },
                         },
                         {
@@ -680,7 +680,7 @@ group("properties.ts", () => {
                         property: {
                             id: prop1,
                             name: "Property 1",
-                            importance: 15,
+                            rank: 15,
                             default: null,
                         },
                         facts: [
@@ -708,7 +708,7 @@ group("properties.ts", () => {
                         property: {
                             id: prop1,
                             name: "Property 1",
-                            importance: 15,
+                            rank: 15,
                             default: null,
                         },
                         facts: [
@@ -800,7 +800,7 @@ group("properties.ts", () => {
                 assertEquals(
                     await graph.read((tx) => getEntryProperty({ entryId: A, propertyId: prop1, tx })),
                     {
-                        property: { id: prop1, name: "Property 1", importance: 15, default: null },
+                        property: { id: prop1, name: "Property 1", rank: 15, default: null },
                         facts: [
                             {
                                 propertyFactId: factIdA1v1,
@@ -866,7 +866,7 @@ group("properties.ts", () => {
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
                                 descriptionMD: "",
-                                importance: 1,
+                                rank: 1,
                             },
                         },
                         {
@@ -877,7 +877,7 @@ group("properties.ts", () => {
                                 type: PropertyType.RelOther,
                                 appliesTo: [{ entryType }],
                                 descriptionMD: "",
-                                importance: 2,
+                                rank: 2,
                                 inheritable: true,
                                 enableSlots: true,
                             },
@@ -981,7 +981,7 @@ group("properties.ts", () => {
                 assertEquals(
                     await graph.read((tx) => getEntryProperty({ entryId: car, propertyId: entryHasPart, tx })),
                     {
-                        property: { id: entryHasPart, name: "Has Part", importance: 2, default: null },
+                        property: { id: entryHasPart, name: "Has Part", rank: 2, default: null },
                         facts: [
                             // These are sorted in alphabetical order by slot so "motor" comes before "sw" (steering wheel)
                             {
@@ -1009,7 +1009,7 @@ group("properties.ts", () => {
                 assertEquals(
                     await graph.read((tx) => getEntryProperty({ entryId: electricCar, propertyId: entryHasPart, tx })),
                     {
-                        property: { id: entryHasPart, name: "Has Part", importance: 2, default: null },
+                        property: { id: entryHasPart, name: "Has Part", rank: 2, default: null },
                         facts: [
                             {
                                 propertyFactId: pfElectricCarHasMotor,
@@ -1050,7 +1050,7 @@ group("properties.ts", () => {
                 assertEquals(
                     await graph.read((tx) => getEntryProperty({ entryId: electricCar, propertyId: entryHasPart, tx })),
                     {
-                        property: { id: entryHasPart, name: "Has Part", importance: 2, default: null },
+                        property: { id: entryHasPart, name: "Has Part", rank: 2, default: null },
                         facts: [
                             // However, slot values are still returned, since they are set:
                             {
@@ -1093,7 +1093,7 @@ group("properties.ts", () => {
                             type: PropertyType.RelIsA,
                             appliesTo: [{ entryType }],
                             descriptionMD: "",
-                            importance: 99,
+                            rank: 99,
                         },
                     },
                     // Create entry A and B:
@@ -1127,7 +1127,7 @@ group("properties.ts", () => {
                 const args = {
                     id,
                     name: `Auto Property ${i}`,
-                    importance: i,
+                    rank: i,
                     default: `"AutoProp${i} value"`,
                 };
                 edits.push({
@@ -1147,7 +1147,7 @@ group("properties.ts", () => {
                 const propArgs = {
                     id,
                     name: `Property ${i}`,
-                    importance: i,
+                    rank: i,
                 };
                 edits.push({
                     code: "CreateProperty",
@@ -1198,7 +1198,7 @@ group("properties.ts", () => {
                 const propArgs = {
                     id,
                     name: `B Property ${i}`,
-                    importance: 20 + i,
+                    rank: 20 + i,
                 };
                 edits.push({
                     code: "CreateProperty",
@@ -1223,9 +1223,9 @@ group("properties.ts", () => {
 
             await graph.runAsSystem(ApplyEdits({ siteId, edits }));
 
-            // Get the properties of A with importance <= 2:
-            assertEquals(await graph.read((tx) => getEntryProperties(A, { tx, maxImportance: 2 })), [
-                // Results are sorted by importance, and by label.
+            // Get the properties of A with rank <= 2:
+            assertEquals(await graph.read((tx) => getEntryProperties(A, { tx, maxRank: 2 })), [
+                // Results are sorted by rank, and by label.
                 autoPropertyValues[0],
                 aPropertyValues[0],
                 autoPropertyValues[1],
@@ -1237,7 +1237,7 @@ group("properties.ts", () => {
             // Now get same as above but SKIP the first two and LIMIT to 3 results, and include the total count.
             {
                 const result = await graph.read((tx) =>
-                    getEntryProperties(A, { tx, skip: 2, limit: 3, totalCount: true, maxImportance: 2 })
+                    getEntryProperties(A, { tx, skip: 2, limit: 3, totalCount: true, maxRank: 2 })
                 );
                 assertEquals(result.slice(), [ // Use slice to discard the totalCount info which otherwise counts as a difference
                     autoPropertyValues[1],

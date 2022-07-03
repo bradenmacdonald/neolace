@@ -154,7 +154,7 @@ export const UpdateProperty = SchemaEditType({
         appliesTo: array.of(Schema({ entryType: vnidString })).strictOptional(),
         mode: Schema.enum(PropertyMode).strictOptional(),
         isA: array.of(vnidString).strictOptional(),
-        importance: number.strictOptional(),
+        rank: number.strictOptional(),
         enableSlots: boolean.strictOptional(),
         // For these properties, use 'undefined' to mean 'no change', and an empty string to mean "set to no value"
         valueConstraint: string.strictOptional(),
@@ -182,7 +182,7 @@ export const UpdateProperty = SchemaEditType({
             newProp.appliesTo = data.appliesTo;
         }
 
-        for (const field of ["name", "descriptionMD", "mode", "isA", "importance"] as const) {
+        for (const field of ["name", "descriptionMD", "mode", "isA", "rank"] as const) {
             if (data[field] !== undefined) {
                 (newProp as any)[field] = data[field];
             }
@@ -228,7 +228,7 @@ export const CreateProperty = SchemaEditType({
         appliesTo: array.of(Schema({ entryType: vnidString })).strictOptional(),
         mode: Schema.enum(PropertyMode).strictOptional(),
         isA: array.of(vnidString).strictOptional(),
-        importance: number.strictOptional(),
+        rank: number.strictOptional(),
         enableSlots: boolean.strictOptional(),
         // For these properties, use 'undefined' to mean 'use default', and an empty string to mean "set to no value"
         valueConstraint: string.strictOptional(),
@@ -248,8 +248,8 @@ export const CreateProperty = SchemaEditType({
                 name: "New Property",
                 type: data.type ?? PropertyType.Value,
                 mode: PropertyMode.Optional,
-                // Default importance is 15
-                importance: 15,
+                // Default rank is 15
+                rank: 15,
                 inheritable: data.inheritable ?? false,
                 enableSlots: data.enableSlots ?? false,
             }},

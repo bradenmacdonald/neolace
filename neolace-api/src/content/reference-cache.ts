@@ -25,7 +25,7 @@ export const ReferenceCacheSchema = Schema({
         description: string,
         type: Schema.enum(PropertyType),
         standardURL: string,
-        importance: number,
+        rank: number,
         displayAs: string,
     })),
     lookups: array.of(Schema({
