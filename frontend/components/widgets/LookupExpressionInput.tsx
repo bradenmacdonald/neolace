@@ -2,8 +2,8 @@ import React from 'react';
 import { useIntl } from 'react-intl';
 import { type Descendant } from 'slate'
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate } from 'slate-react';
-import { EscapeMode, slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor, VoidEntryTypeNode, VoidPropNode } from 'components/utils/slate';
-import { EntryTypeVoid, PropertyVoid } from 'components/utils/slate-mdt';
+import { EscapeMode, slateDocToStringValue, stringValueToSlateDoc, useForceUpdate, useNeolaceSlateEditor, VoidEntryNode, VoidEntryTypeNode, VoidPropNode } from 'components/utils/slate';
+import { EntryTypeVoid, EntryVoid, PropertyVoid } from 'components/utils/slate-mdt';
 import { displayString, TranslatableString } from 'components/utils/i18n';
 
 
@@ -71,7 +71,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = ({value, on
 
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={parsedValue} onChange={handleChange}>
-        <div className={`border border-gray-500 rounded-md inline-flex items-center focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full md:w-auto md:min-w-[600px] max-w-full ${props.className ?? ""}`}>
+        <div className={`border border-gray-500 rounded-md inline-flex items-center focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full md:w-auto md:min-w-[600px] selection:bg-sky-200 max-w-full ${props.className ?? ""}`}>
             {/* toolbar and custom buttons etc. can go here. within the box. */}
             <Editable
                 id={props.id}
@@ -92,7 +92,9 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
 }
 
 export function renderElement({element, children, attributes}: RenderElementProps): JSX.Element {
-    if (element.type === "custom-void-property") {
+    if (element.type === "custom-void-entry") {
+        return <EntryVoid entryId={(element as VoidEntryNode).entryId} attributes={attributes}>{children}</EntryVoid>
+    } else if (element.type === "custom-void-property") {
         return <PropertyVoid propertyId={(element as VoidPropNode).propertyId} attributes={attributes}>{children}</PropertyVoid>
     } else if (element.type === "custom-void-entry-type") {
         return <EntryTypeVoid entryTypeId={(element as VoidEntryTypeNode).entryTypeId} attributes={attributes}>{children}</EntryTypeVoid>

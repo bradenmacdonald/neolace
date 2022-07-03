@@ -8,6 +8,17 @@ export type NeolaceSlateEditor = BaseEditor & ReactEditor & HistoryEditor;
 
 /**
  * This node is not part of MDT or lookup expressions but is used in our editor as a placeholder for a
+ * '[[/entry/_VNID]]' entry identifier, so that we aren't displaying the (unhelpful) VNID to the user, and we can
+ * instead display a nice friendly entry widget.
+ */
+ export interface VoidEntryNode extends api.MDT.CustomInlineNode {
+    type: "custom-void-entry";
+    entryId: api.VNID;
+    children: [{type: "text", text: ""}];
+}
+
+/**
+ * This node is not part of MDT or lookup expressions but is used in our editor as a placeholder for a
  * '[[/prop/_VNID]]' property identifier, so that we aren't displaying the (unhelpful) VNID to the user, and we can
  * instead display a nice friendly property name.
  */
@@ -27,7 +38,7 @@ export interface VoidEntryTypeNode extends api.MDT.CustomInlineNode {
     children: [{type: "text", text: ""}];
 }
 
-export type NeolaceSlateElement = api.MDT.Node | VoidPropNode | VoidEntryTypeNode;
+export type NeolaceSlateElement = api.MDT.Node | VoidEntryNode | VoidPropNode | VoidEntryTypeNode;
 
 export type PlainText = { text: string };
 
@@ -144,19 +155,21 @@ export function useForceUpdate(){
  */
  export function stringValueToSlateDoc(value: string): NeolaceSlateElement[] {
     return value.split("\n").map(line => {
-        const parts: (api.MDT.TextNode|VoidPropNode|VoidEntryTypeNode)[] = [];
+        const parts: (api.MDT.TextNode|VoidEntryNode|VoidPropNode|VoidEntryTypeNode)[] = [];
         // Search the string and replace all '[[/prop/_VNID]]' occurrences with a 'custom-void-property' element.
         while (true) {
-            const nextProp = line.match(/\[\[\/(prop|etype)\/(_[0-9A-Za-z]{1,22})\]\]/m);
-            if (nextProp === null || !nextProp.index) {
+            const nextProp = line.match(/\[\[\/(entry|prop|etype)\/(_[0-9A-Za-z]{1,22})\]\]/m);
+            if (nextProp === null || nextProp.index === undefined) {
                 parts.push({ type: "text", text: line });
                 break;
             } else {
-                if (nextProp.index > 0) {
-                    parts.push({ type: "text", text: line.substring(0, nextProp.index) });
-                }
+                // First add any text that comes before the prop/entry/entryType void. This may be an empty string but
+                // we still need that so that the user can position their cursor before the void.
+                parts.push({ type: "text", text: line.substring(0, nextProp.index) });
                 const type = nextProp[1], id = nextProp[2] as api.VNID;
-                if (type === "prop") {
+                if (type === "entry") {
+                    parts.push({type: "custom-void-entry", entryId: id, children: [{type: "text", text: ""}]});
+                } else if (type === "prop") {
                     parts.push({type: "custom-void-property", propertyId: id, children: [{type: "text", text: ""}]});
                 } else if (type === "etype") {
                     parts.push({type: "custom-void-entry-type", entryTypeId: id, children: [{type: "text", text: ""}]});
@@ -209,6 +222,8 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
             result += `_` + slateDocToStringValue(n.children, escape) + `_`;
         } else if (n.type === "lookup_inline") {
             result += `{ ` + slateDocToStringValue(n.children, EscapeMode.PlainText) + ` }`;
+        } else if (n.type === "custom-void-entry") {
+            result += `[[/entry/${(n as VoidEntryNode).entryId}]]`;
         } else if (n.type === "custom-void-property") {
             result += `[[/prop/${(n as VoidPropNode).propertyId}]]`;
         } else if (n.type === "custom-void-entry-type") {

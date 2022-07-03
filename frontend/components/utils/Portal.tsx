@@ -1,5 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import ReactDOM from "react-dom";
 
 interface Props {
     className?: string;
@@ -13,16 +13,21 @@ interface Props {
  * @param className CSS classname
  * @param el HTML element to create.  default: div
  */
-export const Portal : React.FC<Props> = ( { children, className = 'fixed root-portal top-0 left-0 w-full z-modal', el = 'div' } ) => {
-
-    const [container, setContainer] = React.useState<HTMLElement|null>(null);
+export const Portal: React.FC<Props> = ({
+    children,
+    className = "fixed root-portal top-0 left-0 w-full z-modal",
+    el = "div",
+}) => {
+    const [container, setContainer] = React.useState<HTMLElement | null>(null);
 
     React.useEffect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const portals: Record<string, {element: HTMLElement, usageCount: number}> = (window as any)._portals || ((window as any)._portals = {});
+        const portals: Record<string, { element: HTMLElement; usageCount: number }> = (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (window as any)._portals || ((window as any)._portals = {})
+        );
         const portalKey = el + ":" + className;
         if (portals[portalKey] === undefined) {
-            portals[portalKey] = {element: document.createElement(el), usageCount: 1};
+            portals[portalKey] = { element: document.createElement(el), usageCount: 1 };
             document.body.appendChild(portals[portalKey].element);
             portals[portalKey].element.className = className;
         } else {
@@ -34,8 +39,8 @@ export const Portal : React.FC<Props> = ( { children, className = 'fixed root-po
             if (portals[portalKey].usageCount-- <= 0) {
                 document.body.removeChild(portals[portalKey].element);
             }
-        }
-    }, [])
+        };
+    }, [className, el]);
 
     return container ? ReactDOM.createPortal(children, container) : null;
-}
+};
