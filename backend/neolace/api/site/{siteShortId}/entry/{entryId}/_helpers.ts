@@ -177,8 +177,9 @@ export async function getEntry(
                             startedAt: 0n,
                             pageSize: BigInt(maxValuesPerProp),
                             totalCount: BigInt(facts.length),
-                            // Also pass along the lookup expression that can be used to retrieve the rest of the values from this property:
-                            // this.get(prop=[[/prop/_id]])
+                            // Also pass along the lookup expression that can be used to retrieve the rest of the values
+                            // from this property:
+                            // this.get(prop=prop("_id"))
                             sourceExpression: new GetProperty(new This(), {
                                 prop: new LiteralExpression(new PropertyValue(property.id)),
                             }),

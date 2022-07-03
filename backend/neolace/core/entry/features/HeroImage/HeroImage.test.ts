@@ -121,7 +121,7 @@ group("HeroImage.ts", () => {
                         feature: {
                             featureType: "HeroImage",
                             enabled: true,
-                            config: { lookupExpression: `this.get(prop=[[/prop/${hasFeatureImage}]])` },
+                            config: { lookupExpression: `this.get(prop=prop("${hasFeatureImage}"))` },
                         },
                     },
                 },
@@ -206,7 +206,7 @@ group("HeroImage.ts", () => {
                         entryId: entryId,
                         propertyId: hasFeatureImage,
                         propertyFactId: VNID(),
-                        valueExpression: `[[/entry/${imageId}]]`,
+                        valueExpression: `entry("${imageId}")`,
                         note: caption,
                     },
                 },

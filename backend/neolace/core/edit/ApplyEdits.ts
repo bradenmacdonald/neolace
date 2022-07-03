@@ -23,7 +23,11 @@ import { C, defineAction, EmptyResultError, Field, VNID } from "neolace/deps/ver
 import { Site } from "../Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
-import { directRelTypeForPropertyType, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
+import {
+    directRelTypeForPropertyType,
+    parseLookupExpressionToEntryId,
+    PropertyFact,
+} from "neolace/core/entry/PropertyFact.ts";
 import { features } from "neolace/core/entry/features/all-features.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 
@@ -216,11 +220,8 @@ export const ApplyEdits = defineAction({
                     if (directRelType !== null) {
                         // This is a relationship property, verify that the Entry it will be pointing to exists and is
                         // part of the same site.
-                        if (!valueExpression.startsWith(`[[/entry/`) || !valueExpression.endsWith(`]]`)) {
-                            throw new Error(`Relationship property values must be of the format [[/entry/entry-id]]`);
-                        }
                         // There is a relationship FROM the current entry TO the entry with this id:
-                        const toEntryId = valueExpression.slice(9, -2);
+                        const toEntryId = parseLookupExpressionToEntryId(valueExpression);
 
                         // We also need to create/update a direct (Entry)-[rel]->(Entry) relationship on the graph.
                         try {
@@ -301,11 +302,8 @@ export const ApplyEdits = defineAction({
                     if (directRelType !== null && baseData.newValue !== baseData.originalValue) {
                         // We have changed the value of a relationship property, so we have to ensure the target entry
                         // exists and update the direct relationship between the entries:
-                        if (!baseData.newValue.startsWith(`[[/entry/`) || !baseData.newValue.endsWith(`]]`)) {
-                            throw new Error(`Relationship property values must be of the format [[/entry/entry-id]]`);
-                        }
                         // There is a relationship FROM the current entry TO the entry with this id:
-                        const toEntryId = baseData.newValue.slice(9, -2);
+                        const toEntryId = parseLookupExpressionToEntryId(baseData.newValue);
 
                         // We also need to update a direct (Entry)-[rel]->(Entry) relationship on the graph.
                         try {

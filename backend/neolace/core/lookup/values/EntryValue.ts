@@ -22,7 +22,7 @@ export class EntryValue extends ConcreteValue implements IHasLiteralExpression {
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `[[/entry/${this.id}]]`; // e.g. [[/entry/_6FisU5zxXggLcDz4Kb3Wmd]]
+        return `entry("${this.id}")`;
     }
 
     protected override doCastTo(newType: ClassOf<LookupValue>, context: LookupContext): LookupValue | undefined {

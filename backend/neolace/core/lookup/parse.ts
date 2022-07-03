@@ -1,4 +1,3 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
 import { LookupParseError } from "./errors.ts";
 import { LookupExpression } from "./expressions/base.ts";
 import { List, LiteralExpression, This } from "./expressions.ts";
@@ -35,12 +34,6 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
         [/^"(.*)"$/, (_m) => new LiteralExpression(new V.StringValue(JSON.parse(lookup)))],
         // 123 (Integer literal, supports bigints)
         [/^\d+$/, (_m) => new LiteralExpression(new V.IntegerValue(BigInt(lookup)))],
-        // [[/entry/_6FisU5zxXg5LcDz4Kb3Wmd]] (Entry literal)
-        [/^\[\[\/entry\/(_[0-9A-Za-z]{1,22})\]\]$/, (m) => new LiteralExpression(new V.EntryValue(VNID(m[1])))],
-        // [[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]] (Property literal)
-        [/^\[\[\/prop\/(_[0-9A-Za-z]{1,22})\]\]$/, (m) => new LiteralExpression(new V.PropertyValue(VNID(m[1])))],
-        // [[/etype/_6FisU5zxXg5LcDz4Kb3Wmd]] (Entry Type literal)
-        [/^\[\[\/etype\/(_[0-9A-Za-z]{1,22})\]\]$/, (m) => new LiteralExpression(new V.EntryTypeValue(VNID(m[1])))],
 
         // something.function()
         [

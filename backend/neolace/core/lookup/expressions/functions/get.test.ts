@@ -28,6 +28,7 @@ import { corePerm } from "neolace/core/permissions/permissions.ts";
 import { Always, EntryTypesCondition, PermissionGrant } from "neolace/core/permissions/grant.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { LookupEvaluationError } from "../../errors.ts";
+import { PropFunction } from "./prop.ts";
 
 group("get.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
@@ -37,14 +38,13 @@ group("get.ts", () => {
     const pollenCone = defaultData.entries.pollenCone.id;
     const context = new TestLookupContext({ siteId });
 
-    // Literal expressions referencing some properties in the default PlantDB data set:
-    const scientificName = new LiteralExpression(
-        new PropertyValue(defaultData.schema.properties._propScientificName.id),
-    );
-    const partIsAPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._partIsAPart.id));
-    const hasPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._hasPart.id));
-    const genusSpecies = new LiteralExpression(new PropertyValue(defaultData.schema.properties._genusSpecies.id));
-    const parentGenus = new LiteralExpression(new PropertyValue(defaultData.schema.properties._parentGenus.id));
+    // Expressions referencing some properties in the default PlantDB data set:
+    const makeProp = (id: string) => new PropFunction(new LiteralExpression(new StringValue(id)));
+    const scientificName = makeProp(defaultData.schema.properties._propScientificName.id);
+    const partIsAPart = makeProp(defaultData.schema.properties._partIsAPart.id);
+    const hasPart = makeProp(defaultData.schema.properties._hasPart.id);
+    const genusSpecies = makeProp(defaultData.schema.properties._genusSpecies.id);
+    const parentGenus = makeProp(defaultData.schema.properties._parentGenus.id);
 
     // When retrieving the entry values from a relationship property, they are "annotated" with data like this:
     const defaultAnnotations = {

@@ -147,7 +147,7 @@ group("edit tests", () => {
                         propertyId,
                         propertyFactId: VNID(),
                         /** Value expression: a lookup expression giving the value */
-                        valueExpression: "[[/entry/_FOOBAR]]",
+                        valueExpression: `entry("_FOOBAR")`,
                     },
                 })
             );
@@ -227,7 +227,7 @@ group("edit tests", () => {
                 data: {
                     entryId,
                     propertyFactId,
-                    valueExpression: `[[/entry/${newGenusId}]]`,
+                    valueExpression: `entry("${newGenusId}")`,
                 },
             });
 
@@ -236,7 +236,7 @@ group("edit tests", () => {
             assertEquals(afterValue.id, newGenusId);
             // And to test that the "direct relationships" were updated correctly, we use ancestors(), because the
             // ancestors() function doesn't check PropertyFact entries but rather uses the direct IS_A relationships.
-            const result = await client.evaluateLookupExpression(`[[/entry/${entryId}]].ancestors().first()`);
+            const result = await client.evaluateLookupExpression(`entry("${entryId}").ancestors().first()`);
             assert(result.resultValue.type === "Entry");
             assertEquals(result.resultValue.id, newGenusId);
         });

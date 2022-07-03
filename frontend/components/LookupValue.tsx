@@ -11,8 +11,8 @@ import { HoverClickNote } from "./widgets/HoverClickNote";
 import { ErrorMessage } from "./widgets/ErrorMessage";
 import { LookupGraph } from "./graph/GraphLoader";
 import { EntryValue } from "./widgets/EntryValue";
-import { EntryTypeVoid } from "./utils/slate-mdt";
 import { UiPluginsContext } from "./utils/ui-plugins";
+import { Icon } from "./widgets/Icon";
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -120,8 +120,14 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             return <EntryValue entryId={value.id} mdtContext={props.mdtContext} />;
         }
         case "EntryType": {
-            // eslint-disable-next-line react/no-children-prop
-            return <EntryTypeVoid entryTypeId={value.id} attributes={{}} children={null} />;
+            const entryTypeName = props.mdtContext.refCache.entryTypes[value.id]?.name ?? value.id;
+            const entryTypeColor = props.mdtContext.refCache.entryTypes[value.id]?.color ?? api.EntryTypeColor.Default;
+            return <span className="text-sm font-medium font-sans">
+                <span className={`rounded-l-md py-[3px] px-2 bg-gray-200`} style={{color: api.entryTypeColors[entryTypeColor][2]}}>
+                    <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
+                </span>
+                <span className={`rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700`}>{entryTypeName}</span>
+            </span>;
         }
         case "Image": {
             return <LookupImage value={value} mdtContext={props.mdtContext} />;

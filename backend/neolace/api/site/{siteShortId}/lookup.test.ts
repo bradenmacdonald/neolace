@@ -16,7 +16,7 @@ group("lookup.ts", () => {
         const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
         const result = await client.evaluateLookupExpression(
-            `this.get(prop=[[/prop/${defaultData.schema.properties._propScientificName.id}]])`,
+            `this.get(prop=prop("${defaultData.schema.properties._propScientificName.id}"))`,
             { entryKey: defaultData.entries.ponderosaPine.friendlyId },
         );
 
@@ -27,7 +27,7 @@ group("lookup.ts", () => {
         const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
         const result = await client.evaluateLookupExpression(
-            `this.get(prop=[[/prop/${defaultData.schema.properties._relImages.id}]])`,
+            `this.get(prop=prop("${defaultData.schema.properties._relImages.id}"))`,
             { entryKey: defaultData.entries.ponderosaPine.friendlyId },
         );
 
@@ -54,7 +54,7 @@ group("lookup.ts", () => {
                 },
             ],
             source: {
-                expr: `this.andDescendants().reverse(prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                expr: `this.andDescendants().reverse(prop=prop("${defaultData.schema.properties._imgRelTo.id}"))`,
                 entryId: defaultData.entries.ponderosaPine.id,
             },
         });

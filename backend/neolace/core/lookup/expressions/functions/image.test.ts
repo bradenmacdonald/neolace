@@ -95,7 +95,7 @@ group("image.ts", () => {
     test(`It works with multiple entry values`, async () => {
         const expression = new Image(
             parseLookupString(
-                `this.andDescendants().reverse(prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                `this.andDescendants().reverse(prop=prop("${defaultData.schema.properties._imgRelTo.id}"))`,
             ),
             { format: new LiteralExpression(new StringValue("thumb")) },
         );

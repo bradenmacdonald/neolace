@@ -75,16 +75,6 @@ expressions) are of the following types:
 10. Transform Expression
 11. Type
 
-## Literals
-
-Some types can be referenced as literals:
-
-In each example, `_2uDtUtOWJCL33X7zTAK8dK` is the ID of the object in question.
-
-* Entries: `[[/entry/_2uDtUtOWJCL33X7zTAK8dK]]`
-* Properties: `[[/prop/_2uDtUtOWJCL33X7zTAK8dK]]`
-* Entry Type: `[[/type/_2uDtUtOWJCL33X7zTAK8dK]]`
-
 ## Transform Expressions and Conditionals
 
 An "transform expression" is an expression that accepts a value and returns a

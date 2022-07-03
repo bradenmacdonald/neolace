@@ -8,7 +8,7 @@ export type NeolaceSlateEditor = BaseEditor & ReactEditor & HistoryEditor;
 
 /**
  * This node is not part of MDT or lookup expressions but is used in our editor as a placeholder for a
- * '[[/entry/_VNID]]' entry identifier, so that we aren't displaying the (unhelpful) VNID to the user, and we can
+ * 'entry("_VNID")' entry identifier, so that we aren't displaying the (unhelpful) VNID to the user, and we can
  * instead display a nice friendly entry widget.
  */
 export interface VoidEntryNode extends api.MDT.CustomInlineNode {
@@ -19,7 +19,7 @@ export interface VoidEntryNode extends api.MDT.CustomInlineNode {
 
 /**
  * This node is not part of MDT or lookup expressions but is used in our editor as a placeholder for a
- * '[[/prop/_VNID]]' property identifier, so that we aren't displaying the (unhelpful) VNID to the user, and we can
+ * 'prop("_VNID")' property identifier, so that we aren't displaying the (unhelpful) VNID to the user, and we can
  * instead display a nice friendly property name.
  */
 export interface VoidPropNode extends api.MDT.CustomInlineNode {
@@ -30,7 +30,7 @@ export interface VoidPropNode extends api.MDT.CustomInlineNode {
 
 /**
  * This node is not part of MDT or lookup expressions but is used in our editor as a placeholder for a
- * '[[/etype/_VNID]]' entry type identifier.
+ * 'entryType("_VNID")' entry type identifier.
  */
 export interface VoidEntryTypeNode extends api.MDT.CustomInlineNode {
     type: "custom-void-entry-type";
@@ -160,9 +160,11 @@ export function useForceUpdate() {
 export function stringValueToSlateDoc(value: string): NeolaceSlateElement[] {
     return value.split("\n").map((line) => {
         const parts: (api.MDT.TextNode | VoidEntryNode | VoidPropNode | VoidEntryTypeNode)[] = [];
-        // Search the string and replace all '[[/prop/_VNID]]' occurrences with a 'custom-void-property' element.
+        // Search the string and replace all `prop("_VNID")`, `entry("_VNID")`, and
+        // `entryType("_VNID")` occurrences with a custom void element that looks nicer than the VNID.
         while (true) {
-            const nextProp = line.match(/\[\[\/(entry|prop|etype)\/(_[0-9A-Za-z]{1,22})\]\]/m);
+            // Match strings like `entry("_VNID")` but not `fooentry("_VNID")`
+            const nextProp = line.match(/(?<!\w)(entry|prop|entryType)\("(_[0-9A-Za-z]{1,22})"\)/m);
             if (nextProp === null || nextProp.index === undefined) {
                 parts.push({ type: "text", text: line });
                 break;
@@ -179,7 +181,7 @@ export function stringValueToSlateDoc(value: string): NeolaceSlateElement[] {
                         propertyId: id,
                         children: [{ type: "text", text: "" }],
                     });
-                } else if (type === "etype") {
+                } else if (type === "entryType") {
                     parts.push({
                         type: "custom-void-entry-type",
                         entryTypeId: id,
@@ -235,11 +237,11 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
         } else if (n.type === "lookup_inline") {
             result += `{ ` + slateDocToStringValue(n.children, EscapeMode.PlainText) + ` }`;
         } else if (n.type === "custom-void-entry") {
-            result += `[[/entry/${(n as VoidEntryNode).entryId}]]`;
+            result += `entry("${(n as VoidEntryNode).entryId}")`;
         } else if (n.type === "custom-void-property") {
-            result += `[[/prop/${(n as VoidPropNode).propertyId}]]`;
+            result += `prop("${(n as VoidPropNode).propertyId}")`;
         } else if (n.type === "custom-void-entry-type") {
-            result += `[[/etype/${(n as VoidEntryTypeNode).entryTypeId}]]`;
+            result += `entryType("${(n as VoidEntryTypeNode).entryTypeId}")`;
         } else {
             throw new Error(`sdtv: unexpected node in slate doc: ${n.type}`);
         }

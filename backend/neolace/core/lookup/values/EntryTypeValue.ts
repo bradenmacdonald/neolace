@@ -17,7 +17,7 @@ export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpressi
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `[[/etype/${this.id}]]`; // e.g. [[/etype/_6FisU5zxXggLcDz4Kb3Wmd]]
+        return `entryType("${this.id}")`;
     }
 
     protected serialize() {
