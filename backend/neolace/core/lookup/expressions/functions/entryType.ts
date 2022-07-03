@@ -29,15 +29,11 @@ export class EntryTypeFunction extends LookupFunctionOneArg {
             // Get the type of the specified entry.
 
             // Note: at this point we already know that the user has permission to view the entry specified, and that
-            // it's from the same site.
-            const permissionsPredicate = await makeCypherCondition(context.subject, corePerm.viewSchema.name, {}, [
-                "entry",
-                "entryType",
-            ]);
+            // it's from the same site. That is sufficient to give them "access" to this entryType. They only need the
+            // additional "viewSchema" to *list* all entry types/properties on the site.
             try {
                 const data = await context.tx.queryOne(C`
                     MATCH (entry:${Entry} {id: ${arg.id}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
-                    WHERE ${permissionsPredicate}
                 `.RETURN({ "entryType.id": Field.VNID }));
                 return new EntryTypeValue(data["entryType.id"]);
             } catch (err) {
@@ -48,7 +44,9 @@ export class EntryTypeFunction extends LookupFunctionOneArg {
             }
         } else {
             // This is the VNID of an entry type.
-            const permissionsPredicate = await makeCypherCondition(context.subject, corePerm.viewSchema.name, {}, [
+            // Viewing a single entry type whose VNID the user already knows does not require 'schema' permission;
+            // the schema permission is only required to *list* all properties / entry types of a site.
+            const permissionsPredicate = await makeCypherCondition(context.subject, corePerm.viewSite.name, {}, [
                 "entryType",
             ]);
             try {

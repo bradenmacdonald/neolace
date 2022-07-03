@@ -38,7 +38,13 @@ export const corePerm = definePermissions({
     },
     // TODO: permission to view change history of an entry
     // Schema //
-    viewSchema: { name: "view.schema", description: "View this site's complete schema", requires: ["view"] },
+    viewSchema: {
+        name: "view.schema",
+        description: `View this site's complete schema. This is required to list all the entry types and properties
+            available on the site. This is not required just to see the definition of an entry type or property that
+            is used on an entry that the user has permission to view.`,
+        requires: ["view"],
+    },
     proposeEditToEntry: {
         name: "proposeEdits.entry",
         description: "Propose edits to entries (by creating a draft)",

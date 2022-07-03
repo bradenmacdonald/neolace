@@ -1,5 +1,13 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { assertEquals, assertRejects, createUserWithPermissions, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
+import {
+    assertEquals,
+    assertRejects,
+    createUserWithPermissions,
+    group,
+    setTestIsolation,
+    test,
+    TestLookupContext,
+} from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { AccessMode, CreateSite, UpdateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
@@ -78,25 +86,33 @@ group("entry.ts - permissions", () => {
         // Now that the site is private, check user permissions
         {
             // entry("VNID") for ponderosa pine:
-            const speciesByVNID = new EntryFunction(new LiteralExpression(new StringValue(
-                defaultData.entries.ponderosaPine.id
-            )));
+            const speciesByVNID = new EntryFunction(
+                new LiteralExpression(
+                    new StringValue(
+                        defaultData.entries.ponderosaPine.id,
+                    ),
+                ),
+            );
             // entry("g-pinus"):
-            const genusByFriendlyId = new EntryFunction(new LiteralExpression(new StringValue(
-                defaultData.entries.genusPinus.friendlyId
-            )));
+            const genusByFriendlyId = new EntryFunction(
+                new LiteralExpression(
+                    new StringValue(
+                        defaultData.entries.genusPinus.friendlyId,
+                    ),
+                ),
+            );
 
             // A user who is not logged in at all should not be able to find the entry:
             {
                 await assertRejects(
                     () => context.evaluateExprConcrete(speciesByVNID),
                     LookupEvaluationError,
-                    `Entry "${defaultData.entries.ponderosaPine.id}" not found.`
+                    `Entry "${defaultData.entries.ponderosaPine.id}" not found.`,
                 );
                 await assertRejects(
                     () => context.evaluateExprConcrete(genusByFriendlyId),
                     LookupEvaluationError,
-                    `Entry "${defaultData.entries.genusPinus.friendlyId}" not found.`
+                    `Entry "${defaultData.entries.genusPinus.friendlyId}" not found.`,
                 );
             }
 
@@ -109,8 +125,8 @@ group("entry.ts - permissions", () => {
                     new PermissionGrant(
                         new NotCondition(
                             new EntryTypesCondition([
-                                defaultData.schema.entryTypes._ETSPECIES.id
-                            ])
+                                defaultData.schema.entryTypes._ETSPECIES.id,
+                            ]),
                         ),
                         [corePerm.viewEntry.name],
                     ),
@@ -118,7 +134,7 @@ group("entry.ts - permissions", () => {
                 await assertRejects(
                     () => context.evaluateExprConcrete(speciesByVNID, undefined, user.userId),
                     LookupEvaluationError,
-                    `Entry "${defaultData.entries.ponderosaPine.id}" not found.`
+                    `Entry "${defaultData.entries.ponderosaPine.id}" not found.`,
                 );
                 // But they can see the genus entry:
                 assertEquals(

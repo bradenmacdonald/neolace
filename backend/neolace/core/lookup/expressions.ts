@@ -2,6 +2,7 @@
 
 export { AllEntries } from "./expressions/functions/allEntries.ts";
 export { Ancestors, AndAncestors } from "./expressions/functions/ancestors.ts";
+export { AndRelated } from "./expressions/functions/related.ts";
 export { BasicSearch } from "./expressions/functions/basicSearch.ts";
 export { Count } from "./expressions/functions/count.ts";
 export { DateExpression } from "./expressions/functions/date.ts";
@@ -18,7 +19,7 @@ export { Image } from "./expressions/functions/image.ts";
 export { List } from "./expressions/list-expr.ts";
 export { LiteralExpression } from "./expressions/literal-expr.ts";
 export { Markdown } from "./expressions/functions/markdown.ts";
-export { AndRelated } from "./expressions/functions/related.ts";
+export { PropFunction } from "./expressions/functions/prop.ts";
 export { ReverseProperty } from "./expressions/functions/reverse.ts";
 export { This } from "./expressions/this.ts";
 export { Slice } from "./expressions/functions/slice.ts";
