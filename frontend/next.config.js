@@ -21,6 +21,11 @@ module.exports = (phase, { defaultConfig }) => {
             locales: ["en", "fr", "ru"],
             defaultLocale: "en",
         },
+        // Don't transform ES6 to ES5 for older browsers:
+        experimental: {
+            browsersListForSwc: true,
+            legacyBrowsers: false,
+        },
         // deno-lint-ignore require-await
         rewrites: async () => {
             // In order to support multitenancy with Next.js, we use a "rewrite" to include the host in the path
