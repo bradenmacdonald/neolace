@@ -2,8 +2,7 @@ import React from "react";
 import type { VirtualElement } from "@popperjs/core";
 import type { Graph } from "@antv/g6";
 import { Tooltip } from "components/widgets/Tooltip";
-import { InlineMDT, MDTContext } from "components/markdown-mdt/mdt";
-import Link from "next/link";
+import { MDTContext } from "components/markdown-mdt/mdt";
 import { EntryTooltipContent } from "components/EntryTooltipContent";
 import { VNID } from "neolace-api";
 
@@ -59,7 +58,7 @@ export function useNodeTooltipHelper(
 }
 
 interface TooltipProps {
-    showTooltipForNode: string|undefined;
+    showTooltipForNode: string | undefined;
     tooltipVirtualElement: VirtualElement;
     mdtContext: MDTContext;
 }
@@ -69,13 +68,19 @@ interface TooltipProps {
  */
 export const NodeTooltip: React.FunctionComponent<TooltipProps> = (props: TooltipProps) => {
     if (props.showTooltipForNode === undefined) {
-        return <></>
+        return <></>;
     }
-    return <Tooltip
-        forceVisible={true}
-        tooltipContent={<EntryTooltipContent
-            entryId={props.showTooltipForNode as VNID}
-            mdtContext={props.mdtContext}
-        />}
-    >{props.tooltipVirtualElement}</Tooltip>;
-}
+    return (
+        <Tooltip
+            forceVisible={true}
+            tooltipContent={
+                <EntryTooltipContent
+                    entryId={props.showTooltipForNode as VNID}
+                    mdtContext={props.mdtContext}
+                />
+            }
+        >
+            {props.tooltipVirtualElement}
+        </Tooltip>
+    );
+};

@@ -1,19 +1,19 @@
-import React from 'react';
-import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
-import { ParsedUrlQuery } from 'querystring';
-import { FormattedMessage, useIntl } from 'react-intl';
+import React from "react";
+import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { ParsedUrlQuery } from "querystring";
+import { FormattedMessage, useIntl } from "react-intl";
 
-import { api, client, getSiteData, SiteData } from 'lib/api-client';
-import { SiteDataProvider, SitePage } from 'components/SitePage';
+import { api, client, getSiteData, SiteData } from "lib/api-client";
+import { SiteDataProvider, SitePage } from "components/SitePage";
 import { UserStatus, useUser } from "lib/authentication";
-import { Control, Form } from 'components/widgets/Form';
-import { TextInput } from 'components/widgets/TextInput';
-import { Button } from 'components/widgets/Button';
-import { Redirect } from 'components/utils/Redirect';
-import { Spinner } from 'components/widgets/Spinner';
-import { SuccessMessage } from 'components/widgets/SuccessMessage';
-import { ErrorMessage } from 'components/widgets/ErrorMessage';
-import { defineMessage } from 'components/utils/i18n';
+import { Control, Form } from "components/widgets/Form";
+import { TextInput } from "components/widgets/TextInput";
+import { Button } from "components/widgets/Button";
+import { Redirect } from "components/utils/Redirect";
+import { Spinner } from "components/widgets/Spinner";
+import { SuccessMessage } from "components/widgets/SuccessMessage";
+import { ErrorMessage } from "components/widgets/ErrorMessage";
+import { defineMessage } from "components/utils/i18n";
 
 interface PageProps {
     site: SiteData;
@@ -22,8 +22,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
 }
 
-const LoginPage: NextPage<PageProps> = function(props) {
-
+const LoginPage: NextPage<PageProps> = function (props) {
     const intl = useIntl();
     const user = useUser();
 
@@ -40,7 +39,7 @@ const LoginPage: NextPage<PageProps> = function(props) {
     // Handler for when user enters their email and clicks "Create Account"
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isSubmittedSuccessfully, setSubmittedSuccessfully] = React.useState(false);
-    const [submissionError, setSubmissionError] = React.useState<string|undefined>(undefined);
+    const [submissionError, setSubmissionError] = React.useState<string | undefined>(undefined);
     const handleRegister = React.useCallback(async (event: React.MouseEvent) => {
         event.preventDefault();
         setIsSubmitting(true);
@@ -130,19 +129,19 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
         paths: [],
         // Enable statically generating any additional pages as needed
         fallback: "blocking",
-    }
-}
+    };
+};
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
-    if (!context.params) { throw new Error("Internal error - missing URL params."); }  // Make TypeScript happy
+    if (!context.params) throw new Error("Internal error - missing URL params."); // Make TypeScript happy
 
     // Look up the Neolace site by domain:
     const site = await getSiteData(context.params.siteHost);
-    if (site === null) { return {notFound: true}; }
+    if (site === null) return { notFound: true };
 
     return {
         props: {
             site,
         },
     };
-}
+};

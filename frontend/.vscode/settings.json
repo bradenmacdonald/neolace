@@ -1,4 +1,5 @@
 {
     "deno.enable": false,
     "css.validate": false, // Conflicts with Tailwind
+    "typescript.preferences.quoteStyle": "double"
 }

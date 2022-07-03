@@ -31,7 +31,7 @@ import * as plugins from "../../plugins/enabled-plugins";
 // }
 
 /** To provide all the available plugins to server-site code: */
-export const allPlugins: PluginDefinition[] = Object.values(plugins).filter(p => p.id);
+export const allPlugins: PluginDefinition[] = Object.values(plugins).filter((p) => p.id);
 
 if (!IN_BROWSER) {
     console.debug(`Loaded ${allPlugins.length} frontend plugins, available for server-side rendering.`);

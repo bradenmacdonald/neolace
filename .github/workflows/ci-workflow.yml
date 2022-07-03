@@ -106,6 +106,7 @@ jobs:
           ENV_TYPE: test
         run: deno test --allow-net --allow-env --allow-read --no-check
         working-directory: ./backend
+        timeout-minutes: 10
 
       - name: Stop containers
         if: always()

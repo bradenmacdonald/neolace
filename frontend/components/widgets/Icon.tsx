@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 // A little type helper to declare 'iconSvg' with correct typing.
 function icons<X extends {[iconId: string]: JSX.Element}>(i: X) { return i; }

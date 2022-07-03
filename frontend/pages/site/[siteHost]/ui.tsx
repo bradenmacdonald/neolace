@@ -48,9 +48,9 @@ const UiDemoPage: NextPage = function (props) {
                 "_12345": {
                     id: api.VNID("_12345"),
                     description: "Description of the entry goes here.",
-                    entryType: {id: api.VNID("_demoType")},
+                    entryType: { id: api.VNID("_demoType") },
                     friendlyId: "demo-entry",
-                    name: "Demo Entry"
+                    name: "Demo Entry",
                 },
             },
             entryTypes: {
@@ -59,12 +59,12 @@ const UiDemoPage: NextPage = function (props) {
                     name: "Type goes here",
                     abbreviation: "D",
                     color: api.EntryTypeColor.Cyan,
-                }
+                },
             },
             properties: {},
             lookups: [],
         },
-    })
+    });
 
     return (
         <SitePage title="UI Demos">
@@ -77,14 +77,14 @@ const UiDemoPage: NextPage = function (props) {
             <p>Here is an example of our form component.</p>
 
             <Form>
-                <Control id="form-email" label={defineMessage({ id: 'SqR1My', defaultMessage: "Your Email" })}>
+                <Control id="form-email" label={defineMessage({ id: "SqR1My", defaultMessage: "Your Email" })}>
                     <TextInput />
                 </Control>
                 <Control
                     id="form-lookup-expr"
-                    label={defineMessage({ id: 'UkgQ/N', defaultMessage: "Lookup Expression" })}
+                    label={defineMessage({ id: "UkgQ/N", defaultMessage: "Lookup Expression" })}
                     hint={defineMessage({
-                        id: 'S02xzc',
+                        id: "S02xzc",
                         defaultMessage:
                             "Try using SHIFT-ENTER to create multiple lines, or entering a long string to see the box expand.",
                     })}
@@ -92,14 +92,14 @@ const UiDemoPage: NextPage = function (props) {
                     <LookupExpressionInput
                         value={lookupDemoText}
                         onChange={setLookupDemoText}
-                        placeholder={defineMessage({defaultMessage: 'Enter a lookup expression', id: '18J4sF'})}
+                        placeholder={defineMessage({ defaultMessage: "Enter a lookup expression", id: "18J4sF" })}
                     />
                 </Control>
                 <AutoControl
                     id="form-mdt-editor"
-                    label={defineMessage({ id: '2clcRr', defaultMessage: "MDT (Markdown / rich text) editor" })}
+                    label={defineMessage({ id: "2clcRr", defaultMessage: "MDT (Markdown / rich text) editor" })}
                     hint={defineMessage({
-                        id: 'XR+5Ez',
+                        id: "XR+5Ez",
                         defaultMessage: "This also shows our <ToolbarButton/> component used to make a toolbar.",
                     })}
                     onChangeFinished={setMDTDemoText}
@@ -155,7 +155,7 @@ const UiDemoPage: NextPage = function (props) {
                             <Tab
                                 id="main"
                                 icon="info-circle"
-                                name={defineMessage({ defaultMessage: "Main", id: 'EFTSMc' })}
+                                name={defineMessage({ defaultMessage: "Main", id: "EFTSMc" })}
                             >
                                 This is the main tab content.
                             </Tab>
@@ -164,7 +164,7 @@ const UiDemoPage: NextPage = function (props) {
                                 icon="diamond-fill"
                                 name={defineMessage({
                                     defaultMessage: "Properties",
-                                    id: 'aI80kg',
+                                    id: "aI80kg",
                                 })}
                             >
                                 This is the properties tab.
@@ -173,7 +173,7 @@ const UiDemoPage: NextPage = function (props) {
                                 id="changes"
                                 icon="list"
                                 badge={"3"}
-                                name={defineMessage({ defaultMessage: "Changes", id: 'dgqhUM' })}
+                                name={defineMessage({ defaultMessage: "Changes", id: "dgqhUM" })}
                             >
                                 This is the changes tab, with a "badge" that says "3".
                             </Tab>
@@ -192,15 +192,15 @@ const UiDemoPage: NextPage = function (props) {
                             options={[
                                 {
                                     id: "first",
-                                    label: defineMessage({ defaultMessage: "First item", id: 'c6B/JF' }),
+                                    label: defineMessage({ defaultMessage: "First item", id: "c6B/JF" }),
                                 },
                                 {
                                     id: "second",
-                                    label: defineMessage({ defaultMessage: "Second item", id: 'L9aUV9' }),
+                                    label: defineMessage({ defaultMessage: "Second item", id: "L9aUV9" }),
                                 },
                                 {
                                     id: "third",
-                                    label: defineMessage({ defaultMessage: "Third item", id: 'hDD9II' }),
+                                    label: defineMessage({ defaultMessage: "Third item", id: "hDD9II" }),
                                 },
                             ]}
                         />
@@ -249,7 +249,7 @@ const UiDemoPage: NextPage = function (props) {
             <table>
                 <tbody>
                     <UIDemo label="Entry Type">
-                        <LookupValue value={{type: "Entry", id: api.VNID("_12345")}} mdtContext={demoMDTContext} />
+                        <LookupValue value={{ type: "Entry", id: api.VNID("_12345") }} mdtContext={demoMDTContext} />
                     </UIDemo>
                     <UIDemo label="Property Type">
                         <LookupExpressionInput value="this.reverse(prop=[[/prop/_demoProp]])" onChange={() => null} />

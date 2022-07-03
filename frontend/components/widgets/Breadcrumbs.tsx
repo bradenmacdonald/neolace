@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React from "react";
 import { useIntl } from "react-intl";
-import { Icon, IconId } from "./Icon";
+import { Icon } from "./Icon";
 
 // Helper types to require child element of a certain type:
 type PropsOf<T> = T extends React.FunctionComponent<infer P> ? P : never;
@@ -12,7 +12,6 @@ interface BreadcrumbProps {
     href?: string;
     children: React.ReactNode;
 }
-
 
 export const Breadcrumb: React.FunctionComponent<BreadcrumbProps> = (props) => {
     return (
@@ -46,7 +45,7 @@ export const Breadcrumbs: React.FunctionComponent<BreadcrumbsProps> = (props) =>
     return (
         <nav
             className="flex"
-            aria-label={intl.formatMessage({ id: 'ByoZDD', defaultMessage: "Breadcrumbs" })}
+            aria-label={intl.formatMessage({ id: "ByoZDD", defaultMessage: "Breadcrumbs" })}
         >
             <ol className="unstyled inline-flex items-center space-x-1 md:space-x-3">
                 {props.children}

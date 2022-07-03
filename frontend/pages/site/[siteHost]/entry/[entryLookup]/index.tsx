@@ -1,22 +1,14 @@
-import React from 'react';
-import { FormattedMessage } from 'react-intl';
-import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
-import Link from 'next/link';
-import Image from 'next/image';
-import { ParsedUrlQuery } from 'querystring';
-import { Blurhash } from "react-blurhash";
-import { client, api, getSiteData, SiteData, useEntry } from 'lib/api-client';
+import React from "react";
+import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { ParsedUrlQuery } from "querystring";
+import { api, client, getSiteData } from "lib/api-client";
 
-import { SiteDataProvider, SitePage } from "components/SitePage";
-import { InlineMDT, MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
-import { LookupValue } from 'components/LookupValue';
-import { EntryLink } from 'components/EntryLink';
-import { DEVELOPMENT_MODE, imgThumbnailLoader } from 'lib/config';
-import { EntryPage } from 'components/EntryPage';
+import { SiteDataProvider } from "components/SitePage";
+import { EntryPage } from "components/EntryPage";
 //import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageProps {
-    entryKey: api.VNID|string;
+    entryKey: api.VNID | string;
     publicEntry?: api.EntryData;
     sitePreloaded: api.SiteDetailsData;
 }
@@ -25,11 +17,13 @@ interface PageUrlQuery extends ParsedUrlQuery {
     entryLookup: string;
 }
 
-const EntryPageWrapper: NextPage<PageProps> = function(props) {
-    return (<SiteDataProvider sitePreloaded={props.sitePreloaded}>
-        <EntryPage entrykey={props.entryKey} publicEntry={props.publicEntry}/>
-    </SiteDataProvider>);
-}
+const EntryPageWrapper: NextPage<PageProps> = function (props) {
+    return (
+        <SiteDataProvider sitePreloaded={props.sitePreloaded}>
+            <EntryPage entrykey={props.entryKey} publicEntry={props.publicEntry} />
+        </SiteDataProvider>
+    );
+};
 
 export default EntryPageWrapper;
 
@@ -39,25 +33,28 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
         paths: [],
         // Enable statically generating any additional pages as needed
         fallback: "blocking",
-    }
-}
+    };
+};
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
-    if (!context.params) { throw new Error("Internal error - missing URL params."); }  // Make TypeScript happy
+    if (!context.params) throw new Error("Internal error - missing URL params."); // Make TypeScript happy
 
     // Look up the Neolace site by domain:
     const site = await getSiteData(context.params.siteHost);
-    if (site === null) { return {notFound: true}; }
-    let publicEntry: api.EntryData|undefined;
+    if (site === null) return { notFound: true };
+    let publicEntry: api.EntryData | undefined;
     try {
-        publicEntry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [
-            api.GetEntryFlags.IncludePropertiesSummary,
-            api.GetEntryFlags.IncludeReferenceCache,
-            api.GetEntryFlags.IncludeFeatures,
-        ]});
+        publicEntry = await client.getEntry(context.params.entryLookup, {
+            siteId: site.shortId,
+            flags: [
+                api.GetEntryFlags.IncludePropertiesSummary,
+                api.GetEntryFlags.IncludeReferenceCache,
+                api.GetEntryFlags.IncludeFeatures,
+            ],
+        });
     } catch (err) {
         if (err instanceof api.NotFound) {
-            return {notFound: true};
+            return { notFound: true };
         } else if (err instanceof api.NotAuthorized || err instanceof api.NotAuthenticated) {
             publicEntry = undefined;
         } else {
@@ -82,4 +79,4 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
             sitePreloaded: site,
         },
     };
-}
+};

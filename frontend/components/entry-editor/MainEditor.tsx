@@ -12,7 +12,7 @@ import { defineMessage } from "components/utils/i18n";
 interface Props {
     entry?: api.EditableEntryData;
     /** The schema, including any schema changes which have been made within the current draft, if any. */
-    schema: api.SiteSchemaData|undefined;
+    schema: api.SiteSchemaData | undefined;
     isNewEntry: boolean;
     addUnsavedEdit: (newEdit: api.AnyContentEdit) => void;
 }
@@ -77,7 +77,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, schema, addU
                 value={entry?.name ?? ""}
                 onChangeFinished={updateEntryName}
                 id="title"
-                label={defineMessage({ defaultMessage: "Name / Title", id: 'j+aKkX' })}
+                label={defineMessage({ defaultMessage: "Name / Title", id: "j+aKkX" })}
                 isRequired={true}
             >
                 <TextInput />
@@ -143,7 +143,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, schema, addU
                 value={entry?.description ?? ""}
                 onChangeFinished={updateEntryDescription}
                 id="description"
-                label={defineMessage({ defaultMessage: 'Description', id: 'Q8Qw5B' })}
+                label={defineMessage({ defaultMessage: "Description", id: "Q8Qw5B" })}
             >
                 <MDTEditor inlineOnly={true} />
             </AutoControl>

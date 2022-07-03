@@ -30,8 +30,8 @@ G6.registerNode(
          * @return {G.Shape} The keyShape of the node. It can be obtained by node.get('keyShape')
          */
         draw(cfg, group) {
-            if (!cfg) { throw new Error("no cfg in customized Node.draw()"); }
-            if (!group) { throw new Error("no group in customized Node.draw()"); }
+            if (!cfg) throw new Error("no cfg in customized Node.draw()");
+            if (!group) throw new Error("no group in customized Node.draw()");
             const width = 220;
             const height = 30;
             const radius = 5; // radius by which the rectangle corners are rounded.
@@ -39,16 +39,16 @@ G6.registerNode(
             const leftRectWidth = 30;
             const textPadding = 7; // How much padding is around the text
             const fontSize = 16;
-            const maxTextWidth = width - leftRectWidth - (textPadding * 2) - 5;  // The 5 is because the text truncation algorithm doesn't work perfectly with our preferred font; with this little fix it always seems good.
+            const maxTextWidth = width - leftRectWidth - (textPadding * 2) - 5; // The 5 is because the text truncation algorithm doesn't work perfectly with our preferred font; with this little fix it always seems good.
 
             const [bgColor, darkColor, textColor] = (cfg.color && cfg.color in colorSets) ? colorSets[cfg.color as api.EntryTypeColor] : colorSets[api.EntryTypeColor.Default];
 
             // Draw the selection rectangle, which forms an outer border when this node is selected.
             // Most of the time (when not selected), it is invisible.
             const selectRectThickness = 2;
-            group.addShape('rect', {
+            group.addShape("rect", {
                 attrs: {
-                    opacity: 0,  // usually this is hidden.
+                    opacity: 0, // usually this is hidden.
                     x: -width / 2 - selectRectThickness / 2,
                     y: -height / 2 - selectRectThickness / 2,
                     width: width + selectRectThickness,
@@ -63,7 +63,7 @@ G6.registerNode(
             });
 
             // Draw an invisible to define the overall shape of this node (affects where edges/relationships connect)
-            const keyShape = group.addShape('rect', {
+            const keyShape = group.addShape("rect", {
                 attrs: {
                     x: -width / 2,
                     y: -height / 2,
@@ -78,11 +78,11 @@ G6.registerNode(
             });
 
             // Now draw the darker rectangle on the left
-            const leftRect = group.addShape('rect', {
+            const leftRect = group.addShape("rect", {
                 attrs: {
                     x: -width / 2,
                     y: -height / 2,
-                    width: leftRectWidth + radius,  // We will use a "clip" to hide the right side of this rectangle so only the left side has rounded edges
+                    width: leftRectWidth + radius, // We will use a "clip" to hide the right side of this rectangle so only the left side has rounded edges
                     height,
                     radius,
                     fill: darkColor,
@@ -91,14 +91,14 @@ G6.registerNode(
                 name: `entryNode-leftRect`,
                 draggable: true,
             });
-            leftRect.setClip({type: "rect", attrs: { x: -width / 2, y: -height / 2, width: leftRectWidth, height}});
+            leftRect.setClip({ type: "rect", attrs: { x: -width / 2, y: -height / 2, width: leftRectWidth, height } });
 
             // Now draw the lighter rectangle on the right
-            const rightRect = group.addShape('rect', {
+            const rightRect = group.addShape("rect", {
                 attrs: {
                     x: -width / 2 + leftRectWidth - radius,
                     y: -height / 2,
-                    width: width - leftRectWidth + radius,  // We will use a "clip" to hide the left side of this rectangle so only the right side has rounded edges
+                    width: width - leftRectWidth + radius, // We will use a "clip" to hide the left side of this rectangle so only the right side has rounded edges
                     height,
                     radius,
                     fill: bgColor,
@@ -107,12 +107,15 @@ G6.registerNode(
                 name: `entryNode-rightRect`,
                 draggable: true,
             });
-            rightRect.setClip({type: "rect", attrs: { x: -width / 2 + leftRectWidth, y: -height / 2, width, height}});
+            rightRect.setClip({
+                type: "rect",
+                attrs: { x: -width / 2 + leftRectWidth, y: -height / 2, width, height },
+            });
 
             // Now draw the label of the node (its name)
             const labelText = typeof cfg.label === "string" ? cfg.label : "";
             const labelTextTruncated = truncateString(labelText, maxTextWidth, fontSize);
-            group.addShape('text', {
+            group.addShape("text", {
                 attrs: {
                     fill: textColor,
                     fontSize,
@@ -121,16 +124,16 @@ G6.registerNode(
                     x: -width / 2 + leftRectWidth + textPadding,
                     y: 1, // It looks more centered with y=1 than y=0
                     text: labelTextTruncated,
-                    textBaseline: "middle",  // vertically center the text
+                    textBaseline: "middle", // vertically center the text
                 },
-                className: 'entryNode-label',
-                name: 'entryNode-label',
+                className: "entryNode-label",
+                name: "entryNode-label",
                 draggable: true,
-                labelRelated: true,  // This doesn't seem important but is in the example code...
+                labelRelated: true, // This doesn't seem important but is in the example code...
             });
             // Now draw the letter (or two) on the dark rectangle on the left, indicating the type of node.
             if (cfg.leftLetter) {
-                group.addShape('text', {
+                group.addShape("text", {
                     attrs: {
                         fill: textColor,
                         opacity: 0.2,
@@ -141,10 +144,10 @@ G6.registerNode(
                         y: 1, // It looks more centered with y=1 than y=0
                         text: cfg.leftLetter,
                         textAlign: "center",
-                        textBaseline: "middle",  // vertically center the text
+                        textBaseline: "middle", // vertically center the text
                     },
-                    className: 'entryNode-typeLabel',
-                    name: 'entryNode-typeLabel',
+                    className: "entryNode-typeLabel",
+                    name: "entryNode-typeLabel",
                     draggable: true,
                 });
             }
@@ -183,18 +186,18 @@ G6.registerNode(
          * @param  {Node} node The node item
          */
         setState(name, value, item) {
-            if (!item) { return; }
-            const baseRect: IShape = item.get('keyShape');
-            if (!baseRect || baseRect.destroyed) { return; }
+            if (!item) return;
+            const baseRect: IShape = item.get("keyShape");
+            if (!baseRect || baseRect.destroyed) return;
             const group = item.getContainer();
-            
+
             if (name === "selected") {
                 // When the "select" state changes, toggle the outer border's visibility
-                const selectRect = group.find((element) => element.get('name') === "entryNode-selectRect");
+                const selectRect = group.find((element) => element.get("name") === "entryNode-selectRect");
                 selectRect.attr("opacity", value ? 1 : 0);
             } else if (name === "hover" || name === "active") {
                 if (!item.hasState("selected") && !item.hasState("disabled")) {
-                    const selectRect = group.find((element) => element.get('name') === "entryNode-selectRect");
+                    const selectRect = group.find((element) => element.get("name") === "entryNode-selectRect");
                     selectRect.attr("opacity", value ? 0.2 : 0);
                 }
             } else if (name === "disabled") {

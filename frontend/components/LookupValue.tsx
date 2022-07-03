@@ -1,18 +1,18 @@
-import React from 'react';
-import { api, useSiteData } from 'lib/api-client';
-import { FormattedListParts, FormattedMessage } from 'react-intl';
+import React from "react";
+import Link from "next/link";
+import { FormattedListParts, FormattedMessage } from "react-intl";
 
-import { Tooltip } from 'components/widgets/Tooltip';
-import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
-import { LookupImage } from './LookupImage';
-import { FormattedFileSize } from './widgets/FormattedFileSize';
-import { HoverClickNote } from './widgets/HoverClickNote';
-import Link from 'next/link';
-import { ErrorMessage } from './widgets/ErrorMessage';
+import { api, useSiteData } from "lib/api-client";
+import { Tooltip } from "components/widgets/Tooltip";
+import { InlineMDT, MDTContext } from "./markdown-mdt/mdt";
+import { LookupImage } from "./LookupImage";
+import { FormattedFileSize } from "./widgets/FormattedFileSize";
+import { HoverClickNote } from "./widgets/HoverClickNote";
+import { ErrorMessage } from "./widgets/ErrorMessage";
 import { LookupGraph } from "./graph/GraphLoader";
-import { EntryValue } from './widgets/EntryValue';
-import { EntryTypeVoid } from './utils/slate-mdt';
-import { UiPluginsContext } from './utils/ui-plugins';
+import { EntryValue } from "./widgets/EntryValue";
+import { EntryTypeVoid } from "./utils/slate-mdt";
+import { UiPluginsContext } from "./utils/ui-plugins";
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -21,7 +21,7 @@ interface LookupValueProps {
      * By default, for any paginated values, we'll show the first few values and link to a results page where more
      * values can be seen. To disable that "show more" link (e.g. because a parent component is handling pagination),
      * set this to true. Usually it should be false.
-     * 
+     *
      * This value will not be applied child values, only to this value itself (though if this is an AnnotatedValue, it
      * does apply to the inner value.)
      */
@@ -31,7 +31,7 @@ interface LookupValueProps {
      * Compact generally looks better in the "Properties" section, while "rows" looks better on the lookup query page
      * or inline in markdown documents.
      */
-    defaultListMode?: "compact"|"rows";
+    defaultListMode?: "compact" | "rows";
     children?: never;
 }
 
@@ -39,7 +39,7 @@ interface LookupValueProps {
  * Render a Lookup Value (computed/query value, such as all the "properties" shown on an entry's page)
  */
 export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) => {
-    const {site} = useSiteData();
+    const { site } = useSiteData();
 
     // When the entry loads, the data gets refreshed from the server but is often identical. This will cause a useless
     // update of the whole React tree. We can avoid this by using JSON.stringify to check if the value has actually
@@ -51,7 +51,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
     const pluginsData = React.useContext(UiPluginsContext);
 
     if (typeof value !== "object" || value === null || !("type" in value)) {
-        return <p>[ERROR INVALID VALUE, NO TYPE INFORMATION]</p>;  // Doesn't need i18n, internal error message shouldn't be seen
+        return <p>[ERROR INVALID VALUE, NO TYPE INFORMATION]</p>; // Doesn't need i18n, internal error message shouldn't be seen
     }
 
     if (value.annotations?.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
@@ -109,9 +109,11 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                     </FormattedListParts>
                 </span>;
             } else {
-                return <ul>
-                    {listValues.map((v, idx) => <li key={idx}>{v}</li>)}
-                </ul>;
+                return (
+                    <ul>
+                        {listValues.map((v, idx) => <li key={idx}>{v}</li>)}
+                    </ul>
+                );
             }
         }
         case "Entry": {
@@ -119,7 +121,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         }
         case "EntryType": {
             // eslint-disable-next-line react/no-children-prop
-            return <EntryTypeVoid entryTypeId={value.id} attributes={{}} children={null} />
+            return <EntryTypeVoid entryTypeId={value.id} attributes={{}} children={null} />;
         }
         case "Image": {
             return <LookupImage value={value} mdtContext={props.mdtContext} />;
@@ -128,15 +130,17 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             return <LookupGraph value={value} mdtContext={props.mdtContext} />;
         }
         case "File": {
-            return <>
-                <a href={value.url}>{value.filename}</a> (<FormattedFileSize sizeInBytes={value.size} />)
-            </>;
+            return (
+                <>
+                    <a href={value.url}>{value.filename}</a> (<FormattedFileSize sizeInBytes={value.size} />)
+                </>
+            );
         }
         case "Property": {
             const prop = props.mdtContext.refCache.properties[value.id];
             if (prop === undefined) {
                 // return <Link href={`/prop/${value.id}`}><a className="text-red-700 font-bold">{value.id}</a></Link>
-                return <span className="text-red-700 font-bold">{value.id}</span>
+                return <span className="text-red-700 font-bold">{value.id}</span>;
             }
             return <Tooltip tooltipContent={<>
                 <strong>{prop.name}</strong><br/>
@@ -167,13 +171,15 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Date":
             return <>{value.value}</>;
         case "Error":
-            return <ErrorMessage>
-                <FormattedMessage 
-                    id="I9OUIM"
-                    defaultMessage="Error ({errorType}): {errorMessage}"
-                    values={{errorType: value.errorClass, errorMessage: value.message}}
-                />
-            </ErrorMessage>
+            return (
+                <ErrorMessage>
+                    <FormattedMessage
+                        id="I9OUIM"
+                        defaultMessage="Error ({errorType}): {errorMessage}"
+                        values={{ errorType: value.errorClass, errorMessage: value.message }}
+                    />
+                </ErrorMessage>
+            );
         case "Null":
             return <></>;
         default: {

@@ -28,15 +28,15 @@ const DynamicIntlProviders = {
         )
     ),
     ru: dynamic<ProviderProps>(() =>
-    import("../content/compiled-locales/ru.json").then((data) =>
+        import("../content/compiled-locales/ru.json").then((data) =>
             // eslint-disable-next-line react/display-name
             (props: ProviderProps) => <IntlProvider locale="ru" messages={data.default}>{props.children}</IntlProvider>
         )
     ),
 };
 
-export const AvailablePluginsProvider = dynamic<{children: React.ReactNode}>(
-    import('components/utils/ui-plugins-loader').then((mod) => mod.AvailablePluginsProvider)
+export const AvailablePluginsProvider = dynamic<{ children: React.ReactNode }>(
+    import("components/utils/ui-plugins-loader").then((mod) => mod.AvailablePluginsProvider),
 );
 
 export default function NeolaceApp({ Component, pageProps }: AppProps) {

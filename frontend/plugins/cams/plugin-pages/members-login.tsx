@@ -49,8 +49,9 @@ const MembersLoginPage: React.FunctionComponent<PluginPageProps> = function (pro
                     id="login-password"
                     label={defineMessage({ id: "5sg7KC", defaultMessage: "Password" })}
                     hint={defineMessage({
-                        defaultMessage: "Enter the current members password. Email us if you are a member but don't have the password.",
-                        id: 'hz9Kev',
+                        defaultMessage:
+                            "Enter the current members password. Email us if you are a member but don't have the password.",
+                        id: "hz9Kev",
                     })}
                 >
                     <TextInput type="password" value={password} onChange={handlePasswordChange} />

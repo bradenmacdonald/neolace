@@ -1,27 +1,42 @@
 /**
  * An image that is displayed as the result of the .image() lookup function.
  */
-import React from 'react';
-import { api } from 'lib/api-client';
-import { Blurhash } from 'react-blurhash';
-import Image from 'next/image';
+import React from "react";
+import { Blurhash } from "react-blurhash";
+import Image from "next/image";
+import Link from "next/link";
+import { ImageDisplayFormat } from "neolace-api";
 
-import { InlineMDT, MDTContext } from './markdown-mdt/mdt';
-import { RatioBox } from './widgets/ratio-box';
-import { LookupValue } from './LookupValue';
-import Link from 'next/link';
-import { imgThumbnailLoader } from 'lib/config';
-import { ImageDisplayFormat } from 'neolace-api';
+import { api } from "lib/api-client";
+import { imgThumbnailLoader } from "lib/config";
+import { InlineMDT, MDTContext } from "./markdown-mdt/mdt";
+import { RatioBox } from "./widgets/ratio-box";
+import { LookupValue } from "./LookupValue";
 
 /** Renders either an <a> or a <span> with the given class. */
-const OptionalLink = (props: {children: React.ReactNode; href?: api.EntryValue|api.StringValue; mdtContext: MDTContext; className: string;}) => {
+const OptionalLink = (
+    props: {
+        children: React.ReactNode;
+        href?: api.EntryValue | api.StringValue;
+        mdtContext: MDTContext;
+        className: string;
+    },
+) => {
     if (props.href) {
         if (props.href.type === "Entry") {
             const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) = props.mdtContext.refCache.entries[props.href.id];
             const url = "/entry/" + (entry?.friendlyId || props.href.id);
-            return <Link href={url}><a className={props.className}>{props.children}</a></Link>;
+            return (
+                <Link href={url}>
+                    <a className={props.className}>{props.children}</a>
+                </Link>
+            );
         } else if (props.href.type === "String") {
-            return <Link href={props.href.value}><a className={props.className}>{props.children}</a></Link>;
+            return (
+                <Link href={props.href.value}>
+                    <a className={props.className}>{props.children}</a>
+                </Link>
+            );
         }
     }
     return <span className={props.className}>{props.children}</span>;
@@ -37,8 +52,7 @@ interface ImageProps {
  * Render a Lookup Value (computed/query value, such as all the "properties" shown on an entry's page)
  */
 export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
-
-    const {value} = props;
+    const { value } = props;
     const ratio = value.width && value.height ? value.width / value.height : undefined;
 
     const imgEntryData = props.mdtContext.refCache.entries[value.entryId];

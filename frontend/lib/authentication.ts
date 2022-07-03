@@ -18,7 +18,7 @@ const getSessionPromise = () => {
     }
     // There is no session saved locally, or we're running on the server; either way, no user is logged in.
     return Promise.resolve();
-}
+};
 const apiSessionPromise: Promise<void> = getSessionPromise();
 
 /**
@@ -31,7 +31,7 @@ const apiSessionPromise: Promise<void> = getSessionPromise();
 /**
  * Get the session token, used to make authenticated API requests.
  */
-export async function getSessionToken(): Promise<string|undefined> {
+export async function getSessionToken(): Promise<string | undefined> {
     await apiSessionPromise;
     return KeratinAuthN.session();
 }
@@ -78,11 +78,10 @@ export function useUser(): UserData {
         refreshInterval: 10 * 60_000,
     });
 
-
     const logout = React.useCallback((): Promise<void> => {
         return KeratinAuthN.logout().then(() => {
             mutate(null); // Invallidate the user data from our useSWR hook
-        })
+        });
     }, [mutate]);
 
     const submitPasswordlessLoginToken = React.useCallback((token: string) => {

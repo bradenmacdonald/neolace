@@ -1,19 +1,18 @@
-import React from 'react';
-import Head from 'next/head'
-import Link from 'next/link';
-import { SWRConfig } from 'swr';
+import React from "react";
+import Head from "next/head";
+import Link from "next/link";
+import { SWRConfig } from "swr";
 
-import { SiteData, useSiteData, api } from 'lib/api-client';
-import { UISlot, UISlotWidget, defaultRender, DefaultUISlot } from './widgets/UISlot';
-import FourOhFour from 'pages/404';
-import { MDTContext, RenderMDT } from './markdown-mdt/mdt';
-import { Icon, IconId } from './widgets/Icon';
-import { FormattedMessage, useIntl } from 'react-intl';
-import { UiPluginsContext, UiPluginsProvider } from './utils/ui-plugins';
-import { DEVELOPMENT_MODE } from 'lib/config';
-import { UserStatus, useUser } from 'lib/authentication';
-import { displayString, TranslatableString } from './utils/i18n';
-
+import { api, SiteData, useSiteData } from "lib/api-client";
+import { defaultRender, DefaultUISlot, UISlot, UISlotWidget } from "./widgets/UISlot";
+import FourOhFour from "pages/404";
+import { MDTContext, RenderMDT } from "./markdown-mdt/mdt";
+import { Icon, IconId } from "./widgets/Icon";
+import { FormattedMessage, useIntl } from "react-intl";
+import { UiPluginsContext, UiPluginsProvider } from "./utils/ui-plugins";
+import { DEVELOPMENT_MODE } from "lib/config";
+import { UserStatus, useUser } from "lib/authentication";
+import { displayString, TranslatableString } from "./utils/i18n";
 
 interface SiteDataProviderProps {
     /**
@@ -29,12 +28,12 @@ interface SiteDataProviderProps {
 
 /**
  * Provide all React components within this one with data about the current site (and its enabled plugins)
- * 
+ *
  * See https://swr.vercel.app/docs/with-nextjs for details of how this works using SWR's global fallback config.
  */
 export const SiteDataProvider: React.FunctionComponent<SiteDataProviderProps> = (props) => {
-    const {site, siteError} = useSiteData(props.sitePreloaded ? {fallback: props.sitePreloaded} : {});
-    const fallback = props.sitePreloaded ? {[`site:${props.sitePreloaded.domain}`]: props.sitePreloaded} : {};
+    const { site, siteError } = useSiteData(props.sitePreloaded ? { fallback: props.sitePreloaded } : {});
+    const fallback = props.sitePreloaded ? { [`site:${props.sitePreloaded.domain}`]: props.sitePreloaded } : {};
 
     return (
         <SWRConfig value={{ fallback }}>
@@ -68,12 +67,14 @@ interface Props {
 export const SitePage: React.FunctionComponent<Props> = (props) => {
     const intl = useIntl();
     const user = useUser();
-    const {site, siteError} = useSiteData();
+    const { site, siteError } = useSiteData();
     const pluginsData = React.useContext(UiPluginsContext);
 
     // On mobile, we use JavaScript to show the menu when the user taps on the "Menu" button
     const [mobileMenuVisible, showMobileMenu] = React.useState(false);
-    const toggleMobileMenu = React.useCallback(() => { showMobileMenu(!mobileMenuVisible); }, [mobileMenuVisible]);
+    const toggleMobileMenu = React.useCallback(() => {
+        showMobileMenu(!mobileMenuVisible);
+    }, [mobileMenuVisible]);
 
     // On mobile, we need to hide the menu when a link is clicked, or when the user taps the screen elsewhere (not on the menu)
     const handleLeftPanelClick = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
@@ -83,14 +84,17 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     }, [mobileMenuVisible, showMobileMenu]);
     // Likewise, hide the mobile menu if it's visible but the user taps off of it, on the article area
     const handleArticleClick = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-        if (mobileMenuVisible) { showMobileMenu(false); }
+        if (mobileMenuVisible) showMobileMenu(false);
     }, [mobileMenuVisible, showMobileMenu]);
 
     if (siteError instanceof api.NotFound) {
-        return <FourOhFour/>;
+        return <FourOhFour />;
     }
 
-    const themeColor = (name: keyof NonNullable<typeof site.frontendConfig.theme>, defaultColor: [number, number, number])=> {
+    const themeColor = (
+        name: keyof NonNullable<typeof site.frontendConfig.theme>,
+        defaultColor: [number, number, number],
+    ) => {
         const color: [number, number, number] = site.frontendConfig.theme?.[name] ?? defaultColor;
         return color.join(" ");
     };
@@ -121,7 +125,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             },
         );
     }
-    
+
     if (user.status === UserStatus.LoggedIn) {
         // My Profile link
         defaultSystemLinks.push({
@@ -131,7 +135,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 url: site.isHomeSite ? "/account/" : `${site.homeSiteUrl}/account/`,
                 label: <FormattedMessage id="/GfBD6" defaultMessage="Profile ({name})" values={{name: user.fullName}} />,
                 icon: "person-fill",
-            }
+            },
         });
         // Log out link:
         defaultSystemLinks.push({

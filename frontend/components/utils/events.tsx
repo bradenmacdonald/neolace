@@ -1,5 +1,4 @@
-import React from 'react';
-
+import React from "react";
 
 /** A general click event handler to watch for "click outside of an element" events */
 export function useClickOutsideHandler(elementRef: React.RefObject<HTMLElement>, handler: (event: MouseEvent) => void) {
@@ -11,14 +10,12 @@ export function useClickOutsideHandler(elementRef: React.RefObject<HTMLElement>,
     }, [handler, elementRef]);
 
     React.useEffect(() => {
-        document.addEventListener("mousedown", handleClickOutside, {passive: false});
+        document.addEventListener("mousedown", handleClickOutside, { passive: false });
         return () => { // Unbind the event listener on clean up
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [handleClickOutside]);
-
 }
-
 
 // A listener to handle for Pressing a certain button, usually ESC key press events
 export function useKeyHandler(key: string, handler: (event: KeyboardEvent) => void) {

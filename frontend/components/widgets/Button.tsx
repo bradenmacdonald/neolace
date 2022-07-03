@@ -1,8 +1,8 @@
-import { displayString, TranslatableString } from 'components/utils/i18n';
-import React from 'react';
-import { useIntl } from 'react-intl';
-import { Icon, IconId } from './Icon';
-import { Tooltip } from './Tooltip';
+import { displayString, TranslatableString } from "components/utils/i18n";
+import React from "react";
+import { useIntl } from "react-intl";
+import { Icon, IconId } from "./Icon";
+import { Tooltip } from "./Tooltip";
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     icon?: IconId;

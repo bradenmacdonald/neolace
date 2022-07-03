@@ -1,11 +1,11 @@
-import React from 'react';
-import { FormattedMessage } from 'react-intl';
-import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
-import { ParsedUrlQuery } from 'querystring';
-import { getSiteData, SiteData, api, client } from 'lib/api-client';
+import React from "react";
+import { FormattedMessage } from "react-intl";
+import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import { ParsedUrlQuery } from "querystring";
+import { api, client, getSiteData, SiteData } from "lib/api-client";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { MDTContext, RenderMDT } from 'components/markdown-mdt/mdt';
+import { MDTContext, RenderMDT } from "components/markdown-mdt/mdt";
 
 interface PageProps {
     site: SiteData;
@@ -17,7 +17,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
 }
 
-const HomePage: NextPage<PageProps> = function(props) {
+const HomePage: NextPage<PageProps> = function (props) {
 
     
     const mdtContext = React.useMemo(() => new MDTContext({
@@ -58,17 +58,17 @@ export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
         paths: [],
         // Enable statically generating any additional pages as needed
         fallback: "blocking",
-    }
-}
+    };
+};
 
 export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
-    if (!context.params) { throw new Error("Internal error - missing URL params."); }  // Make TypeScript happy
+    if (!context.params) throw new Error("Internal error - missing URL params."); // Make TypeScript happy
 
     // Look up the Neolace site by domain:
     const site = await getSiteData(context.params.siteHost);
-    if (site === null) { return {notFound: true}; }
+    if (site === null) return { notFound: true };
 
-    const homePage = await client.getSiteHomePage({siteId: site.shortId});
+    const homePage = await client.getSiteHomePage({ siteId: site.shortId });
 
     return {
         props: {
@@ -77,4 +77,4 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
             refCache: homePage.referenceCache,
         },
     };
-}
+};

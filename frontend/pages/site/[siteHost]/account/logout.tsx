@@ -19,11 +19,11 @@ const LogoutPage: NextPage = function () {
     return (
         <SitePage title="Log out">
             <h1>Log out</h1>
-            {isLoggedOut
-                ? (
-                    <p>You have been logged out.</p>
-                )
-                : <p>Logging out... <Spinner /></p>}
+            {isLoggedOut ? <p>You have been logged out.</p> : (
+                <p>
+                    Logging out... <Spinner />
+                </p>
+            )}
         </SitePage>
     );
 };

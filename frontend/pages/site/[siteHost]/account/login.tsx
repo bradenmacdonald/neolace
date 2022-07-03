@@ -35,7 +35,7 @@ const LoginPage: NextPage<PageProps> = function (props) {
     // Handler for when user enters their email and clicks "log in"
     const handleLogin = React.useCallback(async (event: React.MouseEvent) => {
         event.preventDefault();
-        const result = await wrapLogin(client.requestPasswordlessLogin({email: userEmail}));
+        const result = await wrapLogin(client.requestPasswordlessLogin({ email: userEmail }));
         if (result.requested) {
             setLoginStatus(ActionStatus.Success);
         } else {
@@ -51,46 +51,51 @@ const LoginPage: NextPage<PageProps> = function (props) {
         siteName: props.site.name,
     });
 
-    return (<SiteDataProvider sitePreloaded={props.site}>
-        <SitePage title={title}>
-            <h1 className="text-3xl font-semibold">{title}</h1>
+    return (
+        <SiteDataProvider sitePreloaded={props.site}>
+            <SitePage title={title}>
+                <h1 className="text-3xl font-semibold">{title}</h1>
 
-            <p>
-                Account registration is not yet available. However, if you already have an account, you can log in here:
-            </p>
+                <p>
+                    Account registration is not yet available. However, if you already have an account, you can log in
+                    here:
+                </p>
 
-            <Form>
-                <Control
-                    id="login-email"
-                    label={defineMessage({ id: "xxQxLE", defaultMessage: "Email Address" })}
-                    hint={defineMessage({
-                        defaultMessage: "We'll email you a link. Just click it and you'll be logged in.",
-                        id: "E5pRaZ",
-                    })}
-                >
-                    <TextInput value={userEmail} onChange={userEmailChange} />
-                </Control>
-                <Button
-                    onClick={handleLogin}
-                    disabled={userEmail === "" || loginStatus.status === ActionStatus.InProgress ||
-                        loginStatus.status === ActionStatus.Success}
-                    className="font-bold"
-                >
-                    <FormattedMessage id="odXlk8" defaultMessage="Log in" />
-                </Button>
-                <ActionStatusDisplay
-                    state={loginStatus}
-                    className="my-3"
-                    success={
-                        <SuccessMessage>
-                            <FormattedMessage defaultMessage="We have emailed you a link. Click it to log in." id="bnOkqc"/>
-                        </SuccessMessage>
-                    }
-                />
-            </Form>
+                <Form>
+                    <Control
+                        id="login-email"
+                        label={defineMessage({ id: "xxQxLE", defaultMessage: "Email Address" })}
+                        hint={defineMessage({
+                            defaultMessage: "We'll email you a link. Just click it and you'll be logged in.",
+                            id: "E5pRaZ",
+                        })}
+                    >
+                        <TextInput value={userEmail} onChange={userEmailChange} />
+                    </Control>
+                    <Button
+                        onClick={handleLogin}
+                        disabled={userEmail === "" || loginStatus.status === ActionStatus.InProgress ||
+                            loginStatus.status === ActionStatus.Success}
+                        className="font-bold"
+                    >
+                        <FormattedMessage id="odXlk8" defaultMessage="Log in" />
+                    </Button>
+                    <ActionStatusDisplay
+                        state={loginStatus}
+                        className="my-3"
+                        success={
+                            <SuccessMessage>
+                                <FormattedMessage
+                                    defaultMessage="We have emailed you a link. Click it to log in."
+                                    id="bnOkqc"
+                                />
+                            </SuccessMessage>
+                        }
+                    />
+                </Form>
 
-            {
-                /*}
+                {
+                    /*}
             <p className="!mt-[100px]">
                 <FormattedMessage
                     id="site.login.howToCreateAccount"
@@ -100,9 +105,10 @@ const LoginPage: NextPage<PageProps> = function (props) {
                     }}
                 />
             </p>*/
-            }
-        </SitePage>
-    </SiteDataProvider>);
+                }
+            </SitePage>
+        </SiteDataProvider>
+    );
 };
 
 export default LoginPage;

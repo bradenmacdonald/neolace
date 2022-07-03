@@ -1,16 +1,16 @@
-import React from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
-import { NextPage, GetStaticProps, GetStaticPaths } from 'next';
-import Link from 'next/link';
-import { ParsedUrlQuery } from 'querystring';
-import { client, api, getSiteData } from 'lib/api-client';
+import React from "react";
+import { FormattedMessage } from "react-intl";
+import { GetStaticPaths, GetStaticProps, NextPage } from "next";
+import Link from "next/link";
+import { ParsedUrlQuery } from "querystring";
+import { api, client, getSiteData } from "lib/api-client";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { LookupExpressionInput } from 'components/widgets/LookupExpressionInput';
-import { useRouter } from 'next/router';
-import { LookupEvaluatorWithPagination } from 'components/LookupEvaluator';
-import { MDTContext } from 'components/markdown-mdt/mdt';
-import { defineMessage } from 'components/utils/i18n';
+import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
+import { useRouter } from "next/router";
+import { LookupEvaluatorWithPagination } from "components/LookupEvaluator";
+import { MDTContext } from "components/markdown-mdt/mdt";
+import { defineMessage } from "components/utils/i18n";
 
 interface PageProps {
     entry: api.EntryData;
@@ -21,8 +21,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
     entryLookup: string;
 }
 
-const EvaluateLookupPage: NextPage<PageProps> = function(props) {
-
+const EvaluateLookupPage: NextPage<PageProps> = function (props) {
     const router = useRouter();
 
     // The lookup expression that we're currently displaying, if any - comes from the URL or if the user types in a new one and presses ENTER
