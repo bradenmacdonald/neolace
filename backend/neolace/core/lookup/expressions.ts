@@ -6,6 +6,7 @@ export { BasicSearch } from "./expressions/functions/basicSearch.ts";
 export { Count } from "./expressions/functions/count.ts";
 export { DateExpression } from "./expressions/functions/date.ts";
 export { AndDescendants, Descendants } from "./expressions/functions/descendants.ts";
+export { EntryFunction } from "./expressions/functions/entry.ts";
 export { EntryTypeFunction } from "./expressions/functions/entryType.ts";
 export { Filter } from "./expressions/functions/filter.ts";
 export { GetProperty } from "./expressions/functions/get.ts";
