@@ -4,7 +4,7 @@ const path = require("path");
 module.exports = (phase, { defaultConfig }) => {
 
     let baseConfig = {
-        ...defaultConfig,
+        //...defaultConfig,
         reactStrictMode: true,
         images: {
             // Cut down on the number of different images sizes we have to deal with.
