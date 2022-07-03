@@ -8,11 +8,13 @@ import {
     AndRelated,
     // Count,
     DateExpression,
+    EntryFunction,
     GetProperty,
     Graph,
     Image,
     List,
     LiteralExpression,
+    PropFunction,
     This,
 } from "./expressions.ts";
 import * as V from "./values.ts";
@@ -87,21 +89,21 @@ group("parse.ts", () => {
     });
     test("two argument functions", () => {
         checkParse(
-            "this.get(prop=[[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]])",
+            'this.get(prop=prop("_6FisU5zxXg5LcDz4Kb3Wmd"))',
             new GetProperty(new This(), {
-                prop: new LiteralExpression(new V.PropertyValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd"))),
+                prop: new PropFunction(new LiteralExpression(new V.StringValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd")))),
             }),
         );
         checkParse(
-            `get(this, prop=[[/prop/_6FisU5zxXg5LcDz4Kb3Wmd]])`,
+            `get(this, prop=prop(\"_6FisU5zxXg5LcDz4Kb3Wmd\"))`,
             new GetProperty(new This(), {
-                prop: new LiteralExpression(new V.PropertyValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd"))),
+                prop: new PropFunction(new LiteralExpression(new V.StringValue(VNID("_6FisU5zxXg5LcDz4Kb3Wmd")))),
             }),
         );
         checkParse(
-            "this.andAncestors().get(prop=[[/prop/_HASA]])",
+            'this.andAncestors().get(prop=prop("_HASA"))',
             new GetProperty(new AndAncestors(new This()), {
-                prop: new LiteralExpression(new V.PropertyValue(VNID("_HASA"))),
+                prop: new PropFunction(new LiteralExpression(new V.StringValue(VNID("_HASA")))),
             }),
         );
     });
@@ -123,8 +125,8 @@ group("parse.ts", () => {
     });
     test("four argument functions", () => {
         checkParse(
-            `[[/entry/_4kfv0p8IFnzOOOdjmJRw4E]].image(format="logo", link="https://www.technotes.org/", maxWidth=60)`,
-            new Image(new LiteralExpression(new V.EntryValue(VNID("_4kfv0p8IFnzOOOdjmJRw4E"))), {
+            `entry("_4kfv0p8IFnzOOOdjmJRw4E").image(format="logo", link="https://www.technotes.org/", maxWidth=60)`,
+            new Image(new EntryFunction(new LiteralExpression(new V.StringValue(VNID("_4kfv0p8IFnzOOOdjmJRw4E")))), {
                 format: new LiteralExpression(new V.StringValue("logo")),
                 link: new LiteralExpression(new V.StringValue("https://www.technotes.org/")),
                 maxWidth: new LiteralExpression(new V.IntegerValue(60)),

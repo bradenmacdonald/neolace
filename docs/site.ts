@@ -26,13 +26,13 @@ export const siteData: Partial<Parameters<typeof UpdateSite>[0]> = {
 
         Currently available explanations:
 
-        { allEntries().filter(entryType=[[/etype/_7TZIMnSQGqTSn1g1Y7jANc]]) }
+        { allEntries().filter(entryType=entryType("_7TZIMnSQGqTSn1g1Y7jANc")) }
 
         ## Reference
 
         ### Terminology
 
-        { allEntries().filter(entryType=[[/etype/_5oX5jvGNB6hQzuu08iQs5b]]) }
+        { allEntries().filter(entryType=entryType("_5oX5jvGNB6hQzuu08iQs5b")) }
     `,
     footerMD: dedent`
         © Copyright 2022 MacDonald Thoughtstuff Inc.

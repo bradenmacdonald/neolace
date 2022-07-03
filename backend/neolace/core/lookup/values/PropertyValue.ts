@@ -17,7 +17,7 @@ export class PropertyValue extends ConcreteValue implements IHasLiteralExpressio
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `[[/prop/${this.id}]]`; // e.g. [[/prop/_6FisU5zxXggLcDz4Kb3Wmd]]
+        return `prop("${this.id}")`;
     }
 
     protected serialize() {

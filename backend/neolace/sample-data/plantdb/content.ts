@@ -89,7 +89,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.classPinopsida.id,
             propertyId: schema.properties._parentDivision.id,
-            valueExpression: `[[/entry/${entryData.divisionTracheophyta.id}]]`,
+            valueExpression: `entry("${entryData.divisionTracheophyta.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -110,7 +110,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.orderPinales.id,
             propertyId: schema.properties._parentClass.id,
-            valueExpression: `[[/entry/${entryData.classPinopsida.id}]]`,
+            valueExpression: `entry("${entryData.classPinopsida.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -131,7 +131,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.familyPinaceae.id,
             propertyId: schema.properties._parentOrder.id,
-            valueExpression: `[[/entry/${entryData.orderPinales.id}]]`,
+            valueExpression: `entry("${entryData.orderPinales.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -152,7 +152,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.genusPinus.id,
             propertyId: schema.properties._parentFamily.id,
-            valueExpression: `[[/entry/${entryData.familyPinaceae.id}]]`,
+            valueExpression: `entry("${entryData.familyPinaceae.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -173,7 +173,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.ponderosaPine.id,
             propertyId: schema.properties._parentGenus.id,
-            valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
+            valueExpression: `entry("${entryData.genusPinus.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -252,7 +252,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.stonePine.id,
             propertyId: schema.properties._parentGenus.id,
-            valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
+            valueExpression: `entry("${entryData.genusPinus.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -272,7 +272,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.jackPine.id,
             propertyId: schema.properties._parentGenus.id,
-            valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
+            valueExpression: `entry("${entryData.genusPinus.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -292,7 +292,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.japaneseRedPine.id,
             propertyId: schema.properties._parentGenus.id,
-            valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
+            valueExpression: `entry("${entryData.genusPinus.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -312,7 +312,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.japaneseWhitePine.id,
             propertyId: schema.properties._parentGenus.id,
-            valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
+            valueExpression: `entry("${entryData.genusPinus.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -332,7 +332,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.jeffreyPine.id,
             propertyId: schema.properties._parentGenus.id,
-            valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
+            valueExpression: `entry("${entryData.genusPinus.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -352,7 +352,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.pinyonPine.id,
             propertyId: schema.properties._parentGenus.id,
-            valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
+            valueExpression: `entry("${entryData.genusPinus.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -372,7 +372,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.westernWhitePine.id,
             propertyId: schema.properties._parentGenus.id,
-            valueExpression: `[[/entry/${entryData.genusPinus.id}]]`,
+            valueExpression: `entry("${entryData.genusPinus.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -393,7 +393,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.familyCupressaceae.id,
             propertyId: schema.properties._parentOrder.id,
-            valueExpression: `[[/entry/${entryData.orderPinales.id}]]`,
+            valueExpression: `entry("${entryData.orderPinales.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -414,7 +414,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.genusCupressus.id,
             propertyId: schema.properties._parentFamily.id,
-            valueExpression: `[[/entry/${entryData.familyCupressaceae.id}]]`,
+            valueExpression: `entry("${entryData.familyCupressaceae.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -435,7 +435,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.mediterraneanCypress.id,
             propertyId: schema.properties._parentGenus.id,
-            valueExpression: `[[/entry/${entryData.genusCupressus.id}]]`,
+            valueExpression: `entry("${entryData.genusCupressus.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -456,7 +456,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.genusThuja.id,
             propertyId: schema.properties._parentFamily.id,
-            valueExpression: `[[/entry/${entryData.familyCupressaceae.id}]]`,
+            valueExpression: `entry("${entryData.familyCupressaceae.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -477,7 +477,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.westernRedcedar.id,
             propertyId: schema.properties._parentGenus.id,
-            valueExpression: `[[/entry/${entryData.genusThuja.id}]]`,
+            valueExpression: `entry("${entryData.genusThuja.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -514,7 +514,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.pollenCone.id,
             propertyId: schema.properties._partIsAPart.id,
-            valueExpression: `[[/entry/${entryData.cone.id}]]`,
+            valueExpression: `entry("${entryData.cone.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -535,7 +535,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.seedCone.id,
             propertyId: schema.properties._partIsAPart.id,
-            valueExpression: `[[/entry/${entryData.cone.id}]]`,
+            valueExpression: `entry("${entryData.cone.id}")`,
             propertyFactId: VNID(),
         },
     },
@@ -546,7 +546,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.classPinopsida.id,
             propertyId: schema.properties._hasPart.id,
-            valueExpression: `[[/entry/${entryData.pollenCone.id}]]`,
+            valueExpression: `entry("${entryData.pollenCone.id}")`,
             propertyFactId: VNID(),
             slot: "pollen-cone",
         },
@@ -556,7 +556,7 @@ export const makePlantDbContent: EditList = [
         data: {
             entryId: entryData.classPinopsida.id,
             propertyId: schema.properties._hasPart.id,
-            valueExpression: `[[/entry/${entryData.seedCone.id}]]`,
+            valueExpression: `entry("${entryData.seedCone.id}")`,
             propertyFactId: VNID(),
             slot: "seed-cone",
         },

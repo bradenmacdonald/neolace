@@ -6,7 +6,7 @@ description: >-
 ---
 # Overview
 
-{ [[/entry/_5JbEUBYOFXsOvbGg92weq1]].image(format="normal") }
+{ entry("img-x-002-arch-diagram").image(format="normal") }
 
 # Graph Data in Neo4j
 

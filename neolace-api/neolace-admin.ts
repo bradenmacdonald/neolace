@@ -632,12 +632,17 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
  * though, so that if importing back to the same site, we can avoid changing the VNIDs.
  */
 function replaceIdsInMarkdownAndLookupExpressions(idMap: Record<string, string>, markdownOrLookup: string) {
-    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/entry\/([0-9A-Za-z_ñ\-]+)\]\]/mg, (_m, id) => {
-        return `[[/entry/${ idMap[id] ?? id }]]`;
+    // Literal expressions in lookups:
+    markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)entry\("([0-9A-Za-z_ñ\-]+)"\)/mg, (_m, id) => {
+        return `entry("${ idMap[id] ?? id }")`;
     });
-    markdownOrLookup = markdownOrLookup.replaceAll(/\[\[\/prop\/([0-9A-Za-z_ñ\-]+)\]\]/mg, (_m, id) => {
-        return `[[/prop/${ idMap[id] ?? id }]]`;
+    markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)prop\("([0-9A-Za-z_ñ\-]+)"\)/mg, (_m, id) => {
+        return `prop("${ idMap[id] ?? id }")`;
     });
+    markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)entryType\("([0-9A-Za-z_ñ\-]+)"\)/mg, (_m, id) => {
+        return `entryType("${ idMap[id] ?? id }")`;
+    });
+    // Link in markdown:
     markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/([0-9A-Za-z_ñ\-]+)\)/mg, (_m, id) => {
         return `](/entry/${ idMap[id] ?? id })`;
     });

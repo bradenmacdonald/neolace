@@ -119,7 +119,7 @@ group("properties.ts", () => {
                 ],
             }));
             // Say that (entry B) IS A (entry a)
-            const valueExpression = `[[/entry/${entryA}]]`;
+            const valueExpression = `entry("${entryA}")`;
             const note = "B is an A";
             await graph.runAsSystem(ApplyEdits({
                 siteId,
@@ -310,7 +310,7 @@ group("properties.ts", () => {
                                 appliesTo: [{ entryType }],
                                 descriptionMD: "",
                                 rank: 1,
-                                default: `this.reverse(prop=[[/prop/${entryIsA}]])`,
+                                default: `this.reverse(prop=prop("${entryIsA}"))`,
                             },
                         },
                         // Create entry A:
@@ -328,7 +328,7 @@ group("properties.ts", () => {
                             data: {
                                 entryId: B,
                                 propertyId: entryIsA,
-                                valueExpression: `[[/entry/${A}]]`,
+                                valueExpression: `entry("${A}")`,
                                 note: "B is an A",
                                 propertyFactId: pfBisA,
                             },
@@ -342,7 +342,7 @@ group("properties.ts", () => {
                             id: propHasTypes,
                             rank: 1,
                             name: "Has types",
-                            default: `this.reverse(prop=[[/prop/${entryIsA}]])`,
+                            default: `this.reverse(prop=prop("${entryIsA}"))`,
                         },
                         facts: [],
                     },
@@ -454,7 +454,7 @@ group("properties.ts", () => {
                             data: {
                                 entryId: B,
                                 propertyId: entryIsA,
-                                valueExpression: `[[/entry/${A}]]`,
+                                valueExpression: `entry("${A}")`,
                                 note: "B is an A",
                                 propertyFactId: pfBisA,
                             },
@@ -478,7 +478,7 @@ group("properties.ts", () => {
                             data: {
                                 entryId: C,
                                 propertyId: entryIsA,
-                                valueExpression: `[[/entry/${B}]]`,
+                                valueExpression: `entry("${B}")`,
                                 note: "C is a B",
                                 propertyFactId: pfCisB,
                             },
@@ -536,7 +536,7 @@ group("properties.ts", () => {
                         facts: [{
                             propertyFactId: pfBisA,
                             note: "B is an A",
-                            valueExpression: `[[/entry/${A}]]`,
+                            valueExpression: `entry("${A}")`,
                             source: { from: "ThisEntry" },
                             rank: 1,
                         }],
@@ -556,7 +556,7 @@ group("properties.ts", () => {
                         facts: [{
                             propertyFactId: pfCisB,
                             note: "C is a B",
-                            valueExpression: `[[/entry/${B}]]`,
+                            valueExpression: `entry("${B}")`,
                             source: { from: "ThisEntry" },
                             rank: 1,
                         }],
@@ -633,7 +633,7 @@ group("properties.ts", () => {
                                 entryId: B,
                                 propertyId: entryIsA,
                                 propertyFactId: pfBisA,
-                                valueExpression: `[[/entry/${A}]]`,
+                                valueExpression: `entry("${A}")`,
                             },
                         },
                         {
@@ -668,7 +668,7 @@ group("properties.ts", () => {
                                 entryId: C,
                                 propertyId: entryIsA,
                                 propertyFactId: pfCisB,
-                                valueExpression: `[[/entry/${B}]]`,
+                                valueExpression: `entry("${B}")`,
                             },
                         },
                     ],
@@ -924,7 +924,7 @@ group("properties.ts", () => {
                                 entryId: car,
                                 propertyId: entryHasPart,
                                 slot: "sw",
-                                valueExpression: `[[/entry/${steeringWheel}]]`,
+                                valueExpression: `entry("${steeringWheel}")`,
                                 note: "wheel",
                                 propertyFactId: pfCarHasWheel,
                             },
@@ -935,7 +935,7 @@ group("properties.ts", () => {
                                 entryId: car,
                                 propertyId: entryHasPart,
                                 slot: "motor",
-                                valueExpression: `[[/entry/${combustionEngine}]]`,
+                                valueExpression: `entry("${combustionEngine}")`,
                                 note: "engine",
                                 propertyFactId: pfCarhasEngine,
                             },
@@ -956,7 +956,7 @@ group("properties.ts", () => {
                             data: {
                                 entryId: electricCar,
                                 propertyId: entryIsA,
-                                valueExpression: `[[/entry/${car}]]`,
+                                valueExpression: `entry("${car}")`,
                                 note: "wheel",
                                 propertyFactId: pfElectricCarIsCar,
                             },
@@ -967,7 +967,7 @@ group("properties.ts", () => {
                                 entryId: electricCar,
                                 propertyId: entryHasPart,
                                 slot: "motor",
-                                valueExpression: `[[/entry/${electricMotor}]]`,
+                                valueExpression: `entry("${electricMotor}")`,
                                 note: "motor",
                                 propertyFactId: pfElectricCarHasMotor,
                             },
@@ -986,7 +986,7 @@ group("properties.ts", () => {
                             // These are sorted in alphabetical order by slot so "motor" comes before "sw" (steering wheel)
                             {
                                 propertyFactId: pfCarhasEngine,
-                                valueExpression: `[[/entry/${combustionEngine}]]`,
+                                valueExpression: `entry("${combustionEngine}")`,
                                 note: "engine",
                                 slot: "motor",
                                 rank: 2,
@@ -994,7 +994,7 @@ group("properties.ts", () => {
                             },
                             {
                                 propertyFactId: pfCarHasWheel,
-                                valueExpression: `[[/entry/${steeringWheel}]]`,
+                                valueExpression: `entry("${steeringWheel}")`,
                                 note: "wheel",
                                 slot: "sw",
                                 rank: 1,
@@ -1013,7 +1013,7 @@ group("properties.ts", () => {
                         facts: [
                             {
                                 propertyFactId: pfElectricCarHasMotor,
-                                valueExpression: `[[/entry/${electricMotor}]]`,
+                                valueExpression: `entry("${electricMotor}")`,
                                 note: "motor",
                                 slot: "motor",
                                 rank: 1,
@@ -1021,7 +1021,7 @@ group("properties.ts", () => {
                             },
                             {
                                 propertyFactId: pfCarHasWheel,
-                                valueExpression: `[[/entry/${steeringWheel}]]`,
+                                valueExpression: `entry("${steeringWheel}")`,
                                 note: "wheel",
                                 slot: "sw",
                                 rank: 1,
@@ -1055,7 +1055,7 @@ group("properties.ts", () => {
                             // However, slot values are still returned, since they are set:
                             {
                                 propertyFactId: pfElectricCarHasMotor,
-                                valueExpression: `[[/entry/${electricMotor}]]`,
+                                valueExpression: `entry("${electricMotor}")`,
                                 note: "motor",
                                 slot: "motor",
                                 rank: 1,
@@ -1112,7 +1112,7 @@ group("properties.ts", () => {
                             entryId: B,
                             propertyId: entryIsA,
                             propertyFactId: pfBisA,
-                            valueExpression: `[[/entry/${A}]]`,
+                            valueExpression: `entry("${A}")`,
                         },
                     },
                 ],

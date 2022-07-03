@@ -196,10 +196,10 @@ export class PropertyFact extends VNodeType {
  * Given a lookup expression that represents an Entry ID literal, get the entry ID.
  */
 export function parseLookupExpressionToEntryId(valueExpression: string) {
-    // We require the value (lookup expression) to be an entry literal, e.g. [[/entry/...]]
-    if (!valueExpression.startsWith(`[[/entry/`) || !valueExpression.endsWith(`]]`)) {
-        throw new ValidationError(`Relationship property values must be of the format [[/entry/entry-id]]`);
+    // We require the value (lookup expression) to be an entry literal, e.g. entry("_VNID")
+    if (!valueExpression.startsWith(`entry("`) || !valueExpression.endsWith(`")`)) {
+        throw new ValidationError(`Relationship property values must be of the format entry("entry-vnid")`);
     }
     // There is a relationship FROM the current entry TO the entry with this id:
-    return VNID(valueExpression.slice(9, -2));
+    return VNID(valueExpression.slice(7, -2));
 }

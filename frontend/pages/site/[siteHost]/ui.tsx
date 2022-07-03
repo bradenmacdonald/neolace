@@ -252,7 +252,7 @@ const UiDemoPage: NextPage = function (props) {
                         <LookupValue value={{ type: "Entry", id: api.VNID("_12345") }} mdtContext={demoMDTContext} />
                     </UIDemo>
                     <UIDemo label="Property Type">
-                        <LookupExpressionInput value="this.reverse(prop=[[/prop/_demoProp]])" onChange={() => null} />
+                        <LookupExpressionInput value={`this.reverse(prop=prop("_demoProp"))`} onChange={() => null} />
                     </UIDemo>
                 </tbody>
             </table>

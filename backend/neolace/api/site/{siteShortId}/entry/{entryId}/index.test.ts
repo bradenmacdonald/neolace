@@ -159,7 +159,7 @@ group("entry/index.test.ts", () => {
                                 },
                             ],
                             source: {
-                                expr: `this.get(prop=[[/prop/${defaultData.schema.properties._hasPart.id}]])`,
+                                expr: `this.get(prop=prop("${defaultData.schema.properties._hasPart.id}"))`,
                                 entryId: ponderosaPine.id,
                             },
                         },
@@ -195,7 +195,7 @@ group("entry/index.test.ts", () => {
                             ],
                             source: {
                                 expr:
-                                    `this.andDescendants().reverse(prop=[[/prop/${defaultData.schema.properties._imgRelTo.id}]])`,
+                                    `this.andDescendants().reverse(prop=prop("${defaultData.schema.properties._imgRelTo.id}"))`,
                                 entryId: ponderosaPine.id,
                             },
                             annotations: {
@@ -525,7 +525,7 @@ group("entry/index.test.ts", () => {
                 {
                     propertyId: defaultData.schema.properties._parentGenus.id,
                     facts: [{
-                        valueExpression: `[[/entry/${defaultData.entries.genusPinus.id}]]`,
+                        valueExpression: `entry("${defaultData.entries.genusPinus.id}")`,
                         ...propFactDefaults,
                         id: result.propertiesRaw[0].facts[0].id, // We don't know the propertyFactId so just compare it to itself
                     }],
@@ -549,7 +549,7 @@ group("entry/index.test.ts", () => {
                 {
                     propertyId: defaultData.schema.properties._hasHeroImage.id,
                     facts: [{
-                        valueExpression: `[[/entry/${defaultData.entries.imgPonderosaTrunk.id}]]`,
+                        valueExpression: `entry("${defaultData.entries.imgPonderosaTrunk.id}")`,
                         ...propFactDefaults,
                         note: "a ponderosa pine trunk in Lassen Volcanic National Park",
                         id: result.propertiesRaw[3].facts[0].id, // We don't know the propertyFactId so just compare it to itself

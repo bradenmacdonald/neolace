@@ -143,7 +143,7 @@ group("graph()", () => {
                     code: "AddPropertyValue",
                     data: {
                         entryId: B,
-                        valueExpression: `[[/entry/${A}]]`,
+                        valueExpression: `entry("${A}")`,
                         propertyId: entryIsA,
                         propertyFactId: VNID(),
                     },
@@ -153,7 +153,7 @@ group("graph()", () => {
                     code: "AddPropertyValue",
                     data: {
                         entryId: C,
-                        valueExpression: `[[/entry/${A}]]`,
+                        valueExpression: `entry("${A}")`,
                         propertyId: entryIsA,
                         propertyFactId: VNID(),
                     },
@@ -163,7 +163,7 @@ group("graph()", () => {
                     code: "AddPropertyValue",
                     data: {
                         entryId: D,
-                        valueExpression: `[[/entry/${B}]]`,
+                        valueExpression: `entry("${B}")`,
                         propertyId: entryIsA,
                         propertyFactId: VNID(),
                     },
@@ -173,7 +173,7 @@ group("graph()", () => {
                     code: "AddPropertyValue",
                     data: {
                         entryId: D,
-                        valueExpression: `[[/entry/${C}]]`,
+                        valueExpression: `entry("${C}")`,
                         propertyId: entryIsA,
                         propertyFactId: VNID(),
                     },
@@ -183,7 +183,7 @@ group("graph()", () => {
                     code: "AddPropertyValue",
                     data: {
                         entryId: A,
-                        valueExpression: `[[/entry/${D}]]`,
+                        valueExpression: `entry("${D}")`,
                         propertyId: entryIsA,
                         propertyFactId: VNID(),
                     },

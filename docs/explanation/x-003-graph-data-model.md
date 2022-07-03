@@ -6,4 +6,4 @@ description: >-
 ---
 # Overview
 
-{ [[/entry/_5JAehDLtjWX9NPENgEQYWL]].image(format="normal") }
+{ entry("img-x-003-data-model").image(format="normal") }

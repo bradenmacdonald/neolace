@@ -86,7 +86,7 @@ export const EntryVoid = (
 ) => {
     const [selected, exclusivelySelected] = useVoidSelectionStatus();
     // TBD: we need a hook to get the current draft OR current entry + refCache
-    const lookupData = useLookupExpression(`[[/entry/${entryId}]]`);
+    const lookupData = useLookupExpression(`entry("${entryId}")`);
     const entryData = lookupData.result?.referenceCache.entries[entryId];
     const entryName = entryData?.name ?? `Entry ${entryId}`;
     const entryTypeData = lookupData.result?.referenceCache.entryTypes[entryData?.entryType.id ?? ""];

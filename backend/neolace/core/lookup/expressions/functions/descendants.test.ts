@@ -235,7 +235,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: C,
-                            valueExpression: `[[/entry/${A}]]`,
+                            valueExpression: `entry("${A}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -245,7 +245,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: D,
-                            valueExpression: `[[/entry/${A}]]`,
+                            valueExpression: `entry("${A}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -255,7 +255,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: D,
-                            valueExpression: `[[/entry/${B}]]`,
+                            valueExpression: `entry("${B}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -265,7 +265,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: E,
-                            valueExpression: `[[/entry/${B}]]`,
+                            valueExpression: `entry("${B}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -275,7 +275,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: F,
-                            valueExpression: `[[/entry/${C}]]`,
+                            valueExpression: `entry("${C}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -285,7 +285,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: F,
-                            valueExpression: `[[/entry/${D}]]`,
+                            valueExpression: `entry("${D}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -295,7 +295,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: H,
-                            valueExpression: `[[/entry/${F}]]`,
+                            valueExpression: `entry("${F}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -305,7 +305,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: H,
-                            valueExpression: `[[/entry/${E}]]`,
+                            valueExpression: `entry("${E}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -315,7 +315,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: I,
-                            valueExpression: `[[/entry/${E}]]`,
+                            valueExpression: `entry("${E}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -325,7 +325,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: I,
-                            valueExpression: `[[/entry/${G}]]`,
+                            valueExpression: `entry("${G}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -402,7 +402,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: B,
-                            valueExpression: `[[/entry/${A}]]`,
+                            valueExpression: `entry("${A}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -412,7 +412,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: C,
-                            valueExpression: `[[/entry/${A}]]`,
+                            valueExpression: `entry("${A}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -422,7 +422,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: D,
-                            valueExpression: `[[/entry/${B}]]`,
+                            valueExpression: `entry("${B}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -432,7 +432,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: D,
-                            valueExpression: `[[/entry/${C}]]`,
+                            valueExpression: `entry("${C}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },
@@ -442,7 +442,7 @@ group("descendants.ts", () => {
                         code: "AddPropertyValue",
                         data: {
                             entryId: A,
-                            valueExpression: `[[/entry/${D}]]`,
+                            valueExpression: `entry("${D}")`,
                             propertyId: entryIsA,
                             propertyFactId: VNID(),
                         },

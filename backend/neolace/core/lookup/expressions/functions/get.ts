@@ -75,13 +75,13 @@ const dbSlotToValue = (dbValue: unknown): StringValue | NullValue => {
  * the values of the property for the given entries. Entries may appear multiple times.
  *
  * If used with a value property and a single entry
- *  e.g. this.get(prop=[[/prop/_dateOfBirth]])
- * Then this will return either a single value (e.g. a date) or a MultipleValues (if
+ *  e.g. this.get(prop=prop("_dateOfBirth"))
+ * Then this will return either a single value (e.g. a date) or an iterable of values (if
  * multiple values are set for the same property on the same entry)
  *
  * If used with a value property and multiple entries,
- *  e.g. this.andAncestors().get(prop=[[/prop/_dateOfBirth]])
- * Then this will always return a MultipleValues
+ *  e.g. this.andAncestors().get(prop=prop("_dateOfBirth"))
+ * Then this will always return an iterable of values
  */
 export class GetProperty extends LookupFunctionWithArgs {
     static functionName = "get";

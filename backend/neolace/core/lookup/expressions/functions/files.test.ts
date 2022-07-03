@@ -12,15 +12,16 @@ import {
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
+import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
+import { Always, PermissionGrant } from "neolace/core/permissions/grant.ts";
 
-import { EntryValue, FileValue, IntegerValue, PageValue } from "../../values.ts";
+import { EntryValue, FileValue, IntegerValue, PageValue, StringValue } from "../../values.ts";
 import { Files } from "./files.ts";
 import { LiteralExpression } from "../literal-expr.ts";
 import { LookupEvaluationError } from "../../errors.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
-import { AccessMode, UpdateSite } from "../../../Site.ts";
-import { corePerm } from "../../../permissions/permissions.ts";
-import { Always, PermissionGrant } from "../../../permissions/grant.ts";
+import { EntryFunction } from "./entry.ts";
 
 group("files.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
@@ -204,14 +205,16 @@ group("files.ts", () => {
 
     test(`toString()`, async () => {
         const expression = new Files(
-            new LiteralExpression(
-                new EntryValue(
-                    defaultData.entries.ponderosaPine.id,
+            new EntryFunction(
+                new LiteralExpression(
+                    new StringValue(
+                        defaultData.entries.ponderosaPine.id,
+                    ),
                 ),
             ),
         );
 
-        assertEquals(expression.toString(), `files([[/entry/${defaultData.entries.ponderosaPine.id}]])`);
+        assertEquals(expression.toString(), `entry("${defaultData.entries.ponderosaPine.id}").files()`);
     });
 
     test(`It gives an error message when used with non-entries`, async () => {
