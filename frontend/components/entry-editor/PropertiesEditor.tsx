@@ -36,7 +36,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema
         const props = Object.values(schema?.properties).filter((p) =>
             p.appliesTo.find((at) => at.entryType === entryType)
         );
-        props.sort((a, b) => a.importance - b.importance);
+        props.sort((a, b) => a.rank - b.rank);
         return props;
     }, [schema, entryType]);
 

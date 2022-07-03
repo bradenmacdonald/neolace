@@ -102,7 +102,7 @@ export const BaseEntrySchema = Schema({
     }),
 });
 export const EntrySchema = Schema.merge(BaseEntrySchema, {
-    /** Summary of properties for this entry (up to 20 properties, with importance < 20) */
+    /** Summary of properties for this entry (up to 20 properties, with rank < 50) */
     propertiesSummary: array.of(DisplayedPropertySchema).strictOptional(),
 
     /** Some details about all entries mentioned by this entry */

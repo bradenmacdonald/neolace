@@ -14,7 +14,7 @@ export type EntryPropertyValueSet = {
     property: {
         id: VNID;
         name: string;
-        importance: number;
+        rank: number;
         /** Default value. Only loaded from the database if no explicit value is set. */
         default: string | null;
         /** A markdown string with "{value}" placeholders, used to format the value, e.g. make it a link or italic. */
@@ -33,11 +33,11 @@ export type EntryPropertyValueSet = {
 /**
  * Get all property values associated with an Entry.
  *
- * This includes inherited properties and will order the results by importance.
+ * This includes inherited properties and will order the results by rank.
  */
 export async function getEntryProperties<TC extends true | undefined = undefined>(entryId: VNID, options: {
     tx: WrappedTransaction;
-    maxImportance?: number;
+    maxRank?: number;
     skip?: number;
     limit?: number;
     /** Should the total count of matching properties be included in the results? */
@@ -51,7 +51,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
     const skipSafe = C(String(Number(options.skip ?? 0)));
     const limitSafe = C(String(Number(Number(options.limit ?? 100))));
 
-    const maxImportance = options.maxImportance ?? 100; // Importance is in the range 0-99 so <= 100 will always match everything
+    const maxRank = options.maxRank ?? 100; // Importance is in the range 0-99 so <= 100 will always match everything
 
     if (options.specificPropertyId && options.totalCount) {
         throw new Error(
@@ -68,7 +68,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
 
         MATCH (prop:${Property})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
             WHERE
-                prop.importance <= ${maxImportance}
+                prop.rank <= ${maxRank}
                 AND (
                     prop.default <> ""
                     OR exists(
@@ -100,12 +100,12 @@ export async function getEntryProperties<TC extends true | undefined = undefined
                 // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
                 (length(path) = 2 OR prop.inheritable = true)
             AND
-                (prop.importance <= ${maxImportance})
+                (prop.rank <= ${maxRank})
             
             WITH prop, length(path) AS distance, nodes(path)[length(path) - 2] AS ancestor, nodes(path)[length(path) - 1] AS pf
 
             RETURN {
-                property: prop {.id, .name, .importance, default: null, .displayAs},
+                property: prop {.id, .name, .rank, default: null, .displayAs},
                 facts: collect({
                     propertyFactId: pf.id,
                     valueExpression: pf.valueExpression,
@@ -133,7 +133,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
                 // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
                 (length(path) = 2 OR prop.inheritable = true)
             AND
-                (prop.importance <= ${maxImportance})
+                (prop.rank <= ${maxRank})
 
             // We use minDistance below so that for each inherited property, we only get the
             // values set by the closest ancestor. e.g. if grandparent->parent->child each
@@ -146,7 +146,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
             WITH entry, prop, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
 
             RETURN {
-                property: prop {.id, .name, .importance, default: null, .displayAs},
+                property: prop {.id, .name, .rank, default: null, .displayAs},
                 facts: collect({
                     propertyFactId: pf.id,
                     valueExpression: pf.valueExpression,
@@ -169,24 +169,24 @@ export async function getEntryProperties<TC extends true | undefined = undefined
                     ${options.specificPropertyId ? C`prop.id = ${options.specificPropertyId} AND` : C``}
                     // TODO: use NULL or "" but not both
                     prop.default <> ""
-                    AND prop.importance <= ${maxImportance}
+                    AND prop.rank <= ${maxRank}
                     AND NOT exists((entry)-[:${Entry.rel.IS_A}*0..50]->(:${Entry})-[:PROP_FACT]->(:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop))
 
             RETURN {
-                property: prop {.id, .name, .importance, .default, .displayAs},
+                property: prop {.id, .name, .rank, .default, .displayAs},
                 facts: []
             } AS propertyData
         }
 
         RETURN propertyData
-        ORDER BY propertyData.property.importance, propertyData.property.name
+        ORDER BY propertyData.property.rank, propertyData.property.name
         SKIP ${skipSafe} LIMIT ${limitSafe}
     `.givesShape({
         propertyData: Field.Record({
             property: Field.Record({
                 id: Field.VNID,
                 name: Field.String,
-                importance: Field.Int,
+                rank: Field.Int,
                 default: Field.String,
                 displayAs: Field.String,
             }),

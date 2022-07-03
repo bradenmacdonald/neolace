@@ -443,7 +443,7 @@ export const ApplyEdits = defineAction({
                         SET p += ${{
                         name: "New Property",
                         descriptionMD: "",
-                        importance: 15,
+                        rank: 15,
                         // Property type - note that this cannot be changed once the property is created.
                         type: edit.data.type ?? PropertyType.Value,
                         mode: PropertyMode.Optional,
@@ -506,7 +506,7 @@ export const ApplyEdits = defineAction({
                             "default",
                             "inheritable",
                             "standardURL",
-                            "importance",
+                            "rank",
                             "displayAs",
                             "editNoteMD",
                             "enableSlots",

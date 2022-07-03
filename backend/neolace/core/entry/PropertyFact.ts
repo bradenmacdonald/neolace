@@ -49,7 +49,10 @@ export class PropertyFact extends VNodeType {
         /** An optional MDT (Markdown) string explaining something about this property value */
         note: Field.String,
 
-        /** If this property has multiple values (facts), this field determines their order. Rank 0 comes first, then 1... */
+        /**
+         * If this property has multiple values (facts), this field determines their order. Rank 0 comes first,
+         * then 1... Not to be confused with the rank of the overall property.
+         */
         rank: Field.Int.Check(check.number.integer().min(0).max(999_999_999)),
 
         /** Slot allows selectively overwriting inherited entries, useful for HAS PART relationships */
@@ -71,7 +74,7 @@ export class PropertyFact extends VNodeType {
          *    PropertyFact.
          */
         directRelNeo4jId: Field.NullOr.BigInt,
-        // In future, we may want to be able to override "inherits" or "importance", which come from the property entry
+        // In future, we may want to be able to override "inherits" or "rank", which come from the property entry?
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo(() => ({

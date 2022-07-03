@@ -124,8 +124,8 @@ export async function getEntry(
     });
 
     if (flags.has(api.GetEntryFlags.IncludePropertiesSummary) && canViewProperties) {
-        // Include a summary of property values for this entry (up to 15 importance properties - whose importance is <= 20)
-        const properties = await getEntryProperties(entryData.id, { tx, limit: 15, maxImportance: 20 });
+        // Include a summary of property values for this entry (up to 15 important properties - whose rank is <= 50)
+        const properties = await getEntryProperties(entryData.id, { tx, limit: 15, maxRank: 50 });
 
         // ** In the near future, we'll need to resolve a dependency graph and compute these in parallel / async. **
 
@@ -213,7 +213,7 @@ export async function getEntry(
             MATCH (entry:${Entry} {id: ${entryData.id}})
             MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
             WITH prop, pf
-            ORDER BY prop.importance, prop.name, pf.rank
+            ORDER BY prop.rank, prop.name, pf.rank
             WITH prop, collect(pf { .id, .valueExpression, .note, .rank, .slot }) AS facts
         `.RETURN({
             "prop.id": Field.VNID,
