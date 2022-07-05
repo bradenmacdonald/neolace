@@ -1,8 +1,9 @@
-const { PHASE_DEVELOPMENT_SERVER } = require('next/constants')
+const { PHASE_DEVELOPMENT_SERVER } = require('next/constants');
 const path = require("path");
 
 module.exports = (phase, { defaultConfig }) => {
-
+    
+    /** @type {import("next").NextConfig} */
     let baseConfig = {
         //...defaultConfig,
         reactStrictMode: true,
@@ -28,7 +29,6 @@ module.exports = (phase, { defaultConfig }) => {
             // Don't require <a> inside <Link>
             newNextLinkBehavior: true,
         },
-        // deno-lint-ignore require-await
         rewrites: async () => {
             // In order to support multitenancy with Next.js, we use a "rewrite" to include the host in the path
             return {
@@ -37,10 +37,7 @@ module.exports = (phase, { defaultConfig }) => {
                         //source: '/:path*', <-- not working (won't match '/') due to https://github.com/vercel/next.js/issues/14930
                         source: '/:path*{/}?',
                         has: [
-                            {
-                                type: 'host',
-                                value: '(?<siteHost>.*)',
-                            },
+                            {type: 'host', value: '(?<siteHost>.*)'},
                         ],
                         destination: '/site/:siteHost/:path*',
                     },
@@ -49,10 +46,7 @@ module.exports = (phase, { defaultConfig }) => {
                     {
                         source: '/:path*{/}?',
                         has: [
-                            {
-                                type: 'host',
-                                value: '(?<siteHost>.*)',
-                            },
+                            {type: 'host', value: '(?<siteHost>.*)'},
                         ],
                         destination: '/site/:siteHost/fallback/:path*',
                     },
