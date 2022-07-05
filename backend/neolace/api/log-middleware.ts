@@ -1,4 +1,5 @@
 import * as log from "std/log/mod.ts";
+import type { ConnInfo } from "std/http/server.ts";
 import { Drash } from "./mod.ts";
 
 export class NeolaceLogService extends Drash.Service {
@@ -18,9 +19,10 @@ export class NeolaceErrorLogger extends Drash.ErrorHandler {
         error: Drash.Errors.HttpError,
         request: Request,
         response: Drash.Response,
+        connInfo: ConnInfo,
     ): Promise<void> {
         // First adjust the response as per the normal base class handling:
-        super.catch(error, request, response);
+        super.catch(error, request, response, connInfo);
         // Then log the error message:
         const parsedUrl = new URL(request.url);
         const msg = `${request.method} ${parsedUrl.pathname} -> ${response.status}: ${error.name}: ${error.message}`;
