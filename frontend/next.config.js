@@ -3,9 +3,6 @@ const path = require("path");
 
 module.exports = (phase, { defaultConfig }) => {
 
-    // When Neolace is accessed via this hostname, it shows the "admin site" for the Neolace domain
-    const adminSiteHost = process.env.NEOLACE_ADMIN_SITE_HOST ?? "local.neolace.net";
-
     let baseConfig = {
         ...defaultConfig,
         reactStrictMode: true,
@@ -31,16 +28,6 @@ module.exports = (phase, { defaultConfig }) => {
                 afterFiles: [
                     {
                         //source: '/:path*', <-- not working (won't match '/') due to https://github.com/vercel/next.js/issues/14930
-                        source: '/:path*{/}?',
-                        has: [
-                            {
-                                type: 'host',
-                                value: adminSiteHost,
-                            },
-                        ],
-                        destination: '/admin-site/:path*',
-                    },
-                    {
                         source: '/:path*{/}?',
                         has: [
                             {
@@ -92,10 +79,12 @@ module.exports = (phase, { defaultConfig }) => {
         }
     }
 
-    const withBundleAnalyzer = require('@next/bundle-analyzer')({
-        enabled: process.env.ANALYZE === 'true',
-    });
-    baseConfig = withBundleAnalyzer(baseConfig);
+    if (process.env.ANALYZE === 'true') {
+        const withBundleAnalyzer = require('@next/bundle-analyzer')({
+            enabled: true,
+        });
+        baseConfig = withBundleAnalyzer(baseConfig);
+    }
 
     return baseConfig;
 }

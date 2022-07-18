@@ -20,6 +20,7 @@ import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { LookupValue } from "components/LookupValue";
 import { api } from "lib/api-client";
 import { MDTContext } from "components/markdown-mdt/mdt";
+import { DEVELOPMENT_MODE } from "lib/config";
 
 const UIDemo = (props: { label: string; children: React.ReactNode }) => {
     return (
@@ -38,7 +39,7 @@ const UiDemoPage: NextPage = function (props) {
     const [selectBoxItem, setSelectBoxItem] = React.useState("");
     const [selectBox2Item, setSelectBox2Item] = React.useState("");
 
-    if (process.env.NODE_ENV === "production") {
+    if (!DEVELOPMENT_MODE) {
         return <FourOhFour />;
     }
 
