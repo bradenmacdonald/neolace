@@ -2,7 +2,8 @@ import React from 'react';
 import { Portal } from 'components/utils/Portal';
 import { api, useLookupExpression } from 'lib/api-client';
 import { LookupValue } from 'components/LookupValue';
-import { MDTContext } from 'components/markdown-mdt/mdt';
+import { InlineMDT, MDTContext } from 'components/markdown-mdt/mdt';
+import { EntitySymbol } from "./EntitySymbol";
 
 
 interface Props {
@@ -68,7 +69,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
         setRefCache(result.referenceCache);
     }, [result?.referenceCache, searchTerm]);
 
-    const mdtContext = React.useMemo(() => new MDTContext({ refCache }), [refCache]);
+    const mdtContext = React.useMemo(() => new MDTContext({ refCache, disableHoverPreview: true }), [refCache]);
 
     if (error) {
         console.error(error);
@@ -86,9 +87,30 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
                 style={{ left: props.positionLeft, top: props.positionTop }}
             >
                 <ul>
-                    {items.map((item) => (
-                        <li key={item.id}>
-                            <LookupValue value={item} mdtContext={mdtContext} />
+                    {items.slice(0, 8).map((item) => (
+                        <li key={item.id} className="p-1 text-sm hover:bg-blue-50 border-b border-b-slate-200 first:rounded-t last:rounded-b last:border-b-0">
+                            <div className="pb-1">
+                                <span className="w-8 inline-block">
+                                    <EntitySymbol value={item} mdtContext={mdtContext.childContextWith({entryId: item.id})} defaultBg="bg-transparent" />
+                                </span>
+                                {
+                                    item.type === "Entry" ? <>
+                                        <strong>{refCache.entries[item.id]?.name ?? item.id}</strong>
+                                        <span className="font-mono text-xs ml-1">({refCache.entries[item.id]?.friendlyId})</span>
+                                    </>
+                                    : item.type === "EntryType" ? <><strong>{refCache.entryTypes[item.id]?.name ?? item.id}</strong> (Entry Type)</>
+                                    : item.type === "Property" ? <><strong>{refCache.properties[item.id]?.name ?? item.id}</strong> (Property)</>
+                                    : null
+                                }
+                            </div>
+                            <div className="whitespace-nowrap overflow-hidden overflow-ellipsis max-w-sm text-xs ml-8">
+                                {
+                                    item.type === "Entry" ? <InlineMDT mdt={refCache.entries[item.id]?.description} context={mdtContext.childContextWith({entryId: item.id})}/> :
+                                    item.type === "EntryType" ? "" :
+                                    item.type === "Property" ? refCache.properties[item.id]?.description
+                                    : null
+                                }
+                            </div>
                         </li>
                     ))}
                 </ul>
