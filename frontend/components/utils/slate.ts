@@ -164,15 +164,19 @@ export function stringValueToSlateDoc(value: string): NeolaceSlateElement[] {
         // `entryType("_VNID")` occurrences with a custom void element that looks nicer than the VNID.
         while (true) {
             // Match strings like `entry("_VNID")` but not `fooentry("_VNID")`
-            const nextProp = line.match(/(?<!\w)(entry|prop|entryType)\("(_[0-9A-Za-z]{1,22})"\)/m);
-            if (nextProp === null || nextProp.index === undefined) {
+            //const nextProp = line.match(/(?<!\w)(entry|prop|entryType)\("(_[0-9A-Za-z]{1,22})"\)/m);
+            // ^ The above doesn't work in Safari :-/ https://caniuse.com/js-regexp-lookbehind
+            //   So we fake it below by optionally matching preceding word characters and then making sure that match
+            //   group (1) is empty.
+            const nextProp = line.match(/(\w+)?(entry|prop|entryType)\("(_[0-9A-Za-z]{1,22})"\)/m);
+            if (nextProp === null || nextProp.index === undefined || nextProp[1] !== undefined) {
                 parts.push({ type: "text", text: line });
                 break;
             } else {
                 // First add any text that comes before the prop/entry/entryType void. This may be an empty string but
                 // we still need that so that the user can position their cursor before the void.
                 parts.push({ type: "text", text: line.substring(0, nextProp.index) });
-                const type = nextProp[1], id = nextProp[2] as api.VNID;
+                const type = nextProp[2], id = nextProp[3] as api.VNID;
                 if (type === "entry") {
                     parts.push({ type: "custom-void-entry", entryId: id, children: [{ type: "text", text: "" }] });
                 } else if (type === "prop") {
