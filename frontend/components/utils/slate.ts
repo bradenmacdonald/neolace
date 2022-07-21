@@ -337,11 +337,13 @@ export function checkForAutocompletion(editor: NeolaceSlateEditor): Autocompleti
 
     if (selection && Range.isCollapsed(selection)) {
         const [start] = Range.edges(selection);
-        const wordBefore = Editor.before(editor, start, { unit: "word" });
-        const before = wordBefore && Editor.before(editor, wordBefore);
-        const beforeRange = before && Editor.range(editor, before, start);
+        // Get the text that comes before the current cursor position:
+        const lineBefore = Editor.before(editor, start, { unit: "line" });
+        const beforeRange = lineBefore && Editor.range(editor, lineBefore, start);
         const beforeText = beforeRange && Editor.string(editor, beforeRange);
-        const beforeMatch = beforeText && beforeText.match(/^@(\w+)$/);
+        // Require that the @ symbol is at the beginning of the line OR after a whitespace character
+        const beforeMatch = beforeText && beforeText.match(/(^|\s)@([\w-]+)?$/);
+        // And we currently require that the @something... be at the end of the line or followed by a space:
         const after = Editor.after(editor, start);
         const afterRange = Editor.range(editor, start, after);
         const afterText = Editor.string(editor, afterRange);
@@ -349,23 +351,17 @@ export function checkForAutocompletion(editor: NeolaceSlateEditor): Autocompleti
 
         if (beforeMatch && afterMatch) {
             // The user has typed '@something...'
-            return {
-                type: "entityReference",
-                target: beforeRange,
-                search: beforeMatch[1],
-                position: getPosition(beforeRange),
-            };
-        }
-        const charBefore = Editor.before(editor, start, { unit: "character" });
-        const beforeChar = charBefore && Editor.string(editor, Editor.range(editor, charBefore, start));
-        if (beforeChar === "@" && afterText === "") {
-            // They have just typed '@' by itself; no search term yet
-            return {
-                type: "entityReference",
-                target: selection,
-                search: "",
-                position: getPosition(selection),
-            };
+            // Compute the Range for the '@something' text
+            const atMentionStartPoint = Editor.before(editor, start, {unit: "character", distance: (beforeMatch[2]?.length ?? 0) + 1});
+            const atMentionRange = atMentionStartPoint && Editor.range(editor, atMentionStartPoint, start);
+            if (atMentionRange) {
+                return {
+                    type: "entityReference",
+                    target: atMentionRange,
+                    search: beforeMatch[2] ?? "",
+                    position: getPosition(beforeRange),
+                };
+            }
         }
     }
     return {

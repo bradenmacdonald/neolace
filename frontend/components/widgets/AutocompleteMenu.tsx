@@ -6,6 +6,9 @@ import { InlineMDT, MDTContext } from 'components/markdown-mdt/mdt';
 import { EntitySymbol } from "./EntitySymbol";
 
 
+type EntityValue = api.EntryValue | api.PropertyValue | api.EntryTypeValue;
+
+
 interface Props {
     /** What the user has typed, that we're using as a search term */
     searchTerm: string;
@@ -13,6 +16,8 @@ interface Props {
     positionLeft: string;
     /** CSS position for this menu, e.g. "400px" */
     positionTop: string;
+    /** Handler for when the user makes a selection from the dropdown */
+    onClick: (value: EntityValue) => void;
 }
 
 /**
@@ -24,7 +29,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
     const { result, error } = useLookupExpression(`basicSearch(${JSON.stringify(searchTerm)})`);
 
     // We store the results in a state so that we can display the previous values while new ones are loading.
-    const [items, setItems] = React.useState<Array<api.EntryValue | api.PropertyValue | api.EntryTypeValue>>([]);
+    const [items, setItems] = React.useState<Array<EntityValue>>([]);
     const [refCache, setRefCache] = React.useState<api.ReferenceCacheData>({
         entries: {},
         entryTypes: {},
@@ -41,7 +46,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
         console.log("Recalculating");
 
         const searchTermLower = searchTerm.toLowerCase();
-        const newItems: Array<(api.EntryValue | api.PropertyValue | api.EntryTypeValue) & { name: string }> = [];
+        const newItems: Array<(EntityValue) & { name: string }> = [];
 
         // Now, a basic version of this could just use the entries/properties/types in result.resultValue, but that
         // doesn't account for changes coming from the draft or unsaved edits, which affect the reference cache only. So
@@ -92,7 +97,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
                             p-1 text-sm hover:bg-blue-50 border-b border-b-slate-200
                             cursor-default
                             first:rounded-t last:rounded-b last:border-b-0
-                        ">
+                        " onClick={() => props.onClick(item)}>
                             <div className="pb-1">
                                 <span className="w-8 inline-block">
                                     <EntitySymbol value={item} mdtContext={mdtContext.childContextWith({entryId: item.id})} defaultBg="bg-transparent" />
