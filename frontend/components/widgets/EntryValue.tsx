@@ -54,7 +54,10 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
         </span>
     );
 
-    if (site.frontendConfig.features?.hoverPreview?.enabled && !props.mdtContext.disableHoverPreview) {
+    if (props.mdtContext.disableInteractiveFeatures) {
+        // Links and hover previews are disabled in this context.
+        return widget;
+    } else if (site.frontendConfig.features?.hoverPreview?.enabled) {
         return (
             <Tooltip
                 tooltipContent={
