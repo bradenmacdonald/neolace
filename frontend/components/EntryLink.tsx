@@ -35,7 +35,7 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
         );
     }
 
-    if (site.frontendConfig.features?.hoverPreview?.enabled && !props.mdtContext.disableHoverPreview) {
+    if (site.frontendConfig.features?.hoverPreview?.enabled && !props.mdtContext.disableInteractiveFeatures) {
         return (
             <Tooltip
                 tooltipContent={

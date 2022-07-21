@@ -14,7 +14,7 @@ interface MDTContextArgs {
     refCache?: api.ReferenceCacheData;
     headingShift?: number;
     [footnotes]?: MDT.RootNode["footnotes"];
-    disableHoverPreview?: boolean;
+    disableInteractiveFeatures?: boolean;
 }
 
 /**
@@ -37,10 +37,10 @@ export class MDTContext {
      */
     readonly [footnotes]?: MDT.RootNode["footnotes"];
     /**
-     * Should hover previews (detailed tooltips when you mouse over an entry link) be disabled in this context?
-     * Used to prevent tooltips within tooltips, for example.
+     * Disable links, footnotes, and hover previews (tooltips that appear when you hover over an entry reference).
+     * Used in tooltips and dropdowns to prevent unwanted links or tooltips-within-tooltips
      */
-    readonly disableHoverPreview: boolean;
+    readonly disableInteractiveFeatures: boolean;
 
     constructor(args: MDTContextArgs) {
         this.entryId = args.entryId;
@@ -48,7 +48,7 @@ export class MDTContext {
         this.refCache = args.refCache ?? { entries: {}, entryTypes: {}, properties: {}, lookups: [] };
         this.headingShift = args.headingShift ?? 0;
         this[footnotes] = args[footnotes];
-        this.disableHoverPreview = args.disableHoverPreview ?? false;
+        this.disableInteractiveFeatures = args.disableInteractiveFeatures ?? false;
     }
 
     public childContextWith(args: MDTContextArgs) {
@@ -58,7 +58,7 @@ export class MDTContext {
             refCache: args.refCache ?? this.refCache,
             headingShift: this.headingShift + (args.headingShift ?? 0),
             [footnotes]: args[footnotes] ?? (entryId === this.entryId ? this[footnotes] : undefined),
-            disableHoverPreview: args.disableHoverPreview ?? this.disableHoverPreview,
+            disableInteractiveFeatures: args.disableInteractiveFeatures ?? this.disableInteractiveFeatures,
         });
     }
 }
@@ -94,7 +94,14 @@ function inlineNodeToComponent(node: MDT.InlineNode | MDT.AnyInlineNode, context
         case "text":
             return <React.Fragment key={key}>{node.text}</React.Fragment>;
         case "link":
-            if (node.href.startsWith("#")) {
+            if (context.disableInteractiveFeatures) {
+                // Links are currently disabled in this context, so render plain text with an underline.
+                return (
+                    <span key={key} className="underline">
+                        {node.children.map((child) => inlineNodeToComponent(child, context))}
+                    </span>
+                );
+            } else if (node.href.startsWith("#")) {
                 return (
                     <a href={node.href} key={key}>
                         {node.children.map((child) => inlineNodeToComponent(child, context))}
@@ -181,6 +188,10 @@ function inlineNodeToComponent(node: MDT.InlineNode | MDT.AnyInlineNode, context
         case "sup":
             return <sup key={key}>{node.children.map((child) => inlineNodeToComponent(child, context))}</sup>;
         case "footnote_ref": {
+            if (context.disableInteractiveFeatures) {
+                // Footnotes are disabled in this context so just render an asterisk as a placeholder.
+                return <span key={key}>*</span>;
+            }
             const footnoteParagraph = (context[footnotes])?.[node.footnoteId].children[0];
             return (
                 <HoverClickNote key={key} displayText={node.referenceText}>
@@ -192,6 +203,10 @@ function inlineNodeToComponent(node: MDT.InlineNode | MDT.AnyInlineNode, context
             );
         }
         case "footnote_inline":
+            if (context.disableInteractiveFeatures) {
+                // Footnotes are disabled in this context so just render an asterisk as a placeholder.
+                return <span key={key}>*</span>;
+            }
             return (
                 <HoverClickNote key={key}>
                     <p className="text-sm">{node.children.map((child) => inlineNodeToComponent(child, context))}</p>

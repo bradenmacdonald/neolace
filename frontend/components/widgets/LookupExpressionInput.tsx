@@ -1,11 +1,14 @@
 import React from "react";
 import { useIntl } from "react-intl";
-import { type Descendant } from "slate";
+import { Transforms, type Descendant } from "slate";
 import { Editable, ReactEditor, RenderElementProps, RenderLeafProps, Slate } from "slate-react";
 import {
+    checkForAutocompletion,
     EscapeMode,
+    NeolaceSlateElement,
     slateDocToStringValue,
     stringValueToSlateDoc,
+    useAutocompletionState,
     useForceUpdate,
     useNeolaceSlateEditor,
     VoidEntryNode,
@@ -14,6 +17,8 @@ import {
 } from "components/utils/slate";
 import { EntryTypeVoid, EntryVoid, PropertyVoid } from "components/utils/slate-mdt";
 import { displayString, TranslatableString } from "components/utils/i18n";
+import { AutocompletionMenu } from "./AutocompleteMenu";
+import { api } from "lib/api-client";
 
 interface Props {
     /** The lookup value that is currently being edited */
@@ -38,8 +43,8 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
     const intl = useIntl();
     const renderLeaf = React.useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
-
     const forceUpdate = useForceUpdate();
+    const [autocompletion, setAutocompletion] = useAutocompletionState();
 
     const parsedValue: Descendant[] = React.useMemo(() => stringValueToSlateDoc(value), [value]);
 
@@ -57,7 +62,8 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
             const newLookupValue = slateDocToStringValue(newValue, EscapeMode.PlainText);
             onChange(newLookupValue);
         }
-    }, [onChange]);
+        setAutocompletion(checkForAutocompletion(editor));
+    }, [editor, onChange, setAutocompletion]);
 
     const handleKeyDown = React.useCallback((event: React.KeyboardEvent) => {
         if (event.key === "Enter") {
@@ -78,6 +84,22 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
         }
     }, [editor, onFinishedEdits]);
 
+    const handleAutoCompleteSelection = React.useCallback((item: api.EntryValue|api.EntryTypeValue|api.PropertyValue) => {
+        if (autocompletion.target === undefined) {
+            return;
+        }
+        Transforms.select(editor, autocompletion.target);
+        const node: NeolaceSlateElement = (
+            item.type === "Entry" ? {type: "custom-void-entry", entryId: item.id, children: [{ type: "text", text: '' }]}
+            : item.type === "Property" ? {type: "custom-void-property", propertyId: item.id, children: [{ type: "text", text: '' }]}
+            : item.type === "EntryType" ? {type: "custom-void-entry-type", entryTypeId: item.id, children: [{ type: "text", text: '' }]}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            : {type: "text", text: (item as any).id}
+        ); 
+        Transforms.insertNodes(editor, node, {voids: true});
+        Transforms.move(editor);
+    }, [editor, autocompletion.target]);
+
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
     return <Slate editor={editor} value={parsedValue} onChange={handleChange}>
         <div className={`border border-gray-500 rounded-md inline-flex items-center focus-within:outline outline-2 outline-theme-link-color overflow-hidden my-[3px] w-full md:w-auto md:min-w-[600px] selection:bg-sky-200 max-w-full ${props.className ?? ""}`}>
@@ -92,6 +114,17 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
                 renderElement={renderElement}
                 placeholder={props.placeholder ? displayString(intl, props.placeholder) : undefined}
             />
+            {/* Autocompletion dropdown */}
+            {
+                autocompletion.type === "entityReference" ?
+                    <AutocompletionMenu
+                        searchTerm={autocompletion.search}
+                        positionLeft={autocompletion.position[0]}
+                        positionTop={autocompletion.position[1]}
+                        onClick={handleAutoCompleteSelection}
+                    />
+                : null
+            }
         </div>
   </Slate>
 }

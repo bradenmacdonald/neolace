@@ -1,6 +1,6 @@
 import React from "react";
 import { api } from "lib/api-client";
-import { BaseEditor, createEditor, Element, Node, Transforms } from "slate";
+import { BaseEditor, createEditor, Element, Node, Transforms, Range, Editor } from "slate";
 import { ReactEditor, withReact } from "slate-react";
 import { HistoryEditor, withHistory } from "slate-history";
 
@@ -293,4 +293,110 @@ export function parseMdtStringToSlateDoc(mdt: string, inline?: boolean): Neolace
     } else {
         throw new Error("Block-level MDT editing is not yet supported.");
     }
+}
+
+type AutocompletionState = {
+    /** entityReference means autocomplete an entry, property, or entry type. */
+    type: "entityReference";
+    /** The range of text in the Slate.js editor that triggered the autocompletion (e.g. "@a" if the user types '@' and 'a') */
+    target: Range;
+    /** The search string that the user has typed into the editor; use it to filter the autocompletion list. */
+    search: string;
+    /** The absolute position ([X, Y]) of where the dropdown should appear. Uses CSS units like ['4px', '180px'] */
+    position: [string, string];
+} | {
+    type: undefined;
+    target: undefined;
+    search: "";
+};
+
+/**
+ * Put this into a Slate.js onChange event handler to check for circumstances where we should show an autocompletion
+ * popup, such as if the user types '@something' to mention an entry, property, or entry type (or user in future?).
+ *
+ * It would be nice to also use this to autocomplete available lookup functions.
+ * @param editor
+ * @returns
+ */
+export function checkForAutocompletion(editor: NeolaceSlateEditor): AutocompletionState {
+    // Adapted from https://github.com/ianstormtaylor/slate/blob/main/site/examples/mentions.tsx
+    const { selection } = editor;
+
+    const getPosition = (range: Range): [string, string] => {
+        try {
+            const domRange = ReactEditor.toDOMRange(editor, range);
+            const rect = domRange.getBoundingClientRect();
+            return [`${rect.left + window.pageXOffset}px`, `${rect.top + window.pageYOffset + 24}px`];
+        } catch (_err) {
+            // If we can't get a DOM range, get a DOM node, which should work:
+            const domElement = ReactEditor.toDOMNode(editor, Editor.node(editor, range.anchor.path)[0]);
+            const rect = domElement.getBoundingClientRect();
+            return [`${rect.left + window.pageXOffset}px`, `${rect.top + window.pageYOffset + 24}px`];
+        }
+    };
+
+    if (selection && Range.isCollapsed(selection)) {
+        const [start] = Range.edges(selection);
+        // Get the text that comes before the current cursor position:
+        const lineBefore = Editor.before(editor, start, { unit: "line" });
+        const beforeRange = lineBefore && Editor.range(editor, lineBefore, start);
+        const beforeText = beforeRange && Editor.string(editor, beforeRange);
+        // Require that the @ symbol is at the beginning of the line OR after a whitespace character
+        const beforeMatch = beforeText && beforeText.match(/(^|\s)@([\w-]+)?$/);
+        // And we currently require that the @something... be at the end of the line or followed by a space:
+        const after = Editor.after(editor, start);
+        const afterRange = Editor.range(editor, start, after);
+        const afterText = Editor.string(editor, afterRange);
+        const afterMatch = afterText.match(/^(\s|$)/);
+
+        if (beforeMatch && afterMatch) {
+            // The user has typed '@something...'
+            // Compute the Range for the '@something' text
+            const atMentionStartPoint = Editor.before(editor, start, {unit: "character", distance: (beforeMatch[2]?.length ?? 0) + 1});
+            const atMentionRange = atMentionStartPoint && Editor.range(editor, atMentionStartPoint, start);
+            if (atMentionRange) {
+                return {
+                    type: "entityReference",
+                    target: atMentionRange,
+                    search: beforeMatch[2] ?? "",
+                    position: getPosition(beforeRange),
+                };
+            }
+        }
+    }
+    return {
+        type: undefined,
+        target: undefined,
+        search: "",
+    };
+}
+
+/**
+ * React hook for a Slate.js editor to track autocompletion (drop down completion of keywords).
+ */
+export function useAutocompletionState(): [
+    state: AutocompletionState,
+    setState: (newState: AutocompletionState) => void,
+] {
+    const [type, setType] = React.useState<AutocompletionState["type"]>();
+    const [target, setTarget] = React.useState<AutocompletionState["target"]>();
+    const [search, setSearch] = React.useState<AutocompletionState["search"]>("");
+    const [position, setPosition] = React.useState<[string, string]>(["0px", "0px"]);
+    // TODO: move position calculation here and make it not stateful. Requires 'editor' be passed in.
+
+    const setter = React.useCallback((newState: AutocompletionState) => {
+        if (newState.type === "entityReference" && newState.target !== undefined) {
+            setType(newState.type);
+            setTarget(newState.target);
+            setSearch(newState.search);
+            setPosition(newState.position);
+        } else {
+            setType(undefined);
+            setTarget(undefined);
+            setSearch("");
+            setPosition(["0px", "0px"]);
+        }
+    }, []);
+
+    return [{ type, target, search, position } as AutocompletionState, setter];
 }
