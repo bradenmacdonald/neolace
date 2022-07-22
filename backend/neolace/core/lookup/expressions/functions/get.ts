@@ -117,10 +117,29 @@ export class GetProperty extends LookupFunctionWithArgs {
         }
         const propType = propertyData["prop.type"] as PropertyType;
         const propMode = propertyData["prop.mode"] as PropertyMode;
+        const propDefaultValue = propertyData["prop.default"];
 
         if (propMode === PropertyMode.Auto) {
-            // This is an "auto" property, which means its value is determined by evaluating another lookup expression:
-            return await context.evaluateExpr(propertyData["prop.default"] ?? "null");
+            // This is an "auto" property, which means its value is determined by evaluating another lookup expression.
+            // Are we retieving it for one entry or many?
+            const forEntry = await (await this.fromEntriesExpr.getValue(context)).castTo(EntryValue, context);
+            if (forEntry !== undefined) {
+                // Yes, we are looking up this value for a single entry.
+                // Does the user have permission?
+                if (!await hasPermissions(context.subject, corePerm.viewEntryProperty.name, { entryId: forEntry.id })) {
+                    throw new LookupEvaluationError("You do not have permission to view that property.");
+                }
+                // Compute the value of this auto property:
+                const forEntryContext = context.getContextFor(forEntry.id);
+                return await forEntryContext.evaluateExpr(propDefaultValue || "null");
+            } else {
+                // We are lookup up this value property for many entries.
+                // To support this probably requires changing context.entryId to context.thisValue so that we can make
+                // 'this' into an entry set, and not just a single entry, while we evaluate this.
+                throw new LookupEvaluationError(
+                    "Getting a property from multiple entries is not yet supported by get()",
+                );
+            }
         } else if (propType === PropertyType.RelIsA || propType === PropertyType.RelOther) {
             // This is a relationship property.
             const startingEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
@@ -190,25 +209,28 @@ export class GetProperty extends LookupFunctionWithArgs {
                     throw new LookupEvaluationError("You do not have permission to view that property.");
                 }
 
-                // Get the value
-                const propFacts = await getEntryProperty({
+                // Get the values that are explicitly set on this entry
+                const propFacts = (await getEntryProperty({
                     entryId: forEntry.id,
                     propertyId: propValue.id,
                     tx: context.tx,
-                });
+                }))?.facts ?? [];
+
                 // Return this single value
-                if (propFacts?.facts.length) {
+                if (propFacts.length) {
                     // The property is set.
-                    if (propFacts?.facts.length === 1) {
+                    if (propFacts.length === 1) {
                         // And it has a single value
-                        return await context.evaluateExpr(propFacts.facts[0].valueExpression);
+                        const forEntryContext = context.getContextFor(forEntry.id);
+                        return await forEntryContext.evaluateExpr(propFacts[0].valueExpression);
                     } else {
                         // And it has multiple values
                         throw new LookupEvaluationError("Multiple property values not yet supported for get()");
                     }
-                } else if (propFacts?.property.default) {
+                } else if (propDefaultValue) {
                     // Return the default value.
-                    return await context.evaluateExpr(propFacts.property.default);
+                    const forEntryContext = context.getContextFor(forEntry.id);
+                    return await forEntryContext.evaluateExpr(propDefaultValue);
                 } else {
                     // Return null - the property is not set and has no default.
                     return new NullValue();

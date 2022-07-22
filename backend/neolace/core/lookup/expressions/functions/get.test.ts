@@ -71,11 +71,11 @@ group("get.ts", () => {
     });
 
     group("get() - value property, single entry, multiple values", () => {
-        // TODO
+        // TODO: implement this
     });
 
     group("get() - value property, multiple entries", () => {
-        // TODO
+        // TODO: implement this
     });
 
     group("get() - auto property", () => {
@@ -96,6 +96,18 @@ group("get.ts", () => {
                     sourceExpressionEntryId: defaultData.entries.genusThuja.id,
                 }),
             );
+        });
+        test(`Can retrieve an automatically-computed reverse relationship property value without 'this' being set`, async () => {
+            // Thuja.get(prop=parentGenus) when 'this' is not set should be equal to
+            // this.get(prop=parentGenus)  when 'this' is Thuja.
+            const expression1 = new GetProperty(
+                new LiteralExpression(new EntryValue(defaultData.entries.genusThuja.id)),
+                { prop: genusSpecies }, // This property in turn evalutes 'this.reverse(prop=prop("_parentGenus"))'
+            );
+            const expression2 = new GetProperty(new This(), { prop: genusSpecies });
+            const value1 = await context.evaluateExprConcrete(expression1, undefined);
+            const value2 = await context.evaluateExprConcrete(expression2, defaultData.entries.genusThuja.id);
+            assertEquals(value1, value2);
         });
     });
 
