@@ -24,9 +24,9 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
         cypherQuery: CypherQuery,
         options: {
             annotations?: Record<string, AnnotationReviver>;
-            sourceExpression?: LookupExpression;
-            sourceExpressionEntryId?: VNID;
-        } = {},
+            sourceExpression?: LookupExpression | undefined;
+            sourceExpressionEntryId?: VNID | undefined;
+        },
     ) {
         super(context, cypherQuery, options.sourceExpression, options.sourceExpressionEntryId);
         this.annotations = options.annotations;
@@ -50,6 +50,17 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
             } else {
                 return new EntryValue(r["entry.id"]);
             }
+        });
+    }
+
+    public cloneWithSourceExpression(
+        sourceExpression: LookupExpression | undefined,
+        sourceExpressionEntryId: VNID | undefined,
+    ): LazyEntrySetValue {
+        return new LazyEntrySetValue(this.context, this.cypherQuery, {
+            annotations: this.annotations,
+            sourceExpression,
+            sourceExpressionEntryId,
         });
     }
 }

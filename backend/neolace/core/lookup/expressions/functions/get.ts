@@ -24,6 +24,7 @@ import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
 import { hasPermissions, makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
+import { hasSourceExpression } from "../../values/base.ts";
 
 /**
  * Helper function to read annotated rank values from a database query result
@@ -131,7 +132,11 @@ export class GetProperty extends LookupFunctionWithArgs {
                 }
                 // Compute the value of this auto property:
                 const forEntryContext = context.getContextFor(forEntry.id);
-                return await forEntryContext.evaluateExpr(propDefaultValue || "null");
+                let value = await forEntryContext.evaluateExpr(propDefaultValue || "null");
+                if (hasSourceExpression(value)) {
+                    value = value.cloneWithSourceExpression(this, context.entryId);
+                }
+                return value;
             } else {
                 // We are lookup up this value property for many entries.
                 // To support this probably requires changing context.entryId to context.thisValue so that we can make
@@ -223,6 +228,8 @@ export class GetProperty extends LookupFunctionWithArgs {
                         // And it has a single value
                         const forEntryContext = context.getContextFor(forEntry.id);
                         return await forEntryContext.evaluateExpr(propFacts[0].valueExpression);
+                        // TODO: ^ In this case, we should evaluate the expression without a transaction (support
+                        // simple expressions only, not complex database lookups)
                     } else {
                         // And it has multiple values
                         throw new LookupEvaluationError("Multiple property values not yet supported for get()");

@@ -22,7 +22,6 @@ import {
 import { GetProperty } from "./get.ts";
 import { This } from "../this.ts";
 import { LiteralExpression } from "../literal-expr.ts";
-import { ReverseProperty } from "./reverse.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 import { Always, EntryTypesCondition, PermissionGrant } from "neolace/core/permissions/grant.ts";
@@ -44,7 +43,6 @@ group("get.ts", () => {
     const partIsAPart = makeProp(defaultData.schema.properties._partIsAPart.id);
     const hasPart = makeProp(defaultData.schema.properties._hasPart.id);
     const genusSpecies = makeProp(defaultData.schema.properties._genusSpecies.id);
-    const parentGenus = makeProp(defaultData.schema.properties._parentGenus.id);
 
     // When retrieving the entry values from a relationship property, they are "annotated" with data like this:
     const defaultAnnotations = {
@@ -90,9 +88,7 @@ group("get.ts", () => {
                     pageSize: 10n,
                     startedAt: 0n,
                     totalCount: 1n,
-                    // Note that in this case, sourceExpression is not this.get(prop=...), but rather this.reverse(...)
-                    // since that's the "real" lookup expression being used here.
-                    sourceExpression: new ReverseProperty(new This(), { prop: parentGenus }),
+                    sourceExpression: expression,
                     sourceExpressionEntryId: defaultData.entries.genusThuja.id,
                 }),
             );
@@ -107,7 +103,11 @@ group("get.ts", () => {
             const expression2 = new GetProperty(new This(), { prop: genusSpecies });
             const value1 = await context.evaluateExprConcrete(expression1, undefined);
             const value2 = await context.evaluateExprConcrete(expression2, defaultData.entries.genusThuja.id);
-            assertEquals(value1, value2);
+            assertInstanceOf(value1, PageValue);
+            assertInstanceOf(value2, PageValue);
+            assertEquals(value1.values, value2.values);
+            assertEquals(value1.sourceExpression, expression1);
+            assertEquals(value2.sourceExpression, expression2);
         });
     });
 

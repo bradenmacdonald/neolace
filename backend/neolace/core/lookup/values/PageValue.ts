@@ -1,20 +1,20 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import type * as api from "neolace/deps/neolace-api.ts";
 import type { LookupExpression } from "../expressions/base.ts";
-import { ConcreteValue } from "./base.ts";
+import { ConcreteValue, IHasSourceExpression } from "./base.ts";
 
 /**
  * A subset of values from a larger value set.
  */
-export class PageValue<T extends ConcreteValue> extends ConcreteValue {
+export class PageValue<T extends ConcreteValue> extends ConcreteValue implements IHasSourceExpression {
     readonly values: ReadonlyArray<T>;
     readonly startedAt: bigint; // Also called "skip"
     readonly pageSize: bigint; // Also called "limit"
     readonly totalCount: bigint;
     /** The source expression can be used along with slice() to retrieve additional pages of the result. */
-    readonly sourceExpression?: LookupExpression;
+    readonly sourceExpression: LookupExpression | undefined;
     /** The entry used for any "this" expressions in the sourceExpression. This could be removed if we could erase "this" expressions. */
-    readonly sourceExpressionEntryId?: VNID;
+    readonly sourceExpressionEntryId: VNID | undefined;
 
     constructor(
         values: ReadonlyArray<T>,
@@ -22,8 +22,8 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
             startedAt: bigint;
             pageSize: bigint;
             totalCount: bigint;
-            sourceExpression?: LookupExpression;
-            sourceExpressionEntryId?: VNID;
+            sourceExpression: LookupExpression | undefined;
+            sourceExpressionEntryId: VNID | undefined;
         },
     ) {
         super();
@@ -56,9 +56,16 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue {
         return v;
     }
 
-    /** Helper method to quickly make a "Page" value from a fixed array of values */
-    static from<T extends ConcreteValue>(values: T[], minPageSize = 1n): PageValue<T> {
-        const pageSize = values.length < minPageSize ? minPageSize : BigInt(values.length);
-        return new PageValue(values, { startedAt: 0n, pageSize, totalCount: BigInt(values.length) });
+    public cloneWithSourceExpression(
+        sourceExpression: LookupExpression | undefined,
+        sourceExpressionEntryId: VNID | undefined,
+    ): this {
+        return new PageValue(this.values, {
+            pageSize: this.pageSize,
+            startedAt: this.startedAt,
+            totalCount: this.totalCount,
+            sourceExpression,
+            sourceExpressionEntryId,
+        }) as typeof this;
     }
 }

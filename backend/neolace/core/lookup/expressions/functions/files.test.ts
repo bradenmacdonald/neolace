@@ -141,7 +141,13 @@ group("files.ts", () => {
                         "application/pdf",
                         secondPdf.size,
                     ),
-                ], { startedAt: 0n, pageSize: 10n, totalCount: 2n, sourceExpression: expression }),
+                ], {
+                    startedAt: 0n,
+                    pageSize: 10n,
+                    totalCount: 2n,
+                    sourceExpression: expression,
+                    sourceExpressionEntryId: undefined,
+                }),
             );
         });
 
@@ -199,7 +205,13 @@ group("files.ts", () => {
 
         assertEquals(
             await context.evaluateExprConcrete(expression),
-            new PageValue([], { startedAt: 0n, pageSize: 10n, totalCount: 0n, sourceExpression: expression }),
+            new PageValue([], {
+                startedAt: 0n,
+                pageSize: 10n,
+                totalCount: 0n,
+                sourceExpression: expression,
+                sourceExpressionEntryId: undefined,
+            }),
         );
     });
 

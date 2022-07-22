@@ -30,9 +30,10 @@ export class EntryValue extends ConcreteValue implements IHasLiteralExpression {
             return new LazyEntrySetValue(
                 context,
                 C`
-                MATCH (entry:${Entry} {id: ${this.id}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
-                WITH entry, {} AS annotations
-            `,
+                    MATCH (entry:${Entry} {id: ${this.id}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
+                    WITH entry, {} AS annotations
+                `,
+                { sourceExpression: undefined, sourceExpressionEntryId: undefined },
             );
         }
         return undefined;

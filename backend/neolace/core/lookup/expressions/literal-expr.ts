@@ -10,7 +10,7 @@ import { LookupContext } from "../context.ts";
  * e.g. "hello" is a string literal, but `{1 + 1} is two` is not.
  */
 export class LiteralExpression extends LookupExpression {
-    private readonly value: ConcreteValue & IHasLiteralExpression;
+    public readonly value: ConcreteValue & IHasLiteralExpression;
 
     constructor(value: ConcreteValue) {
         super();

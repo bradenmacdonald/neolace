@@ -167,7 +167,6 @@ export async function getEntryProperties<TC extends true | undefined = undefined
             MATCH (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
                 WHERE
                     ${options.specificPropertyId ? C`prop.id = ${options.specificPropertyId} AND` : C``}
-                    // TODO: use NULL or "" but not both
                     prop.default <> ""
                     AND prop.rank <= ${maxRank}
                     AND NOT exists((entry)-[:${Entry.rel.IS_A}*0..50]->(:${Entry})-[:PROP_FACT]->(:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop))
