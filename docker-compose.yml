@@ -69,7 +69,7 @@ services:
   # Redis cache / message queue
   ################################################################
   redis:
-    image: redis:6.0-alpine
+    image: redis:7.0-alpine
     command: >
      --requirepass devpassword
     # Redis DB 0 is used by the neolace backend.
@@ -123,7 +123,7 @@ services:
   # TypeSense (search server)
   ################################################################
   search:
-    image: typesense/typesense:0.23.0
+    image: typesense/typesense:0.23.1
     ports:
       - 5556:8108
     command: >
@@ -138,7 +138,7 @@ services:
   # S3-compatible object storage (used only for development)
   ################################################################
   objstore:
-    image: minio/minio:RELEASE.2021-10-27T16-29-42Z
+    image: minio/minio:RELEASE.2022-07-08T00-05-23Z
     entrypoint: sh
     # command: ["server", "/data"]
     # Create the two default buckets for dev and test configurations, then start the server:

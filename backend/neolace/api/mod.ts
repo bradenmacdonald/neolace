@@ -349,8 +349,8 @@ export function adaptErrors(...mapping: (string | ConvertErrorPathToField)[]) {
  * The above example means that any errors in validting the "slugId" field should be remapped to the "username" field,
  * and the API consumer will see a message that the "username" field was invalid.
  */
-adaptErrors.remap = (errorPath: string, requestPath: string) =>
-    (field: string) => field === errorPath ? requestPath : undefined;
+adaptErrors.remap = (errorPath: string, requestPath: string) => (field: string) =>
+    field === errorPath ? requestPath : undefined;
 
 function convertStandardErrors(err: Error): void {
     if (err.name === "Neo4jError") {

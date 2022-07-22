@@ -248,8 +248,8 @@ export class EntryTypesCondition extends GrantCondition {
             const entryTypeIds = [...this.onlyEntryTypes]; // We already know this contains at least one ID
             let predicate = C`(entry)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType} {id: ${entryTypeIds.pop()}})`;
             while (entryTypeIds.length > 0) {
-                predicate = C
-                    `${predicate} OR (entry)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType} {id: ${entryTypeIds.pop()}})`;
+                predicate =
+                    C`${predicate} OR (entry)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType} {id: ${entryTypeIds.pop()}})`;
             }
             return predicate;
         }

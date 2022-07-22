@@ -7,7 +7,7 @@
         {
             "name": "Run neolace server",
             "request": "launch",
-            "type": "pwa-node",
+            "type": "node",
             "cwd": "${workspaceFolder}",
             "runtimeExecutable": "deno",
             "env": {
@@ -16,7 +16,6 @@
             "runtimeArgs": [
                 "run",
                 "--inspect",
-                "--import-map=import_map.json",
                 "--allow-net",
                 "--allow-env",
                 "--allow-read",
@@ -28,7 +27,7 @@
         /*{
             "name": "Deno: Setup test data",
             "request": "launch",
-            "type": "pwa-node",
+            "type": "node",
             "cwd": "${workspaceFolder}",
             "runtimeExecutable": "deno",
             "env": {
