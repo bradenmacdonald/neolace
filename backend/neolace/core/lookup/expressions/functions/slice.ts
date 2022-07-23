@@ -1,5 +1,12 @@
 import { LookupExpression } from "../base.ts";
-import { IntegerValue, isCountableValue, isIterableValue, PageValue } from "../../values.ts";
+import {
+    BooleanValue,
+    ConcreteValue,
+    IntegerValue,
+    isCountableValue,
+    isIterableValue,
+    PageValue,
+} from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
@@ -31,12 +38,28 @@ export class Slice extends LookupFunctionWithArgs {
         return this.otherArgs["size"];
     }
 
-    protected override validateArgs(): void {
-        this.requireArgs([], { optional: ["start", "end", "size"] });
+    /**
+     * If the expression to slice is already a slice, "unslice" it and then re-slice it.
+     * This is an advanced use cases mostly for implementing pagination in the UI. Generally you won't need to use this.
+     */
+    public get resliceExpr(): LookupExpression | undefined {
+        return this.otherArgs["reslice"];
     }
 
-    public async getValue(context: LookupContext) {
-        const iterableValue = await this.iterableExpr.getValue(context);
+    protected override validateArgs(): void {
+        this.requireArgs([], { optional: ["start", "end", "size", "reslice"] });
+    }
+
+    public async getValue(context: LookupContext): Promise<PageValue<ConcreteValue>> {
+        const reslice: boolean = this.resliceExpr
+            ? (await this.resliceExpr.getValueAs(BooleanValue, context)).value
+            : false;
+        let iterableExpr = this.iterableExpr;
+        if (reslice && this.iterableExpr instanceof Slice) {
+            iterableExpr = this.iterableExpr.iterableExpr;
+        }
+        // This is the iteral that we're going to take a slice out of:
+        const iterableValue = await iterableExpr.getValue(context);
 
         if (!isIterableValue(iterableValue)) {
             throw new LookupEvaluationError(
@@ -107,7 +130,7 @@ export class Slice extends LookupFunctionWithArgs {
             startedAt: start,
             totalCount,
             pageSize: size,
-            sourceExpression: this.iterableExpr,
+            sourceExpression: iterableExpr,
             sourceExpressionEntryId: context.entryId,
         });
     }

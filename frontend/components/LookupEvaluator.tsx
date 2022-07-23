@@ -77,7 +77,7 @@ export const LookupEvaluatorWithPagination: React.FunctionComponent<Props> = (pr
         const numPagesTotal = Math.ceil(pageData.totalCount / numValuesPerPage);
         const pages = [];
         for (let i = 0; i < numPagesDisplayed; i++) {
-            const expr = i === 0 ? props.expr : `slice(${props.expr}, start=${i * numValuesPerPage}, size=${numValuesPerPage})`;
+            const expr = i === 0 ? props.expr : `slice(${props.expr}, start=${i * numValuesPerPage}, size=${numValuesPerPage}, reslice=true)`;
             pages.push(<LookupEvaluator key={expr} expr={expr} mdtContext={props.mdtContext} hideShowMoreLink={true} pageSize={props.pageSize} />);
         }
         return <>
