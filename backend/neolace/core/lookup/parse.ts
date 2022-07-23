@@ -25,6 +25,8 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
     lookup = lookup.trim();
 
     if (lookup === "null") return new LiteralExpression(new V.NullValue());
+    if (lookup === "true") return new LiteralExpression(new V.BooleanValue(true));
+    if (lookup === "false") return new LiteralExpression(new V.BooleanValue(false));
     if (lookup === "this") return new This();
 
     const recursiveParse = (otherLookup: string) => parseLookupString(otherLookup, withExtraFunctions);

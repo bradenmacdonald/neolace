@@ -1,5 +1,5 @@
 import { assertEquals, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
-import { ConcreteValue, IntegerValue, PageValue, StringValue } from "../../values.ts";
+import { BooleanValue, ConcreteValue, IntegerValue, PageValue, StringValue } from "../../values.ts";
 
 import { Slice } from "./slice.ts";
 import { List } from "../list-expr.ts";
@@ -104,6 +104,32 @@ group("slice.ts", () => {
             const expression = new Slice(tenList, { end: int(-3), size: int(2) });
             const value = await context.evaluateExprConcrete(expression);
             check(value, tenListValues.slice(0, 2), { startedAt: 0n });
+        });
+
+        test("slice can be resliced: slice(list, start=2, size=2).slice(start=5, size=4, reslice=true) is the same as slice(list, start=5, size=4)", async () => {
+            const firstSlice = new Slice(tenList, { start: int(2), size: int(2) });
+            const desiredSliceParams = { start: int(5), size: int(4) };
+            const reslice = new Slice(firstSlice, {
+                ...desiredSliceParams,
+                reslice: new LiteralExpression(new BooleanValue(true)),
+            });
+            const directSlice = new Slice(tenList, desiredSliceParams);
+            assertEquals(
+                await context.evaluateExprConcrete(reslice),
+                await context.evaluateExprConcrete(directSlice),
+            );
+        });
+
+        test("reslice=true has no effect on a normal slice", async () => {
+            const expression1 = new Slice(tenList, { end: int(-3), size: int(2) });
+            const expression2 = new Slice(tenList, {
+                end: int(-3),
+                size: int(2),
+                reslice: new LiteralExpression(new BooleanValue(true)),
+            });
+            const value1 = await context.evaluateExprConcrete(expression1);
+            const value2 = await context.evaluateExprConcrete(expression2);
+            assertEquals(value1, value2);
         });
     });
 });

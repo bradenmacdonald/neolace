@@ -43,6 +43,18 @@ group("parse.ts", () => {
         assertNotEquals(new Ancestors(new This()), new AndAncestors(new This())); // Ancestors != AndAncestors
     });
 
+    test("Basic expressions", () => {
+        checkParse("this", new This());
+        checkParse("null", new LiteralExpression(new V.NullValue()));
+        checkParse("true", new LiteralExpression(new V.BooleanValue(true)));
+        checkParse("false", new LiteralExpression(new V.BooleanValue(false)));
+    });
+
+    test("Strings", () => {
+        checkParse(`"hello"`, new LiteralExpression(new V.StringValue("hello")));
+        checkParse(`"hello \\"escaped quotes\\""`, new LiteralExpression(new V.StringValue('hello "escaped quotes"')));
+    });
+
     test("Invalid", () => {
         assertThrows(() => parseLookupString("foobar"), LookupParseError);
         assertThrows(() => parseLookupString(".ancestors()"), LookupParseError);
