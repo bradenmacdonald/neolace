@@ -16,7 +16,7 @@ export class List extends LookupExpression {
         this.items = items;
     }
 
-    public async getValue(context: LookupContext) {
+    public async getValue(context: LookupContext): Promise<LazyIterableValue> {
         // We return a lazy value so that e.g. you can get the count() or first() of the list without evaluating any
         // expensive expressions within the list.
         return new LazyIterableValue({
@@ -29,6 +29,8 @@ export class List extends LookupExpression {
                     this.items.slice(Number(offset), Number(offset + numItems)).map((v) => v.getValue(context)),
                 );
             },
+            sourceExpression: this,
+            sourceExpressionEntryId: context.entryId,
         });
     }
 

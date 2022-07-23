@@ -19,4 +19,14 @@ export class LazyCypherIterableValue<ValueType extends LookupValue> extends Abst
     ) {
         super(context, cypherQuery, options.sourceExpression, options.sourceExpressionEntryId);
     }
+
+    public cloneWithSourceExpression(
+        sourceExpression: LookupExpression,
+        sourceExpressionEntryId: VNID,
+    ): LazyCypherIterableValue<ValueType> {
+        return new LazyCypherIterableValue(this.context, this.cypherQuery, this.getSlice, {
+            sourceExpression,
+            sourceExpressionEntryId,
+        });
+    }
 }

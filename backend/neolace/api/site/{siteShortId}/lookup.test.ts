@@ -26,8 +26,9 @@ group("lookup.ts", () => {
     test("It can evaluate an AUTO relationship property and return a reference cache with details of each entry", async () => {
         const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
+        const expr = `this.get(prop=prop("${defaultData.schema.properties._relImages.id}"))`;
         const result = await client.evaluateLookupExpression(
-            `this.get(prop=prop("${defaultData.schema.properties._relImages.id}"))`,
+            expr,
             { entryKey: defaultData.entries.ponderosaPine.friendlyId },
         );
 
@@ -53,10 +54,7 @@ group("lookup.ts", () => {
                     height: 2336,
                 },
             ],
-            source: {
-                expr: `this.andDescendants().reverse(prop=prop("${defaultData.schema.properties._imgRelTo.id}"))`,
-                entryId: defaultData.entries.ponderosaPine.id,
-            },
+            source: { expr, entryId: defaultData.entries.ponderosaPine.id },
         });
         assertEquals(
             result.referenceCache.entries[defaultData.entries.imgPonderosaTrunk.id]?.name,

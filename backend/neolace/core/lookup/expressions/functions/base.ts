@@ -2,6 +2,8 @@ import { LookupExpression } from "../base.ts";
 import { LookupEvaluationError, LookupParseError } from "../../errors.ts";
 import { This } from "../this.ts";
 import { List } from "../list-expr.ts";
+import { LiteralExpression } from "../../expressions.ts";
+import { EntryTypeValue, EntryValue, PropertyValue } from "../../values.ts";
 
 /**
  * A lookup expression that is a function, like count(), first(), or if(...)
@@ -74,7 +76,12 @@ export abstract class LookupFunctionOneArg extends LookupFunction {
         if (
             this.firstArg instanceof This ||
             this.firstArg instanceof LookupFunction ||
-            this.firstArg instanceof List
+            this.firstArg instanceof List ||
+            this.firstArg instanceof LiteralExpression && (
+                    this.firstArg.value instanceof EntryValue ||
+                    this.firstArg.value instanceof PropertyValue ||
+                    this.firstArg.value instanceof EntryTypeValue
+                )
         ) {
             return `${this.firstArg.toString()}.${this.functionName}()`;
         }

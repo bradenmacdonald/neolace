@@ -4,7 +4,7 @@ import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Site } from "neolace/core/Site.ts";
 import type { LookupContext } from "../context.ts";
 import type { LookupExpression } from "../expressions/base.ts";
-import { ClassOf, ConcreteValue, IIterableValue, LazyValue, LookupValue } from "./base.ts";
+import { ClassOf, ConcreteValue, IHasSourceExpression, IIterableValue, LazyValue, LookupValue } from "./base.ts";
 import { EntryValue } from "./EntryValue.ts";
 import { PageValue } from "./PageValue.ts";
 import { LazyEntrySetValue } from "./LazyEntrySetValue.ts";
@@ -15,20 +15,20 @@ import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 /**
  * Some collection of iterable values, or abstract generator that can produce values.
  */
-export class LazyIterableValue extends LazyValue implements IIterableValue {
+export class LazyIterableValue extends LazyValue implements IIterableValue, IHasSourceExpression {
     readonly hasCount: boolean;
     public readonly isIterable = true;
     public getCount?: () => Promise<bigint>;
     public getSlice: (offset: bigint, numItems: bigint) => Promise<LookupValue[]>;
-    public readonly sourceExpression?: LookupExpression;
-    public readonly sourceExpressionEntryId?: VNID;
+    public readonly sourceExpression: LookupExpression | undefined;
+    public readonly sourceExpressionEntryId: VNID | undefined;
 
     constructor({ context, getCount, getSlice, ...misc }: {
         context: LookupContext;
         getCount?: () => Promise<bigint>;
         getSlice: (offset: bigint, numItems: bigint) => Promise<LookupValue[]>;
-        sourceExpression?: LookupExpression;
-        sourceExpressionEntryId?: VNID;
+        sourceExpression: LookupExpression | undefined;
+        sourceExpressionEntryId: VNID | undefined;
     }) {
         super(context);
         this.hasCount = getCount !== undefined;
@@ -130,9 +130,25 @@ export class LazyIterableValue extends LazyValue implements IIterableValue {
                 WITH entry, {} AS annotations
             `;
 
-            return new LazyEntrySetValue(context, query);
+            return new LazyEntrySetValue(context, query, {
+                sourceExpression: this.sourceExpression,
+                sourceExpressionEntryId: this.sourceExpressionEntryId,
+            });
         }
         return undefined;
+    }
+
+    public cloneWithSourceExpression(
+        sourceExpression: LookupExpression | undefined,
+        sourceExpressionEntryId: VNID | undefined,
+    ): LazyIterableValue {
+        return new LazyIterableValue({
+            context: this.context,
+            getCount: this.getCount,
+            getSlice: this.getSlice,
+            sourceExpression,
+            sourceExpressionEntryId,
+        });
     }
 
     /** Allow lookup function code to easily iterate over these values */

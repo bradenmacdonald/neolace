@@ -7,6 +7,7 @@ import { LookupError } from "neolace/core/lookup/errors.ts";
 import {
     AnnotatedValue,
     ConcreteValue,
+    EntryValue,
     ErrorValue,
     InlineMarkdownStringValue,
     IntegerValue,
@@ -19,8 +20,9 @@ import { EntryPropertyValueSet, getEntryProperties } from "neolace/core/entry/pr
 import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-data.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
-import { GetProperty, LiteralExpression, This } from "neolace/core/lookup/expressions.ts";
+import { GetProperty, LiteralExpression } from "neolace/core/lookup/expressions.ts";
 import { hasPermissions } from "neolace/core/permissions/check.ts";
+import { hasSourceExpression } from "neolace/core/lookup/values/base.ts";
 
 /**
  * Helper function to wrap an async function so that it only runs at most once. If you don't need/call it, it won't run
@@ -135,7 +137,7 @@ export async function getEntry(
             prop: EntryPropertyValueSet["property"],
         ) => {
             const extraAnnotations: Record<string, unknown> = {};
-            let innerValue = await lookupContext.evaluateExpr(fact.valueExpression).then((v) => v.makeConcrete());
+            let innerValue = await lookupContext.evaluateExpr(fact.valueExpression);
             if (prop.displayAs) {
                 // displayAs is used to format the value using Markdown, e.g. to convert it into a link
                 // or display it in italics. But we still make the original value avaiable as an annotation.
@@ -144,7 +146,20 @@ export async function getEntry(
                 extraAnnotations.plainValue = innerValue;
                 innerValue = new InlineMarkdownStringValue(prop.displayAs.replaceAll("{value}", innerValueAsString));
             }
-            return new AnnotatedValue(innerValue, {
+            if (hasSourceExpression(innerValue)) {
+                // Override the source expression. We may have evaluated something like 'this.ancestors().count()' but
+                // we want the source expression to be simply 'this.get(prop=prop(numberOfAncestors))'.
+                // e.g. if users see "Author Bob has 50 books: a, b, c, more..." and they click the "more" link, we want
+                // them to see the lookup query "Bob.get(prop=books)" not the actual query used
+                // "Bob.reverse(prop=Author)", which is the "real" query used to evaluate "Bob.get(prop=books)" but is
+                // harder to understand / more confusing.
+                const sourceExpr = new GetProperty(
+                    new LiteralExpression(new EntryValue(entryData.id)),
+                    { prop: new LiteralExpression(new PropertyValue(prop.id)) },
+                );
+                innerValue = innerValue.cloneWithSourceExpression(sourceExpr, entryData.id);
+            }
+            return new AnnotatedValue(await innerValue.makeConcrete(), {
                 propertyFactId: new StringValue(fact.propertyFactId),
                 source: new StringValue(fact.source.from === "ThisEntry" ? "ThisEntry" : "AncestorEntry"),
                 note: new InlineMarkdownStringValue(fact.note),
@@ -160,10 +175,18 @@ export async function getEntry(
             try {
                 if (facts.length === 0) {
                     if (property.default) {
-                        const innerValue = await lookupContext.evaluateExpr(property.default).then((v) =>
-                            v.makeConcrete()
-                        );
-                        value = new AnnotatedValue(innerValue, { source: new StringValue("Default") });
+                        let innerValue = await lookupContext.evaluateExpr(property.default);
+                        if (hasSourceExpression(innerValue)) {
+                            // Override the source expression. See explanation above.
+                            const sourceExpr = new GetProperty(
+                                new LiteralExpression(new EntryValue(entryData.id)),
+                                { prop: new LiteralExpression(new PropertyValue(property.id)) },
+                            );
+                            innerValue = innerValue.cloneWithSourceExpression(sourceExpr, entryData.id);
+                        }
+                        value = new AnnotatedValue(await innerValue.makeConcrete(), {
+                            source: new StringValue("Default"),
+                        });
                     } else {
                         throw new Error("Unexpected property with no values and no default");
                     }
@@ -180,7 +203,7 @@ export async function getEntry(
                             // Also pass along the lookup expression that can be used to retrieve the rest of the values
                             // from this property:
                             // this.get(prop=prop("_id"))
-                            sourceExpression: new GetProperty(new This(), {
+                            sourceExpression: new GetProperty(new LiteralExpression(new EntryValue(entryData.id)), {
                                 prop: new LiteralExpression(new PropertyValue(property.id)),
                             }),
                             sourceExpressionEntryId: entryData.id,

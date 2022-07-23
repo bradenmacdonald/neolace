@@ -37,7 +37,13 @@ group("basicSearch.ts", () => {
                 new EntryValue(defaultData.entries.japaneseWhitePine.id),
                 new EntryValue(defaultData.entries.jeffreyPine.id),
                 new EntryValue(defaultData.entries.pinyonPine.id),
-            ], { pageSize: 5n, startedAt: 0n, totalCount: 9n, sourceExpression: expr }),
+            ], {
+                pageSize: 5n,
+                startedAt: 0n,
+                totalCount: 9n,
+                sourceExpression: expr,
+                sourceExpressionEntryId: undefined,
+            }),
         );
     });
 
@@ -53,7 +59,13 @@ group("basicSearch.ts", () => {
                 new EntryValue(defaultData.entries.japaneseWhitePine.id), // friendlyId: "s-pinus-parviflora"
                 new EntryValue(defaultData.entries.ponderosaPine.id), // friendlyId: "s-pinus-ponderosa"
                 new EntryValue(defaultData.entries.stonePine.id), // friendlyId: "s-pinus-pinea"
-            ], { pageSize: 5n, startedAt: 0n, totalCount: 3n, sourceExpression: expr }),
+            ], {
+                pageSize: 5n,
+                startedAt: 0n,
+                totalCount: 3n,
+                sourceExpression: expr,
+                sourceExpressionEntryId: undefined,
+            }),
         );
     });
 
@@ -68,7 +80,13 @@ group("basicSearch.ts", () => {
                 // These are currently the only two properties with "name" in their property name:
                 new PropertyValue(defaultData.schema.properties._propOtherNames.id),
                 new PropertyValue(defaultData.schema.properties._propScientificName.id),
-            ], { pageSize: 5n, startedAt: 0n, totalCount: 2n, sourceExpression: expr }),
+            ], {
+                pageSize: 5n,
+                startedAt: 0n,
+                totalCount: 2n,
+                sourceExpression: expr,
+                sourceExpressionEntryId: undefined,
+            }),
         );
     });
 
@@ -83,7 +101,13 @@ group("basicSearch.ts", () => {
                 // In this case, we match both an entry type and a property:
                 new EntryTypeValue(defaultData.schema.entryTypes._ETSPECIES.id),
                 new PropertyValue(defaultData.schema.properties._genusSpecies.id),
-            ], { pageSize: 5n, startedAt: 0n, totalCount: 2n, sourceExpression: expr }),
+            ], {
+                pageSize: 5n,
+                startedAt: 0n,
+                totalCount: 2n,
+                sourceExpression: expr,
+                sourceExpressionEntryId: undefined,
+            }),
         );
     });
 
@@ -140,7 +164,13 @@ group("basicSearch.ts - permissions", () => {
                         // In this case, we match both an entry type and a property:
                         new EntryTypeValue(defaultData.schema.entryTypes._ETSPECIES.id),
                         new PropertyValue(defaultData.schema.properties._genusSpecies.id),
-                    ], { pageSize: 5n, startedAt: 0n, totalCount: 2n, sourceExpression: expression }),
+                    ], {
+                        pageSize: 5n,
+                        startedAt: 0n,
+                        totalCount: 2n,
+                        sourceExpression: expression,
+                        sourceExpressionEntryId: undefined,
+                    }),
                 );
             }
         }
@@ -176,7 +206,13 @@ group("basicSearch.ts - permissions", () => {
                         new EntryValue(defaultData.entries.orderPinales.id),
                         new EntryValue(defaultData.entries.genusPinus.id),
                         // Not matched due to permissions: "pinyonPine", "familyPinaceae", etc.
-                    ], { pageSize: 5n, startedAt: 0n, totalCount: 2n, sourceExpression: expression }),
+                    ], {
+                        pageSize: 5n,
+                        startedAt: 0n,
+                        totalCount: 2n,
+                        sourceExpression: expression,
+                        sourceExpressionEntryId: undefined,
+                    }),
                 );
             }
         }

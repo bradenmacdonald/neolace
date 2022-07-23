@@ -122,7 +122,11 @@ group("entry/index.test.ts", () => {
                                     annotations: { distance: { type: "Integer", value: "5" } },
                                 },
                             ],
-                            source: { expr: "this.ancestors()", entryId: ponderosaPine.id },
+                            source: {
+                                expr:
+                                    `entry("${ponderosaPine.id}").get(prop=prop("${defaultData.schema.properties._taxonomy.id}"))`,
+                                entryId: ponderosaPine.id,
+                            },
                             annotations: {
                                 // This value came from the default on the entry type, not the specific entry itself.
                                 source: { type: "String", value: "Default" },
@@ -159,7 +163,8 @@ group("entry/index.test.ts", () => {
                                 },
                             ],
                             source: {
-                                expr: `this.get(prop=prop("${defaultData.schema.properties._hasPart.id}"))`,
+                                expr:
+                                    `entry("${ponderosaPine.id}").get(prop=prop("${defaultData.schema.properties._hasPart.id}"))`,
                                 entryId: ponderosaPine.id,
                             },
                         },
@@ -195,7 +200,7 @@ group("entry/index.test.ts", () => {
                             ],
                             source: {
                                 expr:
-                                    `this.andDescendants().reverse(prop=prop("${defaultData.schema.properties._imgRelTo.id}"))`,
+                                    `entry("${ponderosaPine.id}").get(prop=prop("${defaultData.schema.properties._relImages.id}"))`,
                                 entryId: ponderosaPine.id,
                             },
                             annotations: {

@@ -129,6 +129,28 @@ export function isIterableValue(value: unknown): value is LookupValue & IIterabl
     return value instanceof LookupValue && (value as unknown as IIterableValue).isIterable === true;
 }
 
+/**
+ * This iterable has some original expression that generated it, e.g. 'this.ancestors()' could be the source exprsesion
+ * of a set of entries.
+ */
+export interface IHasSourceExpression {
+    sourceExpression: LookupExpression | undefined;
+    sourceExpressionEntryId: VNID | undefined;
+    /** Create a copy of this value, with a different source expression. Used to override source expression. */
+    cloneWithSourceExpression(
+        sourceExpression: LookupExpression | undefined,
+        sourceExpressionEntryId: VNID | undefined,
+    ): LookupValue;
+}
+
+export function hasSourceExpression(value: unknown): value is LookupValue & IHasSourceExpression {
+    return (
+        value instanceof LookupValue &&
+        (value as unknown as IHasSourceExpression).sourceExpression !== undefined &&
+        typeof (value as unknown as IHasSourceExpression).cloneWithSourceExpression === "function"
+    );
+}
+
 /** Any value that can always be expressed as a simple literal (e.g. an integer "5") should conform to this interface. */
 export interface IHasLiteralExpression {
     /**
@@ -171,7 +193,8 @@ export abstract class LazyValue extends LookupValue {
  * A cypher-based lookup / query that has not yet been evaluated. Expressions can wrap this query to control things like
  * pagination, annotations, or retrieve only the total count().
  */
-export abstract class AbstractLazyCypherQueryValue extends LazyValue implements ICountableValue, IIterableValue {
+export abstract class AbstractLazyCypherQueryValue extends LazyValue
+    implements ICountableValue, IIterableValue, IHasSourceExpression {
     public readonly hasCount = true;
     public readonly isIterable = true;
     private defaultPageSize: bigint;
@@ -183,13 +206,18 @@ export abstract class AbstractLazyCypherQueryValue extends LazyValue implements 
          */
         public readonly cypherQuery: CypherQuery,
         /** The lookup expression that evaluates to this query */
-        public readonly sourceExpression?: LookupExpression,
+        public readonly sourceExpression: LookupExpression | undefined,
         /** The entry used for any "this" expressions in the sourceExpression. This could be removed if we could erase "this" expressions. */
-        public readonly sourceExpressionEntryId?: VNID,
+        public readonly sourceExpressionEntryId: VNID | undefined,
     ) {
         super(context);
         this.defaultPageSize = context.defaultPageSize;
     }
+
+    public abstract cloneWithSourceExpression(
+        sourceExpression: LookupExpression,
+        sourceExpressionEntryId: VNID,
+    ): AbstractLazyCypherQueryValue;
 
     protected getSkipLimitClause(skip: bigint, limit: bigint) {
         if (typeof skip !== "bigint" || typeof limit !== "bigint") {
