@@ -11,7 +11,7 @@ import { EntryValue } from "./EntryValue.ts";
  *
  * It is only used with LazyEntrySetValue
  */
-type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue;
+type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue | undefined;
 
 /**
  * A cypher query that evaluates to a set of entries, with optional annotations (extra data associated with each entry)
@@ -44,7 +44,10 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
             if (this.annotations) {
                 const annotatedValues: Record<string, ConcreteValue> = {};
                 for (const key in this.annotations) {
-                    annotatedValues[key] = this.annotations[key](r.annotations[key]);
+                    const value = this.annotations[key](r.annotations[key]);
+                    if (value !== undefined) {
+                        annotatedValues[key] = value;
+                    }
                 }
                 return new AnnotatedValue(new EntryValue(r["entry.id"]), annotatedValues);
             } else {

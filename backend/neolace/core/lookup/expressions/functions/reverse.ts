@@ -9,57 +9,11 @@ import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 
 import { LookupExpression } from "../base.ts";
-import {
-    InlineMarkdownStringValue,
-    IntegerValue,
-    LazyEntrySetValue,
-    LookupValue,
-    NullValue,
-    PropertyValue,
-    StringValue,
-} from "../../values.ts";
+import { LazyEntrySetValue, LookupValue, PropertyValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
-
-/**
- * Helper function to read annotated rank values from a database query result
- */
-const dbRankToValue = (dbValue: unknown): IntegerValue | NullValue => {
-    if (typeof dbValue === "bigint") {
-        return new IntegerValue(dbValue);
-    } else if (dbValue === null) {
-        return new NullValue();
-    } else {
-        throw new LookupEvaluationError("Unexpected data type for 'rank' while evaluating lookup.");
-    }
-};
-
-/**
- * Helper function to read annotated note (markdown string) values from a database query result
- */
-const dbNoteToValue = (dbValue: unknown): InlineMarkdownStringValue | NullValue => {
-    if (typeof dbValue === "string") {
-        return new InlineMarkdownStringValue(dbValue);
-    } else {
-        throw new LookupEvaluationError("Unexpected data type for 'note' while evaluating lookup.");
-    }
-};
-
-/**
- * Helper function to read annotated slot values from a database query result
- */
-const dbSlotToValue = (dbValue: unknown): StringValue | NullValue => {
-    if (dbValue === null) {
-        // Slots are disabled for this property - return NULL
-        return new NullValue();
-    } else if (typeof dbValue === "string") {
-        // Slots are enabled for this property - return a string, which may be empty
-        return new StringValue(dbValue);
-    } else {
-        throw new LookupEvaluationError("Unexpected data type for 'slot' while evaluating lookup.");
-    }
-};
+import { dbNoteToValue, dbRankToValue, dbSlotToValue } from "./get.ts";
 
 /**
  * reverse([entry or entry set], prop=...)

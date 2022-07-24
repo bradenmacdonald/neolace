@@ -55,9 +55,7 @@ group("entry/index.test.ts", () => {
             const defaultAnnotations = {
                 // Default annotations on the value of a "normal" property value:
                 propertyFactId: { type: "String" },
-                note: { type: "InlineMarkdownString", value: "" },
                 rank: { type: "Integer", value: "1" },
-                slot: { type: "Null" },
                 source: { type: "String", value: "ThisEntry" },
             };
 

@@ -29,7 +29,7 @@ import { hasSourceExpression } from "../../values/base.ts";
 /**
  * Helper function to read annotated rank values from a database query result
  */
-const dbRankToValue = (dbValue: unknown): IntegerValue | NullValue => {
+export const dbRankToValue = (dbValue: unknown): IntegerValue | NullValue => {
     if (typeof dbValue === "bigint") {
         return new IntegerValue(dbValue);
     } else if (dbValue === null) {
@@ -42,21 +42,20 @@ const dbRankToValue = (dbValue: unknown): IntegerValue | NullValue => {
 /**
  * Helper function to read annotated note (markdown string) values from a database query result
  */
-const dbNoteToValue = (dbValue: unknown): InlineMarkdownStringValue | NullValue => {
-    if (typeof dbValue === "string") {
+export const dbNoteToValue = (dbValue: unknown): InlineMarkdownStringValue | undefined => {
+    if (typeof dbValue === "string" && dbValue !== "") {
         return new InlineMarkdownStringValue(dbValue);
-    } else {
-        throw new LookupEvaluationError("Unexpected data type for 'note' while evaluating lookup.");
     }
+    return undefined;
 };
 
 /**
  * Helper function to read annotated slot values from a database query result
  */
-const dbSlotToValue = (dbValue: unknown): StringValue | NullValue => {
+export const dbSlotToValue = (dbValue: unknown): StringValue | undefined => {
     if (dbValue === null) {
         // Slots are disabled for this property - return NULL
-        return new NullValue();
+        return undefined;
     } else if (typeof dbValue === "string") {
         // Slots are enabled for this property - return a string, which may be empty
         return new StringValue(dbValue);
