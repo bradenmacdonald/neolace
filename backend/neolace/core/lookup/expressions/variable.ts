@@ -1,7 +1,7 @@
 import { LookupExpression } from "./base.ts";
 import { LookupContext } from "../context.ts";
-import { LambdaValue } from "../values/LambdaValue.ts";
 import { LookupEvaluationError } from "../errors.ts";
+import { ErrorValue, LookupValue } from "../values.ts";
 
 /**
  * A variable is a placeholder that references a value.
@@ -16,11 +16,12 @@ export class Variable extends LookupExpression {
         super();
     }
 
-    public async getValue(_context: LookupContext): Promise<LambdaValue> {
+    public async getValue(context: LookupContext): Promise<LookupValue> {
         if (this.variableName === "this") {
             throw new LookupEvaluationError(`"${this.variableName}" cannot be used as a variable name.`);
         }
-        throw new LookupEvaluationError(`Temporarily, "${this.variableName}" cannot be evaluated.`);
+        return context.variables.get(this.variableName) ??
+            new ErrorValue(new LookupEvaluationError(`Undefined variable "${this.variableName}"`));
     }
 
     public toString(): string {

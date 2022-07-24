@@ -57,11 +57,9 @@ group("parse.ts", () => {
     });
 
     test("Invalid", () => {
-        assertThrows(() => parseLookupString("foobar"), LookupParseError);
         assertThrows(() => parseLookupString(".ancestors()"), LookupParseError);
         assertThrows(() => parseLookupString(".count()"), LookupParseError);
         assertThrows(() => parseLookupString("count(.)"), LookupParseError);
-        assertThrows(() => parseLookupString("count(foobar)"), LookupParseError);
         assertThrows(() => parseLookupString("unknownFunction()"), LookupParseError);
     });
     test("one argument functions", () => {

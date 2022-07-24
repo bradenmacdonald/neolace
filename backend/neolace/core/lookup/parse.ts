@@ -1,10 +1,9 @@
 import { LookupParseError } from "./errors.ts";
 import { LookupExpression } from "./expressions/base.ts";
-import { List, LiteralExpression, This } from "./expressions.ts";
+import { Lambda, List, LiteralExpression, This, Variable } from "./expressions.ts";
 import * as V from "./values.ts";
 import { type LookupFunctionClass } from "./expressions/functions/base.ts";
 import { builtInLookupFunctions } from "./expressions/functions/all-functions.ts";
-import { Lambda } from "./expressions/lambda.ts";
 
 /**
  * Parse a lookup expression.
@@ -40,7 +39,7 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
 
         // something.function()
         [
-            /^(.+)\.([A-za-z0-9_]+)\([ \t]*\)$/,
+            /^(.+)\.([A-Za-z0-9_]+)\([ \t]*\)$/,
             (m) => {
                 const something = m[1];
                 const functionName = m[2];
@@ -56,7 +55,7 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
 
         // function(something)
         [
-            /^([A-za-z0-9_]+)\((.+)\)$/,
+            /^([A-Za-z0-9_]+)\((.+)\)$/,
             (m) => {
                 const something = m[2];
                 const functionName = m[1];
@@ -72,7 +71,7 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
 
         // function()
         [
-            /^([A-za-z0-9_]+)\([ \t]*\)$/,
+            /^([A-Za-z0-9_]+)\([ \t]*\)$/,
             (m) => {
                 const functionName = m[1];
                 const allFunctions = builtInLookupFunctions.concat(withExtraFunctions);
@@ -87,7 +86,7 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
 
         // something.function(arg1=arg1Value)
         [
-            /^(.+)\.([A-za-z0-9_]+)\([ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            /^(.+)\.([A-Za-z0-9_]+)\([ \t]*([A-Za-z0-9_]+)[ \t]*=(.*)\)$/,
             (m) => {
                 const something = m[1];
                 const functionName = m[2];
@@ -107,7 +106,7 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
 
         // function(something, arg1=arg1Value)
         [
-            /^([A-za-z0-9_]+)\([ \t]*(.+),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            /^([A-Za-z0-9_]+)\([ \t]*(.+),[ \t]*([A-Za-z0-9_]+)[ \t]*=(.*)\)$/,
             (m) => {
                 const functionName = m[1];
                 const something = m[2];
@@ -127,7 +126,7 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
 
         // something.function(arg1=arg1Value, arg2=arg2value)
         [
-            /^(.+)\.([A-za-z0-9_]+)\([ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            /^(.+)\.([A-Za-z0-9_]+)\([ \t]*([A-Za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-Za-z0-9_]+)[ \t]*=(.*)\)$/,
             (m) => {
                 const something = m[1];
                 const functionName = m[2];
@@ -150,7 +149,7 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
 
         // function(something, arg1=arg1Value, arg2=arg2value)
         [
-            /^([A-za-z0-9_]+)\([ \t]*(.+),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            /^([A-Za-z0-9_]+)\([ \t]*(.+),[ \t]*([A-Za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-Za-z0-9_]+)[ \t]*=(.*)\)$/,
             (m) => {
                 const functionName = m[1];
                 const something = m[2];
@@ -173,7 +172,7 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
 
         // something.function(arg1=arg1Value, arg2=arg2value, arg3=arg3value)
         [
-            /^(.+)\.([A-za-z0-9_]+)\([ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            /^(.+)\.([A-Za-z0-9_]+)\([ \t]*([A-Za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-Za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-Za-z0-9_]+)[ \t]*=(.*)\)$/,
             (m) => {
                 const something = m[1];
                 const functionName = m[2];
@@ -199,7 +198,7 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
 
         // function(something, arg1=arg1Value, arg2=arg2value, arg3=arg3value)
         [
-            /^([A-za-z0-9_]+)\([ \t]*(.+),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-za-z0-9_]+)[ \t]*=(.*)\)$/,
+            /^([A-Za-z0-9_]+)\([ \t]*(.+),[ \t]*([A-Za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-Za-z0-9_]+)[ \t]*=(.*),[ \t]*([A-Za-z0-9_]+)[ \t]*=(.*)\)$/,
             (m) => {
                 const functionName = m[1];
                 const something = m[2];
@@ -223,19 +222,18 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
             },
         ],
 
-        // something, something123 - a variable
+        // something or something123 - a variable
         [
-            /^([A-za-z_][A-za-z0-9_]*)$/,
+            /^[A-Za-z_][A-Za-z0-9_]*$/,
             (m) => {
-                const variableName = m[1];
-                console.log("Encountered variable", variableName);
-                return new LiteralExpression(new V.NullValue());
+                const variableName = m[0];
+                return new Variable(variableName);
             },
         ],
 
         // (something -> expression)
         [
-            /^\([ \t]*([A-za-z_][A-za-z0-9_]*)[ \t]*\-\>[ \t]*(.*)\)$/,
+            /^\([ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*\-\>[ \t]*(.*)\)$/,
             (m) => {
                 const variableName = m[1];
                 const expressionString = m[2];
