@@ -19,6 +19,7 @@ export { GraphValue } from "./values/GraphValue.ts";
 export { ImageValue } from "./values/ImageValue.ts";
 export { InlineMarkdownStringValue } from "./values/InlineMarkdownStringValue.ts";
 export { IntegerValue } from "./values/IntegerValue.ts";
+export { LambdaValue } from "./values/LambdaValue.ts";
 export { LazyCypherIterableValue } from "./values/LazyCypherIterableValue.ts";
 export { LazyEntrySetValue } from "./values/LazyEntrySetValue.ts";
 export { LazyIterableValue } from "./values/LazyIterableValue.ts";

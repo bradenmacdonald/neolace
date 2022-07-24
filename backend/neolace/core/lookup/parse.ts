@@ -4,6 +4,7 @@ import { List, LiteralExpression, This } from "./expressions.ts";
 import * as V from "./values.ts";
 import { type LookupFunctionClass } from "./expressions/functions/base.ts";
 import { builtInLookupFunctions } from "./expressions/functions/all-functions.ts";
+import { Lambda } from "./expressions/lambda.ts";
 
 /**
  * Parse a lookup expression.
@@ -219,6 +220,26 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
                 } else {
                     throw new LookupParseError(`Unknown function: ${functionName}()`);
                 }
+            },
+        ],
+
+        // something, something123 - a variable
+        [
+            /^([A-za-z_][A-za-z0-9_]*)$/,
+            (m) => {
+                const variableName = m[1];
+                console.log("Encountered variable", variableName);
+                return new LiteralExpression(new V.NullValue());
+            },
+        ],
+
+        // (something -> expression)
+        [
+            /^\([ \t]*([A-za-z_][A-za-z0-9_]*)[ \t]*\-\>[ \t]*(.*)\)$/,
+            (m) => {
+                const variableName = m[1];
+                const expressionString = m[2];
+                return new Lambda(variableName, recursiveParse(expressionString));
             },
         ],
     ];

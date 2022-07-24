@@ -2,7 +2,7 @@ import { LookupExpression } from "../base.ts";
 import { LookupEvaluationError, LookupParseError } from "../../errors.ts";
 import { This } from "../this.ts";
 import { List } from "../list-expr.ts";
-import { LiteralExpression } from "../../expressions.ts";
+import { LiteralExpression, Variable } from "../../expressions.ts";
 import { EntryTypeValue, EntryValue, PropertyValue } from "../../values.ts";
 
 /**
@@ -77,6 +77,7 @@ export abstract class LookupFunctionOneArg extends LookupFunction {
             this.firstArg instanceof This ||
             this.firstArg instanceof LookupFunction ||
             this.firstArg instanceof List ||
+            this.firstArg instanceof Variable ||
             this.firstArg instanceof LiteralExpression && (
                     this.firstArg.value instanceof EntryValue ||
                     this.firstArg.value instanceof PropertyValue ||

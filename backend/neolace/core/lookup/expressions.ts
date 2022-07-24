@@ -1,5 +1,6 @@
 /** A helpful file to allow the import of all expression types */
 
+// Functions:
 export { AllEntries } from "./expressions/functions/allEntries.ts";
 export { Ancestors, AndAncestors } from "./expressions/functions/ancestors.ts";
 export { Annotate } from "./expressions/functions/annotate.ts";
@@ -17,10 +18,13 @@ export { First } from "./expressions/functions/first.ts";
 export { Graph } from "./expressions/functions/graph.ts";
 export { If } from "./expressions/functions/if.ts";
 export { Image } from "./expressions/functions/image.ts";
-export { List } from "./expressions/list-expr.ts";
-export { LiteralExpression } from "./expressions/literal-expr.ts";
 export { Markdown } from "./expressions/functions/markdown.ts";
 export { PropFunction } from "./expressions/functions/prop.ts";
 export { ReverseProperty } from "./expressions/functions/reverse.ts";
-export { This } from "./expressions/this.ts";
 export { Slice } from "./expressions/functions/slice.ts";
+// Non-functions:
+export { Lambda } from "./expressions/lambda.ts";
+export { List } from "./expressions/list-expr.ts";
+export { LiteralExpression } from "./expressions/literal-expr.ts";
+export { This } from "./expressions/this.ts";
+export { Variable } from "./expressions/variable.ts";
