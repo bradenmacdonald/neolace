@@ -5,7 +5,7 @@ import { LookupError, LookupParseError } from "./errors.ts";
 
 import type { LookupExpression } from "./expressions/base.ts";
 import { LookupFunctionClass } from "./expressions/functions/base.ts";
-import { parseLookupString } from "./parse.ts";
+import { parseLookupString } from "./parser/parser.ts";
 import { ErrorValue, LookupValue } from "./values.ts";
 
 // A symbol to pass private data into the LookupContext constructor
