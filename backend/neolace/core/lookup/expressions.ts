@@ -2,6 +2,7 @@
 
 export { AllEntries } from "./expressions/functions/allEntries.ts";
 export { Ancestors, AndAncestors } from "./expressions/functions/ancestors.ts";
+export { Annotate } from "./expressions/functions/annotate.ts";
 export { AndRelated } from "./expressions/functions/related.ts";
 export { BasicSearch } from "./expressions/functions/basicSearch.ts";
 export { Count } from "./expressions/functions/count.ts";
