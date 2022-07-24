@@ -6,6 +6,7 @@ import {
     Ancestors,
     AndAncestors,
     AndRelated,
+    Annotate,
     // Count,
     DateExpression,
     EntryFunction,
@@ -153,6 +154,28 @@ group("parse.ts", () => {
                 new LiteralExpression(new V.NullValue()),
                 new LiteralExpression(new V.IntegerValue(1)),
                 new LiteralExpression(new V.StringValue("hello")),
+            ]),
+        );
+        checkParse(
+            // Trailing comma
+            `[null, 1, "hello", ]`,
+            new List([
+                new LiteralExpression(new V.NullValue()),
+                new LiteralExpression(new V.IntegerValue(1)),
+                new LiteralExpression(new V.StringValue("hello")),
+            ]),
+        );
+        checkParse(
+            // Commas inside other values
+            `[null, 1, "hello, you", 123.annotate(a=1, b=2)]`,
+            new List([
+                new LiteralExpression(new V.NullValue()),
+                new LiteralExpression(new V.IntegerValue(1)),
+                new LiteralExpression(new V.StringValue("hello, you")),
+                new Annotate(new LiteralExpression(new V.IntegerValue(123n)), {
+                    a: new LiteralExpression(new V.IntegerValue(1)),
+                    b: new LiteralExpression(new V.IntegerValue(2)),
+                }),
             ]),
         );
     });

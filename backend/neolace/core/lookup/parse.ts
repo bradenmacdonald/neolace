@@ -247,8 +247,36 @@ export function parseLookupString(lookup: string, withExtraFunctions: LookupFunc
         if (lookup.length === 2) {
             return new List([]);
         }
-        const parts = lookup.substring(1, lookup.length - 1).split(",").map((part) => part.trim());
-        return new List(parts.map((part) => recursiveParse(part)));
+        // Hacky parsing to handle expressions in the list that may contain commas that aren't list separators:
+        const parts = [];
+        let nextPartStart = 1;
+        let commaAfter = 1;
+        while (nextPartStart < lookup.length - 1) {
+            commaAfter = lookup.indexOf(",", commaAfter);
+            const isLastPart = commaAfter === -1;
+            if (isLastPart) {
+                const lastPartStr = lookup.substring(nextPartStart, lookup.length - 1);
+                if (/^\s*$/.test(lastPartStr)) {
+                    // Last part is empty. We allow trailing commas.
+                } else {
+                    parts.push(recursiveParse(lastPartStr));
+                }
+                break;
+            } else {
+                const nextPartStr = lookup.substring(nextPartStart, commaAfter);
+                try {
+                    const p = recursiveParse(nextPartStr);
+                    nextPartStart = nextPartStart + nextPartStr.length + 1;
+                    commaAfter = nextPartStart;
+                    parts.push(p);
+                } catch (err) {
+                    if (err instanceof LookupParseError) {
+                        commaAfter++;
+                    } else throw err;
+                }
+            }
+        }
+        return new List(parts);
     }
 
     throw new LookupParseError(`Unable to parse the lookup expression "${lookup}"`);
