@@ -7,15 +7,7 @@ import {
     test,
     TestLookupContext,
 } from "neolace/lib/tests.ts";
-import {
-    EntryValue,
-    InlineMarkdownStringValue,
-    IntegerValue,
-    MakeAnnotatedEntryValue,
-    NullValue,
-    PageValue,
-    PropertyValue,
-} from "../../values.ts";
+import { EntryValue, IntegerValue, MakeAnnotatedEntryValue, PageValue, PropertyValue } from "../../values.ts";
 import { ReverseProperty } from "./reverse.ts";
 import { This } from "../this.ts";
 import { LiteralExpression } from "../literal-expr.ts";
@@ -38,8 +30,6 @@ group("reverse.ts", () => {
     // When retrieving the entry values from a relationship property, they are "annotated" with data like this:
     const defaultAnnotations = {
         rank: new IntegerValue(1n),
-        note: new InlineMarkdownStringValue(""),
-        slot: new NullValue(),
     };
 
     test(`Can reverse a simple IS A relationship property value`, async () => {

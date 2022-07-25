@@ -11,7 +11,6 @@ import {
     ErrorValue,
     InlineMarkdownStringValue,
     IntegerValue,
-    NullValue,
     PageValue,
     PropertyValue,
     StringValue,
@@ -159,12 +158,16 @@ export async function getEntry(
                 );
                 innerValue = innerValue.cloneWithSourceExpression(sourceExpr, entryData.id);
             }
+            if (fact.note) {
+                extraAnnotations.note = new InlineMarkdownStringValue(fact.note);
+            }
+            if (fact.slot) {
+                extraAnnotations.slot = new StringValue(fact.slot);
+            }
             return new AnnotatedValue(await innerValue.makeConcrete(), {
                 propertyFactId: new StringValue(fact.propertyFactId),
                 source: new StringValue(fact.source.from === "ThisEntry" ? "ThisEntry" : "AncestorEntry"),
-                note: new InlineMarkdownStringValue(fact.note),
                 rank: new IntegerValue(fact.rank),
-                slot: fact.slot ? new StringValue(fact.slot) : new NullValue(),
                 ...extraAnnotations,
             });
         };

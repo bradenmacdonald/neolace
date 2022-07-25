@@ -24,4 +24,8 @@ export class NullValue extends ConcreteValue implements IHasLiteralExpression {
         }
         return undefined;
     }
+
+    public override getSortString(): string {
+        return ""; // null values come first
+    }
 }

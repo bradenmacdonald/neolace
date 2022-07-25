@@ -101,7 +101,7 @@ group("edit tests", () => {
             const valueAfterEdit1 = getValue(await getEntry());
             assert(valueAfterEdit1?.type === "String");
             assertEquals(valueAfterEdit1.value, "Jeffrey's pine");
-            assertEquals(valueAfterEdit1.annotations?.note, { type: "InlineMarkdownString", value: "" });
+            assertEquals(valueAfterEdit1.annotations?.note, undefined);
             assertEquals(valueAfterEdit1.annotations?.rank, { type: "Integer", value: "1" }); // Is a string since our number type is bigint, which doesn't JSON serialize as Number
 
             // Now we give it a second value:

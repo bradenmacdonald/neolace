@@ -21,9 +21,14 @@ group("first.ts", () => {
         assertEquals(await context.evaluateExpr(expression), new NullValue());
     });
 
-    test(`It gives the first letter from a string`, async () => {
-        assertEquals(await context.evaluateExpr(new First(literal("Athens"))), new StringValue("A"));
-        assertEquals(await context.evaluateExpr(new First(literal("日本"))), new StringValue("日"));
+    test(`It does not give the first letter from a string`, async () => {
+        // In the future we want to allow .get().first() to give the first value regardless of whether .get() returns
+        // a single value or a list, so for now it's important to not treat strings as iterables.
+        await assertRejects(
+            () => context.evaluateExpr(new First(literal("Athens"))),
+            LookupEvaluationError,
+            `The expression ""Athens"" cannot be used with first().`,
+        );
     });
 
     test(`It gives the first value from a list`, async () => {
@@ -62,7 +67,6 @@ group("first.ts", () => {
     });
 
     test(`toString()`, async () => {
-        assertEquals((new First(literal("Athens"))).toString(), `first("Athens")`);
         assertEquals((new First(new List([literal(123n)]))).toString(), `[123].first()`);
     });
 });

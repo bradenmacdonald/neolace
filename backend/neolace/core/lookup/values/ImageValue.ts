@@ -58,4 +58,8 @@ export class ImageValue extends ConcreteValue {
             sizing: this.data.sizing,
         };
     }
+
+    public override getSortString(): string {
+        return ""; // doesn't really make sense to sort by these values.
+    }
 }

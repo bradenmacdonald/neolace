@@ -11,7 +11,6 @@ import {
 import {
     AnnotatedValue,
     EntryValue,
-    InlineMarkdownStringValue,
     IntegerValue,
     MakeAnnotatedEntryValue,
     NullValue,
@@ -47,8 +46,6 @@ group("get.ts", () => {
     // When retrieving the entry values from a relationship property, they are "annotated" with data like this:
     const defaultAnnotations = {
         rank: new IntegerValue(1n),
-        note: new InlineMarkdownStringValue(""),
-        slot: new NullValue(),
     };
 
     group("get() - value property, single entry, single value", () => {

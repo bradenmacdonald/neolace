@@ -22,7 +22,7 @@ import { LiteralExpression } from "../literal-expr.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { GetProperty } from "./get.ts";
 import { First } from "./first.ts";
-import { parseLookupString } from "../../parse.ts";
+import { parseLookupString } from "../../parser/parser.ts";
 import { ReverseProperty } from "./reverse.ts";
 
 group("image.ts", () => {

@@ -5,7 +5,7 @@ import { LookupError, LookupParseError } from "./errors.ts";
 
 import type { LookupExpression } from "./expressions/base.ts";
 import { LookupFunctionClass } from "./expressions/functions/base.ts";
-import { parseLookupString } from "./parse.ts";
+import { parseLookupString } from "./parser/parser.ts";
 import { ErrorValue, LookupValue } from "./values.ts";
 
 // A symbol to pass private data into the LookupContext constructor
@@ -31,6 +31,8 @@ export class LookupContext {
     public readonly entryId?: VNID;
     /** If lookup result values have to be paginated in this context, what's the default page size? */
     public readonly defaultPageSize: bigint;
+    /** Any user-defined variables that are in scope in this context. */
+    public readonly variables: ReadonlyMap<string, LookupValue>;
     private _cache: Map<string, LookupValue>;
 
     constructor(args: {
@@ -39,6 +41,8 @@ export class LookupContext {
         userId?: VNID;
         entryId?: VNID;
         defaultPageSize?: bigint;
+        /** Any user-defined variables that are in scope in this context. */
+        variables?: ReadonlyMap<string, LookupValue>;
         [_internalCache]?: Map<string, LookupValue>;
     }) {
         // protected _cache = new Map<string, LookupValue>(),
@@ -47,6 +51,7 @@ export class LookupContext {
         this.userId = args.userId;
         this.entryId = args.entryId;
         this.defaultPageSize = args.defaultPageSize ?? 10n;
+        this.variables = args.variables ?? new Map<string, LookupValue>();
         this._cache = args[_internalCache] ?? new Map<string, LookupValue>();
     }
 
@@ -59,13 +64,14 @@ export class LookupContext {
      * For evaluating lookup expressions in a related entry or not an entry at all, but still sharing the same cache.
      * @param entryId The new entry ID to use in this child context
      */
-    protected _getChildContext(entryId: VNID | undefined) {
+    protected _getChildContext(entryId: VNID | undefined, variables?: ReadonlyMap<string, LookupValue>) {
         return new LookupContext({
             tx: this.tx,
             siteId: this.siteId,
             userId: this.userId,
             entryId,
             defaultPageSize: this.defaultPageSize,
+            variables: variables ?? this.variables,
             [_internalCache]: this._cache,
         });
     }
@@ -76,6 +82,15 @@ export class LookupContext {
         } else {
             return this._getChildContext(entryId);
         }
+    }
+
+    /** Get an identical clone of this context that has new variables set / in scope. */
+    public childContextWithVariables(variables: Record<string, LookupValue>) {
+        const newMap = new Map(this.variables.entries());
+        for (const [k, v] of Object.entries(variables)) {
+            newMap.set(k, v);
+        }
+        return this._getChildContext(this.entryId, newMap);
     }
 
     /**
@@ -112,6 +127,11 @@ export class LookupContext {
     }
 
     protected async _evaluateExprWithCache(expr: LookupExpression) {
+        if (this.variables.size > 0) {
+            // If any variables are set, we can't cache the result because we'd have to key the cache by all the
+            // variables and values, which is not worth it.
+            return this._evaluateExpr(expr);
+        }
         const prefix = (this.entryId ?? "") + ":";
         // Key is the entry ID, then a colon, then the expression in "standard form"
         const key = prefix + expr.toString();
@@ -120,17 +140,21 @@ export class LookupContext {
             return cachedValue;
         }
         // Evaluate the value and cache the result:
-        let value;
+        const value = await this._evaluateExpr(expr);
+        this._cache.set(key, value);
+        return value;
+    }
+
+    protected async _evaluateExpr(expr: LookupExpression) {
+        // Evaluate the value:
         try {
-            value = await expr.getValue(this);
+            return await expr.getValue(this);
         } catch (err: unknown) {
             if (err instanceof LookupError) {
-                value = new ErrorValue(err);
+                return new ErrorValue(err);
             } else {
                 throw err;
             }
         }
-        this._cache.set(key, value);
-        return value;
     }
 }

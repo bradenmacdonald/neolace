@@ -1,13 +1,13 @@
 import { LookupContext } from "../context.ts";
-import { ClassOf, ConcreteValue, IHasLiteralExpression, IIterableValue, LookupValue } from "./base.ts";
+import { ClassOf, ConcreteValue, ICountableValue, IHasLiteralExpression, LookupValue } from "./base.ts";
 import { BooleanValue } from "./BooleanValue.ts";
 
 /**
  * A value that respresents a string
  */
-export class StringValue extends ConcreteValue implements IHasLiteralExpression, IIterableValue {
+export class StringValue extends ConcreteValue implements IHasLiteralExpression, ICountableValue {
     readonly value: string;
-    readonly isIterable = true;
+    readonly hasCount = true;
 
     constructor(value: string) {
         super();
@@ -42,5 +42,13 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
             return new BooleanValue(this.value.length !== 0);
         }
         return undefined;
+    }
+
+    public async getCount(): Promise<bigint> {
+        return BigInt(this.value.length);
+    }
+
+    public override getSortString(): string {
+        return this.value;
     }
 }

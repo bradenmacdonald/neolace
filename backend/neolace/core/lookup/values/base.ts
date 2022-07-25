@@ -78,6 +78,9 @@ export abstract class LookupValue {
 
     /** If this is a LazyValue, convert it to a default non-lazy value. */
     public abstract makeConcrete(): Promise<ConcreteValue>;
+
+    /** Get a string representation of this value that can be used to sort it. */
+    public abstract getSortString(): string;
 }
 
 /**
@@ -114,6 +117,8 @@ export function isCountableValue(value: unknown): value is ICountableValue {
 /**
  * Value types that can be iterated (lists, queries, strings, etc.) should conform to this interface, so they can be used
  * with standard functions like first(), filter(), map(), etc.
+ *
+ * Use the iterateOver() helper method for an easy way to iterate over all the values, if needed.
  */
 export interface IIterableValue {
     isIterable: true;
@@ -249,4 +254,32 @@ export abstract class AbstractLazyCypherQueryValue extends LazyValue
     }
 
     public abstract getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]>;
+}
+
+/**
+ * Allow lookup function code to easily iterate over any iterable like this:
+ * for await (const value of iterateOver(iterable)) {
+ */
+export function iterateOver(iterableValue: LookupValue & IIterableValue): AsyncIterable<LookupValue> {
+    return {
+        [Symbol.asyncIterator](): AsyncIterator<LookupValue> {
+            let currentPage: LookupValue[];
+            let numPages = 0n;
+            const pageSize = 50;
+            let currentIdx = 0;
+            return {
+                next() {
+                    return (async () => {
+                        if (currentPage === undefined || currentIdx === pageSize) {
+                            // We need to get the next page of values
+                            currentPage = await iterableValue.getSlice(BigInt(pageSize) * numPages++, BigInt(pageSize));
+                            currentIdx = 0;
+                        }
+                        const value = currentPage[currentIdx++];
+                        return { value, done: value === undefined };
+                    })();
+                },
+            };
+        },
+    };
 }

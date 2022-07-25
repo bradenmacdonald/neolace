@@ -68,4 +68,8 @@ export class PageValue<T extends ConcreteValue> extends ConcreteValue implements
             sourceExpressionEntryId,
         }) as typeof this;
     }
+
+    public override getSortString(): string {
+        return ""; // doesn't really make sense to sort by these values.
+    }
 }

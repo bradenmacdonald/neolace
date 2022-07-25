@@ -27,4 +27,8 @@ export class FileValue extends ConcreteValue {
             size: this.size,
         };
     }
+
+    public override getSortString(): string {
+        return this.filename;
+    }
 }

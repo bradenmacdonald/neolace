@@ -34,4 +34,8 @@ export class InlineMarkdownStringValue extends ConcreteValue implements IHasLite
         }
         return undefined;
     }
+
+    public override getSortString(): string {
+        return this.value;
+    }
 }

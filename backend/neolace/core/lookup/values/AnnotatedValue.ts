@@ -3,6 +3,7 @@ import type * as api from "neolace/deps/neolace-api.ts";
 import { LookupContext } from "../context.ts";
 import { ClassOf, ConcreteValue, LookupValue } from "./base.ts";
 import { EntryValue } from "./EntryValue.ts";
+import { LookupEvaluationError } from "../errors.ts";
 
 /**
  * Represents a value that has been "annotated" with some extra information
@@ -23,11 +24,8 @@ export class AnnotatedValue extends ConcreteValue {
             this.value = value;
             this.annotations = annotations;
         }
-        if (Object.keys(annotations).length === 0) {
-            throw new Error(`Missing annotations`);
-        }
         if (annotations.value !== undefined || annotations.id !== undefined) {
-            throw new Error("Invalid annotation key.");
+            throw new LookupEvaluationError("Invalid annotation key.");
         }
     }
 
@@ -48,6 +46,10 @@ export class AnnotatedValue extends ConcreteValue {
 
     public override asLiteral() {
         return undefined; // Annotated values do not have literal expressions.
+    }
+
+    public override getSortString(): string {
+        return this.value.getSortString();
     }
 }
 

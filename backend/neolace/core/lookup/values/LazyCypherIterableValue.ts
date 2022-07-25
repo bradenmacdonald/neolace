@@ -29,4 +29,8 @@ export class LazyCypherIterableValue<ValueType extends LookupValue> extends Abst
             sourceExpressionEntryId,
         });
     }
+
+    public override getSortString(): string {
+        return ""; // doesn't really make sense to sort by these values.
+    }
 }

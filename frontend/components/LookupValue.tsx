@@ -54,14 +54,32 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         return <p>[ERROR INVALID VALUE, NO TYPE INFORMATION]</p>; // Doesn't need i18n, internal error message shouldn't be seen
     }
 
-    if (value.annotations?.note && value.annotations.note.type === "InlineMarkdownString" && value.annotations.note.value !== "") {
-        const {note, ...annotationsWithoutNote} = value.annotations;
-        const valueWithoutNote = {...value, annotations: annotationsWithoutNote};
+    if (value.annotations?.note || value.annotations?.detail) {
+        const {note, detail, ...otherAnnotations} = value.annotations;
+        const valueWithoutNoteOrDetails = {...value, annotations: otherAnnotations};
         return <>
-            <LookupValue value={valueWithoutNote} mdtContext={props.mdtContext} hideShowMoreLink={props.hideShowMoreLink} />
-            <HoverClickNote>
-                <p className="text-sm"><InlineMDT mdt={note.value} context={props.mdtContext} /></p>
-            </HoverClickNote>
+            <LookupValue
+                value={valueWithoutNoteOrDetails}
+                mdtContext={props.mdtContext}
+                hideShowMoreLink={props.hideShowMoreLink}
+            />
+            {
+                detail && detail.type !== "Page" && detail.type !== "Graph" && detail.type !== "Image" ?
+                    <div className="text-sm inline mx-1">
+                        (<LookupValue value={detail} mdtContext={props.mdtContext} hideShowMoreLink={props.hideShowMoreLink} />)
+                    </div>
+                : detail ? <span>[invalid detail annotation]</span>
+                : null
+            }
+            {
+                note ?
+                    <HoverClickNote>
+                        <p className="text-sm">
+                            <LookupValue value={note} mdtContext={props.mdtContext} hideShowMoreLink={props.hideShowMoreLink} />
+                        </p>
+                    </HoverClickNote>
+                : null
+            }
         </>;
     }
 
