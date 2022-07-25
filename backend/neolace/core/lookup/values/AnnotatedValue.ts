@@ -47,6 +47,10 @@ export class AnnotatedValue extends ConcreteValue {
     public override asLiteral() {
         return undefined; // Annotated values do not have literal expressions.
     }
+
+    public override getSortString(): string {
+        return this.value.getSortString();
+    }
 }
 
 /** A helper function to create an annotated entry value */

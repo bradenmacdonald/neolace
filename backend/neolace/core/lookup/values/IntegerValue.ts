@@ -34,4 +34,9 @@ export class IntegerValue extends ConcreteValue {
         }
         return undefined;
     }
+
+    public override getSortString(): string {
+        // Pad the number with zeroes so we get consistent sorting.
+        return String(this.value).padStart(100, "0");
+    }
 }

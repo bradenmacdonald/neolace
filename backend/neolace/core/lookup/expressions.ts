@@ -24,6 +24,7 @@ export { Markdown } from "./expressions/functions/markdown.ts";
 export { PropFunction } from "./expressions/functions/prop.ts";
 export { ReverseProperty } from "./expressions/functions/reverse.ts";
 export { Slice } from "./expressions/functions/slice.ts";
+export { Sort } from "./expressions/functions/sort.ts";
 // Non-functions:
 export { Lambda } from "./expressions/lambda.ts";
 export { List } from "./expressions/list-expr.ts";

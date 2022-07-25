@@ -23,4 +23,8 @@ export class PropertyValue extends ConcreteValue implements IHasLiteralExpressio
     protected serialize() {
         return { type: "Property" as const, id: this.id };
     }
+
+    public override getSortString(): string {
+        return this.id; // not very useful but at least it's stable.
+    }
 }

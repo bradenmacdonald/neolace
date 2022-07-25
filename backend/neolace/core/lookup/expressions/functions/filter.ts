@@ -6,6 +6,7 @@ import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
+import { iterateOver } from "../../values/base.ts";
 
 /**
  * filter(entries, entryType=[entry type or list of entry types])
@@ -74,7 +75,7 @@ async function getEntryTypesIds(expr: LookupExpression, context: LookupContext):
     const entryTypesValue = await expr.getValueAsOneOf([EntryTypeValue, LazyIterableValue], context);
     const entryTypes = new Set<VNID>();
     if (entryTypesValue instanceof LazyIterableValue) {
-        for await (const value of entryTypesValue) {
+        for await (const value of iterateOver(entryTypesValue)) {
             const asEntryType = await value.castTo(EntryTypeValue, context);
             if (asEntryType === undefined) {
                 throw new LookupEvaluationError(`Expected an entry type but got ${value.constructor.name}`);

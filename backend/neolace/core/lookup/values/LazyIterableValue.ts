@@ -4,7 +4,15 @@ import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Site } from "neolace/core/Site.ts";
 import type { LookupContext } from "../context.ts";
 import type { LookupExpression } from "../expressions/base.ts";
-import { ClassOf, ConcreteValue, IHasSourceExpression, IIterableValue, LazyValue, LookupValue } from "./base.ts";
+import {
+    ClassOf,
+    ConcreteValue,
+    IHasSourceExpression,
+    IIterableValue,
+    iterateOver,
+    LazyValue,
+    LookupValue,
+} from "./base.ts";
 import { EntryValue } from "./EntryValue.ts";
 import { PageValue } from "./PageValue.ts";
 import { LazyEntrySetValue } from "./LazyEntrySetValue.ts";
@@ -85,7 +93,7 @@ export class LazyIterableValue extends LazyValue implements IIterableValue, IHas
             const entryIds: VNID[] = [];
             const entryQueries: CypherQuery[] = [];
 
-            for await (const value of this) {
+            for await (const value of iterateOver(this)) {
                 // Is this a single entry?
                 const valueAsEntry = await value.castTo(EntryValue, context);
                 if (valueAsEntry) {
@@ -151,25 +159,7 @@ export class LazyIterableValue extends LazyValue implements IIterableValue, IHas
         });
     }
 
-    /** Allow lookup function code to easily iterate over these values */
-    [Symbol.asyncIterator](): AsyncIterator<LookupValue> {
-        const getSlice = this.getSlice;
-        let currentPage: LookupValue[];
-        let numPages = 0n;
-        const pageSize = 50;
-        let currentIdx = 0;
-        return {
-            next() {
-                return (async () => {
-                    if (currentPage === undefined || currentIdx === pageSize) {
-                        // We need to get the next page of values
-                        currentPage = await getSlice(BigInt(pageSize) * numPages++, BigInt(pageSize));
-                        currentIdx = 0;
-                    }
-                    const value = currentPage[currentIdx++];
-                    return { value, done: value === undefined };
-                })();
-            },
-        };
+    public override getSortString(): string {
+        return ""; // in future we might want to sort based on the first few values?
     }
 }

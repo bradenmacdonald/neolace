@@ -23,4 +23,8 @@ export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpressi
     protected serialize() {
         return { type: "EntryType" as const, id: this.id };
     }
+
+    public override getSortString(): string {
+        return this.id; // best we can do? Not very useful but at least it's stable.
+    }
 }

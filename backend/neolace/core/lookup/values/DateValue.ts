@@ -59,4 +59,8 @@ export class DateValue extends ConcreteValue {
         }
         return undefined;
     }
+
+    public override getSortString(): string {
+        return this.asIsoString();
+    }
 }

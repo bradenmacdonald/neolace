@@ -22,4 +22,8 @@ export class ErrorValue extends ConcreteValue {
     protected serialize() {
         return { type: "Error" as const, errorClass: this.error.constructor.name, message: this.error.message };
     }
+
+    public override getSortString(): string {
+        return ""; // Sort errors to the top
+    }
 }

@@ -1,6 +1,7 @@
 import { assertEquals, assertInstanceOf, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import { List, LiteralExpression } from "../expressions.ts";
 import { IntegerValue, LazyIterableValue, LookupValue } from "../values.ts";
+import { iterateOver } from "./base.ts";
 
 group("LazyIterableValue.ts", () => {
     // These tests are read-only so don't need isolation, but do use the default plantDB example data:
@@ -21,7 +22,7 @@ group("LazyIterableValue.ts", () => {
 
         // Now check that we can iterate over it using an async iterator:
         const values: LookupValue[] = [];
-        for await (const v of lazyIterable) {
+        for await (const v of iterateOver(lazyIterable)) {
             values.push(v);
         }
         assertEquals(values, numbers);
@@ -41,7 +42,7 @@ group("LazyIterableValue.ts", () => {
 
             // Now check that we can iterate over it using an async iterator and we get the right values:
             const values: LookupValue[] = [];
-            for await (const v of lazyIterable) {
+            for await (const v of iterateOver(lazyIterable)) {
                 values.push(v);
             }
             assertEquals(values, numbers);

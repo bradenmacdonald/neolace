@@ -1,4 +1,5 @@
 import type * as api from "neolace/deps/neolace-api.ts";
+import { IntegerValue } from "../values.ts";
 import { ConcreteValue } from "./base.ts";
 
 /**
@@ -22,5 +23,10 @@ export class BooleanValue extends ConcreteValue {
 
     protected serialize(): api.BooleanValue {
         return { type: "Boolean" as const, value: this.value };
+    }
+
+    public override getSortString(): string {
+        // Booleans should sort like integers:
+        return new IntegerValue(this.value ? 1 : 0).getSortString();
     }
 }

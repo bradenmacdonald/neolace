@@ -66,4 +66,8 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
             sourceExpressionEntryId,
         });
     }
+
+    public override getSortString(): string {
+        return ""; // doesn't really make sense to sort by these values.
+    }
 }
