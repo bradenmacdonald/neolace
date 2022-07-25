@@ -12,6 +12,7 @@ export { AndDescendants, Descendants } from "./expressions/functions/descendants
 export { EntryFunction } from "./expressions/functions/entry.ts";
 export { EntryTypeFunction } from "./expressions/functions/entryType.ts";
 export { Filter } from "./expressions/functions/filter.ts";
+export { GetAttribute } from "./expressions/get-attribute.ts";
 export { GetProperty } from "./expressions/functions/get.ts";
 export { Files } from "./expressions/functions/files.ts";
 export { First } from "./expressions/functions/first.ts";

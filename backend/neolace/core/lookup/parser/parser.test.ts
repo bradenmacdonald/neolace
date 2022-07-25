@@ -8,6 +8,8 @@ import {
     Count,
     DateExpression,
     EntryFunction,
+    First,
+    GetAttribute,
     Graph,
     Image,
     Lambda,
@@ -187,6 +189,18 @@ group("parser.ts", () => {
             errMessage: "The lookup function ancestors() does not accept more than one argument.",
         },
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Attributes
+        {
+            in: `this.name`,
+            out: new GetAttribute("name", new This()),
+        },
+        {
+            in: `this.ancestors().first().name`,
+            out: new GetAttribute("name", new First(new Ancestors(new This()))),
+        },
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Complex test cases
         {
             in: `

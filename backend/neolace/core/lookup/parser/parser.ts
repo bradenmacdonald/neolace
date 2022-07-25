@@ -19,6 +19,7 @@ class LookupParser extends CstParser {
     // Declare types for our various rules:
     expression!: ParserMethod<[], CstNode>;
     functionCall!: ParserMethod<[], CstNode>;
+    dotSomething!: ParserMethod<[], CstNode>;
     dotFunctionCall!: ParserMethod<[], CstNode>;
     list!: ParserMethod<[], CstNode>;
     value!: ParserMethod<[], CstNode>;
@@ -39,7 +40,7 @@ class LookupParser extends CstParser {
                 { ALT: () => $.SUBRULE($.value) },
                 { ALT: () => $.SUBRULE($.lambda) },
             ]);
-            $.OPTION(() => $.SUBRULE($.dotFunctionCall));
+            $.OPTION(() => $.SUBRULE($.dotSomething));
         });
 
         // A function call like foo(), or foo(x) or foo(x, bar=blah, bar2=blah2)
@@ -64,10 +65,27 @@ class LookupParser extends CstParser {
             $.CONSUME(T.RParen);
         });
 
+        /**
+         * dotSomething comes after an expression and matches a '.' followed by another expression
+         * - either x.attribute or x.function(...)
+         */
+        $.RULE("dotSomething", () => {
+            $.CONSUME(T.Dot);
+            $.OR([
+                // .function(...)
+                { ALT: () => $.SUBRULE($.dotFunctionCall) },
+                // .attribute
+                { ALT: () => $.CONSUME(T.Identifier, { LABEL: "attributeName" }) },
+            ]);
+            $.OPTION(() => {
+                $.SUBRULE($.dotSomething, { LABEL: "chainedExpression" });
+            });
+        });
+
         // A function call using the alternative syntax, x.foo() or x.foo(bar=blah, bar2=blah2) where x is the first arg
         // We have to define the rule in this somewhat akward way to avoid left recursion.
         $.RULE("dotFunctionCall", () => {
-            $.CONSUME(T.Dot);
+            // the dot here is already consumed by the 'dotSomething' rule.
             $.CONSUME(T.Identifier, { LABEL: "functionName" });
             $.CONSUME(T.LParen);
             $.OPTION(() => {
@@ -82,9 +100,6 @@ class LookupParser extends CstParser {
                 });
             });
             $.CONSUME(T.RParen);
-            $.OPTION3(() => {
-                $.SUBRULE($.dotFunctionCall, { LABEL: "chainedFunction" });
-            });
         });
 
         $.RULE("list", () => {
@@ -156,7 +171,7 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
         list?: CstNode[];
         functionCall?: CstNode[];
         value?: CstNode[];
-        dotFunctionCall?: CstNode[];
+        dotSomething?: CstNode[];
         lambda?: CstNode[];
     }, params: VisitorParams): LookupExpression {
         // deno-fmt-ignore
@@ -171,9 +186,9 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
             console.error(`Expression visitor couldn't handle`, ctx);
             throw new Error(`Visitor failed in expression()`);
         }
-        if (ctx.dotFunctionCall) {
+        if (ctx.dotSomething) {
             // deno-lint-ignore no-explicit-any
-            expr = this.dotFunctionCall(ctx.dotFunctionCall[0].children as any, params, expr);
+            expr = this.dotSomething(ctx.dotSomething[0].children as any, params, expr);
         }
         return expr;
     }
@@ -199,13 +214,44 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
         );
     }
 
+    /** After an expression is a '.' followed by an attribute access or a function. */
+    dotSomething(
+        ctx: {
+            dotFunctionCall?: CstNode[];
+            attributeName?: (CstNode & IToken)[];
+            chainedExpression?: CstNode[];
+        },
+        params: VisitorParams,
+        /** The expression that came before the '.' */
+        precedingExpr?: LookupExpression,
+    ): LookupExpression {
+        if (precedingExpr === undefined) {
+            throw new Error("Cannot visit dotSomething directly - should be called from expression() or itself");
+        }
+        let expr: LookupExpression;
+        if (ctx.attributeName) {
+            expr = new E.GetAttribute(ctx.attributeName[0].image, precedingExpr);
+        } else if (ctx.dotFunctionCall) {
+            // deno-lint-ignore no-explicit-any
+            expr = this.dotFunctionCall(ctx.dotFunctionCall[0].children as any, params, precedingExpr);
+        } else throw new Error("Unexpected dotSomething");
+
+        if (ctx.chainedExpression) {
+            // After this .attribute or .function() is another .attribute or .function()...
+            // e.g. this.ancestors().count()
+            //                      ^^^^^^^^
+            // deno-lint-ignore no-explicit-any
+            expr = this.dotSomething(ctx.chainedExpression[0].children as any, params, expr);
+        }
+        return expr;
+    }
+
     /** The alternate syntax for calling a function with the first argument before a ".". */
     dotFunctionCall(
         ctx: {
             functionName: (CstNode & IToken)[];
             otherParamName?: (CstNode & IToken)[];
             otherParamValue?: CstNode[];
-            chainedFunction?: CstNode[];
         },
         params: VisitorParams,
         firstParameterExpr?: LookupExpression,
@@ -222,12 +268,7 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
                 otherArgs[argName] = this.visit(ctx.otherParamValue[i], params);
             }
         }
-        let expr = fn.constructWithArgs(firstParameterExpr, otherArgs);
-        if (ctx.chainedFunction) {
-            // deno-lint-ignore no-explicit-any
-            expr = this.dotFunctionCall(ctx.chainedFunction[0].children as any, params, expr);
-        }
-        return expr;
+        return fn.constructWithArgs(firstParameterExpr, otherArgs);
     }
 
     list(ctx: { expression?: CstNode[] }, params: VisitorParams): E.List {
