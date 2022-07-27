@@ -38,10 +38,8 @@ export async function getDraft(
         title: draftData.title,
         description: draftData.description,
         status: draftData.status,
-        edits: draftData.edits?.map((e) => ({
-            ...e,
-            changeType: e.changeType as api.EditChangeType,
-            data: e.data ?? undefined,
-        })),
+        edits: draftData.edits as
+            | (api.AnyEdit & { id: VNID; changeType: api.EditChangeType; timestamp: Date })[]
+            | undefined,
     };
 }
