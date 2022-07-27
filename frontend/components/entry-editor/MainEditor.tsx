@@ -1,7 +1,7 @@
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { api } from "lib/api-client";
+import { api, useSchema } from "lib/api-client";
 import { Spinner } from "components/widgets/Spinner";
 import { AutoControl, Control, Form } from "components/widgets/Form";
 import { TextInput } from "components/widgets/TextInput";
@@ -11,8 +11,6 @@ import { defineMessage } from "components/utils/i18n";
 
 interface Props {
     entry?: api.EditableEntryData;
-    /** The schema, including any schema changes which have been made within the current draft, if any. */
-    schema: api.SiteSchemaData | undefined;
     isNewEntry: boolean;
     addUnsavedEdit: (newEdit: api.AnyContentEdit) => void;
 }
@@ -20,8 +18,10 @@ interface Props {
 /**
  * This widget implements the "Main" tab of the "Edit Entry" page (set entry name, type, ID, and description)
  */
-export const MainEditor: React.FunctionComponent<Props> = ({ entry, schema, addUnsavedEdit, isNewEntry }) => {
+export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEdit, isNewEntry }) => {
     const intl = useIntl();
+    /** The schema, including any schema changes which have been made within the current draft, if any. */
+    const [schema] = useSchema();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Here are the handlers for actually making edits, baed on what the user does.
@@ -100,8 +100,6 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, schema, addU
                 isRequired={isNewEntry}
             >
                 <SelectEntryType
-                    // TODO: This should have any schema changes that are part of the same draft; currently it loads the
-                    // "published" version of the schema only.
                     value={entry?.entryType.id}
                     onChange={updateEntryType}
                     readOnly={!isNewEntry}

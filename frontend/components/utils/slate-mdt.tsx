@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "components/widgets/Icon";
 import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
-import { api, useLookupExpression, useSiteSchema } from "lib/api-client";
+import { api, useLookupExpression, useSchema } from "lib/api-client";
 import { type MDT } from "neolace-api";
 import { Transforms } from "slate";
 import { ReactEditor, RenderElementProps, useFocused, useSelected, useSlate } from "slate-react";
@@ -37,7 +37,7 @@ export const PropertyVoid = (
     },
 ) => {
     const [selected] = useVoidSelectionStatus();
-    const [schema] = useSiteSchema();
+    const [schema] = useSchema();
     const propertyName = schema ? (propertyId ? schema.properties[propertyId]?.name : `Unknown property (${propertyId})`) : "Loading...";
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
         <span className={`rounded-l-md py-[3px] px-2 bg-gray-200 text-green-700 ${selected ? '!bg-sky-300 !text-gray-700' : ''}`}>
@@ -60,7 +60,7 @@ export const EntryTypeVoid = (
     },
 ) => {
     const [selected] = useVoidSelectionStatus();
-    const [schema] = useSiteSchema();
+    const [schema] = useSchema();
     const entryTypeName = schema ? (schema.entryTypes[entryTypeId]?.name ?? `Unknown entry type (${entryTypeId})`) : "Loading...";
     const entryTypeColor = schema?.entryTypes[entryTypeId]?.color ?? api.EntryTypeColor.Default;
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
