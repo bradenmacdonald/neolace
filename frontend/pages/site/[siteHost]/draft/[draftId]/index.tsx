@@ -12,6 +12,7 @@ import { ParsedUrlQuery } from "querystring";
 import { Spinner } from "components/widgets/Spinner";
 import { Button } from "components/widgets/Button";
 import { UserStatus, useUser } from "lib/authentication";
+import { HoverClickNote } from "components/widgets/HoverClickNote";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -86,7 +87,15 @@ const DraftDetailsPage: NextPage = function (_props) {
                 {draft.edits.length > 0
                     ? (
                         <ul>
-                            {draft.edits.map((e, idx) => <li key={idx}>{api.getEditType(e.code).describe(e.data)}</li>)}
+                            {draft.edits.map((e, idx) => (
+                                <li key={idx}>
+                                    {api.getEditType(e.code).describe(e.data)}
+                                    <HoverClickNote superscript={false} displayText="(...)">
+                                        <p>Data for this edit:</p>
+                                        <pre className="whitespace-pre-wrap">{JSON.stringify(e.data, undefined, 4)}</pre>
+                                    </HoverClickNote>
+                                </li>
+                            ))}
                         </ul>
                     )
                     : (
