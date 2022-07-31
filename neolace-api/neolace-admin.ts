@@ -370,6 +370,7 @@ async function exportCommand({siteId, outFolder, ...options}: {siteId: string, e
                                 delete simpleFact.slot;
                             }
                             delete simpleFact.rank; // Rank is implied by the ordering in the list so we don't need it
+                            delete simpleFact.id; // We don't include the property fact ID.
                             return simpleFact;
                         });
                         metadata[friendlyIds[prop.propertyId]] = factsSimplified;

@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "components/widgets/Icon";
 import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
-import { api, useLookupExpression, useSiteSchema } from "lib/api-client";
+import { api, useLookupExpression, useSchema } from "lib/api-client";
 import { type MDT } from "neolace-api";
 import { Transforms } from "slate";
 import { ReactEditor, RenderElementProps, useFocused, useSelected, useSlate } from "slate-react";
@@ -37,7 +37,7 @@ export const PropertyVoid = (
     },
 ) => {
     const [selected] = useVoidSelectionStatus();
-    const [schema] = useSiteSchema();
+    const [schema] = useSchema();
     const propertyName = schema ? (propertyId ? schema.properties[propertyId]?.name : `Unknown property (${propertyId})`) : "Loading...";
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
         <span className={`rounded-l-md py-[3px] px-2 bg-gray-200 text-green-700 ${selected ? '!bg-sky-300 !text-gray-700' : ''}`}>
@@ -60,7 +60,7 @@ export const EntryTypeVoid = (
     },
 ) => {
     const [selected] = useVoidSelectionStatus();
-    const [schema] = useSiteSchema();
+    const [schema] = useSchema();
     const entryTypeName = schema ? (schema.entryTypes[entryTypeId]?.name ?? `Unknown entry type (${entryTypeId})`) : "Loading...";
     const entryTypeColor = schema?.entryTypes[entryTypeId]?.color ?? api.EntryTypeColor.Default;
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
@@ -160,8 +160,8 @@ export function renderElement({ element, children, attributes }: RenderElementPr
     switch (element.type) {
         case "link":
             return <a href="#" {...attributes}>{children}</a>;
-        // case "code_inline":
-        //     return <code key={key}>{node.children[0].text}</code>;
+        case "code_inline":
+            return <code {...attributes}>{children}</code>;
         case "lookup_inline": {
             return (
                 <InlineLookupEditableElement element={element} attributes={attributes}>
@@ -192,9 +192,6 @@ export function renderElement({ element, children, attributes }: RenderElementPr
         //         <p className="text-sm">{node.children.map(child => inlineNodeToComponent(child, context))}</p>
         //     </HoverClickNote>
 
-        // Block elements:
-        case "paragraph":
-            return <p {...attributes}>{children}</p>;
         case "custom-void-entry":
             return (
                 <EntryVoid entryId={(element as VoidEntryNode).entryId} attributes={attributes}>{children}</EntryVoid>
@@ -211,6 +208,10 @@ export function renderElement({ element, children, attributes }: RenderElementPr
                     {children}
                 </EntryTypeVoid>
             );
+
+        // Block elements:
+        case "paragraph":
+            return <p {...attributes}>{children}</p>;
         default:
             return (
                 <span className="border-red-100 border-[1px] text-red-700">{`Unknown MDT node "${element.type}"`}</span>

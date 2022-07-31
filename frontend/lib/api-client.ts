@@ -1,8 +1,9 @@
 import "lib/keratin-authn/keratin-authn.min";
+import React from "react";
 import useSWR, { KeyedMutator } from "swr";
 import { AsyncCache } from "./async-cache";
 import { useRouter } from "next/router";
-import { EvaluateLookupData, isVNID, NeolaceApiClient, NotFound, SiteDetailsData, VNID } from "neolace-api";
+import { EvaluateLookupData, NeolaceApiClient, NotFound, SiteDetailsData, VNID } from "neolace-api";
 
 import { API_SERVER_URL, IN_BROWSER } from "lib/config";
 import { ApiError } from "next/dist/server/api-utils";
@@ -45,6 +46,7 @@ const siteDataCache = new AsyncCache<string, SiteDetailsData>(
     5 * 60_000, // timeout is 5 minutes
 );
 
+/** Server-side method to get data about a site by domain. On the client side, use the useSiteData() hook. */
 export async function getSiteData(domain: string): Promise<SiteDetailsData | null> {
     try {
         // If the site has been previously retrieved, this cache will always return the cached value immediately.
@@ -141,71 +143,6 @@ export function useLookupExpression(
 }
 
 /**
- * React hook to get the current site's schema
- * @returns
- */
-export function useSiteSchema(): [data: api.SiteSchemaData | undefined, error: ApiError | undefined] {
-    const { site, siteError } = useSiteData();
-
-    const key = `siteSchema:${site.shortId}:no-draft`;
-    const { data, error } = useSWR(key, async () => {
-        if (siteError) {
-            throw new ApiError(500, "Site Error");
-        }
-        if (!site.shortId) {
-            return undefined; // We need to wait for the siteId before we can load the entry
-        }
-        return await client.getSiteSchema({ siteId: site.shortId });
-    }, {
-        // refreshInterval: 10 * 60_000,
-    });
-    return [data, error];
-}
-
-type DraftDataWithEdits = Required<api.DraftData>;
-
-/**
- * React hook to get the currently published version of an entry, to use as a basis for making edits.
- * @returns
- */
-export function useDraft(
-    draftId: VNID | "_",
-): [
-    data: DraftDataWithEdits | undefined,
-    error: ApiError | undefined,
-    mutate: KeyedMutator<DraftDataWithEdits | undefined>,
-] {
-    const { site, siteError } = useSiteData();
-
-    const key = `draft:${site.shortId}:${draftId}`;
-    const { data, error, mutate } = useSWR(key, async (): Promise<DraftDataWithEdits | undefined> => {
-        if (siteError) {
-            throw new ApiError(500, "Site Error");
-        }
-        if (draftId === NEW) {
-            return undefined;
-        }
-        if (!isVNID(draftId)) {
-            throw new ApiError(500, "Not a valid VNID");
-        }
-        if (!site.shortId) {
-            return undefined; // We need to wait for the siteId before we can load the draft
-        }
-        try {
-            const data = await client.getDraft(draftId, {flags: [
-                api.GetDraftFlags.IncludeEdits,
-            ] as const, siteId: site.shortId});
-            return data;
-        } catch (err) {
-            throw err;
-        }
-    }, {
-        // refreshInterval: 10 * 60_000,
-    });
-    return [data, error, mutate];
-}
-
-/**
  * React hook to get the data required to display an entry
  */
 export function useEntry(
@@ -244,57 +181,209 @@ export function useEntry(
 }
 
 /**
- * React hook to get the currently published version of an entry, to use as a basis for making edits.
+ * In this context, a "reference cache" is available to provide data on any Entry, Entry Type, or Property that is
+ * referenced. For example, in the context of an Entry A that links to Entry B, the reference cache will include some
+ * details about Entry B such as its Name and friendly ID, so that the link to it can be properly displayed within Entry
+ * A.
+ */
+ export const RefCacheContext = React.createContext<{refCache?: api.ReferenceCacheData, parentRefCache?: api.ReferenceCacheData}>({
+    // Default values for this context:
+    refCache: undefined,
+});
+
+/**
+ * In this context, there is a "current entry ID". e.g. on an entry page, this is the ID of the entry being viewed.
+ */
+export const EntryContext = React.createContext<{entryId: VNID|undefined}>({
+    // Default values for this context:
+    entryId: undefined,
+});
+
+export interface DraftContextData {
+    draftId: VNID|'_'|undefined;
+    unsavedEdits: ReadonlyArray<api.AnyContentEdit>;
+}
+/**
+ * In this context, there is a "current draft ID". e.g. when editing a draft
+ */
+export const DraftContext = React.createContext<DraftContextData>({
+    // Default values for this context:
+    draftId: undefined,
+    /**
+     * Edits that have been made in the UI in the browser but not yet saved into the draft (they'll be lost if the
+     * browser window is closed).
+     */
+    unsavedEdits: [],
+});
+
+
+type DraftDataWithEdits = Required<api.DraftData>;
+
+/**
+ * React hook to get a draft
  * @returns
  */
-export function useEditableEntry(
-    entryId: VNID | { newEntryWithId: VNID },
+export function useDraft(
+    context: {draftContext?: DraftContextData} = {},
 ): [
-    data: api.EditableEntryData | undefined,
-    error: ApiError | undefined,
-    mutate: KeyedMutator<api.EditableEntryData | undefined>,
+    data: DraftDataWithEdits | undefined,
+    unsavedEdits: ReadonlyArray<api.AnyContentEdit>,
+    error: api.ApiError | undefined,
+    mutate: KeyedMutator<DraftDataWithEdits | undefined>,
 ] {
     const { site, siteError } = useSiteData();
+    const _autoDraftContext = React.useContext(DraftContext);
+    const draftContext = context.draftContext || _autoDraftContext;
+    const draftId = draftContext.draftId;
 
-    // TODO: Change "no-draft" below to the ID of the current draft, if any, from a <DraftContext> provider.
-    const key = `entry-edit:${site.shortId}:no-draft:${entryId}`;
-    const { data, error, mutate } = useSWR(key, async () => {
+    const key = `draft:${site.shortId}:${draftId}`;
+    const { data, error, mutate } = useSWR(key, async (): Promise<DraftDataWithEdits | undefined> => {
         if (siteError) {
-            throw new ApiError(500, "Site Error");
+            throw new api.ApiError("Site Error", 500);
         }
-        if (typeof entryId === "object") {
-            if (isVNID(entryId.newEntryWithId)) {
-                // We are creating a new entry, and it has been assigned a temporary new VNID:
-                const blankEntry: api.EditableEntryData = {
-                    id: entryId.newEntryWithId,
-                    friendlyId: "",
-                    name: "",
-                    description: "",
-                    entryType: { id: "" as VNID, name: "" },
-                    features: {},
-                    propertiesRaw: [],
-                };
-                return blankEntry;
-            } else {
-                throw new ApiError(500, "Not a valid entry ID.");
-            }
+        if (draftId === "_" || draftId === undefined) {
+            return undefined;
+        }
+        if (!api.isVNID(draftId)) {
+            throw new api.ApiError("Not a valid VNID", 500);
+        }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the draft
+        }
+        return await client.getDraft(draftId, {flags: [
+            api.GetDraftFlags.IncludeEdits,
+        ] as const, siteId: site.shortId});
+    }, {
+        // refreshInterval: 10 * 60_000,
+    });
+
+    return [data, draftContext.unsavedEdits, error, mutate];
+}
+
+
+/**
+ * React hook to get the current site's schema, including any edits made within the current draft.
+ * @returns
+ */
+export function useSchema(
+    context: {draftContext?: DraftContextData} = {},
+): [data: api.SiteSchemaData | undefined, error: api.ApiError | undefined] {
+    const { site, siteError } = useSiteData();
+    const [draft, unsavedEdits] = useDraft(context);
+
+    const key = `siteSchema:${site.shortId}`;
+    const { data: baseSchema, error } = useSWR(key, async () => {
+        if (siteError) {
+            throw new api.ApiError("Site Error", 500);
         }
         if (!site.shortId) {
             return undefined; // We need to wait for the siteId before we can load the entry
         }
-        if (!isVNID(entryId)) {
-            throw new ApiError(500, `"${entryId}" is not a valid VNID`);
+        return await client.getSiteSchema({ siteId: site.shortId });
+    }, {
+        // refreshInterval: 10 * 60_000,
+    });
+
+    // Apply any edits from the draft, if present:
+    const schema = React.useMemo(() => {
+        if (baseSchema === undefined) {
+            // Base schema hasn't loaded yet.
+        } else if (draft?.edits || unsavedEdits.length > 0) {
+            const edits = [...(draft?.edits ?? []), ...unsavedEdits];
+            const schema = api.applyEditsToSchema(baseSchema, edits);
+            return schema;
+        } else {
+            return baseSchema;
         }
-        const data: api.EditableEntryData = await client.getEntry(entryId, {
-            flags: [
-                api.GetEntryFlags.IncludeFeatures,
-                api.GetEntryFlags.IncludeRawProperties,
-            ] as const,
-            siteId: site.shortId,
-        });
+    }, [baseSchema, draft?.edits, unsavedEdits]);
+
+    return [schema, error];
+}
+
+/**
+ * React hook to get an editable version of the entry (including all editable properties, not just the "top" properties
+ * seen in the property summary).
+ * This is aware of the DraftContext and will apply any edits and unsaved edits from the draft, if present.
+ */
+export function useEditableEntry(
+    /** The ID of the entry. May be a new entry if the draft context contains a 'CreateEntry' edit. */
+    entryId: VNID,
+    /** Is this a new entry? If so we won't try to load the "base version" from the server. */
+    isNewEntry: boolean,
+    context: {draftContext?: DraftContextData},
+): [
+    data: api.EditableEntryData | undefined,
+    error: api.ApiError | undefined,
+    // mutate: KeyedMutator<api.EditableEntryData | undefined>,
+] {
+    const { site, siteError } = useSiteData();
+    // Get the site schema. We don't need the draft's edits to be applied to it.
+    const [baseSchema] = useSchema();
+
+    // Get the draft, if set.
+    const [draft, unsavedEdits, draftError] = useDraft(context);
+
+    // Get the "base version" of the entry (currently published version), if it exists.
+    const key = `entry-edit:${site.shortId}:${entryId}`;
+    const { data: baseEntry, error } = useSWR(key, async () => {
+        if (siteError) {
+            throw new api.ApiError("Site Error", 500);
+        }
+        if (!api.isVNID(entryId)) {
+            throw new api.ApiError(`"${entryId}" is not a valid VNID`, 500);
+        }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the entry
+        }
+        let data: api.EditableEntryData = {
+            // Start with blank entry data:
+            id: entryId,
+            friendlyId: "",
+            name: "",
+            description: "",
+            entryType: { id: "" as VNID, name: "" },
+            features: {},
+            propertiesRaw: [],
+        };
+        if (!isNewEntry) {
+            try {
+                data = await client.getEntry(entryId, {
+                    flags: [
+                        api.GetEntryFlags.IncludeFeatures,
+                        api.GetEntryFlags.IncludeRawProperties,
+                    ] as const,
+                    siteId: site.shortId,
+                });
+            } catch (err) {
+                if (err instanceof api.NotFound) {
+                    // No such entry exists. But it may exist within the draft, if it was previously created and saved
+                    // to this draft. So for now we just return a blank entry. We can't check if it exists within the
+                    // draft here because this useSWR fetcher is not keyed to the draft's edits so shouldn't use them.
+                } else { throw err; }
+            }
+        } else {
+            // This is a newly-created entry. We won't be able to retrieve it from the API since it hasn't actually been created yet.
+            // Just return the blank entry data already created.
+        }
         return data;
     }, {
         // refreshInterval: 10 * 60_000,
     });
-    return [data, error, mutate];
+
+    // Combine the base entry (if set) with any edits from the draft
+    const entry = React.useMemo(() => {
+        // What the user is currently editing and should see on the screen is:
+        // The previously published version of the entry (if any),
+        // PLUS any edits previously made to it in the current draft (if any),
+        // PLUS any edits currently made on this page now, but not yet saved to the draft (if any)
+        const edits: api.AnyEdit[] = [...(draft?.edits ?? []), ...unsavedEdits];
+        return baseEntry && baseSchema
+            ? api.applyEditsToEntry(baseEntry, baseSchema, edits)
+            : undefined;
+    }, [baseEntry, baseSchema, draft?.edits, unsavedEdits]);
+
+    return [entry, error];
 }
+
+// TODO: a useRefCache() hook that uses the RefCacheContext plus applies any edits from the draft to the reference
+// cache.

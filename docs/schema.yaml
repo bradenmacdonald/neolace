@@ -18,7 +18,7 @@ entryTypes:
   - id: _ET_EXPLANATION
     name: Explanation
     description: ''
-    friendlyIdPrefix: ""
+    friendlyIdPrefix: ''
     color: orange
     abbreviation: EX
     enabledFeatures:
@@ -26,7 +26,7 @@ entryTypes:
   - id: _ET_REFERENCE
     name: Reference
     description: ''
-    friendlyIdPrefix: ""
+    friendlyIdPrefix: ''
     color: red
     abbreviation: R
     enabledFeatures:
@@ -42,8 +42,8 @@ entryTypes:
     name: Image
     description: An Image
     friendlyIdPrefix: img-
-    color: ""
-    abbreviation: ""
+    color: ''
+    abbreviation: ''
     enabledFeatures:
       Image: {}
 properties: []

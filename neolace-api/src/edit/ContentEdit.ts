@@ -297,10 +297,38 @@ export const DeletePropertyValue = ContentEditType({
         /** The ID of the property fact to change */
         propertyFactId: vnidString,
     }),
-    apply: () => {
-        throw new Error("This edit type is not implemented yet.");
+    apply: (baseEntry, data) => {
+        const updatedEntry: EditableEntryData = {...baseEntry, propertiesRaw: [...baseEntry.propertiesRaw]};
+        const propertyIndex = baseEntry.propertiesRaw.findIndex((p) => p.facts.map((f) => f.id).includes(data.propertyFactId));
+        if (propertyIndex !== -1) {
+            const baseFacts = baseEntry.propertiesRaw[propertyIndex].facts;
+            const factIndex = baseFacts.findIndex((f) => f.id === data.propertyFactId);
+            const newFacts = [...baseFacts];
+            if (factIndex !== -1) {
+                newFacts.splice(factIndex, 1);
+            }
+            updatedEntry.propertiesRaw[propertyIndex].facts = newFacts;
+        }
+        return updatedEntry;
     },
     describe: (data) => `Deleted \`PropertyFact ${data.propertyFactId}\` property value`,
+    consolidate(thisEdit, earlierEdit) {
+        if (
+            (earlierEdit.code === UpdatePropertyValue.code) &&
+            earlierEdit.data.propertyFactId === thisEdit.data.propertyFactId
+        ) {
+            // Ignore any updates if the property gets deleted
+            return thisEdit;
+        }
+        if (
+            (earlierEdit.code === AddPropertyValue.code) &&
+            earlierEdit.data.propertyFactId === thisEdit.data.propertyFactId
+        ) {
+            // Add + Delete combine to nothing.
+            return [];
+        }
+        return undefined;
+    },
 });
 
 export const _allContentEditTypes = {

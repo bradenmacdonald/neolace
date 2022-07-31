@@ -16,14 +16,18 @@ export function consolidateEdits<EditTypes extends (AnyEdit)[]>(edits: EditTypes
             const currentEdit = newEdits[c];
             const prevEdit = newEdits[p];
             const consolidatedEdit = getEditType(currentEdit.code).consolidate?.(currentEdit, prevEdit);
-            if (consolidatedEdit) {
-                // Replace the previous edit with the new consolidated edit:
-                newEdits[p] = consolidatedEdit;
-                // Delete the now-redundant current edit:
-                newEdits.splice(c, 1);
-                // Continue with the same current edit (now has one lower index of "c") and earlier previous edit
-                c--;
+            if (consolidatedEdit == undefined) {
+                continue; // No change
             }
+            const consolidatedEdits = Array.isArray(consolidatedEdit) ? consolidatedEdit : [consolidatedEdit];
+            // Replace the current edit with the consolidated edit(s):
+            newEdits.splice(c, 1, ...consolidatedEdits);
+            // Remove the previous edit:
+            newEdits.splice(p, 1);
+            // Continue with the same current edit (at its updated index of "c") and earlier previous edit
+            c += (consolidatedEdits.length - 2);
+            // Adjust p so we re-consolidate with the newly updated edits
+            p = c;
         }
     }
     return newEdits as EditTypes;

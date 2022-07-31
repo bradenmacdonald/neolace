@@ -1,5 +1,12 @@
 import * as check from "neolace/deps/computed-types.ts";
-import { DraftStatus, EditChangeType, EditList, getEditType } from "neolace/deps/neolace-api.ts";
+import {
+    AnyEdit,
+    consolidateEdits,
+    DraftStatus,
+    EditChangeType,
+    EditList,
+    getEditType,
+} from "neolace/deps/neolace-api.ts";
 import {
     C,
     defaultUpdateFor,
@@ -333,6 +340,9 @@ export const AcceptDraft = defineAction({
             throw new Error("Draft is not open.");
         }
 
+        // Consolidate the edits so that we don't do something like create an entry and then immediately delete it.
+        const editsConsolidated = consolidateEdits(draft.edits as AnyEdit[]);
+
         await tx.queryOne(C`
             MATCH (draft:${Draft} {id: ${data.id}})
             SET draft.status = ${DraftStatus.Accepted}
@@ -341,8 +351,7 @@ export const AcceptDraft = defineAction({
         const { modifiedNodes } = await ApplyEdits.apply(tx, {
             siteId: draft.site!.id,
             draftId: data.id,
-            // deno-lint-ignore no-explicit-any
-            edits: draft.edits as any,
+            edits: editsConsolidated,
         });
 
         return {

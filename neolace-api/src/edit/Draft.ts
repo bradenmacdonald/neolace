@@ -1,4 +1,5 @@
 import { Schema, Type, string, vnidString, array, DateType, object, } from "../api-schemas.ts";
+import { VNID } from "../types.ts";
 import type { AnyEdit } from "./AnyEdit.ts";
 import { EditChangeType } from "./Edit.ts";
 
@@ -34,7 +35,7 @@ export const DraftEditSchema = Schema({
     changeType: Schema.enum(EditChangeType),
     data: object.strictOptional(),
     timestamp: DateType,
-});
+}).transform(e => e as AnyEdit & { id: VNID, changeType: EditChangeType, timestamp: Date });
 export type DraftEditData = Type<typeof DraftEditSchema>;
 
 export const DraftSchema = Schema({

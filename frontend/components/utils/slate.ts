@@ -238,6 +238,12 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
             result += `**` + slateDocToStringValue(n.children, escape) + `**`;
         } else if (n.type === "em") {
             result += `_` + slateDocToStringValue(n.children, escape) + `_`;
+        } else if (n.type === "sup") {
+            result += `^` + slateDocToStringValue(n.children, escape) + `^`;
+        } else if (n.type === "sub") {
+            result += `~` + slateDocToStringValue(n.children, escape) + `~`;
+        } else if (n.type === "code_inline") {
+            result += '`' + slateDocToStringValue(n.children, EscapeMode.PlainText) + '`';
         } else if (n.type === "lookup_inline") {
             result += `{ ` + slateDocToStringValue(n.children, EscapeMode.PlainText) + ` }`;
         } else if (n.type === "custom-void-entry") {

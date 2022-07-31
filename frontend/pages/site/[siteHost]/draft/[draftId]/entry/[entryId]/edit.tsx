@@ -1,7 +1,7 @@
 import React from "react";
 import { NextPage } from "next";
 import { FormattedMessage, useIntl } from "react-intl";
-import { api, client, NEW, useDraft, useEditableEntry, useSiteData, useSiteSchema } from "lib/api-client";
+import { api, client, NEW, useSiteData, useSchema, DraftContextData, useEditableEntry, useDraft } from "lib/api-client";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -32,48 +32,40 @@ const DraftEntryEditPage: NextPage = function (_props) {
     const intl = useIntl();
     // Look up the Neolace site by domain:
     const { site, siteError } = useSiteData();
-    const [baseSchema] = useSiteSchema();
     const router = useRouter();
     const user = useUser();
     const query = router.query as PageUrlQuery;
     const draftId = query.draftId as api.VNID | NEW;
-    const [draft, draftError] = useDraft(draftId);
+
     // *IF* we are creating a new entry from scratch, this will be its new VNID. Note that VNID() only works on the
     // client in this case, and generating it on the server wouldn't make sense anyways.
     const [newEntryId] = React.useState(() => IN_BROWSER ? api.VNID() : api.VNID("_tbd"));
     const isNewEntry = query.entryId === "_";
-    // The "base entry" is the unmodified entry, as published on the site, without any edits applied.
-    const [baseEntry, entryError] = useEditableEntry(
-        isNewEntry ? { newEntryWithId: newEntryId } : query.entryId as api.VNID,
-    );
+    const entryId: api.VNID = isNewEntry ? newEntryId : query.entryId as api.VNID;
 
-    // Any edits that have previously been saved into the draft that we're editing, if any:
-    const draftEdits = (draft?.edits ?? emptyArray) as api.AnyEdit[];
     // Any edits that the user has made on this page now, but hasn't yet saved to a draft:
     const [unsavedEdits, setUnsavedEdits] = React.useState<api.AnyContentEdit[]>([]);
     const addUnsavedEdit = React.useCallback((newEdit: api.AnyContentEdit) => {
         setUnsavedEdits((existingEdits) => api.consolidateEdits([...existingEdits, newEdit]));
     }, []);
 
-    const entry = React.useMemo(() => {
-        // What the user is currently editing and should see on the screen is:
-        // The previously published version of the entry (if any),
-        // PLUS any edits previously made to it in the current draft (if any),
-        // PLUS any edits currently made on this page now, but not yet saved to the draft (if any)
-        return baseEntry && baseSchema
-            ? api.applyEditsToEntry(baseEntry, baseSchema, [...draftEdits, ...unsavedEdits])
-            : undefined;
-    }, [baseEntry, baseSchema, draftEdits, unsavedEdits]);
-    const schema = React.useMemo(() => baseSchema ? api.applyEditsToSchema(baseSchema, unsavedEdits) : undefined, [
-        baseSchema,
+    const draftContext: DraftContextData = {
+        draftId,
         unsavedEdits,
-    ]);
+    };
+    const [draft, _, draftError] = useDraft({draftContext});
+
+    // This is the entry after all edits have been applied
+    const [entry, entryError] = useEditableEntry(entryId, isNewEntry, {draftContext});
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Managing the draft (all edits are part of a draft)
 
     // If we'll be creating a new draft when the user saves these changes, this is the title for that new draft:
     const [newDraftTitle, setNewDraftTitle] = React.useState("");
+    const newDraftTitleChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        setNewDraftTitle(event.target.value);
+    }, []);
     const [isSaving, setIsSaving] = React.useState(false);
     const saveChangesToDraft = React.useCallback(async () => {
         if (draftError) {
@@ -85,7 +77,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
             // We're creating a new draft:
             await client.createDraft({
                 title: newDraftTitle.trim() ||
-                    intl.formatMessage({id: "TUzKsg", defaultMessage: `Edited {title}` }, { title: baseEntry?.name ?? "" }),
+                    intl.formatMessage({id: "TUzKsg", defaultMessage: `Edited {title}` }, { title: entry?.name ?? "" }),
                 description: "",
                 edits: unsavedEdits,
             }, { siteId: site.shortId }).then(
@@ -105,10 +97,24 @@ const DraftEntryEditPage: NextPage = function (_props) {
                 },
             );
         } else {
-            // We're updating an existing draft
-            alert("Updating an existing draft is not yet implemented.");
+            try {
+                for (const edit of unsavedEdits) {
+                    await client.addEditToDraft(edit, {draftId, siteId: site.shortId});
+                }
+                setIsSaving(false);
+                router.push(`/draft/${draftId}`);
+            } catch (error) {
+                setIsSaving(false);
+                console.error(error);
+                alert(
+                    intl.formatMessage({
+                        id: "uAFusW",
+                        defaultMessage: `Failed to save draft: {error}`,
+                    }, { error: String((error instanceof Error ? error?.message : undefined) ?? error) }),
+                );
+            }
         }
-    }, [draftId, baseEntry?.name, unsavedEdits, newDraftTitle, draftError, intl, router, site.shortId]);
+    }, [draftId, entry?.name, unsavedEdits, newDraftTitle, draftError, intl, router, site.shortId]);
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour />;
@@ -123,9 +129,9 @@ const DraftEntryEditPage: NextPage = function (_props) {
     } else if (entryError instanceof api.NotFound) {
         content = <FourOhFour />;
     } else if (draftError) {
-        content = <ErrorMessage>{String(draftError)}</ErrorMessage>;
+        content = <ErrorMessage>Draft error: {String(draftError)}</ErrorMessage>;
     } else if (entryError) {
-        content = <ErrorMessage>{String(entryError)}</ErrorMessage>;
+        content = <ErrorMessage>Entry error: {String(entryError)}</ErrorMessage>;
     } else if (draft?.status === api.DraftStatus.Accepted || draft?.status === api.DraftStatus.Cancelled) {
         content = <ErrorMessage>This draft is no longer editable.</ErrorMessage>;
     } else {
@@ -168,19 +174,14 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         icon="info-circle"
                         name={defineMessage({ defaultMessage: "Main", id: "EFTSMc" })}
                     >
-                        <MainEditor
-                            entry={entry}
-                            schema={schema}
-                            addUnsavedEdit={addUnsavedEdit}
-                            isNewEntry={isNewEntry}
-                        />
+                        <MainEditor entry={entry} addUnsavedEdit={addUnsavedEdit} isNewEntry={isNewEntry} />
                     </Tab>
                     <Tab
                         id="properties"
                         icon="diamond-fill"
                         name={defineMessage({ defaultMessage: "Properties", id: "aI80kg" })}
                     >
-                        <PropertiesEditor entry={entry} schema={schema} addUnsavedEdit={addUnsavedEdit} />
+                        <PropertiesEditor entry={entry} addUnsavedEdit={addUnsavedEdit} />
                     </Tab>
                     <Tab
                         id="changes"
@@ -253,11 +254,11 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                             defaultMessage: "Provide a brief description of what you changed:",
                                         })}
                                     >
-                                        <TextInput />
+                                        <TextInput value={newDraftTitle} onChange={newDraftTitleChange} />
                                     </Control>
                                     <Button
                                         icon="file-earmark-diff"
-                                        disabled={unsavedEdits.length === 0 || isSaving}
+                                        disabled={unsavedEdits.length === 0 || newDraftTitle.length === 0 || isSaving}
                                         onClick={saveChangesToDraft}
                                     >
                                         <FormattedMessage

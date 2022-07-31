@@ -3,7 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { VNID } from "neolace-api";
 
 import { noTranslationNeeded } from "components/utils/i18n";
-import { useSiteSchema } from "lib/api-client";
+import { useSchema } from "lib/api-client";
 import { ErrorMessage } from "./ErrorMessage";
 import { SelectBox, SelectOption } from "./SelectBox";
 
@@ -17,7 +17,7 @@ interface Props {
  * A select widget for chosing an EntryType
  */
 export const SelectEntryType: React.FunctionComponent<Props> = ({ ...props }) => {
-    const [schema, schemaError] = useSiteSchema();
+    const [schema, schemaError] = useSchema();
 
     const options: SelectOption[] = React.useMemo(() => {
         if (!schema) {

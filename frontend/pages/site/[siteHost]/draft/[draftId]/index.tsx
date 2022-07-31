@@ -2,7 +2,7 @@ import React from "react";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { api, client, NEW, useDraft, useSiteData } from "lib/api-client";
+import { api, client, DraftContextData, NEW, useDraft, useSiteData } from "lib/api-client";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -12,6 +12,10 @@ import { ParsedUrlQuery } from "querystring";
 import { Spinner } from "components/widgets/Spinner";
 import { Button } from "components/widgets/Button";
 import { UserStatus, useUser } from "lib/authentication";
+import { HoverClickNote } from "components/widgets/HoverClickNote";
+
+// Define a consistent empty array so that React doesn't think a value changes if we use a different '[]' on each render
+const noEdits = [] as const;
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -26,7 +30,8 @@ const DraftDetailsPage: NextPage = function (_props) {
     const router = useRouter();
     const query = router.query as PageUrlQuery;
     const draftId = query.draftId as api.VNID | NEW;
-    const [draft, draftError, mutateDraft] = useDraft(draftId);
+    const draftContext: DraftContextData = { draftId, unsavedEdits: noEdits, };
+    const [draft, _unsavedChanges, draftError, mutateDraft] = useDraft({draftContext});
 
     const [isUpdatingDraft, setUpdatingDraft] = React.useState(false);
     const acceptDraft = React.useCallback(async () => {
@@ -86,7 +91,15 @@ const DraftDetailsPage: NextPage = function (_props) {
                 {draft.edits.length > 0
                     ? (
                         <ul>
-                            {draft.edits.map((e, idx) => <li key={idx}>{api.getEditType(e.code).describe(e.data)}</li>)}
+                            {draft.edits.map((e, idx) => (
+                                <li key={idx}>
+                                    {api.getEditType(e.code).describe(e.data)}
+                                    <HoverClickNote superscript={false} displayText="(...)">
+                                        <p>Data for this edit:</p>
+                                        <pre className="whitespace-pre-wrap">{JSON.stringify(e.data, undefined, 4)}</pre>
+                                    </HoverClickNote>
+                                </li>
+                            ))}
                         </ul>
                     )
                     : (
@@ -108,6 +121,18 @@ const DraftDetailsPage: NextPage = function (_props) {
                             <FormattedMessage id="T3NjTq" defaultMessage="Accept Draft (apply changes)" />
                         </Button>
                     </> : <p>You need to log in to accept a draft.</p>
+                }
+
+                {
+                    user.status === UserStatus.LoggedIn ? <>
+                        <Button
+                            icon="plus-lg"
+                            disabled={draft.status !== api.DraftStatus.Open}
+                            onClick={() => router.push(`/draft/${draftId}/entry/_/edit`)}
+                        >
+                            <FormattedMessage id="lE5OgU" defaultMessage="Create a new entry (in this draft)" />
+                        </Button>
+                    </> : <p>You need to log in to edit this draft.</p>
                 }
 
             </>

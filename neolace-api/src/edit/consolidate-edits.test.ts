@@ -1,5 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.146.0/testing/asserts.ts";
 import { VNID } from "../types.ts";
+import { AddPropertyValue, DeletePropertyValue, UpdatePropertyValue } from "./ContentEdit.ts";
 import {
     type AnyEdit,
     consolidateEdits,
@@ -91,6 +92,10 @@ Deno.test("Consolidate edits", async (t) => {
         assertEquals(consolidateEdits(oldEdits), [
             {
                 code: CreateEntry.code,
+                data: { id: entryB, name: "B name", friendlyId: "B", type: type1, description: "Entry B" },
+            },
+            {
+                code: CreateEntry.code,
                 data: {
                     id: entryA,
                     name: "A name new",
@@ -98,10 +103,6 @@ Deno.test("Consolidate edits", async (t) => {
                     type: type1,
                     description: "New A description",
                 },
-            },
-            {
-                code: CreateEntry.code,
-                data: { id: entryB, name: "B name", friendlyId: "B", type: type1, description: "Entry B" },
             },
         ]);
     });
@@ -144,6 +145,51 @@ Deno.test("Consolidate edits", async (t) => {
                 code: CreateEntry.code,
                 data: { id: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
             },
+        ]);
+    });
+
+    await t.step("Adding/updating/removing property facts", () => {
+        // Create a couple of edits that won't be changed by what we're doing here.
+        const unrelatedEdit1: AnyEdit = { code: SetEntryName.code, data: { entryId: entryC, name: "C name" } };
+        const unrelatedEdit2: AnyEdit = {
+            code: UpdatePropertyValue.code,
+            data: { entryId: entryA, propertyFactId: VNID(), note: "new note" },
+        };
+        const propId = VNID();
+        const fact1 = VNID(), fact2 = VNID();
+        const oldEdits: AnyEdit[] = [
+            // This new property value will get updated and then erased, so should consolidate to nothing:
+            {
+                code: AddPropertyValue.code,
+                data: { entryId: entryA, propertyFactId: fact1, propertyId: propId, valueExpression: "1 first value" },
+            },
+            unrelatedEdit1,
+            // These two updates to 'fact2' should get consolidated:
+            {
+                code: UpdatePropertyValue.code,
+                data: { entryId: entryA, propertyFactId: fact2, valueExpression: "2 first value" },
+            },
+            {
+                code: UpdatePropertyValue.code,
+                data: { entryId: entryA, propertyFactId: fact2, valueExpression: "2 second value" },
+            },
+            unrelatedEdit2,
+            {
+                code: UpdatePropertyValue.code,
+                data: { entryId: entryA, propertyFactId: fact1, valueExpression: "1 second value" },
+            },
+            { code: DeletePropertyValue.code, data: { entryId: entryA, propertyFactId: fact1 } },
+        ];
+        assertEquals(consolidateEdits(oldEdits), [
+            // The 'Add' has been removed since it was later deleted.
+            unrelatedEdit1,
+            // The two updates to 'fact2' should be consolidated:
+            {
+                code: UpdatePropertyValue.code,
+                data: { entryId: entryA, propertyFactId: fact2, valueExpression: "2 second value" },
+            },
+            unrelatedEdit2,
+            // The 'update' and 'delete' are gone, since they consolidate with the 'Add' to nothing.
         ]);
     });
 });

@@ -3,7 +3,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { VNID } from "neolace-api";
 
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
-import { api } from "lib/api-client";
+import { api, useSchema } from "lib/api-client";
 import { Spinner } from "components/widgets/Spinner";
 import { Control } from "components/widgets/Form";
 import { SelectBox } from "components/widgets/SelectBox";
@@ -16,16 +16,16 @@ const emptyPropsRawArray: api.EditableEntryData["propertiesRaw"] = [];
 
 interface Props {
     entry: api.EditableEntryData | undefined;
-    /** The schema, including any schema changes which have been made within the current draft, if any. */
-    schema: api.SiteSchemaData | undefined;
     addUnsavedEdit: (newEdit: api.AnyContentEdit) => void;
 }
 
 /**
  * This widget implements the "Properties" tab of the "Edit Entry" page.
  */
-export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, schema, addUnsavedEdit, ...props }) => {
+export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEdit, ...props }) => {
     const entryType = entry?.entryType.id;
+    /** The schema, including any schema changes which have been made within the current draft, if any. */
+    const [schema] = useSchema();
 
     // This list contains all the possible properties that can be applied to entries of this type:
     const applicableProperties = React.useMemo(() => {
@@ -189,14 +189,25 @@ const SinglePropertyEditor: React.FunctionComponent<SinglePropertyEditorProps> =
                             <LookupExpressionInput
                                 value={fact.valueExpression}
                                 onChange={(newValue) => {
-                                    if (newValue !== currentValue) {
-                                        addUnsavedEdit({
-                                            code: api.UpdatePropertyValue.code,
-                                            data: { entryId, propertyFactId: fact.id, valueExpression: newValue },
-                                        });
-                                    }
+                                    addUnsavedEdit({
+                                        code: api.UpdatePropertyValue.code,
+                                        data: { entryId, propertyFactId: fact.id, valueExpression: newValue },
+                                    });
                                 }}
                                 className="md:!min-w-[200px] flex-auto"
+                            />
+                            <ToolbarButton
+                                icon="dash-lg"
+                                tooltip={defineMessage({
+                                    defaultMessage: "Remove this property value",
+                                    id: 'mtBE/b',
+                                })}
+                                onClick={() => {
+                                    addUnsavedEdit({
+                                        code: api.DeletePropertyValue.code,
+                                        data: { entryId, propertyFactId: fact.id },
+                                    });
+                                }}
                             />
                             <ToolbarButton
                                 icon="plus-lg"
