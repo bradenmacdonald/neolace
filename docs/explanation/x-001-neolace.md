@@ -1,8 +1,7 @@
 ---
 name: 001 Neolace
 id: _4ybTbey44SCI9CAE7fAaTb
-description: >-
-  An overview of Neolace.
+description: An overview of Neolace.
 ---
 # Introduction
 
@@ -10,7 +9,7 @@ description: >-
 
 # Core Features
 
-Every Neolace Site is primarily a collection of **Entries**. Each Entry usually corresponds to knowledge about some "thing" in the real world, but an Entry can also represent a piece of content, like a page of text or an image. The page you are reading right now ({ this }) is an Entry.
+Every Neolace Site is primarily a collection of **[Entries](/entry/term-entry)**. Each [Entry](/entry/term-entry) usually corresponds to knowledge about some "thing" in the real world, but an [Entry](/entry/term-entry) can also represent a piece of content, like a page of text or an image. The page you are reading right now ({ this }) is an [Entry](/entry/term-entry).
 
 Each Entry has **Properties**; for example an entry about "Canada" would state that it has a "Total Area" of "9,984,670 km^2^" - in this case, "Total Area" is the Property and "9,984,670 km^2^" is the Property Value. Property Values can also be relationships; in the Canada example, it could have the "Capital" property with the value "Ottawa, Ontario" where "Ottawa, Ontario" is another entry.
 

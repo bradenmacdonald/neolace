@@ -1,8 +1,7 @@
 ---
 name: 002 Architecture of Neolace
 id: _2Hrqlyy5raCUlV0qS47z5p
-description: >-
-  An overview of the software architecture of Neolace.
+description: An overview of the software architecture of Neolace.
 ---
 # Overview
 
@@ -31,7 +30,7 @@ Every VNode ("object") is identified by a unique identifier called a [**VNID**](
 * Neo4j node IDs are meant for internal use only and are not suitable for this purpose (they can be recycled etc.)
 * [VNIDs](/entry/term-VNID) are a type of UUID which means that API clients can generate their own IDs in advance of writing to the database, which can be handy for e.g. offline edits.
 
-Some Neolace entities (e.g. Entries, Sites, Users) also have a **friendly ID**, which is a short string with no spaces (like a user name) that uniquely identifies that entity. Unlike [VNIDs](/entry/term-VNID), the friendly ID can be changed. Neolace also tracks old friendly IDs, so that even if an entity's current friendly ID has changed, previously used friendly IDs will continue to work and "point to" the same Entry/Site/User.
+Some Neolace entities (e.g. Entries, Sites, Users) also have a **[friendly ID](/entry/term-friendly-id)**, which is a short string with no spaces (like a user name) that uniquely identifies that entity. Unlike [VNIDs](/entry/term-VNID), the [friendly ID](/entry/term-friendly-id) can be changed. Neolace also tracks old friendly IDs, so that even if an entity's current friendly ID has changed, previously used friendly IDs will continue to work and "point to" the same Entry/Site/User.
 
 For details on VNodes and Vertex Framework, see [the Vertex Framework documentation](https://github.com/neolace-dev/vertex-framework).
 
@@ -48,7 +47,7 @@ A migrations framework is used to define the database schema and apply some occa
 Each Action tracks carefully which VNodes it modifies, and then validation of each modified VNode is done before the write transaction is committed. Every Action successfully applied to the graph is itself a VNode, written into the graph, with a `MODIFIED` relationship pointing to each VNode it created, modified, or deleted.
 
 * This provides a complete change history of every VNode and its relationships.
-* This provides fairly strong schema enforcement which Neo4j otherwise does not support (although changes to the validation schema do not apply retroactively, and it relies on actions accurately declaring which VhNodes they have modified).
+* This provides fairly strong schema enforcement which Neo4j otherwise does not support (although changes to the validation schema do not apply retroactively, and it relies on actions accurately declaring which VNodes they have modified).
 
 Actions can generally be "inverted" to create a new Action that undoes the original action. This, in combination with the Action log/history, allows auditing and reverting changes to the graph as needed.
 

@@ -1,8 +1,9 @@
 ---
 name: Neolace Graph Data Model
 id: _5JAehDLtjWX9NPENgEQYWL
-description: A diagram showing the high-level [data model of Neolace](/entry/x-003-graph-data-model).
+description: 'A diagram showing the high-level [data model of Neolace](/entry/x-003-graph-data-model).'
 image: img-x-003-data-model.img.png
+imageSizing: contain
 # Generate this with:
 # 
 # CALL db.schema.visualization() YIELD nodes, relationships
