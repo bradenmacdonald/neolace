@@ -5,6 +5,7 @@ import { Editable, RenderLeafProps, Slate } from "slate-react";
 import {
     emptyDocument,
     EscapeMode,
+    ExtendedTextNode,
     parseMdtStringToSlateDoc,
     slateDocToStringValue,
     stringValueToSlateDoc,
@@ -179,7 +180,24 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", ...props
 };
 
 const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
-    return <span {...attributes} className="">{children}</span>;
+    let classes = "";
+    const textNode = leaf as ExtendedTextNode;
+    if (textNode.strong) {
+        classes += "font-bold ";
+    }
+    if (textNode.emphasis) {
+        classes += "italic ";
+    }
+    if (textNode.strikethrough) {
+        classes += "line-through ";
+    }
+    if (textNode.sup) {
+        return <sup {...attributes} className={classes}>{children}</sup>;
+    } else if (textNode.sup) {
+        return <sub {...attributes} className={classes}>{children}</sub>;
+    } else {
+        return <span {...attributes} className={classes}>{children}</span>;
+    }
 };
 
 /**
