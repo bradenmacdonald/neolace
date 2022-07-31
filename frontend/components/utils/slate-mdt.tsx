@@ -160,8 +160,8 @@ export function renderElement({ element, children, attributes }: RenderElementPr
     switch (element.type) {
         case "link":
             return <a href="#" {...attributes}>{children}</a>;
-        // case "code_inline":
-        //     return <code key={key}>{node.children[0].text}</code>;
+        case "code_inline":
+            return <code {...attributes}>{children}</code>;
         case "lookup_inline": {
             return (
                 <InlineLookupEditableElement element={element} attributes={attributes}>
@@ -192,9 +192,6 @@ export function renderElement({ element, children, attributes }: RenderElementPr
         //         <p className="text-sm">{node.children.map(child => inlineNodeToComponent(child, context))}</p>
         //     </HoverClickNote>
 
-        // Block elements:
-        case "paragraph":
-            return <p {...attributes}>{children}</p>;
         case "custom-void-entry":
             return (
                 <EntryVoid entryId={(element as VoidEntryNode).entryId} attributes={attributes}>{children}</EntryVoid>
@@ -211,6 +208,10 @@ export function renderElement({ element, children, attributes }: RenderElementPr
                     {children}
                 </EntryTypeVoid>
             );
+
+        // Block elements:
+        case "paragraph":
+            return <p {...attributes}>{children}</p>;
         default:
             return (
                 <span className="border-red-100 border-[1px] text-red-700">{`Unknown MDT node "${element.type}"`}</span>
