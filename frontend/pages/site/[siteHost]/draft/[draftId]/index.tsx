@@ -123,6 +123,18 @@ const DraftDetailsPage: NextPage = function (_props) {
                     </> : <p>You need to log in to accept a draft.</p>
                 }
 
+                {
+                    user.status === UserStatus.LoggedIn ? <>
+                        <Button
+                            icon="plus-lg"
+                            disabled={draft.status !== api.DraftStatus.Open}
+                            onClick={() => router.push(`/draft/${draftId}/entry/_/edit`)}
+                        >
+                            <FormattedMessage id="lE5OgU" defaultMessage="Create a new entry (in this draft)" />
+                        </Button>
+                    </> : <p>You need to log in to edit this draft.</p>
+                }
+
             </>
         );
     }
