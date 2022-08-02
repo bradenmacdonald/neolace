@@ -1,11 +1,12 @@
 import React from "react";
 import { useIntl } from "react-intl";
-import { type Descendant, Editor, Transforms } from "slate";
-import { Editable, RenderLeafProps, Slate } from "slate-react";
+import { type Descendant, Editor, Transforms, Range, Text } from "slate";
+import { Editable, RenderLeafProps, Slate, useSlate } from "slate-react";
 import {
     emptyDocument,
     EscapeMode,
     ExtendedTextNode,
+    NeolaceSlateEditor,
     parseMdtStringToSlateDoc,
     slateDocToStringValue,
     stringValueToSlateDoc,
@@ -13,7 +14,9 @@ import {
 } from "components/utils/slate";
 import { ToolbarButton } from "./Button";
 import { renderElement } from "components/utils/slate-mdt";
-import { defineMessage } from "components/utils/i18n";
+import { defineMessage, TranslatableString } from "components/utils/i18n";
+import { IconId } from "./Icon";
+import { ParagraphNode } from "neolace-api/types/markdown-mdt-ast";
 
 interface Props {
     /** The MDT (Markdown) string value that is currently being edited */
@@ -151,13 +154,45 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", ...props
             >
                 {/* The Toolbar */}
                 <div className="block w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
+                    <MarkButton
+                        mark="strong"
+                        icon="type-bold"
+                        tooltip={defineMessage({id: "HedEP7", defaultMessage: "Bold text"})}
+                        disabled={sourceMode}
+                     />
+                     <MarkButton
+                        mark="emphasis"
+                        icon="type-italic"
+                        tooltip={defineMessage({id: "qDkbVY", defaultMessage: "Italic text"})}
+                        disabled={sourceMode}
+                     />
+                     <MarkButton
+                        mark="sup"
+                        removeMark="sub"
+                        icon="type-superscript"
+                        tooltip={defineMessage({id: "+uJ/8b", defaultMessage: "Superscript"})}
+                        disabled={sourceMode}
+                     />
+                     <MarkButton
+                        mark="sub"
+                        removeMark="sup"
+                        icon="type-subscript"
+                        tooltip={defineMessage({id: 'rDSlqC', defaultMessage: "Subscript"})}
+                        disabled={sourceMode}
+                     />
+                     <MarkButton
+                        mark="strikethrough"
+                        icon="type-strikethrough"
+                        tooltip={defineMessage({id: 'awehGz', defaultMessage: "Strike through"})}
+                        disabled={sourceMode}
+                     />
                     <ToolbarButton
                         onClick={insertLookupExpression}
                         tooltip={defineMessage({ id: "mFU1yM", defaultMessage: "Insert lookup expression" })}
                         icon="braces-asterisk"
                     />
                     <ToolbarButton
-                        enabled={sourceMode}
+                        toggled={sourceMode}
                         onClick={toggleSourceMode}
                         tooltip={defineMessage({ id: "mA1RDm", defaultMessage: "Edit source" })}
                         icon="code"
@@ -179,6 +214,55 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", ...props
     );
 };
 
+type Mark = keyof Omit<ExtendedTextNode, "text"|"type">;
+/** Is the given mark (bold/italics/etc.) active for the selected text? */
+const isMarkActive = (editor: NeolaceSlateEditor, mark: Mark) => {
+    const {selection} = editor;
+    if (selection && Range.isExpanded(selection)) {
+        // Check if every text node in the selection has the mark active:
+        for (const node of (Editor.fragment(editor, selection)[0] as ParagraphNode).children) {
+            const textNode = node as ExtendedTextNode;
+            if (textNode.text !== "" && !textNode[mark]) {
+                return false;
+            }
+        }
+        return true;
+    } else {
+        // Editor.marks() gives the currently enabled marks for when new text is typed.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (Editor.marks(editor) as any)?.[mark] === true;
+    }
+};
+/** Toolbar button to toggle a formatting mark (bold/italics/superscript/subscript/etc.) */
+const MarkButton = ({mark, removeMark, ...props}: {
+    tooltip: TranslatableString,
+    mark: Mark,
+    removeMark?: Mark,
+    icon: IconId,
+    disabled?: boolean;
+}) => {
+    const editor = useSlate();
+    const clickCallback = React.useCallback(() => {
+        if (isMarkActive(editor, mark)) {
+            Editor.removeMark(editor, mark)
+        } else {
+            Editor.addMark(editor, mark, true);
+            // Remove any mark that is incompatible (e.g. subscript if we just made it superscript)
+            if (removeMark) {
+                Editor.removeMark(editor, removeMark);
+            }
+        }
+    }, [editor, mark, removeMark]);
+
+    return <ToolbarButton
+        icon={props.icon}
+        toggled={props.disabled ? false : isMarkActive(editor, mark)}
+        onClick={clickCallback}
+        tooltip={props.tooltip}
+        disabled={props.disabled}
+    />;
+};
+
 const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
     let classes = "";
     const textNode = leaf as ExtendedTextNode;
@@ -193,7 +277,7 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
     }
     if (textNode.sup) {
         return <sup {...attributes} className={classes}>{children}</sup>;
-    } else if (textNode.sup) {
+    } else if (textNode.sub) {
         return <sub {...attributes} className={classes}>{children}</sub>;
     } else {
         return <span {...attributes} className={classes}>{children}</span>;
