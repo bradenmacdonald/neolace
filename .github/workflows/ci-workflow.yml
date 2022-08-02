@@ -81,8 +81,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup repo
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
       - name: Setup Deno
         uses: denoland/setup-deno@v1.1.0
@@ -112,21 +111,29 @@ jobs:
         if: always()
         run: docker-compose -f "docker-compose.yml" down
 
-  test-api:
+  test-api-and-frontend:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup repo
-        uses: actions/checkout@v2
-
+      - uses: actions/checkout@v2
       - name: Setup Deno
         uses: denoland/setup-deno@v1.1.0
         with:
           deno-version: ${{ env.deno-version }}
-
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
       - name: Run tests (neolace-api)
         run: deno test
         working-directory: ./neolace-api
+      - name: Compile neolace-api
+        run: deno run --allow-read --allow-run --allow-write --allow-env _compile.ts
+        working-directory: ./neolace-api
+      - run: npm ci
+        working-directory: ./frontend
+      - name: Run tests (frontend)
+        run: ./node_modules/.bin/jest test
+        working-directory: ./frontend
 
   ######################################################################################################################
   ## Build & Publish Docker Images
