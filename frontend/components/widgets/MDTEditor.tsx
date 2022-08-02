@@ -1,5 +1,4 @@
 import React from "react";
-import { useIntl } from "react-intl";
 import { type Descendant, Editor, Transforms, Range, Text } from "slate";
 import { Editable, RenderLeafProps, Slate, useSlate } from "slate-react";
 import {
@@ -47,8 +46,7 @@ interface Props {
  *
  * In either "source mode" or "visual mode", onFinishedEdits will be called as the user blurs off of the element.
  */
-export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", ...props }) => {
-    const intl = useIntl();
+export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus, onChange, onBlur, inlineOnly, ...props }) => {
     const renderLeaf = React.useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
     const [sourceMode, setSourceMode] = React.useState(false);
@@ -72,10 +70,10 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", ...props
             // Update the editor:
             editor.children = sourceMode
                 ? stringValueToSlateDoc(value)
-                : parseMdtStringToSlateDoc(value, props.inlineOnly);
+                : parseMdtStringToSlateDoc(value, inlineOnly);
             updateLastValueInternallySet(value);
         }
-    }, [value, lastValueInternallySet, sourceMode]);
+    }, [value, lastValueInternallySet, sourceMode, editor, inlineOnly]);
 
     // This effect is used to handle toggling between "visual mode" (WYSIWYG) and "source mode" (edit the plain MDT/markdown)
     React.useEffect(() => {
@@ -87,24 +85,24 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", ...props
                 // THEN:
                 editor.children = stringValueToSlateDoc(newValue);
                 updateLastValueInternallySet(newValue);
-                if (props.onChange) {
-                    props.onChange(newValue);
+                if (onChange) {
+                    onChange(newValue);
                 }
             } else {
                 // We have turned source mode off; update the visual editor's document accordingly.
-                editor.children = parseMdtStringToSlateDoc(value, props.inlineOnly);
+                editor.children = parseMdtStringToSlateDoc(value, inlineOnly);
                 // To avoid editing issues, we need to normalize the tree according to Slate rules:
                 Editor.normalize(editor, { force: true });
             }
             updateLastSourceMode(sourceMode);
         }
-    }, [sourceMode, lastSourceMode, value, props.onChange]);
+    }, [sourceMode, lastSourceMode, value, onChange, editor, inlineOnly]);
 
     const handleChange = React.useCallback((newEditorState: Descendant[]) => {
-        if (sourceMode && props.onChange) {
+        if (sourceMode && onChange) {
             const newValue = slateDocToStringValue(newEditorState, EscapeMode.PlainText);
             updateLastValueInternallySet(newValue); // Mark this as an internal change, not coming from outside this component.
-            props.onChange(newValue);
+            onChange(newValue);
         } else {
             // The user has made changes in visual edit mode. We won't notify the 'onChange'
             // handler until they blur off of this editor or go back to source mode, because
@@ -112,30 +110,24 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", ...props
             // don't want the onChange handler to change the value prop now and reset the
             // editor state in the middle of editing.
         }
-    }, [props.onChange, sourceMode]);
+    }, [onChange, sourceMode]);
 
     // Track whether or not the user is actively using this overall editor widget.
     // When in "visual mode" (not source mode), we don't notify the parent element about changes until they blur off of
     // this editor to some other part of the document.
     const handleFocusChange = React.useCallback((isFocused: boolean) => {
         if (isFocused) {
-            if (props.onFocus) {
-                props.onFocus();
-            }
+            onFocus?.();
         } else {
             // The user has blurred this editor. Notify our parent if it is interested.
             const newValue = slateDocToStringValue(editor.children, sourceMode ? EscapeMode.PlainText : EscapeMode.MDT);
             if (!sourceMode) {
                 updateLastValueInternallySet(newValue);
             }
-            if (props.onChange) {
-                props.onChange(newValue);
-            }
-            if (props.onBlur) {
-                props.onBlur();
-            }
+            onChange?.(newValue);
+            onBlur?.();
         }
-    }, [sourceMode, editor.children, props.onFocus, props.onChange, props.onBlur]);
+    }, [sourceMode, editor.children, onFocus, onChange, onBlur]);
     useSmartFocusAwareness(rootDiv.current, handleFocusChange);
 
     // Edit commands:
