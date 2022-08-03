@@ -1,6 +1,6 @@
 import React from "react";
 import { type Descendant, Editor, Transforms, Range, Text } from "slate";
-import { Editable, RenderLeafProps, Slate, useSlate } from "slate-react";
+import { Editable, RenderLeafProps, Slate, useFocused, useSlate } from "slate-react";
 import {
     emptyDocument,
     EscapeMode,
@@ -67,7 +67,6 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
             // is shorter, slate may give an error when trying to keep the cursor in the same position which no longer
             // exists:
             Transforms.deselect(editor); // Just de-select, otherwise we may trap focus in this element if we're handling a blur at the moment.
-            editor.prevSelection = undefined;
 
             // Update the editor:
             editor.children = sourceMode
@@ -84,7 +83,6 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
         const lastSourceMode = lastSourceModeRef.current;
         if (sourceMode !== lastSourceMode) {
             // Avoid bugs when the selection range in one mode is invalid in another mode; clear the selection now.
-            editor.prevSelection = undefined;
             Transforms.deselect(editor);
 
             // Now change to the new mode:
@@ -149,22 +147,14 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
             // user as if it is selected. By inserting the 'wasSelected' mark, we also pre-split the text into separate
             // nodes (if needded), and update the selection accordingly, so we can avoid bugs later when applying marks
             // like bold using the toolbar buttons while the input element is blurred.
+            Transforms.setNodes(editor, {wasSelected: false}, {at: [], match: node => Text.isText(node)});
             Transforms.setNodes(editor, {wasSelected: true}, {at: currentSelection, split: true, match: node => Text.isText(node)});
-            Editor.normalize(editor);
-            editor.prevSelection = editor.selection;
             // We must also clear the DOM selection or strange bugs can occur:
             window.getSelection()?.removeAllRanges();
+        } else {
+            // Clear any previous 'wasSelected' so it doesn't render now that this is blurred.
+            Transforms.setNodes(editor, {wasSelected: false}, {at: [], match: node => Text.isText(node)});
         }
-    }, [editor]);
-    const handleInnerEditableFocus = React.useCallback(() => {
-        const { prevSelection } = editor;
-        if (prevSelection) {
-            // Restore the previous selection:
-            Transforms.select(editor, prevSelection);
-            editor.prevSelection = undefined;
-            // Remove the 'wasSelected' mark throughout the document:
-            Transforms.setNodes(editor, {wasSelected: false}, {mode: "all", match: node => Text.isText(node)});
-      }
     }, [editor]);
 
     // Edit commands:
@@ -238,7 +228,6 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
                     renderElement={renderElement}
                     placeholder={props.placeholder}
                     onBlur={handleInnerEditableBlur}
-                    onFocus={handleInnerEditableFocus}
                 />
             </div>
         </Slate>
@@ -304,6 +293,7 @@ const MarkButton = ({mark, removeMark, ...props}: {
 const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
     let classes = "";
     const textNode = leaf as ExtendedTextNode;
+    const isFocused = useFocused();
     if (textNode.strong) {
         classes += "font-bold ";
     }
@@ -313,8 +303,8 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
     if (textNode.strikethrough) {
         classes += "line-through ";
     }
-    if (textNode.wasSelected) {
-        classes += "bg-sky-100"
+    if (textNode.wasSelected && !isFocused) {
+        classes += "bg-sky-100 ";
     }
     if (textNode.sup) {
         return <sup {...attributes} className={classes}>{children}</sup>;

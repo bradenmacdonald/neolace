@@ -4,7 +4,7 @@ import { BaseEditor, createEditor, Element, Node, Transforms, Range, Editor, Bas
 import { ReactEditor, withReact } from "slate-react";
 import { HistoryEditor, withHistory } from "slate-history";
 
-export type NeolaceSlateEditor = BaseEditor & ReactEditor & HistoryEditor & {prevSelection?: BaseSelection};
+export type NeolaceSlateEditor = BaseEditor & ReactEditor & HistoryEditor;
 
 /**
  * This node is not part of MDT or lookup expressions but is used in our editor as a placeholder for a
