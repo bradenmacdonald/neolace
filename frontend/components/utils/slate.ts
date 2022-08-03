@@ -1,10 +1,10 @@
 import React from "react";
 import { api } from "lib/api-client";
-import { BaseEditor, createEditor, Element, Node, Transforms, Range, Editor } from "slate";
+import { BaseEditor, createEditor, Element, Node, Transforms, Range, Editor, BaseSelection } from "slate";
 import { ReactEditor, withReact } from "slate-react";
 import { HistoryEditor, withHistory } from "slate-history";
 
-export type NeolaceSlateEditor = BaseEditor & ReactEditor & HistoryEditor;
+export type NeolaceSlateEditor = BaseEditor & ReactEditor & HistoryEditor & {prevSelection?: BaseSelection};
 
 /**
  * This node is not part of MDT or lookup expressions but is used in our editor as a placeholder for a
@@ -50,6 +50,11 @@ export interface ExtendedTextNode extends api.MDT.TextNode {
     sub?: boolean,
     sup?: boolean,
     strikethrough?: boolean,
+    /**
+     * A mark used to indicate the selected text even when the editor is not focused.
+     * https://github.com/ianstormtaylor/slate/issues/3412#issuecomment-1147955840
+     */
+    wasSelected?: boolean,
 }
 
 export type NeolaceSlateElement = api.MDT.Node | VoidEntryNode | VoidPropNode | VoidEntryTypeNode | ExtendedTextNode;
@@ -65,7 +70,7 @@ declare module "slate" {
     interface CustomTypes {
         Editor: NeolaceSlateEditor;
         Element: NeolaceSlateElement;
-        Text: api.MDT.TextNode;
+        Text: ExtendedTextNode;
     }
 }
 

@@ -66,6 +66,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
             // is shorter, slate may give an error when trying to keep the cursor in the same position which no longer
             // exists:
             Transforms.deselect(editor); // Just de-select, otherwise we may trap focus in this element if we're handling a blur at the moment.
+            editor.prevSelection = undefined;
 
             // Update the editor:
             editor.children = sourceMode
@@ -78,6 +79,10 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
     // This effect is used to handle toggling between "visual mode" (WYSIWYG) and "source mode" (edit the plain MDT/markdown)
     React.useEffect(() => {
         if (sourceMode !== lastSourceMode) {
+            // Avoid bugs when the selection range in one mode is invalid in another mode; clear the selection now.
+            editor.prevSelection = undefined;
+            Transforms.deselect(editor);
+            // Now change to the new mode:
             if (sourceMode) {
                 // We have turned source mode on; update the source based on the current state of the visual editor.
                 // FIRST update value based on the visual editor's tree.
@@ -129,6 +134,34 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
         }
     }, [sourceMode, editor.children, onFocus, onChange, onBlur]);
     useSmartFocusAwareness(rootDiv.current, handleFocusChange);
+
+    // Work around a bug where the Slate selection disappears when users click on a toolbar button
+    // https://github.com/ianstormtaylor/slate/issues/3412#issuecomment-1147955840
+    const handleInnerEditableBlur = React.useCallback(() => {
+        const currentSelection = editor.selection;
+        const hasSelection = !!currentSelection && Range.isExpanded(currentSelection);
+        if (hasSelection) {
+            // Mark the current text as 'selected'. We will then render a 'fake' selection so that it still looks to the
+            // user as if it is selected. By inserting the 'wasSelected' mark, we also pre-split the text into separate
+            // nodes (if needded), and update the selection accordingly, so we can avoid bugs later when applying marks
+            // like bold using the toolbar buttons while the input element is blurred.
+            Transforms.setNodes(editor, {wasSelected: true}, {at: currentSelection, split: true, match: node => Text.isText(node)});
+            Editor.normalize(editor);
+            editor.prevSelection = editor.selection;
+            // We must also clear the DOM selection or strange bugs can occur:
+            window.getSelection()?.removeAllRanges();
+        }
+    }, [editor]);
+    const handleInnerEditableFocus = React.useCallback(() => {
+        const { prevSelection } = editor;
+        if (prevSelection) {
+            // Restore the previous selection:
+            Transforms.select(editor, prevSelection);
+            editor.prevSelection = undefined;
+            // Remove the 'wasSelected' mark throughout the document:
+            Transforms.setNodes(editor, {wasSelected: false}, {mode: "all", match: node => Text.isText(node)});
+      }
+    }, [editor]);
 
     // Edit commands:
     const insertLookupExpression = React.useCallback(() => {
@@ -200,6 +233,8 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
                     renderLeaf={renderLeaf}
                     renderElement={renderElement}
                     placeholder={props.placeholder}
+                    onBlur={handleInnerEditableBlur}
+                    onFocus={handleInnerEditableFocus}
                 />
             </div>
         </Slate>
@@ -273,6 +308,9 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
     }
     if (textNode.strikethrough) {
         classes += "line-through ";
+    }
+    if (textNode.wasSelected) {
+        classes += "bg-sky-100"
     }
     if (textNode.sup) {
         return <sup {...attributes} className={classes}>{children}</sup>;
