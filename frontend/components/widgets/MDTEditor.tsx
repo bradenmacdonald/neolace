@@ -213,9 +213,16 @@ const isMarkActive = (editor: NeolaceSlateEditor, mark: Mark) => {
     if (selection && Range.isExpanded(selection)) {
         // Check if every text node in the selection has the mark active:
         for (const node of (Editor.fragment(editor, selection)[0] as ParagraphNode).children) {
-            const textNode = node as ExtendedTextNode;
-            if (textNode.text !== "" && !textNode[mark]) {
-                return false;
+            if (node.type === "text") {
+                if (node.text !== "" && !(node as ExtendedTextNode)[mark]) {
+                    return false;
+                }
+            } else if (node.type === "link") {
+                for (const child of node.children) {
+                    if (child.type === "text" && child.text !== "" && !(child as ExtendedTextNode)[mark]) {
+                        return false;
+                    }
+                }
             }
         }
         return true;
