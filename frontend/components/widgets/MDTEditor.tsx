@@ -196,13 +196,13 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
                         mark="sub"
                         removeMark="sup"
                         icon="type-subscript"
-                        tooltip={defineMessage({id: 'rDSlqC', defaultMessage: "Subscript"})}
+                        tooltip={defineMessage({id: "rDSlqC", defaultMessage: "Subscript"})}
                         disabled={sourceMode}
                      />
                      <MarkButton
                         mark="strikethrough"
                         icon="type-strikethrough"
-                        tooltip={defineMessage({id: 'awehGz', defaultMessage: "Strike through"})}
+                        tooltip={defineMessage({id: "awehGz", defaultMessage: "Strike through"})}
                         disabled={sourceMode}
                      />
                     <ToolbarButton
@@ -213,8 +213,8 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
                     <ToolbarButton
                         toggled={sourceMode}
                         onClick={toggleSourceMode}
-                        tooltip={defineMessage({ id: "mA1RDm", defaultMessage: "Edit source" })}
-                        icon="code"
+                        tooltip={defineMessage({ id: "qdw5n+", defaultMessage: "Edit as markdown" })}
+                        icon="markdown"
                     />
                 </div>
                 {/* The Slate.js Editor textarea */}
