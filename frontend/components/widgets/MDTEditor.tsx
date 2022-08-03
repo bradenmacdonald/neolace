@@ -16,6 +16,7 @@ import { renderElement } from "components/utils/slate-mdt";
 import { defineMessage, TranslatableString } from "components/utils/i18n";
 import { IconId } from "./Icon";
 import { ParagraphNode } from "neolace-api/types/markdown-mdt-ast";
+import { useStateRef } from "components/utils/stateRefHook";
 
 interface Props {
     /** The MDT (Markdown) string value that is currently being edited */
@@ -49,9 +50,9 @@ interface Props {
 export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus, onChange, onBlur, inlineOnly, ...props }) => {
     const renderLeaf = React.useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
-    const [sourceMode, setSourceMode] = React.useState(false);
-    const toggleSourceMode = React.useCallback(() => setSourceMode((prevMode) => !prevMode), []);
-    const [lastSourceMode, updateLastSourceMode] = React.useState(sourceMode);
+    const [sourceMode, setSourceMode, sourceModeRef] = useStateRef(false);
+    const toggleSourceMode = React.useCallback(() => setSourceMode((prevMode) => !prevMode), [setSourceMode]);
+    const [lastSourceMode, updateLastSourceMode, lastSourceModeRef] = useStateRef(sourceMode);
 
     const [lastValueInternallySet, updateLastValueInternallySet] = React.useState<string | undefined>(undefined);
     const rootDiv = React.useRef<HTMLDivElement>(null);
@@ -78,10 +79,14 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
 
     // This effect is used to handle toggling between "visual mode" (WYSIWYG) and "source mode" (edit the plain MDT/markdown)
     React.useEffect(() => {
+        // Within handlers, we should always read from the 'ref' values to avoid bugs with concurrent updates:
+        const sourceMode = sourceModeRef.current;
+        const lastSourceMode = lastSourceModeRef.current;
         if (sourceMode !== lastSourceMode) {
             // Avoid bugs when the selection range in one mode is invalid in another mode; clear the selection now.
             editor.prevSelection = undefined;
             Transforms.deselect(editor);
+
             // Now change to the new mode:
             if (sourceMode) {
                 // We have turned source mode on; update the source based on the current state of the visual editor.
@@ -90,9 +95,8 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
                 // THEN:
                 editor.children = stringValueToSlateDoc(newValue);
                 updateLastValueInternallySet(newValue);
-                if (onChange) {
-                    onChange(newValue);
-                }
+                // Notify the parent that the value may have changed, based on converting the visual mode to markdown:
+                onChange?.(newValue);
             } else {
                 // We have turned source mode off; update the visual editor's document accordingly.
                 editor.children = parseMdtStringToSlateDoc(value, inlineOnly);
@@ -101,10 +105,10 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
             }
             updateLastSourceMode(sourceMode);
         }
-    }, [sourceMode, lastSourceMode, value, onChange, editor, inlineOnly]);
+    }, [sourceMode, lastSourceMode, editor, value, onChange, inlineOnly, sourceModeRef, lastSourceModeRef, updateLastSourceMode]);
 
     const handleChange = React.useCallback((newEditorState: Descendant[]) => {
-        if (sourceMode && onChange) {
+        if (sourceModeRef.current && onChange) {
             const newValue = slateDocToStringValue(newEditorState, EscapeMode.PlainText);
             updateLastValueInternallySet(newValue); // Mark this as an internal change, not coming from outside this component.
             onChange(newValue);
@@ -115,7 +119,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
             // don't want the onChange handler to change the value prop now and reset the
             // editor state in the middle of editing.
         }
-    }, [onChange, sourceMode]);
+    }, [onChange, sourceModeRef]);
 
     // Track whether or not the user is actively using this overall editor widget.
     // When in "visual mode" (not source mode), we don't notify the parent element about changes until they blur off of
