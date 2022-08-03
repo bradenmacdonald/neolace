@@ -1,6 +1,6 @@
 import React from "react";
 import { api } from "lib/api-client";
-import { BaseEditor, createEditor, Element, Node, Transforms, Range, Editor } from "slate";
+import { BaseEditor, createEditor, Element, Node, Transforms, Range, Editor, BaseSelection } from "slate";
 import { ReactEditor, withReact } from "slate-react";
 import { HistoryEditor, withHistory } from "slate-history";
 
@@ -38,11 +38,26 @@ export interface VoidEntryTypeNode extends api.MDT.CustomInlineNode {
     children: [{ type: "text"; text: "" }];
 }
 
-export type NeolaceSlateElement = api.MDT.Node | VoidEntryNode | VoidPropNode | VoidEntryTypeNode;
+/**
+ * In Slate.js, unlike the MDT node tree, we use 'marks' (attributes) to indicate bold/italcs etc. not full nodes
+ * StrongNode, EmphasisNode etc.
+ *
+ * See Slate.js docs for details on "Marks".
+ */
+export interface ExtendedTextNode extends api.MDT.TextNode {
+    strong?: boolean,
+    emphasis?: boolean,
+    sub?: boolean,
+    sup?: boolean,
+    strikethrough?: boolean,
+    /**
+     * A mark used to indicate the selected text even when the editor is not focused.
+     * https://github.com/ianstormtaylor/slate/issues/3412#issuecomment-1147955840
+     */
+    wasSelected?: boolean,
+}
 
-export type PlainText = { text: string };
-
-export type NeolaceSlateText = PlainText;
+export type NeolaceSlateElement = api.MDT.Node | VoidEntryNode | VoidPropNode | VoidEntryTypeNode | ExtendedTextNode;
 
 /** A generic empty Slate document using our Node types. */
 export const emptyDocument: NeolaceSlateElement[] = [{
@@ -55,7 +70,7 @@ declare module "slate" {
     interface CustomTypes {
         Editor: NeolaceSlateEditor;
         Element: NeolaceSlateElement;
-        Text: api.MDT.TextNode;
+        Text: ExtendedTextNode;
     }
 }
 
@@ -210,21 +225,100 @@ export enum EscapeMode {
     MDT = 1,
 }
 
+/** Marks are boolean flags that indicate bold/italics/strikethrough/etc. */
+type Marks = Omit<ExtendedTextNode, "text"|"type">;
+const allMarks: readonly (keyof Marks)[] = ["emphasis", "strong", "strikethrough", "sup", "sub"] as const;
+
 /**
  * Convert a Slate document back to MDT/lookup expression.
  * This works for documents being edited visually as well as for when using
  * the editor to edit plain text code with only text elements and paragraphs.
  *
- * If using this to edit plain text (MDT/markdown, lookup expressions, etc.)
- * set escape to "no-escape"; otherwise set it false so that text will be escaped correctly.
+ * If using this to edit plain text (lookup expressions, or markdown code etc.) set escape to PlainText; otherwise for
+ * visual editing of rich text, set it to MDT so that text in the generated markdown will be escaped correctly.
  */
-export function slateDocToStringValue(node: NeolaceSlateElement[], escape: EscapeMode): string {
+export function slateDocToStringValue(node: NeolaceSlateElement[], escape: EscapeMode, inheritedMarks: Marks = {}): string {
+    /** The output string (MDT/markdown/lookup) */
     let result = "";
+    /**
+     * activeMarks: a mutable object that indicates what bold/italic/superscript/subscript/strikethrough formatting is
+     * active on the text in 'result', as well as the index (in characters) at which that mark started:
+     **/
+    const activeMarks: Partial<Record<keyof Marks, number>> = {};
+    /** When a new mark (e.g. "bold") starts, we use this function to record the start point in 'activeMarks' */
+    const startMark = (mark: keyof Marks) => activeMarks[mark] = result.length;
+    /** End a mark and insert the required Markdown symbol (e.g. "**" for bold) at the start and end of the mark */
+    const endMark = (mark: keyof Marks) => {
+        const symbol = (
+            mark === "strong" ? "**" :
+            mark === "emphasis" ? "*" :  // Could also use '_' but it doesn't work in the middle of a word.
+            mark === "strikethrough" ? "~~" :
+            mark === "sub" ? "~" :
+            mark === "sup" ? "^" :
+            "!!!"
+        );
+        let insertPos = activeMarks[mark];
+        if (insertPos === undefined) throw new Error("Can't end a mark that's not started.");
+
+        // Special case: in Markdown, a starting mark cannot be followed by whitespace ("** bold**" is invalid):
+        while (result[insertPos] === " " || result[insertPos] === "\n") insertPos++;
+        if (insertPos >= result.length) {
+            // This mark only affects whitespace, which we cannot do. So just ignore it.
+            delete activeMarks[mark];
+            return;
+        }
+
+        let markedText = result.substring(insertPos);
+        // Insert the symbol at the start position:
+        result = result.substring(0, insertPos) + symbol;
+
+        // After the symbol comes the marked text itself, then the closing symbol:
+        let tail = symbol;
+        // Special case: in Markdown, an ending mark cannot be followed by whitespace ("**bold **" is invalid):
+        while (markedText[markedText.length - 1] === " " || markedText[markedText.length - 1] === "\n") {
+            tail += markedText[markedText.length - 1];
+            markedText = markedText.substring(0, markedText.length - 1);
+        }
+
+        // Special case: In superscript/subscript sections, spaces must be escaped:
+        if (mark === "sup" || mark === "sub") {
+            markedText = markedText.replaceAll(/\s/g, (m) => `\\${m}`);
+        }
+
+        result += markedText + tail;
+        delete activeMarks[mark];
+        // Now that we've inserted a new symbol into the markdown, we need to adjust the
+        // offsets of other active marks
+        for (const otherMark of getActiveMarks()) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            if (activeMarks[otherMark]! > insertPos) {
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                activeMarks[otherMark]! += symbol.length;
+            }
+        }
+    }
+    /** Get the keys of activeMarks, sorted by which marks are the most recent. */
+    const getActiveMarks = (): (keyof Marks)[] => Object.entries(activeMarks).sort((a, b) => b[1] - a[1]).map(([mark, _index]) => mark as keyof Marks);
+
+    // Go through the nodes recursively and convert them to Markdown (or to plain text)
     for (const n of node) {
         if ("text" in n) {
             if (escape === EscapeMode.MDT) {
+                const textNode = n as ExtendedTextNode;
+                // Do we need to stop any marks?
+                for (const mark of getActiveMarks()) {
+                    if (!textNode[mark]) endMark(mark);
+                }
+                // Are we starting any marks?
+                for (const mark of allMarks) {
+                    if (textNode[mark] && !(mark in activeMarks) && !inheritedMarks[mark]) {
+                        startMark(mark);
+                    }
+                }
+                // Now add the escaped text:
                 result += api.MDT.escapeText(n.text);
             } else {
+                // In "Plain Text" escape mode, we ignore all marks and don't do any escaping.
                 result += n.text;
             }
         } else if (n.type === "paragraph") {
@@ -233,15 +327,23 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
             }
             result += slateDocToStringValue(n.children, escape);
         } else if (n.type === "link") {
-            result += `[` + slateDocToStringValue(n.children, escape) + `](${n.href})`;
-        } else if (n.type === "strong") {
-            result += `**` + slateDocToStringValue(n.children, escape) + `**`;
-        } else if (n.type === "em") {
-            result += `_` + slateDocToStringValue(n.children, escape) + `_`;
-        } else if (n.type === "sup") {
-            result += `^` + slateDocToStringValue(n.children, escape) + `^`;
-        } else if (n.type === "sub") {
-            result += `~` + slateDocToStringValue(n.children, escape) + `~`;
+            // If any marks are only partially applied to this link, we need to end
+            // those marks now and start them again inside the link
+            // e.g. '**bold** [**first** word](/foo)' - valid
+            //      '**bold [first** word](/foo)' - invalid, we need to avoid this.
+            for (const mark of getActiveMarks()) {
+                for (const textNode of n.children as ExtendedTextNode[]) {
+                    if (textNode.type === "text" && !textNode[mark]) {
+                        endMark(mark);
+                        break;
+                    }
+                }
+            }
+            const inheritedMarks: Marks = {};
+            for (const mark of getActiveMarks()) {
+                inheritedMarks[mark] = true;
+            }
+            result += `[` + slateDocToStringValue(n.children, escape, inheritedMarks) + `](${n.href})`;
         } else if (n.type === "code_inline") {
             result += '`' + slateDocToStringValue(n.children, EscapeMode.PlainText) + '`';
         } else if (n.type === "lookup_inline") {
@@ -256,6 +358,10 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
             throw new Error(`sdtv: unexpected node in slate doc: ${n.type}`);
         }
     }
+    // Do we need to stop any marks?
+    for (const mark of getActiveMarks()) {
+        endMark(mark);
+    }
     return result;
 }
 
@@ -264,19 +370,42 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
  * structure), so this function converts from our MDT tree to a Slate.js document tree. Note that Slate.js itself
  * might modify the tree even more, e.g. to insert 'text' nodes before/after/between inline elements.
  */
-function cleanMdtNodeForSlate(node: api.MDT.Node): api.MDT.Node[] {
-    if (node.type === "softbreak") {
+function cleanMdtNodeForSlate(node: api.MDT.Node, marks: Omit<ExtendedTextNode, "text"|"type"> = {}): api.MDT.Node[] {
+    let removeNode = false;
+    marks = {...marks};
+    if (node.type === "inline") {
+        // Slate.js doesn't really need the "inline" node itself, so just remove it from the tree.
+        removeNode = true;
+    } else if (node.type === "text") {
+        return [{...node, ...marks }];
+    } else if (node.type === "softbreak") {
         // Softbreaks don't appear in the visual editor.
-        return [{ type: "text", text: " " }];
+        return [{ type: "text", text: " ", ...marks }];
+    } else if (node.type === "strong") {
+        // Instead of a StrongNode, use a 'mark' to indicate this text is bold:
+        removeNode = true;  // Remove this node from the tree, but keep its children
+        marks.strong = true;
+    } else if (node.type === "em") {
+        removeNode = true;
+        marks.emphasis = true;
+    } else if (node.type === "sup") {
+        removeNode = true;
+        marks.sup = true;
+    } else if (node.type === "sub") {
+        removeNode = true;
+        marks.sub = true;
+    } else if (node.type === "s") {
+        removeNode = true;
+        marks.strikethrough = true;
     }
     if ("children" in node && node.children) {
         const originalChildren = node.children;
         const newChildren = [];
         for (const child of originalChildren) {
-            newChildren.push(...cleanMdtNodeForSlate(child));
+            newChildren.push(...cleanMdtNodeForSlate(child, marks));
         }
-        if (node.type === "inline") {
-            // Slate.js doesn't really need the "inline" node itself, so just remove it from the tree.
+        if (removeNode) {
+            // Remove this node from the tree, but keep its children in place.
             return newChildren;
         }
         node.children = newChildren;

@@ -36,6 +36,8 @@ interface ToolbarButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
     icon: IconId;
     tooltip: TranslatableString;
     onClick?: React.MouseEventHandler<HTMLButtonElement>;
+    toggled?: boolean;
+    /** @deprecated Alias for toggled. */
     enabled?: boolean;
     children?: never;
 }
@@ -45,8 +47,9 @@ export const ToolbarSeparator: React.FunctionComponent<Record<never, never>> = (
     return <span aria-hidden={true} className="inline-block py-1 text-slate-200 select-none">|</span>
 }
 
-export const ToolbarButton: React.FunctionComponent<ToolbarButtonProps> = ({tooltip, icon, enabled, onClick, ...props}) => {
+export const ToolbarButton: React.FunctionComponent<ToolbarButtonProps> = ({tooltip, icon, enabled, toggled, onClick, ...props}) => {
     const intl = useIntl();
+    toggled = toggled ?? enabled ?? false;
 
     const handleClick = React.useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
@@ -57,7 +60,7 @@ export const ToolbarButton: React.FunctionComponent<ToolbarButtonProps> = ({tool
 
     return <Tooltip tooltipContent={<span>{displayString(intl, tooltip)}</span>}>
         {attribs => <button {...props} {...attribs} aria-label={displayString(intl, tooltip)} onClick={handleClick} className={`rounded-md px-2 py-1 hover:shadow-sm hover:shadow-gray-500 disabled:text-gray-300 disabled:hover:shadow-none disabled:cursor-not-allowed align-top ${enabled ? 'text-black' : 'text-gray-600'}`}>
-            <span className={`${enabled ? "border-b-2 border-b-red-700" : ""}`}>
+            <span className={`${toggled ? "border-b-2 border-b-red-700" : ""}`}>
                 <Icon icon={icon}/>
             </span>
         </button>
