@@ -30,6 +30,12 @@ describe("markdown round-trip", () => {
         verifyInlineWithFormattingChanges("__Alternate Bold__");
     });
 
+    // it("can do complicated bold and italics formatting", () => {
+    //     // This is the way to write: "A rechargeable battery" with overlapping formatting,
+    //     // where "rechargeable bat" is bold and "able battery" is italic:
+    //     verifyInline("A **recharge*able bat***_tery_.");
+    // });
+
     it("nesting of marks", () => {
         verifyInline("***super*cali**");
         verifyInline("**^super^cali**");
@@ -39,6 +45,11 @@ describe("markdown round-trip", () => {
         verifyInline("**partial**[**bold** not bold](/foo)");
         verifyInline("**This is bold *and this is both***");
         verifyInline(`The **total area** of Canada is **9,984,670 km^2^**`);
+    });
+
+    it("can escape spaces in superscript/subscript", () => {
+        verifyInline("blah blah^Oh\\ really?^");
+        verifyInline("blah blah~Oh\\ really?~");
     });
 });
 

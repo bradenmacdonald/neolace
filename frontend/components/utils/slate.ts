@@ -275,6 +275,11 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
             markedText = markedText.substring(0, markedText.length - 1);
         }
 
+        // Special case: In superscript/subscript sections, spaces must be escaped:
+        if (mark === "sup" || mark === "sub") {
+            markedText = markedText.replaceAll(/\s/g, (m) => `\\${m}`);
+        }
+
         result += markedText + tail;
         delete activeMarks[mark];
         // Now that we've inserted a new symbol into the markdown, we need to adjust the
