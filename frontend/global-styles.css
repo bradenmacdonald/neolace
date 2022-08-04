@@ -48,26 +48,27 @@
     .neo-typography h3 { @apply text-2xl; }
     .neo-typography h4 { @apply text-xl; }
     .neo-typography h5 { @apply text-lg; }
-    .neo-typography p { font-weight: 400; @apply my-1; }
+    .neo-typography p { font-weight: 400; @apply mt-1 mb-2; }
     .neo-typography a:not(.unstyled) { @apply underline text-theme-link-color; }
+
+    /* marker color for lists */
+    .neo-typography ul li::marker, .neo-typography ol li::marker {
+        @apply text-gray-400;
+    }
+    /* Spacing for lists */
+    .neo-typography ul:not(.unstyled), .neo-typography ol:not(.unstyled) {
+        @apply mt-1 mb-2;
+    }
 
     /* Unordered lists */
     .neo-typography ul:not(.unstyled) li {
         @apply ml-3 pl-2 mb-1;
         list-style-type: "▸";
     }
-    .neo-typography ul li::marker, .neo-typography ol li::marker {
-        /* content: "▸"; */
-        @apply text-gray-400;
-    }
 
     /* Ordered lists */
     .neo-typography ol:not(.unstyled) li {
         @apply ml-6 pl-1 mb-1 list-decimal;
-    }
-    /* Blockquote */
-    .neo-typography blockquote {
-        @apply ml-3 pl-3 pr-6 border-l-4 border-gray-300;
     }
     /* Internationalize our ordered lists: */
     .neo-typography ol li:lang(ar) { list-style-type: arabic-indic; }
@@ -79,6 +80,19 @@
     .neo-typography ol li:lang(zh_HANT) { list-style-type: trad-chinese-informal; }
     .neo-typography ol li::marker {
         @apply text-sm;
+    }
+
+    /* Blockquote */
+    .neo-typography blockquote {
+        @apply ml-3 pl-3 pr-6 border-l-4 border-gray-200 text-gray-800;
+    }
+    /* Code */
+    .neo-typography code {
+        @apply text-sky-900;
+    }
+    /* Code Block */
+    .neo-typography code pre {
+        @apply ml-3 pl-3 pr-6 border-l-4 border-gray-200 text-sky-900 overflow-x-auto;
     }
     /* Animation that animates an element's 'transform' and also its visibility property, hiding/showing it before/after the transform */
     .transition-visibility-transform {
