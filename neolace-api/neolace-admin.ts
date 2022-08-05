@@ -240,7 +240,11 @@ async function exportSchema(siteId: string): Promise<string> {
     const schema = await client.getSiteSchema({siteId});
     const yamlSchema = schemaToYaml(schema);
     // Do a quick validation:
-    assertEquals(yamlToSchema(yamlSchema).schema, schema);
+    try {
+        assertEquals(yamlToSchema(yamlSchema).schema, schema);
+    } catch (err) {
+        console.error(`Warning: detected that importing the exported schema would have some differences.`, err);
+    }
     return yamlSchema
 }
 
