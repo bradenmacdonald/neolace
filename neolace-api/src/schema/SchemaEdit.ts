@@ -79,6 +79,18 @@ export const UpdateEntryType = SchemaEditType({
         return Object.freeze(newSchema);
     },
     describe: (data) => `Updated \`EntryType ${data.id}\``,
+    consolidate: (thisEdit, earlierEdit) => {
+        if (
+            earlierEdit.code === "UpdateEntryType" &&
+            thisEdit.data.id === earlierEdit.data.id
+        ) {
+            return {
+                code: "UpdateEntryType",
+                data: { ...earlierEdit.data, ...thisEdit.data },
+            }
+        }
+        return undefined;
+    },
 });
 
 /**
@@ -141,6 +153,18 @@ export const UpdateEntryTypeFeature = SchemaEditType({
         return Object.freeze(newSchema);
     },
     describe: (data) => `Updated ${data.feature.featureType} feature of \`EntryType ${data.entryTypeId}\``,
+    consolidate: (thisEdit, earlierEdit) => {
+        if (
+            earlierEdit.code === "UpdateEntryTypeFeature" &&
+            thisEdit.data.entryTypeId === earlierEdit.data.entryTypeId &&
+            thisEdit.data.feature.featureType === earlierEdit.data.feature.featureType
+        ) {
+            // The new edit for the same feature always overrides the old, as it's always a complete specification
+            // of the feature settings.
+            return thisEdit;
+        }
+        return undefined;
+    },
 });
 
 export const UpdateProperty = SchemaEditType({

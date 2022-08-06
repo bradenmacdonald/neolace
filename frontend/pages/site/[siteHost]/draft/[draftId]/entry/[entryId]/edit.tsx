@@ -1,7 +1,7 @@
 import React from "react";
 import { NextPage } from "next";
 import { FormattedMessage, useIntl } from "react-intl";
-import { api, client, NEW, useSiteData, useSchema, DraftContextData, useEditableEntry, useDraft } from "lib/api-client";
+import { api, client, NEW, useSiteData, useSchema, DraftContextData, useEditableEntry, useDraft, DraftContext } from "lib/api-client";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -44,8 +44,8 @@ const DraftEntryEditPage: NextPage = function (_props) {
     const entryId: api.VNID = isNewEntry ? newEntryId : query.entryId as api.VNID;
 
     // Any edits that the user has made on this page now, but hasn't yet saved to a draft:
-    const [unsavedEdits, setUnsavedEdits] = React.useState<api.AnyContentEdit[]>([]);
-    const addUnsavedEdit = React.useCallback((newEdit: api.AnyContentEdit) => {
+    const [unsavedEdits, setUnsavedEdits] = React.useState<api.AnyEdit[]>([]);
+    const addUnsavedEdit = React.useCallback((newEdit: api.AnyEdit) => {
         setUnsavedEdits((existingEdits) => api.consolidateEdits([...existingEdits, newEdit]));
     }, []);
 
@@ -136,7 +136,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
         content = <ErrorMessage>This draft is no longer editable.</ErrorMessage>;
     } else {
         content = (
-            <>
+            <DraftContext.Provider value={draftContext}>
                 <Breadcrumbs>
                     <Breadcrumb href={`/`}>{site.name}</Breadcrumb>
                     <Breadcrumb href={`/draft/`}>
@@ -270,7 +270,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                             )}
                     </Tab>
                 </TabBarRouter>
-            </>
+            </DraftContext.Provider>
         );
     }
 

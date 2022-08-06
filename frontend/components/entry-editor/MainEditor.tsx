@@ -8,11 +8,12 @@ import { TextInput } from "components/widgets/TextInput";
 import { MDTEditor } from "components/widgets/MDTEditor";
 import { SelectEntryType } from "components/widgets/SelectEntryType";
 import { defineMessage } from "components/utils/i18n";
+import { EntryTypeModal } from "components/schema-editor/EntryTypeModal";
 
 interface Props {
     entry?: api.EditableEntryData;
     isNewEntry: boolean;
-    addUnsavedEdit: (newEdit: api.AnyContentEdit) => void;
+    addUnsavedEdit: (newEdit: api.AnyEdit) => void;
 }
 
 /**
@@ -55,6 +56,24 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
         addUnsavedEdit({ code: api.SetEntryDescription.code, data: { entryId: entry.id, description } });
     }, [entry, addUnsavedEdit]);
 
+    // Show a modal (popup) that allows the user to create a new entry type
+    const [showingNewEntryTypeModalWithVNID, setNewEntryTypeVNID] = React.useState(undefined as api.VNID|undefined);
+    const showNewEntryTypeModal = React.useCallback(() => { setNewEntryTypeVNID(api.VNID()); }, []);
+    const cancelNewEntryTypeModal = React.useCallback(() => { setNewEntryTypeVNID(undefined); }, []);
+
+    const doneCreatingEntryType = React.useCallback((edits: api.AnySchemaEdit[]) => {
+        // Create the new entry type, by adding the edits to unsavedEdits:
+        for (const edit of edits) { addUnsavedEdit(edit); }
+        setNewEntryTypeVNID(
+            (newEntryTypeId) => {
+                // Select the new entry type in the "Edit Entry" form:
+                if (newEntryTypeId) { updateEntryType(newEntryTypeId); }
+                // Close the modal:
+                return undefined;
+            }
+        );
+    }, [addUnsavedEdit, updateEntryType]);
+
     const entryType = entry ? schema?.entryTypes[entry?.entryType.id] : undefined;
 
     if (!schema || !entry) {
@@ -70,7 +89,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
         );
     }
 
-    return (
+    return (<>
         <Form>
             {/* Entry Name/Title */}
             <AutoControl
@@ -103,6 +122,8 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
                     value={entry?.entryType.id}
                     onChange={updateEntryType}
                     readOnly={!isNewEntry}
+                    extraOption={defineMessage({ id: "f0R45x", defaultMessage: "+ Add a new entry type..." })}
+                    onSelectExtraOption={showNewEntryTypeModal}
                 />
             </Control>
 
@@ -146,5 +167,15 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
                 <MDTEditor inlineOnly={true} />
             </AutoControl>
         </Form>
-    );
+
+        {
+            showingNewEntryTypeModalWithVNID ?
+                <EntryTypeModal
+                    entryTypeId={showingNewEntryTypeModalWithVNID}
+                    onSaveChanges={doneCreatingEntryType}
+                    onCancel={cancelNewEntryTypeModal}
+                />
+            : null
+        }
+    </>);
 };
