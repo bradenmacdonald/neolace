@@ -9,6 +9,7 @@ import { MDTEditor } from "components/widgets/MDTEditor";
 import { SelectEntryType } from "components/widgets/SelectEntryType";
 import { defineMessage } from "components/utils/i18n";
 import { EntryTypeModal } from "components/schema-editor/EntryTypeModal";
+import { ToolbarButton } from "components/widgets/Button";
 
 interface Props {
     entry?: api.EditableEntryData;
@@ -57,22 +58,23 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
     }, [entry, addUnsavedEdit]);
 
     // Show a modal (popup) that allows the user to create a new entry type
-    const [showingNewEntryTypeModalWithVNID, setNewEntryTypeVNID] = React.useState(undefined as api.VNID|undefined);
-    const showNewEntryTypeModal = React.useCallback(() => { setNewEntryTypeVNID(api.VNID()); }, []);
-    const cancelNewEntryTypeModal = React.useCallback(() => { setNewEntryTypeVNID(undefined); }, []);
+    const [showingEditEntryTypeModalWithVNID, editEntryTypeWithVNID] = React.useState(undefined as api.VNID|undefined);
+    const showNewEntryTypeModal = React.useCallback(() => { editEntryTypeWithVNID(api.VNID()); }, []);
+    const showEditEntryTypeModal = React.useCallback(() => { editEntryTypeWithVNID(entry?.entryType.id); }, [entry?.entryType.id]);
+    const cancelEditEntryTypeModal = React.useCallback(() => { editEntryTypeWithVNID(undefined); }, []);
 
-    const doneCreatingEntryType = React.useCallback((edits: api.AnySchemaEdit[]) => {
+    const doneEditingEntryType = React.useCallback((edits: api.AnySchemaEdit[]) => {
         // Create the new entry type, by adding the edits to unsavedEdits:
         for (const edit of edits) { addUnsavedEdit(edit); }
-        setNewEntryTypeVNID(
-            (newEntryTypeId) => {
+        editEntryTypeWithVNID(
+            (editedEntryTypeId) => {
                 // Select the new entry type in the "Edit Entry" form:
-                if (newEntryTypeId) { updateEntryType(newEntryTypeId); }
+                if (editedEntryTypeId && entry?.entryType.id !== editedEntryTypeId) { updateEntryType(editedEntryTypeId); }
                 // Close the modal:
                 return undefined;
             }
         );
-    }, [addUnsavedEdit, updateEntryType]);
+    }, [addUnsavedEdit, entry?.entryType.id, updateEntryType]);
 
     const entryType = entry ? schema?.entryTypes[entry?.entryType.id] : undefined;
 
@@ -117,6 +119,16 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
                     })
                 )}}
                 isRequired={isNewEntry}
+                afterInput={
+                    entry?.entryType.id ? (
+                        /* A button that allows the user to make edits to this entry type (TODO: disable if they don't have permission) */
+                        <ToolbarButton
+                            icon="three-dots"
+                            tooltip={defineMessage({defaultMessage: "Edit this entry type...", id: "fR7peU"})}
+                            onClick={showEditEntryTypeModal}
+                        /> 
+                    ): null
+                }
             >
                 <SelectEntryType
                     value={entry?.entryType.id}
@@ -169,11 +181,11 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
         </Form>
 
         {
-            showingNewEntryTypeModalWithVNID ?
+            showingEditEntryTypeModalWithVNID ?
                 <EntryTypeModal
-                    entryTypeId={showingNewEntryTypeModalWithVNID}
-                    onSaveChanges={doneCreatingEntryType}
-                    onCancel={cancelNewEntryTypeModal}
+                    entryTypeId={showingEditEntryTypeModalWithVNID}
+                    onSaveChanges={doneEditingEntryType}
+                    onCancel={cancelEditEntryTypeModal}
                 />
             : null
         }

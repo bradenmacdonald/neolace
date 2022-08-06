@@ -26,6 +26,8 @@ interface ControlProps {
     label: TranslatableText;
     hint?: TranslatableText;
     children: React.ReactElement;
+    /** Extra HTML/elements associated with this control, but not related to the main input itself */
+    afterInput?: React.ReactNode;
     /** Is this field required? */
     isRequired?: boolean;
 }
@@ -50,7 +52,12 @@ export const Control: React.FunctionComponent<ControlProps> = (props) => {
                     </span>
                 )}
             </label>
-            {childInput}
+            {props.afterInput ?
+                <div className="flex flex-row">
+                    {childInput}
+                    {props.afterInput}
+                </div>
+            : childInput}
             {props.hint ? <span className="block text-sm text-gray-600">{displayText(props.hint)}</span> : null}
         </div>
     );
