@@ -15,6 +15,7 @@ interface MDTContextArgs {
     headingShift?: number;
     [footnotes]?: MDT.RootNode["footnotes"];
     disableInteractiveFeatures?: boolean;
+    inParagraph?: boolean;
 }
 
 /**
@@ -41,6 +42,8 @@ export class MDTContext {
      * Used in tooltips and dropdowns to prevent unwanted links or tooltips-within-tooltips
      */
     readonly disableInteractiveFeatures: boolean;
+    /** inParagraph: Used within <p> elements to disable rendering of <ul> or other forbidden elements. */
+    readonly inParagraph: boolean;
 
     constructor(args: MDTContextArgs) {
         this.entryId = args.entryId;
@@ -49,6 +52,7 @@ export class MDTContext {
         this.headingShift = args.headingShift ?? 0;
         this[footnotes] = args[footnotes];
         this.disableInteractiveFeatures = args.disableInteractiveFeatures ?? false;
+        this.inParagraph = args.inParagraph ?? false;
     }
 
     public childContextWith(args: MDTContextArgs) {
@@ -59,6 +63,7 @@ export class MDTContext {
             headingShift: this.headingShift + (args.headingShift ?? 0),
             [footnotes]: args[footnotes] ?? (entryId === this.entryId ? this[footnotes] : undefined),
             disableInteractiveFeatures: args.disableInteractiveFeatures ?? this.disableInteractiveFeatures,
+            inParagraph: args.inParagraph ?? this.inParagraph,
         });
     }
 }
@@ -272,7 +277,8 @@ function nodeToComponent(node: MDT.Node, context: MDTContext): React.ReactElemen
             );
         }
         case "paragraph":
-            return <p key={key}>{node.children.map((child) => nodeToComponent(child, context))}</p>;
+            const childContext = context.childContextWith({inParagraph: true});
+            return <p key={key}>{node.children.map((child) => nodeToComponent(child, childContext))}</p>;
         case "list_item":
             return <li key={key}>{node.children.map((child) => nodeToComponent(child, context))}</li>;
         case "bullet_list":
