@@ -120,7 +120,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             }
 
             // TODO: Need to support controlling this mode via annotations in the future.
-            if (props.defaultListMode === "compact") {
+            if (props.mdtContext.inParagraph || props.defaultListMode === "compact") {
                 return <span className="neo-lookup-paged-values">
                     <FormattedListParts type="unit" value={listValues}>
                         {parts => <>{parts.map(p => p.value)}</>}

@@ -84,7 +84,7 @@ export const schema = ValidateSiteSchema({
             name: "Image",
             description: "An image, such as a photo of a plant",
             friendlyIdPrefix: "img-",
-            color: EntryTypeColor.Slate,
+            color: EntryTypeColor.Default,
             abbreviation: "IM",
             enabledFeatures: {
                 Image: {},

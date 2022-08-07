@@ -201,7 +201,7 @@ export const EntryContext = React.createContext<{entryId: VNID|undefined}>({
 
 export interface DraftContextData {
     draftId: VNID|'_'|undefined;
-    unsavedEdits: ReadonlyArray<api.AnyContentEdit>;
+    unsavedEdits: ReadonlyArray<api.AnyEdit>;
 }
 /**
  * In this context, there is a "current draft ID". e.g. when editing a draft
@@ -227,7 +227,7 @@ export function useDraft(
     context: {draftContext?: DraftContextData} = {},
 ): [
     data: DraftDataWithEdits | undefined,
-    unsavedEdits: ReadonlyArray<api.AnyContentEdit>,
+    unsavedEdits: ReadonlyArray<api.AnyEdit>,
     error: api.ApiError | undefined,
     mutate: KeyedMutator<DraftDataWithEdits | undefined>,
 ] {

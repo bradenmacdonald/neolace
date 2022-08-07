@@ -3,7 +3,6 @@ import { Schema, Type, string, number, vnidString, array, boolean, Record, } fro
 /** The available color options for each entry */
 export enum EntryTypeColor {
     Default = "",
-    Slate = "",
     Red = "red",
     Orange = "orange",
     Yellow = "yellow",
@@ -22,7 +21,7 @@ export const entryTypeColors: Record<EntryTypeColor, readonly [backgroundColor: 
     // [overall background color, darker left rectangle color, text color]
     // These colors come from https://tailwindcss.com/docs/customizing-colors and are typically the
     // [color-100, color-200, and color-800] variants from that pallete
-    [EntryTypeColor.Slate]: ["#F1F5F9", "#CBD5E1", "#0F172A"],
+    [EntryTypeColor.Default]: ["#F1F5F9", "#CBD5E1", "#0F172A"],  // Default is "Slate" color
     [EntryTypeColor.Red]: ["#FECACA", "#FCA5A5", "#991B1B"],
     [EntryTypeColor.Orange]: ["#FFEDD5", "#FED7AA", "#9A3412"],
     [EntryTypeColor.Yellow]: ["#FEF9C3", "#FEF08A", "#A16207"],
