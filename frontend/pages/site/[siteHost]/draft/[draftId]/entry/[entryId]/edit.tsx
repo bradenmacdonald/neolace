@@ -63,11 +63,12 @@ const DraftEntryEditPage: NextPage = function (_props) {
 
     // If we'll be creating a new draft when the user saves these changes, this is the title for that new draft:
     const [newDraftTitle, setNewDraftTitle] = React.useState("");
+    const defaultDraftTitle = intl.formatMessage({id: "aGZGjy", defaultMessage: `Edited "{title}"` }, { title: entry?.name ?? "" });
     const newDraftTitleChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         setNewDraftTitle(event.target.value);
     }, []);
     const [isSaving, setIsSaving] = React.useState(false);
-    const saveChangesToDraft = React.useCallback(async () => {
+    const saveChangesToDraft = React.useCallback(async (applyImmediately = false) => {
         if (draftError) {
             // This shouldn't happen because if there's a draft error, the save button won't be shown. But just in case:
             return alert("Inconsistent state: cannot save changes to a draft with errors.");
@@ -76,14 +77,29 @@ const DraftEntryEditPage: NextPage = function (_props) {
         if (draftId === NEW) {
             // We're creating a new draft:
             await client.createDraft({
-                title: newDraftTitle.trim() ||
-                    intl.formatMessage({id: "TUzKsg", defaultMessage: `Edited {title}` }, { title: entry?.name ?? "" }),
+                title: newDraftTitle.trim() || defaultDraftTitle,
                 description: "",
                 edits: unsavedEdits,
             }, { siteId: site.shortId }).then(
                 (newDraft) => { // If successful:
-                    // Redirect to let the user view/edit the new draft:
-                    router.push(`/draft/${newDraft.id}`);
+                    if (applyImmediately) {
+                        client.acceptDraft(newDraft.id, {siteId: site.shortId}).then(() => {
+                            // The draft has been accepted immediately:
+                            router.push(`/entry/${entry?.friendlyId}`);
+                        }, (applyError) => {
+                            console.error(applyError);
+                            alert(
+                                intl.formatMessage({
+                                    id: "Y3wO1p",
+                                    defaultMessage: `Failed to apply changes: {error}`,
+                                }, { error: String((applyError instanceof Error ? applyError?.message : undefined) ?? applyError) }),
+                            );
+                            // The draft failed to apply. Go to the draft page.
+                            router.push(`/draft/${draftId}`);
+                        });
+                    } else {
+                        router.push(`/draft/${draftId}`);
+                    }
                 },
                 (error) => {
                     setIsSaving(false);
@@ -114,7 +130,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                 );
             }
         }
-    }, [draftId, entry?.name, unsavedEdits, newDraftTitle, draftError, intl, router, site.shortId]);
+    }, [draftError, draftId, newDraftTitle, defaultDraftTitle, unsavedEdits, site.shortId, router, intl, entry?.friendlyId]);
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour />;
@@ -184,59 +200,53 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         <PropertiesEditor entry={entry} addUnsavedEdit={addUnsavedEdit} />
                     </Tab>
                     <Tab
-                        id="changes"
-                        icon="list"
-                        badge={unsavedEdits.length ? unsavedEdits.length.toString() : undefined}
-                        name={defineMessage({ defaultMessage: "Changes", id: "dgqhUM" })}
-                    >
-                        {unsavedEdits.length > 0
-                            ? (
-                                <ul>
-                                    {unsavedEdits.map((e, idx) => (
-                                        <li key={idx}>
-                                            <p>
-                                                <strong>{e.code}</strong>{" "}
-                                                {
-                                                    e.code === api.SetEntryName.code ?
-                                                        <FormattedMessage
-                                                            defaultMessage='Renamed this entry to "{newName}"'
-                                                            id="Psr/Zc"
-                                                            values={{newName: e.data.name}}
-                                                        />
-                                                    : null
-                                                }
-                                                <HoverClickNote superscript={false} displayText="(...)">
-                                                    <p>Data for this edit:</p>
-                                                    <pre className="whitespace-pre-wrap">{JSON.stringify(e.data, undefined, 4)}</pre>
-                                                </HoverClickNote>
-                                            </p>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )
-                            : (
-                                <p>
-                                    <FormattedMessage
-                                        id="VtwXmq"
-                                        defaultMessage="You haven't made any changes yet. Make some changes above and you'll be able to save the changes here."
-                                    />
-                                </p>
-                            )}
-                    </Tab>
-                    <Tab
                         id="save"
                         icon="check-circle-fill"
-                        name={defineMessage({ defaultMessage: "Save", id: "jvo0vs" })}
+                        name={defineMessage({ defaultMessage: "Save Changes", id: "3VI9mt" })}
+                        badge={unsavedEdits.length ? unsavedEdits.length.toString() : undefined}
                     >
-                        <h3>
-                            <FormattedMessage id="X0ha1a" defaultMessage="Save changes" />
-                        </h3>
+                        <h3><FormattedMessage id="dgqhUM" defaultMessage="Changes" /></h3>
+                            {unsavedEdits.length > 0
+                                ? (
+                                    <ul>
+                                        {unsavedEdits.map((e, idx) => (
+                                            <li key={idx}>
+                                                <p>
+                                                    {
+                                                        e.code === api.SetEntryName.code ?
+                                                            <FormattedMessage
+                                                                defaultMessage='Renamed this entry to "{newName}"'
+                                                                id="Psr/Zc"
+                                                                values={{newName: e.data.name}}
+                                                            />
+                                                        : <strong>{e.code}</strong>
+                                                    }
+                                                    <HoverClickNote superscript={false} displayText="(...)">
+                                                        <p>Data for this edit:</p>
+                                                        <pre className="whitespace-pre-wrap">{JSON.stringify(e.data, undefined, 4)}</pre>
+                                                    </HoverClickNote>
+                                                </p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )
+                                : (
+                                    <p>
+                                        <FormattedMessage
+                                            id="im5E8q"
+                                            defaultMessage="You haven't made any changes yet. Make some changes usign the other tabs and you'll be able to save the changes here."
+                                        />
+                                    </p>
+                                )
+                            }
+
+                        <h3><FormattedMessage id="H/DODr" defaultMessage="Save these changes" /></h3>
                         {draft
                             ? (
                                 <Button
                                     icon="file-earmark-diff"
                                     disabled={unsavedEdits.length === 0 || isSaving}
-                                    onClick={saveChangesToDraft}
+                                    onClick={() => saveChangesToDraft()}
                                 >
                                     <FormattedMessage
                                         id="S/a7rH"
@@ -250,20 +260,30 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                     <Control
                                         id="draft-desc"
                                         label={defineMessage({
-                                            id: "I72/UY",
-                                            defaultMessage: "Provide a brief description of what you changed:",
+                                            id: "uRwjl1",
+                                            defaultMessage: "Provide a brief description of what you changed (optional):",
                                         })}
                                     >
-                                        <TextInput value={newDraftTitle} onChange={newDraftTitleChange} />
+                                        <TextInput value={newDraftTitle} onChange={newDraftTitleChange} placeholder={defaultDraftTitle} />
                                     </Control>
                                     <Button
                                         icon="file-earmark-diff"
-                                        disabled={unsavedEdits.length === 0 || newDraftTitle.length === 0 || isSaving}
-                                        onClick={saveChangesToDraft}
+                                        disabled={unsavedEdits.length === 0 || isSaving}
+                                        onClick={() => saveChangesToDraft()}
+                                        bold={true}
                                     >
                                         <FormattedMessage
                                             id="TpheOq"
                                             defaultMessage="Save these changes (as draft)"
+                                        />
+                                    </Button>
+                                    <Button
+                                        disabled={unsavedEdits.length === 0 || isSaving}
+                                        onClick={() => saveChangesToDraft(true)}
+                                    >
+                                        <FormattedMessage
+                                            id="zUjePC"
+                                            defaultMessage="Save immediately"
                                         />
                                     </Button>
                                 </Form>
