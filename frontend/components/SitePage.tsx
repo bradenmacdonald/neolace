@@ -102,6 +102,18 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     const defaultSystemLinks: UISlotWidget<SystemLink>[] = [];
     //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
 
+    defaultSystemLinks.push(
+        {
+            id: "lookup",
+            priority: 22,
+            content: {
+                url: "/lookup",
+                label: <FormattedMessage id="VzW9jr" defaultMessage="Lookup" />,
+                icon: "asterisk",
+            },
+        },
+    );
+
     if (DEVELOPMENT_MODE) {
         // For now, the "Drafts" link should only be visible during development
         defaultSystemLinks.push(
