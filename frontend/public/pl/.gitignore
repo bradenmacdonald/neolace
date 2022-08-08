@@ -1,2 +1,4 @@
+# This folder holds public static asset files for plugins, and will be used during the frontend build process.
+# Do not delete it.
 *
 !.gitignore
