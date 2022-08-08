@@ -14,7 +14,7 @@ export const plugin: PluginDefinition = {
                         priority: 20,
                         content: {
                             url: "/search",
-                            label: <FormattedMessage id="xmcVZ0" defaultMessage="Search" />,
+                            label: <FormattedMessage id="JrRTUH" defaultMessage="Quick Search" />,
                             icon: "search",
                         },
                     },

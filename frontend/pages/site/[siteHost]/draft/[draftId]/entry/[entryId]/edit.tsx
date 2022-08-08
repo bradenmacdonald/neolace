@@ -95,10 +95,10 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                 }, { error: String((applyError instanceof Error ? applyError?.message : undefined) ?? applyError) }),
                             );
                             // The draft failed to apply. Go to the draft page.
-                            router.push(`/draft/${draftId}`);
+                            router.push(`/draft/${newDraft.id}`);
                         });
                     } else {
-                        router.push(`/draft/${draftId}`);
+                        router.push(`/draft/${newDraft.id}`);
                     }
                 },
                 (error) => {
