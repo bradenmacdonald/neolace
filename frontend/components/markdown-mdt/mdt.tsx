@@ -126,7 +126,7 @@ function inlineNodeToComponent(node: MDT.InlineNode | MDT.AnyInlineNode, context
                     // Not sure what this is linking to...
                     return (
                         <Link href={node.href} key={key}>
-                            <a>{node.children.map((child) => inlineNodeToComponent(child, context))}</a>
+                            {node.children.map((child) => inlineNodeToComponent(child, context))}
                         </Link>
                     );
                 }

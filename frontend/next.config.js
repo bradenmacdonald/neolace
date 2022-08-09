@@ -1,10 +1,11 @@
-const { PHASE_DEVELOPMENT_SERVER } = require('next/constants')
+const { PHASE_DEVELOPMENT_SERVER } = require('next/constants');
 const path = require("path");
 
 module.exports = (phase, { defaultConfig }) => {
-
+    
+    /** @type {import("next").NextConfig} */
     let baseConfig = {
-        ...defaultConfig,
+        //...defaultConfig,
         reactStrictMode: true,
         images: {
             // Cut down on the number of different images sizes we have to deal with.
@@ -21,7 +22,13 @@ module.exports = (phase, { defaultConfig }) => {
             locales: ["en", "fr", "ru"],
             defaultLocale: "en",
         },
-        // deno-lint-ignore require-await
+        experimental: {
+            // Don't transform ES6 to ES5 for older browsers:
+            browsersListForSwc: true,
+            legacyBrowsers: false,
+            // Don't require <a> inside <Link>
+            newNextLinkBehavior: true,
+        },
         rewrites: async () => {
             // In order to support multitenancy with Next.js, we use a "rewrite" to include the host in the path
             return {
@@ -30,10 +37,7 @@ module.exports = (phase, { defaultConfig }) => {
                         //source: '/:path*', <-- not working (won't match '/') due to https://github.com/vercel/next.js/issues/14930
                         source: '/:path*{/}?',
                         has: [
-                            {
-                                type: 'host',
-                                value: '(?<siteHost>.*)',
-                            },
+                            {type: 'host', value: '(?<siteHost>.*)'},
                         ],
                         destination: '/site/:siteHost/:path*',
                     },
@@ -42,10 +46,7 @@ module.exports = (phase, { defaultConfig }) => {
                     {
                         source: '/:path*{/}?',
                         has: [
-                            {
-                                type: 'host',
-                                value: '(?<siteHost>.*)',
-                            },
+                            {type: 'host', value: '(?<siteHost>.*)'},
                         ],
                         destination: '/site/:siteHost/fallback/:path*',
                     },

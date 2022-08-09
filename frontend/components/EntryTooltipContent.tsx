@@ -16,8 +16,11 @@ export const EntryTooltipContent: React.FunctionComponent<Props> = (props: Props
     const entry = refCache.entries[props.entryId];
     return entry ? <>
         <span className="text-base my-1">
-            <Link href={`/entry/${entry.friendlyId}`}>
-                <a className="font-bold text-theme-link-color underline">{entry.name}</a>
+            <Link
+                href={`/entry/${entry.friendlyId}`}
+                className="font-bold text-theme-link-color underline"
+            >
+                {entry.name}
             </Link>{" "}
             {/* The entry type, in parentheses */}
             ({refCache.entryTypes[entry.entryType.id]?.name})
@@ -29,5 +32,5 @@ export const EntryTooltipContent: React.FunctionComponent<Props> = (props: Props
                 context={props.mdtContext.childContextWith({entryId: entry.id, disableInteractiveFeatures: true})}
             />
         </p>
-    </> : <p>Error: entry missing from reference cache.</p>
+    </> : <p>Error: entry missing from reference cache.</p>;
 }

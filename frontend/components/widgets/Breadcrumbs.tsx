@@ -21,10 +21,11 @@ export const Breadcrumb: React.FunctionComponent<BreadcrumbProps> = (props) => {
             </span>
             {props.href
                 ? (
-                    <Link href={props.href}>
-                        <a className="inline-flex items-center text-sm font-medium">
-                            {props.children}
-                        </a>
+                    <Link
+                        href={props.href}
+                        className="inline-flex items-center text-sm font-medium"
+                    >
+                        {props.children}
                     </Link>
                 )
                 : <span className="inline-flex items-center text-sm font-medium">{props.children}</span>}

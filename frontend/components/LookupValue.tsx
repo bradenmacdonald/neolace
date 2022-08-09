@@ -111,9 +111,9 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 if (value.source) {
                     if (value.source.entryId) {
                         const entryKey = props.mdtContext.refCache.entries[value.source.entryId]?.friendlyId ?? props.mdtContext.entryId;
-                        moreLink = <Link key="more" href={`/entry/${entryKey}/lookup?e=${encodeURIComponent(value.source.expr)}`}><a>{moreLink}</a></Link>;
+                        moreLink = <Link key="more" href={`/entry/${entryKey}/lookup?e=${encodeURIComponent(value.source.expr)}`}>{moreLink}</Link>;
                     } else {
-                        moreLink = <Link key="more" href={`/lookup?e=${encodeURIComponent(value.source.expr)}`}><a>{moreLink}</a></Link>;
+                        moreLink = <Link key="more" href={`/lookup?e=${encodeURIComponent(value.source.expr)}`}>{moreLink}</Link>;
                     }
                 }
                 listValues.push(moreLink);

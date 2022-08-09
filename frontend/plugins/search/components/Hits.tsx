@@ -67,25 +67,16 @@ export const InfiniteHits: React.FunctionComponent<UseInfiniteHitsProps<Hit>> = 
                 {hits.map((hit) => (
                     <li key={hit.objectID} className="my-3 pl-3 border-l-4 border-l-gray-300">
                         <div className="text-lg">
-                            <>
-                                <Link href={`/entry/${hit.friendlyId}`}>
-                                    <a className="font-bold text-theme-link-color underline">
-                                        <Highlight
-                                            hit={hit}
-                                            attribute="name"
-                                            classNames={highlightClasses}
-                                        />
-                                    </a>
-                                </Link>{" "}
-                                ({hit.type})
-                            </>
+                            <Link
+                                href={`/entry/${hit.friendlyId}`}
+                                className="font-bold text-theme-link-color underline"
+                            >
+                                <Highlight hit={hit} attribute="name" classNames={highlightClasses} />
+                            </Link>{" "}
+                            ({hit.type})
                         </div>
                         <p className="text-sm">
-                            <Highlight
-                                hit={hit}
-                                attribute="description"
-                                classNames={{ highlighted: "bg-yellow-200 text-inherit" }}
-                            />
+                            <Highlight hit={hit} attribute="description" classNames={highlightClasses} />
                         </p>
                     </li>
                 ))}

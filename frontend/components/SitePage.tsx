@@ -181,9 +181,9 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 renderWidget={
                     (link: UISlotWidget<SystemLink>) => (
                         <li key={link.id}>
-                            <Link href={link.content.url}><a>
+                            <Link href={link.content.url}>
                                 <Icon icon={link.content.icon}/> {link.content.label}
-                            </a></Link>
+                            </Link>
                         </li>
                     )
                 }
@@ -240,14 +240,15 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
 
                 {/* Site name/logo */}
                 <DefaultUISlot slotId="siteLogo">
-                    <Link href="/">
+                    <Link
+                        href="/"
+                        className="flex-none p-1 mr-1 flex items-center mb-3 -indent-1 font-bold text-lg"
+                    >
                         {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
-                        <a className="flex-none p-1 mr-1 flex items-center mb-3 -indent-1 font-bold text-lg">
-                            {
-                                // eslint-disable-next-line @next/next/no-img-element
-                                site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
-                            }
-                        </a>
+                        {
+                            // eslint-disable-next-line @next/next/no-img-element
+                            site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
+                        }
                     </Link>
                 </DefaultUISlot>
 
