@@ -1,6 +1,6 @@
 import { C, VNID } from "neolace/deps/vertex-framework.ts";
 import { LookupExpression } from "../base.ts";
-import { EntryTypeValue, LazyEntrySetValue, LazyIterableValue } from "../../values.ts";
+import { EntryTypeValue, EntryValue, LazyEntrySetValue, LazyIterableValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
@@ -28,9 +28,13 @@ export class Filter extends LookupFunctionWithArgs {
     public get excludeEntryTypeExpr(): LookupExpression | undefined {
         return this.otherArgs["excludeEntryType"];
     }
+    /** Exclude specific values */
+    public get excludeExpr(): LookupExpression | undefined {
+        return this.otherArgs["exclude"];
+    }
 
     protected override validateArgs(): void {
-        this.requireArgs([], { optional: ["entryType", "excludeEntryType"] });
+        this.requireArgs([], { optional: ["entryType", "excludeEntryType", "exclude"] });
     }
 
     public async getValue(context: LookupContext): Promise<LazyEntrySetValue> {
@@ -55,6 +59,24 @@ export class Filter extends LookupFunctionWithArgs {
                 ${cypherQuery}
                 MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
                 WHERE NOT entryType.id IN ${Array.from(notEntryTypes)}
+                WITH entry, annotations
+            `;
+        }
+
+        if (this.excludeExpr) {
+            const notEntries = new Set<VNID>();
+            for await (const value of iterateOver(await this.excludeExpr.getValueAs(LazyEntrySetValue, context))) {
+                const asEntry = await value.castTo(EntryValue, context);
+                if (asEntry === undefined) {
+                    throw new LookupEvaluationError(`Expected an entry value but got ${value.constructor.name}`);
+                }
+                notEntries.add(asEntry.id);
+            }
+
+            cypherQuery = C`
+                ${cypherQuery}
+                WITH entry, annotations
+                WHERE NOT entry.id IN ${Array.from(notEntries)}
                 WITH entry, annotations
             `;
         }

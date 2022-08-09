@@ -89,4 +89,34 @@ group("filter.ts", () => {
             }),
         ]);
     });
+
+    test(`x.filter(exclude=[multiple entries]) excludes specific entries`, async () => {
+        const entries = new AndAncestors(new This());
+        // Filter "ponderosa pine and its ancestors" to only entries of type "Genus" or "Order":
+        const value = await context.evaluateExprConcrete(
+            new Filter(entries, {
+                exclude: new List([
+                    new This(),
+                    new LiteralExpression(new V.EntryValue(defaultData.entries.genusPinus.id)),
+                ]),
+            }),
+        );
+        assertInstanceOf(value, V.PageValue);
+        assertEquals(value.values, [
+            // "This" (ponderosa pine) is excluded
+            // Genus (distance 1) is excluded
+            new V.AnnotatedValue(new V.EntryValue(defaultData.entries.familyPinaceae.id), {
+                distance: new V.IntegerValue(2),
+            }),
+            new V.AnnotatedValue(new V.EntryValue(defaultData.entries.orderPinales.id), {
+                distance: new V.IntegerValue(3),
+            }),
+            new V.AnnotatedValue(new V.EntryValue(defaultData.entries.classPinopsida.id), {
+                distance: new V.IntegerValue(4),
+            }),
+            new V.AnnotatedValue(new V.EntryValue(defaultData.entries.divisionTracheophyta.id), {
+                distance: new V.IntegerValue(5),
+            }),
+        ]);
+    });
 });
