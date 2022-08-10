@@ -1,8 +1,11 @@
+import { useRouter } from "next/router";
 import React from "react";
 
 export type HouseOfSecurityProps = Record<never, never>;
 
 export const HouseOfSecurity: React.FunctionComponent<HouseOfSecurityProps> = (props) => {
+
+    const router = useRouter();
 
     const shapeStrategy = React.useRef<SVGRectElement>(null);
     const shapeGovernance = React.useRef<SVGRectElement>(null);
@@ -16,7 +19,7 @@ export const HouseOfSecurity: React.FunctionComponent<HouseOfSecurityProps> = (p
             shapeGovernance.current,
             shapeManagement.current,
             shapeOrganization.current,
-            shapeTechnology.current,
+            // shapeTechnology.current,
         ];
         for (const shape of shapes) {
             if (shape) {
@@ -24,6 +27,19 @@ export const HouseOfSecurity: React.FunctionComponent<HouseOfSecurityProps> = (p
                 shape.onmouseleave = () => shape.style.fill = "transparent";
             }
         }
+        if (shapeStrategy.current) {
+            shapeStrategy.current.onclick = () => router.push("/entry/cams-research-program#h-strategy");
+        }
+        if (shapeGovernance.current) {
+            shapeGovernance.current.onclick = () => router.push("/entry/cams-research-program#h-governance");
+        }
+        if (shapeManagement.current) {
+            shapeManagement.current.onclick = () => router.push("/entry/cams-research-program#h-management");
+        }
+        if (shapeOrganization.current) {
+            shapeOrganization.current.onclick = () => router.push("/entry/cams-research-program#h-organization");
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     return <div className="relative max-w-[800px]">
@@ -305,7 +321,7 @@ export const HouseOfSecurity: React.FunctionComponent<HouseOfSecurityProps> = (p
 
                 <g id="HouseOfSecurityHoverOverlays">
                     <g transform="matrix(1,0,0,1,0,-1)">
-                        <path d="M740,563.849L740,523.947L60,523.947L60,563.849L20,563.849L20,593.849L780,593.849L780,563.849L740,563.849Z" style={{fill: "transparent", cursor: "pointer"}} ref={shapeTechnology}/>
+                        <path d="M740,563.849L740,523.947L60,523.947L60,563.849L20,563.849L20,593.849L780,593.849L780,563.849L740,563.849Z" style={{fill: "transparent"}} ref={shapeTechnology}/>
                     </g>
                     <g transform="matrix(0.998898,0,0,1.00641,-0.293776,-1.63003)">
                         <rect x="415.752" y="222.37" width="134.148" height="278.216" style={{fill: "transparent", cursor: "pointer"}} ref={shapeManagement}/>
