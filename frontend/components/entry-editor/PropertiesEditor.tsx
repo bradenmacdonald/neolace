@@ -87,8 +87,8 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
         return (
             <p>
                 <FormattedMessage
-                    defaultMessage='Use the "Main" tab to choose an entry type for this entry before you set properties.'
-                    id="qfzF5C"
+                    defaultMessage="Choose an entry type for this entry before you set properties."
+                    id="RosBHH"
                 />
             </p>
         );
