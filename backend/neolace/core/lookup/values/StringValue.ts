@@ -1,4 +1,5 @@
 import { LookupContext } from "../context.ts";
+import { IntegerValue } from "../values.ts";
 import { ClassOf, ConcreteValue, ICountableValue, IHasLiteralExpression, LookupValue } from "./base.ts";
 import { BooleanValue } from "./BooleanValue.ts";
 
@@ -50,5 +51,12 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
 
     public override getSortString(): string {
         return this.value;
+    }
+    /** Get an attribute of this value, if any, e.g. value.name or value.length */
+    public override async getAttribute(attrName: string): Promise<LookupValue | undefined> {
+        if (attrName === "length") {
+            return new IntegerValue(this.value.length);
+        }
+        return undefined;
     }
 }

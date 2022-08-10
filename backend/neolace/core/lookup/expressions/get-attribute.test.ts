@@ -1,7 +1,14 @@
 import { assertEquals, assertRejects, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
-import { InlineMarkdownStringValue, IntegerValue, NullValue, StringValue } from "../values.ts";
+import {
+    EntryTypeValue,
+    InlineMarkdownStringValue,
+    IntegerValue,
+    NullValue,
+    PropertyValue,
+    StringValue,
+} from "../values.ts";
 import { GetAttribute } from "./get-attribute.ts";
-import { Ancestors, First, This } from "../expressions.ts";
+import { Ancestors, First, LiteralExpression, This } from "../expressions.ts";
 import { LookupEvaluationError } from "../errors.ts";
 
 group("get-attribute.ts", () => {
@@ -10,8 +17,18 @@ group("get-attribute.ts", () => {
     const siteId = defaultData.site.id;
     const context = new TestLookupContext({ siteId });
 
+    // String
+
+    test(`Attributes of a string can be retrieved: .length`, async () => {
+        const expression = new GetAttribute("length", new LiteralExpression(new StringValue("abcdef")));
+        const value = await context.evaluateExprConcrete(expression);
+        assertEquals(value, new IntegerValue(6));
+    });
+
+    // Entry
+
     test(`Attributes of an entry can be retrieved: .id`, async () => {
-        // this.name
+        // this.id
         const expression = new GetAttribute("id", new This());
         const value = await context.evaluateExprConcrete(expression, ponderosaPine.id);
         assertEquals(value, new StringValue(ponderosaPine.id));
@@ -25,21 +42,57 @@ group("get-attribute.ts", () => {
     });
 
     test(`Attributes of an entry can be retrieved: .friendlyId`, async () => {
-        // this.name
+        // this.friendlyId
         const expression = new GetAttribute("friendlyId", new This());
         const value = await context.evaluateExprConcrete(expression, ponderosaPine.id);
         assertEquals(value, new StringValue(ponderosaPine.friendlyId));
     });
 
     test(`Attributes of an entry can be retrieved: .description`, async () => {
-        // this.name
+        // this.description
         const expression = new GetAttribute("description", new This());
         const value = await context.evaluateExprConcrete(expression, ponderosaPine.id);
         assertEquals(value, new InlineMarkdownStringValue(ponderosaPine.description));
     });
 
+    // Entry Type
+    const speciesType = defaultData.schema.entryTypes._ETSPECIES;
+
+    test(`Attributes of an entry type can be retrieved: .id`, async () => {
+        // entryType(...).id
+        const expression = new GetAttribute("id", new LiteralExpression(new EntryTypeValue(speciesType.id)));
+        const value = await context.evaluateExprConcrete(expression);
+        assertEquals(value, new StringValue(speciesType.id));
+    });
+
+    test(`Attributes of an entry type can be retrieved: .name`, async () => {
+        // entryType(...).name
+        const expression = new GetAttribute("name", new LiteralExpression(new EntryTypeValue(speciesType.id)));
+        const value = await context.evaluateExprConcrete(expression);
+        assertEquals(value, new StringValue(speciesType.name));
+    });
+
+    // Property
+    const sciNameProp = defaultData.schema.properties._propScientificName;
+
+    test(`Attributes of a property can be retrieved: .id`, async () => {
+        // entryType(...).id
+        const expression = new GetAttribute("id", new LiteralExpression(new PropertyValue(sciNameProp.id)));
+        const value = await context.evaluateExprConcrete(expression);
+        assertEquals(value, new StringValue(sciNameProp.id));
+    });
+
+    test(`Attributes of a property can be retrieved: .name`, async () => {
+        // entryType(...).name
+        const expression = new GetAttribute("name", new LiteralExpression(new PropertyValue(sciNameProp.id)));
+        const value = await context.evaluateExprConcrete(expression);
+        assertEquals(value, new StringValue(sciNameProp.name));
+    });
+
+    // Annotations
+
     test(`Annotations can be retrieved: this.ancestors().first().distance`, async () => {
-        // this.name
+        // this.ancestors().first().distance
         const expression = new GetAttribute("distance", new First(new Ancestors(new This())));
         const value = await context.evaluateExprConcrete(expression, ponderosaPine.id);
         assertEquals(value, new IntegerValue(1));

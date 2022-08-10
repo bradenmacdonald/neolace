@@ -81,6 +81,11 @@ export abstract class LookupValue {
 
     /** Get a string representation of this value that can be used to sort it. */
     public abstract getSortString(): string;
+
+    /** Get an attribute of this value, if any, e.g. value.name or value.length */
+    public async getAttribute(_attrName: string, _context: LookupContext): Promise<LookupValue | undefined> {
+        return undefined;
+    }
 }
 
 /**

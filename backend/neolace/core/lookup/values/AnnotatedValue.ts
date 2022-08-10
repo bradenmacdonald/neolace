@@ -51,6 +51,17 @@ export class AnnotatedValue extends ConcreteValue {
     public override getSortString(): string {
         return this.value.getSortString();
     }
+
+    /** Get an attribute from this annotated value. This is the normal way to get annotation values via lookup expressions */
+    public override async getAttribute(attrName: string, context: LookupContext): Promise<LookupValue | undefined> {
+        // First check the "inner" value (cannot be overridden by annotations)
+        const innerValueAttr = await this.value.getAttribute(attrName, context);
+        if (innerValueAttr !== undefined) {
+            return innerValueAttr;
+        }
+        // Then check annotation values:
+        return this.annotations[attrName]; // May be undefined
+    }
 }
 
 /** A helper function to create an annotated entry value */
