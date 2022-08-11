@@ -78,11 +78,15 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
     }, [editor]);
 
     const handleBlur = React.useCallback(() => {
+        if (autocompletion.type !== undefined) {
+            // While the autocomplete menu is open, ignore blue events.
+            return;
+        }
         if (onFinishedEdits) {
             const newValue = slateDocToStringValue(editor.children, EscapeMode.PlainText);
             onFinishedEdits(newValue);
         }
-    }, [editor, onFinishedEdits]);
+    }, [autocompletion.type, editor.children, onFinishedEdits]);
 
     const handleAutoCompleteSelection = React.useCallback((item: api.EntryValue|api.EntryTypeValue|api.PropertyValue) => {
         if (autocompletion.target === undefined) {
@@ -98,6 +102,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
         ); 
         Transforms.insertNodes(editor, node, {voids: true});
         Transforms.move(editor);
+        ReactEditor.focus(editor);
     }, [editor, autocompletion.target]);
 
     {/* Note that "value" below is really "initialValue" and updates won't affect it - https://github.com/ianstormtaylor/slate/pull/4540 */}
