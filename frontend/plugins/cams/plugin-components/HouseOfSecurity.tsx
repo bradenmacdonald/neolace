@@ -39,8 +39,9 @@ export const HouseOfSecurity: React.FunctionComponent<HouseOfSecurityProps> = (p
         if (shapeOrganization.current) {
             shapeOrganization.current.onclick = () => router.push("/entry/cams-research-program#h-organization");
         }
+    // We always want the above code to strictly run once, and to run in the browser only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, []);
 
     return <div className="relative max-w-[800px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}

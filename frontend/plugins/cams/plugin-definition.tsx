@@ -4,6 +4,7 @@ import Head from "next/head";
 import { PluginDefinition } from "components/utils/ui-plugins";
 import { UiChangeOperation } from "components/widgets/UISlot";
 import type { HouseOfSecurityProps } from "./plugin-components/HouseOfSecurity";
+import { Spinner } from "components/widgets/Spinner";
 
 // These are loaded dynamically to keep the plugin definition script as small as possible, since all plugin definitions
 // are loaded and sent to the browser.
@@ -11,13 +12,15 @@ import type { HouseOfSecurityProps } from "./plugin-components/HouseOfSecurity";
 const MembersOnlyNotice = dynamic<any>(() =>
     import(`./plugin-components/MembersOnlyNotice`).then((mod) => mod.MembersOnlyNotice)
 );
-// Ideally we shouldn't need 'ssr: false' nor 'loading: ...' here, and we could use
-// <React.Suspense fallback={<Spinner/>}><HouseOfSecurity/></React.Suspense> below, but it currently doesn't seem to be working.
-// https://github.com/vercel/next.js/issues/35728
-// https://stackoverflow.com/questions/71706064/react-18-hydration-failed-because-the-initial-ui-does-not-match-what-was-render
+// Ideally we shouldn't need 'ssr: false' nor 'loading: ...' here, and we could set {suspense: true} and use
+// <React.Suspense fallback={<Spinner/>}><HouseOfSecurity/></React.Suspense> below, but it currently doesn't work
+// because the <LookupValue/> component calls useSiteData() which uses useSWR() without {suspense: true}
+// https://github.com/vercel/swr/issues/1906
+// Basically, we need to wait until the story around using SWR with Suspense is better defined, and Suspense is less
+// experimental.
 const HouseOfSecurity = dynamic<HouseOfSecurityProps>(
     () => import(`./plugin-components/HouseOfSecurity`).then((mod) => mod.HouseOfSecurity),
-    { ssr: false, loading: () => <>...</> },
+    { ssr: false, loading: () => <><Spinner/></> },
 );
 
 export const plugin: PluginDefinition = {
