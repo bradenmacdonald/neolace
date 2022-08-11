@@ -476,8 +476,8 @@ export function checkForAutocompletion(editor: NeolaceSlateEditor): Autocompleti
         const lineBefore = Editor.before(editor, start, { unit: "line" });
         const beforeRange = lineBefore && Editor.range(editor, lineBefore, start);
         const beforeText = beforeRange && Editor.string(editor, beforeRange);
-        // Require that the @ symbol is at the beginning of the line OR after a whitespace character
-        const beforeMatch = beforeText && beforeText.match(/(^|\s)@([\w-]+)?$/);
+        // Match the '@' symbol followed by some text:
+        const beforeMatch = beforeText && beforeText.match(/@([\w-]+)?$/);
         // And we currently require that the @something... be at the end of the line or followed by a space:
         const after = Editor.after(editor, start);
         const afterRange = Editor.range(editor, start, after);
@@ -487,13 +487,13 @@ export function checkForAutocompletion(editor: NeolaceSlateEditor): Autocompleti
         if (beforeMatch && afterMatch) {
             // The user has typed '@something...'
             // Compute the Range for the '@something' text
-            const atMentionStartPoint = Editor.before(editor, start, {unit: "character", distance: (beforeMatch[2]?.length ?? 0) + 1});
+            const atMentionStartPoint = Editor.before(editor, start, {unit: "character", distance: (beforeMatch[1]?.length ?? 0) + 1});
             const atMentionRange = atMentionStartPoint && Editor.range(editor, atMentionStartPoint, start);
             if (atMentionRange) {
                 return {
                     type: "entityReference",
                     target: atMentionRange,
-                    search: beforeMatch[2] ?? "",
+                    search: beforeMatch[1] ?? "",
                     position: getPosition(beforeRange),
                 };
             }
