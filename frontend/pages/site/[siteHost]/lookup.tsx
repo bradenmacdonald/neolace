@@ -10,6 +10,7 @@ import { useRouter } from "next/router";
 import { LookupEvaluatorWithPagination } from "components/LookupEvaluator";
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { defineMessage } from "components/utils/i18n";
+import Link from "next/link";
 
 interface PageProps {
     sitePreloaded: api.SiteDetailsData;
@@ -35,13 +36,14 @@ const EvaluateLookupPage: NextPage<PageProps> = function (props) {
     }, [router]);
 
     // When the router first loads (on a full page load), it won't have the query.
-    // Once it has been initialized we may need to change editingLookupExpression
+    // Once it has been initialized we may need to change editingLookupExpression.
+    // Likewise whenever router.query changes.
     React.useEffect(() => {
         if (router.isReady) {
             setEditingLookupExpression(activeLookupExpression);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router.isReady]);
+    }, [router.isReady, router.query]);
 
     const mdtContext = React.useMemo(() => new MDTContext({ entryId: undefined, refCache: undefined }), []);
 
@@ -59,19 +61,47 @@ const EvaluateLookupPage: NextPage<PageProps> = function (props) {
                     placeholder={defineMessage({ id: "Uowwem", defaultMessage: "Enter a lookup expression..." })}
                 />
 
-                <p>
-                    <FormattedMessage id="vBiQpy" defaultMessage="Result:" />
-                </p>
-                <div className={activeLookupExpression !== editingLookupExpression ? `opacity-50` : ``}>
-                    {activeLookupExpression
-                        ? <LookupEvaluatorWithPagination expr={activeLookupExpression} mdtContext={mdtContext} />
-                        : (
-                            <FormattedMessage
-                                id="++0Uwo"
-                                defaultMessage="Enter a lookup expression above to see the result."
-                            />
-                        )}
-                </div>
+                {activeLookupExpression
+                    ? <>
+                        <p>
+                            <FormattedMessage id="vBiQpy" defaultMessage="Result:" />
+                        </p>
+                        <div className={activeLookupExpression !== editingLookupExpression ? `opacity-50` : ``}>
+                            <LookupEvaluatorWithPagination expr={activeLookupExpression} mdtContext={mdtContext} />
+                        </div>
+                    </>
+                    : <>
+                        <div className="mt-5">
+                            <p>
+                                <FormattedMessage
+                                    defaultMessage="Enter a <link>lookup expression</link> above and press ⏎ Enter to see the result."
+                                    id="jK8qYd"
+                                    values={{link: (str: string) => <Link href="https://junction.neolace.com/entry/term-lookup" target="_blank">{str}</Link> }}
+                                />
+                            </p>
+
+                            <p><FormattedMessage defaultMessage="Examples:" id="6M8P0C" /></p>
+                            <ul>
+                                <li>
+                                    <Link href={`/lookup?e=${encodeURIComponent(`allEntries()`)}`}><code>allEntries()</code></Link>
+                                    {" "}- <FormattedMessage defaultMessage="See a list of all entries." id="LY6fJN" />
+                                </li>
+                                <li>
+                                    <Link href={`/lookup?e=${encodeURIComponent(`allEntries().count()`)}`}><code>allEntries().count()</code></Link>
+                                    {" "}- <FormattedMessage defaultMessage="See how many entries exist on this site." id="7M1PBy" />
+                                </li>
+                                <li>
+                                    <code>allEntries().filter(entryType=Species).graph()</code>
+                                    {" "}- <FormattedMessage defaultMessage='A graph of all "Species" entries (hypothetical example)' id="4lyAlD" />
+                                </li>
+                                <li>
+                                    <code>entry("lion").andRelated(depth=2).graph()</code>
+                                    {" "}- <FormattedMessage defaultMessage='A graph of animals related to lions (hypothetical example)' id="uWMcKo" />
+                                </li>
+                            </ul>
+                            <p><FormattedMessage defaultMessage="Tip: in the box above, press @ and start typing to see available entries, entry types, and properties." id="xdrfAV" /></p>
+                        </div>
+                    </>}
             </SitePage>
         </SiteDataProvider>
     );
