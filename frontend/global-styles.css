@@ -88,7 +88,7 @@
     }
     /* Code */
     .neo-typography code {
-        @apply text-sky-900;
+        @apply text-sky-900 break-words;
     }
     /* Code Block */
     .neo-typography code pre {
