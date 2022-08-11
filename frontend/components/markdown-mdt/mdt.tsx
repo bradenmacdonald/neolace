@@ -6,6 +6,7 @@ import { MDT, VNID } from "neolace-api";
 import { LookupValue } from "components/LookupValue";
 import { FormattedMessage } from "react-intl";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
+import { ErrorMessage } from "components/widgets/ErrorMessage";
 
 const footnotes = Symbol("footnotes");
 
@@ -176,7 +177,10 @@ function inlineNodeToComponent(node: MDT.InlineNode | MDT.AnyInlineNode, context
             if (lookupData) {
                 return <LookupValue key={key} mdtContext={context} value={lookupData.value} />;
             }
-            return <code key={key} className="text-red-500">{"{"}{lookupExpression}{"}"}</code>;
+            return <ErrorMessage key={key}>
+                Missing lookup value for:{" "}
+                <code className="!text-inherit">{"{"}{lookupExpression}{"}"}</code>
+            </ErrorMessage>;
         }
         case "strong":
             return <strong key={key}>{node.children.map((child) => inlineNodeToComponent(child, context))}</strong>;
@@ -307,9 +311,10 @@ function nodeToComponent(node: MDT.Node, context: MDTContext): React.ReactElemen
                 return <LookupValue key={key} mdtContext={context} value={lookupData.value} />;
             }
             return (
-                <code key={key} className="text-red-500">
-                    <pre>{"{"}{lookupExpression}{"}"}</pre>
-                </code>
+                <ErrorMessage key={key}>
+                    Missing lookup value for:{" "}
+                    <code className="!text-inherit">{"{"}{lookupExpression}{"}"}</code>
+                </ErrorMessage>
             );
         }
         case "table":

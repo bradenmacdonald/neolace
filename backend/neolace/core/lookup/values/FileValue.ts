@@ -1,5 +1,6 @@
 import type * as api from "neolace/deps/neolace-api.ts";
-import { ConcreteValue } from "./base.ts";
+import { IntegerValue, StringValue } from "../values.ts";
+import { ConcreteValue, LookupValue } from "./base.ts";
 
 /**
  * A file attached to an entry (using the Files feature)
@@ -30,5 +31,14 @@ export class FileValue extends ConcreteValue {
 
     public override getSortString(): string {
         return this.filename;
+    }
+
+    /** Get an attribute of this value, if any, e.g. value.name or value.length */
+    public override async getAttribute(attrName: string): Promise<LookupValue | undefined> {
+        if (attrName === "filename") return new StringValue(this.filename);
+        if (attrName === "url") return new StringValue(this.url);
+        if (attrName === "contentType") return new StringValue(this.contentType);
+        if (attrName === "size") return new IntegerValue(this.size);
+        return undefined;
     }
 }
