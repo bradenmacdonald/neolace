@@ -346,7 +346,7 @@ export function parseLookupString(
     if (lexingResult.errors.length > 0) {
         throw new LookupParseError(lexingResult.errors[0].message);
     }
-    parser.input = lexingResult.tokens; // Assigning to this will reset the parser's inernal state.
+    parser.input = lexingResult.tokens; // Assigning to this will reset the parser's internal state.
     const cst = parser.expression();
     if (parser.errors.length > 0) {
         throw new LookupParseError(parser.errors[0].message);
