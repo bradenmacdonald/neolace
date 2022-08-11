@@ -89,6 +89,8 @@
     /* Code */
     .neo-typography code {
         @apply text-sky-900 break-words;
+        /* The 'break-words' class currently doesn't work in Safari, so we also have to use this: */
+        word-break: break-word;
     }
     /* Code Block */
     .neo-typography code pre {
