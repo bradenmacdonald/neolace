@@ -47,6 +47,15 @@ export abstract class LookupExpression {
         valueTypes: [ClassOf<VT1>, ClassOf<VT2>, ClassOf<VT3>],
         context: LookupContext,
     ): Promise<VT1 | VT2 | VT3>;
+    public async getValueAsOneOf<
+        VT1 extends LookupValue,
+        VT2 extends LookupValue,
+        VT3 extends LookupValue,
+        VT4 extends LookupValue,
+    >(
+        valueTypes: [ClassOf<VT1>, ClassOf<VT2>, ClassOf<VT3>, ClassOf<VT4>],
+        context: LookupContext,
+    ): Promise<VT1 | VT2 | VT3 | VT4>;
     public async getValueAsOneOf(
         valueTypes: Array<ClassOf<LookupValue>>,
         context: LookupContext,

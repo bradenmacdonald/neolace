@@ -248,10 +248,10 @@ export class ReferenceCache {
      */
     public extractMarkdownReferences(
         markdown: string | api.MDT.RootNode | api.MDT.Node,
-        args: { currentEntryId?: VNID, inline?: boolean },
+        args: { currentEntryId?: VNID; inline?: boolean },
     ) {
         if (typeof markdown === "string") {
-            markdown = api.MDT.tokenizeMDT(markdown, {inline: args.inline ?? false});
+            markdown = api.MDT.tokenizeMDT(markdown, { inline: args.inline ?? false });
         }
 
         const node = markdown;
