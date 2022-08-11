@@ -37,13 +37,13 @@ const EvaluateLookupPage: NextPage<PageProps> = function (props) {
 
     // When the router first loads (on a full page load), it won't have the query.
     // Once it has been initialized we may need to change editingLookupExpression.
-    // Likewise whenever router.query changes.
+    // Likewise whenever the path/query changes changes.
     React.useEffect(() => {
         if (router.isReady) {
             setEditingLookupExpression(activeLookupExpression);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router.isReady, router.query]);
+    }, [router.isReady, router.asPath]);
 
     const mdtContext = React.useMemo(() => new MDTContext({ entryId: undefined, refCache: undefined }), []);
 
