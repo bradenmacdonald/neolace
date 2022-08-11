@@ -1,5 +1,6 @@
 import React from "react";
 import dynamic from "next/dynamic";
+import Head from "next/head";
 import { PluginDefinition } from "components/utils/ui-plugins";
 import { UiChangeOperation } from "components/widgets/UISlot";
 import type { HouseOfSecurityProps } from "./plugin-components/HouseOfSecurity";
@@ -46,6 +47,12 @@ export const plugin: PluginDefinition = {
                         priority: 1,
                         content: (
                             <>
+                                {/* Adjust the scroll padding so that #anchor links scroll far enough that the header doesn't block the content */}
+                                <Head>
+                                    <style>
+                                        {`html, body { scroll-padding-top: 80px; }`}
+                                    </style>
+                                </Head>
                                 <div className="fixed w-full z-[2] bg-black h-[72px]">
                                     <div className="max-w-[1080px] mx-auto h-full">
                                         <a href="https://cams.mit.edu/">
