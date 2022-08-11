@@ -267,7 +267,7 @@ export async function getEntry(
     if (flags.has(api.GetEntryFlags.IncludeReferenceCache)) {
         // Extract references from the description of this entry
         if (canViewDescription) {
-            refCache?.extractMarkdownReferences(entryData.description, { currentEntryId: entryData.id });
+            refCache?.extractMarkdownReferences(entryData.description, { currentEntryId: entryData.id, inline: true });
         }
         result.referenceCache = await refCache!.getData(lookupContext);
     }

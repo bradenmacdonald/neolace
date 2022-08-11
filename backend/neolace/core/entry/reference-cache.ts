@@ -248,16 +248,16 @@ export class ReferenceCache {
      */
     public extractMarkdownReferences(
         markdown: string | api.MDT.RootNode | api.MDT.Node,
-        args: { currentEntryId?: VNID },
+        args: { currentEntryId?: VNID, inline?: boolean },
     ) {
         if (typeof markdown === "string") {
-            markdown = api.MDT.tokenizeMDT(markdown);
+            markdown = api.MDT.tokenizeMDT(markdown, {inline: args.inline ?? false});
         }
 
         const node = markdown;
         if (node.type === "link") {
             if (node.href.startsWith("/entry/")) {
-                const entryKey = node.href.substr(7);
+                const entryKey = node.href.substring(7);
                 // May be a friendlyId or VNID
                 if (isVNID(entryKey)) {
                     this._entryIdsUsed.add(entryKey);
