@@ -1,13 +1,10 @@
 import { EmptyResultError, VNID } from "neolace/deps/vertex-framework.ts";
 import { uploadFileToObjStore } from "neolace/core/objstore/objstore.ts";
-import { dirname, join as joinPath } from "std/path/mod.ts";
+import { dirname, fromFileUrl, join as joinPath } from "std/path/mod.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 
-const thisFolder: string = (() => {
-    const tf = dirname(import.meta.url);
-    return tf.startsWith("file:") ? tf.substr(5) : tf;
-})();
+const thisFolder: string = dirname(fromFileUrl(import.meta.url));
 
 export const files = Object.freeze({
     ponderosaPineImg: { id: VNID("_buzaxyrAoq6yEFvu0zX2J"), path: "images/img-lassen-ponderosa.webp" },

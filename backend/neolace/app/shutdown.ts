@@ -48,15 +48,22 @@ const sigintWatcher = async () => {
     Deno.exit(0);
 };
 Deno.addSignalListener("SIGINT", sigintWatcher);
+
 const sigtermWatcher = async () => {
     log.info("Shutting down (SIGTERM)...");
     await prepareForShutdown();
     Deno.exit(0);
 };
-Deno.addSignalListener("SIGTERM", sigtermWatcher);
+if (Deno.build.os !== "windows") {
+    // SIGTERM is not supported on Windows
+    Deno.addSignalListener("SIGTERM", sigtermWatcher);
+}
+
 onShutDown(async () => {
     Deno.removeSignalListener("SIGINT", sigintWatcher);
-    Deno.removeSignalListener("SIGTERM", sigtermWatcher);
+    if (Deno.build.os !== "windows") {
+        Deno.removeSignalListener("SIGTERM", sigtermWatcher);
+    }
 });
 
 // Checks to run just before we actually quit.
