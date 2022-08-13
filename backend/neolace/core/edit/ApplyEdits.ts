@@ -4,6 +4,7 @@ import {
     CreateEntry,
     CreateEntryType,
     CreateProperty,
+    DeleteProperty,
     DeletePropertyValue,
     EditList,
     EntryTypeColor,
@@ -349,7 +350,8 @@ export const ApplyEdits = defineAction({
                             MATCH (pf:${PropertyFact} {id: ${propertyFactId}})-[:${PropertyFact.rel.FOR_PROP}]->(property:${Property})
                             MATCH (pf)<-[:${Entry.rel.PROP_FACT}]-(e:${Entry} {id: ${edit.data.entryId}})
                             MATCH (e)-[:${Entry.rel.IS_OF_TYPE}]->(et)-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-                            MATCH (e)-[rel]->(e2) WHERE pf.directRelNeo4jId = id(rel)
+                            // If it's a relationship property, we also have to delete the direct relationship:
+                            OPTIONAL MATCH (e)-[rel]->(e2) WHERE pf.directRelNeo4jId = id(rel)
                             DETACH DELETE pf, rel   
                         `.RETURN({ "e.id": Field.VNID }));
                     } catch (err: unknown) {
@@ -521,6 +523,28 @@ export const ApplyEdits = defineAction({
                         SET p += ${changes}
                     `.RETURN({}));
                     modifiedNodes.add(edit.data.id);
+                    break;
+                }
+
+                case DeleteProperty.code: {
+                    // Before we delete the property, check if it has any matching values:
+                    const checkExtantValues = await tx.queryOne(C`
+                        MATCH (property:${Property} {id: ${edit.data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                        MATCH (pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
+                    `.RETURN({ "count(pf)": Field.Int }));
+                    const factsCount = checkExtantValues["count(pf)"];
+                    if (factsCount > 0) {
+                        throw new InvalidEdit(
+                            DeleteProperty.code,
+                            { propertyId: edit.data.id },
+                            `Properties cannot be deleted while there are still entries with values set for that property.`,
+                        );
+                    }
+                    // Now delete it:
+                    await tx.queryOne(C`
+                        MATCH (property:${Property} {id: ${edit.data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                        DETACH DELETE property
+                    `.RETURN({}));
                     break;
                 }
 

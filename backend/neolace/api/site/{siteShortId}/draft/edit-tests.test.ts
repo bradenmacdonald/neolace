@@ -2,6 +2,7 @@ import {
     api,
     assert,
     assertEquals,
+    assertFalse,
     assertInstanceOf,
     assertRejects,
     getClient,
@@ -242,7 +243,7 @@ group("edit tests", () => {
         });
     });
 
-    group("Deleting properties", () => {
+    group("Deleting property values", () => {
         test("We can delete a property on an entry", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
             const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
@@ -258,7 +259,7 @@ group("edit tests", () => {
             assert(propertyFact?.value.type === "Entry");
             assertEquals(propertyFact?.value.id, defaultData.entries.familyCupressaceae.id);
 
-            // now delete the property
+            // now delete the property value
             await doEdit(client, {
                 code: api.DeletePropertyValue.code,
                 data: {
@@ -322,6 +323,56 @@ group("edit tests", () => {
             );
             assertInstanceOf(err, api.InvalidEdit);
             assertEquals(err.message, `That property fact does not exist on that entry.`);
+        });
+    });
+
+    group("Schema edit: Deleting a property", () => {
+        test("We can delete a property, but only if no entries exist with values set for that property", async () => {
+            // Get an API client, logged in as a bot that belongs to an admin
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+            // first, create the property (in the schema)
+            const propertyId = VNID();
+            await doEdit(client, {
+                code: api.CreateProperty.code,
+                data: {
+                    id: propertyId,
+                    name: "Temp Property",
+                    appliesTo: [{ entryType: defaultData.schema.entryTypes._ETSPECIES.id }],
+                    type: api.PropertyType.Value,
+                },
+            });
+
+            // Set a property fact on an entry
+            const entryId = defaultData.entries.jackPine.id;
+            const propertyFactId = VNID();
+            await doEdit(client, {
+                code: api.AddPropertyValue.code,
+                data: {
+                    entryId,
+                    propertyId,
+                    propertyFactId,
+                    valueExpression: `"This is a temporary value."`,
+                },
+            });
+
+            // Now try to delete the property from the schema. It should fail:
+            const doDelete = () => doEdit(client, { code: api.DeleteProperty.code, data: { id: propertyId } });
+            await assertRejects(
+                doDelete,
+                api.InvalidEdit,
+                "Properties cannot be deleted while there are still entries with values set for that property.",
+            );
+
+            // Now delete the property fact from the entry:
+            await doEdit(client, { code: api.DeletePropertyValue.code, data: { entryId, propertyFactId } });
+
+            // Now the delete should succeed:
+            await doDelete();
+
+            const schema = await client.getSiteSchema({ siteId: defaultData.site.shortId });
+
+            assertFalse(Object.keys(schema.properties).includes(propertyId));
         });
     });
 });

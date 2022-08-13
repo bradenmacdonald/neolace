@@ -132,6 +132,9 @@ const DraftEntryEditPage: NextPage = function (_props) {
         }
     }, [draftError, draftId, newDraftTitle, defaultDraftTitle, unsavedEdits, site.shortId, router, intl, entry?.friendlyId]);
 
+    const [schema] = useSchema({draftContext});
+    const entryType = entry ? schema?.entryTypes[entry.entryType.id] : undefined;
+
     if (siteError instanceof api.NotFound) {
         return <FourOhFour />;
     } else if (siteError) {
@@ -191,13 +194,52 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         name={defineMessage({ defaultMessage: "Main", id: "EFTSMc" })}
                     >
                         <MainEditor entry={entry} addUnsavedEdit={addUnsavedEdit} isNewEntry={isNewEntry} />
+                        <h2><FormattedMessage defaultMessage="Properties" id="aI80kg" /></h2>
+                        <PropertiesEditor entry={entry} addUnsavedEdit={addUnsavedEdit} />
                     </Tab>
+                    {/*
                     <Tab
                         id="properties"
                         icon="diamond-fill"
                         name={defineMessage({ defaultMessage: "Properties", id: "aI80kg" })}
                     >
-                        <PropertiesEditor entry={entry} addUnsavedEdit={addUnsavedEdit} />
+                    </Tab>
+                    */}
+                    <Tab
+                        id="article"
+                        icon="journal-text"
+                        name={defineMessage({ defaultMessage: "Article", id: "jx7Hn3" })}
+                        hidden={entryType === undefined || entryType.enabledFeatures.Article === undefined}
+                    >
+                        <code><pre>{entry?.features.Article?.articleMD}</pre></code>
+                    </Tab>
+                    <Tab
+                        id="image"
+                        icon="image"
+                        name={defineMessage({ defaultMessage: "Image", id: "+0zv6g" })}
+                        hidden={entryType === undefined || entryType.enabledFeatures.Image === undefined}
+                    >
+                        {
+                            entry?.features.Image ? 
+                                <>
+                                    <a href={entry.features.Image.imageUrl}>{entry.features.Image.width}x{entry.features.Image.height} image</a>
+                                </>
+                            : "No image attached yet."
+                        }
+                    </Tab>
+                    <Tab
+                        id="files"
+                        icon="files"
+                        name={defineMessage({ defaultMessage: "Files", id: "m4vqJl" })}
+                        hidden={entryType === undefined || entryType.enabledFeatures.Files === undefined}
+                    >
+                        {
+                            entry?.features.Files ? 
+                                <>
+                                    {entry.features.Files.files.length} files.
+                                </>
+                            : "No files attached yet."
+                        }
                     </Tab>
                     <Tab
                         id="save"

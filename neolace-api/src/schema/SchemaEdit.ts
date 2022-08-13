@@ -283,6 +283,21 @@ export const CreateProperty = SchemaEditType({
     describe: (data) => `Created \`Property ${data.id}\``,
 });
 
+export const DeleteProperty = SchemaEditType({
+    changeType: EditChangeType.Schema,
+    code: "DeleteProperty",
+    dataSchema: Schema({
+        id: vnidString,
+    }),
+    apply: (currentSchema, data) => {
+        const newProperties = {...currentSchema.properties};
+        delete newProperties[data.id];
+        const newSchema: SiteSchemaData = { ...currentSchema, properties: newProperties };
+        return UpdateProperty.apply(newSchema, data);
+    },
+    describe: (data) => `Deleted \`Property ${data.id}\``,
+});
+
 
 export const _allSchemaEditTypes = {
     CreateEntryType,
@@ -290,6 +305,7 @@ export const _allSchemaEditTypes = {
     UpdateEntryTypeFeature,
     UpdateProperty,
     CreateProperty,
+    DeleteProperty,
 };
 
 export type AnySchemaEdit = (
@@ -298,4 +314,5 @@ export type AnySchemaEdit = (
     | Edit<typeof UpdateEntryTypeFeature>
     | Edit<typeof UpdateProperty>
     | Edit<typeof CreateProperty>
+    | Edit<typeof DeleteProperty>
 );

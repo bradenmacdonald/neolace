@@ -18,6 +18,8 @@ export interface TabProps {
     /** This is for internal use to notify <TabBar> of clicks on each <Tab> */
     _onTabClick?: (tabId: string) => void;
     _isCurrentTab?: boolean;
+    /** If this is true, the tab is not rendered at all. */
+    hidden?: boolean;
 }
 
 export const Tab: React.FunctionComponent<TabProps> = (props) => {
@@ -80,6 +82,7 @@ export const TabBar: React.FunctionComponent<TabBarProps> = (props) => {
             <div className="border-b border-gray-200 dark:border-gray-700 mb-4">
                 <ul className="unstyled flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
                     {tabs.map((tab) =>
+                        tab.props.hidden ? null :
                         React.cloneElement(tab, {
                             key: tab.props.id,
                             _onTabClick: props.onTabClick,
@@ -89,6 +92,7 @@ export const TabBar: React.FunctionComponent<TabBarProps> = (props) => {
                 </ul>
             </div>
             {tabs.map((tab) => (
+                tab.props.hidden ? null :
                 <div
                     key={tab.props.id}
                     role="tabpanel"

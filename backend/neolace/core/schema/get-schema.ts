@@ -199,9 +199,8 @@ export function diffSchema(
 
         // Delete any removed Properties:
         const deletedPropertyIds = difference(oldPropertyIds, newPropertyIds);
-        if (deletedPropertyIds.size > 0) {
-            console.error(`Trying to delete property with ID ${deletedPropertyIds.values().next().value}`); // Temporary until deleting properties is implemented
-            throw new Error("Deleting Properties from the schema is not implemented.");
+        for (const propId of deletedPropertyIds) {
+            result.edits.push({ code: "DeleteProperty", data: { id: propId as VNID } });
         }
 
         // Create any newly added Properties:
@@ -218,9 +217,9 @@ export function diffSchema(
             const newProp: PropertyData = newSchema.properties[propId];
             if (newProp.type !== oldProp.type) {
                 // The type has changed - need to delete and re-create this property
-                throw new Error(
-                    "Property type has changed. Need to delete and re-create it but deleting Properties from the schema is not implemented.",
-                );
+                result.edits.push({ code: "DeleteProperty", data: { id: propId as VNID } });
+                result.edits.push({ code: "CreateProperty", data: newSchema.properties[propId] });
+                continue;
             }
 
             const changes: Partial<Type<typeof UpdateProperty["dataSchema"]>> = {};
