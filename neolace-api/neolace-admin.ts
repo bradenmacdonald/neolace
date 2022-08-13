@@ -487,7 +487,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                     id: entryId,
                     type: entryType.id,
                     name: metadata.name,
-                    description: replaceIdsInMarkdownAndLookupExpressions(idMap, metadata.description ?? ""),
+                    description: replaceIdsInMarkdownAndLookupExpressions(idMap, metadata.description ?? "", false),
                     friendlyId: friendlyId,
                 },
             });
@@ -556,7 +556,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                     entryId,
                     feature: {
                         featureType: "Article",
-                        articleMD: replaceIdsInMarkdownAndLookupExpressions(idMap, articleMD),
+                        articleMD: replaceIdsInMarkdownAndLookupExpressions(idMap, articleMD, false),
                     },
                 },
             });
@@ -636,11 +636,13 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
  * generally swap them out for human readable IDs wherever possible. We do still preserve the VNIDs in the export data
  * though, so that if importing back to the same site, we can avoid changing the VNIDs.
  */
-function replaceIdsInMarkdownAndLookupExpressions(idMap: Record<string, string>, markdownOrLookup: string) {
+function replaceIdsInMarkdownAndLookupExpressions(idMap: Record<string, string>, markdownOrLookup: string, isExport = true) {
     // Literal expressions in lookups:
-    markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)entry\("([0-9A-Za-z_ñ\-]+)"\)/mg, (_m, id) => {
-        return `entry("${ idMap[id] ?? id }")`;
-    });
+    if (isExport) {  // On import, we want to preserve the friendly IDs in this case
+        markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)entry\("([0-9A-Za-z_ñ\-]+)"\)/mg, (_m, id) => {
+            return `entry("${ idMap[id] ?? id }")`;
+        });
+    }
     markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)prop\("([0-9A-Za-z_ñ\-]+)"\)/mg, (_m, id) => {
         return `prop("${ idMap[id] ?? id }")`;
     });
@@ -648,9 +650,11 @@ function replaceIdsInMarkdownAndLookupExpressions(idMap: Record<string, string>,
         return `entryType("${ idMap[id] ?? id }")`;
     });
     // Link in markdown:
-    markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/([0-9A-Za-z_ñ\-]+)\)/mg, (_m, id) => {
-        return `](/entry/${ idMap[id] ?? id })`;
-    });
+    if (isExport) {  // On import, we want to preserve the friendly IDs in this case
+        markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/([0-9A-Za-z_ñ\-]+)\)/mg, (_m, id) => {
+            return `](/entry/${ idMap[id] ?? id })`;
+        });
+    }
     return markdownOrLookup;
 }
 
