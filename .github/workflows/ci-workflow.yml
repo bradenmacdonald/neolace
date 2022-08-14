@@ -141,7 +141,7 @@ jobs:
 
   build-and-push-images:
     runs-on: ubuntu-latest
-    needs: [lint, check-backend-types, test-backend]
+    needs: [lint, check-backend-types, test-backend, test-api-and-frontend]
     strategy:
       matrix:
         include:
