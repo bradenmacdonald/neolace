@@ -203,6 +203,10 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                     : null
                 }
             </div>
+
+            <div id="entry-end">
+                <UISlot slotId="entryAfterContent" defaultContents={[]} renderWidget={(w) => React.cloneElement(w.content, { key: w.id, entry, })} />
+            </div>
         </SitePage>
     );
 }
