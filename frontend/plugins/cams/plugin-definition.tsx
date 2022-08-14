@@ -9,8 +9,13 @@ import { Spinner } from "components/widgets/Spinner";
 // These are loaded dynamically to keep the plugin definition script as small as possible, since all plugin definitions
 // are loaded and sent to the browser.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const HeaderNavModal = dynamic<any>(() =>
+    import(`./plugin-components/HeaderNavModal`).then((mod) => mod.HeaderNavModal),
+    { ssr: false },
+);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const MembersOnlyNotice = dynamic<any>(() =>
-    import(`./plugin-components/MembersOnlyNotice`).then((mod) => mod.MembersOnlyNotice)
+    import(`./plugin-components/MembersOnlyNotice`).then((mod) => mod.MembersOnlyNotice),
 );
 // Ideally we shouldn't need 'ssr: false' nor 'loading: ...' here, and we could set {suspense: true} and use
 // <React.Suspense fallback={<Spinner/>}><HouseOfSecurity/></React.Suspense> below, but it currently doesn't work
@@ -57,7 +62,7 @@ export const plugin: PluginDefinition = {
                                     </style>
                                 </Head>
                                 <div className="fixed w-full z-[2] bg-black h-[72px]">
-                                    <div className="max-w-[1080px] mx-auto h-full">
+                                    <div className="max-w-[1080px] mx-auto h-full flex justify-between">
                                         <a href="https://cams.mit.edu/">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
@@ -66,6 +71,7 @@ export const plugin: PluginDefinition = {
                                                 src="/pl/cams/cams-header-logo.png"
                                             />
                                         </a>
+                                        <HeaderNavModal/>
                                     </div>
                                 </div>
                             </>
