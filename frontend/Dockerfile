@@ -6,7 +6,7 @@ FROM denoland/deno:${DENO_IMAGE_VERSION} AS transpile
 WORKDIR /build/neolace-api/
 COPY ./neolace-api/ /build/neolace-api/
 RUN apk add --update nodejs npm
-RUN deno run --allow-read --allow-run --allow-write --allow-env _compile.ts
+RUN deno run --allow-read --allow-run --allow-write --allow-env --allow-net _compile.ts
 ################################################################
 # Stage 2: Intall our Next.js frontend
 ################################################################

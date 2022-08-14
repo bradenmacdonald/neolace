@@ -127,7 +127,7 @@ jobs:
         run: deno test
         working-directory: ./neolace-api
       - name: Compile neolace-api
-        run: deno run --allow-read --allow-run --allow-write --allow-env --allow-net _compile.ts
+        run: ./_compile.ts
         working-directory: ./neolace-api
       - run: npm ci
         working-directory: ./frontend

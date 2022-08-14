@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "predev": "npm install && npm run compile:i18n && cd ../neolace-api && deno run --allow-read --allow-run --allow-write --allow-env --allow-net _compile.ts && cd - && node ./copy-plugin-public-files.mjs",
+    "predev": "npm install && npm run compile:i18n && cd ../neolace-api && ./_compile.ts && cd - && node ./copy-plugin-public-files.mjs",
     "dev": "next dev -p 5555",
     "prebuild": "node ./copy-plugin-public-files.mjs",
     "build": "next build",
