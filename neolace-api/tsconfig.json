@@ -7,7 +7,7 @@
         "sourceMap": false,
         "forceConsistentCasingInFileNames": true,
         "module": "CommonJS",
-        "lib": ["DOM","DOM.Iterable","ES2019"],
+        "lib": ["dom","dom.iterable","es2021"],
         "moduleResolution": "Node",
         "strict": true,
         "target": "ES2019",
