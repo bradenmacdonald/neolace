@@ -7,7 +7,7 @@
             "label": "Compile neolace-api package for Node.js",
             "type": "shell",
             "command": "deno",
-            "args": ["run", "--allow-read", "--allow-run", "--allow-write", "--allow-env", "_compile.ts"],
+            "args": ["run", "--allow-read", "--allow-run", "--allow-write", "--allow-env", "--allow-net", "_compile.ts"],
             "problemMatcher": []
         },
     ]

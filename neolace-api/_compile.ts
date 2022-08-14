@@ -1,4 +1,4 @@
-import { build, emptyDir } from "https://deno.land/x/dnt@0.23.0/mod.ts";
+import { build, emptyDir } from "https://deno.land/x/dnt@0.30.0/mod.ts";
 
 const outDir = "./dist";
 
@@ -11,6 +11,9 @@ await build({
     // Emit ES6 style output, not CommonJS nor UMD
     scriptModule: false,
     shims: {
+    },
+    compilerOptions: {
+        lib: ["dom","dom.iterable","es2021"],
     },
     package: {
         // package.json properties
