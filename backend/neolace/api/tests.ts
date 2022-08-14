@@ -10,10 +10,14 @@ export function group(name: string, tests: () => unknown) {
     realGroup(name, () => {
         if (level === 0) {
             beforeAll(async () => {
+                console.log("Starting server...");
                 await startServer();
+                console.log("Started server");
             });
             afterAll(async () => {
+                console.log("stopping server...");
                 await stopServer();
+                console.log("Server stopped");
             });
         }
         level++;

@@ -34,8 +34,11 @@ export function group(name: string, tests: () => unknown) {
             { sanitizeOps: false }, // TODO: leaving this enabled causes some occasional flaky sanitizer test failures. Is the Neo4j driver not properly closing the websocket every time?
             () => {
                 afterAll(async () => {
+                    console.log("Stopping graph database connection...");
                     await stopGraphDatabaseConnection();
+                    console.log("stopping redis...");
                     await stopRedis();
+                    console.log("databases stopped.");
                 });
                 level++;
                 tests();
