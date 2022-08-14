@@ -13,6 +13,10 @@ export type UiSlotId =
      * This should be a React element that accepts an 'entry' parameter.
      */
     | "entryPreFeature"
+    /**
+     * On the enter page, after the entry content, but before the site footer.
+     */
+    | "entryAfterContent"
     | `plugin:${string}`;
 
 export interface PluginPageProps {
