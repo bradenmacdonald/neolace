@@ -10,7 +10,7 @@ export class EntryListResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/entry/"];
 
     GET = this.method({
-        responseSchema: api.PaginatedResult(api.EntrySummarySchema),
+        responseSchema: api.schemas.StreamedResult(api.EntrySummarySchema),
         description: `Get a list of all entries that the current user can view, optionally filtered by type.
         This API always returns up to date information, but is fairly limited. Use the search API for more
         complex use cases, such as results sorted by name.`,

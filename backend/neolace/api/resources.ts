@@ -14,6 +14,7 @@ import { DraftFileResource } from "./site/%7BsiteShortId%7D/draft/%7BdraftId%7D/
 import { AcceptDraftResource } from "./site/{siteShortId}/draft/{draftId}/accept.ts";
 import { EntryListResource } from "./site/%7BsiteShortId%7D/entry/index.ts";
 import { EntryResource } from "./site/{siteShortId}/entry/{entryId}/index.ts";
+import { SiteUserIndexResource } from "./site/{siteShortId}/user/index.ts";
 import { UserIndexResource } from "./user/index.ts";
 import { UserMeResource } from "./user/me.ts";
 import { VerifyUserEmailResource } from "./user/verify-email.ts";
@@ -36,6 +37,7 @@ export const builtInRestApiResources: (typeof Drash.Resource)[] = [
     AcceptDraftResource,
     EntryListResource,
     EntryResource,
+    SiteUserIndexResource,
     UserIndexResource,
     UserMeResource,
     VerifyUserEmailResource,

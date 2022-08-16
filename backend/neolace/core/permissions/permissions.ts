@@ -19,8 +19,15 @@ export function definePermissions<T extends { [key: string]: Permission }>(perms
 
 export const corePerm = definePermissions({
     /** Built-in permissions that affect how Neolace works, which are scoped to a particular site: */
-    viewSite: { name: "view", description: "View this site and its home page." },
-    viewEntry: { name: "view.entry", description: "View the name, type, and ID of entries.", requires: ["view"] },
+    viewSite: {
+        name: "view",
+        description: "View this site and its home page.",
+    },
+    viewEntry: {
+        name: "view.entry",
+        description: "View the name, type, and ID of entries.",
+        requires: ["view"],
+    },
     viewEntryDescription: {
         name: "view.entry.description",
         description: "View the description of entries.",
@@ -71,7 +78,11 @@ export const corePerm = definePermissions({
         description: "Can the user approve/accept/apply edits to the site's schema",
         requires: ["view.schema"], // Does not necessarily require proposeEdits
     },
-    viewDraft: { name: "view.draft", description: "View drafts (proposed edits)", requires: ["view"] },
+    viewDraft: {
+        name: "view.draft",
+        description: "View drafts (proposed edits)",
+        requires: ["view"],
+    },
     editDraft: {
         name: "edit.draft",
         description: "Edit drafts (change title/description/changes)",
@@ -80,10 +91,37 @@ export const corePerm = definePermissions({
 
     // TODO in future: edit own user profile (and plugin to prevents 'members only' user from doing so)
 
-    // TODO in future: site admin permissions: admin.view.users, admin.view.groups, admin. etc., erase all site content
+    // Site Administration permissions:
+    siteAdmin: {
+        name: "admin.view",
+        description: "This is required for access to the site administration or any site administration functions.",
+    },
+    siteAdminViewUser: {
+        name: "admin.view.user",
+        description: "View the site's users.",
+        requires: ["admin.view"],
+    },
+    siteAdminViewGroup: {
+        name: "admin.view.group",
+        description: "View the site's groups and which users are in which group.",
+        requires: ["admin.view.user"],
+    },
+    siteAdminManageGroup: {
+        name: "admin.manage.group",
+        description: "Edit the site's groups and their permissions.",
+        requires: ["admin.view.group"],
+    },
+    siteAdminManageGroupMembership: {
+        name: "admin.manage.groupMembership",
+        description: "Add/remove users to groups. This is how they are added/removed from the site as a whole.",
+        requires: ["admin.manage.group"],
+    },
 
     /** Actions that can only take place from the home site: */
-    createSite: { name: "createSite", description: "Create a new site in this realm." },
+    createSite: {
+        name: "createSite",
+        description: "Create a new site in this realm.",
+    },
 });
 
 export async function getPerm(name: PermissionName): Promise<Permission | undefined> {

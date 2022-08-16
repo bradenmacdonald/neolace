@@ -3,8 +3,9 @@ import { PasswordlessLoginResponse, UserDataResponse, VerifyEmailRequest, EmailT
 import * as errors from "./errors.ts";
 import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags } from "./edit/index.ts";
-import { EntryData, EntrySummaryData, EvaluateLookupData, GetEntryFlags, PaginatedResultData } from "./content/index.ts";
+import { EntryData, EntrySummaryData, EvaluateLookupData, GetEntryFlags } from "./content/index.ts";
 import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData } from "./site/Site.ts";
+import { SiteUserSummaryData } from "./site/SiteAdmin.ts";
 import * as schemas from "./api-schemas.ts";
 import { VNID } from "./types.ts";
 
@@ -303,7 +304,7 @@ export class NeolaceApiClient {
      */
     public async getEntries(options: {ofEntryType?: VNID, siteId?: string} = {}): Promise<{totalCount: number}&AsyncIterable<EntrySummaryData>> {
         const siteId = this.getSiteId(options);
-        const firstPage: PaginatedResultData<EntrySummaryData> = await this.call(`/site/${siteId}/entry/` + (options.ofEntryType ? `?entryType=${options.ofEntryType}` : ""));
+        const firstPage: schemas.StreamedResultData<EntrySummaryData> = await this.call(`/site/${siteId}/entry/` + (options.ofEntryType ? `?entryType=${options.ofEntryType}` : ""));
         let currentPage = firstPage;
         return {
             totalCount: firstPage.totalCount!,  // The first page always includes the total count
@@ -327,6 +328,14 @@ export class NeolaceApiClient {
                 },
             }),
         };
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Site administration API methods
+
+    public async getSiteUsers(options?: {page?: number, siteId?: string}): Promise<schemas.PaginatedResultData<SiteUserSummaryData>> {
+        const siteId = this.getSiteId(options);
+        return await this.call(`/site/${siteId}/user` + (options?.page ? `?page=${options.page}` : ""), {method: "GET"});
     }
 
     /**

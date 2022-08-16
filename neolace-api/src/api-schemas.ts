@@ -38,3 +38,23 @@ export const HealthCheckResponse = Schema({
     reachable: boolean,
     databaseWorking: boolean,
 });
+
+/**
+ * A paginated result set.
+ */
+export const PaginatedResult = <T>(itemSchema: Validator<T>) => Schema({
+    values: array.of(itemSchema),
+    totalCount: number,
+});
+export type PaginatedResultData<T> = {values: T[], totalCount: number};
+
+/**
+ * A paginated result set that can be used like an iterator to fetch a list of things in order, but which does not
+ * support random access (jumping ahead to a specific page).
+ */
+export const StreamedResult = <T>(itemSchema: Validator<T>) => Schema({
+    values: array.of(itemSchema),
+    totalCount: number.strictOptional(),
+    nextPageUrl: string.strictOptional(),
+});
+export type StreamedResultData<T> = {values: T[], totalCount?: number, nextPageUrl?: string};
