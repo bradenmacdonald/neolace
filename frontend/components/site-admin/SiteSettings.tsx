@@ -55,8 +55,8 @@ export const SiteSettingsAdminTool: React.FunctionComponent<AdminComponentProps>
                     <AutoControl
                         id="id"
                         value={site.shortId}
-                        label={defineMessage({defaultMessage: 'ID', id: 'qlcuNQ'})}
-                        hint={defineMessage({defaultMessage: "Cannot be changed.", id: 'KIAjvA'})}
+                        label={defineMessage({defaultMessage: "ID", id: "qlcuNQ"})}
+                        hint={defineMessage({defaultMessage: "Cannot be changed.", id: "KIAjvA"})}
                     >
                         <TextInput readOnly={true} />
                     </AutoControl>
@@ -65,7 +65,7 @@ export const SiteSettingsAdminTool: React.FunctionComponent<AdminComponentProps>
                     <AutoControl
                         id="id"
                         value={site.description}
-                        label={defineMessage({defaultMessage: 'Description', id: 'Q8Qw5B'})}
+                        label={defineMessage({defaultMessage: "Description", id: "Q8Qw5B"})}
                     >
                         <TextInput />
                     </AutoControl>
@@ -81,8 +81,17 @@ export const SiteSettingsAdminTool: React.FunctionComponent<AdminComponentProps>
                 </Form>
             </Tab>
 
-            <Tab id="homepage" name={defineMessage({defaultMessage: "Home Page", id: 'xHJnaY', })}>
-                <code><pre>todo</pre></code>
+            <Tab id="homepage" name={defineMessage({defaultMessage: "Home Page", id: "xHJnaY", })}>
+                <p>Home page editor will be added in the near future.</p>
+            </Tab>
+
+            <Tab id="links" name={defineMessage({defaultMessage: "Links", id: 'qCcwo3', })}>
+                <p>Main site links (on the left-hand side):</p>
+                <ol>
+                    {site.frontendConfig.headerLinks?.map((l, lIdx) => 
+                        <li key={lIdx}><strong>{l.text}</strong> : {l.href}</li>
+                    )}
+                </ol>
             </Tab>
 
             <Tab id="theme" name={defineMessage({defaultMessage: "Theme", id: 'Pe0ogR', })}>
