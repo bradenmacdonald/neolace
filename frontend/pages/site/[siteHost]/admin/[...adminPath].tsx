@@ -39,14 +39,12 @@ const SiteAdminPage: NextPage<PageProps> = function (props) {
     }
 
     // If the current page is /admin/foo, this adminPath is 'foo'
-    const adminPath = (router.query.adminPath as string[])[0];
-    const adminTool = builtInAdminTools.find((t) => t.matchPath.test(adminPath));
+    const [activeToolId, ...subPath] = (router.query.adminPath as string[]);
+    const adminTool = builtInAdminTools.find((t) => t.id === activeToolId);
     
     if (adminTool === undefined) {
         return <FourOhFour/>;
     }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const matchedPath = adminPath.match(adminTool.matchPath)!;
     const titleTranslated = displayString(intl, adminTool.name);
 
     return (
@@ -67,7 +65,7 @@ const SiteAdminPage: NextPage<PageProps> = function (props) {
                     <Breadcrumb>{titleTranslated}</Breadcrumb>
                 </Breadcrumbs>
                 <h1 className="text-3xl font-semibold">{titleTranslated}</h1>
-                {React.createElement<AdminComponentProps>(adminTool.component, {matchedPath, })}
+                {React.createElement<AdminComponentProps>(adminTool.component, {subPath, })}
             </SitePage>
         </SiteDataProvider>
     );

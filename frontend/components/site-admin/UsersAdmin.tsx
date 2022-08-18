@@ -3,10 +3,9 @@ import { FormattedMessage } from "react-intl";
 import useSWR from "swr";
 
 import { ErrorMessage } from "components/widgets/ErrorMessage";
-import { Redirect } from "components/utils/Redirect";
 import { Spinner } from "components/widgets/Spinner";
 import { client, useSiteData } from "lib/api-client";
-import { UserStatus, useUser } from "lib/authentication";
+import { useUser } from "lib/authentication";
 
 
 /**
@@ -29,11 +28,6 @@ export const SiteUsersAdminTool: React.FunctionComponent = function (_props) {
     }, {
         // refreshInterval: 10 * 60_000,
     });
-
-    if (user.status === UserStatus.Anonymous) {
-        return <Redirect to="/account/login" />;
-    }
-
 
     if (error) {
         return (

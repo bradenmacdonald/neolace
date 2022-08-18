@@ -323,7 +323,7 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
             }
         } else if (n.type === "paragraph") {
             if (result.length > 0) {
-                result += "\n";
+                result += "\n\n";
             }
             result += slateDocToStringValue(n.children, escape);
         } else if (n.type === "link") {
@@ -370,7 +370,7 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
  * structure), so this function converts from our MDT tree to a Slate.js document tree. Note that Slate.js itself
  * might modify the tree even more, e.g. to insert 'text' nodes before/after/between inline elements.
  */
-function cleanMdtNodeForSlate(node: api.MDT.Node, marks: Omit<ExtendedTextNode, "text"|"type"> = {}): api.MDT.Node[] {
+function cleanMdtNodeForSlate(node: api.MDT.Node|api.MDT.RootNode, marks: Omit<ExtendedTextNode, "text"|"type"> = {}): api.MDT.Node[] {
     let removeNode = false;
     marks = {...marks};
     if (node.type === "inline") {
@@ -410,6 +410,9 @@ function cleanMdtNodeForSlate(node: api.MDT.Node, marks: Omit<ExtendedTextNode, 
         }
         node.children = newChildren;
     }
+    if (node.type === "mdt-document") {
+        return node.children;
+    }
     return [node];
 }
 
@@ -426,7 +429,7 @@ export function parseMdtStringToSlateDoc(mdt: string, inline?: boolean): Neolace
             children,
         }];
     } else {
-        throw new Error("Block-level MDT editing is not yet supported.");
+        return cleanMdtNodeForSlate(api.MDT.tokenizeMDT(mdt));
     }
 }
 

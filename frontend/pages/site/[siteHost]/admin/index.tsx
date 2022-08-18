@@ -9,6 +9,7 @@ import { SiteDataProvider, SitePage } from "components/SitePage";
 import { getSiteData, SiteData } from "lib/api-client";
 import { UserStatus, useUser } from "lib/authentication";
 import { AdminLinks } from "components/site-admin/site-admin";
+import { ErrorMessage } from "components/widgets/ErrorMessage";
 
 interface PageProps {
     site: SiteData;
@@ -53,6 +54,10 @@ const SiteAdminPage: NextPage<PageProps> = function (props) {
                 <p>
                     <FormattedMessage defaultMessage="Select an admin tool from the menu on the left." id="AnSXvE" />
                 </p>
+                <ErrorMessage>
+                    Note: The Site Administration tool is still being developed. For now, most functionality is read-only.
+                    If you need a setting changed, email us at <a href="mailto:team@neolace.com">team@neolace.com</a>.
+                </ErrorMessage>
             </SitePage>
         </SiteDataProvider>
     );

@@ -212,6 +212,12 @@ export function renderElement({ element, children, attributes }: RenderElementPr
         // Block elements:
         case "paragraph":
             return <p {...attributes}>{children}</p>;
+        case "bullet_list":
+            return <ul {...attributes}>{children}</ul>;
+        case "ordered_list":
+            return <ul {...attributes}>{children}</ul>;
+        case "list_item":
+            return <li {...attributes}>{children}</li>;
         default:
             return (
                 <span className="border-red-100 border-[1px] text-red-700">{`Unknown MDT node "${element.type}"`}</span>
