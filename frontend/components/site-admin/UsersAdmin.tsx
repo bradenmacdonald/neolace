@@ -1,23 +1,12 @@
 import React from "react";
-import { GetStaticPaths, GetStaticProps, NextPage } from "next";
-import { ParsedUrlQuery } from "querystring";
-import { FormattedMessage, useIntl } from "react-intl";
-
-import { client, getSiteData, SiteData, useSiteData } from "lib/api-client";
-import { SiteDataProvider, SitePage } from "components/SitePage";
-import { UserStatus, useUser } from "lib/authentication";
-import { Redirect } from "components/utils/Redirect";
+import { FormattedMessage } from "react-intl";
 import useSWR from "swr";
-import { ErrorMessage } from "components/widgets/ErrorMessage";
-import { Spinner } from "components/widgets/Spinner";
-import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 
-interface PageProps {
-    site: SiteData;
-}
-interface PageUrlQuery extends ParsedUrlQuery {
-    siteHost: string;
-}
+import { ErrorMessage } from "components/widgets/ErrorMessage";
+import { Redirect } from "components/utils/Redirect";
+import { Spinner } from "components/widgets/Spinner";
+import { client, useSiteData } from "lib/api-client";
+import { UserStatus, useUser } from "lib/authentication";
 
 
 /**
@@ -25,7 +14,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
  * @param props
  * @returns
  */
- const SiteUsersPageContent: React.FunctionComponent = function (props) {
+export const SiteUsersAdminTool: React.FunctionComponent = function (_props) {
     const user = useUser();
     const {site} = useSiteData();
 
@@ -82,55 +71,4 @@ interface PageUrlQuery extends ParsedUrlQuery {
             </tbody>
         </table>
     </>);
-};
-
-/**
- * This site admin page lists all of the users associated with the current site.
- * @param props
- * @returns
- */
-const SiteUsersPage: NextPage<PageProps> = function (props) {
-    const intl = useIntl();
-    const user = useUser();
-
-    if (user.status === UserStatus.Anonymous) {
-        return <Redirect to="/account/login" />;
-    }
-
-    const title = intl.formatMessage({ id: "YDMrKK", defaultMessage: "Users" });
-
-    return (
-        <SiteDataProvider sitePreloaded={props.site}>
-            <SitePage title={title}>
-                <Breadcrumbs>
-                    <Breadcrumb href={`/`}>{props.site.name}</Breadcrumb>
-                    <Breadcrumb href={`/admin`}>
-                        <FormattedMessage id="iOBTBR" defaultMessage="Site Administration" />
-                    </Breadcrumb>
-                    <Breadcrumb>{title}</Breadcrumb>
-                </Breadcrumbs>
-                <h1 className="text-3xl font-semibold">{title}</h1>
-                <SiteUsersPageContent />
-            </SitePage>
-        </SiteDataProvider>
-    );
-};
-
-export default SiteUsersPage;
-
-export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
-    return await {
-        // Which pages to pre-generate at build time. For now, we generate all pages on-demand.
-        paths: [],
-        // Enable statically generating any additional pages as needed
-        fallback: "blocking",
-    };
-};
-
-export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (context) => {
-    if (!context.params) throw new Error("Internal error - missing URL params."); // Make TypeScript happy
-    // Look up the Neolace site by domain:
-    const site = await getSiteData(context.params.siteHost);
-    if (site === null) return { notFound: true };
-    return { props: { site } };
 };
