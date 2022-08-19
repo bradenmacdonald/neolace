@@ -46,7 +46,7 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
 
         const result = await graph.read((tx) => {
             return tx.query(C`
-                MATCH (user:${User})<-[:${Group.rel.HAS_USER}]-(group:${Group})-[:${Group.rel.BELONGS_TO}*1..${
+                MATCH (user:${User})-[optionalOwnRel:${BotUser.rel.OWNED_BY}*0..1 {inheritPermissions: true}]->(owner:${User})<-[:${Group.rel.HAS_USER}]-(group:${Group})-[:${Group.rel.BELONGS_TO}*1..${
                 C(String(GroupMaxDepth))
             }]->(site:${Site} {id: ${siteId}})
                 WHERE ${viewSiteUserPermissionPredicate}
@@ -55,7 +55,10 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
                 WITH user, CASE WHEN ${viewSiteUserGroupsPermissionPredicate} THEN group ELSE NULL END AS group
                 // We want to return just one row per user, even if the user is part of multiple groups:
                 WITH user, collect(group {.id, .name}) AS groups
-                // Now also fetch the "owner" information if this user is a bot.
+                // Now also fetch the "owner" information if this user is a bot. We haven't carried it from the above
+                // pattern because the 'owner' above is sometimes the same as 'user' in the case when there's no bot,
+                // and also the pattern above doesn't match owner for cases where the bot is not inheriting permissions
+                // via its owner, but rather explicitly added to a Group.
                 OPTIONAL MATCH (user)-[:${BotUser.rel.OWNED_BY}]->(owner)
 
                 // Now we do some tricks to return the total count at the same time:
@@ -67,10 +70,11 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
                 RETURN
                     substring(user.slugId, ${User.slugIdPrefix.length}) AS username,
                     user.fullName AS fullName,
-                    owner.slugId AS ownerSlugId,
+                    CASE WHEN owner.slugId IS NULL THEN NULL ELSE substring(owner.slugId, ${User.slugIdPrefix.length}) END AS ownerSlugId,
                     owner.fullName AS ownerFullName,
                     groups AS groups,
                     totalCount
+                ORDER BY fullName, username
                 SKIP ${C(String(skip))} LIMIT ${C(String(limit))}
             `.givesShape({
                 username: Field.String,
@@ -91,7 +95,10 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
                 username: row.username,
                 fullName: row.fullName,
                 isBot: row.ownerFullName !== null,
-                ownedByUsername: row.ownerSlugId,
+                ownedBy: row.ownerSlugId === null ? undefined : {
+                    username: row.ownerSlugId,
+                    fullName: row.ownerFullName!,
+                },
                 groups: row.groups,
             })),
             totalCount: result[0].totalCount,
