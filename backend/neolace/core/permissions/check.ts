@@ -16,6 +16,19 @@ export async function hasPermissions(
 ): Promise<boolean> {
     // Get the complete list of permissions needed:
     const needed = await getAllRequiredPermissions(Array.isArray(verb) ? [...verb] : [verb]);
+    // Check that we have enough data about the object to determine those permissions:
+    for (const permName of needed) {
+        const perm = await getPerm(permName);
+        if (perm) {
+            for (const keyNeeded of perm.requiresObjectFields) {
+                if (!(keyNeeded in object)) {
+                    throw new Error(
+                        `Internal error: to check for the "${permName}" permission, the action object must include {${keyNeeded}: ...}`,
+                    );
+                }
+            }
+        }
+    }
     // Do prechecks on these permissions:
     let { result, conditionalYes } = await preChecks(subject, needed);
 

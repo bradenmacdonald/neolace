@@ -10,6 +10,7 @@ import { getEntryProperty } from "neolace/core/entry/properties.ts";
 
 import { LookupExpression } from "../base.ts";
 import {
+    EntryTypeValue,
     EntryValue,
     InlineMarkdownStringValue,
     IntegerValue,
@@ -25,6 +26,8 @@ import { LookupFunctionWithArgs } from "./base.ts";
 import { hasPermissions, makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 import { hasSourceExpression } from "../../values/base.ts";
+import { EntryTypeFunction } from "./entryType.ts";
+import { LiteralExpression } from "../literal-expr.ts";
 
 /**
  * Helper function to read annotated rank values from a database query result
@@ -209,7 +212,20 @@ export class GetProperty extends LookupFunctionWithArgs {
                 // Yes, we are looking up this value for a single entry.
 
                 // Does the user have permission?
-                if (!await hasPermissions(context.subject, corePerm.viewEntryProperty.name, { entryId: forEntry.id })) {
+
+                // Look up the entry type for this entry; the entry type is required to check permissions.
+                // We use evaluateExpr() so that this is cached, and multiple calls to get() will use the cached
+                // entry type result.
+                const entryType = await context.evaluateExpr(new EntryTypeFunction(new LiteralExpression(forEntry)));
+                if (!(entryType instanceof EntryTypeValue)) {
+                    throw new LookupEvaluationError("Unable to get entry type for the entry.");
+                }
+                if (
+                    !await hasPermissions(context.subject, corePerm.viewEntryProperty.name, {
+                        entryId: forEntry.id,
+                        entryTypeId: entryType.id,
+                    })
+                ) {
                     throw new LookupEvaluationError("You do not have permission to view that property.");
                 }
 
