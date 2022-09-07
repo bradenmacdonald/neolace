@@ -1,4 +1,4 @@
-import { api, assertEquals, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
+import { api, assert, assertEquals, getClient, group, setTestIsolation, test } from "neolace/api/tests.ts";
 import { CreateBot } from "neolace/core/User.ts";
 import { getGraph } from "neolace/api/mod.ts";
 
@@ -47,5 +47,25 @@ group("my-permissions.ts", () => {
         assertEquals(result[api.CorePerm.siteAdmin], { hasPerm: true });
         // We don't expect data about "can view entry" because it requires that a specific entry ID is specified:
         assertEquals(result[api.CorePerm.viewEntry], undefined);
+    });
+
+    const max = 25;
+    test(`It can get the permissions of an admin user in less than ${max}ms`, async () => {
+        const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+        // Run a couple times to warm up the caches:
+        await client.getMyPermissions();
+        await client.getMyPermissions();
+        // Then time it:
+        const before = performance.now();
+        const result = await client.getMyPermissions();
+        const after = performance.now();
+        const took = after - before;
+
+        assert(took < max, `Expected getMyPermissions() to take < ${max}ms, but it took ${took}ms`);
+
+        assertEquals(result[api.CorePerm.viewSite], { hasPerm: true });
+        assertEquals(result[api.CorePerm.proposeNewEntry], { hasPerm: true });
+        assertEquals(result[api.CorePerm.siteAdmin], { hasPerm: true });
     });
 });

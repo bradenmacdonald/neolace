@@ -9,7 +9,18 @@ import { Site } from "neolace/core/Site.ts";
 import { AllOfCondition, Always, GrantCondition, OneOfCondition, PermissionGrant } from "./grant.ts";
 import { getSitePublicGrants } from "./default-grants.ts";
 
-export async function hasPermissions(
+/**
+ * A very short-term cache that is used internally by checkPermissions() to speed up checking multiple permissions.
+ * This cache is just for a single subject during a single request, and should not be long-lived.
+ */
+interface PreCheckCache {
+    /** Grants that are automatic for all users on the site */
+    allDefaultGrants?: PermissionGrant[];
+    /** Grants that the subject (the user) has, based on their group membership */
+    groupGrants?: PermissionGrant[];
+}
+
+export async function hasPermission(
     subject: ActionSubject,
     verb: PermissionName | readonly PermissionName[],
     object: ActionObject,
@@ -30,7 +41,8 @@ export async function hasPermissions(
         }
     }
     // Do prechecks on these permissions:
-    let { result, conditionalYes } = await preChecks(subject, needed);
+    const cache: PreCheckCache = {};
+    let { result, conditionalYes } = await preChecks(subject, needed, cache);
 
     if (!result && conditionalYes) {
         // The preliminary checks show that this user doesn't have permission, but one of the conditional grants may
@@ -48,6 +60,56 @@ export async function hasPermissions(
     return result;
 }
 
+/**
+ * Given a list of permissions, check which of those permissions the user (subject) has for the given object.
+ * Returns a list of booleans in the same order as the list of permissions given (verbs)
+ */
+export async function checkPermissions(
+    subject: ActionSubject,
+    verbs: readonly PermissionName[],
+    object: ActionObject,
+): Promise<boolean[]> {
+    const cache: PreCheckCache = {};
+    const results: boolean[] = [];
+
+    for (const perm of verbs) {
+        // Get the complete list of permissions needed:
+        const needed = await getAllRequiredPermissions([perm]);
+        // Check that we have enough data about the object to determine those permissions:
+        for (const permName of needed) {
+            const perm = await getPerm(permName);
+            if (perm) {
+                for (const keyNeeded of perm.requiresObjectFields) {
+                    if (!(keyNeeded in object)) {
+                        throw new Error(
+                            `Internal error: to check for the "${permName}" permission, the action object must include {${keyNeeded}: ...}`,
+                        );
+                    }
+                }
+            }
+        }
+
+        // Do prechecks on this permissions:
+        let { result, conditionalYes } = await preChecks(subject, needed, cache);
+
+        if (!result && conditionalYes) {
+            // The preliminary checks show that this user doesn't have permission, but one of the conditional grants may
+            // apply to them, so now we have to evaluate the relevant conditional grants.
+            const { getTx, closeTx } = makeCloseableTransactionOnDemand();
+            try {
+                result = await conditionalYes.appliesTo({ subject, object, getTx });
+            } finally {
+                closeTx();
+            }
+        }
+
+        // Check if any plugins want to override the permissions check
+        result = await doPluginOverrides(subject, needed, object, result) ?? result;
+        results.push(result);
+    }
+    return results;
+}
+
 export async function makeCypherCondition(
     subject: ActionSubject,
     verb: PermissionName | PermissionName[],
@@ -57,7 +119,8 @@ export async function makeCypherCondition(
     // Get the complete list of permissions needed:
     const needed = await getAllRequiredPermissions(Array.isArray(verb) ? [...verb] : [verb]);
     // Do prechecks on these permissions:
-    const { result, conditionalYes } = await preChecks(subject, needed);
+    const cache: PreCheckCache = {};
+    const { result, conditionalYes } = await preChecks(subject, needed, cache);
 
     let predicate: CypherQuery;
     if (result) {
@@ -88,6 +151,7 @@ export async function makeCypherCondition(
 async function preChecks(
     subject: ActionSubject,
     allNeeded: ReadonlySet<PermissionName>,
+    cache: PreCheckCache,
 ): Promise<{ result: true; conditionalYes?: undefined } | { result: false; conditionalYes?: GrantCondition }> {
     // Short circuit for the system user, who is always granted all permissions.
     if (subject.userId === SYSTEM_VNID) {
@@ -101,7 +165,8 @@ async function preChecks(
 
     const needed = new Set(allNeeded);
     // Get the default grants for the site.
-    const allDefaultGrants = (await getSitePublicGrants(subject.siteId));
+    const allDefaultGrants = cache.allDefaultGrants ??
+        (cache.allDefaultGrants = await getSitePublicGrants(subject.siteId));
     // Do the default grants cover the required permissions? If so we can save a lot of time by returning true now.
     const resolveUnconditionalGrants = (grants: PermissionGrant[]) => {
         for (const grant of grants) {
@@ -122,8 +187,10 @@ async function preChecks(
     // At this point, 'needed' is the set of remaining permissions that the user still requires to do this action.
 
     // Check what permisison grants the user has from any groups that they may belong to:
-    const groups = await getUserGroups(subject);
-    const groupGrants: PermissionGrant[] = (await Promise.all(groups.map((g) => getGroupGrants(g)))).flat();
+    const groupGrants: PermissionGrant[] = cache.groupGrants ?? (cache.groupGrants = await (async () => {
+        const groups = await getUserGroups(subject);
+        return (await Promise.all(groups.map((g) => getGroupGrants(g)))).flat();
+    })());
     resolveUnconditionalGrants(groupGrants);
     if (needed.size === 0) {
         // The unconditional default grants have already provided the required permissions

@@ -1,8 +1,9 @@
 import * as log from "std/log/mod.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { AccessMode, Site } from "neolace/core/Site.ts";
+import { AccessMode, Site, siteShortIdFromId } from "neolace/core/Site.ts";
 import { Always, DraftSelfAuthoredCondition, IfLoggedIn, PermissionGrant } from "./grant.ts";
+import { useRedisCache } from "neolace/core/redis.ts";
 
 // These grants are always enabled for all sites
 const coreGrants: PermissionGrant[] = [
@@ -34,17 +35,22 @@ export const defaultGrants: Record<AccessMode, readonly PermissionGrant[]> = Obj
 
 /**
  * Get the grants which apply to _everyone_ (logged in or not) for the given site
- * TODO: cache this in Redis and clear the cache when the site is updated.
  */
-export async function getSitePublicGrants(siteId: VNID) {
-    const graph = await getGraph();
-    const site = await graph.pullOne(Site, (s) => s.accessMode.publicGrantStrings.shortId(), { key: siteId });
-    const grants = [...defaultGrants[site.accessMode as AccessMode]] ?? [];
-    for (const publicGrantString of (site.publicGrantStrings ?? [])) {
+export async function getSitePublicGrants(siteId: VNID): Promise<PermissionGrant[]> {
+    // TODO: clear the cache when the site is updated.
+    const cacheKey = `getSitePublicGrants.siteData.${siteId})`;
+    const [accessMode, publicGrantStrings] = await useRedisCache<[string, string[]]>(cacheKey, async () => {
+        const graph = await getGraph();
+        const site = await graph.pullOne(Site, (s) => s.accessMode.publicGrantStrings, { key: siteId });
+        return [site.accessMode, site.publicGrantStrings ?? []];
+    });
+    const grants = [...defaultGrants[accessMode as AccessMode]] ?? [];
+    for (const publicGrantString of (publicGrantStrings ?? [])) {
         try {
             grants.push(PermissionGrant.parse(publicGrantString));
         } catch (err) {
-            log.error(`Unable to parse public grant string "${publicGrantString}" for site ${site.shortId}`, err);
+            const shortId = await siteShortIdFromId(siteId);
+            log.error(`Unable to parse public grant string "${publicGrantString}" for site ${shortId}`, err);
         }
     }
     return grants;

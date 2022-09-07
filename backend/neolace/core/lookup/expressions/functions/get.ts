@@ -23,7 +23,7 @@ import {
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
-import { hasPermissions, makeCypherCondition } from "neolace/core/permissions/check.ts";
+import { hasPermission, makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 import { hasSourceExpression } from "../../values/base.ts";
 import { EntryTypeFunction } from "./entryType.ts";
@@ -129,7 +129,7 @@ export class GetProperty extends LookupFunctionWithArgs {
             if (forEntry !== undefined) {
                 // Yes, we are looking up this value for a single entry.
                 // Does the user have permission?
-                if (!await hasPermissions(context.subject, corePerm.viewEntryProperty.name, { entryId: forEntry.id })) {
+                if (!await hasPermission(context.subject, corePerm.viewEntryProperty.name, { entryId: forEntry.id })) {
                     throw new LookupEvaluationError("You do not have permission to view that property.");
                 }
                 // Compute the value of this auto property:
@@ -221,7 +221,7 @@ export class GetProperty extends LookupFunctionWithArgs {
                     throw new LookupEvaluationError("Unable to get entry type for the entry.");
                 }
                 if (
-                    !await hasPermissions(context.subject, corePerm.viewEntryProperty.name, {
+                    !await hasPermission(context.subject, corePerm.viewEntryProperty.name, {
                         entryId: forEntry.id,
                         entryTypeId: entryType.id,
                     })

@@ -3,13 +3,13 @@ import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.t
 import { getGraph } from "neolace/core/graph.ts";
 import { AccessMode, CreateSite } from "neolace/core/Site.ts";
 
-import { hasPermissions, makeCypherCondition } from "./check.ts";
+import { hasPermission, makeCypherCondition } from "./check.ts";
 import { corePerm, PermissionName } from "./permissions.ts";
 
 group("default-grants.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
-    test("integration test of default grants, site access modes, and hasPermissions()", async () => {
+    test("integration test of default grants, site access modes, and hasPermission()", async () => {
         const graph = await getGraph();
 
         // Create some sites for testing:
@@ -37,7 +37,7 @@ group("default-grants.ts", () => {
         // Now check the permissions:
 
         const anonUserHasPerm = (siteId: VNID, perm: PermissionName) =>
-            hasPermissions({ siteId, userId: undefined }, perm, {});
+            hasPermission({ siteId, userId: undefined }, perm, {});
 
         // A user who is not logged in cannot view the private site, but can view the public sites:
         assertEquals(await anonUserHasPerm(privateSite, corePerm.viewSite.name), false);
@@ -74,7 +74,7 @@ group("default-grants.ts", () => {
                     corePerm.proposeEditToSchema.name,
                 ]
             ) {
-                const expected = await hasPermissions(subject, perm, {});
+                const expected = await hasPermission(subject, perm, {});
                 const predicate = await makeCypherCondition(subject, perm, {}, []);
                 const result = await graph.read((tx) =>
                     tx.queryOne(C`RETURN ${predicate} AS x`.givesShape({ x: Field.Boolean }))

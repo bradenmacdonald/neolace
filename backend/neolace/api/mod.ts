@@ -9,7 +9,7 @@ import { PathError } from "neolace/deps/computed-types.ts";
 
 import { getGraph } from "neolace/core/graph.ts";
 import { ActionObject, ActionSubject } from "neolace/core/permissions/action.ts";
-import { hasPermissions } from "neolace/core/permissions/check.ts";
+import { hasPermission } from "neolace/core/permissions/check.ts";
 import { getHomeSite, siteCodeForSite, siteIdFromShortId } from "neolace/core/Site.ts";
 
 interface AuthenticatedUserData {
@@ -216,7 +216,7 @@ export class NeolaceHttpResource extends Drash.Resource {
             return true; // The system user is allowed to do anything using the API (dangerous)
         }
         const subject = await this.getPermissionSubject(request);
-        return hasPermissions(subject, verb, object ?? {});
+        return hasPermission(subject, verb, object ?? {});
     }
 
     /**

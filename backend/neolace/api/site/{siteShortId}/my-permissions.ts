@@ -2,8 +2,9 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { ActionObject } from "neolace/core/permissions/action.ts";
-import { getAllPerms } from "neolace/core/permissions/permissions.ts";
+import { getAllPerms, PermissionName } from "neolace/core/permissions/permissions.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
+import { checkPermissions } from "../../../core/permissions/check.ts";
 
 export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/my-permissions"];
@@ -14,8 +15,6 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
         notes: "This lists all the permissions that the current user has on the current site, in a given context.",
     }, async ({ request }) => {
         // Permissions and parameters:
-        // First of all, the "view site" permission is required to use this API at all.
-        await this.requirePermission(request, api.CorePerm.viewSite);
 
         const object: ActionObject = {};
 
@@ -37,6 +36,7 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
 
         const result: Record<string, { hasPerm: boolean }> = {};
 
+        const permsToCheck: PermissionName[] = [];
         for (const perm of await getAllPerms()) {
             // First, determine if we know enough data to check this permission.
             // For example, to check the "view.entry" permission, we need "entryId" and "entryTypeId". If we don't have
@@ -52,11 +52,18 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
                 // We don't have enough data to compute if the user has this permission or not.
                 continue;
             }
-            // Now check if the user has this permission:
-            const hasPerm = await this.hasPermission(request, perm.name, object);
-            result[perm.name] = {
-                hasPerm,
-            };
+            permsToCheck.push(perm.name);
+        }
+        const subject = await this.getPermissionSubject(request);
+        // Now check which of those permissions the user has:
+        console.time(`checkPermissions`);
+        const permResults = await checkPermissions(subject, permsToCheck, object);
+        console.timeEnd(`checkPermissions`);
+
+        for (let i = 0; i < permsToCheck.length; i++) {
+            const permName = permsToCheck[i];
+            const hasPerm = permResults[i];
+            result[permName] = { hasPerm };
         }
         return result;
     });
