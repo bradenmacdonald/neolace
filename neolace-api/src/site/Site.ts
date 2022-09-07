@@ -1,5 +1,6 @@
 import { Schema, Type, string, array, boolean, Record, number, object } from "../api-schemas.ts";
 import { ReferenceCacheSchema } from "../content/reference-cache.ts";
+import { PermissionName } from "../permissions.ts";
 import { VNID } from "../types.ts";
 
 const rgbTuple = array.min(3).max(3).of(number).transform(x => x as [number, number, number]);
@@ -98,3 +99,9 @@ export interface EntryIndexDocument {
     visibleToGroups: string[];
     [k: `prop${string}`]: string[];
 }
+
+/** Data about what permissions the user has, in a given context */
+export const SiteUserMyPermissionsSchema = Record(string, Schema({
+    hasPerm: boolean,
+}));
+export type SiteUserMyPermissionsData = Record<PermissionName, {hasPerm: boolean}>;

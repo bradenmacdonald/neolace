@@ -4,7 +4,7 @@ import * as errors from "./errors.ts";
 import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
 import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags } from "./edit/index.ts";
 import { EntryData, EntrySummaryData, EvaluateLookupData, GetEntryFlags } from "./content/index.ts";
-import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData } from "./site/Site.ts";
+import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData, SiteUserMyPermissionsData } from "./site/Site.ts";
 import { SiteUserSummaryData } from "./site/SiteAdmin.ts";
 import * as schemas from "./api-schemas.ts";
 import { VNID } from "./types.ts";
@@ -328,6 +328,25 @@ export class NeolaceApiClient {
                 },
             }),
         };
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Permissions API
+
+    /**
+     * Get the permissions that the user has, in a specific context.
+     * For example, to determine if the user has 'edit.entry' permission, pass in the entryId and entryTypeId
+     * @param options 
+     * @returns 
+     */
+    public async getMyPermissions(options?: {entryId?: VNID, entryTypeId?: VNID, draftId?: VNID, [custom: `plugin:${string}`]: string, siteId?: string}): Promise<SiteUserMyPermissionsData> {
+        const siteId = this.getSiteId(options);
+
+        const objectFields = {...options};
+        delete objectFields.siteId;
+        const args = new URLSearchParams(objectFields);
+
+        return await this.call(`/site/${siteId}/my-permissions?${args.toString()}`, {method: "GET"});
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
