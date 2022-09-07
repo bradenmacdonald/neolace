@@ -3,7 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { SWRConfig } from "swr";
 
-import { api, SiteData, useSiteData } from "lib/api-client";
+import { api, SiteData, usePermissions, useSiteData } from "lib/api-client";
 import { defaultRender, DefaultUISlot, UISlot, UISlotWidget } from "./widgets/UISlot";
 import FourOhFour from "pages/404";
 import { MDTContext, RenderMDT } from "./markdown-mdt/mdt";
@@ -69,6 +69,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     const user = useUser();
     const { site, siteError } = useSiteData();
     const pluginsData = React.useContext(UiPluginsContext);
+    const permissions = usePermissions();
 
     // On mobile, we use JavaScript to show the menu when the user taps on the "Menu" button
     const [mobileMenuVisible, showMobileMenu] = React.useState(false);
@@ -103,6 +104,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
 
     defaultSystemLinks.push(
+        // Run a "lookup" query and see the result:
         {
             id: "lookup",
             priority: 22,
@@ -112,20 +114,35 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 icon: "asterisk",
             },
         },
+        // Create a new entry:
+        {
+            id: "create-entry",
+            priority: 25,
+            content: {
+                url: "/draft/_/entry/_/edit",
+                label: <FormattedMessage id="oTIZFX" defaultMessage="Create Entry" />,
+                icon: "plus-lg",
+            },
+            // Only show if the user has permission to propose a new entry:
+            hidden: !permissions?.[api.CorePerm.proposeNewEntry]?.hasPerm,
+        },
+        // Site administration:
+        {
+            id: "admin",
+            priority: 50,
+            content: {
+                url: `/admin/`,
+                label: <FormattedMessage id="iOBTBR" defaultMessage="Site Administration" />,
+                icon: "gear-fill",
+            },
+            // Only show if the user has permission to administer the site:
+            hidden: !permissions?.[api.CorePerm.siteAdmin]?.hasPerm,
+        }
     );
 
     if (DEVELOPMENT_MODE) {
         // For now, the "Drafts" link should only be visible during development
         defaultSystemLinks.push(
-            {
-                id: "create-entry",
-                priority: 25,
-                content: {
-                    url: "/draft/_/entry/_/edit",
-                    label: <FormattedMessage id="oTIZFX" defaultMessage="Create Entry" />,
-                    icon: "plus-lg",
-                },
-            },
             {
                 id: "drafts",
                 priority: 30,
