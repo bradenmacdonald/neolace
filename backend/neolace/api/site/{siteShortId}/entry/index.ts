@@ -1,5 +1,5 @@
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
-import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { Site, slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
@@ -21,7 +21,7 @@ export class EntryListResource extends NeolaceHttpResource {
         const onlyEntryType = request.queryParam("entryType") as VNID | undefined;
         const entryTypeFilter = onlyEntryType ? C`{id: ${onlyEntryType}}` : C``;
         const subject = await this.getPermissionSubject(request);
-        const permissionsFilter = await makeCypherCondition(subject, corePerm.viewEntry.name, {
+        const permissionsFilter = await makeCypherCondition(subject, api.CorePerm.viewEntry, {
             entryTypeId: onlyEntryType,
         }, ["entry", "entryType"]);
 
@@ -85,7 +85,7 @@ export class EntryListResource extends NeolaceHttpResource {
             may use this API method. You must pass ?confirm=danger for this method to succeed.`,
     }, async ({ request }) => {
         // Permissions and parameters:
-        await this.requirePermission(request, "DANGER!!"); // Only a user with the "*" global permission grant will match this
+        await this.requirePermission(request, "DANGER!!" as api.PermissionName); // Only a user with the "*" global permission grant will match this
         const { siteId } = await this.getSiteDetails(request);
         const graph = await getGraph();
         const user = this.requireUser(request);

@@ -1,5 +1,5 @@
 import * as log from "std/log/mod.ts";
-import { adaptErrors, api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { CreateDraft } from "neolace/core/edit/Draft.ts";
 import { getDraft } from "./_helpers.ts";
 
@@ -16,8 +16,8 @@ export class DraftIndexResource extends NeolaceHttpResource {
         const userId = this.requireUser(request).id;
 
         // To create any draft at all, the user must have one of these two permissions:
-        if (!await this.hasPermission(request, corePerm.proposeEditToEntry.name)) {
-            await this.requirePermission(request, corePerm.proposeEditToSchema.name);
+        if (!await this.hasPermission(request, api.CorePerm.proposeEditToEntry)) {
+            await this.requirePermission(request, api.CorePerm.proposeEditToSchema);
         }
 
         // Response:
@@ -53,10 +53,10 @@ export class DraftIndexResource extends NeolaceHttpResource {
         }
 
         if (hasEntryChanges) {
-            await this.requirePermission(request, corePerm.proposeEditToEntry.name);
+            await this.requirePermission(request, api.CorePerm.proposeEditToEntry);
         }
         if (hasSchemaChanges) {
-            await this.requirePermission(request, corePerm.proposeEditToSchema.name);
+            await this.requirePermission(request, api.CorePerm.proposeEditToSchema);
         }
 
         const { id } = await graph.runAs(

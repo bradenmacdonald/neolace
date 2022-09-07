@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { getEntry } from "./entry/{entryId}/_helpers.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
@@ -47,9 +47,9 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
 
         // Check permissions:
         if (entry) {
-            await this.requirePermission(request, corePerm.viewEntry.name, { entryId: entry.id });
+            await this.requirePermission(request, api.CorePerm.viewEntry, { entryId: entry.id });
         } else {
-            await this.requirePermission(request, corePerm.viewSite.name);
+            await this.requirePermission(request, api.CorePerm.viewSite);
         }
 
         const userId = request.user?.id;

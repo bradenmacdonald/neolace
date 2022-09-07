@@ -15,11 +15,10 @@ import {
     PermissionGrant,
     TestCondition,
 } from "./grant.ts";
-import { PermissionName } from "./permissions.ts";
 
 group("PermissionGrant", () => {
     test("givesPermission() states whether a grant gives a particular permission, including handling wildcards", async () => {
-        const check = (permsGranted: PermissionName[], perm: PermissionName) =>
+        const check = (permsGranted: string[], perm: string) =>
             new PermissionGrant(Always, permsGranted).givesPermission(perm);
 
         // A grant of "foo" and "bar" gives the permissions foo and bar, but not blah:

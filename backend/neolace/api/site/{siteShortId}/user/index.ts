@@ -1,6 +1,6 @@
 import { C, Field } from "neolace/deps/vertex-framework.ts";
 
-import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { BotUser, User } from "neolace/core/User.ts";
 import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { Group, GroupMaxDepth } from "neolace/core/permissions/Group.ts";
@@ -20,7 +20,7 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
         // Permissions and parameters:
         // First of all, the "site admin" permission is required to use this API at all.
         const permSubject = await this.getPermissionSubject(request);
-        await this.requirePermission(request, corePerm.siteAdmin.name);
+        await this.requirePermission(request, api.CorePerm.siteAdmin);
         const page = BigInt(request.queryParam("page") ?? 1n);
         if (page < 1n) throw new api.InvalidFieldValue([{ fieldPath: "page", message: "Invalid page number" }]);
         const limit = 25n; // Hard-coded page size for now.
@@ -32,14 +32,14 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
          */
         const viewSiteUserPermissionPredicate = await makeCypherCondition(
             permSubject,
-            corePerm.siteAdminViewUser.name,
+            api.CorePerm.siteAdminViewUser,
             {},
             ["user", "group"],
         );
         /** This represents whether or not the user has permission to view the groups that each user is in. */
         const viewSiteUserGroupsPermissionPredicate = await makeCypherCondition(
             permSubject,
-            corePerm.siteAdminViewGroup.name,
+            api.CorePerm.siteAdminViewGroup,
             {},
             ["user", "group"],
         );

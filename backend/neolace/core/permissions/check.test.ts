@@ -2,7 +2,7 @@ import { C, Field } from "neolace/deps/vertex-framework.ts";
 import { assertArrayIncludes, assertEquals, assertRejects, group, test } from "neolace/lib/tests.ts";
 import { _forTests } from "./check.ts";
 import { AllOfCondition, Always, IfLoggedIn, OneOfCondition, PermissionGrant, TestCondition } from "./grant.ts";
-import { corePerm } from "./permissions.ts";
+import { corePerm, PermissionName } from "./permissions.ts";
 
 const {
     getAllRequiredPermissions,
@@ -58,7 +58,7 @@ group("getAllRequiredPermissions()", () => {
 
     test("it passes through unrecognized permissions", async () => {
         assertSetEquals(
-            await getAllRequiredPermissions(["foobar-permission"]),
+            await getAllRequiredPermissions(["foobar-permission"] as unknown[] as PermissionName[]),
             new Set(["foobar-permission"]),
         );
     });
@@ -81,7 +81,7 @@ group("determineCondition()", () => {
         assertEquals(
             determineCondition(
                 // If the user needs these permissions:
-                new Set(["foo.bar"]),
+                new Set(["foo.bar"] as unknown[] as PermissionName[]),
                 // And has these conditional grants:
                 [new PermissionGrant(Always, ["bar", "something.else"])],
             ), // Then there is no possible condition under which they have permission:
@@ -93,7 +93,7 @@ group("determineCondition()", () => {
         assertEquals(
             determineCondition(
                 // If the user needs these permissions:
-                new Set(["create", "edit.andSave"]),
+                new Set(["create", "edit.andSave"] as unknown[] as PermissionName[]),
                 // And has these conditional grants:
                 [
                     new PermissionGrant(Always, ["foobar"]),
@@ -109,7 +109,7 @@ group("determineCondition()", () => {
         assertEquals(
             determineCondition(
                 // If the user needs these permissions:
-                new Set(["create", "edit.andSave"]),
+                new Set(["create", "edit.andSave"] as unknown[] as PermissionName[]),
                 // And has these conditional grants:
                 [
                     new PermissionGrant(Always, ["foobar"]),
@@ -132,7 +132,7 @@ group("determineCondition()", () => {
         assertEquals(
             determineCondition(
                 // If the user needs these permissions:
-                new Set(["p1", "p2"]),
+                new Set(["p1", "p2"] as unknown[] as PermissionName[]),
                 // And has these conditional grants:
                 [A, B, C],
             ), // Then they have permission if they have A or (B and C)

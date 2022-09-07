@@ -1,4 +1,4 @@
-import { api, corePerm } from "neolace/api/mod.ts";
+import { api } from "neolace/api/mod.ts";
 import { C, EmptyResultError, Field, isVNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { siteCodeForSite } from "neolace/core/Site.ts";
@@ -74,10 +74,10 @@ export async function getEntry(
     const permSubject = { userId, siteId };
     const permObject = { entryId: entryData.id, entryTypeId: entryData.type?.id };
     const hasAllPerms = await hasPermissions(permSubject, [
-        corePerm.viewEntry.name,
-        corePerm.viewEntryDescription.name,
-        corePerm.viewEntryFeatures.name,
-        corePerm.viewEntryProperty.name,
+        api.CorePerm.viewEntry,
+        api.CorePerm.viewEntryDescription,
+        api.CorePerm.viewEntryFeatures,
+        api.CorePerm.viewEntryProperty,
     ], permObject);
     if (hasAllPerms) {
         // Most common case: the user has all the "view" permissions:
@@ -87,10 +87,10 @@ export async function getEntry(
         canViewProperties = true;
     } else {
         // Check for an unusual mix of permissions:
-        canViewEntry = await hasPermissions(permSubject, corePerm.viewEntry.name, permObject);
-        canViewDescription = await hasPermissions(permSubject, corePerm.viewEntryDescription.name, permObject);
-        canViewFeatures = await hasPermissions(permSubject, corePerm.viewEntryFeatures.name, permObject);
-        canViewProperties = await hasPermissions(permSubject, corePerm.viewEntryProperty.name, permObject);
+        canViewEntry = await hasPermissions(permSubject, api.CorePerm.viewEntry, permObject);
+        canViewDescription = await hasPermissions(permSubject, api.CorePerm.viewEntryDescription, permObject);
+        canViewFeatures = await hasPermissions(permSubject, api.CorePerm.viewEntryFeatures, permObject);
+        canViewProperties = await hasPermissions(permSubject, api.CorePerm.viewEntryProperty, permObject);
     }
     if (!canViewEntry) {
         throw new api.NotAuthorized("You do not have permission to view that entry.");

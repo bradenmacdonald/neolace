@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { adaptErrors, api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { AcceptDraft, Draft } from "neolace/core/edit/Draft.ts";
 
 export class AcceptDraftResource extends NeolaceHttpResource {
@@ -16,7 +16,7 @@ export class AcceptDraftResource extends NeolaceHttpResource {
         const graph = await getGraph();
 
         // First permissions check:
-        await this.requirePermission(request, corePerm.viewDraft.name, { draftId });
+        await this.requirePermission(request, api.CorePerm.viewDraft, { draftId });
 
         // Some permissions depend on whether the draft contains schema changes or not:
         const draft = await graph.pullOne(Draft, (d) => d.site((s) => s.id).hasSchemaChanges().hasContentChanges(), {
@@ -26,10 +26,10 @@ export class AcceptDraftResource extends NeolaceHttpResource {
             throw new api.NotFound(`Draft not found`);
         }
         if (draft.hasContentChanges) {
-            await this.requirePermission(request, corePerm.applyEditsToEntries.name, { draftId });
+            await this.requirePermission(request, api.CorePerm.applyEditsToEntries, { draftId });
         }
         if (draft.hasSchemaChanges) {
-            await this.requirePermission(request, corePerm.applyEditsToSchema.name, { draftId });
+            await this.requirePermission(request, api.CorePerm.applyEditsToSchema, { draftId });
         }
         if (!(draft.hasContentChanges) && !(draft.hasSchemaChanges)) {
             throw new api.InvalidRequest(api.InvalidRequestReason.DraftIsEmpty, "Draft is empty");

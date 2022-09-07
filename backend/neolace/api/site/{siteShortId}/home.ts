@@ -1,4 +1,4 @@
-import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { Site } from "neolace/core/Site.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
@@ -12,7 +12,7 @@ export class SiteHomeResource extends NeolaceHttpResource {
     }, async ({ request }) => {
         const graph = await getGraph();
         // Permissions and parameters:
-        await this.requirePermission(request, corePerm.viewSite.name);
+        await this.requirePermission(request, api.CorePerm.viewSite);
         const { siteId } = await this.getSiteDetails(request);
 
         const siteData = await graph.pullOne(Site, (s) => s.homePageMD, { key: siteId });

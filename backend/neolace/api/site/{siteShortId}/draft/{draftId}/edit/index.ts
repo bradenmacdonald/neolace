@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getDraft } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
 import { UpdateDraft } from "neolace/core/edit/Draft.ts";
 
@@ -18,7 +18,7 @@ export class DraftEditsResource extends NeolaceHttpResource {
         const user = this.requireUser(request);
         const { siteId } = await this.getSiteDetails(request);
         const draftId = VNID(request.pathParam("draftId"));
-        await this.requirePermission(request, corePerm.editDraft.name, { draftId });
+        await this.requirePermission(request, api.CorePerm.editDraft, { draftId });
         const graph = await getGraph();
         // Validate that the draft exists in the site:
         const _draft = await graph.read((tx) => getDraft(draftId, siteId, tx));
@@ -27,9 +27,9 @@ export class DraftEditsResource extends NeolaceHttpResource {
         const editType = api.getEditType(bodyData.code);
         if (editType.changeType === api.EditChangeType.Content) {
             const entryId = getEditEntryId(bodyData as api.AnyContentEdit);
-            await this.requirePermission(request, corePerm.proposeEditToEntry.name, { entryId });
+            await this.requirePermission(request, api.CorePerm.proposeEditToEntry, { entryId });
         } else if (editType.changeType === api.EditChangeType.Schema) {
-            await this.requirePermission(request, corePerm.proposeEditToSchema.name);
+            await this.requirePermission(request, api.CorePerm.proposeEditToSchema);
         }
 
         await graph.runAs(
