@@ -1,8 +1,9 @@
 import { C, Field } from "neolace/deps/vertex-framework.ts";
 import { assertArrayIncludes, assertEquals, assertRejects, group, test } from "neolace/lib/tests.ts";
+import { CorePerm } from "neolace/deps/neolace-api.ts";
 import { _forTests } from "./check.ts";
 import { AllOfCondition, Always, IfLoggedIn, OneOfCondition, PermissionGrant, TestCondition } from "./grant.ts";
-import { corePerm, PermissionName } from "./permissions.ts";
+import { type PermissionName } from "./permissions.ts";
 
 const {
     getAllRequiredPermissions,
@@ -26,24 +27,24 @@ group("getAllRequiredPermissions()", () => {
         );
 
         // A basic permission:
-        assertEquals(corePerm.viewSite.name, "view");
+        assertEquals(CorePerm.viewSite, "view");
         assertSetEquals(
-            await getAllRequiredPermissions([corePerm.viewSite.name]),
+            await getAllRequiredPermissions([CorePerm.viewSite]),
             new Set(["view"]),
         );
 
         // view.entry requires view
-        assertEquals(corePerm.viewEntry.name, "view.entry");
+        assertEquals(CorePerm.viewEntry, "view.entry");
         assertSetEquals(
-            await getAllRequiredPermissions([corePerm.viewEntry.name]),
+            await getAllRequiredPermissions([CorePerm.viewEntry]),
             new Set(["view", "view.entry"]),
         );
 
-        // "proposeEdits.entry.new" requires "proposeEdits.entry" which requires "view.entry" (and thus "view")
+        // "proposeEdits.entry" requires "view.entry..." (and thus "view")
         // See permissions.ts for the definitions of these.
-        assertEquals(corePerm.proposeNewEntry.name, "proposeEdits.entry.new");
+        assertEquals(CorePerm.proposeEditToEntry, "proposeEdits.entry");
         assertSetEquals(
-            await getAllRequiredPermissions([corePerm.proposeNewEntry.name]),
+            await getAllRequiredPermissions([CorePerm.proposeEditToEntry]),
             new Set([
                 "view",
                 "view.entry",
@@ -51,7 +52,6 @@ group("getAllRequiredPermissions()", () => {
                 "view.entry.features",
                 "view.entry.description",
                 "proposeEdits.entry",
-                "proposeEdits.entry.new",
             ]),
         );
     });

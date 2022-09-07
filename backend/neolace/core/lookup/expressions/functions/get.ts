@@ -128,8 +128,15 @@ export class GetProperty extends LookupFunctionWithArgs {
             const forEntry = await (await this.fromEntriesExpr.getValue(context)).castTo(EntryValue, context);
             if (forEntry !== undefined) {
                 // Yes, we are looking up this value for a single entry.
+                // Look up the entry type for this entry; the entry type is required to check permissions.
+                const forEntryType = await this.getEntryType(forEntry, context);
                 // Does the user have permission?
-                if (!await hasPermission(context.subject, corePerm.viewEntryProperty.name, { entryId: forEntry.id })) {
+                if (
+                    !await hasPermission(context.subject, corePerm.viewEntryProperty.name, {
+                        entryId: forEntry.id,
+                        entryTypeId: forEntryType.id,
+                    })
+                ) {
                     throw new LookupEvaluationError("You do not have permission to view that property.");
                 }
                 // Compute the value of this auto property:
@@ -214,16 +221,11 @@ export class GetProperty extends LookupFunctionWithArgs {
                 // Does the user have permission?
 
                 // Look up the entry type for this entry; the entry type is required to check permissions.
-                // We use evaluateExpr() so that this is cached, and multiple calls to get() will use the cached
-                // entry type result.
-                const entryType = await context.evaluateExpr(new EntryTypeFunction(new LiteralExpression(forEntry)));
-                if (!(entryType instanceof EntryTypeValue)) {
-                    throw new LookupEvaluationError("Unable to get entry type for the entry.");
-                }
+                const forEntryType = await this.getEntryType(forEntry, context);
                 if (
                     !await hasPermission(context.subject, corePerm.viewEntryProperty.name, {
                         entryId: forEntry.id,
-                        entryTypeId: entryType.id,
+                        entryTypeId: forEntryType.id,
                     })
                 ) {
                     throw new LookupEvaluationError("You do not have permission to view that property.");
@@ -265,5 +267,16 @@ export class GetProperty extends LookupFunctionWithArgs {
                 );
             }
         }
+    }
+
+    /** Given an entry value, get its entry type. (the entry type is required to check permissions) */
+    private async getEntryType(entry: EntryValue, context: LookupContext): Promise<EntryTypeValue> {
+        // We use evaluateExpr() so that this is cached, and multiple calls to get() will use the cached
+        // entry type result.
+        const entryType = await context.evaluateExpr(new EntryTypeFunction(new LiteralExpression(entry)));
+        if (!(entryType instanceof EntryTypeValue)) {
+            throw new LookupEvaluationError("Unable to get entry type for the entry.");
+        }
+        return entryType;
     }
 }
