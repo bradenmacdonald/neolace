@@ -20,15 +20,9 @@ interface PreCheckCache {
     groupGrants?: PermissionGrant[];
 }
 
-export async function hasPermission(
-    subject: ActionSubject,
-    verb: PermissionName | readonly PermissionName[],
-    object: ActionObject,
-): Promise<boolean> {
-    // Get the complete list of permissions needed:
-    const needed = await getAllRequiredPermissions(Array.isArray(verb) ? [...verb] : [verb]);
-    // Check that we have enough data about the object to determine those permissions:
-    for (const permName of needed) {
+/** Check that we have enough data about the object to determine the given permissions */
+async function ensureObjectData(perms: Set<PermissionName>, object: ActionObject) {
+    for (const permName of perms) {
         const perm = await getPerm(permName);
         if (perm) {
             for (const keyNeeded of perm.requiresObjectFields) {
@@ -40,6 +34,17 @@ export async function hasPermission(
             }
         }
     }
+}
+
+export async function hasPermission(
+    subject: ActionSubject,
+    verb: PermissionName | readonly PermissionName[],
+    object: ActionObject,
+): Promise<boolean> {
+    // Get the complete list of permissions needed:
+    const needed = await getAllRequiredPermissions(Array.isArray(verb) ? [...verb] : [verb]);
+    // Check that we have enough data about the object to determine those permissions:
+    await ensureObjectData(needed, object);
     // Do prechecks on these permissions:
     const cache: PreCheckCache = {};
     let { result, conditionalYes } = await preChecks(subject, needed, cache);
@@ -61,6 +66,44 @@ export async function hasPermission(
 }
 
 /**
+ * An efficient way to check if a user has permission for a set of objects.
+ *
+ * Returns a boolean array of the same length as objects.
+ */
+export async function checkPermissionsForAll(
+    subject: ActionSubject,
+    verb: PermissionName | readonly PermissionName[],
+    objects: ActionObject[],
+): Promise<boolean[]> {
+    // Get the complete list of permissions needed:
+    const needed = await getAllRequiredPermissions(Array.isArray(verb) ? [...verb] : [verb]);
+    // Check that we have enough data about the object to determine those permissions:
+    await Promise.all(objects.map((object) => ensureObjectData(needed, object)));
+    // Do prechecks on these permissions:
+    const cache: PreCheckCache = {};
+    const { result: unconditionalResult, conditionalYes } = await preChecks(subject, needed, cache);
+
+    const { getTx, closeTx } = makeCloseableTransactionOnDemand();
+    const results = [];
+    try {
+        for (const object of objects) {
+            let result = unconditionalResult;
+            if (!unconditionalResult && conditionalYes) {
+                // The preliminary checks show that this user doesn't have permission, but one of the conditional grants may
+                // apply to them, so now we have to evaluate the relevant conditional grants.
+                result = await conditionalYes.appliesTo({ subject, object, getTx });
+            }
+            // Check if any plugins want to override the permissions check
+            result = await doPluginOverrides(subject, needed, object, result) ?? result;
+            results.push(result);
+        }
+    } finally {
+        closeTx();
+    }
+    return results;
+}
+
+/**
  * Given a list of permissions, check which of those permissions the user (subject) has for the given object.
  * Returns a list of booleans in the same order as the list of permissions given (verbs)
  */
@@ -76,18 +119,7 @@ export async function checkPermissions(
         // Get the complete list of permissions needed:
         const needed = await getAllRequiredPermissions([perm]);
         // Check that we have enough data about the object to determine those permissions:
-        for (const permName of needed) {
-            const perm = await getPerm(permName);
-            if (perm) {
-                for (const keyNeeded of perm.requiresObjectFields) {
-                    if (!(keyNeeded in object)) {
-                        throw new Error(
-                            `Internal error: to check for the "${permName}" permission, the action object must include {${keyNeeded}: ...}`,
-                        );
-                    }
-                }
-            }
-        }
+        await ensureObjectData(needed, object);
 
         // Do prechecks on this permissions:
         let { result, conditionalYes } = await preChecks(subject, needed, cache);

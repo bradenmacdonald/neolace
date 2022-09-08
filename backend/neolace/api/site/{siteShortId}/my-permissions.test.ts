@@ -49,7 +49,7 @@ group("my-permissions.ts", () => {
         assertEquals(result[api.CorePerm.viewEntry], undefined);
     });
 
-    const max = 25;
+    const max = 40;
     test(`It can get the permissions of an admin user in less than ${max}ms`, async () => {
         const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 

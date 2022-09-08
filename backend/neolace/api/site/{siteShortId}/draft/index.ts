@@ -1,7 +1,8 @@
 import * as log from "std/log/mod.ts";
+
 import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { CreateDraft } from "neolace/core/edit/Draft.ts";
-import { getDraft } from "./_helpers.ts";
+import { checkPermissionsRequiredForEdits, getDraft } from "./_helpers.ts";
 
 export class DraftIndexResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/draft"];
@@ -15,16 +16,17 @@ export class DraftIndexResource extends NeolaceHttpResource {
         const { siteId } = await this.getSiteDetails(request);
         const userId = this.requireUser(request).id;
 
-        // To create any draft at all, the user must have one of these two permissions:
-        if (!await this.hasPermission(request, api.CorePerm.proposeEditToEntry)) {
-            await this.requirePermission(request, api.CorePerm.proposeEditToSchema);
-        }
-
         // Response:
         const edits = bodyData.edits as api.EditList;
+        // We don't allow creating an empty draft as it's noisy for other users and we can't really check permissions
+        // until we know what type of edits will be in the draft.
+        if (edits.length === 0) {
+            throw new api.InvalidFieldValue([{
+                fieldPath: "edits",
+                message: "At least one edit is required to create a draft.", // Because otherwise it's hard to check permissions
+            }]);
+        }
 
-        let hasSchemaChanges = false;
-        let hasEntryChanges = false;
         for (const idx in edits) {
             const e = edits[idx]; // The payload validator will have checked that "e" has .code and .data, but not check their value
             const editType = api.getEditType.OrNone(e.code);
@@ -34,11 +36,6 @@ export class DraftIndexResource extends NeolaceHttpResource {
                     message: `Invalid edit code: "${e.code}"`,
                 }]);
             }
-            if (editType.changeType === api.EditChangeType.Schema) {
-                hasSchemaChanges = true;
-            } else if (editType.changeType === api.EditChangeType.Content) {
-                hasEntryChanges = true;
-            } else throw `Unexpected entry change type ${editType.changeType}`;
             // Validate the data too:
             try {
                 editType.dataSchema(e.data);
@@ -52,12 +49,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
             }
         }
 
-        if (hasEntryChanges) {
-            await this.requirePermission(request, api.CorePerm.proposeEditToEntry);
-        }
-        if (hasSchemaChanges) {
-            await this.requirePermission(request, api.CorePerm.proposeEditToSchema);
-        }
+        await checkPermissionsRequiredForEdits(edits, await this.getPermissionSubject(request), "propose");
 
         const { id } = await graph.runAs(
             userId,

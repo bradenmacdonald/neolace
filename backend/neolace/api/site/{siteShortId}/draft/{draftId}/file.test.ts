@@ -19,6 +19,18 @@ group("file.ts", () => {
         const fileContents = "hello world, I'm some example content";
         const fileToUpload = new File([fileContents], "foo.txt", { type: "text/plain" });
 
+        // We cannot create an empty draft, so this fake edit is used when we create drafts.
+        const mockEdit: api.AnyContentEdit = {
+            code: "CreateEntry",
+            data: {
+                id: VNID("_123"),
+                type: defaultData.schema.entryTypes._ETSPECIES.id,
+                name: "",
+                description: "",
+                friendlyId: "",
+            },
+        };
+
         test("Does not allow an anonymous user to add a file to a draft", async () => {
             const adminClient = await getClient(defaultData.users.admin, defaultData.site.shortId);
             const anonClient = await getClient(undefined, defaultData.site.shortId);
@@ -26,7 +38,7 @@ group("file.ts", () => {
             const draft = await adminClient.createDraft({
                 title: "New Draft",
                 description: "Testing file uploads",
-                edits: [],
+                edits: [mockEdit],
             });
 
             await assertRejects(
@@ -40,7 +52,7 @@ group("file.ts", () => {
             const draft = await client.createDraft({
                 title: "New Draft",
                 description: "Testing file uploads",
-                edits: [],
+                edits: [mockEdit],
             });
 
             // Upload the file:
@@ -61,7 +73,7 @@ group("file.ts", () => {
             const draft = await client.createDraft({
                 title: "New Draft",
                 description: "Testing file uploads",
-                edits: [],
+                edits: [mockEdit],
             });
 
             // Upload the file twice:

@@ -40,14 +40,17 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
 
         // Determine the entry that will be the 'this' value in the expression, if any.
         const entryKeyStr = request.queryParam("entryKey");
-        let entry: { id: VNID } | undefined;
+        let entry: { id: VNID; entryType: { id: VNID } } | undefined;
         if (entryKeyStr) {
             entry = await graph.read((tx) => getEntry(entryKeyStr, siteId, request.user?.id, tx));
         }
 
         // Check permissions:
         if (entry) {
-            await this.requirePermission(request, api.CorePerm.viewEntry, { entryId: entry.id });
+            await this.requirePermission(request, api.CorePerm.viewEntry, {
+                entryId: entry.id,
+                entryTypeId: entry.entryType.id,
+            });
         } else {
             await this.requirePermission(request, api.CorePerm.viewSite);
         }

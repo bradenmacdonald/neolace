@@ -1,6 +1,6 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { getDraft } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
+import { checkPermissionsRequiredForEdits, getDraft } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
 import { UpdateDraft } from "neolace/core/edit/Draft.ts";
 
 /**
@@ -21,16 +21,19 @@ export class DraftEditsResource extends NeolaceHttpResource {
         await this.requirePermission(request, api.CorePerm.editDraft, { draftId });
         const graph = await getGraph();
         // Validate that the draft exists in the site:
-        const _draft = await graph.read((tx) => getDraft(draftId, siteId, tx));
+        const draft = await graph.read((tx) =>
+            getDraft(draftId, siteId, tx, new Set([api.GetDraftFlags.IncludeEdits]))
+        );
 
-        // At this point, we know the draft is valid and the user has permission to add edits to it. But what type of edits?
-        const editType = api.getEditType(bodyData.code);
-        if (editType.changeType === api.EditChangeType.Content) {
-            const entryId = getEditEntryId(bodyData as api.AnyContentEdit);
-            await this.requirePermission(request, api.CorePerm.proposeEditToEntry, { entryId });
-        } else if (editType.changeType === api.EditChangeType.Schema) {
-            await this.requirePermission(request, api.CorePerm.proposeEditToSchema);
-        }
+        // At this point, we know the draft is valid and the user has permission to add edits to it.
+        // But we still have to check if they have permission for the specific type of edits:
+        const existingEdits = draft.edits;
+        await checkPermissionsRequiredForEdits(
+            [bodyData],
+            await this.getPermissionSubject(request),
+            "propose",
+            existingEdits,
+        );
 
         await graph.runAs(
             user.id,
