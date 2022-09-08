@@ -10,6 +10,7 @@ import { getEntryProperty } from "neolace/core/entry/properties.ts";
 
 import { LookupExpression } from "../base.ts";
 import {
+    EntryTypeValue,
     EntryValue,
     InlineMarkdownStringValue,
     IntegerValue,
@@ -22,9 +23,11 @@ import {
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
-import { hasPermissions, makeCypherCondition } from "neolace/core/permissions/check.ts";
+import { hasPermission, makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 import { hasSourceExpression } from "../../values/base.ts";
+import { EntryTypeFunction } from "./entryType.ts";
+import { LiteralExpression } from "../literal-expr.ts";
 
 /**
  * Helper function to read annotated rank values from a database query result
@@ -125,8 +128,15 @@ export class GetProperty extends LookupFunctionWithArgs {
             const forEntry = await (await this.fromEntriesExpr.getValue(context)).castTo(EntryValue, context);
             if (forEntry !== undefined) {
                 // Yes, we are looking up this value for a single entry.
+                // Look up the entry type for this entry; the entry type is required to check permissions.
+                const forEntryType = await this.getEntryType(forEntry, context);
                 // Does the user have permission?
-                if (!await hasPermissions(context.subject, corePerm.viewEntryProperty.name, { entryId: forEntry.id })) {
+                if (
+                    !await hasPermission(context.subject, corePerm.viewEntryProperty.name, {
+                        entryId: forEntry.id,
+                        entryTypeId: forEntryType.id,
+                    })
+                ) {
                     throw new LookupEvaluationError("You do not have permission to view that property.");
                 }
                 // Compute the value of this auto property:
@@ -209,7 +219,15 @@ export class GetProperty extends LookupFunctionWithArgs {
                 // Yes, we are looking up this value for a single entry.
 
                 // Does the user have permission?
-                if (!await hasPermissions(context.subject, corePerm.viewEntryProperty.name, { entryId: forEntry.id })) {
+
+                // Look up the entry type for this entry; the entry type is required to check permissions.
+                const forEntryType = await this.getEntryType(forEntry, context);
+                if (
+                    !await hasPermission(context.subject, corePerm.viewEntryProperty.name, {
+                        entryId: forEntry.id,
+                        entryTypeId: forEntryType.id,
+                    })
+                ) {
                     throw new LookupEvaluationError("You do not have permission to view that property.");
                 }
 
@@ -249,5 +267,16 @@ export class GetProperty extends LookupFunctionWithArgs {
                 );
             }
         }
+    }
+
+    /** Given an entry value, get its entry type. (the entry type is required to check permissions) */
+    private async getEntryType(entry: EntryValue, context: LookupContext): Promise<EntryTypeValue> {
+        // We use evaluateExpr() so that this is cached, and multiple calls to get() will use the cached
+        // entry type result.
+        const entryType = await context.evaluateExpr(new EntryTypeFunction(new LiteralExpression(entry)));
+        if (!(entryType instanceof EntryTypeValue)) {
+            throw new LookupEvaluationError("Unable to get entry type for the entry.");
+        }
+        return entryType;
     }
 }

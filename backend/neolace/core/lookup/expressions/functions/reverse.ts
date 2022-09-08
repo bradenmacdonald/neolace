@@ -1,12 +1,11 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { PropertyType } from "neolace/deps/neolace-api.ts";
+import { CorePerm, PropertyType } from "neolace/deps/neolace-api.ts";
 
 import { Site } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { directRelTypeForPropertyType, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { makeCypherCondition } from "neolace/core/permissions/check.ts";
-import { corePerm } from "neolace/core/permissions/permissions.ts";
 
 import { LookupExpression } from "../base.ts";
 import { LazyEntrySetValue, LookupValue, PropertyValue } from "../../values.ts";
@@ -72,8 +71,8 @@ export class ReverseProperty extends LookupFunctionWithArgs {
                 // (in this case "view author").
                 // We can assume that B (the argument to this reverse() function) is an entry the user has permission to
                 // view so we only need to check A.
-                corePerm.viewEntry.name,
-                corePerm.viewEntryProperty.name,
+                CorePerm.viewEntry,
+                CorePerm.viewEntryProperty,
             ],
             {},
             ["entry"],

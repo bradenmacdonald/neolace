@@ -6,8 +6,7 @@ export * as api from "neolace/deps/neolace-api.ts";
 export { config as realmConfig } from "neolace/app/config.ts";
 export { getGraph } from "neolace/core/graph.ts";
 export { NeolaceHttpResource } from "neolace/api/mod.ts";
-export { hasPermissions, makeCypherCondition } from "neolace/core/permissions/check.ts";
-export { corePerm } from "neolace/core/permissions/permissions.ts";
+export { checkPermissions, hasPermission, makeCypherCondition } from "neolace/core/permissions/check.ts";
 export { Always, PermissionGrant } from "neolace/core/permissions/grant.ts";
 
 export { Site, siteCodeForSite, siteIdFromShortId, siteShortIdFromId } from "neolace/core/Site.ts";

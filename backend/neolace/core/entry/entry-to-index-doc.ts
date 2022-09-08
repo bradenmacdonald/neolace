@@ -9,8 +9,7 @@ import { Entry } from "./Entry.ts";
 import { getEntryProperties } from "./properties.ts";
 import * as V from "neolace/core/lookup/values.ts";
 import { siteShortIdFromId } from "neolace/core/Site.ts";
-import { hasPermissions } from "neolace/core/permissions/check.ts";
-import { corePerm } from "neolace/core/permissions/permissions.ts";
+import { checkPermissions } from "neolace/core/permissions/check.ts";
 
 /**
  * Generate a version of this entry that can be used to build the search index.
@@ -43,11 +42,11 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
     // Convert markdown fields into plain text, convert properties into values
     await graph.read(async (tx) => {
         const lookupContext = new LookupContext({ tx, siteId, entryId, defaultPageSize: BigInt(maxValuesPerProp) });
-        const [canViewDescription, canViewProperties, canViewFeatures] = await Promise.all([
-            hasPermissions(permSubject, corePerm.viewEntryDescription.name, permObject),
-            hasPermissions(permSubject, corePerm.viewEntryProperty.name, permObject),
-            hasPermissions(permSubject, corePerm.viewEntryFeatures.name, permObject),
-        ]);
+        const [canViewDescription, canViewProperties, canViewFeatures] = await checkPermissions(permSubject, [
+            api.CorePerm.viewEntryDescription,
+            api.CorePerm.viewEntryProperty,
+            api.CorePerm.viewEntryFeatures,
+        ], permObject);
 
         if (canViewDescription) {
             description = await markdownToPlainText(api.MDT.tokenizeMDT(entryData.description), lookupContext);

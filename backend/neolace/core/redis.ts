@@ -26,3 +26,23 @@ export const [getRedis, stopRedis] = defineStoppableResource(async () => {
         },
     };
 });
+
+type SerializableValue = string | boolean | Record<string, unknown> | unknown[] | null;
+
+export async function useRedisCache<T extends SerializableValue>(
+    key: string,
+    computeValue: () => Promise<T>,
+): Promise<T> {
+    key = `useRedisCache:` + key;
+    const redis = await getRedis();
+    const cachedValue = await redis.get(key);
+    if (cachedValue !== undefined) {
+        // We loaded the value from the cache
+        return JSON.parse(cachedValue);
+    }
+    const newValue = await computeValue();
+    const expirySeconds = 10; // TODO: This is an extremely low value (10 seconds) because we haven't implemented a way
+    // to clear the cache. We need to update vertex framework to add post-action handlers.
+    redis.set(key, JSON.stringify(newValue), { ex: expirySeconds });
+    return newValue;
+}

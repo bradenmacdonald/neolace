@@ -9,8 +9,7 @@ import { PathError } from "neolace/deps/computed-types.ts";
 
 import { getGraph } from "neolace/core/graph.ts";
 import { ActionObject, ActionSubject } from "neolace/core/permissions/action.ts";
-import { hasPermissions } from "neolace/core/permissions/check.ts";
-import { corePerm } from "neolace/core/permissions/permissions.ts";
+import { hasPermission } from "neolace/core/permissions/check.ts";
 import { getHomeSite, siteCodeForSite, siteIdFromShortId } from "neolace/core/Site.ts";
 
 interface AuthenticatedUserData {
@@ -184,7 +183,7 @@ export class NeolaceHttpResource extends Drash.Resource {
 
     protected async requirePermission(
         request: NeolaceHttpRequest,
-        verb: string | string[],
+        verb: api.PermissionName | api.PermissionName[],
         object?: ActionObject,
     ): Promise<void> {
         const checksPassed = await this.hasPermission(request, verb, object);
@@ -210,14 +209,14 @@ export class NeolaceHttpResource extends Drash.Resource {
 
     protected async hasPermission(
         request: NeolaceHttpRequest,
-        verb: string | string[],
+        verb: api.PermissionName | api.PermissionName[],
         object?: ActionObject,
     ): Promise<boolean> {
         if (request.user?.id === SYSTEM_VNID) {
             return true; // The system user is allowed to do anything using the API (dangerous)
         }
         const subject = await this.getPermissionSubject(request);
-        return hasPermissions(subject, verb, object ?? {});
+        return hasPermission(subject, verb, object ?? {});
     }
 
     /**
@@ -365,4 +364,4 @@ function convertStandardErrors(err: Error): void {
     }
 }
 
-export { api, corePerm, Drash, getGraph, log };
+export { api, Drash, getGraph, log };

@@ -21,92 +21,28 @@ group("index.ts", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
         group("An empty draft", () => {
-            test("an admin can create an empty draft", async () => {
+            test("Creating an empty draft is not allowed", async () => {
                 // Get an API client, logged in as a bot that belongs to an admin
                 const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
-                const result = await client.createDraft({
-                    title: "A Test Draft",
-                    edits: [],
-                });
-                assert(isVNID(result.id));
-            });
-
-            /**
-             * This tests creating an empty draft on a site that doesn't allow public contributions
-             */
-            test("test permissions - PublicReadOnly Site", async () => {
-                const graph = await getGraph();
-                // Set Access Mode to PublicReadOnly:
-                await graph.runAsSystem(UpdateSite({
-                    key: defaultData.site.id,
-                    accessMode: AccessMode.PublicReadOnly,
-                }));
-
-                const createDraftArgs: api.CreateDraftData = {
-                    title: "A Test Draft",
-                    edits: [],
-                };
-
-                // A user with no particular permissions should not be allowed to create a draft, even an empty one.
-                {
-                    const { userData } = await createUserWithPermissions();
-                    const client = await getClient(userData, defaultData.site.shortId);
-                    await assertRejects(
-                        () => client.createDraft(createDraftArgs),
-                        api.NotAuthorized,
-                    );
-                }
-
-                // A user with either "propose schema changes" or "propose content changes" can create an empty draft though.
-                {
-                    const { userData } = await createUserWithPermissions(
-                        new PermissionGrant(Always, [corePerm.proposeEditToSchema.name]),
-                    );
-                    const client = await getClient(userData, defaultData.site.shortId);
-                    const result = await client.createDraft(createDraftArgs);
-                    assert(isVNID(result.id));
-                }
-                {
-                    const { userData } = await createUserWithPermissions(
-                        new PermissionGrant(Always, [corePerm.proposeEditToEntry.name]),
-                    );
-                    const client = await getClient(userData, defaultData.site.shortId);
-                    const result = await client.createDraft(createDraftArgs);
-                    assert(isVNID(result.id));
-                }
-            });
-
-            /**
-             * This tests creating an empty draft on a site that does allow public contributions
-             */
-            test("test permissions - PublicContributions Site", async () => {
-                const graph = await getGraph();
-                // Set Access Mode to PublicReadOnly:
-                await graph.runAsSystem(UpdateSite({
-                    key: defaultData.site.id,
-                    accessMode: AccessMode.PublicContributions,
-                }));
-
-                const createDraftArgs: api.CreateDraftData = {
-                    title: "A Test Draft",
-                    edits: [],
-                };
-
-                // A user with no particular permissions should still be allowed to create a draft, even an empty one.
-                {
-                    const { userData } = await createUserWithPermissions();
-                    const client = await getClient(userData, defaultData.site.shortId);
-                    const result = await client.createDraft(createDraftArgs);
-                    assert(isVNID(result.id));
-                }
+                await assertRejects(
+                    () => client.createDraft({ title: "A Test Draft", edits: [] }),
+                    api.InvalidFieldValue,
+                    "At least one edit is required to create a draft.",
+                );
             });
         });
 
         group("Invalid draft data", () => {
             test("cannot create a draft with an empty title", async () => {
                 const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
-                const err = await assertRejects(
-                    () => client.createDraft({ title: "", edits: [] }),
+                const err = await assertRejects(() =>
+                    client.createDraft({
+                        title: "",
+                        edits: [{
+                            code: api.CreateEntryType.code,
+                            data: api.CreateEntryType.dataSchema({ id: VNID(), name: "New EntryType" }),
+                        }],
+                    })
                 );
                 assertInstanceOf(err, api.InvalidFieldValue);
                 assertEquals(err.fieldErrors[0].fieldPath, "title");
@@ -292,15 +228,23 @@ group("index.ts", () => {
                 // A user with only "propose schema changes" cannot propose content edits:
                 {
                     const { userData } = await createUserWithPermissions(
-                        new PermissionGrant(Always, [corePerm.proposeEditToSchema.name]),
+                        new PermissionGrant(Always, [api.CorePerm.proposeEditToSchema]),
                     );
                     const client = await getClient(userData, defaultData.site.shortId);
                     await assertRejects(() => client.createDraft(createDraftWithContentEdits), api.NotAuthorized);
                 }
-                // But a user with "propose entry edits" permission can:
+                // A user with only "edit entry" but not "create new entry" cannot create a new entry:
                 {
                     const { userData } = await createUserWithPermissions(
-                        new PermissionGrant(Always, [corePerm.proposeEditToEntry.name]),
+                        new PermissionGrant(Always, [api.CorePerm.proposeEditToEntry]),
+                    );
+                    const client = await getClient(userData, defaultData.site.shortId);
+                    await assertRejects(() => client.createDraft(createDraftWithContentEdits), api.NotAuthorized);
+                }
+                // But a user with "propose new entries" permission can:
+                {
+                    const { userData } = await createUserWithPermissions(
+                        new PermissionGrant(Always, [api.CorePerm.proposeNewEntry]),
                     );
                     const client = await getClient(userData, defaultData.site.shortId);
                     const result = await client.createDraft(createDraftWithContentEdits);

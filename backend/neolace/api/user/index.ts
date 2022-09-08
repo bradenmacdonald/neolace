@@ -54,7 +54,7 @@ export class UserIndexResource extends NeolaceHttpResource {
         ); // An error in the "slugId" property gets remapped into the "username" field
 
         const userData = await getPublicUserData(result.id);
-        console.log(`Created user ${userId} with temporary password ${tempPassword} and username ${userData.username}`);
+        console.log(`Created new user ${userId} with username ${userData.username}`);
         return {
             userData,
             temporaryCredentials: {
