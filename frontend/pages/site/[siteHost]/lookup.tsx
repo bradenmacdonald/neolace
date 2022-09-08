@@ -76,7 +76,7 @@ const EvaluateLookupPage: NextPage<PageProps> = function (props) {
                                 <FormattedMessage
                                     defaultMessage="Enter a <link>lookup expression</link> above and press ⏎ Enter to see the result."
                                     id="jK8qYd"
-                                    values={{link: (str: string) => <Link href="https://junction.neolace.com/entry/term-lookup" target="_blank">{str}</Link> }}
+                                    values={{link: (str) => <Link href="https://junction.neolace.com/entry/term-lookup" target="_blank">{str}</Link> }}
                                 />
                             </p>
 

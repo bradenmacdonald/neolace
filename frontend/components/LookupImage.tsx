@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Blurhash } from "react-blurhash";
-import Image from "next/image";
+import Image from "next/future/image";
 import Link from "next/link";
 import { ImageDisplayFormat } from "neolace-api";
 
@@ -71,7 +71,6 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                     width={value.width}
                     height={value.height}
                     alt={value.altText}
-                    layout="intrinsic"
                 />
             </OptionalLink>
         </div>
@@ -89,8 +88,8 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                             loader={imgThumbnailLoader}
                             alt={value.altText}
                             sizes={"250px" /* We're displaying these images never wider than 250px, so use a smaller image source */}
-                            layout="fill"
-                            objectFit="contain"
+                            fill
+                            className="object-contain"
                         />
                     </OptionalLink>
                 </RatioBox>
@@ -111,11 +110,10 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                 src={value.imageUrl}
                 loader={imgThumbnailLoader}
                 alt={value.altText}
-                layout="intrinsic"
                 width={value.width}
                 height={value.height}
+                className={`${value.sizing === api.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
                 sizes={"1000px" /* We're displaying these small thumbnails at only < 100px wide, so use a small image */}
-                objectFit={value.sizing}
             />
         </OptionalLink>;
     } else {
@@ -128,9 +126,9 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                 src={value.imageUrl}
                 loader={imgThumbnailLoader}
                 alt={value.altText}
-                layout="fill"
+                fill
+                className={`${value.sizing === api.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
                 sizes={"100px" /* We're displaying these small thumbnails at only < 100px wide, so use a small image */}
-                objectFit={value.sizing}
             />
         </OptionalLink>;
     }

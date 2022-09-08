@@ -1,7 +1,7 @@
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "next/future/image";
 import { Blurhash } from "react-blurhash";
 import { api, useEntry } from "lib/api-client";
 
@@ -14,7 +14,6 @@ import { ErrorMessage } from "./widgets/ErrorMessage";
 import { defineMessage } from "./utils/i18n";
 import { Spinner } from "./widgets/Spinner";
 import { UISlot } from "./widgets/UISlot";
-//import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface Props {
     /** The entry key (either its friendlyId or VNID) */
@@ -115,7 +114,9 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                             Otherwise (if square-ish or vertical), use a fixed aspect ratio container and either display the image centered or stretch the
                             image to "cover" the area, depending on the image contents.
                         */
-                        (entry.features.HeroImage.width && entry.features.HeroImage.height && (entry.features.HeroImage.width > entry.features.HeroImage.height * 1.4)) ? {aspectRatio: `${entry.features.HeroImage.width} / ${entry.features.HeroImage.height}`, height: "auto", minHeight: "20vh" /* for old safari that doesn't support aspect-ratio */} : {}
+                        (entry.features.HeroImage.width && entry.features.HeroImage.height && (entry.features.HeroImage.width > entry.features.HeroImage.height * 1.4))
+                            ? {aspectRatio: `${entry.features.HeroImage.width} / ${entry.features.HeroImage.height}`, height: "auto", minHeight: "20vh" /* for old safari that doesn't support aspect-ratio */}
+                            : {}
                     )}>
                         {/* A blurry representation of the image, shown while it is loading: */}
                         <Blurhash
@@ -127,8 +128,8 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                             src={entry.features.HeroImage.imageUrl}
                             loader={imgThumbnailLoader}
                             alt=""
-                            layout="fill"
-                            objectFit={entry.features.HeroImage.sizing ?? "contain"}
+                            fill
+                            className={`${entry.features.HeroImage.sizing === api.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
                             sizes="1000px"
                             priority
                         />
