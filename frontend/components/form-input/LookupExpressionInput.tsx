@@ -14,8 +14,8 @@ import {
     VoidEntryNode,
     VoidEntryTypeNode,
     VoidPropNode,
-} from "components/utils/slate";
-import { EntryTypeVoid, EntryVoid, PropertyVoid } from "components/utils/slate-mdt";
+} from "components/slate-editor/slate";
+import { EntryTypeVoid, EntryVoid, PropertyVoid } from "components/slate-editor/slate-mdt";
 import { displayString, TranslatableString } from "components/utils/i18n";
 import { AutocompletionMenu } from "components/form-input";
 import { api } from "lib/api";

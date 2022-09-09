@@ -7,7 +7,7 @@ import { api, getSiteData } from "lib/api";
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { LookupExpressionInput } from "components/form-input";
 import { useRouter } from "next/router";
-import { LookupEvaluatorWithPagination } from "components/LookupEvaluator";
+import { LookupEvaluatorWithPagination } from "components/widgets/LookupEvaluator";
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { defineMessage } from "components/utils/i18n";
 import Link from "next/link";

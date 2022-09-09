@@ -1,9 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import { api } from "lib/api";
-import { EntryLink } from "components/EntryLink";
+import { EntryLink } from "components/widgets/EntryLink";
 import { MDT, VNID } from "neolace-api";
-import { LookupValue } from "components/LookupValue";
+import { LookupValue } from "components/widgets/LookupValue";
 import { FormattedMessage } from "react-intl";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
 import { ErrorMessage } from "components/widgets/ErrorMessage";

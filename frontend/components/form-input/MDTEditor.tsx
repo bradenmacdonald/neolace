@@ -10,9 +10,9 @@ import {
     slateDocToStringValue,
     stringValueToSlateDoc,
     useNeolaceSlateEditor,
-} from "components/utils/slate";
+} from "components/slate-editor/slate";
 import { ToolbarButton } from "../widgets/Button";
-import { renderElement } from "components/utils/slate-mdt";
+import { renderElement } from "components/slate-editor/slate-mdt";
 import { defineMessage, TranslatableString } from "components/utils/i18n";
 import { IconId } from "../widgets/Icon";
 import { ParagraphNode } from "neolace-api/types/markdown-mdt-ast";

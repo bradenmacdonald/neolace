@@ -9,8 +9,8 @@ import { ImageDisplayFormat } from "neolace-api";
 
 import { api } from "lib/api";
 import { imgThumbnailLoader } from "lib/config";
-import { InlineMDT, MDTContext } from "./markdown-mdt/mdt";
-import { RatioBox } from "./widgets/ratio-box";
+import { InlineMDT, MDTContext } from "../markdown-mdt/mdt";
+import { RatioBox } from "./ratio-box";
 import { LookupValue } from "./LookupValue";
 
 /** Renders either an <a> or a <span> with the given class. */
@@ -49,7 +49,7 @@ interface ImageProps {
 }
 
 /**
- * Render a Lookup Value (computed/query value, such as all the "properties" shown on an entry's page)
+ * Render a Lookup Value that is an image
  */
 export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
     const { value } = props;

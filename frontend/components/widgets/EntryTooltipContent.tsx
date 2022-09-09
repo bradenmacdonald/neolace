@@ -1,7 +1,7 @@
 import { type VNID } from "neolace-api";
 import Link from "next/link";
 import React from "react";
-import { InlineMDT, type MDTContext } from "./markdown-mdt/mdt";
+import { InlineMDT, type MDTContext } from "../markdown-mdt/mdt";
 
 interface Props {
     entryId: VNID;

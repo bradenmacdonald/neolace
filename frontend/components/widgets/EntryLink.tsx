@@ -3,7 +3,7 @@ import Link from "next/link";
 import { api, useSiteData } from "lib/api";
 import { DEVELOPMENT_MODE } from "lib/config";
 import { Tooltip } from "components/widgets/Tooltip";
-import { MDTContext } from "./markdown-mdt/mdt";
+import { MDTContext } from "components/markdown-mdt/mdt";
 import { EntryTooltipContent } from "./EntryTooltipContent";
 
 interface Props {

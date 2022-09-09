@@ -7,8 +7,8 @@ import { api, useEntry } from "lib/api";
 
 import { SitePage } from "components/SitePage";
 import { InlineMDT, MDTContext, RenderMDT } from "components/markdown-mdt/mdt";
-import { LookupValue } from "components/LookupValue";
-import { EntryLink } from "components/EntryLink";
+import { LookupValue } from "components/widgets/LookupValue";
+import { EntryLink } from "components/widgets/EntryLink";
 import { DEVELOPMENT_MODE, imgThumbnailLoader } from "lib/config";
 import { ErrorMessage } from "./widgets/ErrorMessage";
 import { defineMessage } from "./utils/i18n";

@@ -2,11 +2,11 @@ import React from "react";
 import { api, useLookupExpression } from "lib/api";
 import { FormattedMessage } from "react-intl";
 
-import { MDTContext } from "./markdown-mdt/mdt";
+import { MDTContext } from "components/markdown-mdt/mdt";
 import { LookupValue } from "./LookupValue";
-import { Spinner } from "./widgets/Spinner";
-import { ErrorMessage } from "./widgets/ErrorMessage";
-import { Button } from "./widgets/Button";
+import { Spinner } from "./Spinner";
+import { ErrorMessage } from "./ErrorMessage";
+import { Button } from "./Button";
 
 interface Props {
     expr: string;

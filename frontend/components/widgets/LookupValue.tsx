@@ -4,15 +4,15 @@ import { FormattedListParts, FormattedMessage } from "react-intl";
 
 import { api, useSiteData } from "lib/api";
 import { Tooltip } from "components/widgets/Tooltip";
-import { InlineMDT, MDTContext } from "./markdown-mdt/mdt";
+import { InlineMDT, MDTContext } from "../markdown-mdt/mdt";
 import { LookupImage } from "./LookupImage";
-import { FormattedFileSize } from "./widgets/FormattedFileSize";
-import { HoverClickNote } from "./widgets/HoverClickNote";
-import { ErrorMessage } from "./widgets/ErrorMessage";
-import { LookupGraph } from "./graph/GraphLoader";
-import { EntryValue } from "./widgets/EntryValue";
-import { UiPluginsContext } from "./utils/ui-plugins";
-import { Icon } from "./widgets/Icon";
+import { FormattedFileSize } from "./FormattedFileSize";
+import { HoverClickNote } from "./HoverClickNote";
+import { ErrorMessage } from "./ErrorMessage";
+import { LookupGraph } from "../graph/GraphLoader";
+import { EntryValue } from "./EntryValue";
+import { UiPluginsContext } from "../utils/ui-plugins";
+import { Icon } from "./Icon";
 
 interface LookupValueProps {
     value: api.AnyLookupValue;

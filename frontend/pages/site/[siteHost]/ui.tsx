@@ -21,7 +21,7 @@ import {
 } from "components/form-input";
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
-import { LookupValue } from "components/LookupValue";
+import { LookupValue } from "components/widgets/LookupValue";
 import { api } from "lib/api";
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { DEVELOPMENT_MODE } from "lib/config";
