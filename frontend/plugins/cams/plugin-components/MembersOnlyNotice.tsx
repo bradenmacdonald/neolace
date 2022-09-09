@@ -1,6 +1,5 @@
 import { ErrorMessage } from "components/widgets/ErrorMessage";
-import { api } from "lib/api-client";
-import { UserStatus, useUser } from "lib/authentication";
+import { api, UserStatus, useUser } from "lib/api";
 import Link from "next/link";
 import React from "react";
 

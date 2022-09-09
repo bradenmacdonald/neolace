@@ -7,7 +7,7 @@ import Image from "next/future/image";
 import Link from "next/link";
 import { ImageDisplayFormat } from "neolace-api";
 
-import { api } from "lib/api-client";
+import { api } from "lib/api";
 import { imgThumbnailLoader } from "lib/config";
 import { InlineMDT, MDTContext } from "./markdown-mdt/mdt";
 import { RatioBox } from "./widgets/ratio-box";

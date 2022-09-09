@@ -9,7 +9,7 @@ import { Button } from "components/widgets/Button";
 import { ActionStatus, ActionStatusDisplay, useActionStatus } from "components/widgets/ActionStatusDisplay";
 import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { FormattedMessage } from "react-intl";
-import { UserStatus, useUser } from "lib/authentication";
+import { UserStatus, useUser } from "lib/api";
 
 const MembersLoginPage: React.FunctionComponent<PluginPageProps> = function (props) {
     const user = useUser();

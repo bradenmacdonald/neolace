@@ -2,7 +2,7 @@ import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
-import { api, getSiteData } from "lib/api-client";
+import { api, getSiteData } from "lib/api";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { LookupExpressionInput } from "components/form-input";

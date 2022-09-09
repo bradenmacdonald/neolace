@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { FormattedListParts, FormattedMessage } from "react-intl";
 
-import { api, useSiteData } from "lib/api-client";
+import { api, useSiteData } from "lib/api";
 import { Tooltip } from "components/widgets/Tooltip";
 import { InlineMDT, MDTContext } from "./markdown-mdt/mdt";
 import { LookupImage } from "./LookupImage";

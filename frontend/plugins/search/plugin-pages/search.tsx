@@ -1,6 +1,6 @@
 import React from "react";
 
-import { api, client, useSiteData } from "lib/api-client";
+import { api, client, useSiteData } from "lib/api";
 import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
 import { InstantSearch } from "react-instantsearch-hooks-web";
 import { InfiniteHits } from "../components/Hits";

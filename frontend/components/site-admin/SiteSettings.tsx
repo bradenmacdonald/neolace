@@ -2,8 +2,7 @@ import React from "react";
 import { useRouter } from "next/router";
 
 import type { AdminComponentProps } from "./site-admin";
-import { useSiteData } from "lib/api-client";
-import { useUser } from "lib/authentication";
+import { useSiteData } from "lib/api";
 import { Tab, TabBar } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
 import { AutoControl, Form, MDTEditor, TextInput } from "components/form-input";
@@ -19,7 +18,6 @@ function rgbTripleToHex(value: [r: number, g: number, b: number]): string {
  * @returns
  */
 export const SiteSettingsAdminTool: React.FunctionComponent<AdminComponentProps> = function (props) {
-    const user = useUser();
     const {site} = useSiteData();
     const router = useRouter();
 

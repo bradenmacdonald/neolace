@@ -2,7 +2,7 @@
  * A graph that is displayed as the result of the .graph() lookup function.
  */
 import React from "react";
-import { api } from "lib/api-client";
+import { api } from "lib/api";
 import { MDTContext } from "../markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "lib/hooks/useResizeObserver";

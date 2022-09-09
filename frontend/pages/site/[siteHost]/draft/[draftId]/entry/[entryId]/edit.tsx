@@ -1,7 +1,19 @@
 import React from "react";
 import { NextPage } from "next";
 import { FormattedMessage, useIntl } from "react-intl";
-import { api, client, NEW, useSiteData, useSchema, DraftContextData, useEditableEntry, useDraft, DraftContext } from "lib/api-client";
+import {
+    api,
+    client,
+    NEW,
+    useSiteData,
+    useSchema,
+    DraftContextData,
+    useEditableEntry,
+    useDraft,
+    DraftContext,
+    UserStatus,
+    useUser,
+} from "lib/api";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -17,7 +29,6 @@ import { defineMessage } from "components/utils/i18n";
 import { PropertiesEditor } from "components/entry-editor/PropertiesEditor";
 import { MainEditor } from "components/entry-editor/MainEditor";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
-import { UserStatus, useUser } from "lib/authentication";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;

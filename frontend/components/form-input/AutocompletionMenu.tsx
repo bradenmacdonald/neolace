@@ -1,6 +1,6 @@
 import React from 'react';
 import { Portal } from 'components/utils/Portal';
-import { api, useLookupExpression } from 'lib/api-client';
+import { api, useLookupExpression } from 'lib/api';
 import { InlineMDT, MDTContext } from 'components/markdown-mdt/mdt';
 import { EntitySymbol } from "../widgets/EntitySymbol";
 

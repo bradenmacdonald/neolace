@@ -1,4 +1,4 @@
-import { api, SiteData } from "lib/api-client";
+import { api, SiteData } from "lib/api";
 import React, { useContext } from "react";
 import type { UiSlotChange } from "components/widgets/UISlot";
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { api, useLookupExpression } from "lib/api-client";
+import { api, useLookupExpression } from "lib/api";
 import { FormattedMessage } from "react-intl";
 
 import { MDTContext } from "./markdown-mdt/mdt";

@@ -1,48 +1,19 @@
 import React from "react";
 import Head from "next/head";
 import Link from "next/link";
-import { SWRConfig } from "swr";
 
-import { api, SiteData, usePermissions, useSiteData } from "lib/api-client";
+import { api, usePermissions, useSiteData, UserStatus, useUser } from "lib/api";
 import { defaultRender, DefaultUISlot, UISlot, UISlotWidget } from "./widgets/UISlot";
 import FourOhFour from "pages/404";
 import { MDTContext, RenderMDT } from "./markdown-mdt/mdt";
 import { Icon, IconId } from "./widgets/Icon";
 import { FormattedMessage, useIntl } from "react-intl";
-import { UiPluginsContext, UiPluginsProvider } from "./utils/ui-plugins";
+import { UiPluginsContext } from "./utils/ui-plugins";
 import { DEVELOPMENT_MODE } from "lib/config";
-import { UserStatus, useUser } from "lib/authentication";
 import { displayString, TranslatableString } from "./utils/i18n";
+import { SiteDataProvider } from "./SiteDataProvider";
+export { SiteDataProvider }  // for convenience, allow SitePage and SiteDataProvider to both be imported together
 
-interface SiteDataProviderProps {
-    /**
-     * For a better user experience with no flash of unstyled content etc, use getStaticProps to preload the site data
-     * and pass it in here.
-     *
-     * TODO: Ideally the logic to load the data in getStaticProps shouldn't need to be duplicated in each separate page.
-     * Follow https://github.com/vercel/next.js/discussions/10949 for updates on a better way to handle this.
-     */
-    sitePreloaded: SiteData | null;
-    children: React.ReactNode;
-}
-
-/**
- * Provide all React components within this one with data about the current site (and its enabled plugins)
- *
- * See https://swr.vercel.app/docs/with-nextjs for details of how this works using SWR's global fallback config.
- */
-export const SiteDataProvider: React.FunctionComponent<SiteDataProviderProps> = (props) => {
-    const { site, siteError } = useSiteData(props.sitePreloaded ? { fallback: props.sitePreloaded } : {});
-    const fallback = props.sitePreloaded ? { [`site:${props.sitePreloaded.domain}`]: props.sitePreloaded } : {};
-
-    return (
-        <SWRConfig value={{ fallback }}>
-            <UiPluginsProvider site={site}>
-                {props.children}
-            </UiPluginsProvider>
-        </SWRConfig>
-    );
-};
 
 export const DefaultSiteTitle = Symbol("DefaultSiteTitle");
 

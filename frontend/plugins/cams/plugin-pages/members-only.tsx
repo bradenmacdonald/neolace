@@ -4,7 +4,7 @@ import { PluginPageProps } from "components/utils/ui-plugins";
 import { SitePage } from "components/SitePage";
 import { Spinner } from "components/widgets/Spinner";
 import { Redirect } from "components/utils/Redirect";
-import { UserStatus, useUser } from "lib/authentication";
+import { UserStatus, useUser } from "lib/api";
 import { LookupEvaluatorWithPagination } from "components/LookupEvaluator";
 import { MDTContext } from "components/markdown-mdt/mdt";
 

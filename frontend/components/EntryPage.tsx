@@ -3,7 +3,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import Link from "next/link";
 import Image from "next/future/image";
 import { Blurhash } from "react-blurhash";
-import { api, useEntry } from "lib/api-client";
+import { api, useEntry } from "lib/api";
 
 import { SitePage } from "components/SitePage";
 import { InlineMDT, MDTContext, RenderMDT } from "components/markdown-mdt/mdt";

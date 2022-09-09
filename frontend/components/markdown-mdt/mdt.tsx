@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { api } from "lib/api-client";
+import { api } from "lib/api";
 import { EntryLink } from "components/EntryLink";
 import { MDT, VNID } from "neolace-api";
 import { LookupValue } from "components/LookupValue";

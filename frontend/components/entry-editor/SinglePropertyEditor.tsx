@@ -2,7 +2,7 @@ import React from "react";
 import { FormattedMessage } from "react-intl";
 
 import { defineMessage } from "components/utils/i18n";
-import { api } from "lib/api-client";
+import { api } from "lib/api";
 import { LookupExpressionInput } from "components/form-input";
 import { ToolbarButton } from "components/widgets/Button";
 import { InlineMDT, MDTContext } from "components/markdown-mdt/mdt";

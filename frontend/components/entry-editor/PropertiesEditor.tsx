@@ -3,7 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { VNID } from "neolace-api";
 
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
-import { api, useSchema } from "lib/api-client";
+import { api, useSchema } from "lib/api";
 import { Spinner } from "components/widgets/Spinner";
 import { Control, SelectBox } from "components/form-input";
 import { SinglePropertyEditor } from "./SinglePropertyEditor";

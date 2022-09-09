@@ -1,7 +1,7 @@
 import React from "react";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
-import { api, client, getSiteData } from "lib/api-client";
+import { api, client, getSiteData } from "lib/api";
 
 import { SiteDataProvider } from "components/SitePage";
 import { EntryPage } from "components/EntryPage";

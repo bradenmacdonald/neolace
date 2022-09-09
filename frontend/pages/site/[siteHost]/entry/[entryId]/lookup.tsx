@@ -3,7 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import Link from "next/link";
 import { ParsedUrlQuery } from "querystring";
-import { api, client, getSiteData } from "lib/api-client";
+import { api, client, getSiteData } from "lib/api";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { LookupExpressionInput } from "components/form-input";
