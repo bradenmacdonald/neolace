@@ -1,4 +1,5 @@
-import { useClickOutsideHandler, useKeyHandler } from "components/utils/events";
+import { useClickOutsideHandler } from "components/hooks/useClickOutsideHandler";
+import { useKeyHandler } from "components/hooks/useKeyHandler";
 import { Portal } from "components/utils/Portal";
 import React from "react";
 
