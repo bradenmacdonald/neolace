@@ -22,6 +22,21 @@ interface Props {
     publicEntry?: api.EntryData;
 }
 
+/**
+ * The actual entry page, seen when viewing an entry, e.g. at /entry/foo
+ *
+ * This is in components/ rather than pages for a few reasons:
+ * (1) We will be adding a "preview entry" page that loads the data differently but still needs to look exactly the
+ *     same, which means we'll be re-using this code for multiple pages.
+ *     That is, both /entry/foo and /draft/1/preview/entry/foo will use this same page, but one is showing the currently
+ *     published version of the entry, and the other is showing a preview of draft changes.
+ * (2) The code gets a bit messier and more indented if this is all put into
+ *     pages/site/[siteHost]/entry/[entryLookup]/index.tsx
+ *     So we want this "inner" part to be in a separate file. BUT it is not permitted to put components (partial pages)
+ *     in the pages/ directory - see https://github.com/vercel/next.js/issues/8454 . So this has to be in the
+ *     components/directory.
+ * (3) We'll have a much better approach for this in the near future: https://nextjs.org/blog/layouts-rfc
+ */
 export const EntryPage: React.FunctionComponent<Props> = function (props) {
     const [entry, entryError] = useEntry(props.entrykey, props.publicEntry);
     const intl = useIntl();
