@@ -92,7 +92,12 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
 
     return (
         <SitePage
-            // First define what widgets we have in the left-hand column on each entry page:
+
+            // The name of this entry is the <title> of the page
+            title={entry.name}
+
+            // First define what widgets we have in the left-hand column on each entry page.
+            // These are the defaults, but plugins can always change/add/remove them.
             leftNavTopSlot={[
                 // First display the name of the entry:
                 {id: "entryName", priority: 20, content: <>
@@ -124,7 +129,6 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                 </>},
                 ] : [])
             ]}
-            title={entry.name}
         >
             {/* Hero image, if any */}
             {
@@ -139,12 +143,23 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                             ? {aspectRatio: `${entry.features.HeroImage.width} / ${entry.features.HeroImage.height}`, height: "auto", minHeight: "20vh" /* for old safari that doesn't support aspect-ratio */}
                             : {}
                     )}>
-                        {/* A blurry representation of the image, shown while it is loading: */}
+                        {/* A blurry representation of the hero image, shown while it is loading: */}
                         <Blurhash
                             hash={entry.features.HeroImage.blurHash ?? ""}
                             width="100%"
                             height="100%"
                         />
+                        {/*
+                            The hero image. Depending on the content of the image, we crop it using "cover" or shrink it
+                            proportionally to fit, using "contain".
+                            * Photos with the subject in the center with lots of space around it are ideal for "cover";
+                              it's fine to crop out parts of them to make the image fit.
+                            * Images where the subject almost touches all four sides and seeing the whole thing without
+                              cropping is important - those need to use "contain".
+
+                            If the image is significantly wider than it is tall, it doesn't matter - we adjust the
+                            height to fit exactly anyways (see above).
+                        */}
                         <Image
                             src={entry.features.HeroImage.imageUrl}
                             loader={imgThumbnailLoader}
@@ -155,6 +170,7 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                             priority
                         />
 
+                        {/* Display the caption, if any, at the bottom right of the hero image. */}
                         {entry.features.HeroImage.caption ?
                             <div className="absolute bottom-0 right-0 bg-opacity-60 bg-gray-50 text-gray-800 text-xs p-2 max-w-lg backdrop-blur-sm rounded-tl font-light">
                                 <EntryLink entryKey={entry.features.HeroImage.entryId} mdtContext={mdtContext}>
@@ -183,9 +199,11 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                         <tbody>
                             {entry.propertiesSummary?.map(p => 
                                 <tr key={p.propertyId} className="even:bg-[#fbfbfe]">
+                                    {/* The property (e.g. "Population") */}
                                     <th className="block md:table-cell text-xs md:text-base -mb-1 md:mb-0 pt-1 md:py-1 pr-2 align-top text-left font-normal text-gray-500 md:text-gray-700 min-w-[120px]">
                                         <LookupValue value={{type: "Property", id: p.propertyId}} mdtContext={mdtContext} />
                                     </th>
+                                    {/* The property value (e.g. "38 million people") */}
                                     <td className="block md:table-cell pr-2 pb-1 md:py-1 text-sm md:text-base">
                                         <LookupValue value={p.value} mdtContext={mdtContext} defaultListMode="compact" />
                                     </td>
@@ -195,6 +213,9 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                     </table>
                 </div>
                 {/*
+                // In an earlier design, we always displayed a graph here. Currently we don't do that, and a graph will
+                // only be displayed if explicitly added to the entry type as a "property" - see technotes.org for an
+                // example of this.
                 <div id="graph-thumbnail" className="hidden md:block flex-initial">
                     <h2><FormattedMessage id="site.entry.graphHeading" defaultMessage="Explore Graph"/></h2>
                     <div className="bg-gray-200 pb-[50%] text-center">(graph)</div>
@@ -203,9 +224,23 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
             </div>
 
             <div id="entry-contents">
-                
+
+                {/*
+                    Before the content of the entry, here is a slot that allows plugins to display additional content or
+                    UI widgets. By default, there is nothing here and thus is is not visible.
+                    We use 'cloneElement' in order to pass 'entry' as a prop to the plugin widgets; but in the future we
+                    may have a nicer way to do this using EntryContext/<EntryContext.Provider>.
+                */}
                 <UISlot slotId="entryPreFeature" defaultContents={[]} renderWidget={(w) => React.cloneElement(w.content, { key: w.id, entry, })} />
 
+                {/*
+                    If this _is_ an image entry (this entry has the "image" feature), display the image here.
+                    This is different than the "hero image" above, which is not the main content of the entry, but just
+                    an image displayed with the entry to make it look nicer.
+
+                    Typically an entry is either an image entry or an article entry (or neither), but not both. However,
+                    it _could_ have both if there was a use case for that, so we do allow that option.
+                */}
                 {
                     entry.features?.Image ?
                         <>
@@ -222,12 +257,25 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                 {/* Article content, if any */}
                 {
                     entry.features?.Article ?
-                        <RenderMDT mdt={entry.features.Article.articleMD} context={mdtContext.childContextWith({headingShift: 1})}/>
+                        <RenderMDT 
+                            // The Markdown (MDT) of this article
+                            mdt={entry.features.Article.articleMD}
+                            // The page already has an <h1> (the entry title, above), so we "shift" all headings in
+                            // the markdown so that the first heading in the markdown will be rendered here as an <h2>.
+                            // This is because each HTML page should only have one <h1> heading.
+                            context={mdtContext.childContextWith({headingShift: 1})}
+                        />
                     : null
                 }
             </div>
 
             <div id="entry-end">
+                {/*
+                    After the content of the entry, here is a slot that allows plugins to display additional content or
+                    UI widgets. By default, there is nothing here and thus is is not visible.
+                    We use 'cloneElement' in order to pass 'entry' as a prop to the plugin widgets; but in the future we
+                    may have a nicer way to do this using EntryContext/<EntryContext.Provider>.
+                */}
                 <UISlot slotId="entryAfterContent" defaultContents={[]} renderWidget={(w) => React.cloneElement(w.content, { key: w.id, entry, })} />
             </div>
         </SitePage>

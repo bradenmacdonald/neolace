@@ -28,7 +28,7 @@ interface Props {
     onChange?: (newValue: string) => void;
     /** Event handler, called when the user has made changes and then blurred this input. */
     onFinishedEdits?: (newValue: string) => void;
-    placeholder?: string;
+    // placeholder?: TranslatableText;
     /** ID for the underlying textarea, used to focus on it with a label */
     id?: string;
 
@@ -227,7 +227,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
                     /* decorate={decorate}*/
                     renderLeaf={renderLeaf}
                     renderElement={renderElement}
-                    placeholder={props.placeholder}
+                    // placeholder={displayString(intl, props.placeholder)}
                     onBlur={handleInnerEditableBlur}
                 />
             </div>

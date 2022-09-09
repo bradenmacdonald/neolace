@@ -1,6 +1,9 @@
 import React from "react";
 import Router from "next/router";
 
+/**
+ * Displaying this component anywhere will redirect the user to the specified page.
+ */
 export const Redirect: React.FunctionComponent<{to: string, replace?: boolean, children?: React.ReactNode}> = function(props) {
     // When this components first renders, tell the Router to redirect.
     React.useEffect(() => {
