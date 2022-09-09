@@ -92,13 +92,18 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
 
     return (
         <SitePage
+            // First define what widgets we have in the left-hand column on each entry page:
             leftNavTopSlot={[
+                // First display the name of the entry:
                 {id: "entryName", priority: 20, content: <>
                     <strong className="block mt-2">{entry.name}</strong>
                 </>},
+                // Then we used to display the friendlyId. For now it's hidden but it's kept in the HTML because
+                // it's useful to have somewhere in the HTML to find the VNID and friendlyId.
                 {id: "entryId", priority: 21, content: <>
                     <code id="entry-id" data-entry-id={entry.id} className="font-mono font-light hidden">{entry.friendlyId}</code>
                 </>},
+                // These are the links to each heading in the entry's article, if any, as well as to the summary and properties at the top:
                 {id: "tableOfContents", priority: 50, content: <>
                     <ul id="left-toc-headings">
                         <li><Link href={`/entry/${entry.friendlyId}#summary`}><FormattedMessage id="RrCui3" defaultMessage="Summary"/></Link></li>
@@ -110,6 +115,7 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                         }
                     </ul>
                 </>},
+                // Action links, e.g. to edit this entry, view change history, etc.
                 ...(DEVELOPMENT_MODE ? [
                     {id: "entryActions", priority: 60, content: <>
                     <ul id="entry-actions" className="mt-4">
@@ -161,6 +167,7 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                 : null
             }
 
+            {/* Summary: The entry name and description */}
             <h1 id="summary">{entry.name}</h1>
             <p id="description"><InlineMDT mdt={entry.description ?? ""} context={mdtContext} /></p>
 

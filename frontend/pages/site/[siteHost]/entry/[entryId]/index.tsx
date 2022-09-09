@@ -42,6 +42,11 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     // Look up the Neolace site by domain:
     const site = await getSiteData(context.params.siteHost);
     if (site === null) return { notFound: true };
+
+    // Load whatever data anonymous users can view (whatever data is public).
+    // The results of this get cached and served to everyone, so it cannot contain anything that's user specific, nor
+    // that requires special permissions. Anything that _does_ require special permissions will be loaded later, in the
+    // browser, within the <EntryPage> component using the useEntry() hook.
     let publicEntry: api.EntryData | undefined;
     try {
         publicEntry = await client.getEntry(context.params.entryId, {
@@ -63,7 +68,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     }
 
     if (publicEntry && publicEntry?.friendlyId !== context.params.entryId) {
-        // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
+        // If the entry was looked up by an old friendlyId or by its VNID, redirect so the [new] friendlyId is in the URL:
         return {
             redirect: {
                 destination: `/entry/${publicEntry.friendlyId}`,
