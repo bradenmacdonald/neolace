@@ -16,8 +16,8 @@ import { renderElement } from "components/utils/slate-mdt";
 import { defineMessage, TranslatableString } from "components/utils/i18n";
 import { IconId } from "../widgets/Icon";
 import { ParagraphNode } from "neolace-api/types/markdown-mdt-ast";
-import { useStateRef } from "components/hooks/useStateRef";
-import { useSmartFocusAwareness } from "components/hooks/useSmartFocusAwareness";
+import { useStateRef } from "lib/hooks/useStateRef";
+import { useSmartFocusAwareness } from "lib/hooks/useSmartFocusAwareness";
 
 interface Props {
     /** The MDT (Markdown) string value that is currently being edited */

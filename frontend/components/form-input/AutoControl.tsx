@@ -1,5 +1,5 @@
 import React from "react";
-import { useStateRef } from "components/hooks/useStateRef";
+import { useStateRef } from "lib/hooks/useStateRef";
 import { Control, ControlProps } from "./Control";
 
 
