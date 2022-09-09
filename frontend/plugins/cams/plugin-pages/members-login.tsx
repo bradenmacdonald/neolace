@@ -7,7 +7,7 @@ import { TextInput } from "components/widgets/TextInput";
 import { Redirect } from "components/utils/Redirect";
 import { defineMessage } from "components/utils/i18n";
 import { Button } from "components/widgets/Button";
-import { ActionStatus, ActionStatusDisplay, useActionStatus } from "components/widgets/ActionStatusIndicator";
+import { ActionStatus, ActionStatusDisplay, useActionStatus } from "components/widgets/ActionStatusDisplay";
 import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { FormattedMessage } from "react-intl";
 import { UserStatus, useUser } from "lib/authentication";
