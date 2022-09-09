@@ -1,7 +1,7 @@
 import React from "react";
 
 import { displayText, TranslatableText } from "components/utils/i18n";
-import { Icon, IconId } from "./Icon";
+import { Icon, IconId } from "../widgets/Icon";
 import { useClickOutsideHandler } from "components/utils/events";
 
 export interface SelectOption {

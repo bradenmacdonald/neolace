@@ -9,7 +9,7 @@ interface Props {
 }
 
 /**
- * The content to display in a tooltip when hovering over an entry link or a node in the graph.
+ * The content to display in a tooltip when hovering over an entry link (or a node in the graph).
  */
 export const EntryTooltipContent: React.FunctionComponent<Props> = (props: Props) => {
     const refCache = props.mdtContext.refCache;

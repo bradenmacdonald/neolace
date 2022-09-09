@@ -2,8 +2,7 @@ import React from "react";
 
 import { PluginPageProps } from "components/utils/ui-plugins";
 import { SitePage } from "components/SitePage";
-import { Control, Form } from "components/widgets/Form";
-import { TextInput } from "components/widgets/TextInput";
+import { Control, Form, TextInput } from "components/form-input";
 import { Redirect } from "components/utils/Redirect";
 import { defineMessage } from "components/utils/i18n";
 import { Button } from "components/widgets/Button";

@@ -5,7 +5,7 @@ import { VNID } from "neolace-api";
 import { noTranslationNeeded, TranslatableString } from "components/utils/i18n";
 import { useSchema } from "lib/api-client";
 import { ErrorMessage } from "./ErrorMessage";
-import { SelectBox, SelectOption } from "./SelectBox";
+import { SelectBox, SelectOption } from "../form-input";
 
 interface Props {
     value?: VNID;

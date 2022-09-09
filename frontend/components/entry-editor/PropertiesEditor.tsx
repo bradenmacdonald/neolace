@@ -5,8 +5,7 @@ import { VNID } from "neolace-api";
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
 import { api, useSchema } from "lib/api-client";
 import { Spinner } from "components/widgets/Spinner";
-import { Control } from "components/widgets/Form";
-import { SelectBox } from "components/widgets/SelectBox";
+import { Control, SelectBox } from "components/form-input";
 import { SinglePropertyEditor } from "./SinglePropertyEditor";
 
 // We have to declare this empty object outside of the function below so it doesn't change on every call.

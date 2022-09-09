@@ -1,14 +1,12 @@
 import React from "react";
+import { useRouter } from "next/router";
 
 import type { AdminComponentProps } from "./site-admin";
 import { useSiteData } from "lib/api-client";
 import { useUser } from "lib/authentication";
 import { Tab, TabBar } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
-import { useRouter } from "next/router";
-import { AutoControl, Form } from "components/widgets/Form";
-import { TextInput } from "components/widgets/TextInput";
-import { MDTEditor } from "components/widgets/MDTEditor";
+import { AutoControl, Form, MDTEditor, TextInput } from "components/form-input";
 
 function rgbTripleToHex(value: [r: number, g: number, b: number]): string {
     return '#' + value.map(component => component.toString(16).padStart(2, "0")).join("");

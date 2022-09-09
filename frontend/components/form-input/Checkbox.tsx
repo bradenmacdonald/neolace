@@ -1,4 +1,3 @@
-import { TranslatableString } from "components/utils/i18n";
 import React from "react";
 
 interface Props extends React.InputHTMLAttributes<HTMLInputElement> {

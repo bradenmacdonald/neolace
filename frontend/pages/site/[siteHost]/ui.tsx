@@ -5,17 +5,21 @@ import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
 import { _allIcons, Icon, IconId } from "components/widgets/Icon";
 import { Button } from "components/widgets/Button";
-import { TextInput } from "components/widgets/TextInput";
-import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
 import { Spinner } from "components/widgets/Spinner";
 import { Tooltip } from "components/widgets/Tooltip";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
-import { AutoControl, Control, Form } from "components/widgets/Form";
-import { MDTEditor } from "components/widgets/MDTEditor";
+import {
+    AutoControl,
+    Control,
+    Form,
+    LookupExpressionInput,
+    MDTEditor,
+    SelectBox,
+    TextInput,
+} from "components/form-input";
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
-import { SelectBox } from "components/widgets/SelectBox";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { LookupValue } from "components/LookupValue";
 import { api } from "lib/api-client";

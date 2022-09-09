@@ -1,6 +1,6 @@
 import React from "react";
 import { Icon } from "components/widgets/Icon";
-import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
+import { LookupExpressionInput } from "components/form-input";
 import { api, useLookupExpression, useSchema } from "lib/api-client";
 import { type MDT } from "neolace-api";
 import { Transforms } from "slate";
