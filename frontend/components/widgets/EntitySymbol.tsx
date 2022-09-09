@@ -1,5 +1,5 @@
 import { MDTContext } from "components/markdown-mdt/mdt";
-import { api } from "lib/api-client";
+import { api } from "lib/api";
 import { Icon } from "./Icon";
 
 type EntityValue = api.EntryValue | api.PropertyValue | api.EntryTypeValue;

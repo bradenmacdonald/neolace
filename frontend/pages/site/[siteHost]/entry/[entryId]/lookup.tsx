@@ -3,12 +3,12 @@ import { FormattedMessage } from "react-intl";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import Link from "next/link";
 import { ParsedUrlQuery } from "querystring";
-import { api, client, getSiteData } from "lib/api-client";
+import { api, client, getSiteData } from "lib/api";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
+import { LookupExpressionInput } from "components/form-input";
 import { useRouter } from "next/router";
-import { LookupEvaluatorWithPagination } from "components/LookupEvaluator";
+import { LookupEvaluatorWithPagination } from "components/widgets/LookupEvaluator";
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { defineMessage } from "components/utils/i18n";
 
@@ -18,7 +18,7 @@ interface PageProps {
 }
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
-    entryLookup: string;
+    entryId: string;
 }
 
 const EvaluateLookupPage: NextPage<PageProps> = function (props) {
@@ -116,7 +116,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     if (site === null) { return {notFound: true}; }
     let entry: api.EntryData;
     try {
-        entry = await client.getEntry(context.params.entryLookup, {siteId: site.shortId, flags: [
+        entry = await client.getEntry(context.params.entryId, {siteId: site.shortId, flags: [
             api.GetEntryFlags.IncludeFeatures,  // We need the article headings
             api.GetEntryFlags.IncludePropertiesSummary,  // To know if we show the "Properties" nav link or not
             api.GetEntryFlags.IncludeReferenceCache,
@@ -128,7 +128,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         throw err;
     }
 
-    if (entry.friendlyId !== context.params.entryLookup) {
+    if (entry.friendlyId !== context.params.entryId) {
         // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
         return {
             redirect: {

@@ -10,7 +10,7 @@ import {
     transformCondenseNodeLeaves,
     transformExpandLeaves,
     transformHideNodesOfType,
-} from "./GraphFunctions";
+} from "./graph-functions";
 
 export interface Transform {
     id: string;

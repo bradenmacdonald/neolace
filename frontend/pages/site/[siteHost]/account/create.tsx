@@ -3,11 +3,9 @@ import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { api, client, getSiteData, SiteData } from "lib/api-client";
+import { api, client, getSiteData, SiteData, UserStatus, useUser } from "lib/api";
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { UserStatus, useUser } from "lib/authentication";
-import { Control, Form } from "components/widgets/Form";
-import { TextInput } from "components/widgets/TextInput";
+import { Control, Form, TextInput } from "components/form-input";
 import { Button } from "components/widgets/Button";
 import { Redirect } from "components/utils/Redirect";
 import { Spinner } from "components/widgets/Spinner";

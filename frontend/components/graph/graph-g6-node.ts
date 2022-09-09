@@ -1,5 +1,5 @@
 import G6, { IShape } from "@antv/g6";
-import { api } from "lib/api-client";
+import { api } from "lib/api";
 
 /**
  * Always use this node type by importing this string, don't hard-code "entryNode" elsewhere,

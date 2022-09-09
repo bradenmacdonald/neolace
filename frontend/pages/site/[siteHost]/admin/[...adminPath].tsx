@@ -2,15 +2,11 @@ import React from "react";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
 import { FormattedMessage, useIntl } from "react-intl";
-import useSWR from "swr";
 
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
-import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { Redirect } from "components/utils/Redirect";
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { Spinner } from "components/widgets/Spinner";
-import { client, getSiteData, SiteData, useSiteData } from "lib/api-client";
-import { UserStatus, useUser } from "lib/authentication";
+import { getSiteData, SiteData, UserStatus, useUser } from "lib/api";
 import { AdminComponentProps, AdminLinks, builtInAdminTools } from "components/site-admin/site-admin";
 import { useRouter } from "next/router";
 import FourOhFour from "pages/404";

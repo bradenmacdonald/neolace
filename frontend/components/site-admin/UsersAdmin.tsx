@@ -4,8 +4,7 @@ import useSWR from "swr";
 
 import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { Spinner } from "components/widgets/Spinner";
-import { client, useSiteData } from "lib/api-client";
-import { useUser } from "lib/authentication";
+import { client, useSiteData, useUser } from "lib/api";
 
 
 /**

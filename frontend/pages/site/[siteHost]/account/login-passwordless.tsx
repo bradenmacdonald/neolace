@@ -2,9 +2,8 @@ import React, { ReactNode } from "react";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
 
-import { getSiteData, SiteData } from "lib/api-client";
+import { getSiteData, SiteData, UserStatus, useUser } from "lib/api";
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { UserStatus, useUser } from "lib/authentication";
 import { Redirect } from "components/utils/Redirect";
 
 interface PageProps {

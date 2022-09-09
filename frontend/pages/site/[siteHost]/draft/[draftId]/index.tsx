@@ -2,7 +2,7 @@ import React from "react";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { FormattedMessage, useIntl } from "react-intl";
-import { api, client, DraftContextData, NEW, useDraft, useSiteData } from "lib/api-client";
+import { api, client, DraftContextData, NEW, useDraft, useSiteData, UserStatus, useUser } from "lib/api";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -11,7 +11,6 @@ import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { ParsedUrlQuery } from "querystring";
 import { Spinner } from "components/widgets/Spinner";
 import { Button } from "components/widgets/Button";
-import { UserStatus, useUser } from "lib/authentication";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
 
 // Define a consistent empty array so that React doesn't think a value changes if we use a different '[]' on each render

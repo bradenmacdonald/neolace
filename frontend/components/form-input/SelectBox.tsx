@@ -1,8 +1,8 @@
 import React from "react";
 
 import { displayText, TranslatableText } from "components/utils/i18n";
-import { Icon, IconId } from "./Icon";
-import { useClickOutsideHandler } from "components/utils/events";
+import { Icon, IconId } from "../widgets/Icon";
+import { useClickOutsideHandler } from "lib/hooks/useClickOutsideHandler";
 
 export interface SelectOption {
     id: string;

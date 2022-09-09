@@ -6,8 +6,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { Redirect } from "components/utils/Redirect";
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { getSiteData, SiteData } from "lib/api-client";
-import { UserStatus, useUser } from "lib/authentication";
+import { getSiteData, SiteData, UserStatus, useUser } from "lib/api";
 import { AdminLinks } from "components/site-admin/site-admin";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
 

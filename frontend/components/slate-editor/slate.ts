@@ -1,5 +1,5 @@
 import React from "react";
-import { api } from "lib/api-client";
+import { api } from "lib/api";
 import { BaseEditor, createEditor, Element, Node, Transforms, Range, Editor, BaseSelection } from "slate";
 import { ReactEditor, withReact } from "slate-react";
 import { HistoryEditor, withHistory } from "slate-history";

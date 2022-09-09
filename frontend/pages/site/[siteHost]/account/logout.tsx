@@ -3,7 +3,7 @@ import { NextPage } from "next";
 
 import { SitePage } from "components/SitePage";
 import { Spinner } from "components/widgets/Spinner";
-import { useUser } from "lib/authentication";
+import { useUser } from "lib/api";
 
 const LogoutPage: NextPage = function () {
     const user = useUser();

@@ -2,12 +2,12 @@ import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
-import { api, getSiteData } from "lib/api-client";
+import { api, getSiteData } from "lib/api";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
+import { LookupExpressionInput } from "components/form-input";
 import { useRouter } from "next/router";
-import { LookupEvaluatorWithPagination } from "components/LookupEvaluator";
+import { LookupEvaluatorWithPagination } from "components/widgets/LookupEvaluator";
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { defineMessage } from "components/utils/i18n";
 import Link from "next/link";

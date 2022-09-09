@@ -2,17 +2,17 @@
  * A graph that is displayed as the result of the .graph() lookup function.
  */
 import React from "react";
-import { api } from "lib/api-client";
+import { api } from "lib/api";
 import { MDTContext } from "../markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
-import { useResizeObserver } from "../utils/resizeObserverHook";
-import { entryNode, pickEntryTypeLetter } from "./Node";
+import { useResizeObserver } from "lib/hooks/useResizeObserver";
+import { entryNode, pickEntryTypeLetter } from "./graph-g6-node";
 import { VNID } from "neolace-api";
 import { ToolbarButton, ToolbarSeparator } from "../widgets/Button";
 import { useIntl } from "react-intl";
-import { useStateRef } from "../utils/stateRefHook";
-import { applyTransforms, Transform, Transforms } from "./Transforms";
-import { Modal } from "../widgets/Modal";
+import { useStateRef } from "lib/hooks/useStateRef";
+import { applyTransforms, Transform, Transforms } from "./graph-transforms";
+import { Modal } from "components/widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 import { defineMessage } from "components/utils/i18n";
 import { debugLog } from "lib/config";

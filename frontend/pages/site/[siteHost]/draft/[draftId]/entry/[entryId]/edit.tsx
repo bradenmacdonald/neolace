@@ -1,7 +1,19 @@
 import React from "react";
 import { NextPage } from "next";
 import { FormattedMessage, useIntl } from "react-intl";
-import { api, client, NEW, useSiteData, useSchema, DraftContextData, useEditableEntry, useDraft, DraftContext } from "lib/api-client";
+import {
+    api,
+    client,
+    NEW,
+    useSiteData,
+    useSchema,
+    DraftContextData,
+    useEditableEntry,
+    useDraft,
+    DraftContext,
+    UserStatus,
+    useUser,
+} from "lib/api";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -9,8 +21,7 @@ import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { useRouter } from "next/router";
 import { ParsedUrlQuery } from "querystring";
-import { Control, Form } from "components/widgets/Form";
-import { TextInput } from "components/widgets/TextInput";
+import { Control, Form, TextInput } from "components/form-input";
 import { Button } from "components/widgets/Button";
 import { IN_BROWSER } from "lib/config";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
@@ -18,7 +29,6 @@ import { defineMessage } from "components/utils/i18n";
 import { PropertiesEditor } from "components/entry-editor/PropertiesEditor";
 import { MainEditor } from "components/entry-editor/MainEditor";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
-import { UserStatus, useUser } from "lib/authentication";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;

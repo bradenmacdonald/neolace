@@ -3,7 +3,7 @@ import type { VirtualElement } from "@popperjs/core";
 import type { Graph } from "@antv/g6";
 import { Tooltip } from "components/widgets/Tooltip";
 import { MDTContext } from "components/markdown-mdt/mdt";
-import { EntryTooltipContent } from "components/EntryTooltipContent";
+import { EntryTooltipContent } from "components/widgets/EntryTooltipContent";
 import { VNID } from "neolace-api";
 
 /**

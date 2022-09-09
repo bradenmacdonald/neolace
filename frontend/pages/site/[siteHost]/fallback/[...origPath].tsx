@@ -3,7 +3,7 @@ import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import dynamic from "next/dynamic";
 import { ParsedUrlQuery } from "querystring";
 
-import { getSiteData, SiteData } from "lib/api-client";
+import { getSiteData, SiteData } from "lib/api";
 import { PluginPageProps } from "components/utils/ui-plugins";
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { Spinner } from "components/widgets/Spinner";

@@ -2,15 +2,14 @@ import React from "react";
 
 import { PluginPageProps } from "components/utils/ui-plugins";
 import { SitePage } from "components/SitePage";
-import { Control, Form } from "components/widgets/Form";
-import { TextInput } from "components/widgets/TextInput";
+import { Control, Form, TextInput } from "components/form-input";
 import { Redirect } from "components/utils/Redirect";
 import { defineMessage } from "components/utils/i18n";
 import { Button } from "components/widgets/Button";
-import { ActionStatus, ActionStatusDisplay, useActionStatus } from "components/widgets/ActionStatusIndicator";
+import { ActionStatus, ActionStatusDisplay, useActionStatus } from "components/widgets/ActionStatusDisplay";
 import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { FormattedMessage } from "react-intl";
-import { UserStatus, useUser } from "lib/authentication";
+import { UserStatus, useUser } from "lib/api";
 
 const MembersLoginPage: React.FunctionComponent<PluginPageProps> = function (props) {
     const user = useUser();

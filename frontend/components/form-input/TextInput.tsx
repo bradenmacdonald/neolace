@@ -1,11 +1,14 @@
 import React from "react";
-import { Icon, IconId } from "./Icon";
+import { Icon, IconId } from "../widgets/Icon";
 
 interface Props extends React.InputHTMLAttributes<HTMLInputElement> {
     icon?: IconId;
     inputRef?: React.Ref<HTMLInputElement>;
 }
 
+/**
+ * A text input box, i.e. <input type="text">
+ */
 export const TextInput: React.FunctionComponent<Props> = (props) => {
     const { icon, inputRef, className: customClass, ...overrideInputProps } = props;
 

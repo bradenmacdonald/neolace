@@ -1,10 +1,10 @@
 import React from "react";
 import Link from "next/link";
-import { api, useSiteData } from "lib/api-client";
+import { api, useSiteData } from "lib/api";
 import { DEVELOPMENT_MODE } from "lib/config";
 import { Tooltip } from "components/widgets/Tooltip";
 import { MDTContext } from "components/markdown-mdt/mdt";
-import { EntryTooltipContent } from "components/EntryTooltipContent";
+import { EntryTooltipContent } from "components/widgets/EntryTooltipContent";
 
 interface Props {
     entryId: api.VNID;

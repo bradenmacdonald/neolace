@@ -1,7 +1,7 @@
 import { type VNID } from "neolace-api";
 import Link from "next/link";
 import React from "react";
-import { InlineMDT, type MDTContext } from "./markdown-mdt/mdt";
+import { InlineMDT, type MDTContext } from "../markdown-mdt/mdt";
 
 interface Props {
     entryId: VNID;
@@ -9,7 +9,7 @@ interface Props {
 }
 
 /**
- * The content to display in a tooltip when hovering over an entry link or a node in the graph.
+ * The content to display in a tooltip when hovering over an entry link (or a node in the graph).
  */
 export const EntryTooltipContent: React.FunctionComponent<Props> = (props: Props) => {
     const refCache = props.mdtContext.refCache;

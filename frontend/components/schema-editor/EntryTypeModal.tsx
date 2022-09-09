@@ -1,23 +1,23 @@
-import React, { ChangeEvent } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import React from "react";
+import { FormattedMessage } from "react-intl";
 import { VNID } from "neolace-api";
 
 import { defineMessage, displayText, noTranslationNeeded } from "components/utils/i18n";
-import { api, useSchema } from "lib/api-client";
+import { api, useSchema } from "lib/api";
 import { Spinner } from "components/widgets/Spinner";
-import { AutoControl, Control, Form } from "components/widgets/Form";
-import { SelectBox } from "components/widgets/SelectBox";
-import { LookupExpressionInput } from "components/widgets/LookupExpressionInput";
-import { Button, ToolbarButton } from "components/widgets/Button";
-import { InlineMDT, MDTContext } from "components/markdown-mdt/mdt";
+import {
+    AutoControl,
+    Checkbox,
+    Control,
+    Form,
+    LookupExpressionInput,
+    MDTEditor,
+    SelectBox,
+    TextInput,
+} from "components/form-input";
+import { Button } from "components/widgets/Button";
 import { Modal } from "components/widgets/Modal";
-import { TextInput } from "components/widgets/TextInput";
-import { MDTEditor } from "components/widgets/MDTEditor";
 import { Icon } from "components/widgets/Icon";
-import { Checkbox } from "components/widgets/Checkbox";
-
-// We have to declare this empty object outside of the function below so it doesn't change on every call.
-const emptyPropsRawArray: api.EditableEntryData["propertiesRaw"] = [];
 
 interface Props {
     /** The ID of the entry type to edit. Pass in a randomly generated new ID to create a new entry type. */
@@ -93,15 +93,15 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, on
     );
 
     const updateName = React.useCallback(
-        (event: ChangeEvent<HTMLInputElement>) => update({ name: event.target.value }),
+        (event: React.ChangeEvent<HTMLInputElement>) => update({ name: event.target.value }),
         [update],
     );
     const updateAbbreviation = React.useCallback(
-        (event: ChangeEvent<HTMLInputElement>) => update({ abbreviation: event.target.value }),
+        (event: React.ChangeEvent<HTMLInputElement>) => update({ abbreviation: event.target.value }),
         [update],
     );
     const updateFriendlyIdPrefix = React.useCallback(
-        (event: ChangeEvent<HTMLInputElement>) => update({ friendlyIdPrefix: event.target.value }),
+        (event: React.ChangeEvent<HTMLInputElement>) => update({ friendlyIdPrefix: event.target.value }),
         [update],
     );
     const updateDescription = React.useCallback(

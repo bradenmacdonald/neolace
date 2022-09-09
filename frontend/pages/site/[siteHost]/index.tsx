@@ -2,7 +2,7 @@ import React from "react";
 import { FormattedMessage } from "react-intl";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
-import { api, client, getSiteData, SiteData } from "lib/api-client";
+import { api, client, getSiteData, SiteData } from "lib/api";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { MDTContext, RenderMDT } from "components/markdown-mdt/mdt";

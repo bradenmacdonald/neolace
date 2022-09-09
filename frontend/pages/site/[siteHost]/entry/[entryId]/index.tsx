@@ -1,11 +1,10 @@
 import React from "react";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
-import { api, client, getSiteData } from "lib/api-client";
+import { api, client, getSiteData } from "lib/api";
 
 import { SiteDataProvider } from "components/SitePage";
 import { EntryPage } from "components/EntryPage";
-//import { UserContext, UserStatus } from 'components/user/UserContext';
 
 interface PageProps {
     entryKey: api.VNID | string;
@@ -14,12 +13,13 @@ interface PageProps {
 }
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
-    entryLookup: string;
+    entryId: string;
 }
 
 const EntryPageWrapper: NextPage<PageProps> = function (props) {
     return (
         <SiteDataProvider sitePreloaded={props.sitePreloaded}>
+            {/* Almost all details of the entry page are in the <EntryPage> component; see it for details on why. */}
             <EntryPage entrykey={props.entryKey} publicEntry={props.publicEntry} />
         </SiteDataProvider>
     );
@@ -42,9 +42,14 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     // Look up the Neolace site by domain:
     const site = await getSiteData(context.params.siteHost);
     if (site === null) return { notFound: true };
+
+    // Load whatever data anonymous users can view (whatever data is public).
+    // The results of this get cached and served to everyone, so it cannot contain anything that's user specific, nor
+    // that requires special permissions. Anything that _does_ require special permissions will be loaded later, in the
+    // browser, within the <EntryPage> component using the useEntry() hook.
     let publicEntry: api.EntryData | undefined;
     try {
-        publicEntry = await client.getEntry(context.params.entryLookup, {
+        publicEntry = await client.getEntry(context.params.entryId, {
             siteId: site.shortId,
             flags: [
                 api.GetEntryFlags.IncludePropertiesSummary,
@@ -62,8 +67,8 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         }
     }
 
-    if (publicEntry && publicEntry?.friendlyId !== context.params.entryLookup) {
-        // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
+    if (publicEntry && publicEntry?.friendlyId !== context.params.entryId) {
+        // If the entry was looked up by an old friendlyId or by its VNID, redirect so the [new] friendlyId is in the URL:
         return {
             redirect: {
                 destination: `/entry/${publicEntry.friendlyId}`,
@@ -75,7 +80,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     return {
         props: {
             publicEntry,
-            entryKey: context.params.entryLookup,
+            entryKey: context.params.entryId,
             sitePreloaded: site,
         },
     };

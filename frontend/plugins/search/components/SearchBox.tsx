@@ -2,7 +2,7 @@ import React, { ChangeEvent } from "react";
 import { useSearchBox, type UseSearchBoxProps } from "react-instantsearch-hooks-web";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { TextInput } from "components/widgets/TextInput";
+import { TextInput } from "components/form-input";
 
 export const SearchBox: React.FunctionComponent<UseSearchBoxProps> = (props) => {
     const intl = useIntl();
