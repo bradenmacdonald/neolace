@@ -1,11 +1,11 @@
 const { PHASE_DEVELOPMENT_SERVER } = require('next/constants');
 const path = require("path");
 
-module.exports = (phase, { defaultConfig }) => {
+module.exports = (phase) => {
     
     /** @type {import("next").NextConfig} */
     let baseConfig = {
-        //...defaultConfig,
+        swcMinify: true,
         reactStrictMode: true,
         images: {
             // Cut down on the number of different images sizes we have to deal with.
@@ -25,6 +25,8 @@ module.exports = (phase, { defaultConfig }) => {
         experimental: {
             // Don't transform ES6 to ES5 for older browsers:
             browsersListForSwc: true,
+            // We don't use Node APIs in browser-side code, but apparently this option isn't working yet.
+            // fallbackNodePolyfills: false,
             legacyBrowsers: false,
             // Don't require <a> inside <Link>
             newNextLinkBehavior: true,

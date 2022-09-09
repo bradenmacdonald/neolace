@@ -1,4 +1,4 @@
-import type { ImageLoader } from 'next/image';
+import type { ImageLoader } from 'next/future/image';
 /** Are we currently running in development mode or production? */
 export const DEVELOPMENT_MODE = process.env.NODE_ENV === "development";
 /** Are we currently running in a browser? (if not, we're prerendering on the server in Node.js) */
