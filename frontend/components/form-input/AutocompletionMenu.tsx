@@ -43,8 +43,8 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
         }
         let referenceCache = result.referenceCache;
         // IF we are in the context of a draft, update the result with edits from the draft:
-        if (draft) {
-            referenceCache = api.applyEditsToReferenceCache(referenceCache, [...draft.edits, ...unsavedEdits]);
+        if (draft || unsavedEdits) {
+            referenceCache = api.applyEditsToReferenceCache(referenceCache, [...(draft?.edits ?? []), ...unsavedEdits]);
         }
         const { entries, entryTypes, properties } = referenceCache;
 

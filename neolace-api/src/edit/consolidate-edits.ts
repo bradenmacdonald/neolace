@@ -20,10 +20,10 @@ export function consolidateEdits<EditTypes extends (AnyEdit)[]>(edits: EditTypes
                 continue; // No change
             }
             const consolidatedEdits = Array.isArray(consolidatedEdit) ? consolidatedEdit : [consolidatedEdit];
-            // Replace the current edit with the consolidated edit(s):
-            newEdits.splice(c, 1, ...consolidatedEdits);
-            // Remove the previous edit:
-            newEdits.splice(p, 1);
+            // Remove the current edit:
+            newEdits.splice(c, 1);
+            // Replace the earlier edit with the consolidated edit(s):
+            newEdits.splice(p, 1, ...consolidatedEdits);
             // Continue with the same current edit (at its updated index of "c") and earlier previous edit
             c += (consolidatedEdits.length - 2);
             // Adjust p so we re-consolidate with the newly updated edits
