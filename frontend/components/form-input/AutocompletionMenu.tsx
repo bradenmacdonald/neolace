@@ -1,6 +1,6 @@
 import React from 'react';
 import { Portal } from 'components/utils/Portal';
-import { api, useLookupExpression } from 'lib/api';
+import { api, useDraft, useLookupExpression } from 'lib/api';
 import { InlineMDT, MDTContext } from 'components/markdown-mdt/mdt';
 import { EntitySymbol } from "../widgets/EntitySymbol";
 
@@ -26,6 +26,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
     // Use the basicSearch() function to fetch all entries, properties, and entry types that match the search term.
     // If the search term is an empty string, this is just a list of all entries, properties, and entry types.
     const { result, error } = useLookupExpression(`basicSearch(${JSON.stringify(searchTerm)})`);
+    const [draft, unsavedEdits] = useDraft();
 
     // We store the results in a state so that we can display the previous values while new ones are loading.
     const [items, setItems] = React.useState<Array<EntityValue>>([]);
@@ -40,9 +41,12 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
         if (result?.referenceCache === undefined) {
             return; // Wait while the next set of autocompletion items loads.
         }
-        // TODO: update the reference cache based on the draft.
-        const { entries, entryTypes, properties } = result.referenceCache;
-        console.log("Recalculating");
+        let referenceCache = result.referenceCache;
+        // IF we are in the context of a draft, update the result with edits from the draft:
+        if (draft || unsavedEdits) {
+            referenceCache = api.applyEditsToReferenceCache(referenceCache, [...(draft?.edits ?? []), ...unsavedEdits]);
+        }
+        const { entries, entryTypes, properties } = referenceCache;
 
         const searchTermLower = searchTerm.toLowerCase();
         const newItems: Array<(EntityValue) & { name: string }> = [];
@@ -70,8 +74,8 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
         newItems.sort((a, b) => a.name.localeCompare(b.name));
 
         setItems(newItems);
-        setRefCache(result.referenceCache);
-    }, [result?.referenceCache, searchTerm]);
+        setRefCache(referenceCache);
+    }, [result?.referenceCache, searchTerm, draft, unsavedEdits]);
 
     const mdtContext = React.useMemo(() => new MDTContext({ refCache, disableInteractiveFeatures: true }), [refCache]);
 

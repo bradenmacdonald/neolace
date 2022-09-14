@@ -92,10 +92,6 @@ Deno.test("Consolidate edits", async (t) => {
         assertEquals(consolidateEdits(oldEdits), [
             {
                 code: CreateEntry.code,
-                data: { id: entryB, name: "B name", friendlyId: "B", type: type1, description: "Entry B" },
-            },
-            {
-                code: CreateEntry.code,
                 data: {
                     id: entryA,
                     name: "A name new",
@@ -103,6 +99,10 @@ Deno.test("Consolidate edits", async (t) => {
                     type: type1,
                     description: "New A description",
                 },
+            },
+            {
+                code: CreateEntry.code,
+                data: { id: entryB, name: "B name", friendlyId: "B", type: type1, description: "Entry B" },
             },
         ]);
     });
@@ -190,6 +190,40 @@ Deno.test("Consolidate edits", async (t) => {
             },
             unrelatedEdit2,
             // The 'update' and 'delete' are gone, since they consolidate with the 'Add' to nothing.
+        ]);
+    });
+
+    await t.step("Changing description after create and set property", () => {
+        // This test case is based on a bug that we observed, where a property would disappear after changing the description.
+        const firstEdit: AnyEdit = {
+            code: "CreateEntry",
+            data: {
+                id: entryA,
+                type: type1,
+                name: "Aerial lift",
+                description: "A **aerial lift** has yet to be described",
+                friendlyId: "tc-trnsprt-cable-top"
+            },
+        };
+        const secondEdit: AnyEdit = {
+            code: "AddPropertyValue",
+            data: {
+                entryId: entryA,
+                propertyId: VNID(),
+                propertyFactId: VNID(),
+                valueExpression: "entry(\"_5tEE5QD4ucSGpKcwioQv0x\")"
+            }
+        };
+        const thirdEdit: AnyEdit = {
+            code: "SetEntryDescription",
+            data: {
+                "entryId": entryA,
+                "description": "A **aerial lift** is something like a gondola that hangs from a wire rope.",
+            }
+        };
+        assertEquals(consolidateEdits([firstEdit, secondEdit, thirdEdit]), [
+            {code: "CreateEntry", data: {...firstEdit.data, description: thirdEdit.data.description}},
+            secondEdit,
         ]);
     });
 });
