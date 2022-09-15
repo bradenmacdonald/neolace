@@ -16,7 +16,7 @@ export function usePermissions(context?: {
     const { site, siteError } = useSiteData();
 
     // Get the draft, if set.
-    const [draft, unsavedEdits, _draftError] = useDraft(context);
+    const [draft] = useDraft(context);
 
     // Get the user's permissions, in the given context:
     const key = `user-permissions:${user.username}:${context?.entryId ?? ""}:${draft?.id ?? ""}`;
