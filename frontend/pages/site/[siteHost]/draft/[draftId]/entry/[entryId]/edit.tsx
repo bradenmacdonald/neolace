@@ -29,6 +29,7 @@ import { defineMessage } from "components/utils/i18n";
 import { PropertiesEditor } from "components/entry-editor/PropertiesEditor";
 import { MainEditor } from "components/entry-editor/MainEditor";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
+import { EditDescription } from "components/widgets/EditDescription";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -263,21 +264,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                     <ul>
                                         {unsavedEdits.map((e, idx) => (
                                             <li key={idx}>
-                                                <p>
-                                                    {
-                                                        e.code === api.SetEntryName.code ?
-                                                            <FormattedMessage
-                                                                defaultMessage='Renamed this entry to "{newName}"'
-                                                                id="Psr/Zc"
-                                                                values={{newName: e.data.name}}
-                                                            />
-                                                        : <strong>{e.code}</strong>
-                                                    }
-                                                    <HoverClickNote superscript={false} displayText="(...)">
-                                                        <p>Data for this edit:</p>
-                                                        <pre className="whitespace-pre-wrap">{JSON.stringify(e.data, undefined, 4)}</pre>
-                                                    </HoverClickNote>
-                                                </p>
+                                                <EditDescription edit={e} />
                                             </li>
                                         ))}
                                     </ul>

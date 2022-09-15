@@ -11,7 +11,7 @@ import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { ParsedUrlQuery } from "querystring";
 import { Spinner } from "components/widgets/Spinner";
 import { Button } from "components/widgets/Button";
-import { HoverClickNote } from "components/widgets/HoverClickNote";
+import { EditDescription } from "components/widgets/EditDescription";
 import { CorePerm } from "neolace-api";
 
 // Define a consistent empty array so that React doesn't think a value changes if we use a different '[]' on each render
@@ -92,13 +92,7 @@ const DraftDetailsPage: NextPage = function (_props) {
                     ? (
                         <ul>
                             {draft.edits.map((e, idx) => (
-                                <li key={idx}>
-                                    {api.getEditType(e.code).describe(e.data)}
-                                    <HoverClickNote superscript={false} displayText="(...)">
-                                        <p>Data for this edit:</p>
-                                        <pre className="whitespace-pre-wrap">{JSON.stringify(e.data, undefined, 4)}</pre>
-                                    </HoverClickNote>
-                                </li>
+                                <li key={idx}> <EditDescription edit={e} /> </li>
                             ))}
                         </ul>
                     )

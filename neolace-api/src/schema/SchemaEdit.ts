@@ -88,6 +88,20 @@ export const UpdateEntryType = SchemaEditType({
                 code: "UpdateEntryType",
                 data: { ...earlierEdit.data, ...thisEdit.data },
             }
+        } else if (
+            earlierEdit.code === CreateEntryType.code &&
+            thisEdit.data.id === earlierEdit.data.id &&
+            thisEdit.data.name !== undefined
+        ) {
+            // If an entry type was created and then later its name was changed, put the final name into the CreateEntryType edit.
+            const {name, id, ...otherUpdates} = thisEdit.data;
+            const newCreateEdit = {code: CreateEntryType.code, data: {id: earlierEdit.data.id, name}};
+            if (Object.keys(otherUpdates).length > 0) {
+                // Move the change to "name" into the CreateEntryType edit, and keep the other changes in this edit:
+                return [newCreateEdit, {code: "UpdateEntryType", data: {id, ...otherUpdates}}];
+            } else {
+                return newCreateEdit;  // We can delete this UpdateEntryType since it only changed the name, which is now reflected in the CreateEntryType
+            }
         }
         return undefined;
     },
