@@ -243,7 +243,7 @@ export class NeolaceApiClient {
     // Draft API Methods
 
     private _parseDraft(rawDraft: any): DraftData {
-        rawDraft.created = Date.parse(rawDraft.created);
+        rawDraft.created = new Date(rawDraft.created);
         if (rawDraft.edits) {
             rawDraft.edits.forEach((e: any) => { e.timestamp = Date.parse(e.timestamp); })
         }

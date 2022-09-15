@@ -1,7 +1,7 @@
 import React from "react";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage, FormattedRelativeTime, useIntl } from "react-intl";
 import { api, client, DraftContextData, NEW, useDraft, useSiteData, UserStatus, useUser } from "lib/api";
 
 import { SitePage } from "components/SitePage";
@@ -66,9 +66,7 @@ const DraftDetailsPage: NextPage = function (_props) {
 
                 <h1>{draft.title}</h1>
 
-                <p>Draft by {draft.author.fullName} ({draft.author.username})</p>
-
-                <p>Created: {String(draft.created)}</p>
+                <p>Draft by {draft.author.fullName} ({draft.author.username}), created <span><FormattedRelativeTime value={(draft.created.getTime() - new Date().getTime())/1000} updateIntervalInSeconds={1} /></span>.</p>
 
                 <p>Description: {draft.description}</p>
 
