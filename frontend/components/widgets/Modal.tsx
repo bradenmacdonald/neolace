@@ -2,11 +2,14 @@ import React from "react";
 import { useKeyHandler } from "lib/hooks/useKeyHandler";
 import { Portal } from "components/utils/Portal";
 import { useZIndex, IncreaseZIndex, ZIndexContext } from "lib/hooks/useZIndex";
+import { TranslatableString, displayText } from "components/utils/i18n";
 
 interface ModalProps {
     children?: React.ReactNode;
     className?: string;
     onClose?: () => void;
+    title?: TranslatableString;
+    actionBar?: React.ReactNode;
 }
 
 /**
@@ -40,12 +43,20 @@ export const Modal: React.FunctionComponent<ModalProps> = ({ onClose, ...props }
                         // Modals are centered in the viewport, and not affected by scrolling (fixed):
                         `fixed left-[50vw] top-[50vh] -translate-x-1/2 -translate-y-1/2 ` +
                         // And this is the default appearance of our modals:
-                        `border p-0 rounded bg-white border-gray-800 shadow font-normal` +
+                        `border p-0 rounded bg-white border-slate-400 shadow font-normal ` +
                         (props.className ?? "")
                     }
                     style={{zIndex}}
                 >
-                    {props.children}
+                    {
+                        (props.actionBar || props.title) ?
+                            <div className="flex flex-col h-full">
+                                {props.title ? <div className="flex-none bg-slate-100 border-b rounded-t border-slate-400"><h1 className="m-0 p-2 font-bold">{displayText(props.title)}</h1></div> : null}
+                                <div className="flex-auto p-2 overflow-y-auto overscroll-contain neo-typography">{props.children}</div>
+                                {props.actionBar ? <div className="flex-none bg-slate-100 border-t rounded-b border-slate-400">{props.actionBar}</div> : null}
+                            </div>
+                        : props.children
+                    }
                 </div>
             </ZIndexContext.Provider>
         </Portal>
