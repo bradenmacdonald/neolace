@@ -4,6 +4,7 @@ import { client } from "lib/api-client";
 import { useUser } from "./User";
 import { useSiteData } from "./SiteData";
 import { DraftContextData, useDraft } from "./DraftData";
+
 /**
  * React hook to get the user's permissions in a certain context.
  */
@@ -36,4 +37,15 @@ export function usePermissions(context?: {
         console.error(error);
     }
     return data;
+}
+/**
+ * React hook to get the user's permissions in a certain context.
+ */
+ export function usePermission(perm: api.CorePerm, context?: {
+    /** The ID of the entry, if we want to know entry-specific information */
+    entryId?: api.VNID;
+    draftContext?: DraftContextData;
+}): boolean {
+    const permissions = usePermissions(context);
+    return permissions?.[perm]?.hasPerm ?? false;
 }
