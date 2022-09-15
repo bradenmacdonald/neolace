@@ -110,6 +110,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                                     Note: <InlineMDT mdt={fact.note} context={new MDTContext({})} />
                                 </div>
                             :null}
+                            {fact.slot ? <div className="w-full text-sm">Slot: {fact.slot}</div> :null}
                         </div>
                     );
                 })}
