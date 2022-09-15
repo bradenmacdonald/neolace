@@ -1,7 +1,9 @@
-import type { VirtualElement } from "@popperjs/core";
-import { Portal } from "components/utils/Portal";
 import React from "react";
 import { usePopper } from "react-popper";
+import type { VirtualElement } from "@popperjs/core";
+
+import { Portal } from "components/utils/Portal";
+import { useZIndex, IncreaseZIndex, ZIndexContext } from "lib/hooks/useZIndex";
 
 interface TooltipProps {
     tooltipContent: React.ReactNode;
@@ -59,6 +61,8 @@ export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
         };
     }, [popperElement, showTooltip, props.onClickOutsideTooltip, handleClickOutside]);
 
+    const zIndex = useZIndex({increaseBy: IncreaseZIndex.ForTooltip});
+
     return (
         <>
             {typeof props.children === "function" ? props.children({
@@ -75,17 +79,19 @@ export const Tooltip: React.FunctionComponent<TooltipProps> = (props) => {
                     role="tooltip"
                     id={tooltipId}
                     ref={setPopperElement}
-                    style={styles.popper}
+                    style={{...styles.popper, zIndex}}
                     {...attributes.popper}
                     className={`
-                        max-w-[400px] border p-1 rounded border-gray-800 shadow bg-blue-50 z-tooltip
+                        max-w-[400px] border p-1 rounded border-gray-800 shadow bg-blue-50
                         text-sm font-normal neo-typography
                         ${showTooltip ? "visible opacity-100" : "invisible opacity-0"}
                         transition-opacity duration-500
                     `}
                     aria-hidden={!showTooltip}
                 >
-                    {showTooltip ? props.tooltipContent : null}
+                    <ZIndexContext.Provider value={zIndex}>
+                        {showTooltip ? props.tooltipContent : null}
+                    </ZIndexContext.Provider>
                 </div>
             </Portal>
         </>

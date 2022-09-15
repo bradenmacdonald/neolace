@@ -12,6 +12,7 @@ import { UiPluginsContext } from "./utils/ui-plugins";
 import { DEVELOPMENT_MODE } from "lib/config";
 import { displayString, TranslatableString } from "./utils/i18n";
 import { SiteDataProvider } from "./SiteDataProvider";
+import { useZIndex, IncreaseZIndex, ZIndexContext } from "lib/hooks/useZIndex";
 export { SiteDataProvider }  // for convenience, allow SitePage and SiteDataProvider to both be imported together
 
 
@@ -58,6 +59,9 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     const handleArticleClick = React.useCallback((event: React.MouseEvent<HTMLDivElement>) => {
         if (mobileMenuVisible) showMobileMenu(false);
     }, [mobileMenuVisible, showMobileMenu]);
+
+    // If we're in a mobile view and the left menu is active, it needs to be in front of absolutely everything.
+    const leftMenuZIndex = useZIndex({increaseBy: mobileMenuVisible ? IncreaseZIndex.ForMobileMenu : IncreaseZIndex.NoChange});
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour />;
@@ -213,7 +217,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             <div
                 id="left-panel"
                 className={
-                    `${mobileMenuVisible ? `translate-x-0 visible z-mobile-menu` : `-translate-x-[100%] invisible`}
+                    `${mobileMenuVisible ? `translate-x-0 visible` : `-translate-x-[100%] invisible`}
                     transition-visibility-transform md:visible md:translate-x-0
                     fixed md:sticky
                     flex
@@ -223,40 +227,42 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     md:h-[100vh]
                     bg-slate-100
                 `}
+                style={{zIndex: leftMenuZIndex}}
                 onClick={handleLeftPanelClick}
             >
+                <ZIndexContext.Provider value={leftMenuZIndex}>
+                    {/* Site name/logo */}
+                    <DefaultUISlot slotId="siteLogo">
+                        <Link
+                            href="/"
+                            className="flex-none p-1 mr-1 flex items-center mb-3 -indent-1 font-bold text-lg"
+                        >
+                            {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
+                            {
+                                // eslint-disable-next-line @next/next/no-img-element
+                                site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
+                            }
+                        </Link>
+                    </DefaultUISlot>
 
-                {/* Site name/logo */}
-                <DefaultUISlot slotId="siteLogo">
-                    <Link
-                        href="/"
-                        className="flex-none p-1 mr-1 flex items-center mb-3 -indent-1 font-bold text-lg"
-                    >
-                        {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
-                        {
-                            // eslint-disable-next-line @next/next/no-img-element
-                            site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
-                        }
-                    </Link>
-                </DefaultUISlot>
-
-                <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavTopSlot ?? []), {
-                    id: "siteLinks",
-                    priority: 15,
-                    content: <>
-                        <ul>
-                            {site.frontendConfig.headerLinks?.map(link => 
-                                <li key={link.href}><Link href={link.href}>{link.text}</Link></li>
-                            )}
-                        </ul>
-                    </>,
-                }]} renderWidget={defaultRender} />
-                <div className="flex-auto">{/* This is a spacer that pushes the "bottom" content to the end */}</div>
-                <UISlot slotId="leftNavBottom" defaultContents={[...(props.leftNavBottomSlot ?? []), {
-                    id: "systemLinks",
-                    priority: 80,
-                    content: systemLinks,
-                }]} renderWidget={defaultRender} />
+                    <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavTopSlot ?? []), {
+                        id: "siteLinks",
+                        priority: 15,
+                        content: <>
+                            <ul>
+                                {site.frontendConfig.headerLinks?.map(link => 
+                                    <li key={link.href}><Link href={link.href}>{link.text}</Link></li>
+                                )}
+                            </ul>
+                        </>,
+                    }]} renderWidget={defaultRender} />
+                    <div className="flex-auto">{/* This is a spacer that pushes the "bottom" content to the end */}</div>
+                    <UISlot slotId="leftNavBottom" defaultContents={[...(props.leftNavBottomSlot ?? []), {
+                        id: "systemLinks",
+                        priority: 80,
+                        content: systemLinks,
+                    }]} renderWidget={defaultRender} />
+                </ZIndexContext.Provider>
             </div>
 
             {/* The main content of this entry */}

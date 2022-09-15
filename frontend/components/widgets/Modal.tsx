@@ -1,7 +1,8 @@
+import React from "react";
 import { useClickOutsideHandler } from "lib/hooks/useClickOutsideHandler";
 import { useKeyHandler } from "lib/hooks/useKeyHandler";
 import { Portal } from "components/utils/Portal";
-import React from "react";
+import { useZIndex, IncreaseZIndex, ZIndexContext } from "lib/hooks/useZIndex";
 
 interface ModalProps {
     children?: React.ReactNode;
@@ -26,9 +27,11 @@ export const Modal: React.FunctionComponent<ModalProps> = ({ onClose, ...props }
     useClickOutsideHandler(modalElement, handleClickOutside);
     useKeyHandler("Escape", handleClickOutside);
 
+    const zIndex = useZIndex({increaseBy: IncreaseZIndex.ForModal});
+
     return (
-        <>
-            <Portal>
+        <Portal>
+            <ZIndexContext.Provider value={zIndex}>
                 <div
                     ref={modalElement}
                     role="dialog"
@@ -37,13 +40,14 @@ export const Modal: React.FunctionComponent<ModalProps> = ({ onClose, ...props }
                         // Modals are centered in the viewport, and not affected by scrolling (fixed):
                         `fixed left-[50vw] top-[50vh] -translate-x-1/2 -translate-y-1/2 ` +
                         // And this is the default appearance of our modals:
-                        `border p-0 rounded bg-white border-gray-800 shadow font-normal z-modal ` +
+                        `border p-0 rounded bg-white border-gray-800 shadow font-normal` +
                         (props.className ?? "")
                     }
+                    style={{zIndex}}
                 >
                     {props.children}
                 </div>
-            </Portal>
-        </>
+            </ZIndexContext.Provider>
+        </Portal>
     );
 };
