@@ -20,18 +20,33 @@ The technology database stores structured data about technology in a graph. The 
   * USES_MATERIAL: [Material {}]
 * **Process**: e.g. "welding" (may be a function of a device, or required to build a device), "data compression", "stratospheric aerosol scattering", "chemical vapour deposition", "digital contact tracing"
   * IS_A: [Process {weight}]
-* **Design**: a specific design/plan/implementation/algorithm of a Tech Concept, e.g. "555 timer IC", "Hoover Dam", "iPhone 12"; can incude research prototypes, not necessarily only commercially available.
+* **Product**: a specific design of a tech concept that is developed and manufactured
   * IS_A: [Concept {weight}]
-  * IS_VERSION_OF: [Design {order}]
-  * IS_VARIANT_OF: [Design {order}]
-  * HAS_ANTECEDENT: [Design {}]
-  * HAS_PART: [Concept {weight}, Design {weight}]
+  * IS_VERSION_OF: [Product {order}]
+  * IS_VARIANT_OF: [Product {order}]
+  * HAS_ANTECEDENT: [Product {}]
+  * HAS_PART: [Concept {weight}, Product {weight}]
   * HAS_PROPERTY: [Property {value/range, uncertainty}]
   * USES_MATERIAL: [Material {}]
   * USES_PATENT: [Patent {}]
   * COMPLIES_WITH [Standard {}]
-  * **Product**: a commercially available instance of a Design. Often there is a 1:1 correlation between product and design (e.g. "iPhone 12"), but not always - e.g. the "555 timer IC" design is sold by many different vendors
-    * HAS_DESIGN: [Design {}]
+* **Instance**: An individual instance of a Tech Concept or a Product.
+  * Covers things like:
+    - Living Shangri-La (building)
+    - One Water Street (building)
+    - Kelowna Airport (airport)
+    - Hoover Dam (dam)
+    - Peak to Peak Gondola (ski lift)
+    - Launch Pad 39A (launch pad)
+    - Cascadia Ultra High-Speed Ground Transportation System (UHSGT) (railway)
+    - SkyTrain (subway network)
+    - Millenium Line (specific subway line)
+    - Space Shuttle Endeavour (space vehicle)
+    - USS Gerald R. Ford (ship)
+  * Other terms considered for this: work instance construction site installation project system facility development
+  * Or: vehicle, building, infrastructure (three separate categories)
+  * Or: vehicle, structure, facility
+
 * **Patent**: a patent for a specific process or device
   * RELATES_TO: [Concept {weight}, Process {weight}, Patent {weight}]
   * CITES: [Patent {weight}]
