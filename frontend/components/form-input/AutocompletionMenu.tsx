@@ -3,6 +3,7 @@ import { Portal } from 'components/utils/Portal';
 import { api, useDraft, useLookupExpression } from 'lib/api';
 import { InlineMDT, MDTContext } from 'components/markdown-mdt/mdt';
 import { EntitySymbol } from "../widgets/EntitySymbol";
+import { IncreaseZIndex, useZIndex } from "lib/hooks/useZIndex";
 
 
 type EntityValue = api.EntryValue | api.PropertyValue | api.EntryTypeValue;
@@ -78,6 +79,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
     }, [result?.referenceCache, searchTerm, draft, unsavedEdits]);
 
     const mdtContext = React.useMemo(() => new MDTContext({ refCache, disableInteractiveFeatures: true }), [refCache]);
+    const zIndex = useZIndex({increaseBy: IncreaseZIndex.ForDropdown});
 
     if (error) {
         console.error(error);
@@ -92,7 +94,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
         <Portal>
             <div
                 className="absolute border rounded bg-white border-slate-700 shadow-md"
-                style={{ left: props.positionLeft, top: props.positionTop }}
+                style={{ left: props.positionLeft, top: props.positionTop, zIndex }}
             >
                 <ul>
                     {items.slice(0, 8).map((item) => (

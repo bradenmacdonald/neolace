@@ -3,6 +3,7 @@ import React from "react";
 import { displayText, TranslatableText } from "components/utils/i18n";
 import { Icon, IconId } from "../widgets/Icon";
 import { useClickOutsideHandler } from "lib/hooks/useClickOutsideHandler";
+import { IncreaseZIndex, useZIndex } from "lib/hooks/useZIndex";
 
 export interface SelectOption {
     id: string;
@@ -91,6 +92,7 @@ export const SelectBox: React.FunctionComponent<Props> = ({ onChange, options, v
     const { classNameButton, node: buttonContent } = selectedOption
         ? renderOption(selectedOption)
         : { classNameButton: "", node: "" };
+    const zIndex = useZIndex({increaseBy: IncreaseZIndex.ForDropdown});
 
     return (
         <div className={`relative max-w-full ${props.className ?? "w-[600px]"}`} ref={outerDiv}>
@@ -120,8 +122,8 @@ export const SelectBox: React.FunctionComponent<Props> = ({ onChange, options, v
                     unstyled absolute -mt-[5px] mx-[3px] w-full ${isMenuVisible ? "block" : "hidden"}
                     max-h-64 overflow-auto
                     rounded-md bg-white border border-gray-500 shadow-lg
-                    z-widget
                 `}
+                style={{zIndex}}
                 role="listbox"
                 aria-activedescendant={selectedItem}
                 tabIndex={-1}
