@@ -14,8 +14,10 @@ interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
  * Our button component is a regular old button. You can click on it to do actions.
  *
  * In general, any widget which goes to a new page should be a <Link>/<a>, while any widget that performs an action on
- * the current page should be a Button. This refers to the actual HTML, not necessarily the visual appearance (you can
- * style a button to look like a link, for example, if you want).
+ * the current page should be a Button. This refers to the actual HTML, not necessarily the visual appearance (to get
+ * a button that looks like a link, use <ButtonLink>).
+ *
+ * forwardRef is used so that if you need to get a reference to the inner <button> using ref={...}, you can.
  */
 export const Button = React.forwardRef<HTMLButtonElement, Props>(function Button({onClick, bold, icon, children, ...props}, ref) {
     const handleClick = React.useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
