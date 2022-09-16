@@ -34,7 +34,7 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                     return <>{name}</>;
                 }
             } else if (draft.status === api.DraftStatus.Accepted) {
-                return <Link href={`/entry/${friendlyId}`}>{name}</Link>
+                return <Link href={`/entry/${friendlyId ?? entryId}`}>{name}</Link>
             }
         }
         return name;
@@ -42,16 +42,12 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
 
     const description: React.ReactNode = (() => {
         switch (code) {
+            //
+            // Schema changes:
+            //
             case "CreateEntryType": {
                 return <FormattedMessage defaultMessage="Created new entry type: {entryType}" id="qYXLaL" values={{
                     entryType: <strong>{edit.data.name}</strong>,
-                }} />
-            }
-            case "CreateEntry": {
-                return <FormattedMessage defaultMessage="Created new {entryType} entry: {entry}, with friendly ID {friendlyId}" id="wGmmfj" values={{
-                    entry: <><strong>{entryLink({...edit.data, entryId: edit.data.id})}</strong></>,
-                    entryType: <>{schema?.entryTypes[edit.data.type]?.name}</>,
-                    friendlyId: <code>{edit.data.friendlyId}</code>,
                 }} />
             }
             case "UpdateEntryTypeFeature": {
@@ -72,6 +68,28 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                         feature: data.feature.featureType,
                     }} />
                 }
+            }
+            case "CreateProperty": {
+                return <FormattedMessage defaultMessage="Created new property: {propertyName}" id="EVuqQe" values={{
+                    propertyName: <strong>{edit.data.name}</strong>,
+                }} />
+            }
+            case "UpdateProperty": {
+                const prop = schema?.properties[edit.data.id];
+                return <FormattedMessage defaultMessage="Updated {propertyName} property ({fields})" id="E8NYSc" values={{
+                    propertyName: <strong>{prop?.name ?? edit.data.id}</strong>,
+                    fields: Object.keys(edit.data).filter((k) => k !== "id").join(", "),
+                }} />
+            }
+            //
+            // Content changes:
+            //
+            case "CreateEntry": {
+                return <FormattedMessage defaultMessage="Created new {entryType} entry: {entry}, with friendly ID {friendlyId}" id="wGmmfj" values={{
+                    entry: <><strong>{entryLink({...edit.data, entryId: edit.data.id})}</strong></>,
+                    entryType: <>{schema?.entryTypes[edit.data.type]?.name}</>,
+                    friendlyId: <code>{edit.data.friendlyId}</code>,
+                }} />
             }
             case "AddPropertyValue": {
                 return <FormattedMessage defaultMessage="Added a new property value to {entry} - {property}: {value}" id="fktjWL" values={{

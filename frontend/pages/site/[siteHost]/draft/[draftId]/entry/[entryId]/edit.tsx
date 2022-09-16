@@ -272,8 +272,8 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                 : (
                                     <p>
                                         <FormattedMessage
-                                            id="im5E8q"
-                                            defaultMessage="You haven't made any changes yet. Make some changes usign the other tabs and you'll be able to save the changes here."
+                                            id="by5rU2"
+                                            defaultMessage="You haven't made any changes yet. Make some changes using the other tabs and you'll be able to save the changes here."
                                         />
                                     </p>
                                 )

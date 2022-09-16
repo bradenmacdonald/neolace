@@ -3,17 +3,20 @@ import { FormattedMessage } from "react-intl";
 import { VNID } from "neolace-api";
 
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
-import { api, useSchema } from "lib/api";
+import { api, usePermission, useSchema } from "lib/api";
 import { Spinner } from "components/widgets/Spinner";
 import { Control, SelectBox } from "components/form-input";
 import { SinglePropertyEditor } from "./SinglePropertyEditor";
+import { Button, ToolbarButton } from "components/widgets/Button";
+import { Modal } from "components/widgets/Modal";
+import { EditSchemaPropertiesModal } from "components/schema-editor/EditSchemaPropertiesModal";
 
 // We have to declare this empty object outside of the function below so it doesn't change on every call.
 const emptyPropsRawArray: api.EditableEntryData["propertiesRaw"] = [];
 
 interface Props {
     entry: api.EditableEntryData | undefined;
-    addUnsavedEdit: (newEdit: api.AnyContentEdit) => void;
+    addUnsavedEdit: (newEdit: api.AnyEdit) => void;
 }
 
 /**
@@ -23,6 +26,16 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
     const entryType = entry?.entryType.id;
     /** The schema, including any schema changes which have been made within the current draft, if any. */
     const [schema] = useSchema();
+
+    const canEditSchema = usePermission(api.CorePerm.proposeEditToSchema);
+    const [showingPropertiesSchemaEditor, setShowingPropertiesSchemaEditor] = React.useState(false);
+    const showPropertiesSchemaEditor = React.useCallback(() => setShowingPropertiesSchemaEditor(true), []);
+    const cancelPropertiesSchemaEditor = React.useCallback(() => setShowingPropertiesSchemaEditor(false), []);
+    const doneEditingSchemaProperties = React.useCallback((edits: api.AnySchemaEdit[]) => {
+        // Create the new entry type, by adding the edits to unsavedEdits:
+        for (const edit of edits) { addUnsavedEdit(edit); }
+        setShowingPropertiesSchemaEditor(false);
+    }, [addUnsavedEdit]);
 
     // This list contains all the possible properties that can be applied to entries of this type:
     const applicableProperties = React.useMemo(() => {
@@ -114,12 +127,30 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
             <Control
                 id="addOtherProperty"
                 label={defineMessage({ defaultMessage: "Add another property:", id: "wlyMMP" })}
+                afterInput={
+                    canEditSchema ?
+                        <ToolbarButton
+                            icon="three-dots"
+                            tooltip={defineMessage({defaultMessage: "Edit the available properties", id: "H8dTHq"})}
+                            onClick={showPropertiesSchemaEditor}
+                        />
+                    :
+                        <ToolbarButton
+                            icon="three-dots"
+                            disabled={true}
+                            tooltip={defineMessage({defaultMessage: "You don't have permission to edit the available properties.", id: "cMQwO2"})}
+                        />
+                }
             >
                 <SelectBox
                     options={unsetProps.map((p) => ({ id: p.id, label: noTranslationNeeded(p.name) }))}
                     onChange={handleAddNewProperty}
                 />
             </Control>
+
+            {showingPropertiesSchemaEditor ?
+                <EditSchemaPropertiesModal onSaveChanges={doneEditingSchemaProperties} onCancel={cancelPropertiesSchemaEditor} />
+            : null}
         </>
     );
 };

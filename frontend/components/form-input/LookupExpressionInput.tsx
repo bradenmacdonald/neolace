@@ -22,9 +22,9 @@ import { api } from "lib/api";
 
 interface Props {
     /** The lookup value that is currently being edited */
-    value: string;
+    value?: string;
     /** Event handler, called on any change at all. */
-    onChange: (newValue: string) => void;
+    onChange?: (newValue: string) => void;
     /** Event handler, called when the user has made changes and then pressed ENTER or blurred this input. */
     onFinishedEdits?: (newValue: string) => void;
     placeholder?: TranslatableString;
@@ -46,7 +46,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
     const forceUpdate = useForceUpdate();
     const [autocompletion, setAutocompletion] = useAutocompletionState();
 
-    const parsedValue: Descendant[] = React.useMemo(() => stringValueToSlateDoc(value), [value]);
+    const parsedValue: Descendant[] = React.useMemo(() => stringValueToSlateDoc(value ?? ""), [value]);
 
     React.useEffect(() => {
         // This function should force the editor to update its contents IF "props.value" is changed externally, but

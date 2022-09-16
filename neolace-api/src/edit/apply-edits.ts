@@ -81,7 +81,13 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
         const editType = getEditType(edit.code);
         if (editType.changeType === EditChangeType.Schema) {
             edit = edit as AnySchemaEdit;
-            schema = editType.apply(schema, edit.data);
+            if (edit.code === "UpdateProperty") {
+                // Remove "appliesTo": It's not relevant to reference cache and will throw an exception if any entry types aren't in the reference cache
+                const {appliesTo: _, ...data} = edit.data;
+                schema = editType.apply(schema, data);
+            } else {
+                schema = editType.apply(schema, edit.data);
+            }
         } else {
             edit = edit as AnyContentEdit;
             if (edit.code === "CreateEntry") {
@@ -114,6 +120,7 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
             descriptionMD: undefined,
             standardURL: prop.standardURL ?? "",
             displayAs: prop.displayAs ?? "",
+            appliesTo: undefined,
         }])),
     }
     return refCache;

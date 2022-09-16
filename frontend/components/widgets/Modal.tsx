@@ -8,8 +8,13 @@ interface ModalProps {
     children?: React.ReactNode;
     className?: string;
     onClose?: () => void;
+    /** The title to display on the modal. Providing this or actionBar changes the layout of the modal. */
     title?: TranslatableString;
+    /** React node containing buttons to display at the bottom of the modal. */
     actionBar?: React.ReactNode;
+
+    /** Optional ref to the scrollable <div> inside the modal, if title or actionBar was used. */
+    scrollableRef?: React.Ref<HTMLDivElement>;
 }
 
 /**
@@ -52,7 +57,7 @@ export const Modal: React.FunctionComponent<ModalProps> = ({ onClose, ...props }
                         (props.actionBar || props.title) ?
                             <div className="flex flex-col h-full">
                                 {props.title ? <div className="flex-none bg-slate-100 border-b rounded-t border-slate-400"><h1 className="m-0 p-2 font-bold">{displayText(props.title)}</h1></div> : null}
-                                <div className="flex-auto p-2 overflow-y-auto overscroll-contain neo-typography">{props.children}</div>
+                                <div ref={props.scrollableRef} className="flex-auto p-2 overflow-y-auto overscroll-contain neo-typography">{props.children}</div>
                                 {props.actionBar ? <div className="flex-none bg-slate-100 border-t rounded-b border-slate-400">{props.actionBar}</div> : null}
                             </div>
                         : props.children

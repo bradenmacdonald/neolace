@@ -252,6 +252,15 @@ export const UpdateProperty = SchemaEditType({
         return Object.freeze(newSchema);
     },
     describe: (data) => `Updated \`Property ${data.id}\``,
+    consolidate: (thisEdit, earlierEdit) => {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.id === thisEdit.data.id) {
+            return {
+                code: thisEdit.code,
+                data: { ...earlierEdit.data, ...thisEdit.data },
+            }
+        }
+        return undefined;
+    },
 });
 
 export const CreateProperty = SchemaEditType({
@@ -295,6 +304,15 @@ export const CreateProperty = SchemaEditType({
         return UpdateProperty.apply(newSchema, data);
     },
     describe: (data) => `Created \`Property ${data.id}\``,
+    consolidate: (thisEdit, earlierEdit) => {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.id === thisEdit.data.id) {
+            return {
+                code: thisEdit.code,
+                data: { ...earlierEdit.data, ...thisEdit.data },
+            }
+        }
+        return undefined;
+    },
 });
 
 export const DeleteProperty = SchemaEditType({
