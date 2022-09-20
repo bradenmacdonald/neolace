@@ -4,6 +4,7 @@ import { client } from "lib/api-client";
 import { useUser } from "./User";
 import { useSiteData } from "./SiteData";
 import { DraftContextData, useDraft } from "./DraftData";
+
 /**
  * React hook to get the user's permissions in a certain context.
  */
@@ -16,10 +17,10 @@ export function usePermissions(context?: {
     const { site, siteError } = useSiteData();
 
     // Get the draft, if set.
-    const [draft, unsavedEdits, _draftError] = useDraft(context);
+    const [draft] = useDraft(context);
 
     // Get the user's permissions, in the given context:
-    const key = `user-permissions:${user.username}:${context?.entryId ?? ""}:${draft?.id ?? ""}`;
+    const key = `user-permissions:${site.shortId}:${user.username}:${context?.entryId ?? ""}:${draft?.id ?? ""}`;
     const { data, error } = useSWR(key, async () => {
         if (siteError) {
             throw new api.ApiError("Site Error", 500);
@@ -36,4 +37,15 @@ export function usePermissions(context?: {
         console.error(error);
     }
     return data;
+}
+/**
+ * React hook to get the user's permissions in a certain context.
+ */
+ export function usePermission(perm: api.CorePerm, context?: {
+    /** The ID of the entry, if we want to know entry-specific information */
+    entryId?: api.VNID;
+    draftContext?: DraftContextData;
+}): boolean {
+    const permissions = usePermissions(context);
+    return permissions?.[perm]?.hasPerm ?? false;
 }

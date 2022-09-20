@@ -1,8 +1,8 @@
 import React from "react";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
-import { FormattedMessage, useIntl } from "react-intl";
-import { api, client, DraftContextData, NEW, useDraft, useSiteData, UserStatus, useUser } from "lib/api";
+import { FormattedMessage, FormattedRelativeTime, useIntl } from "react-intl";
+import { api, client, DraftContextData, NEW, useDraft, useSiteData, UserStatus, useUser, DraftContext, usePermission } from "lib/api";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -11,7 +11,8 @@ import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { ParsedUrlQuery } from "querystring";
 import { Spinner } from "components/widgets/Spinner";
 import { Button } from "components/widgets/Button";
-import { HoverClickNote } from "components/widgets/HoverClickNote";
+import { EditDescription } from "components/widgets/EditDescription";
+import { CorePerm } from "neolace-api";
 
 // Define a consistent empty array so that React doesn't think a value changes if we use a different '[]' on each render
 const noEdits = [] as const;
@@ -31,6 +32,8 @@ const DraftDetailsPage: NextPage = function (_props) {
     const draftId = query.draftId as api.VNID | NEW;
     const draftContext: DraftContextData = { draftId, unsavedEdits: noEdits, };
     const [draft, _unsavedChanges, draftError, mutateDraft] = useDraft({draftContext});
+    const canEditDraft = usePermission(CorePerm.editDraft, {draftContext});
+    const canProposeNewEntry = usePermission(CorePerm.proposeNewEntry, {draftContext});
 
     const [isUpdatingDraft, setUpdatingDraft] = React.useState(false);
     const acceptDraft = React.useCallback(async () => {
@@ -55,7 +58,7 @@ const DraftDetailsPage: NextPage = function (_props) {
         content = <Spinner />;
     } else {
         content = (
-            <>
+            <DraftContext.Provider value={draftContext}>
                 <Breadcrumbs>
                     <Breadcrumb href={`/`}>{site.name}</Breadcrumb>
                     <Breadcrumb href={`/draft/`}>
@@ -66,9 +69,7 @@ const DraftDetailsPage: NextPage = function (_props) {
 
                 <h1>{draft.title}</h1>
 
-                <p>Draft by {draft.author.fullName} ({draft.author.username})</p>
-
-                <p>Created: {String(draft.created)}</p>
+                <p>Draft by {draft.author.fullName} ({draft.author.username}), created <span><FormattedRelativeTime value={(draft.created.getTime() - new Date().getTime())/1000} updateIntervalInSeconds={1} /></span>.</p>
 
                 <p>Description: {draft.description}</p>
 
@@ -91,13 +92,7 @@ const DraftDetailsPage: NextPage = function (_props) {
                     ? (
                         <ul>
                             {draft.edits.map((e, idx) => (
-                                <li key={idx}>
-                                    {api.getEditType(e.code).describe(e.data)}
-                                    <HoverClickNote superscript={false} displayText="(...)">
-                                        <p>Data for this edit:</p>
-                                        <pre className="whitespace-pre-wrap">{JSON.stringify(e.data, undefined, 4)}</pre>
-                                    </HoverClickNote>
-                                </li>
+                                <li key={idx}> <EditDescription edit={e} /> </li>
                             ))}
                         </ul>
                     )
@@ -126,7 +121,7 @@ const DraftDetailsPage: NextPage = function (_props) {
                     user.status === UserStatus.LoggedIn ? <>
                         <Button
                             icon="plus-lg"
-                            disabled={draft.status !== api.DraftStatus.Open}
+                            disabled={draft.status !== api.DraftStatus.Open || !canEditDraft || !canProposeNewEntry}
                             onClick={() => router.push(`/draft/${draftId}/entry/_/edit`)}
                         >
                             <FormattedMessage id="lE5OgU" defaultMessage="Create a new entry (in this draft)" />
@@ -134,7 +129,7 @@ const DraftDetailsPage: NextPage = function (_props) {
                     </> : <p>You need to log in to edit this draft.</p>
                 }
 
-            </>
+            </DraftContext.Provider>
         );
     }
 

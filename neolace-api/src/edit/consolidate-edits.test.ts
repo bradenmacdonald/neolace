@@ -15,6 +15,7 @@ const entryB = VNID("_entryB");
 const entryC = VNID("_entryC");
 const type1 = VNID("_type1");
 const type2 = VNID("_type2");
+const type3 = VNID("_type3");
 
 Deno.test("Consolidate edits", async (t) => {
     await t.step("two renames of the same entry", () => {
@@ -224,6 +225,23 @@ Deno.test("Consolidate edits", async (t) => {
         assertEquals(consolidateEdits([firstEdit, secondEdit, thirdEdit]), [
             {code: "CreateEntry", data: {...firstEdit.data, description: thirdEdit.data.description}},
             secondEdit,
+        ]);
+    });
+
+    await t.step("Changing entry type name after creating it", () => {
+        assertEquals(consolidateEdits([
+            {code: "CreateEntryType", data: {id: type1, name: "Old name 1"}},
+            {code: "CreateEntryType", data: {id: type2, name: "Old name 2"}},
+            {code: "CreateEntryType", data: {id: type3, name: "Type 3"}},
+            {code: "UpdateEntryType", data: {id: type1, name: "New Name 1"}},
+            {code: "UpdateEntryType", data: {id: type2, name: "New Name 2", description: "description 2"}},
+            {code: "UpdateEntryType", data: {id: type3, description: "description 3. Name wasn't changed."}},
+        ]), [
+            {code: "CreateEntryType", data: {id: type1, name: "New Name 1"}},
+            {code: "CreateEntryType", data: {id: type2, name: "New Name 2"}},
+            {code: "UpdateEntryType", data: {id: type2, description: "description 2"}}, // Note that this moved up. Shouldn't be a problem? Would be better if it stayed put though.
+            {code: "CreateEntryType", data: {id: type3, name: "Type 3"}},
+            {code: "UpdateEntryType", data: {id: type3, description: "description 3. Name wasn't changed."}},
         ]);
     });
 });

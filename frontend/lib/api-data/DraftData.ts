@@ -71,3 +71,29 @@ export function useDraft(
 
     return [data, draftContext.unsavedEdits, error, mutate];
 }
+
+/**
+ * React hook to correctly get any "pending" edits - edits which are in the current draft (IFF it hasn't been applied
+ * yet), and unsaved edits which are in the react state while the user is actively making changes to the draft, but
+ * which may be discarded before being saved into a draft.
+ */
+ export function usePendingEdits(
+    /**
+     * The draft data normally comes automatically from a <DraftContext.Provider> in a parent element, but if you need
+     * to use this in the same component that *creates* the <DraftContext.Provider>, then you can pass the data about
+     * the draft in via this parameter.
+     */
+    context: { draftContext?: DraftContextData } = {},
+): api.AnyEdit[] {
+    const [draft, unsavedEdits] = useDraft();
+
+    const result: api.AnyEdit[] = React.useMemo(() => {
+        if (draft && draft.status === api.DraftStatus.Open) {
+            return [...draft.edits, ...unsavedEdits];
+        } else {
+            return [...unsavedEdits];
+        }
+    }, [draft, unsavedEdits]);
+
+    return result;
+}

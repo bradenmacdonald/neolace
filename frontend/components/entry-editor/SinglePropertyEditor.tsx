@@ -98,12 +98,19 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                                     defaultMessage: "Add another property value",
                                     id: "6d1F0k",
                                 })}
+                                onClick={() => {
+                                    addUnsavedEdit({
+                                        code: api.AddPropertyValue.code,
+                                        data: { entryId, propertyId: prop.id, propertyFactId: api.VNID(), valueExpression: "" },
+                                    });
+                                }}
                             />
                             {fact.note ?// TODO: We need an editor for notes and a better way to handle MDTContext here
                                 <div className="w-full text-sm">
                                     Note: <InlineMDT mdt={fact.note} context={new MDTContext({})} />
                                 </div>
                             :null}
+                            {fact.slot ? <div className="w-full text-sm">Slot: {fact.slot}</div> :null}
                         </div>
                     );
                 })}

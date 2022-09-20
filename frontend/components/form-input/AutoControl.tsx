@@ -1,6 +1,8 @@
 import React from "react";
 import { useStateRef } from "lib/hooks/useStateRef";
 import { Control, ControlProps } from "./Control";
+import { SelectBox } from "./SelectBox";
+import { LookupExpressionInput } from "./LookupExpressionInput";
 
 
 interface AutoControlProps<ValueType> extends ControlProps {
@@ -53,6 +55,12 @@ export function AutoControl<ValueType>(props: AutoControlProps<ValueType>) {
         onFocus: handleFocus,
         onBlur: handleBlur,
     });
+
+    if (props.children.type === SelectBox) {
+        return <>SelectBox doesn't work with &lt;AutoControl&gt; - just use &lt;Control&gt; instead for the same effect.</>;
+    } else if (props.children.type === LookupExpressionInput) {
+        return <>LookupExpressionInput doesn't work with &lt;AutoControl&gt; - just use &lt;Control&gt; and the input's onFinishedEdits property instead for the same effect.</>;
+    }
 
     return (
         <Control {...controlProps}>

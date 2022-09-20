@@ -27,7 +27,7 @@ interface Props {
 }
 
 /**
- * This widget implements the modal that pops up to allow creating/editing an entry
+ * This widget implements the modal that pops up to allow creating/editing an entry type
  */
 export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, onSaveChanges, onCancel }) => {
     /** The current schema, including any schema changes which have already been made within the current draft, if any. */
@@ -120,16 +120,26 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, on
 
     return (
         <Modal
-            className="w-full max-w-4xl h-[600px] max-h-screen overflow-y-auto neo-typography"
+            className="w-full max-w-4xl h-[600px] max-h-screen overflow-y-auto"
             onClose={confirmClose}
+            title={defineMessage({defaultMessage: "Edit Entry Type", id: "qEou9X"})}
+            actionBar={<>
+                <Button
+                    icon="check-circle-fill"
+                    bold={true}
+                    disabled={entryType.name === ""}
+                    onClick={saveChanges}
+                >
+                    <FormattedMessage defaultMessage="Save" id="jvo0vs" />
+                </Button>
+                <Button
+                    onClick={onCancel}
+                >
+                    <FormattedMessage defaultMessage="Cancel" id="47FYwb" />
+                </Button>
+            </>}
         >
-            <div className="p-2">
-                <h2>
-                    <FormattedMessage
-                        defaultMessage="Edit Entry Type"
-                        id="qEou9X"
-                    />
-                </h2>
+            <div>
                 <Form>
                     <Control
                         id="typeName"
@@ -287,20 +297,6 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, on
                             </Control>
                         )
                         : null}
-
-                    <Button
-                        icon="check-circle-fill"
-                        bold={true}
-                        disabled={entryType.name === ""}
-                        onClick={saveChanges}
-                    >
-                        <FormattedMessage defaultMessage="Save" id="jvo0vs" />
-                    </Button>
-                    <Button
-                        onClick={onCancel}
-                    >
-                        <FormattedMessage defaultMessage="Cancel" id="47FYwb" />
-                    </Button>
                 </Form>
             </div>
         </Modal>

@@ -20,8 +20,12 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
 
         // Check what parameters were specified in the query string:
         for (const [key, value] of new URL(request.url).searchParams.entries()) {
-            if (key in (["entryId", "entryTypeId", "draftId"] as const)) {
-                object[key as keyof ActionObject] = value as VNID;
+            if (["entryId", "entryTypeId", "draftId"].includes(key)) {
+                try {
+                    object[key as keyof ActionObject] = VNID(value);
+                } catch {
+                    throw new api.InvalidFieldValue([{ fieldPath: key, message: "Not a valid VNID" }]);
+                }
             } else if (key.startsWith("plugin:")) {
                 object[key as `plugin:${string}`] = value;
             }

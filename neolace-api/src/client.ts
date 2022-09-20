@@ -243,7 +243,7 @@ export class NeolaceApiClient {
     // Draft API Methods
 
     private _parseDraft(rawDraft: any): DraftData {
-        rawDraft.created = Date.parse(rawDraft.created);
+        rawDraft.created = new Date(rawDraft.created);
         if (rawDraft.edits) {
             rawDraft.edits.forEach((e: any) => { e.timestamp = Date.parse(e.timestamp); })
         }
@@ -339,11 +339,15 @@ export class NeolaceApiClient {
      * @param options 
      * @returns 
      */
-    public async getMyPermissions(options?: {entryId?: VNID, entryTypeId?: VNID, draftId?: VNID, [custom: `plugin:${string}`]: string, siteId?: string}): Promise<SiteUserMyPermissionsData> {
+    public async getMyPermissions(options: {entryId?: VNID, entryTypeId?: VNID, draftId?: VNID, [custom: `plugin:${string}`]: string, siteId?: string} = {}): Promise<SiteUserMyPermissionsData> {
         const siteId = this.getSiteId(options);
 
-        const objectFields = {...options};
-        delete objectFields.siteId;
+        const objectFields: Record<string, string> = {};
+        for (const [k, v] of Object.entries(options)) {
+            if (v !== undefined && k !== "siteId") {
+                objectFields[k] = v;
+            }
+        }
         const args = new URLSearchParams(objectFields);
 
         return await this.call(`/site/${siteId}/my-permissions?${args.toString()}`, {method: "GET"});
