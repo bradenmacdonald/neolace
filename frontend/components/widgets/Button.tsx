@@ -61,11 +61,21 @@ export const ToolbarButton: React.FunctionComponent<ToolbarButtonProps> = ({tool
     }, [onClick]);
 
     return <Tooltip tooltipContent={<span>{displayString(intl, tooltip)}</span>}>
-        {attribs => <button {...props} {...attribs} aria-label={displayString(intl, tooltip)} onClick={handleClick} className={`rounded-md px-2 py-1 hover:shadow-sm hover:shadow-gray-500 disabled:text-gray-300 disabled:hover:shadow-none disabled:cursor-not-allowed align-top ${enabled ? 'text-black' : 'text-gray-600'}`}>
-            <span className={`${toggled ? "border-b-2 border-b-red-700" : ""}`}>
-                <Icon icon={icon}/>
-            </span>
-        </button>
-        }
+        {attribs => (
+            <button
+                {...props}
+                {...attribs}
+                aria-label={displayString(intl, tooltip)}
+                // When the button is disabled, events won't fire and our custom tooltips won't be visible.
+                // It would be better to implement a way to still display the booltip but for now, this works:
+                {...(props.disabled ? { title: displayString(intl, tooltip) } : {})}
+                onClick={handleClick}
+                className={`rounded-md px-2 py-1 hover:shadow-sm hover:shadow-gray-500 disabled:text-gray-300 disabled:hover:shadow-none disabled:cursor-not-allowed align-top ${toggled ? 'text-black' : 'text-gray-600'}`}
+            >
+                <span className={`${toggled ? "border-b-2 border-b-red-700" : ""}`}>
+                    <Icon icon={icon}/>
+                </span>
+            </button>
+        )}
     </Tooltip>
 }
