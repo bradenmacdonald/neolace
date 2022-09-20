@@ -20,7 +20,7 @@ export function usePermissions(context?: {
     const [draft] = useDraft(context);
 
     // Get the user's permissions, in the given context:
-    const key = `user-permissions:${user.username}:${context?.entryId ?? ""}:${draft?.id ?? ""}`;
+    const key = `user-permissions:${site.shortId}:${user.username}:${context?.entryId ?? ""}:${draft?.id ?? ""}`;
     const { data, error } = useSWR(key, async () => {
         if (siteError) {
             throw new api.ApiError("Site Error", 500);
