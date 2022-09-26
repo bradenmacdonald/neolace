@@ -1,6 +1,8 @@
-import { type VNID } from "neolace-api";
-import Link from "next/link";
 import React from "react";
+import Link from "next/link";
+import { type VNID } from "neolace-api";
+
+import { useRefCache } from "lib/api";
 import { InlineMDT, type MDTContext } from "../markdown-mdt/mdt";
 
 interface Props {
@@ -12,7 +14,7 @@ interface Props {
  * The content to display in a tooltip when hovering over an entry link (or a node in the graph).
  */
 export const EntryTooltipContent: React.FunctionComponent<Props> = (props: Props) => {
-    const refCache = props.mdtContext.refCache;
+    const refCache = useRefCache();
     const entry = refCache.entries[props.entryId];
     return entry ? <>
         <span className="text-base my-1">

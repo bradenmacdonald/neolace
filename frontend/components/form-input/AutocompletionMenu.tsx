@@ -1,6 +1,6 @@
 import React from 'react';
 import { Portal } from 'components/utils/Portal';
-import { api, useDraft, useLookupExpression } from 'lib/api';
+import { api, RefCacheContext, useDraft, useLookupExpression } from 'lib/api';
 import { InlineMDT, MDTContext } from 'components/markdown-mdt/mdt';
 import { EntitySymbol } from "../widgets/EntitySymbol";
 import { IncreaseZIndex, useZIndex } from "lib/hooks/useZIndex";
@@ -26,7 +26,7 @@ interface Props {
 export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm, ...props }) => {
     // Use the basicSearch() function to fetch all entries, properties, and entry types that match the search term.
     // If the search term is an empty string, this is just a list of all entries, properties, and entry types.
-    const { result, error } = useLookupExpression(`basicSearch(${JSON.stringify(searchTerm)})`);
+    const { resultValue, newReferenceCache, error } = useLookupExpression(`basicSearch(${JSON.stringify(searchTerm)})`);
     const [draft, unsavedEdits] = useDraft();
 
     // We store the results in a state so that we can display the previous values while new ones are loading.
@@ -39,10 +39,10 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
     });
 
     React.useEffect(() => {
-        if (result?.referenceCache === undefined) {
+        if (resultValue === undefined) {
             return; // Wait while the next set of autocompletion items loads.
         }
-        let referenceCache = result.referenceCache;
+        let referenceCache = newReferenceCache;
         // IF we are in the context of a draft, update the result with edits from the draft:
         if (draft || unsavedEdits) {
             referenceCache = api.applyEditsToReferenceCache(referenceCache, [...(draft?.edits ?? []), ...unsavedEdits]);
@@ -76,9 +76,9 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
 
         setItems(newItems);
         setRefCache(referenceCache);
-    }, [result?.referenceCache, searchTerm, draft, unsavedEdits]);
+    }, [resultValue, newReferenceCache, searchTerm, draft, unsavedEdits]);
 
-    const mdtContext = React.useMemo(() => new MDTContext({ refCache, disableInteractiveFeatures: true }), [refCache]);
+    const mdtContext = React.useMemo(() => new MDTContext({ disableInteractiveFeatures: true }), []);
     const zIndex = useZIndex({increaseBy: IncreaseZIndex.ForDropdown});
 
     if (error) {
@@ -89,58 +89,60 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
     }
 
     return (
-        // We pass in className here to remove the "fixed" property from the <Portal>. If we later change <Portal> to
-        // not be "fixed" by default, we can remove this.
-        <Portal>
-            <div
-                className="absolute border rounded bg-white border-slate-700 shadow-md"
-                style={{ left: props.positionLeft, top: props.positionTop, zIndex }}
-            >
-                <ul>
-                    {items.slice(0, 8).map((item) => (
-                        <li key={item.id} className="
-                            p-1 text-sm hover:bg-blue-50 border-b border-b-slate-200
-                            cursor-default
-                            first:rounded-t last:rounded-b last:border-b-0
-                        " onClick={() => props.onClick(item)}>
-                            <div className="pb-1">
-                                <span className="w-8 inline-block">
-                                    <EntitySymbol value={item} mdtContext={mdtContext.childContextWith({entryId: item.id})} defaultBg="bg-transparent" />
-                                </span>
-                                <strong>
+        <RefCacheContext.Provider value={{refCache}}>
+            {/* We pass in className here to remove the "fixed" property from the <Portal>. If we later change <Portal> to
+            not be "fixed" by default, we can remove this. */}
+            <Portal>
+                <div
+                    className="absolute border rounded bg-white border-slate-700 shadow-md"
+                    style={{ left: props.positionLeft, top: props.positionTop, zIndex }}
+                >
+                    <ul>
+                        {items.slice(0, 8).map((item) => (
+                            <li key={item.id} className="
+                                p-1 text-sm hover:bg-blue-50 border-b border-b-slate-200
+                                cursor-default
+                                first:rounded-t last:rounded-b last:border-b-0
+                            " onClick={() => props.onClick(item)}>
+                                <div className="pb-1">
+                                    <span className="w-8 inline-block">
+                                        <EntitySymbol value={item} defaultBg="bg-transparent" />
+                                    </span>
+                                    <strong>
+                                        {
+                                            item.type === "Entry" ? (refCache.entries[item.id]?.name ?? item.id)
+                                            : item.type === "EntryType" ? (refCache.entryTypes[item.id]?.name ?? item.id)
+                                            : item.type === "Property" ? (refCache.properties[item.id]?.name ?? item.id)
+                                            : null
+                                        }
+                                    </strong>{" "}
+                                    <span className="text-xs text-gray-600">
+                                        {
+                                            item.type === "Entry" ? <>
+                                                (
+                                                    {refCache.entryTypes[refCache.entries[item.id]?.entryType.id]?.name},{" "}
+                                                    <span className="font-mono text-xs ml-1">{refCache.entries[item.id]?.friendlyId}</span>
+                                                )
+                                            </>
+                                            : item.type === "EntryType" ? <>(Entry Type)</>
+                                            : item.type === "Property" ? <>(Property)</>
+                                            : null
+                                        }
+                                    </span>
+                                </div>
+                                <div className="whitespace-nowrap overflow-hidden overflow-ellipsis max-w-sm text-xs ml-8">
                                     {
-                                        item.type === "Entry" ? (refCache.entries[item.id]?.name ?? item.id)
-                                        : item.type === "EntryType" ? (refCache.entryTypes[item.id]?.name ?? item.id)
-                                        : item.type === "Property" ? (refCache.properties[item.id]?.name ?? item.id)
+                                        item.type === "Entry" ? <InlineMDT mdt={refCache.entries[item.id]?.description} context={mdtContext.childContextWith({entryId: item.id})}/> :
+                                        item.type === "EntryType" ? <>&nbsp;</> :
+                                        item.type === "Property" ? refCache.properties[item.id]?.description
                                         : null
                                     }
-                                </strong>{" "}
-                                <span className="text-xs text-gray-600">
-                                    {
-                                        item.type === "Entry" ? <>
-                                            (
-                                                {refCache.entryTypes[refCache.entries[item.id]?.entryType.id]?.name},{" "}
-                                                <span className="font-mono text-xs ml-1">{refCache.entries[item.id]?.friendlyId}</span>
-                                            )
-                                        </>
-                                        : item.type === "EntryType" ? <>(Entry Type)</>
-                                        : item.type === "Property" ? <>(Property)</>
-                                        : null
-                                    }
-                                </span>
-                            </div>
-                            <div className="whitespace-nowrap overflow-hidden overflow-ellipsis max-w-sm text-xs ml-8">
-                                {
-                                    item.type === "Entry" ? <InlineMDT mdt={refCache.entries[item.id]?.description} context={mdtContext.childContextWith({entryId: item.id})}/> :
-                                    item.type === "EntryType" ? <>&nbsp;</> :
-                                    item.type === "Property" ? refCache.properties[item.id]?.description
-                                    : null
-                                }
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        </Portal>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </Portal>
+        </RefCacheContext.Provider>
     );
 };

@@ -1,14 +1,17 @@
 import * as api from "neolace-api";
+import React from "react";
 import useSWR from "swr";
 
 import { client } from "lib/api-client";
 import { useSiteData } from "./SiteData";
 import { useUser } from "./User";
+import { useRefCache } from "./ReferenceCache";
+import { useDraft } from "./DraftData";
 
 /**
  * React hook to get the data required to display an entry
  */
- export function useEntry(
+export function useEntry(
     entryKey: api.VNID | string,
     fallback?: api.EntryData,
 ): [data: api.EntryData | undefined, error: api.ApiError | undefined] {
@@ -41,4 +44,62 @@ import { useUser } from "./User";
         return [fallback, undefined];
     }
     return [data, error];
+}
+
+/**
+ * React hook to get very basic data about an entry; e.g. its name and type.
+ */
+export function useEntrySummary(
+    entryKey: api.VNID | string,
+): [data: api.RefCacheEntryData | undefined, refCache: api.ReferenceCacheData, error: api.ApiError | undefined] {
+    const { site } = useSiteData();
+    const refCache = useRefCache();
+    const [draft, unsavedEdits] = useDraft();
+    const user = useUser();
+    const userKey = user.username ?? "";
+
+    // The logic here is very simple: if it's in 'refCache', return that data; otherwise, fetch a new refCache
+    // from the server and return that.
+    // However, actually implementing this logic is complicated because we cannot conditionally call React hooks.
+    // So we have to move the 'if (useExistingRefCache) {...} else {...}' inside each of these hook calls below:
+
+    const useExistingRefCache = refCache.entries[entryKey] !== undefined;
+
+    const key = useExistingRefCache ? "" : `entry:${site.shortId}:${entryKey}:${userKey}:${draft?.id ?? "no-draft"}`;
+    const { data, error } = useSWR(key, async () => {
+        if (key === "") {
+            return undefined; // This data is in the reference cache; no need to load anything from the server.
+        }
+        if (!site.shortId) {
+            return undefined; // We need to wait for the siteId before we can load the entry
+        }
+        return await client.evaluateLookupExpression(`entry("${entryKey}")`, { siteId: site.shortId });
+    }, {
+        // refreshInterval: 10 * 60_000,
+    });
+
+    const returnedRefCache = React.useMemo(() => {
+        if (useExistingRefCache) {
+            return refCache;  // Edits from the draft are already applied to this reference cache
+        } else {
+            const baseRefCache = data?.referenceCache ?? {entries: {}, entryTypes: {}, lookups: [], properties: {}};
+            let newRefCache = baseRefCache;
+            if (draft?.edits || unsavedEdits.length > 0) {
+                newRefCache = api.applyEditsToReferenceCache(baseRefCache, [...(draft?.edits ?? []), ...unsavedEdits]);
+            }
+            return newRefCache;
+        }
+    },[useExistingRefCache, refCache, data?.referenceCache, draft?.edits, unsavedEdits]);
+
+    if (useExistingRefCache) {
+        return [refCache.entries[entryKey], returnedRefCache, undefined];
+    } else {
+        return [
+            data?.referenceCache?.entries[entryKey],
+            // The reference cache with details that may be required to display this enter correctly, such as
+            // information about its EntryType, and values of any lookups in the description.
+            returnedRefCache,
+            error
+        ];
+    }
 }

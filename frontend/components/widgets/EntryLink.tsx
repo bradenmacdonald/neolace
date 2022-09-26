@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { api, useSiteData } from "lib/api";
+import { api, useRefCache, useSiteData } from "lib/api";
 import { DEVELOPMENT_MODE } from "lib/config";
 import { Tooltip } from "components/widgets/Tooltip";
 import { MDTContext } from "components/markdown-mdt/mdt";
@@ -18,8 +18,8 @@ interface Props {
  */
 export const EntryLink: React.FunctionComponent<Props> = (props) => {
     const { site } = useSiteData();
+    const refCache = useRefCache();
 
-    const refCache = props.mdtContext.refCache;
     const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) =
         api.isVNID(props.entryKey) ? refCache.entries[props.entryKey]
         : Object.values(refCache.entries).find(e => e.friendlyId === props.entryKey);

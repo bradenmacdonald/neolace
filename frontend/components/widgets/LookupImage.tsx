@@ -7,7 +7,7 @@ import Image from "next/future/image";
 import Link from "next/link";
 import { ImageDisplayFormat } from "neolace-api";
 
-import { api } from "lib/api";
+import { api, useRefCache } from "lib/api";
 import { imgThumbnailLoader } from "lib/config";
 import { InlineMDT, MDTContext } from "../markdown-mdt/mdt";
 import { RatioBox } from "./ratio-box";
@@ -18,13 +18,13 @@ const OptionalLink = (
     props: {
         children: React.ReactNode;
         href?: api.EntryValue | api.StringValue;
-        mdtContext: MDTContext;
         className: string;
     },
 ) => {
+    const refCache = useRefCache();
     if (props.href) {
         if (props.href.type === "Entry") {
-            const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) = props.mdtContext.refCache.entries[props.href.id];
+            const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) = refCache.entries[props.href.id];
             const url = "/entry/" + (entry?.friendlyId || props.href.id);
             return (
                 <Link href={url} className={props.className}>
@@ -52,10 +52,11 @@ interface ImageProps {
  * Render a Lookup Value that is an image
  */
 export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
+    const refCache = useRefCache();
     const { value } = props;
     const ratio = value.width && value.height ? value.width / value.height : undefined;
 
-    const imgEntryData = props.mdtContext.refCache.entries[value.entryId];
+    const imgEntryData = refCache.entries[value.entryId];
     const caption = (
         value.caption?.value === "" ? null :  // If caption is an empty string, don't display anything
         value.caption ? <LookupValue value={value.caption} mdtContext={props.mdtContext} /> 
@@ -64,7 +65,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
 
     if (value.format === api.ImageDisplayFormat.PlainLogo) {
         return <div className="w-full mt-2 mb-1" style={{maxWidth: `${value.maxWidth ?? 400}px`}}>
-            <OptionalLink href={value.link} mdtContext={props.mdtContext} className="">
+            <OptionalLink href={value.link} className="">
                 <Image
                     src={value.imageUrl}
                     loader={imgThumbnailLoader}
@@ -79,7 +80,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
             <div className="md:clear-right"></div> {/* TODO: make this way of clearing text+images optional?, just have md:clear-right applied to the div below */}
             <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 border-gray-400 md:ml-4 mb-2">
                 <RatioBox ratio={ratio}>
-                    <OptionalLink href={value.link} mdtContext={props.mdtContext} className="relative left-0 top-0 w-full h-full block">
+                    <OptionalLink href={value.link} className="relative left-0 top-0 w-full h-full block">
                         {/* A blurry representation of the image, shown while it is loading. */}
                         <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" />
                         {/* the image: */}
@@ -102,7 +103,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
         </>
     } else if (value.format === ImageDisplayFormat.Normal) {
         // Thumbnail:
-        return <OptionalLink href={value.link} mdtContext={props.mdtContext} className="block max-w-full relative">
+        return <OptionalLink href={value.link} className="block max-w-full relative">
             {/* A blurry representation of the image, shown while it is loading. */}
             <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" className="opacity-30" />
             {/* the image: */}
@@ -118,7 +119,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
         </OptionalLink>;
     } else {
         // Thumbnail:
-        return <OptionalLink href={value.link} mdtContext={props.mdtContext} className="inline-block h-20 w-20 border-2 border-gray-500 rounded-md relative">
+        return <OptionalLink href={value.link} className="inline-block h-20 w-20 border-2 border-gray-500 rounded-md relative">
             {/* A blurry representation of the image, shown while it is loading. */}
             <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" className="opacity-30" />
             {/* the image: */}
@@ -133,4 +134,3 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
         </OptionalLink>;
     }
 };
- 

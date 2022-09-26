@@ -3,7 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import Link from "next/link";
 import { ParsedUrlQuery } from "querystring";
-import { api, client, getSiteData } from "lib/api";
+import { api, client, getSiteData, RefCacheContext } from "lib/api";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { LookupExpressionInput } from "components/form-input";
@@ -46,53 +46,54 @@ const EvaluateLookupPage: NextPage<PageProps> = function (props) {
 
     const mdtContext = React.useMemo(() => new MDTContext({
         entryId: props.entry.id,
-        refCache: props.entry.referenceCache,
-    }), [props.entry.id, props.entry.referenceCache]);
+    }), [props.entry.id]);
 
     return (
         <SiteDataProvider sitePreloaded={props.sitePreloaded}>
-            <SitePage
-                leftNavTopSlot={[
-                    {id: "entryName", priority: 20, content: <>
-                        <br/>
-                        <strong>{props.entry.name}</strong>
-                    </>},
-                    {id: "entryId", priority: 21, content: <>
-                        <code id="entry-id" data-entry-id={props.entry.id} className="font-mono font-light hidden">{props.entry.friendlyId}</code>
-                    </>},
-                    {id: "tableOfContents", priority: 50, content: <>
-                        <ul id="left-toc-headings">
-                            <li><Link  href={`/entry/${props.entry.friendlyId}#summary`}><FormattedMessage id="RrCui3" defaultMessage="Summary"/></Link></li>
-                            <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><FormattedMessage id="aI80kg" defaultMessage="Properties"/></Link></li>
-                            {
-                                props.entry.features?.Article?.headings.map(heading =>
-                                    <li key={heading.id}><Link href={`/entry/${props.entry.friendlyId}#h-${heading.id}`}>{heading.title}</Link></li>
-                                )
-                            }
-                        </ul>
-                    </>},
-                ]}
-                title={props.entry.name}
-            >
-                <h1>{props.entry.name}</h1>
+            <RefCacheContext.Provider value={{refCache: props.entry.referenceCache}}>
+                <SitePage
+                    leftNavTopSlot={[
+                        {id: "entryName", priority: 20, content: <>
+                            <br/>
+                            <strong>{props.entry.name}</strong>
+                        </>},
+                        {id: "entryId", priority: 21, content: <>
+                            <code id="entry-id" data-entry-id={props.entry.id} className="font-mono font-light hidden">{props.entry.friendlyId}</code>
+                        </>},
+                        {id: "tableOfContents", priority: 50, content: <>
+                            <ul id="left-toc-headings">
+                                <li><Link  href={`/entry/${props.entry.friendlyId}#summary`}><FormattedMessage id="RrCui3" defaultMessage="Summary"/></Link></li>
+                                <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><FormattedMessage id="aI80kg" defaultMessage="Properties"/></Link></li>
+                                {
+                                    props.entry.features?.Article?.headings.map(heading =>
+                                        <li key={heading.id}><Link href={`/entry/${props.entry.friendlyId}#h-${heading.id}`}>{heading.title}</Link></li>
+                                    )
+                                }
+                            </ul>
+                        </>},
+                    ]}
+                    title={props.entry.name}
+                >
+                    <h1>{props.entry.name}</h1>
 
-                <LookupExpressionInput
-                    value={editingLookupExpression}
-                    onChange={handleLookupExpressionChange}
-                    onFinishedEdits={handleFinishedChangingLookupExpression}
-                    placeholder={defineMessage({id: 'Uowwem', defaultMessage: "Enter a lookup expression..."})}
-                />
+                    <LookupExpressionInput
+                        value={editingLookupExpression}
+                        onChange={handleLookupExpressionChange}
+                        onFinishedEdits={handleFinishedChangingLookupExpression}
+                        placeholder={defineMessage({id: 'Uowwem', defaultMessage: "Enter a lookup expression..."})}
+                    />
 
-                <p><FormattedMessage id="vBiQpy" defaultMessage="Result:" /></p>
-                <div className={activeLookupExpression !== editingLookupExpression ? `opacity-50` : ``}>
-                    {
-                        activeLookupExpression ?
-                            <LookupEvaluatorWithPagination expr={activeLookupExpression} mdtContext={mdtContext} />
-                        :
-                            <FormattedMessage id="++0Uwo" defaultMessage="Enter a lookup expression above to see the result." />
-                    }
-                </div>
-            </SitePage>
+                    <p><FormattedMessage id="vBiQpy" defaultMessage="Result:" /></p>
+                    <div className={activeLookupExpression !== editingLookupExpression ? `opacity-50` : ``}>
+                        {
+                            activeLookupExpression ?
+                                <LookupEvaluatorWithPagination expr={activeLookupExpression} mdtContext={mdtContext} />
+                            :
+                                <FormattedMessage id="++0Uwo" defaultMessage="Enter a lookup expression above to see the result." />
+                        }
+                    </div>
+                </SitePage>
+            </RefCacheContext.Provider>
         </SiteDataProvider>
     );
 }

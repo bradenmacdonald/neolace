@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "components/widgets/Icon";
 import { LookupExpressionInput } from "components/form-input";
-import { api, useDraft, useLookupExpression, useSchema } from "lib/api";
+import { api, useEntrySummary, useSchema } from "lib/api";
 import { type MDT } from "neolace-api";
 import { Transforms } from "slate";
 import { ReactEditor, RenderElementProps, useFocused, useSelected, useSlate } from "slate-react";
@@ -85,14 +85,7 @@ export const EntryVoid = (
     },
 ) => {
     const [selected, exclusivelySelected] = useVoidSelectionStatus();
-    // TBD: we need a hook to get the current draft OR current entry + refCache
-    const lookupData = useLookupExpression(`entry("${entryId}")`);
-    const [draft, unsavedEdits] = useDraft();
-    let referenceCache = lookupData.result?.referenceCache;
-    if (referenceCache && draft) {
-        referenceCache = api.applyEditsToReferenceCache(referenceCache, [...draft.edits, ...unsavedEdits]);
-    }
-    const entryData = referenceCache?.entries[entryId];
+    const [entryData, referenceCache, _error] = useEntrySummary(entryId);
     const entryName = entryData?.name ?? `Entry ${entryId}`;
     const entryTypeData = referenceCache?.entryTypes[entryData?.entryType.id ?? ""];
     const colors = api.entryTypeColors[entryTypeData?.color ?? api.EntryTypeColor.Default];

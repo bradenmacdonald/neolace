@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { FormattedListParts, FormattedMessage } from "react-intl";
 
-import { api, useSiteData } from "lib/api";
+import { api, useRefCache } from "lib/api";
 import { Tooltip } from "components/widgets/Tooltip";
 import { InlineMDT, MDTContext } from "../markdown-mdt/mdt";
 import { LookupImage } from "./LookupImage";
@@ -39,7 +39,7 @@ interface LookupValueProps {
  * Render a Lookup Value (computed/query value, such as all the "properties" shown on an entry's page)
  */
 export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) => {
-    const { site } = useSiteData();
+    const refCache = useRefCache();
 
     // When the entry loads, the data gets refreshed from the server but is often identical. This will cause a useless
     // update of the whole React tree. We can avoid this by using JSON.stringify to check if the value has actually
@@ -110,7 +110,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 />;
                 if (value.source) {
                     if (value.source.entryId) {
-                        const entryKey = props.mdtContext.refCache.entries[value.source.entryId]?.friendlyId ?? props.mdtContext.entryId;
+                        const entryKey = refCache.entries[value.source.entryId]?.friendlyId ?? props.mdtContext.entryId;
                         moreLink = <Link key="more" href={`/entry/${entryKey}/lookup?e=${encodeURIComponent(value.source.expr)}`}>{moreLink}</Link>;
                     } else {
                         moreLink = <Link key="more" href={`/lookup?e=${encodeURIComponent(value.source.expr)}`}>{moreLink}</Link>;
@@ -138,8 +138,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             return <EntryValue entryId={value.id} mdtContext={props.mdtContext} />;
         }
         case "EntryType": {
-            const entryTypeName = props.mdtContext.refCache.entryTypes[value.id]?.name ?? value.id;
-            const entryTypeColor = props.mdtContext.refCache.entryTypes[value.id]?.color ?? api.EntryTypeColor.Default;
+            const entryTypeName = refCache.entryTypes[value.id]?.name ?? value.id;
+            const entryTypeColor = refCache.entryTypes[value.id]?.color ?? api.EntryTypeColor.Default;
             return <span className="text-sm font-medium font-sans">
                 <span className={`rounded-l-md py-[3px] px-2 bg-gray-200`} style={{color: api.entryTypeColors[entryTypeColor][2]}}>
                     <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
@@ -161,7 +161,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             );
         }
         case "Property": {
-            const prop = props.mdtContext.refCache.properties[value.id];
+            const prop = refCache.properties[value.id];
             if (prop === undefined) {
                 // return <Link href={`/prop/${value.id}`}><a className="text-red-700 font-bold">{value.id}</a></Link>
                 return <span className="text-red-700 font-bold">{value.id}</span>;
