@@ -45,7 +45,7 @@ const EvaluateLookupPage: NextPage<PageProps> = function (props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router.isReady, router.asPath]);
 
-    const mdtContext = React.useMemo(() => new MDTContext({ entryId: undefined, refCache: undefined }), []);
+    const mdtContext = React.useMemo(() => new MDTContext({ entryId: undefined }), []);
 
     const title = intl.formatMessage({ defaultMessage: "Lookup", id: "VzW9jr" });
 

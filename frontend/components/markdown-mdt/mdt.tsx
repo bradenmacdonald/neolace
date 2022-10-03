@@ -7,12 +7,12 @@ import { LookupValue } from "components/widgets/LookupValue";
 import { FormattedMessage } from "react-intl";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
+import { LookupEvaluator } from "components/widgets/LookupEvaluator";
 
 const footnotes = Symbol("footnotes");
 
 interface MDTContextArgs {
     entryId?: VNID | undefined;
-    refCache?: api.ReferenceCacheData;
     headingShift?: number;
     [footnotes]?: MDT.RootNode["footnotes"];
     disableInteractiveFeatures?: boolean;
@@ -29,8 +29,6 @@ interface MDTContextArgs {
 export class MDTContext {
     /** The ID of the current entry, if relevant. */
     readonly entryId: VNID | undefined;
-    /** Reference cache: has details of any entries, properties, entry types, or lookup expressions that are needed. */
-    readonly refCache: api.ReferenceCacheData;
     /** Decrease the size of the headings by this number (1 means <h1> becomes <h2>, etc.) */
     readonly headingShift: number;
     /**
@@ -48,8 +46,6 @@ export class MDTContext {
 
     constructor(args: MDTContextArgs) {
         this.entryId = args.entryId;
-        // If no reference cache is available, create an empty one for consistency.
-        this.refCache = args.refCache ?? { entries: {}, entryTypes: {}, properties: {}, lookups: [] };
         this.headingShift = args.headingShift ?? 0;
         this[footnotes] = args[footnotes];
         this.disableInteractiveFeatures = args.disableInteractiveFeatures ?? false;
@@ -60,7 +56,6 @@ export class MDTContext {
         const entryId = "entryId" in args ? args.entryId : this.entryId;
         return new MDTContext({
             entryId,
-            refCache: args.refCache ?? this.refCache,
             headingShift: this.headingShift + (args.headingShift ?? 0),
             [footnotes]: args[footnotes] ?? (entryId === this.entryId ? this[footnotes] : undefined),
             disableInteractiveFeatures: args.disableInteractiveFeatures ?? this.disableInteractiveFeatures,
@@ -171,16 +166,7 @@ function inlineNodeToComponent(node: MDT.InlineNode | MDT.AnyInlineNode, context
             return <code key={key}>{node.children[0].text}</code>;
         case "lookup_inline": {
             const lookupExpression = node.children[0].text;
-            const lookupData = context.refCache.lookups.find((x) =>
-                x.entryContext === context.entryId && x.lookupExpression === lookupExpression
-            );
-            if (lookupData) {
-                return <LookupValue key={key} mdtContext={context} value={lookupData.value} />;
-            }
-            return <ErrorMessage key={key}>
-                Missing lookup value for:{" "}
-                <code className="!text-inherit">{"{"}{lookupExpression}{"}"}</code>
-            </ErrorMessage>;
+            return <LookupEvaluator key={key} expr={lookupExpression} mdtContext={context} expectAllValuesInRefCache={true} />
         }
         case "strong":
             return <strong key={key}>{node.children.map((child) => inlineNodeToComponent(child, context))}</strong>;
@@ -304,18 +290,7 @@ function nodeToComponent(node: MDT.Node, context: MDTContext): React.ReactElemen
             );
         case "lookup_block": {
             const lookupExpression = node.children[0].text;
-            const lookupData = context.refCache.lookups.find((x) =>
-                x.entryContext === context.entryId && x.lookupExpression === lookupExpression
-            );
-            if (lookupData) {
-                return <LookupValue key={key} mdtContext={context} value={lookupData.value} />;
-            }
-            return (
-                <ErrorMessage key={key}>
-                    Missing lookup value for:{" "}
-                    <code className="!text-inherit">{"{"}{lookupExpression}{"}"}</code>
-                </ErrorMessage>
-            );
+            return <LookupEvaluator key={key} expr={lookupExpression} mdtContext={context} expectAllValuesInRefCache={true} />
         }
         case "table":
         case "thead":

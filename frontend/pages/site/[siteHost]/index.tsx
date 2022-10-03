@@ -2,7 +2,7 @@ import React from "react";
 import { FormattedMessage } from "react-intl";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
-import { api, client, getSiteData, SiteData } from "lib/api";
+import { api, client, getSiteData, RefCacheContext, SiteData } from "lib/api";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { MDTContext, RenderMDT } from "components/markdown-mdt/mdt";
@@ -20,34 +20,35 @@ interface PageUrlQuery extends ParsedUrlQuery {
 const HomePage: NextPage<PageProps> = function (props) {
 
     
-    const mdtContext = React.useMemo(() => new MDTContext({
-        entryId: undefined,
-        refCache: props.refCache,
-    }), [props.refCache]);
+    const mdtContext = React.useMemo(() => new MDTContext({ entryId: undefined, }), []);
 
-    return (<SiteDataProvider sitePreloaded={props.site}>
-        <SitePage title={props.site.name}>
-            {/* Below, 100vh-11.6rem pushes the footer down to the bottom of the screen but prevents scrolling if there's only a single line in the footer */}
-            <div className="max-w-6xl mx-auto neo-typography md:min-h-[calc(100vh-11.6rem)]">
-                {props.homepageMD ?
-                    <RenderMDT mdt={props.homepageMD} context={mdtContext} />
-                :
-                    <>
-                        <h1>
-                            <FormattedMessage id="vfakHv" defaultMessage="Welcome to {siteName}" values={{siteName: props.site.name}}/>
-                        </h1>
-                        <p>
-                            <FormattedMessage
-                                id="Gb43IT"
-                                defaultMessage="This site is powered by Neolace. If this is your site, you should customize this home page to say what you'd like."
-                                description="A default homepage description, if no home page text has been set."
-                            />
-                        </p>
-                    </>
-                }
-            </div>
-        </SitePage>
-    </SiteDataProvider>);
+    return (
+        <SiteDataProvider sitePreloaded={props.site}>
+            <RefCacheContext.Provider value={{refCache: props.refCache}}>
+                <SitePage title={props.site.name}>
+                    {/* Below, 100vh-11.6rem pushes the footer down to the bottom of the screen but prevents scrolling if there's only a single line in the footer */}
+                    <div className="max-w-6xl mx-auto neo-typography md:min-h-[calc(100vh-11.6rem)]">
+                        {props.homepageMD ?
+                            <RenderMDT mdt={props.homepageMD} context={mdtContext} />
+                        :
+                            <>
+                                <h1>
+                                    <FormattedMessage id="vfakHv" defaultMessage="Welcome to {siteName}" values={{siteName: props.site.name}}/>
+                                </h1>
+                                <p>
+                                    <FormattedMessage
+                                        id="Gb43IT"
+                                        defaultMessage="This site is powered by Neolace. If this is your site, you should customize this home page to say what you'd like."
+                                        description="A default homepage description, if no home page text has been set."
+                                    />
+                                </p>
+                            </>
+                        }
+                    </div>
+                </SitePage>
+            </RefCacheContext.Provider>
+        </SiteDataProvider>
+    );
 }
 
 export default HomePage;

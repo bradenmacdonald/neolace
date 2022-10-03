@@ -2,7 +2,7 @@
  * A graph that is displayed as the result of the .graph() lookup function.
  */
 import React from "react";
-import { api } from "lib/api";
+import { api, useRefCache } from "lib/api";
 import { MDTContext } from "../markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "lib/hooks/useResizeObserver";
@@ -117,19 +117,20 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     const [activeTool, setActiveTool, activeToolRef] = useStateRef(Tool.Select);
     /** Is the graph currently expanded (displayed in a large modal?) */
     const [expanded, setExpanded, expandedRef] = useStateRef(false);
+    const refCache = useRefCache();
 
     // The data (nodes and relationships) that we want to display as a graph.
     const originalData = React.useMemo(() => {
-        return convertValueToData(props.value, props.mdtContext.refCache);
-    }, [props.value, props.mdtContext.refCache]);
+        return convertValueToData(props.value, refCache);
+    }, [props.value, refCache]);
     const [transformList, setTransforms] = React.useState<Transform[]>(emptyTransforms);
 
     const currentData = React.useMemo(() => {
         debugLog(`Computing currentData from originalData + ${transformList.length} transform(s).`);
         let transformedData = applyTransforms(originalData, transformList);
-        transformedData = colorGraph(transformedData, transformList, props.mdtContext.refCache);
+        transformedData = colorGraph(transformedData, transformList, refCache);
         return transformedData;
-    }, [originalData, transformList, props.mdtContext.refCache]);
+    }, [originalData, transformList, refCache]);
 
     // In order to preserve our G6 graph when we move it to a modal (when expanding the view), the <div> that contains
     // it must not be destroyed and re-created. React will normally try to destroy and re-create it, not realizing that

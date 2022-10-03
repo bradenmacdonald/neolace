@@ -1,5 +1,4 @@
-import { MDTContext } from "components/markdown-mdt/mdt";
-import { api } from "lib/api";
+import { api, useRefCache } from "lib/api";
 import { Icon } from "./Icon";
 
 type EntityValue = api.EntryValue | api.PropertyValue | api.EntryTypeValue;
@@ -9,13 +8,13 @@ type EntityValue = api.EntryValue | api.PropertyValue | api.EntryTypeValue;
  */
 export const EntitySymbol: React.FunctionComponent<{
     value: EntityValue,
-    mdtContext: MDTContext,
     selected?: boolean,
     className?: string,
     roundedLeftOnly?: boolean,
     defaultBg?: string,
-}> = ({ value, mdtContext, selected = false, className = "", roundedLeftOnly = false, defaultBg = "bg-gray-200" }) => {
+}> = ({ value, selected = false, className = "", roundedLeftOnly = false, defaultBg = "bg-gray-200" }) => {
 
+    const refCache = useRefCache();
     const rounded = roundedLeftOnly ? "rounded-l-md" : "rounded-md";
 
     if (value.type === "Property") {
@@ -25,14 +24,14 @@ export const EntitySymbol: React.FunctionComponent<{
             </span>
         );
     } else if (value.type === "EntryType") {
-        const entryTypeColor = mdtContext.refCache.entryTypes[value.id]?.color ?? api.EntryTypeColor.Default;
+        const entryTypeColor = refCache.entryTypes[value.id]?.color ?? api.EntryTypeColor.Default;
         return (
             <span className={`${rounded} py-[3px] px-2 ${defaultBg} ${selected ? '!bg-sky-300' : ''} ${className}`} style={{color: api.entryTypeColors[entryTypeColor][2]}}>
                 <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
             </span>
         );
     } else if (value.type === "Entry") {
-        const entryTypeData = mdtContext.refCache.entryTypes[mdtContext.refCache.entries[value.id]?.entryType.id];
+        const entryTypeData = refCache.entryTypes[refCache.entries[value.id]?.entryType.id];
         const entryTypeColor = api.entryTypeColors[entryTypeData?.color] ?? api.EntryTypeColor.Default;
         return (
             <span

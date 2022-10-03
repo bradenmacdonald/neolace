@@ -22,7 +22,7 @@ import {
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { LookupValue } from "components/widgets/LookupValue";
-import { api } from "lib/api";
+import { api, RefCacheContext } from "lib/api";
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { DEVELOPMENT_MODE } from "lib/config";
 
@@ -47,31 +47,41 @@ const UiDemoPage: NextPage = function (props) {
         return <FourOhFour />;
     }
 
-    const demoMDTContext = new MDTContext({
-        refCache: {
-            entries: {
-                "_12345": {
-                    id: api.VNID("_12345"),
-                    description: "Description of the entry goes here.",
-                    entryType: { id: api.VNID("_demoType") },
-                    friendlyId: "demo-entry",
-                    name: "Demo Entry",
-                },
+    const demoMDTContext = new MDTContext({});
+    const demoRefCache: api.ReferenceCacheData = {
+        entries: {
+            "_12345": {
+                id: api.VNID("_12345"),
+                description: "Description of the entry goes here.",
+                entryType: { id: api.VNID("_demoType") },
+                friendlyId: "demo-entry",
+                name: "Demo Entry",
             },
-            entryTypes: {
-                "_demoType": {
-                    id: api.VNID("_demoType"),
-                    name: "Type goes here",
-                    abbreviation: "D",
-                    color: api.EntryTypeColor.Cyan,
-                },
-            },
-            properties: {},
-            lookups: [],
         },
-    });
+        entryTypes: {
+            "_demoType": {
+                id: api.VNID("_demoType"),
+                name: "Type goes here",
+                abbreviation: "D",
+                color: api.EntryTypeColor.Cyan,
+            },
+        },
+        properties: {
+            "_demoProp": {
+                name: "Demoness",
+                description: "To what extent this is a demo.",
+                id: api.VNID("_demoProp"),
+                type: api.PropertyType.Value,
+                standardURL: "",
+                rank: 1,
+                displayAs: "",
+            }
+        },
+        lookups: [],
+    };
 
     return (
+        <RefCacheContext.Provider value={{refCache: demoRefCache}}>
         <SitePage title="UI Demos">
             <h1 className="text-3xl font-semibold">UI Demos</h1>
 
@@ -262,6 +272,7 @@ const UiDemoPage: NextPage = function (props) {
                 </tbody>
             </table>
         </SitePage>
+        </RefCacheContext.Provider>
     );
 };
 

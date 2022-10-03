@@ -1,5 +1,5 @@
 import React from "react";
-import { api, useLookupExpression } from "lib/api";
+import { api, RefCacheContext, useLookupExpression } from "lib/api";
 import { FormattedMessage } from "react-intl";
 
 import { MDTContext } from "components/markdown-mdt/mdt";
@@ -7,6 +7,7 @@ import { LookupValue } from "./LookupValue";
 import { Spinner } from "./Spinner";
 import { ErrorMessage } from "./ErrorMessage";
 import { Button } from "./Button";
+import { DEVELOPMENT_MODE } from "lib/config";
 
 interface Props {
     expr: string;
@@ -14,15 +15,20 @@ interface Props {
     hideShowMoreLink?: boolean;
     children?: never;
     pageSize?: number;
+    /**
+     * Do we expect all values to be in the reference cache already?
+     * e.g. when viewing an entry, all the lookup values related to the entry should already be in the reference cache.
+     * So if they're not, we need to show a warning (at least on development mode). (Because hitting the server
+     * separately for each value is going to really decrease performance.)
+     */
+    expectAllValuesInRefCache?: boolean;
 }
 
 /**
  * Evaluate a Lookup Expression and display the resulting value
  */
 export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
-    const {result, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId, pageSize: props.pageSize});
-
-    const mdtContext = React.useMemo(() => props.mdtContext.childContextWith({refCache: result?.referenceCache}), [result?.referenceCache, props.mdtContext])
+    const {resultValue, newReferenceCache, foundInCache, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId, pageSize: props.pageSize});
 
     if (error) {
         if (error instanceof api.InvalidRequest && error.reason === api.InvalidRequestReason.LookupExpressionParseError) {
@@ -48,10 +54,15 @@ export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
                 </ErrorMessage>
             );
         }
-    } else if (result === undefined) {
+    } else if (resultValue === undefined) {
         return <Spinner />;
     }
-    return <LookupValue value={result.resultValue} mdtContext={mdtContext} hideShowMoreLink={props.hideShowMoreLink} />;
+    return (
+        <RefCacheContext.Provider value={{refCache: newReferenceCache}}>
+            <LookupValue value={resultValue} mdtContext={props.mdtContext} hideShowMoreLink={props.hideShowMoreLink} />
+            {(DEVELOPMENT_MODE && props.expectAllValuesInRefCache && !foundInCache ? <ErrorMessage>Warning: not found in refCache.</ErrorMessage> : "")}
+        </RefCacheContext.Provider>
+    );
 };
 
 /**
@@ -65,12 +76,12 @@ export const LookupEvaluatorWithPagination: React.FunctionComponent<Props> = (pr
     }, [props.expr, setNumPages]);
     // Evaluate the expression now to get basic information about it, like whether or not it's a paged value.
     // SWR will ensure that the inner <LookupEvaluator> doesn't send additional API requests for the same lookup expression.
-    const { result, error } = useLookupExpression(props.expr, {
+    const { resultValue } = useLookupExpression(props.expr, {
         entryId: props.mdtContext.entryId,
         pageSize: props.pageSize,
     });
 
-    const pageData = result?.resultValue.type === "Page" ? result.resultValue : undefined;
+    const pageData = resultValue?.type === "Page" ? resultValue : undefined;
 
     if (pageData) {
         const numValuesPerPage = pageData.pageSize;
