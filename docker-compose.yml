@@ -156,7 +156,7 @@ services:
 
   createbuckets:
     # Make sure buckets exist and allow public read ("download")
-    image: minio/mc
+    image: minio/mc:RELEASE.2022-09-16T09-16-47Z  # Note: when upgrading this, will need to change 'mc policy' to 'mc anonymous'
     depends_on:
       - objstore
     entrypoint: >
