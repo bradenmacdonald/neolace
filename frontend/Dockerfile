@@ -10,7 +10,7 @@ RUN deno run --allow-read --allow-run --allow-write --allow-env --allow-net _com
 ################################################################
 # Stage 2: Intall our Next.js frontend
 ################################################################
-FROM node:16-alpine
+FROM node:18-alpine
 WORKDIR /neolace/frontend
 ENV NODE_ENV production
 ENV PATH /neolace/frontend/node_modules/.bin:$PATH

@@ -12,7 +12,7 @@ export const [startServer, stopServer] = defineStoppableResource(async () => {
     const plugins = await getPlugins();
     const pluginResources = plugins.map((p) => p.restApiResources ?? []).flat();
 
-    const hostname = "0.0.0.0";
+    const hostname = "[::]"; // Bind to all addresses on IPv4 and IPv6
     const port = config.port;
     const server = new Drash.Server({
         resources: [...builtInRestApiResources, ...pluginResources],
