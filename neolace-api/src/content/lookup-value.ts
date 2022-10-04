@@ -104,6 +104,12 @@ export interface IntegerValue extends LookupValue {
     value: string;
 }
 
+export interface QuantityValue extends LookupValue {
+    type: "Quantity";
+    magnitude: number;
+    units?: string;
+}
+
 export interface DateValue extends LookupValue {
     type: "Date";
     /** ISO 8601 date string (no time information) */
@@ -140,6 +146,7 @@ export type AnyLookupValue = (
     | ImageValue
     | BooleanValue
     | IntegerValue
+    | QuantityValue
     | DateValue
     | StringValue
     | InlineMarkdownString
