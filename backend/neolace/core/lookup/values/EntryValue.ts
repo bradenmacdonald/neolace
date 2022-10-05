@@ -7,6 +7,7 @@ import { ClassOf, ConcreteValue, IHasLiteralExpression, LookupValue } from "./ba
 import { LazyEntrySetValue } from "./LazyEntrySetValue.ts";
 import { StringValue } from "./StringValue.ts";
 import { InlineMarkdownStringValue } from "./InlineMarkdownStringValue.ts";
+import { LookupEvaluationError } from "../errors.ts";
 
 /**
  * Represents an Entry
@@ -45,8 +46,13 @@ export class EntryValue extends ConcreteValue implements IHasLiteralExpression {
         return { type: "Entry" as const, id: this.id };
     }
 
-    public override getSortString(): string {
-        return this.id; // best we can do? Not very useful but at least it's stable.
+    public override compareTo(otherValue: LookupValue): number {
+        if (otherValue instanceof EntryValue) {
+            return otherValue.id === this.id ? 0 : -1;
+        }
+        throw new LookupEvaluationError(
+            `Comparing ${this.constructor.name} and ${otherValue.constructor.name} values is not supported.`,
+        );
     }
 
     /** Get an attribute of this value, if any, e.g. value.name or value.length */

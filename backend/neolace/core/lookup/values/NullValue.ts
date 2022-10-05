@@ -25,7 +25,10 @@ export class NullValue extends ConcreteValue implements IHasLiteralExpression {
         return undefined;
     }
 
-    public override getSortString(): string {
-        return ""; // null values come first
+    public override compareTo(otherValue: LookupValue): number {
+        if (otherValue instanceof NullValue) {
+            return 0; // Should we make null not equal to null?
+        }
+        return -1;
     }
 }

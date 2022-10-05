@@ -60,7 +60,24 @@ export class DateValue extends ConcreteValue {
         return undefined;
     }
 
-    public override getSortString(): string {
-        return this.asIsoString();
+    public override compareTo(otherValue: LookupValue) {
+        if (otherValue instanceof DateValue) {
+            const yearDiff = this.year - otherValue.year;
+            if (yearDiff > 0) return 1;
+            else if (yearDiff < 0) return -1;
+            else {
+                const monthDiff = this.month - otherValue.month;
+                if (monthDiff > 0) return 1;
+                else if (monthDiff < 0) return -1;
+                else {
+                    const dayDiff = this.day - otherValue.day;
+                    if (dayDiff > 0) return 1;
+                    else if (dayDiff < 0) return -1;
+                    else return 0;
+                }
+            }
+        } else {
+            return -1; // Not equal
+        }
     }
 }

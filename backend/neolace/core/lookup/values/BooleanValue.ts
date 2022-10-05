@@ -1,6 +1,5 @@
 import type * as api from "neolace/deps/neolace-api.ts";
-import { IntegerValue } from "../values.ts";
-import { ConcreteValue } from "./base.ts";
+import { ConcreteValue, LookupValue } from "./base.ts";
 
 /**
  * A value that respresents a boolean
@@ -25,8 +24,10 @@ export class BooleanValue extends ConcreteValue {
         return { type: "Boolean" as const, value: this.value };
     }
 
-    public override getSortString(): string {
-        // Booleans should sort like integers:
-        return new IntegerValue(this.value ? 1 : 0).getSortString();
+    public override compareTo(otherValue: LookupValue): number {
+        if (otherValue instanceof BooleanValue) {
+            return otherValue.value === this.value ? 0 : -1;
+        }
+        return -1;
     }
 }

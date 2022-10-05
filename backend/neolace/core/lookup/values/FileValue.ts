@@ -29,10 +29,6 @@ export class FileValue extends ConcreteValue {
         };
     }
 
-    public override getSortString(): string {
-        return this.filename;
-    }
-
     /** Get an attribute of this value, if any, e.g. value.name or value.length */
     public override async getAttribute(attrName: string): Promise<LookupValue | undefined> {
         if (attrName === "filename") return new StringValue(this.filename);

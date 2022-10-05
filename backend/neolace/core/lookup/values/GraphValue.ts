@@ -34,8 +34,4 @@ export class GraphValue extends ConcreteValue {
             rels: this.rels,
         };
     }
-
-    public override getSortString(): string {
-        return ""; // doesn't really make sense to sort by graph values.
-    }
 }

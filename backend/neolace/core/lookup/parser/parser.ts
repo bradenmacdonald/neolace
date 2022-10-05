@@ -299,17 +299,17 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
     }
 
     quantity(ctx: {
-        FloatLiteral: IToken[],
-        LSquare: CstNode[],
+        FloatLiteral: IToken[];
+        LSquare: CstNode[];
         // The following are all potentially parts of the unit definition, e.g. "kg m/s^2":
-        IntegerLiteral?: IToken[],
-        Caret?: IToken[],
-        FwdSlash?: IToken[],
-        MultiplicationDot?: IToken[],
-        Identifier?: IToken[],
-     }): E.LiteralExpression {
+        IntegerLiteral?: IToken[];
+        Caret?: IToken[];
+        FwdSlash?: IToken[];
+        MultiplicationDot?: IToken[];
+        Identifier?: IToken[];
+    }): E.LiteralExpression {
         const floatValue = Number.parseFloat(ctx.FloatLiteral[0].image);
-        let unitStr: string|undefined;
+        let unitStr: string | undefined;
         if (ctx.LSquare) {
             // If a unit section was included, in square brackets:
             const unitTokens = [

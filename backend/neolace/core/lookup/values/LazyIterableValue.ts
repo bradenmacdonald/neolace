@@ -158,8 +158,4 @@ export class LazyIterableValue extends LazyValue implements IIterableValue, IHas
             sourceExpressionEntryId,
         });
     }
-
-    public override getSortString(): string {
-        return ""; // in future we might want to sort based on the first few values?
-    }
 }
