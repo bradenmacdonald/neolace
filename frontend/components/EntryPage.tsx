@@ -3,7 +3,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import Link from "next/link";
 import Image from "next/future/image";
 import { Blurhash } from "react-blurhash";
-import { api, RefCacheContext, useEntry } from "lib/api";
+import { api, RefCacheContext, useEntry, usePermission } from "lib/api";
 
 import { SitePage } from "components/SitePage";
 import { InlineMDT, MDTContext, RenderMDT } from "components/markdown-mdt/mdt";
@@ -40,6 +40,7 @@ interface Props {
 export const EntryPage: React.FunctionComponent<Props> = function (props) {
     const [entry, entryError] = useEntry(props.entrykey, props.publicEntry);
     const intl = useIntl();
+    const canProposeEdits = usePermission(api.CorePerm.proposeEditToEntry, { entryId: entry?.id });
 
     const mdtContext = React.useMemo(() => new MDTContext({ entryId: entry?.id }), [entry?.id]);
 
@@ -115,13 +116,11 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                         </ul>
                     </>},
                     // Action links, e.g. to edit this entry, view change history, etc.
-                    ...(DEVELOPMENT_MODE ? [
-                        {id: "entryActions", priority: 60, content: <>
+                    {id: "entryActions", priority: 60, content: <>
                         <ul id="entry-actions" className="mt-4">
-                            <li><Link href={`/draft/_/entry/${entry.id}/edit`}><FormattedMessage id="wEQDC6" defaultMessage="Edit"/></Link></li>
+                            {canProposeEdits ? <li><Link href={`/draft/_/entry/${entry.id}/edit`}><FormattedMessage id="wEQDC6" defaultMessage="Edit"/></Link></li> : null }
                         </ul>
                     </>},
-                    ] : [])
                 ]}
             >
                 {/* Hero image, if any */}
