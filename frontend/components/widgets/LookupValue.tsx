@@ -183,6 +183,25 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Integer":
             return <>{value.value}</>
         case "Quantity":
+            if (value.conversions && Object.keys(value.conversions).length > 0) {
+                // Display some helpful conversions
+                return <>
+                    <Tooltip tooltipContent={<>
+                        {value.conversions.primary ? <>
+                            {value.conversions.primary.magnitude.toPrecision(value.magnitude.toString().length + 1)} {value.conversions.primary.units}<br />
+                        </> : null}
+                        {value.conversions.base ? <>
+                            {value.conversions.base.magnitude.toPrecision(value.magnitude.toString().length + 1)} {value.conversions.base.units}<br />
+                        </> : null}
+                        {value.conversions.uscs ? <>
+                            {value.conversions.uscs.magnitude.toPrecision(value.magnitude.toString().length + 1)} {value.conversions.uscs.units}<br />
+                        </> : null}
+                    </>}>
+                        {attribs => <span {...attribs}>{value.magnitude} {value.units}</span>}
+                    </Tooltip>
+                    
+                </>;
+            }
             return <>{value.magnitude} {value.units}</>
         case "String":
             // Temporary special case hack for the TechNotes homepage until we support video:

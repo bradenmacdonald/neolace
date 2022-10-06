@@ -108,6 +108,15 @@ export interface QuantityValue extends LookupValue {
     type: "Quantity";
     magnitude: number;
     units?: string;
+    /** Helpful conversions that users may wish to see */
+    conversions?: {
+        /** The most important/expected conversion to display, if relevant */
+        primary?: { magnitude: number; units: string; };
+        /** Conversion to base SI units, if not already in base units */
+        base?: { magnitude: number; units: string; };
+        /** Conversion to US Customary System */
+        uscs?: { magnitude: number; units: string; };
+    }
 }
 
 export interface DateValue extends LookupValue {
