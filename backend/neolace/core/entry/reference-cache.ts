@@ -228,6 +228,7 @@ export class ReferenceCache {
             }
             case "Boolean":
             case "Integer":
+            case "Quantity":
             case "String":
             case "Date":
             case "Null":
