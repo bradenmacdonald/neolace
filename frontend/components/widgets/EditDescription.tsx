@@ -1,4 +1,4 @@
-import { api, useDraft, usePermissions, useSchema } from "lib/api";
+import { api, useDraft, useLookupExpression, usePermissions, useRefCache, useSchema } from "lib/api";
 import Link from "next/link";
 import React from "react";
 import { FormattedMessage } from "react-intl";
@@ -23,7 +23,8 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
 
     // Our little helper to render a link to an entry, based on lots of details about the user's permissions and whether
     // we're seeing this in an open draft (so further changes can be made) or not.
-    const entryLink = ({name, entryId, friendlyId}: {name: string, entryId: api.VNID, friendlyId?: string}) => {
+    const entryLink = ({name, entryId, friendlyId}: {name?: string|React.ReactElement, entryId: api.VNID, friendlyId?: string}) => {
+        name = name ?? <EntryName entryId={entryId} />
         if (draft) {
             if (draft.status === api.DraftStatus.Open) {
                 // This is an active draft. Show a link to allow the user to make further edits to this entry, but only
@@ -93,16 +94,16 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
             }
             case "AddPropertyValue": {
                 return <FormattedMessage defaultMessage="Added a new property value to {entry} - {property}: {value}" id="fktjWL" values={{
-                    entry: <>{entryLink({name: edit.data.entryId, entryId: edit.data.entryId})}</>,
+                    entry: <>{entryLink({entryId: edit.data.entryId})}</>,
                     property: <strong>{schema?.properties[edit.data.propertyId]?.name}</strong>,
-                    value: <code>{edit.data.valueExpression}</code>,
+                    value: <FriendlyValueDisplay lookupValue={edit.data.valueExpression} />,
                 }} />
             }
             case "UpdatePropertyValue": {
                 return <FormattedMessage defaultMessage="Updated property value on {entry} - fact {propertyFactId}: {value}" id="M6/W4Z" values={{
-                    entry: <>{entryLink({name: edit.data.entryId, entryId: edit.data.entryId})}</>,
+                    entry: <>{entryLink({entryId: edit.data.entryId})}</>,
                     propertyFactId: <>{edit.data.propertyFactId}</>,
-                    value: <code>{edit.data.valueExpression}</code>,
+                    value: <FriendlyValueDisplay lookupValue={edit.data.valueExpression} />,
                 }} />
             }
             default: {
@@ -118,4 +119,35 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
             <pre className="whitespace-pre-wrap">{JSON.stringify(edit.data, undefined, 4)}</pre>
         </HoverClickNote>
     </>;
+};
+
+export const FriendlyValueDisplay: React.FunctionComponent<{lookupValue?: string}> = ({lookupValue}) => {
+    if (lookupValue === undefined) {
+        return null;
+    } else if (lookupValue.startsWith('entry("') && lookupValue.endsWith('")')) {
+        const vnidSlice = lookupValue.slice(7, -2);
+        if (api.isVNID(vnidSlice)) {
+            return <EntryName entryId={vnidSlice} />
+        }
+    }
+    return <code>{lookupValue}</code>;
+};
+
+
+/** Display the name of an entry, loading it from the server as needed. */
+export const EntryName: React.FunctionComponent<{entryId: api.VNID}> = ({entryId}) => {
+    const refCache = useRefCache();
+    if (refCache.entries[entryId]) {
+        return <>{refCache.entries[entryId].name}</>;
+    } else {
+        return <LoadEntryName entryId={entryId} />
+    }
+};
+/** When the entry name is not available from the Draft / RefCache, load it from the server. */
+export const LoadEntryName: React.FunctionComponent<{entryId: api.VNID}> = ({entryId}) => {
+    const data = useLookupExpression(`this.name`, {entryId});
+    if (data.error || data.resultValue?.type !== "String") {
+        return <>{entryId}</>;  // The entry name could not be loaded. Just display the ID.
+    }
+    return <>{data.resultValue.value}</>;
 };
