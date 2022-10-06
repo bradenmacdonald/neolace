@@ -28,6 +28,7 @@ import { LookupParseError } from "../errors.ts";
 const True = new LiteralExpression(new V.BooleanValue(true));
 const False = new LiteralExpression(new V.BooleanValue(false));
 const Int = (i: number | bigint) => new LiteralExpression(new V.IntegerValue(i));
+const Quantity = (m: number, units?: string) => new LiteralExpression(new V.QuantityValue(m, units));
 const Str = (x: string) => new LiteralExpression(new V.StringValue(x));
 
 group("parser.ts", () => {
@@ -128,6 +129,31 @@ group("parser.ts", () => {
             // List with 'deep' values that can break the default lookahead limit:
             in: `[entry("tc-ec-cell-li"), entry("tc-ec-cell")]`,
             out: new List([new EntryFunction(Str("tc-ec-cell-li")), new EntryFunction(Str("tc-ec-cell"))]),
+        },
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Quantity values:
+        {
+            in: `1.23`,
+            out: Quantity(1.23),
+        },
+        {
+            in: `0.003 [ng]`,
+            out: Quantity(0.003, "ng"),
+        },
+        {
+            in: `15 [m]`,
+            out: Quantity(15, "m"),
+        },
+        {
+            in: `1500.2 [K kg⋅m/s^2]`,
+            out: Quantity(1500.2, "K kg⋅m/s^2"),
+        },
+        // In a list:
+
+        {
+            in: `[30 [mg], 50 [mg]]`,
+            out: new List([Quantity(30, "mg"), Quantity(50, "mg")]),
         },
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

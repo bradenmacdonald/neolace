@@ -182,8 +182,29 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             }</>
         case "Integer":
             return <>{value.value}</>
+        case "Quantity":
+            if (value.conversions && Object.keys(value.conversions).length > 0) {
+                // Display some helpful conversions
+                return <>
+                    <Tooltip tooltipContent={<>
+                        {value.conversions.primary ? <>
+                            {value.conversions.primary.magnitude.toPrecision(value.magnitude.toString().length + 1)} {value.conversions.primary.units}<br />
+                        </> : null}
+                        {value.conversions.base ? <>
+                            {value.conversions.base.magnitude.toPrecision(value.magnitude.toString().length + 1)} {value.conversions.base.units}<br />
+                        </> : null}
+                        {value.conversions.uscs ? <>
+                            {value.conversions.uscs.magnitude.toPrecision(value.magnitude.toString().length + 1)} {value.conversions.uscs.units}<br />
+                        </> : null}
+                    </>}>
+                        {attribs => <span {...attribs}>{value.magnitude} {value.units}</span>}
+                    </Tooltip>
+                    
+                </>;
+            }
+            return <>{value.magnitude} {value.units}</>
         case "String":
-            // Temporary special case hack for the TechNotes hompage until we support video:
+            // Temporary special case hack for the TechNotes homepage until we support video:
             if (value.value === "$TN_HOME_VIDEO$") {
                 return <div className="max-h-[400px]">
                     <video src="https://f000.backblazeb2.com/file/technotes/technotes-home.mp4" muted autoPlay loop playsInline className="block mx-auto w-full h-full max-h-[400px] max-w-none "></video>

@@ -48,10 +48,6 @@ export class AnnotatedValue extends ConcreteValue {
         return undefined; // Annotated values do not have literal expressions.
     }
 
-    public override getSortString(): string {
-        return this.value.getSortString();
-    }
-
     /** Get an attribute from this annotated value. This is the normal way to get annotation values via lookup expressions */
     public override async getAttribute(attrName: string, context: LookupContext): Promise<LookupValue | undefined> {
         // First check the "inner" value (cannot be overridden by annotations)

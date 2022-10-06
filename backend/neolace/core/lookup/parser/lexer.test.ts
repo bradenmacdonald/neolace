@@ -134,4 +134,24 @@ group("lexer.ts", () => {
             T.RParen, // )
         ]);
     });
+
+    test("quantity values", () => {
+        const { tokens, errors } = lookupLexer.tokenize(
+            `1500.2 [K kg⋅m/s^2]`,
+        );
+        assertEquals(errors, []);
+        assertEquals(simplifyTokens(tokens), [
+            T.FloatLiteral, // 1500.2
+            T.LSquare,
+            [T.Identifier, "K"],
+            [T.Identifier, "kg"],
+            T.MultiplicationDot, // ⋅
+            [T.Identifier, "m"],
+            T.FwdSlash,
+            [T.Identifier, "s"],
+            T.Caret,
+            T.IntegerLiteral, // 2
+            T.RSquare, // ]
+        ]);
+    });
 });

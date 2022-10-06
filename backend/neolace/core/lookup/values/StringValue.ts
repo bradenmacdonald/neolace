@@ -49,9 +49,14 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
         return BigInt(this.value.length);
     }
 
-    public override getSortString(): string {
-        return this.value;
+    public override compareTo(otherValue: LookupValue) {
+        if (otherValue instanceof StringValue) {
+            return this.value.localeCompare(otherValue.value);
+        } else {
+            return -1; // Not equal
+        }
     }
+
     /** Get an attribute of this value, if any, e.g. value.name or value.length */
     public override async getAttribute(attrName: string): Promise<LookupValue | undefined> {
         if (attrName === "length") {

@@ -15,6 +15,7 @@ export const StringLiteral = createToken({
     pattern: /"(?:[^\\"]|\\(?:[nt"\\/]|u[0-9a-fA-F]{4}))*"/,
 });
 export const IntegerLiteral = createToken({ name: "IntegerLiteral", pattern: /-?(0|[1-9]\d*)/ });
+export const FloatLiteral = createToken({ name: "FloatLiteral", pattern: /-?((0|[1-9]\d*)?\.\d+)/ });
 
 // Syntax:
 export const Comma = createToken({ name: "Comma", pattern: /,/, label: "," });
@@ -25,6 +26,9 @@ export const LParen = createToken({ name: "LParen", pattern: /\(/, label: "(" })
 export const RParen = createToken({ name: "RParen", pattern: /\)/, label: ")" });
 export const Equals = createToken({ name: "Equals", pattern: /=/, label: "=" });
 export const Arrow = createToken({ name: "Arrow", pattern: /->/, label: "->" });
+export const FwdSlash = createToken({ name: "FwdSlash", pattern: /\//, label: "/" });
+export const Caret = createToken({ name: "Caret", pattern: /\^/, label: "^" });
+export const MultiplicationDot = createToken({ name: "MultiplicationDot", pattern: /⋅/, label: "⋅" }); // Used in Quantity units
 
 // Note: see https://github.com/chevrotain/chevrotain/blob/master/examples/grammars/calculator/calculator_embedded_actions.js
 // for an example when we add +, *, and /
@@ -46,8 +50,12 @@ export const lookupTokens = [
     False,
     Null,
     StringLiteral,
+    FloatLiteral,
     IntegerLiteral,
     Arrow,
+    FwdSlash,
+    Caret,
+    MultiplicationDot,
     // All simple literals must come before Identifiers, so 'true' is a literal not a variable/function.
     Identifier,
 ];

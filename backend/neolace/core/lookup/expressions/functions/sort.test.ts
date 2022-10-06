@@ -36,12 +36,37 @@ group("sort.ts", () => {
 
     test("Sorting integers", async () => {
         await checkSort(
-            `[18, 5, 64, 0, -3, -18].sort()`,
-            `[-18, -3, 0, 5, 18, 64]`,
+            `[18, -10, 5, 64, 0, -3, -18].sort()`,
+            `[-18, -10, -3, 0, 5, 18, 64]`,
         );
         await checkSort(
-            `[18, 5, 64, 0, -3, -18].sort(reverse=true)`,
-            `[64, 18, 5, 0, -3, -18]`,
+            `[18, 5, 64, 0, -3, -10, -18].sort(reverse=true)`,
+            `[64, 18, 5, 0, -3, -10, -18]`,
+        );
+    });
+
+    test("Sorting large integers", async () => {
+        await checkSort(
+            `[
+                1,
+                9999999999999999999999999999999999,
+                1234567890000000000000000000000200,
+                1234567890000000000000000000000300,
+                1234567890000000000000000000000303,
+                1234567890000000000000000000000100,
+                55555555555555555555555555555555,
+                1000000000000000000000000000000000000000,
+            ].sort()`,
+            `[
+                1,
+                55555555555555555555555555555555,
+                1234567890000000000000000000000100,
+                1234567890000000000000000000000200,
+                1234567890000000000000000000000300,
+                1234567890000000000000000000000303,
+                9999999999999999999999999999999999,
+                1000000000000000000000000000000000000000,
+            ]`,
         );
     });
 
@@ -60,6 +85,58 @@ group("sort.ts", () => {
         await checkSort(
             `entry("s-pinus-ponderosa").andAncestors().sort(by=(e -> e.name)).map(apply=(e -> e.name))`,
             `["Pinaceae", "Pinales", "Pinopsida", "Pinus", "Ponderosa Pine", "Tracheophyta"]`,
+        );
+    });
+
+    test("Unitless Quantities and Integers mixed and matched will sort as you would expect", async () => {
+        await checkSort(
+            `[
+                2.5,
+                1.0,
+                -17.3,
+                2,
+                10,
+                -25,
+            ].sort()`,
+            `[
+                -25,
+                -17.3,
+                1.0,
+                2,
+                2.5,
+                10,
+            ]`,
+        );
+    });
+
+    test("Quantities sort as you would expect", async () => {
+        await checkSort(
+            `[
+                1 [in],
+                1 [cm],
+                0.1 [cm],
+                2 [cm],
+            ].sort()`,
+            `[
+                0.1 [cm],
+                1 [cm],
+                2 [cm],
+                1 [in],
+            ]`,
+        );
+        await checkSort(
+            `[
+                1 [in],
+                1 [cm],
+                0.1 [cm],
+                2 [cm],
+            ].sort(reverse=true)`,
+            `[
+                1 [in],
+                2 [cm],
+                1 [cm],
+                0.1 [cm],
+            ]`,
         );
     });
 });

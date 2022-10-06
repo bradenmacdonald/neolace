@@ -1,4 +1,6 @@
 import { LookupContext } from "../context.ts";
+import { LookupEvaluationError } from "../errors.ts";
+import { QuantityValue } from "../values.ts";
 import { ClassOf, ConcreteValue, LookupValue } from "./base.ts";
 import { BooleanValue } from "./BooleanValue.ts";
 
@@ -35,8 +37,15 @@ export class IntegerValue extends ConcreteValue {
         return undefined;
     }
 
-    public override getSortString(): string {
-        // Pad the number with zeroes so we get consistent sorting.
-        return String(this.value).padStart(100, "0");
+    public override compareTo(otherValue: LookupValue): number {
+        if (otherValue instanceof IntegerValue) {
+            const diff = this.value - otherValue.value;
+            return diff === 0n ? 0 : diff > 0n ? 1 : -1;
+        } else if (otherValue instanceof QuantityValue) {
+            return new QuantityValue(Number(this.value)).compareTo(otherValue);
+        }
+        throw new LookupEvaluationError(
+            `Comparing ${this.constructor.name} and ${otherValue.constructor.name} values is not supported.`,
+        );
     }
 }

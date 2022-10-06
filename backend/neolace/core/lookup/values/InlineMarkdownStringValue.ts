@@ -35,7 +35,11 @@ export class InlineMarkdownStringValue extends ConcreteValue implements IHasLite
         return undefined;
     }
 
-    public override getSortString(): string {
-        return this.value;
+    public override compareTo(otherValue: LookupValue): number {
+        if (otherValue instanceof InlineMarkdownStringValue) {
+            return this.value.localeCompare(otherValue.value);
+        } else {
+            return -1; // Not equal
+        }
     }
 }

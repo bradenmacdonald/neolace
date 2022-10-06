@@ -27,8 +27,4 @@ export class LambdaValue extends LazyValue {
             new LookupEvaluationError("Cannot return/use a lambda expression (anonymous function) in that way."),
         );
     }
-
-    public override getSortString(): string {
-        return ""; // doesn't really make sense to sort by these values.
-    }
 }

@@ -98,6 +98,13 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                     value: <code>{edit.data.valueExpression}</code>,
                 }} />
             }
+            case "UpdatePropertyValue": {
+                return <FormattedMessage defaultMessage="Updated property value on {entry} - fact {propertyFactId}: {value}" id="M6/W4Z" values={{
+                    entry: <>{entryLink({name: edit.data.entryId, entryId: edit.data.entryId})}</>,
+                    propertyFactId: <>{edit.data.propertyFactId}</>,
+                    value: <code>{edit.data.valueExpression}</code>,
+                }} />
+            }
             default: {
                 return api.getEditType(edit.code).describe(edit.data);
             }

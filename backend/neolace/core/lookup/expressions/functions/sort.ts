@@ -3,7 +3,6 @@ import { BooleanValue, isIterableValue, LambdaValue, LazyIterableValue, LookupVa
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
-import { Variable } from "../../expressions.ts";
 import { iterateOver } from "../../values/base.ts";
 
 /**
@@ -37,9 +36,9 @@ export class Sort extends LookupFunctionWithArgs {
         const reverse: boolean = this.reverseExpr
             ? (await this.reverseExpr.getValueAs(BooleanValue, context)).value
             : false;
-        const sortBy: LambdaValue = this.sortByExpr
+        const sortBy: LambdaValue | undefined = this.sortByExpr
             ? (await this.sortByExpr.getValueAs(LambdaValue, context))
-            : new LambdaValue({ context, variableName: "_v", innerExpression: new Variable("_v") }); // By default, sort on the values in the iterable
+            : undefined; // By default, sort on the values in the iterable
         // This is the iteral that we're going to take a slice out of:
         const iterableValue = await this.iterableExpr.getValue(context);
 
@@ -49,18 +48,24 @@ export class Sort extends LookupFunctionWithArgs {
             );
         }
 
-        const values: [value: LookupValue, sortKey: string][] = [];
-        for await (const value of iterateOver(iterableValue)) {
-            const itemContext = context.childContextWithVariables({
-                [sortBy.variableName]: value,
-            });
-            const sortKey = await itemContext.evaluateExpr(sortBy.innerExpression);
-            values.push([value, sortKey.getSortString()]);
+        const values: [value: LookupValue, sortKey: LookupValue][] = [];
+        if (sortBy) {
+            for await (const value of iterateOver(iterableValue)) {
+                const itemContext = context.childContextWithVariables({
+                    [sortBy.variableName]: value,
+                });
+                const sortKey = await itemContext.evaluateExpr(sortBy.innerExpression);
+                values.push([value, sortKey]);
+            }
+        } else {
+            for await (const value of iterateOver(iterableValue)) {
+                values.push([value, value]);
+            }
         }
         if (reverse) {
-            values.sort((a, b) => b[1].localeCompare(a[1]));
+            values.sort((a, b) => b[1].compareTo(a[1]));
         } else {
-            values.sort((a, b) => a[1].localeCompare(b[1]));
+            values.sort((a, b) => a[1].compareTo(b[1]));
         }
 
         return new LazyIterableValue({

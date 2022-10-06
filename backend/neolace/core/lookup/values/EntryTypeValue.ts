@@ -27,8 +27,11 @@ export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpressi
         return { type: "EntryType" as const, id: this.id };
     }
 
-    public override getSortString(): string {
-        return this.id; // best we can do? Not very useful but at least it's stable.
+    public override compareTo(otherValue: LookupValue): number {
+        if (otherValue instanceof EntryTypeValue) {
+            return otherValue.id === this.id ? 0 : -1;
+        }
+        return -1;
     }
 
     /** Get an attribute of this value, if any, e.g. value.name or value.length */

@@ -79,8 +79,13 @@ export abstract class LookupValue {
     /** If this is a LazyValue, convert it to a default non-lazy value. */
     public abstract makeConcrete(): Promise<ConcreteValue>;
 
-    /** Get a string representation of this value that can be used to sort it. */
-    public abstract getSortString(): string;
+    /**
+     * For sorting or equality testing purposes, compare this to another value.
+     * Return 0 if the values are equal (BY VALUE!) or -1/+1 if they are different.
+     */
+    public compareTo(_otherValue: LookupValue): number {
+        throw new LookupEvaluationError(`Comparing ${this.constructor.name} values is not supported.`);
+    }
 
     /** Get an attribute of this value, if any, e.g. value.name or value.length */
     public async getAttribute(_attrName: string, _context: LookupContext): Promise<LookupValue | undefined> {
