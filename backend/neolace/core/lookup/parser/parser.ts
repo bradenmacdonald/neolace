@@ -23,6 +23,7 @@ class LookupParser extends CstParser {
     dotFunctionCall!: ParserMethod<[], CstNode>;
     list!: ParserMethod<[], CstNode>;
     quantity!: ParserMethod<[], CstNode>;
+    quantityInt!: ParserMethod<[], CstNode>;
     value!: ParserMethod<[], CstNode>;
     lambda!: ParserMethod<[], CstNode>;
 
@@ -39,6 +40,7 @@ class LookupParser extends CstParser {
                 { ALT: () => $.SUBRULE($.functionCall) },
                 { ALT: () => $.SUBRULE($.list) },
                 { ALT: () => $.SUBRULE($.quantity) },
+                { ALT: () => $.SUBRULE($.quantityInt) },
                 { ALT: () => $.SUBRULE($.value) },
                 { ALT: () => $.SUBRULE($.lambda) },
             ]);
@@ -120,6 +122,22 @@ class LookupParser extends CstParser {
             $.CONSUME(T.RSquare);
         });
 
+        $.RULE("quantityInt", () => {
+            $.CONSUME(T.IntegerLiteral);
+            // In the case of an integer, it only becomes a "Quantity" IF it is followed by a unit in square brackets:
+            $.CONSUME(T.LSquare);
+            $.AT_LEAST_ONE(() => {
+                $.OR([
+                    { ALT: () => $.CONSUME(T.Identifier) }, // A unit name like "km", "kg", "MiB"
+                    { ALT: () => $.CONSUME(T.Caret) },
+                    { ALT: () => $.CONSUME(T.MultiplicationDot) },
+                    { ALT: () => $.CONSUME2(T.IntegerLiteral) },
+                    { ALT: () => $.CONSUME(T.FwdSlash) },
+                ]);
+            });
+            $.CONSUME(T.RSquare);
+        });
+
         $.RULE("quantity", () => {
             $.CONSUME(T.FloatLiteral);
             // The numeric quantity value can optionally be followed by the units in square brackets:
@@ -190,6 +208,7 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
     expression(ctx: {
         list?: CstNode[];
         quantity?: CstNode[];
+        quantityInt?: CstNode[];
         functionCall?: CstNode[];
         value?: CstNode[];
         dotSomething?: CstNode[];
@@ -201,6 +220,7 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
             : ctx.functionCall ? this.visit(ctx.functionCall, params)
             : ctx.list ? this.visit(ctx.list, params)
             : ctx.quantity ? this.visit(ctx.quantity, params)
+            : ctx.quantityInt ? this.visit(ctx.quantityInt, params)
             : ctx.lambda ? this.visit(ctx.lambda, params)
             : undefined
         );
@@ -296,6 +316,38 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
     list(ctx: { expression?: CstNode[] }, params: VisitorParams): E.List {
         // ctx.expression contains each item in the list, if there are any.
         return new E.List((ctx.expression ?? []).map((item) => this.visit(item, params)));
+    }
+
+    quantityInt(ctx: {
+        IntegerLiteral: IToken[];
+        // The following (as well as additional integer literals) are all potentially parts of the unit definition, e.g. "kg m/s^2":
+        Caret?: IToken[];
+        FwdSlash?: IToken[];
+        MultiplicationDot?: IToken[];
+        Identifier?: IToken[];
+    }): E.LiteralExpression {
+        const [intToken, ...otherInts] = ctx.IntegerLiteral;
+        const intValue = Number.parseInt(intToken.image, 10);
+        let unitStr: string | undefined;
+        // A unit section (in square brackets) must be included for this integer to become a quantity:
+        const unitTokens = [
+            ...(ctx.Identifier ?? []),
+            ...(ctx.Caret ?? []),
+            ...otherInts,
+            ...(ctx.FwdSlash ?? []),
+            ...(ctx.MultiplicationDot ?? []),
+        ];
+        unitTokens.sort((a, b) => a.startOffset - b.startOffset);
+        unitStr = "";
+        let lastToken: IToken = {} as IToken;
+        for (const t of unitTokens) {
+            if (t.tokenType === T.Identifier && lastToken?.tokenType === T.Identifier) {
+                unitStr += " "; // The lexer stripped the whitespace between identifiers but we need to add it back in.
+            }
+            unitStr += t.image;
+            lastToken = t;
+        }
+        return new E.LiteralExpression(new V.QuantityValue(intValue, unitStr));
     }
 
     quantity(ctx: {

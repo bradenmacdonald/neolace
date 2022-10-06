@@ -45,6 +45,31 @@ group("sort.ts", () => {
         );
     });
 
+    test("Sorting large integers", async () => {
+        await checkSort(
+            `[
+                1,
+                9999999999999999999999999999999999,
+                1234567890000000000000000000000200,
+                1234567890000000000000000000000300,
+                1234567890000000000000000000000303,
+                1234567890000000000000000000000100,
+                55555555555555555555555555555555,
+                1000000000000000000000000000000000000000,
+            ].sort()`,
+            `[
+                1,
+                55555555555555555555555555555555,
+                1234567890000000000000000000000100,
+                1234567890000000000000000000000200,
+                1234567890000000000000000000000300,
+                1234567890000000000000000000000303,
+                9999999999999999999999999999999999,
+                1000000000000000000000000000000000000000,
+            ]`,
+        );
+    });
+
     test("Sorting dates", async () => {
         await checkSort(
             `[date("1998-01-02"), date("2022-05-06"), date("2022-05-05")].sort()`,
@@ -60,6 +85,58 @@ group("sort.ts", () => {
         await checkSort(
             `entry("s-pinus-ponderosa").andAncestors().sort(by=(e -> e.name)).map(apply=(e -> e.name))`,
             `["Pinaceae", "Pinales", "Pinopsida", "Pinus", "Ponderosa Pine", "Tracheophyta"]`,
+        );
+    });
+
+    test("Unitless Quantities and Integers mixed and matched will sort as you would expect", async () => {
+        await checkSort(
+            `[
+                2.5,
+                1.0,
+                -17.3,
+                2,
+                10,
+                -25,
+            ].sort()`,
+            `[
+                -25,
+                -17.3,
+                1.0,
+                2,
+                2.5,
+                10,
+            ]`,
+        );
+    });
+
+    test("Quantities sort as you would expect", async () => {
+        await checkSort(
+            `[
+                1 [in],
+                1 [cm],
+                0.1 [cm],
+                2 [cm],
+            ].sort()`,
+            `[
+                0.1 [cm],
+                1 [cm],
+                2 [cm],
+                1 [in],
+            ]`,
+        );
+        await checkSort(
+            `[
+                1 [in],
+                1 [cm],
+                0.1 [cm],
+                2 [cm],
+            ].sort(reverse=true)`,
+            `[
+                1 [in],
+                2 [cm],
+                1 [cm],
+                0.1 [cm],
+            ]`,
         );
     });
 });
