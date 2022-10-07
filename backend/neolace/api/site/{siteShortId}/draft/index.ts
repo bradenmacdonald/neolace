@@ -81,6 +81,13 @@ export class DraftIndexResource extends NeolaceHttpResource {
         // Cypher clause/predicate that we can use to filter out drafts that the user is not allowed to see.
         const permissionsPredicate = await makeCypherCondition(subject, api.CorePerm.viewDraft, {}, ["draft"]);
 
+        // Are we filtering by status?
+        let statusFilter = C``;
+        const statusFilterParam = request.queryParam("status");
+        if (statusFilterParam) {
+            statusFilter = C`AND draft.status = ${BigInt(statusFilterParam)}`;
+        }
+
         const pageNum = BigInt(request.queryParam("page") ?? 1n) - 1n;
         if (pageNum < 0) {
             throw new api.InvalidFieldValue([{ fieldPath: "page", message: "Invalid page number" }]);
@@ -92,7 +99,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
             graph.read(async (tx) => {
                 return await tx.query(C`
                     MATCH (draft:${Draft})-[:${Draft.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
-                    WHERE ${permissionsPredicate}
+                    WHERE ${permissionsPredicate} ${statusFilter}
 
                     WITH draft
                     MATCH (draft:${Draft})-[:${Draft.rel.AUTHORED_BY}]->(author:${User})

@@ -1,10 +1,16 @@
 import React from "react";
 import { NextPage } from "next";
-import { FormattedMessage, useIntl } from "react-intl";
-import { useSiteData } from "lib/api";
+import { FormattedMessage, FormattedRelativeTime, useIntl } from "react-intl";
+import { api, client, useSiteData, useUser } from "lib/api";
 
 import { SitePage } from "components/SitePage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
+import { Tab, TabBarRouter } from "components/widgets/Tabs";
+import { defineMessage } from "components/utils/i18n";
+import useSWR from "swr";
+import { ErrorMessage } from "components/widgets/ErrorMessage";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 const DraftDetailsPage: NextPage = function (_props) {
     const intl = useIntl();
@@ -24,8 +30,55 @@ const DraftDetailsPage: NextPage = function (_props) {
 
             <h1>{title}</h1>
 
-            <p>Drafts will be listed here soon.</p>
+            <TabBarRouter queryParam="status">
+                <Tab id="open" name={defineMessage({ defaultMessage: "Open", id: "JfG49w" })}>
+                    <ListOfDrafts status={api.DraftStatus.Open} />
+                </Tab>
+                <Tab id="accepted" name={defineMessage({ defaultMessage: "Accepted", id: "aFyFm0" })}>
+                    <ListOfDrafts status={api.DraftStatus.Accepted} />
+                </Tab>
+                <Tab id="cancelled" name={defineMessage({ defaultMessage: "Cancelled", id: "3wsVWF" })}>
+                    <ListOfDrafts status={api.DraftStatus.Cancelled} />
+                </Tab>
+            </TabBarRouter>
         </SitePage>
+    );
+};
+
+const ListOfDrafts: React.FunctionComponent<{ status: api.DraftStatus }> = ({ status }) => {
+    const { site } = useSiteData();
+    const user = useUser();
+    const userKey = user.username ?? "";
+    const router = useRouter();
+    const page = typeof router.query?.page === "string" ? parseInt(router.query?.page, 10) : 1;
+
+    const key = `draftsList:${site.shortId}:${userKey}:${status}:${page}`; // We include the user since different users may have different permissions to view drafts
+    const { data, error } = useSWR(key, async () => {
+        if (!site.shortId) {
+            return { values: [], totalCount: 0 };
+        }
+        return await client.listDrafts({ siteId: site.shortId, status, page });
+    });
+
+    if (error) {
+        return <ErrorMessage>Unable to load drafts: {error}</ErrorMessage>;
+    }
+
+    return (
+        <ol>
+            {(data?.values || []).map((draft) => (
+                <li key={draft.id}>
+                    <Link href={`/draft/${draft.id}`}>
+                        <span className="font-semibold">{draft.title}</span>
+                    </Link>{" "}
+                    | {draft.author.fullName} |{" "}
+                    <FormattedRelativeTime
+                        value={(draft.created.getTime() - new Date().getTime()) / 1000}
+                        updateIntervalInSeconds={1}
+                    />
+                </li>
+            ))}
+        </ol>
     );
 };
 

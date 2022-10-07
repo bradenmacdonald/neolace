@@ -2,7 +2,7 @@
 import { PasswordlessLoginResponse, UserDataResponse, VerifyEmailRequest, EmailTokenResponse, CreateHumanUserResponse } from "./user.ts";
 import * as errors from "./errors.ts";
 import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
-import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags } from "./edit/index.ts";
+import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags, DraftStatus } from "./edit/index.ts";
 import { EntryData, EntrySummaryData, EvaluateLookupData, GetEntryFlags } from "./content/index.ts";
 import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData, SiteUserMyPermissionsData } from "./site/Site.ts";
 import { SiteUserSummaryData } from "./site/SiteAdmin.ts";
@@ -250,11 +250,14 @@ export class NeolaceApiClient {
         return rawDraft;
     }
 
-    public async listDrafts(options?: {siteId?: string, page?: number}): Promise<schemas.PaginatedResultData<DraftData>> {
+    public async listDrafts(options?: {siteId?: string, page?: number, status?: DraftStatus}): Promise<schemas.PaginatedResultData<DraftData>> {
         const siteId = this.getSiteId(options);
         const args = new URLSearchParams();
         if (options?.page !== undefined) {
             args.set("page", options.page.toString());
+        }
+        if (options?.status !== undefined) {
+            args.set("status", options.status.toString());
         }
         const data = await this.call(`/site/${siteId}/draft/?` + args.toString(), {method: "GET"}) as any;
         data.values = data.values.map(this._parseDraft);
