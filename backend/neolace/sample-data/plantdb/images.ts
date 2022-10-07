@@ -10,8 +10,8 @@ import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
 export async function createImages(siteId: VNID) {
     const graph = await getGraph();
     const draft = await graph.runAsSystem(CreateDraft({
-        title: "Hero Image Test Draft",
-        description: "testing",
+        title: "Hero Image Upload Draft",
+        description: "Uploading images for PlantDB sample content.",
         siteId,
         authorId: SYSTEM_VNID,
         edits: [],

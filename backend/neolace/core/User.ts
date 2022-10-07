@@ -92,7 +92,7 @@ export function username(): DerivedProperty<string> {
     return DerivedProperty.make(
         User,
         (user) => user.slugId,
-        (user) => user.slugId.substr(User.slugIdPrefix.length),
+        (user) => user.slugId.substring(User.slugIdPrefix.length),
     );
 }
 
