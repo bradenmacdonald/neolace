@@ -34,7 +34,14 @@ export function group(name: string, tests: () => unknown) {
             { sanitizeOps: false }, // TODO: leaving this enabled causes some occasional flaky sanitizer test failures. Is the Neo4j driver not properly closing the websocket every time?
             () => {
                 afterAll(async () => {
-                    await stopGraphDatabaseConnection();
+                    let timeout: number | undefined;
+                    await Promise.race([
+                        stopGraphDatabaseConnection(),
+                        new Promise((r) => timeout = setTimeout(r, 2_000)), // Wait at most 2s to close the connection. Sometimes this hangs forever with Neo4j 4.4 (fine in 4.3)
+                    ]);
+                    if (timeout !== undefined) {
+                        clearTimeout(timeout);
+                    }
                     await stopRedis();
                 });
                 level++;
