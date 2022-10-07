@@ -253,4 +253,43 @@ group("index.ts", () => {
             });
         });
     });
+    group("listing site drafts", () => {
+        const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
+
+        test("Listing drafts on PlantDB site", async () => {
+            // Get an API client, logged in as a bot that belongs to an admin
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+            const drafts = await client.listDrafts();
+            // The script that creates the PlantDB sample content currently only creates one draft:
+            assertEquals(drafts, {
+                values: [{
+                    id: VNID(drafts.values[0].id),
+                    title: "Hero Image Upload Draft",
+                    created: drafts.values[0].created,
+                    author: { username: "system", fullName: "System" },
+                    description: "Uploading images for PlantDB sample content.",
+                    status: api.DraftStatus.Accepted,
+                }],
+                totalCount: 1,
+            });
+            assertInstanceOf(drafts.values[0].created, Date);
+        });
+
+        test("test permissions - user with no permission grants", async () => {
+            const graph = await getGraph();
+            // If the site is "private" or "public read only", a user without explicit permissions cannot create content edits.
+            const { userData: userWithNoPermissions } = await createUserWithPermissions();
+            const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.shortId);
+            // Private site shouldn't work:
+            await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
+            const results = await noPermsClient.listDrafts();
+            // It always succeeds but will simply return no drafts, as the drafts that the user doesn't have
+            // permission to see are filtered out:
+            assertEquals(results, {
+                values: [],
+                totalCount: 0,
+            });
+        });
+    });
 });

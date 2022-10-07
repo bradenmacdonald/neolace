@@ -101,6 +101,16 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             // Only show if the user has permission to propose a new entry:
             hidden: !permissions?.[api.CorePerm.proposeNewEntry]?.hasPerm,
         },
+        // See drafts:
+        {
+            id: "drafts",
+            priority: 30,
+            content: {
+                url: "/draft/",
+                label: <FormattedMessage id="2atspc" defaultMessage="Drafts" />,
+                icon: "file-earmark-diff",
+            },
+        },
         // Site administration:
         {
             id: "admin",
@@ -114,21 +124,6 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             hidden: !permissions?.[api.CorePerm.siteAdmin]?.hasPerm,
         }
     );
-
-    if (DEVELOPMENT_MODE) {
-        // For now, the "Drafts" link should only be visible during development
-        defaultSystemLinks.push(
-            {
-                id: "drafts",
-                priority: 30,
-                content: {
-                    url: "/draft/",
-                    label: <FormattedMessage id="2atspc" defaultMessage="Drafts" />,
-                    icon: "file-earmark-diff",
-                },
-            },
-        );
-    }
 
     if (user.status === UserStatus.LoggedIn) {
         // My Profile link
