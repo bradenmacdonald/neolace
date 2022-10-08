@@ -39,9 +39,16 @@ export function useEntry(
     }, {
         // refreshInterval: 10 * 60_000,
     });
-    if (!data && !error && fallback) {
+    if (!data && fallback) {
+        if (error) {
+            // There was an error loading the (user-specific) version; fall back to the public version but report the error.
+            console.error(error);
+        }
         // Use the public version of the entry until we've loaded the user-specific version.
         return [fallback, undefined];
+    } else if (data && error) {
+        console.error(`Unable to refresh entry data:`, error);
+        return [data, undefined];
     }
     return [data, error];
 }
