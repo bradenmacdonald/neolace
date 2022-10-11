@@ -142,6 +142,10 @@ group("parser.ts", () => {
             out: Quantity(0.003, "ng"),
         },
         {
+            in: `50 [%]`,
+            out: Quantity(50, "%"),
+        },
+        {
             in: `15 [m]`,
             out: Quantity(15, "m"),
         },

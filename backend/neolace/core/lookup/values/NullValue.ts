@@ -29,6 +29,6 @@ export class NullValue extends ConcreteValue implements IHasLiteralExpression {
         if (otherValue instanceof NullValue) {
             return 0; // Should we make null not equal to null?
         }
-        return -1;
+        return super.compareTo(otherValue); // This will throw
     }
 }

@@ -21,14 +21,10 @@ group("index.ts", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
         group("An empty draft", () => {
-            test("Creating an empty draft is not allowed", async () => {
+            test("Creating an empty draft is allowed", async () => {
                 // Get an API client, logged in as a bot that belongs to an admin
                 const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
-                await assertRejects(
-                    () => client.createDraft({ title: "A Test Draft", edits: [] }),
-                    api.InvalidFieldValue,
-                    "At least one edit is required to create a draft.",
-                );
+                client.createDraft({ title: "A Test Draft", edits: [] });
             });
         });
 

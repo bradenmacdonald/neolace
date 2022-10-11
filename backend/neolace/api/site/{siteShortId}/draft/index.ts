@@ -25,10 +25,8 @@ export class DraftIndexResource extends NeolaceHttpResource {
         // We don't allow creating an empty draft as it's noisy for other users and we can't really check permissions
         // until we know what type of edits will be in the draft.
         if (edits.length === 0) {
-            throw new api.InvalidFieldValue([{
-                fieldPath: "edits",
-                message: "At least one edit is required to create a draft.", // Because otherwise it's hard to check permissions
-            }]);
+            // By default, we allow creating an empty draft IFF the user has "create new entry" permission
+            this.requirePermission(request, api.CorePerm.proposeNewEntry);
         }
 
         for (const idx in edits) {

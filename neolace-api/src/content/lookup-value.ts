@@ -119,6 +119,12 @@ export interface QuantityValue extends LookupValue {
     }
 }
 
+export interface RangeValue extends LookupValue {
+    type: "Range";
+    min: IntegerValue|QuantityValue|DateValue|StringValue;
+    max: IntegerValue|QuantityValue|DateValue|StringValue;
+}
+
 export interface DateValue extends LookupValue {
     type: "Date";
     /** ISO 8601 date string (no time information) */
@@ -156,6 +162,7 @@ export type AnyLookupValue = (
     | BooleanValue
     | IntegerValue
     | QuantityValue
+    | RangeValue
     | DateValue
     | StringValue
     | InlineMarkdownString

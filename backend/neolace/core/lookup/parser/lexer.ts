@@ -27,6 +27,7 @@ export const RParen = createToken({ name: "RParen", pattern: /\)/, label: ")" })
 export const Equals = createToken({ name: "Equals", pattern: /=/, label: "=" });
 export const Arrow = createToken({ name: "Arrow", pattern: /->/, label: "->" });
 export const FwdSlash = createToken({ name: "FwdSlash", pattern: /\//, label: "/" });
+export const Percent = createToken({ name: "Percent", pattern: /%/, label: "%" });
 export const Caret = createToken({ name: "Caret", pattern: /\^/, label: "^" });
 export const MultiplicationDot = createToken({ name: "MultiplicationDot", pattern: /⋅/, label: "⋅" }); // Used in Quantity units
 
@@ -55,6 +56,7 @@ export const lookupTokens = [
     Arrow,
     FwdSlash,
     Caret,
+    Percent,
     MultiplicationDot,
     // All simple literals must come before Identifiers, so 'true' is a literal not a variable/function.
     Identifier,

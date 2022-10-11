@@ -58,7 +58,7 @@ export class Slice extends LookupFunctionWithArgs {
         if (reslice && this.iterableExpr instanceof Slice) {
             iterableExpr = this.iterableExpr.iterableExpr;
         }
-        // This is the iteral that we're going to take a slice out of:
+        // This is the iterable that we're going to take a slice out of:
         const iterableValue = await iterableExpr.getValue(context);
 
         if (!isIterableValue(iterableValue)) {

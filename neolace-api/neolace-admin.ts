@@ -141,8 +141,15 @@ function applyIdMap(map: Record<string, string>, schema: api.SiteSchemaData, {ge
         }
         return newId as VNID;
     }
+
+    // Do replacements in order of longest to shortest so that 'IS_A' will be replaced *AFTER* 'IS_A2';
+    // otherwise 'IS_A2' becomes 'foo2' (b/c 'IS_A' goes to 'foo') which is invalid never gets replaced by the real
+    // value of 'IS_A2'
+    const idMapEntriesSorted = Object.entries(newMap);
+    idMapEntriesSorted.sort((a, b) => b[0].length - a[0].length);
+
     const replaceAllIds = (someString: string): string => {
-        for (const [oldVCId, newVCId] of Object.entries(newMap)) {
+        for (const [oldVCId, newVCId] of idMapEntriesSorted) {
             someString = someString.replaceAll(oldVCId, newVCId);
         }
         return someString;

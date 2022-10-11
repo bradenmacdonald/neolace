@@ -70,6 +70,12 @@ export class QuantityValue extends ConcreteValue {
             conversions.uscs = this.parsedQuantity.getWithUnits("mi/h");
         } else if (units === "m") {
             conversions.uscs = this.parsedQuantity.getWithUnits("ft"); // We don't support "yard" at the moment.
+        } else if (units === "kg") {
+            conversions.uscs = this.parsedQuantity.getWithUnits("lb");
+        } else if (units === "degC") {
+            conversions.uscs = this.parsedQuantity.getWithUnits("degF");
+        } else if (units === "degF") {
+            conversions.primary = this.parsedQuantity.getWithUnits("degC");
         }
 
         return { type: "Quantity" as const, magnitude: this.magnitude, units, conversions };
@@ -94,8 +100,6 @@ export class QuantityValue extends ConcreteValue {
         } else if (otherValue instanceof IntegerValue) {
             return this.parsedQuantity.magnitude - Number(otherValue.value);
         }
-        throw new LookupEvaluationError(
-            `Comparing ${this.constructor.name} and ${otherValue.constructor.name} values is not supported.`,
-        );
+        return super.compareTo(otherValue); // This will throw
     }
 }

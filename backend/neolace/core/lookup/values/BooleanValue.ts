@@ -26,8 +26,8 @@ export class BooleanValue extends ConcreteValue {
 
     public override compareTo(otherValue: LookupValue): number {
         if (otherValue instanceof BooleanValue) {
-            return otherValue.value === this.value ? 0 : -1;
+            return otherValue.value === this.value ? 0 : (otherValue.value ? -1 : 1);
         }
-        return -1;
+        return super.compareTo(otherValue); // This will throw
     }
 }

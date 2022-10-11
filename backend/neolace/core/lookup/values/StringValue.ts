@@ -52,9 +52,8 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
     public override compareTo(otherValue: LookupValue) {
         if (otherValue instanceof StringValue) {
             return this.value.localeCompare(otherValue.value);
-        } else {
-            return -1; // Not equal
         }
+        return super.compareTo(otherValue); // This will throw
     }
 
     /** Get an attribute of this value, if any, e.g. value.name or value.length */

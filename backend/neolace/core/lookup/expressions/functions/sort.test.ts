@@ -34,6 +34,13 @@ group("sort.ts", () => {
         );
     });
 
+    test("Sorting booleans", async () => {
+        await checkSort(
+            `[false, true, false, true].sort()`,
+            `[false, false, true, true]`,
+        );
+    });
+
     test("Sorting integers", async () => {
         await checkSort(
             `[18, -10, 5, 64, 0, -3, -18].sort()`,
