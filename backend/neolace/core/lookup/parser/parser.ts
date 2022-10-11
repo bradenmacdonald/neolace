@@ -130,6 +130,7 @@ class LookupParser extends CstParser {
                 $.OR([
                     { ALT: () => $.CONSUME(T.Identifier) }, // A unit name like "km", "kg", "MiB"
                     { ALT: () => $.CONSUME(T.Caret) },
+                    { ALT: () => $.CONSUME(T.Percent) },
                     { ALT: () => $.CONSUME(T.MultiplicationDot) },
                     { ALT: () => $.CONSUME2(T.IntegerLiteral) },
                     { ALT: () => $.CONSUME(T.FwdSlash) },
@@ -147,6 +148,7 @@ class LookupParser extends CstParser {
                     $.OR([
                         { ALT: () => $.CONSUME(T.Identifier) }, // A unit name like "km", "kg", "MiB"
                         { ALT: () => $.CONSUME(T.Caret) },
+                        { ALT: () => $.CONSUME(T.Percent) },
                         { ALT: () => $.CONSUME(T.MultiplicationDot) },
                         { ALT: () => $.CONSUME(T.IntegerLiteral) },
                         { ALT: () => $.CONSUME(T.FwdSlash) },
@@ -322,6 +324,7 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
         IntegerLiteral: IToken[];
         // The following (as well as additional integer literals) are all potentially parts of the unit definition, e.g. "kg m/s^2":
         Caret?: IToken[];
+        Percent?: IToken[];
         FwdSlash?: IToken[];
         MultiplicationDot?: IToken[];
         Identifier?: IToken[];
@@ -333,6 +336,7 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
         const unitTokens = [
             ...(ctx.Identifier ?? []),
             ...(ctx.Caret ?? []),
+            ...(ctx.Percent ?? []),
             ...otherInts,
             ...(ctx.FwdSlash ?? []),
             ...(ctx.MultiplicationDot ?? []),
@@ -356,6 +360,7 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
         // The following are all potentially parts of the unit definition, e.g. "kg m/s^2":
         IntegerLiteral?: IToken[];
         Caret?: IToken[];
+        Percent?: IToken[];
         FwdSlash?: IToken[];
         MultiplicationDot?: IToken[];
         Identifier?: IToken[];
@@ -367,6 +372,7 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
             const unitTokens = [
                 ...(ctx.Identifier ?? []),
                 ...(ctx.Caret ?? []),
+                ...(ctx.Percent ?? []),
                 ...(ctx.IntegerLiteral ?? []),
                 ...(ctx.FwdSlash ?? []),
                 ...(ctx.MultiplicationDot ?? []),
