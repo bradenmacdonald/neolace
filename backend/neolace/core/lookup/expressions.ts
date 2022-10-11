@@ -23,6 +23,7 @@ export { Link } from "./expressions/functions/link.ts";
 export { Map } from "./expressions/functions/map.ts";
 export { Markdown } from "./expressions/functions/markdown.ts";
 export { PropFunction } from "./expressions/functions/prop.ts";
+export { Range } from "./expressions/functions/range.ts";
 export { ReverseProperty } from "./expressions/functions/reverse.ts";
 export { Slice } from "./expressions/functions/slice.ts";
 export { Sort } from "./expressions/functions/sort.ts";

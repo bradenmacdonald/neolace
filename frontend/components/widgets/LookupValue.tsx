@@ -13,6 +13,7 @@ import { LookupGraph } from "../graph/GraphLoader";
 import { EntryValue } from "./EntryValue";
 import { UiPluginsContext } from "../utils/ui-plugins";
 import { Icon } from "./Icon";
+import { LookupQuantityValue } from "./LookupQuantityValue";
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -183,26 +184,13 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Integer":
             return <>{value.value}</>
         case "Quantity":
-            if (value.conversions && Object.keys(value.conversions).length > 0) {
-                // Display some helpful conversions
-                return <>
-                    <Tooltip tooltipContent={<>
-                        {value.conversions.primary ? <>
-                            {value.conversions.primary.magnitude.toPrecision(value.magnitude.toString().length + 1)} {value.conversions.primary.units}<br />
-                        </> : null}
-                        {value.conversions.base ? <>
-                            {value.conversions.base.magnitude.toPrecision(value.magnitude.toString().length + 1)} {value.conversions.base.units}<br />
-                        </> : null}
-                        {value.conversions.uscs ? <>
-                            {value.conversions.uscs.magnitude.toPrecision(value.magnitude.toString().length + 1)} {value.conversions.uscs.units}<br />
-                        </> : null}
-                    </>}>
-                        {attribs => <span {...attribs}>{value.magnitude} {value.units}</span>}
-                    </Tooltip>
-                    
-                </>;
+            return <LookupQuantityValue value={value} />
+        case "Range":
+            if (value.min.type === "Quantity" && value.max.type === "Quantity" && value.min.units === value.max.units) {
+                // Special case:
+                return <><LookupQuantityValue value={value.min} hideUnits={true} /> - <LookupQuantityValue value={value.max} /></>
             }
-            return <>{value.magnitude} {value.units}</>
+            return <><LookupValue value={value.min} mdtContext={props.mdtContext} /> - <LookupValue value={value.max} mdtContext={props.mdtContext} /></>
         case "String":
             // Temporary special case hack for the TechNotes homepage until we support video:
             if (value.value === "$TN_HOME_VIDEO$") {

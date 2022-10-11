@@ -38,8 +38,7 @@ export class InlineMarkdownStringValue extends ConcreteValue implements IHasLite
     public override compareTo(otherValue: LookupValue): number {
         if (otherValue instanceof InlineMarkdownStringValue) {
             return this.value.localeCompare(otherValue.value);
-        } else {
-            return -1; // Not equal
         }
+        return super.compareTo(otherValue); // This will throw
     }
 }

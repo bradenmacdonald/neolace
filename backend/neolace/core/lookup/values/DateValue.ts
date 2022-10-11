@@ -76,8 +76,7 @@ export class DateValue extends ConcreteValue {
                     else return 0;
                 }
             }
-        } else {
-            return -1; // Not equal
         }
+        return super.compareTo(otherValue); // This will throw
     }
 }

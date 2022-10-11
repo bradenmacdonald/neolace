@@ -83,8 +83,10 @@ export abstract class LookupValue {
      * For sorting or equality testing purposes, compare this to another value.
      * Return 0 if the values are equal (BY VALUE!) or -1/+1 if they are different.
      */
-    public compareTo(_otherValue: LookupValue): number {
-        throw new LookupEvaluationError(`Comparing ${this.constructor.name} values is not supported.`);
+    public compareTo(otherValue: LookupValue): number {
+        throw new LookupEvaluationError(
+            `Comparing ${this.constructor.name} with ${otherValue.constructor.name} is not supported.`,
+        );
     }
 
     /** Get an attribute of this value, if any, e.g. value.name or value.length */

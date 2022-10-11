@@ -27,4 +27,5 @@ export { NullValue } from "./values/NullValue.ts";
 export { PageValue } from "./values/PageValue.ts";
 export { PropertyValue } from "./values/PropertyValue.ts";
 export { QuantityValue } from "./values/QuantityValue.ts";
+export { RangeValue } from "./values/RangeValue.ts";
 export { StringValue } from "./values/StringValue.ts";

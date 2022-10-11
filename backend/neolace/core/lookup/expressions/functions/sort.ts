@@ -39,7 +39,7 @@ export class Sort extends LookupFunctionWithArgs {
         const sortBy: LambdaValue | undefined = this.sortByExpr
             ? (await this.sortByExpr.getValueAs(LambdaValue, context))
             : undefined; // By default, sort on the values in the iterable
-        // This is the iteral that we're going to take a slice out of:
+        // This is the iterable that we're going to sort:
         const iterableValue = await this.iterableExpr.getValue(context);
 
         if (!isIterableValue(iterableValue)) {

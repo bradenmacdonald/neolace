@@ -1,5 +1,4 @@
 import { LookupContext } from "../context.ts";
-import { LookupEvaluationError } from "../errors.ts";
 import { QuantityValue } from "../values.ts";
 import { ClassOf, ConcreteValue, LookupValue } from "./base.ts";
 import { BooleanValue } from "./BooleanValue.ts";
@@ -44,8 +43,6 @@ export class IntegerValue extends ConcreteValue {
         } else if (otherValue instanceof QuantityValue) {
             return new QuantityValue(Number(this.value)).compareTo(otherValue);
         }
-        throw new LookupEvaluationError(
-            `Comparing ${this.constructor.name} and ${otherValue.constructor.name} values is not supported.`,
-        );
+        return super.compareTo(otherValue); // This will throw
     }
 }

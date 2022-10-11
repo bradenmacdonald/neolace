@@ -27,13 +27,6 @@ export class PropertyValue extends ConcreteValue implements IHasLiteralExpressio
         return { type: "Property" as const, id: this.id };
     }
 
-    public override compareTo(otherValue: LookupValue): number {
-        if (otherValue instanceof PropertyValue) {
-            return otherValue.id === this.id ? 0 : -1;
-        }
-        return -1;
-    }
-
     /** Get an attribute of this value, if any, e.g. value.name or value.length */
     public override async getAttribute(attrName: string, context: LookupContext): Promise<LookupValue | undefined> {
         if (attrName === "id") {
