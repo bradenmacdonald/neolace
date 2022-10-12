@@ -82,6 +82,10 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
         if (editType.changeType === EditChangeType.Schema) {
             edit = edit as AnySchemaEdit;
             if (edit.code === "UpdateProperty") {
+                if (schema.properties[edit.data.id] === undefined) {
+                    // This property isn't yet in the reference cache.
+                    continue; // Ignore it.
+                }
                 // Remove "appliesTo": It's not relevant to reference cache and will throw an exception if any entry types aren't in the reference cache
                 const {appliesTo: _, ...data} = edit.data;
                 schema = editType.apply(schema, data);
