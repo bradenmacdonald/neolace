@@ -2,7 +2,7 @@ import React from "react";
 import { FormattedMessage } from "react-intl";
 
 import { api, useDraft, useSchema } from "lib/api";
-import { defineMessage } from "components/utils/i18n";
+import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
 import { AutoControl, Checkbox, Control, LookupExpressionInput, MDTEditor, SelectBox, TextInput } from "components/form-input";
 
 interface Props {
@@ -34,6 +34,29 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyId, 
     // We need to wait for the schema to load
     const isLoading = schema === undefined;
     const isNewProperty = !isLoading && (unsavedEdits.find((edit) => (edit.code === "CreateProperty" && edit.data.id === propertyId)));
+
+    // Available properties for the "parent property" field.
+    const possibleParentProps = React.useMemo(() => {
+        const props: api.PropertyData[] = [];
+        if (!schema) return props;
+
+        for (const p of Object.values(schema.properties)) {
+            if (p.id === propertyId) continue; // This prop can't be its own parent.
+            props.push({ ...p });
+        }
+
+        props.forEach((p) => {
+            const parentPropIds = p.isA;
+            if (parentPropIds && parentPropIds.length === 1) {
+                const parentProp = props.find((pp) => pp.id === parentPropIds[0]);
+                if (parentProp) {
+                    p.name = `${parentProp.name} > ${p.name}`;
+                }
+            }
+        });
+        props.sort((a, b) => a.name.localeCompare(b.name));
+        return props;
+    }, [schema, propertyId]);
 
     return <>
         <h1 className="!mt-0 !text-xl">
@@ -81,6 +104,29 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyId, 
                     },
                 ]}
             readOnly={isLoading || !isNewProperty} />
+        </Control>
+
+        {/* Parent property: NOTE: This currently glosses over the fact that properties can have multiple parent properties. */}
+        <Control
+            id="prop-parent-property"
+            label={defineMessage({ defaultMessage: "Parent Property", id: 'EmJtOa' })}
+            hint={defineMessage({defaultMessage: "If this is a more specific version of an existing property.", id: 'YRWIMT'})}
+        >
+            <SelectBox
+                value={prop.isA?.[0]}
+                onChange={(newParent) =>
+                    // The type can only be set when creating the property. Even though there is already a "CreateProperty"
+                    // edit, it will be consolidated with this one.
+                    updateProperty({isA: newParent ? [newParent as api.VNID] : []})
+                }
+                options={[
+                    {
+                        id: "",
+                        label: defineMessage({defaultMessage: "[No parent property]", id: 'kyTFFe'}),
+                    },
+                    ...possibleParentProps.map((p) => ({ id: p.id, label: noTranslationNeeded(p.name) })),
+                ]}
+            />
         </Control>
 
         <Control
