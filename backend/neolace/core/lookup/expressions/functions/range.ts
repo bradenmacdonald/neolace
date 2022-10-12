@@ -1,5 +1,5 @@
 import { LookupExpression } from "../base.ts";
-import { isIterableValue, LookupValue, RangeValue } from "../../values.ts";
+import { isIterableValue, LookupValue, NullValue, RangeValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionOneArg } from "./base.ts";
@@ -41,6 +41,8 @@ export class Range extends LookupFunctionOneArg {
                     else if (value.max.compareTo(max) > 0) max = value.max;
                 }
                 continue;
+            } else if (value instanceof NullValue) {
+                continue; // Ignore null values (e.g. missing data for some entries)
             }
 
             // Normal case for handling any non-range values:
