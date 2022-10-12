@@ -46,7 +46,8 @@ export const ListSchemaProperties: React.FunctionComponent<Props> = (props) => {
         props.sort((a, b) => a.name.localeCompare(b.name));
 
         if (searchKeyword) {
-            props = props.filter((p) => p.name.includes(searchKeyword) || p.descriptionMD.includes(searchKeyword))
+            const keywordLower = searchKeyword.toLowerCase();
+            props = props.filter((p) => p.name.toLowerCase().includes(keywordLower) || p.descriptionMD.toLowerCase().includes(keywordLower))
         }
 
         return props;
