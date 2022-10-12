@@ -403,7 +403,12 @@ class LookupVisitor extends parser.getBaseCstVisitorConstructor<VisitorParams, L
         if (ctx.StringLiteral) {
             /** The original unescaped text for this string, including the outer "quotes": */
             const image = ctx.StringLiteral[0].image;
-            const value = JSON.parse(image); // This will handle escapes for us and be the most performant parser.
+            let value;
+            try {
+                value = JSON.parse(image); // This will handle escapes for us and be the most performant parser.
+            } catch {
+                throw new LookupParseError(`Unable to parse string value: ${image}`);
+            }
             return new E.LiteralExpression(new V.StringValue(value));
         }
         if (ctx.IntegerLiteral) return new E.LiteralExpression(new V.IntegerValue(BigInt(ctx.IntegerLiteral[0].image)));
