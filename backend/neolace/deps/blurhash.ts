@@ -119,15 +119,15 @@ const sRGBToLinear = (value: number) => {
 const linearTosRGB = (value: number) => {
     const v = Math.max(0, Math.min(1, value));
     if (v <= 0.0031308) {
-        return Math.round(v * 12.92 * 255 + 0.5);
+        return Math.trunc(v * 12.92 * 255 + 0.5);
     } else {
-        return Math.round((1.055 * Math.pow(v, 1 / 2.4) - 0.055) * 255 + 0.5);
+        return Math.trunc((1.055 * Math.pow(v, 1 / 2.4) - 0.055) * 255 + 0.5);
     }
 };
 
 const sign = (n: number) => (n < 0 ? -1 : 1);
 
-export const signPow = (val: number, exp: number) => sign(val) * Math.pow(Math.abs(val), exp);
+const signPow = (val: number, exp: number) => sign(val) * Math.pow(Math.abs(val), exp);
 
 type NumberTriplet = [number, number, number];
 
@@ -145,11 +145,13 @@ const multiplyBasisFunction = (
     const bytesPerRow = width * bytesPerPixel;
 
     for (let x = 0; x < width; x++) {
+        const bytesPerPixelX = bytesPerPixel * x;
         for (let y = 0; y < height; y++) {
+            const basePixelIndex = bytesPerPixelX + y * bytesPerRow;
             const basis = basisFunction(x, y);
-            r += basis * sRGBToLinear(pixels[bytesPerPixel * x + 0 + y * bytesPerRow]);
-            g += basis * sRGBToLinear(pixels[bytesPerPixel * x + 1 + y * bytesPerRow]);
-            b += basis * sRGBToLinear(pixels[bytesPerPixel * x + 2 + y * bytesPerRow]);
+            r += basis * sRGBToLinear(pixels[basePixelIndex]);
+            g += basis * sRGBToLinear(pixels[basePixelIndex + 1]);
+            b += basis * sRGBToLinear(pixels[basePixelIndex + 2]);
         }
     }
 

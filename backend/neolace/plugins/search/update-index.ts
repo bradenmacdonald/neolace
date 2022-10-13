@@ -3,7 +3,7 @@ import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { TypeSense } from "neolace/deps/typesense.ts";
 
 import {
-    corePerm,
+    api,
     Entry,
     entryToIndexDocument,
     EntryType,
@@ -88,7 +88,7 @@ export async function reindexAllEntries(siteId: VNID) {
     await setCurrentReIndexJobForSite(siteId, newCollectionName);
 
     // This will filter to only index entries that the current user can see:
-    const permissionsCondition = await makeCypherCondition({ siteId, userId: undefined }, corePerm.viewEntry.name, {}, [
+    const permissionsCondition = await makeCypherCondition({ siteId, userId: undefined }, api.CorePerm.viewEntry, {}, [
         "entry",
         "entryType",
     ]);
