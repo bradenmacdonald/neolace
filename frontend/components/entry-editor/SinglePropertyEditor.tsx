@@ -62,7 +62,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                     // const isLast = (idx === facts.length - 1);
                     const currentValue = fact.valueExpression;
                     return (
-                        <div key={idx} className="flex w-full min-w-0 flex-wrap">
+                        <div key={fact.id} className="flex w-full min-w-0 flex-wrap">
                             {
                                 /*
                                 In the future, for simple values we can show the actual computed value, and not show

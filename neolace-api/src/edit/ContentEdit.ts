@@ -215,8 +215,10 @@ export const AddPropertyValue = ContentEditType({
             updatedEntry.propertiesRaw.push({propertyId: data.propertyId, facts: [newPropertyFact]});
         } else {
             // We're adding an additional value/fact to a property that already has one or more values/facts:
-            const prop = updatedEntry.propertiesRaw[propertyIndex];
-            prop.facts = [...prop.facts, newPropertyFact];
+            updatedEntry.propertiesRaw[propertyIndex] = {
+                ...updatedEntry.propertiesRaw[propertyIndex],
+                facts: [...updatedEntry.propertiesRaw[propertyIndex].facts, newPropertyFact],
+            };
         }
         return updatedEntry;
     },
