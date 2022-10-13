@@ -13,6 +13,7 @@ import {
     PropertyMode,
     PropertyType,
     SetEntryDescription,
+    SetEntryFriendlyId,
     SetEntryName,
     UpdateEntryFeature,
     UpdateEntryType,
@@ -91,6 +92,26 @@ export const ApplyEdits = defineAction({
                                 SetEntryName.code,
                                 { entryId: edit.data.entryId },
                                 "Cannot set change the entry's name - entry does not exist.",
+                            );
+                        }
+                        throw err;
+                    }
+                    modifiedNodes.add(edit.data.entryId);
+                    break;
+                }
+
+                case SetEntryFriendlyId.code: {
+                    try {
+                        await tx.queryOne(C`
+                            MATCH (e:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                            SET e.slugId = site.siteCode + ${edit.data.friendlyId}
+                        `.RETURN({}));
+                    } catch (err: unknown) {
+                        if (err instanceof EmptyResultError) {
+                            throw new InvalidEdit(
+                                SetEntryFriendlyId.code,
+                                { entryId: edit.data.entryId },
+                                "Cannot set change the entry's friendly ID - entry does not exist.",
                             );
                         }
                         throw err;
