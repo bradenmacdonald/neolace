@@ -92,6 +92,23 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                     friendlyId: <code>{edit.data.friendlyId}</code>,
                 }} />
             }
+            case "SetEntryName": {
+                return <FormattedMessage defaultMessage="Renamed {entry} to {name}" id="RBY6Qr" values={{
+                    entry: <><strong>{entryLink({entryId: edit.data.entryId})}</strong></>,
+                    name: <>"{edit.data.name}"</>,
+                }} />
+            }
+            case "SetEntryDescription": {
+                return <FormattedMessage defaultMessage="Changed description of {entry}" id="Usb1qT" values={{
+                    entry: <><strong>{entryLink({entryId: edit.data.entryId})}</strong></>,
+                }} />
+            }
+            case "SetEntryFriendlyId": {
+                return <FormattedMessage defaultMessage="Changed friendly ID of {entry} to {friendlyId}" id="eDXIzJ" values={{
+                    entry: <><strong>{entryLink({entryId: edit.data.entryId, friendlyId: edit.data.friendlyId})}</strong></>,
+                    friendlyId: <code>{edit.data.friendlyId}</code>,
+                }} />
+            }
             case "AddPropertyValue": {
                 return <FormattedMessage defaultMessage="Added a new property value to {entry} - {property}: {value}" id="fktjWL" values={{
                     entry: <>{entryLink({entryId: edit.data.entryId})}</>,

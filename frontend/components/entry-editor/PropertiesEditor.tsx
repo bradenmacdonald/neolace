@@ -7,8 +7,7 @@ import { api, usePermission, useSchema } from "lib/api";
 import { Spinner } from "components/widgets/Spinner";
 import { Control, SelectBox } from "components/form-input";
 import { SinglePropertyEditor } from "./SinglePropertyEditor";
-import { Button, ToolbarButton } from "components/widgets/Button";
-import { Modal } from "components/widgets/Modal";
+import { ToolbarButton } from "components/widgets/Button";
 import { EditSchemaPropertiesModal } from "components/schema-editor/EditSchemaPropertiesModal";
 
 // We have to declare this empty object outside of the function below so it doesn't change on every call.
