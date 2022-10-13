@@ -2,6 +2,8 @@ import React from "react";
 
 import { api } from "lib/api";
 import { Tooltip } from "components/widgets/Tooltip";
+import { FormattedMessage } from "react-intl";
+import { defineMessage, displayText, TranslatableText } from "components/utils/i18n";
 
 interface Props {
     value: api.QuantityValue;
@@ -32,7 +34,7 @@ export const LookupQuantityValue: React.FunctionComponent<Props> = ({value, hide
             
         </>;
     }
-    return <>{value.magnitude} {hideUnits ? null : value.units}</>
+    return <>{value.magnitude} {hideUnits ? null : <DisplayUnits units={value.units}/>}</>
 };
 
 /**
@@ -42,6 +44,11 @@ export const LookupQuantityValue: React.FunctionComponent<Props> = ({value, hide
 
     if (units === undefined) {
         return <></>;
+    }
+
+    let explanation: TranslatableText|undefined;
+    if (units === "pphpd") {
+        explanation = defineMessage({defaultMessage: "Passengers Per Hour Per Direction", id: "cHykpV"});
     }
 
     let result = "";
@@ -57,5 +64,15 @@ export const LookupQuantityValue: React.FunctionComponent<Props> = ({value, hide
         ));
         result += parts.join("⋅");
     }
-    return <>{result}</>;
+
+    if (explanation) {
+        // Display this unit with a tooltip that explains what it is.
+        return (
+            <Tooltip tooltipContent={displayText(explanation)}>
+                {attribs => <span {...attribs}>{units}</span>}
+            </Tooltip>
+        );
+    } else {
+        return <>{result}</>;
+    }
 };
