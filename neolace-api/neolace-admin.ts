@@ -646,19 +646,19 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
 function replaceIdsInMarkdownAndLookupExpressions(idMap: Record<string, string>, markdownOrLookup: string, isExport = true) {
     // Literal expressions in lookups:
     if (isExport) {  // On import, we want to preserve the friendly IDs in this case
-        markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)entry\("([0-9A-Za-z_ñ\-]+)"\)/mg, (_m, id) => {
+        markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)entry\("([0-9\p{Alphabetic}_\-]+)"\)/mgu, (_m, id) => {
             return `entry("${ idMap[id] ?? id }")`;
         });
     }
-    markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)prop\("([0-9A-Za-z_ñ\-]+)"\)/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)prop\("([0-9\p{Alphabetic}_\-]+)"\)/mgu, (_m, id) => {
         return `prop("${ idMap[id] ?? id }")`;
     });
-    markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)entryType\("([0-9A-Za-z_ñ\-]+)"\)/mg, (_m, id) => {
+    markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)entryType\("([0-9\p{Alphabetic}_\-]+)"\)/mgu, (_m, id) => {
         return `entryType("${ idMap[id] ?? id }")`;
     });
     // Link in markdown:
     if (isExport) {  // On import, we want to preserve the friendly IDs in this case
-        markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/([0-9A-Za-z_ñ\-]+)\)/mg, (_m, id) => {
+        markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/([0-9\p{Alphabetic}_\-]+)\)/mgu, (_m, id) => {
             return `](/entry/${ idMap[id] ?? id })`;
         });
     }
