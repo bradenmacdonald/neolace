@@ -58,9 +58,14 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
 
     const imgEntryData = refCache.entries[value.entryId];
     const caption = (
-        value.caption?.value === "" ? null :  // If caption is an empty string, don't display anything
-        value.caption ? <LookupValue value={value.caption} mdtContext={props.mdtContext} /> 
-        : <InlineMDT mdt={imgEntryData?.description ?? ""} context={props.mdtContext.childContextWith({entryId: value.entryId})} />
+        // If caption is an empty string, don't display anything:
+        value.caption?.value === "" ? null :
+        // Otherwise show the explicit caption set via .image(capation="..."):
+        value.caption ? <LookupValue value={value.caption} mdtContext={props.mdtContext} /> :
+        // If no explicit caption but the image has a description, use that as the caption:
+        imgEntryData?.description ? <InlineMDT mdt={imgEntryData?.description ?? ""} context={props.mdtContext.childContextWith({entryId: value.entryId})} />
+        // Otherwise, don't show a caption.
+        : null
     );
 
     if (value.format === api.ImageDisplayFormat.PlainLogo) {
@@ -78,9 +83,9 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
     } else if (value.format === api.ImageDisplayFormat.RightAligned) {
         return <>
             <div className="md:clear-right"></div> {/* TODO: make this way of clearing text+images optional?, just have md:clear-right applied to the div below */}
-            <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border-2 border-gray-400 md:ml-4 mb-2">
+            <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border rounded border-gray-400 md:ml-4 mb-2">
                 <RatioBox ratio={ratio}>
-                    <OptionalLink href={value.link} className="relative left-0 top-0 w-full h-full block">
+                    <OptionalLink href={value.link} className="relative left-0 top-0 w-full h-full block [&_canvas]:rounded-t">
                         {/* A blurry representation of the image, shown while it is loading. */}
                         <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" />
                         {/* the image: */}
@@ -90,12 +95,12 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                             alt={value.altText}
                             sizes={"250px" /* We're displaying these images never wider than 250px, so use a smaller image source */}
                             fill
-                            className="object-contain"
+                            className="object-contain rounded-t"
                         />
                     </OptionalLink>
                 </RatioBox>
                 {caption &&
-                    <div className="p-1 text-sm">
+                    <div className="p-1 text-sm bg-slate-50 rounded-b border-t border-gray-400">
                         {caption}
                     </div>
                 }
