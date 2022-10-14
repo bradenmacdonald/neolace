@@ -19,6 +19,7 @@ interface Props {
 export const EntryLink: React.FunctionComponent<Props> = (props) => {
     const { site } = useSiteData();
     const refCache = useRefCache();
+    const currentEntryId = props.mdtContext.entryId;
 
     const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) =
         api.isVNID(props.entryKey) ? refCache.entries[props.entryKey]
@@ -33,6 +34,11 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
                 {props.children}
             </Link>
         );
+    }
+
+    if (entry.id === currentEntryId) {
+        // This is the current entry, so we don't really need to display it as a link.
+        return <>{props.children}</>;
     }
 
     if (site.frontendConfig.features?.hoverPreview?.enabled && !props.mdtContext.disableInteractiveFeatures) {
