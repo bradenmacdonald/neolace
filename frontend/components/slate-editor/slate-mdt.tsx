@@ -216,6 +216,8 @@ export function renderElement({ element, children, attributes }: RenderElementPr
             return <ul {...attributes}>{children}</ul>;
         case "list_item":
             return <li {...attributes}>{children}</li>;
+        case "footnote_inline":
+            return <span {...attributes} className="bg-slate-100 border p-1 text-sm"><span className="text-xs opacity-70" contentEditable={false}>Footnote:</span> {children}</span>
         default:
             return (
                 <span className="border-red-100 border-[1px] text-red-700">{`Unknown MDT node "${element.type}"`}</span>

@@ -348,6 +348,8 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
             result += '`' + slateDocToStringValue(n.children, EscapeMode.PlainText) + '`';
         } else if (n.type === "lookup_inline") {
             result += `{ ` + slateDocToStringValue(n.children, EscapeMode.PlainText) + ` }`;
+        } else if (n.type === "footnote_inline") {
+            result += `^[ ` + slateDocToStringValue(n.children, EscapeMode.MDT) + ` ]`;
         } else if (n.type === "custom-void-entry") {
             result += `entry("${(n as VoidEntryNode).entryId}")`;
         } else if (n.type === "custom-void-property") {
