@@ -52,6 +52,17 @@ group("sort.ts", () => {
         );
     });
 
+    test("NULL values always sort last", async () => {
+        await checkSort(
+            `[18, -10, 5, null, null, null, 64, 0, -3, -18].sort()`,
+            `[-18, -10, -3, 0, 5, 18, 64, null, null, null]`,
+        );
+        await checkSort(
+            `[18, null, 5, 64, 0, -3, -10, null, -18].sort(reverse=true)`,
+            `[64, 18, 5, 0, -3, -10, -18, null, null]`,
+        );
+    });
+
     test("Sorting large integers", async () => {
         await checkSort(
             `[
