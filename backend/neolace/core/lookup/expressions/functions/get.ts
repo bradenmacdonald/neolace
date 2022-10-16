@@ -204,7 +204,7 @@ export class GetProperty extends LookupFunctionWithArgs {
                 WITH entry, annotations
                 WHERE ${canViewEntry}
                 WITH entry, annotations
-                ORDER BY annotations.rank, entry.name
+                ORDER BY annotations.rank, entry.name, entry.id
             `,
                 {
                     annotations: { rank: dbRankToValue, note: dbNoteToValue, slot: dbSlotToValue },
