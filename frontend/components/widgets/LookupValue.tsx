@@ -14,6 +14,7 @@ import { EntryValue } from "./EntryValue";
 import { UiPluginsContext } from "../utils/ui-plugins";
 import { Icon } from "./Icon";
 import { LookupQuantityValue } from "./LookupQuantityValue";
+import { Blurhash } from "react-blurhash";
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -95,14 +96,10 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
 
     switch (value.type) {
         case "Page": {
-
-            const listValues = value.values.map((v, idx) => 
-                <LookupValue key={idx} value={v} mdtContext={props.mdtContext} />
-            );
-            
             const numRemaining = value.totalCount - value.startedAt - value.values.length;
+            let moreLink: JSX.Element|undefined;
             if (numRemaining > 0 && !props.hideShowMoreLink) {
-                let moreLink = <FormattedMessage
+                moreLink = <FormattedMessage
                     key="more"
                     id="hAv0cA"
                     defaultMessage="{extraCount, plural, one {# more…} other {# more…}}"
@@ -117,20 +114,40 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                         moreLink = <Link key="more" href={`/lookup?e=${encodeURIComponent(value.source.expr)}`}>{moreLink}</Link>;
                     }
                 }
-                listValues.push(moreLink);
+                
             }
 
             // TODO: Need to support controlling this mode via annotations in the future.
             if (props.mdtContext.inParagraph || props.defaultListMode === "compact") {
+                const listValues = value.values.map((v, idx) => 
+                    <LookupValue key={idx} value={v} mdtContext={props.mdtContext} />
+                );
+                if (moreLink) {
+                    listValues.push(moreLink);
+                }
                 return <span className="neo-lookup-paged-values">
                     <FormattedListParts type="unit" value={listValues}>
                         {parts => <>{parts.map(p => p.value)}</>}
                     </FormattedListParts>
                 </span>;
+            } else if (value.values.every((v) => v.type === "Image")) {
+                // This is a list of images. Display them in a larger, more useful way:
+                const images = value.values as api.ImageValue[];
+                return (
+                    <ul className="unstyled flex flex-row flex-wrap">
+                        {images.map((v, idx) => (
+                            <LookupImage key={v.entryId} value={v} mdtContext={props.mdtContext} overrideFormat="ListItemFormat" />
+                        ))}
+                        {moreLink && <li>{moreLink}</li>}
+                    </ul>
+                );
             } else {
                 return (
                     <ul>
-                        {listValues.map((v, idx) => <li key={idx}>{v}</li>)}
+                        {value.values.map((v, idx) => <li key={idx}>
+                            <LookupValue key={idx} value={v} mdtContext={props.mdtContext} />
+                        </li>)}
+                        {moreLink && <li>{moreLink}</li>}
                     </ul>
                 );
             }

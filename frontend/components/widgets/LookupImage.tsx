@@ -44,6 +44,11 @@ const OptionalLink = (
 
 interface ImageProps {
     value: api.ImageValue;
+    /**
+     * Set this to override the format=... part of value to force a "list item" format, which is more appropriate when
+     * displaying a large number of images that fill up the whole page.
+     */
+    overrideFormat?: "ListItemFormat";
     mdtContext: MDTContext;
     children?: never;
 }
@@ -68,7 +73,33 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
         : null
     );
 
-    if (value.format === api.ImageDisplayFormat.PlainLogo) {
+    if (props.overrideFormat === "ListItemFormat") {
+        // This mode works in conjunction with the "Page" mode in <LookupValue /> to display a list of images with
+        // large thumbnails. It's used mostly for search results or when users click on the "See more" link to see
+        // a list of images.
+        return <>
+            <li className="w-full md:max-w-[30%] border rounded border-gray-400 md:ml-4 mb-2 flex-initial bg-slate-50">
+                <RatioBox ratio={16/9}>
+                    <Link href={`/entry/${refCache.entries[value.entryId]?.friendlyId ?? value.entryId}`} className="relative left-0 top-0 w-full h-full block [&_canvas]:rounded-t">
+                        {/* A blurry representation of the image, shown while it is loading. */}
+                        <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" />
+                        {/* the image: */}
+                        <Image
+                            src={value.imageUrl}
+                            loader={imgThumbnailLoader}
+                            alt={value.altText}
+                            sizes={"768px" /* We're displaying these images never wider than ~760px, so use a smaller image source */}
+                            fill
+                            className={`rounded-t ${value.sizing === api.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
+                        />
+                    </Link>
+                </RatioBox>
+                <div className="p-1 text-xs rounded-b border-t border-gray-400">
+                    {caption ?? refCache.entries[value.entryId]?.name ?? ""}
+                </div>
+            </li>
+        </>
+    } else if (value.format === api.ImageDisplayFormat.PlainLogo) {
         return <div className="w-full mt-2 mb-1" style={{maxWidth: `${value.maxWidth ?? 400}px`}}>
             <OptionalLink href={value.link} className="">
                 <Image
