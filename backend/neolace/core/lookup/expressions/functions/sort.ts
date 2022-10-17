@@ -1,5 +1,5 @@
 import { LookupExpression } from "../base.ts";
-import { BooleanValue, isIterableValue, LambdaValue, LazyIterableValue, LookupValue } from "../../values.ts";
+import { BooleanValue, isIterableValue, LambdaValue, LazyIterableValue, LookupValue, NullValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
@@ -62,11 +62,12 @@ export class Sort extends LookupFunctionWithArgs {
                 values.push([value, value]);
             }
         }
-        if (reverse) {
-            values.sort((a, b) => b[1].compareTo(a[1]));
-        } else {
-            values.sort((a, b) => a[1].compareTo(b[1]));
-        }
+
+        // We always sort NULL values to the end, regardless of the 'reverse' direction or not.
+        const doSort = (a: LookupValue, b: LookupValue, reverse?: boolean) => (
+            a instanceof NullValue ? 1 : b instanceof NullValue ? -1 : reverse ? b.compareTo(a) : a.compareTo(b)
+        );
+        values.sort((a, b) => doSort(a[1], b[1], reverse));
 
         return new LazyIterableValue({
             context,
