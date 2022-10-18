@@ -155,7 +155,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
         </OptionalLink>;
     } else {
         // Thumbnail:
-        return <OptionalLink href={value.link} className="inline-block h-20 w-20 border-2 border-gray-500 rounded-md relative">
+        return <OptionalLink href={value.link} className="inline-block h-20 w-20 border border-gray-500 rounded-md relative overflow-clip">
             {/* A blurry representation of the image, shown while it is loading. */}
             <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" className="opacity-30" />
             {/* the image: */}
