@@ -256,6 +256,15 @@ export const makePlantDbContent: EditList = [
             propertyFactId: VNID(),
         },
     },
+    {
+        code: "AddPropertyValue",
+        data: {
+            entryId: entryData.stonePine.id,
+            propertyId: schema.properties._propScientificName.id,
+            valueExpression: `"Pinus pinea"`,
+            propertyFactId: VNID(),
+        },
+    },
     // Jack Pine
     {
         code: "CreateEntry",
@@ -276,6 +285,15 @@ export const makePlantDbContent: EditList = [
             propertyFactId: VNID(),
         },
     },
+    {
+        code: "AddPropertyValue",
+        data: {
+            entryId: entryData.jackPine.id,
+            propertyId: schema.properties._propScientificName.id,
+            valueExpression: `"Pinus banksiana"`,
+            propertyFactId: VNID(),
+        },
+    },
     // Japanese Red Pine
     {
         code: "CreateEntry",
@@ -293,6 +311,15 @@ export const makePlantDbContent: EditList = [
             entryId: entryData.japaneseRedPine.id,
             propertyId: schema.properties._parentGenus.id,
             valueExpression: `entry("${entryData.genusPinus.id}")`,
+            propertyFactId: VNID(),
+        },
+    },
+    {
+        code: "AddPropertyValue",
+        data: {
+            entryId: entryData.japaneseRedPine.id,
+            propertyId: schema.properties._propScientificName.id,
+            valueExpression: `"Pinus densiflora"`,
             propertyFactId: VNID(),
         },
     },

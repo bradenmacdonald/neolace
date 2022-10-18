@@ -11,6 +11,7 @@ import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
  * lookup value, not a lookup expression.
  */
 export type EntryPropertyValueSet = {
+    entryId?: VNID;
     property: {
         id: VNID;
         name: string;
@@ -32,10 +33,18 @@ export type EntryPropertyValueSet = {
 
 /**
  * Get all property values associated with an Entry.
+ * Or, get a single property value associated with a specific entry.
+ * Or, get all properties values associated with a set of entries.
  *
- * This includes inherited properties and will order the results by rank.
+ * Basically, this giant, complex query encapsulates all of our logic about how to compute property values, and deals
+ * with complexity like inherited property values and "slots" where appropriate.
+ *
+ * This function includes inherited properties and will order the results by rank.
+ *
+ * This function however does NOT check permissions. You should separately ensure that the user has the relevant
+ * permissions, such as CorePerm.viewEntryProperty.
  */
-export async function getEntryProperties<TC extends true | undefined = undefined>(entryId: VNID, options: {
+export async function getEntryProperties<TC extends true | undefined = undefined>(entryId: VNID | VNID[], options: {
     tx: WrappedTransaction;
     maxRank?: number;
     skip?: number;
@@ -57,6 +66,20 @@ export async function getEntryProperties<TC extends true | undefined = undefined
         throw new Error(
             `Cannot request totalCount along with specific property ID - no need for wasting extra calculation when count is either 0 or 1.`,
         );
+    }
+
+    const multipleEntries = Array.isArray(entryId);
+    const entryFilter = (
+        multipleEntries
+            ? C`MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType}) WHERE entry.id IN ${entryId}`
+            : C`MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})`
+    );
+
+    if (multipleEntries && options.totalCount) {
+        throw new Error(`
+            totalCount cannot yet be used when retrieving properties from more than one entry.
+            (Just because we haven't implemented it yet; it's fine to do in principle...)
+        `);
     }
 
     // Start fetching the total count of matching properties asynchronously, if requested
@@ -83,7 +106,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
     `.givesShape({ totalCount: Field.Int })).then((r) => r.totalCount);
 
     const data = await options.tx.query(C`
-        MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
+        ${entryFilter}
 
         CALL {
             ///////////////////////////////////////////////////////////////////////////////////
@@ -102,9 +125,10 @@ export async function getEntryProperties<TC extends true | undefined = undefined
             AND
                 (prop.rank <= ${maxRank})
             
-            WITH prop, length(path) AS distance, nodes(path)[length(path) - 2] AS ancestor, nodes(path)[length(path) - 1] AS pf
+            WITH entry, prop, length(path) AS distance, nodes(path)[length(path) - 2] AS ancestor, nodes(path)[length(path) - 1] AS pf
 
             RETURN {
+                entryId: entry.id,
                 property: prop {.id, .name, .rank, default: null, .displayAs},
                 facts: collect({
                     propertyFactId: pf.id,
@@ -146,6 +170,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
             WITH entry, prop, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
 
             RETURN {
+                entryId: entry.id,
                 property: prop {.id, .name, .rank, default: null, .displayAs},
                 facts: collect({
                     propertyFactId: pf.id,
@@ -172,16 +197,18 @@ export async function getEntryProperties<TC extends true | undefined = undefined
                     AND NOT exists((entry)-[:${Entry.rel.IS_A}*0..50]->(:${Entry})-[:PROP_FACT]->(:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop))
 
             RETURN {
+                entryId: entry.id,
                 property: prop {.id, .name, .rank, .default, .displayAs},
                 facts: []
             } AS propertyData
         }
 
         RETURN propertyData
-        ORDER BY propertyData.property.rank, propertyData.property.name
+        ORDER BY propertyData.entryId, propertyData.property.rank, propertyData.property.name
         SKIP ${skipSafe} LIMIT ${limitSafe}
     `.givesShape({
         propertyData: Field.Record({
+            entryId: Field.VNID,
             property: Field.Record({
                 id: Field.VNID,
                 name: Field.String,
@@ -212,6 +239,11 @@ export async function getEntryProperties<TC extends true | undefined = undefined
     for (const prop of result) {
         if (prop.property.displayAs === "") {
             delete prop.property.displayAs;
+        }
+        if (!multipleEntries) {
+            // The entry ID is only useful if we are retrieving properties from multiple entries.
+            // Returning it in other single-entry cases makes the test code more complicated, so we avoid it.
+            delete prop.entryId;
         }
         // Sort property values by slot, then by rank.
         // We do this at the end because it's more efficient to do once most irrelevant/inherited facts are stripped out,
@@ -247,4 +279,17 @@ export async function getEntryProperty(
         return results[0];
     }
     return undefined;
+}
+
+/**
+ * Get the values of a single property from many different entries.
+ */
+export async function getEntriesProperty(
+    tx: WrappedTransaction,
+    entryIds: VNID[],
+    specificPropertyId: VNID,
+): Promise<(EntryPropertyValueSet & { entryId: VNID })[]> {
+    return getEntryProperties(entryIds, { tx, specificPropertyId }) as Promise<
+        (EntryPropertyValueSet & { entryId: VNID })[]
+    >;
 }

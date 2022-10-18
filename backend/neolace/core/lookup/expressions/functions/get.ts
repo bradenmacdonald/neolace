@@ -1,12 +1,12 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
+import { CorePerm, PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
 
 import { Site } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { directRelTypeForPropertyType, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
-import { getEntryProperty } from "neolace/core/entry/properties.ts";
+import { getEntriesProperty, getEntryProperty } from "neolace/core/entry/properties.ts";
 
 import { LookupExpression } from "../base.ts";
 import {
@@ -28,6 +28,7 @@ import { corePerm } from "neolace/core/permissions/permissions.ts";
 import { hasSourceExpression } from "../../values/base.ts";
 import { EntryTypeFunction } from "./entryType.ts";
 import { LiteralExpression } from "../literal-expr.ts";
+import { LazyCypherIterableValue } from "../../values/LazyCypherIterableValue.ts";
 
 /**
  * Helper function to read annotated rank values from a database query result
@@ -147,7 +148,7 @@ export class GetProperty extends LookupFunctionWithArgs {
                 }
                 return value;
             } else {
-                // We are lookup up this value property for many entries.
+                // We are lookup up this AUTO property for many entries.
                 // To support this probably requires changing context.entryId to context.thisValue so that we can make
                 // 'this' into an entry set, and not just a single entry, while we evaluate this.
                 throw new LookupEvaluationError(
@@ -160,11 +161,11 @@ export class GetProperty extends LookupFunctionWithArgs {
             // Get the cypher clause/predicate that we can use to filter out entries that the user is not allowed to see.
             const canViewProperties = await makeCypherCondition(
                 context.subject,
-                corePerm.viewEntryProperty.name,
+                CorePerm.viewEntryProperty,
                 {},
                 ["entry"],
             );
-            const canViewEntry = await makeCypherCondition(context.subject, corePerm.viewEntry.name, {}, ["entry"]);
+            const canViewEntry = await makeCypherCondition(context.subject, CorePerm.viewEntry, {}, ["entry"]);
             // Using a simplified version of our "get property value" code, we are finding all the entries that are
             // related via a specific property to the source entry/entries.
             return new LazyEntrySetValue(
@@ -261,10 +262,60 @@ export class GetProperty extends LookupFunctionWithArgs {
                 }
             } else {
                 // We are lookup up this value property for many entries.
-                // const forEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
-                throw new LookupEvaluationError(
-                    "Getting a property from multiple entries is not yet supported by get()",
+                const startingEntrySet = await this.fromEntriesExpr.getValueAs(LazyEntrySetValue, context);
+                // Get the cypher clause/predicate that we can use to filter out entries that the user is not allowed to see.
+                const canViewProperties = await makeCypherCondition(
+                    context.subject,
+                    CorePerm.viewEntryProperty,
+                    {},
+                    ["entry"],
                 );
+
+                const entryIdsQuery = C`${startingEntrySet.cypherQuery} WITH entry WHERE ${canViewProperties}`;
+
+                return new LazyCypherIterableValue(context, entryIdsQuery, async (offset, numItems) => {
+                    const entryIdsResult = await context.tx.query(C`
+                        ${entryIdsQuery}
+                        RETURN entry.id
+                        ORDER BY entry.id
+                        SKIP ${C(String(BigInt(offset)))} LIMIT ${C(String(BigInt(numItems)))}
+                    `.givesShape({ "entry.id": Field.VNID }));
+
+                    const entryIds = entryIdsResult.map((r) => r["entry.id"]);
+
+                    const propertyValues = await getEntriesProperty(context.tx, entryIds, propValue.id);
+
+                    const result: Array<Promise<LookupValue>> = [];
+
+                    for (const entryPropValue of propertyValues) {
+                        const propFacts = entryPropValue.facts;
+                        if (propFacts.length) {
+                            // The property is set.
+                            if (propFacts.length === 1) {
+                                // And it has a single value
+                                const forEntryContext = context.getContextFor(entryPropValue.entryId);
+                                result.push(forEntryContext.evaluateExpr(propFacts[0].valueExpression));
+                                // TODO: ^ In this case, we should evaluate the expression without a transaction (support
+                                // simple expressions only, not complex database lookups)
+                            } else {
+                                // And it has multiple values
+                                throw new LookupEvaluationError("Multiple property values not yet supported for get()");
+                            }
+                        } else if (propDefaultValue) {
+                            // Return the default value.
+                            const forEntryContext = context.getContextFor(entryPropValue.entryId);
+                            result.push(forEntryContext.evaluateExpr(propDefaultValue));
+                        } else {
+                            // Return null - the property is not set and has no default.
+                            result.push(new Promise((r) => r(new NullValue())));
+                        }
+                    }
+
+                    return await Promise.all(result);
+                }, {
+                    sourceExpression: this,
+                    sourceExpressionEntryId: context.entryId,
+                });
             }
         }
     }
