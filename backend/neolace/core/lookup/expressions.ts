@@ -27,6 +27,7 @@ export { Range } from "./expressions/functions/range.ts";
 export { ReverseProperty } from "./expressions/functions/reverse.ts";
 export { Slice } from "./expressions/functions/slice.ts";
 export { Sort } from "./expressions/functions/sort.ts";
+export { WithDetail } from "./expressions/functions/withDetail.ts";
 // Non-functions:
 export { Lambda } from "./expressions/lambda.ts";
 export { List } from "./expressions/list-expr.ts";
