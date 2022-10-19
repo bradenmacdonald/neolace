@@ -70,7 +70,26 @@ group("get.ts", () => {
     });
 
     group("get() - value property, multiple entries", () => {
-        // TODO: implement this
+        test(`get() can retrieve a property value for multiple entries`, async () => {
+            // Get the scientific name for all pines:
+            const value = await context.evaluateExprConcrete(
+                `
+                entry("${defaultData.entries.genusPinus.id}").descendants()
+                .get(prop=prop("${defaultData.schema.properties._propScientificName.id}"))
+                .sort()
+            `,
+                defaultData.entries.ponderosaPine.id,
+            );
+
+            assertInstanceOf(value, PageValue);
+            assertEquals(value.values, [
+                // Currently only four entries in the default data set have scientific names:
+                new StringValue("Pinus banksiana"),
+                new StringValue("Pinus densiflora"),
+                new StringValue("Pinus pinea"),
+                new StringValue("Pinus ponderosa"),
+            ]);
+        });
     });
 
     group("get() - auto property", () => {

@@ -1,14 +1,19 @@
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { EditList, PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
 
-import { assertEquals, beforeAll, group, resetDBToBlankSnapshot, test } from "neolace/lib/tests.ts";
+import { assertEquals, beforeAll, group, resetDBToBlankSnapshot, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
-import { EntryPropertyValueSet, getEntryProperties, getEntryProperty } from "neolace/core/entry/properties.ts";
+import {
+    EntryPropertyValueSet,
+    getEntriesProperty,
+    getEntryProperties,
+    getEntryProperty,
+} from "neolace/core/entry/properties.ts";
 
 group("properties.ts", () => {
     group("set property values", () => {
@@ -1292,5 +1297,68 @@ group("properties.ts", () => {
         });
 
         // TODO: test the dbHits performance of getProperties()
+    });
+
+    group("getEntriesProperty - get a property from multiple entries", () => {
+        const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
+
+        test("getEntriesProperty() can retrieve a single property from multiple entries", async () => {
+            const graph = await getGraph();
+            const entryIds = [
+                defaultData.entries.ponderosaPine.id,
+                defaultData.entries.jackPine.id,
+                defaultData.entries.japaneseRedPine.id,
+            ];
+            const propertyId = defaultData.schema.properties._propScientificName.id;
+            const result = await graph.read((tx) => getEntriesProperty(tx, entryIds, propertyId));
+            assertEquals(result.length, 3);
+
+            const property = {
+                id: propertyId,
+                name: defaultData.schema.properties._propScientificName.name,
+                rank: defaultData.schema.properties._propScientificName.rank,
+                displayAs: defaultData.schema.properties._propScientificName.displayAs,
+                default: null,
+            };
+
+            const ponderosaResult = result.find((r) => r.entryId === defaultData.entries.ponderosaPine.id);
+            assertEquals(ponderosaResult, {
+                entryId: defaultData.entries.ponderosaPine.id,
+                property,
+                facts: [{
+                    propertyFactId: ponderosaResult?.facts[0].propertyFactId as VNID,
+                    valueExpression: `"Pinus ponderosa"`,
+                    note: "",
+                    rank: 1,
+                    source: { from: "ThisEntry" },
+                }],
+            });
+
+            const jackPineResult = result.find((r) => r.entryId === defaultData.entries.jackPine.id);
+            assertEquals(jackPineResult, {
+                entryId: defaultData.entries.jackPine.id,
+                property,
+                facts: [{
+                    propertyFactId: jackPineResult?.facts[0].propertyFactId as VNID,
+                    valueExpression: `"Pinus banksiana"`,
+                    note: "",
+                    rank: 1,
+                    source: { from: "ThisEntry" },
+                }],
+            });
+
+            const redPineResult = result.find((r) => r.entryId === defaultData.entries.japaneseRedPine.id);
+            assertEquals(redPineResult, {
+                entryId: defaultData.entries.japaneseRedPine.id,
+                property,
+                facts: [{
+                    propertyFactId: redPineResult?.facts[0].propertyFactId as VNID,
+                    valueExpression: `"Pinus densiflora"`,
+                    note: "",
+                    rank: 1,
+                    source: { from: "ThisEntry" },
+                }],
+            });
+        });
     });
 });
