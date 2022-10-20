@@ -94,12 +94,15 @@ group("get.ts", () => {
 
     group("get() - auto property", () => {
         test(`Can retrieve an automatically-computed reverse relationship property value`, async () => {
+            // The 'genusSpecies' prop has this expression: this.reverse(prop=prop("_parentGenus"))
+            // So it uses reverse() to reverse the 'parent genus' property of any species in the specified genus.
             const expression = new GetProperty(new This(), { prop: genusSpecies });
             const value = await context.evaluateExprConcrete(expression, defaultData.entries.genusThuja.id);
             assertEquals(
                 value,
                 new PageValue([
-                    MakeAnnotatedEntryValue(defaultData.entries.westernRedcedar.id, { ...defaultAnnotations }),
+                    // Since it uses reverse(), the entries are not annotated.
+                    new EntryValue(defaultData.entries.westernRedcedar.id),
                 ], {
                     pageSize: 10n,
                     startedAt: 0n,

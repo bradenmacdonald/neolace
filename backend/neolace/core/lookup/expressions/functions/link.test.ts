@@ -103,9 +103,9 @@ group("link.ts", () => {
 
     test(`It gives an error message when used with other values`, async () => {
         await assertRejects(
-            () => context.evaluateExprConcrete(`link(123)`),
+            () => context.evaluateExprConcrete(`link(false)`),
             LookupEvaluationError,
-            `The expression "123" is not of the right type.`,
+            `The expression "false" is not of the right type.`,
         );
     });
 });
