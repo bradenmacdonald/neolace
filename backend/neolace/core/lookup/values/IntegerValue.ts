@@ -1,5 +1,5 @@
 import { LookupContext } from "../context.ts";
-import { QuantityValue } from "../values.ts";
+import { QuantityValue, StringValue } from "../values.ts";
 import { ClassOf, ConcreteValue, LookupValue } from "./base.ts";
 import { BooleanValue } from "./BooleanValue.ts";
 
@@ -32,6 +32,8 @@ export class IntegerValue extends ConcreteValue {
     protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {
         if (newType === BooleanValue) {
             return new BooleanValue(this.value !== 0n);
+        } else if (newType === StringValue) {
+            return new StringValue(this.value.toString());
         }
         return undefined;
     }

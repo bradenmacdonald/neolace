@@ -12,7 +12,6 @@ import { LazyEntrySetValue, LookupValue, PropertyValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
-import { dbNoteToValue, dbRankToValue, dbSlotToValue } from "./get.ts";
 
 /**
  * reverse([entry or entry set], prop=...)
@@ -21,7 +20,7 @@ import { dbNoteToValue, dbRankToValue, dbSlotToValue } from "./get.ts";
  *
  * e.g. if A has part B, then B.reverse(prop=[[has part]]) will yield A
  *
- * Returned entries are not necessarily distinct.
+ * Only distinct entries will be returned, and information like rank, note, etc. will not be returned.
  */
 export class ReverseProperty extends LookupFunctionWithArgs {
     static functionName = "reverse";
@@ -97,19 +96,14 @@ export class ReverseProperty extends LookupFunctionWithArgs {
 
             // When reversing, we don't have to worry about inheritance.
 
-            WITH fromEntry AS entry, {
-                note: pf.note,
-                rank: pf.rank,
-                slot: CASE WHEN prop.enableSlots THEN pf.slot ELSE null END
-            } AS annotations
-
-            WITH entry, annotations
+            WITH fromEntry AS entry
             WHERE ${canViewEntry}
-            WITH entry, annotations
-            ORDER BY annotations.rank, entry.name, entry.id
+
+            WITH DISTINCT entry, {} AS annotations
+            ORDER BY entry.name, entry.id
         `,
             {
-                annotations: { rank: dbRankToValue, note: dbNoteToValue, slot: dbSlotToValue },
+                // annotations: {  },
                 sourceExpression: this,
                 sourceExpressionEntryId: context.entryId,
             },

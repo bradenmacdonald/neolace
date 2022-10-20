@@ -7,7 +7,7 @@ import {
     test,
     TestLookupContext,
 } from "neolace/lib/tests.ts";
-import { EntryValue, IntegerValue, MakeAnnotatedEntryValue, PageValue, PropertyValue } from "../../values.ts";
+import { EntryValue, PageValue, PropertyValue } from "../../values.ts";
 import { ReverseProperty } from "./reverse.ts";
 import { This } from "../this.ts";
 import { LiteralExpression } from "../literal-expr.ts";
@@ -27,11 +27,6 @@ group("reverse.ts", () => {
     // Literal expressions referencing some properties in the default PlantDB data set:
     const partIsAPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._partIsAPart.id));
 
-    // When retrieving the entry values from a relationship property, they are "annotated" with data like this:
-    const defaultAnnotations = {
-        rank: new IntegerValue(1n),
-    };
-
     test(`Can reverse a simple IS A relationship property value`, async () => {
         const expression = new ReverseProperty(new This(), { prop: partIsAPart });
         const value = await context.evaluateExprConcrete(expression, cone);
@@ -40,8 +35,14 @@ group("reverse.ts", () => {
         assertEquals(
             value,
             new PageValue([
-                MakeAnnotatedEntryValue(pollenCone, { ...defaultAnnotations }),
-                MakeAnnotatedEntryValue(seedCone, { ...defaultAnnotations }),
+                // Reverse properties don't include annotations, because they can conflict with each other.
+                // e.g. if A has part C with rank 1 and B has part C with rank 1, then C.reverse("has part")
+                // will return "A with rank 1" and "B with rank 1" (conflicting ranks)
+                // e.g. if A has part C and A has part B, then [B,C].reverse("has part") will return A only once because
+                // we generally want to avoid duplicates, but to do so we'd have to pick the rank/note/slot from either
+                // "A has part C" or "A has part B" - we can't include both.
+                new EntryValue(pollenCone),
+                new EntryValue(seedCone),
             ], {
                 pageSize: 10n,
                 startedAt: 0n,

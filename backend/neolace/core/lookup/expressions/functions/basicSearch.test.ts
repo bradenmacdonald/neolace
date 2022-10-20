@@ -8,7 +8,7 @@ import {
     test,
     TestLookupContext,
 } from "neolace/lib/tests.ts";
-import { EntryTypeValue, EntryValue, IntegerValue, PageValue, PropertyValue, StringValue } from "../../values.ts";
+import { BooleanValue, EntryTypeValue, EntryValue, PageValue, PropertyValue, StringValue } from "../../values.ts";
 import { LiteralExpression } from "../literal-expr.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
@@ -112,12 +112,12 @@ group("basicSearch.ts", () => {
     });
 
     test(`It gives an error message when given a non-string`, async () => {
-        const expression = new BasicSearch(new LiteralExpression(new IntegerValue(13)));
+        const expression = new BasicSearch(new LiteralExpression(new BooleanValue(false)));
 
         await assertRejects(
             () => context.evaluateExpr(expression),
             LookupEvaluationError,
-            `The expression "13" is not of the right type.`,
+            `The expression "false" is not of the right type.`,
         );
     });
 
