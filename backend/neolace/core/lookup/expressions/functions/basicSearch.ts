@@ -47,7 +47,11 @@ export class BasicSearch extends LookupFunctionOneArg {
             CALL {
                 MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${context.siteId}})
                 WHERE (${entryPermissionPredicate}) AND (toLower(entry.name) CONTAINS ${keyword} OR toLower(entry.slugId) CONTAINS ${keyword})
-                RETURN "Entry" AS type, entry.id AS id, entry.name AS name
+                RETURN
+                    "Entry" AS type,
+                    entry.id AS id,
+                    entry.name AS name,
+                    CASE WHEN toLower(entry.name) = ${keyword} OR substring(entry.slugId, 5) = ${keyword} THEN 1 ELSE 0 END AS isExactMatch
 
                 UNION ALL
 
@@ -55,7 +59,11 @@ export class BasicSearch extends LookupFunctionOneArg {
                 WHERE (entryTypeOrProperty:${EntryType} OR entryTypeOrProperty:${Property})
                   AND (${schemaPermissionPredicate})
                   AND (toLower(entryTypeOrProperty.name) CONTAINS ${keyword})
-                RETURN CASE WHEN entryTypeOrProperty:${EntryType} THEN "EntryType" ELSE "Property" END AS type, entryTypeOrProperty.id AS id, entryTypeOrProperty.name AS name
+                RETURN
+                    CASE WHEN entryTypeOrProperty:${EntryType} THEN "EntryType" ELSE "Property" END AS type,
+                    entryTypeOrProperty.id AS id,
+                    entryTypeOrProperty.name AS name,
+                    CASE WHEN toLower(entryTypeOrProperty.name) = ${keyword} THEN 1 ELSE 0 END AS isExactMatch
             }
         `;
 
@@ -66,7 +74,7 @@ export class BasicSearch extends LookupFunctionOneArg {
                 const records = await context.tx.query(C`
                 ${cypherQuery}
                 RETURN type, id, name
-                ORDER BY name, type, id
+                ORDER BY isExactMatch DESC, name, type, id
                 SKIP ${C(String(BigInt(offset)))} LIMIT ${C(String(BigInt(numItems)))}
             `.givesShape({
                     "type": Field.String,

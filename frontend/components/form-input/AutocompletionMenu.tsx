@@ -50,29 +50,38 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
         const { entries, entryTypes, properties } = referenceCache;
 
         const searchTermLower = searchTerm.toLowerCase();
-        const newItems: Array<(EntityValue) & { name: string }> = [];
+        const newItems: Array<(EntityValue) & { name: string; exactMatch?: boolean; }> = [];
 
         // Now, a basic version of this could just use the entries/properties/types in result.resultValue, but that
         // doesn't account for changes coming from the draft or unsaved edits, which affect the reference cache only. So
         // we instead get the list of items from the reference cache, which we know will contain all the matching items,
         // including additions, changes, or deletions made by the draft / unsaved edits.
         for (const entry of Object.values(entries)) {
-            if (entry.name.toLowerCase().includes(searchTermLower) || entry.friendlyId.includes(searchTermLower)) {
-                newItems.push({ type: "Entry", id: entry.id, name: entry.name });
+            const nameLower = entry.name.toLowerCase();
+            if (nameLower.includes(searchTermLower) || entry.friendlyId.includes(searchTermLower)) {
+                newItems.push({
+                    type: "Entry",
+                    id: entry.id,
+                    name: entry.name,
+                    exactMatch: (nameLower === searchTermLower || entry.friendlyId.toLowerCase() === searchTermLower),
+                });
             }
         }
         for (const entryType of Object.values(entryTypes)) {
-            if (entryType.name.toLowerCase().includes(searchTermLower)) {
-                newItems.push({ type: "EntryType", id: entryType.id, name: entryType.name });
+            const nameLower = entryType.name.toLowerCase();
+            if (nameLower.includes(searchTermLower)) {
+                newItems.push({ type: "EntryType", id: entryType.id, name: entryType.name, exactMatch: nameLower === searchTermLower });
             }
         }
         for (const property of Object.values(properties)) {
-            if (property.name.toLowerCase().includes(searchTermLower)) {
-                newItems.push({ type: "Property", id: property.id, name: property.name });
+            const nameLower = property.name.toLowerCase();
+            if (nameLower.includes(searchTermLower)) {
+                newItems.push({ type: "Property", id: property.id, name: property.name, exactMatch: nameLower === searchTermLower });
             }
         }
 
-        newItems.sort((a, b) => a.name.localeCompare(b.name));
+        // Sort the items by name, but always put exact matches first.
+        newItems.sort((a, b) => a.exactMatch ? -1 : b.exactMatch ? 1 : a.name.localeCompare(b.name));
 
         setItems(newItems);
         setRefCache(referenceCache);
