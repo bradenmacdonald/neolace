@@ -518,6 +518,9 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                 // Now we need to be able to handle either a list of property facts or a single string value:
                 const facts = typeof metadata[humanKey] === "string" ? [{valueExpression: metadata[humanKey]}] : metadata[humanKey];
                 for (const fact of facts) {
+                    if (fact.valueExpression === undefined) {
+                        throw new Error(`Invalid property value on entry ${entryId} (${friendlyId})`);
+                    }
                     edits.push({
                         code: api.AddPropertyValue.code,
                         data: {
