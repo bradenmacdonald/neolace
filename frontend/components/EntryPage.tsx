@@ -154,6 +154,11 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                                 height to fit exactly anyways (see above).
                             */}
                             <Image
+                                key={
+                                    entry.features.HeroImage.entryId
+                                    /* ^ Use this key to force the BlurHash to appear when we navigate, while the new
+                                    image loads; otherwise it shows the previous image which is confusing.
+                                */}
                                 src={entry.features.HeroImage.imageUrl}
                                 loader={imgThumbnailLoader}
                                 alt=""
