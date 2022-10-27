@@ -8,6 +8,7 @@ export const MembersOnlyNotice: React.FunctionComponent<{ entry: api.EntryData }
     // TODO: change this to check the user's permission on the returned entry
     if (
         entry.description === "" && !entry.propertiesSummary?.length &&
+        entry.entryType.name === "Members Only Handout" &&
         (user.status === UserStatus.Anonymous || user.username !== "camsmember")
     ) {
         return (

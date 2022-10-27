@@ -98,7 +98,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Page": {
             const numRemaining = value.totalCount - value.startedAt - value.values.length;
             let moreLink: JSX.Element|undefined;
-            if (numRemaining > 0 && !props.hideShowMoreLink) {
+            const hideShowMoreLink = props.hideShowMoreLink || value.annotations?.showMore?.type === "Boolean" && value.annotations.showMore.value === false;
+            if (numRemaining > 0 && !hideShowMoreLink) {
                 moreLink = <FormattedMessage
                     key="more"
                     id="hAv0cA"
@@ -114,7 +115,6 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                         moreLink = <Link key="more" href={`/lookup?e=${encodeURIComponent(value.source.expr)}`}>{moreLink}</Link>;
                     }
                 }
-                
             }
 
             // TODO: Need to support controlling this mode via annotations in the future.
@@ -174,7 +174,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "File": {
             return (
                 <>
-                    <a href={value.url}>{value.filename}</a> (<FormattedFileSize sizeInBytes={value.size} />)
+                    <a href={value.url} target="_blank" rel="noreferrer">{value.filename}</a> (<FormattedFileSize sizeInBytes={value.size} />)
                 </>
             );
         }
