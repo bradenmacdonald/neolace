@@ -98,7 +98,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "Page": {
             const numRemaining = value.totalCount - value.startedAt - value.values.length;
             let moreLink: JSX.Element|undefined;
-            if (numRemaining > 0 && !props.hideShowMoreLink) {
+            const hideShowMoreLink = props.hideShowMoreLink || value.annotations?.showMore?.type === "Boolean" && value.annotations.showMore.value === false;
+            if (numRemaining > 0 && !hideShowMoreLink) {
                 moreLink = <FormattedMessage
                     key="more"
                     id="hAv0cA"
