@@ -32,8 +32,9 @@ const HouseOfSecurity = dynamic<HouseOfSecurityProps>(
 
 /** This is a React widget that wraps the system links in the bottom left and hides them */
 const HideExceptForAdmin: React.FC<{widget: React.ReactElement}> = ({widget}) => {
+    const key = widget.key;
     const hasEditPermission = usePermission(CorePerm.proposeNewEntry);
-    return hasEditPermission ? <>{widget}</> : null;
+    return <React.Fragment key={key}>{hasEditPermission ? widget : null}</React.Fragment>;
 }
 
 
