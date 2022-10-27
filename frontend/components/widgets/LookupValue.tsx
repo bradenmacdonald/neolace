@@ -115,7 +115,6 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                         moreLink = <Link key="more" href={`/lookup?e=${encodeURIComponent(value.source.expr)}`}>{moreLink}</Link>;
                     }
                 }
-                
             }
 
             // TODO: Need to support controlling this mode via annotations in the future.
@@ -175,7 +174,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "File": {
             return (
                 <>
-                    <a href={value.url}>{value.filename}</a> (<FormattedFileSize sizeInBytes={value.size} />)
+                    <a href={value.url} target="_blank" rel="noreferrer">{value.filename}</a> (<FormattedFileSize sizeInBytes={value.size} />)
                 </>
             );
         }
