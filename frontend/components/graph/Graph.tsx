@@ -36,6 +36,7 @@ export interface G6RawGraphData {
         nodesCondensed?: Set<string>;
         clique?: number;
         color?: api.EntryTypeColor;
+        colorCustom?: string;
         leftLetter?: string;
     }[];
     edges: {
@@ -66,6 +67,9 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
     } else {
         data.nodes.forEach((node) => {
             node.color = refCache.entryTypes[node.entryType]?.color ?? api.EntryTypeColor.Default;
+            if (refCache.entryTypes[node.entryType]?.colorCustom) {
+                node.colorCustom = refCache.entryTypes[node.entryType].colorCustom;
+            }
             node.leftLetter = refCache.entryTypes[node.entryType]?.abbreviation ?? "";
         });
     }

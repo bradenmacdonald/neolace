@@ -56,6 +56,7 @@ export const UpdateEntryType = SchemaEditType({
         description: string.strictOptional(),
         friendlyIdPrefix: string.strictOptional(),
         color: Schema.enum(EntryTypeColor).strictOptional(),
+        colorCustom: string.strictOptional(),
         abbreviation: string.min(0).max(2).strictOptional(),
     }),
     apply: (currentSchema, data) => {
@@ -179,6 +180,25 @@ export const UpdateEntryTypeFeature = SchemaEditType({
         }
         return undefined;
     },
+});
+
+export const DeleteEntryType = SchemaEditType({
+    changeType: EditChangeType.Schema,
+    code: "DeleteEntryType",
+    dataSchema: Schema({
+        entryTypeId: vnidString,
+    }),
+    apply: (currentSchema, data) => {
+
+        const newSchema: SiteSchemaData = {
+            ...currentSchema,
+            entryTypes: {...currentSchema.entryTypes},
+        };
+        delete newSchema.entryTypes[data.entryTypeId];
+
+        return Object.freeze(newSchema);
+    },
+    describe: (data) => `Deleted \`EntryType ${data.entryTypeId}\``,
 });
 
 export const UpdateProperty = SchemaEditType({
@@ -335,6 +355,7 @@ export const _allSchemaEditTypes = {
     CreateEntryType,
     UpdateEntryType,
     UpdateEntryTypeFeature,
+    DeleteEntryType,
     UpdateProperty,
     CreateProperty,
     DeleteProperty,
@@ -344,6 +365,7 @@ export type AnySchemaEdit = (
     | Edit<typeof CreateEntryType>
     | Edit<typeof UpdateEntryType>
     | Edit<typeof UpdateEntryTypeFeature>
+    | Edit<typeof DeleteEntryType>
     | Edit<typeof UpdateProperty>
     | Edit<typeof CreateProperty>
     | Edit<typeof DeleteProperty>

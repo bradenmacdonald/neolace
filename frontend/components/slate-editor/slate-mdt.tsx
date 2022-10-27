@@ -62,9 +62,9 @@ export const EntryTypeVoid = (
     const [selected] = useVoidSelectionStatus();
     const [schema] = useSchema();
     const entryTypeName = schema ? (schema.entryTypes[entryTypeId]?.name ?? `Unknown entry type (${entryTypeId})`) : "Loading...";
-    const entryTypeColor = schema?.entryTypes[entryTypeId]?.color ?? api.EntryTypeColor.Default;
+    const entryTypeColor = api.getEntryTypeColor(schema?.entryTypes[entryTypeId]);
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
-        <span className={`rounded-l-md py-[3px] px-2 bg-gray-200 ${selected ? '!bg-sky-300' : ''}`} style={{color: api.entryTypeColors[entryTypeColor][2]}}>
+        <span className={`rounded-l-md py-[3px] px-2 bg-gray-200 ${selected ? '!bg-sky-300' : ''}`} style={{color: entryTypeColor.textColor}}>
             <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
         </span>
         <span className={`rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700 ${selected ? '!bg-sky-200' : ''}`}>{entryTypeName}</span>
@@ -88,7 +88,7 @@ export const EntryVoid = (
     const [entryData, referenceCache, _error] = useEntrySummary(entryId);
     const entryName = entryData?.name ?? `Entry ${entryId}`;
     const entryTypeData = referenceCache?.entryTypes[entryData?.entryType.id ?? ""];
-    const colors = api.entryTypeColors[entryTypeData?.color ?? api.EntryTypeColor.Default];
+    const color = api.getEntryTypeColor(entryTypeData);
     const abbrev = entryTypeData?.abbreviation ?? "";
     return (
         <span
@@ -96,9 +96,9 @@ export const EntryVoid = (
             {...attributes}
             className="text-sm font-medium font-sans select-none"
             style={{
-                "--entry-type-color-0": colors[0],
-                "--entry-type-color-1": colors[1],
-                "--entry-type-color-2": colors[2],
+                "--entry-type-color-0": color.backgroundColor,
+                "--entry-type-color-1": color.darkerBackgroundColor,
+                "--entry-type-color-2": color.textColor,
             } as React.CSSProperties}
         >
             <span className={`

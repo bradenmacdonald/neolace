@@ -4,6 +4,8 @@ import {
     CreateEntry,
     CreateEntryType,
     CreateProperty,
+    DeleteEntry,
+    DeleteEntryType,
     DeleteProperty,
     DeletePropertyValue,
     EditList,
@@ -417,6 +419,7 @@ export const ApplyEdits = defineAction({
                     if (edit.data.description !== undefined) changes.description = edit.data.description;
                     if (edit.data.friendlyIdPrefix !== undefined) changes.friendlyIdPrefix = edit.data.friendlyIdPrefix;
                     if (edit.data.color !== undefined) changes.color = edit.data.color;
+                    if (edit.data.colorCustom !== undefined) changes.colorCustom = edit.data.colorCustom;
                     if (edit.data.abbreviation !== undefined) changes.abbreviation = edit.data.abbreviation;
 
                     // The following query will also validate that the entry type exists and is linked to the site.
@@ -452,6 +455,31 @@ export const ApplyEdits = defineAction({
                             DETACH DELETE feature
                         `);
                     }
+                    modifiedNodes.add(edit.data.entryTypeId);
+                    break;
+                }
+
+                case DeleteEntryType.code: { // Delete an EntryType
+                    const baseQuery = C`
+                        MATCH (site:${Site} {id: ${siteId}})
+                        MATCH (et:${EntryType} {id: ${edit.data.entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site)
+                    `;
+                    // First make sure no entries exist:
+                    const checkEntries = await tx.query(C`
+                        ${baseQuery}
+                        MATCH (e:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(et)
+                    `.RETURN({}));
+                    if (checkEntries.length > 0) {
+                        throw new InvalidEdit(
+                            DeleteEntryType.code,
+                            { entryTypeId: edit.data.entryTypeId },
+                            `Entry types cannot be deleted while there are still entries of that type.`,
+                        );
+                    }
+                    await tx.queryOne(C`
+                        ${baseQuery}
+                        DETACH DELETE (et)
+                    `.RETURN({}));
                     modifiedNodes.add(edit.data.entryTypeId);
                     break;
                 }
@@ -565,6 +593,33 @@ export const ApplyEdits = defineAction({
                     await tx.queryOne(C`
                         MATCH (property:${Property} {id: ${edit.data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
                         DETACH DELETE property
+                    `.RETURN({}));
+                    break;
+                }
+
+                case DeleteEntry.code: {
+                    const entryMatch =
+                        C`MATCH (entry:${Entry} {id: ${edit.data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})`;
+                    // Before we delete the entry, check if it has any relationships:
+                    const checkExtantRelationships = await tx.query(C`
+                        ${entryMatch}
+                        MATCH (entry)-[:${Entry.rel.IS_A}|${Entry.rel.RELATES_TO}]-(otherEntry:${Entry})
+                    `.RETURN({}));
+                    if (checkExtantRelationships.length > 0) {
+                        throw new InvalidEdit(
+                            DeleteEntry.code,
+                            { entryId: edit.data.entryId },
+                            `For now, entries with relationships cannot be deleted. Remove the relationships, then delete the entry.`,
+                        );
+                        // We may remove this restriction in the future.
+                    }
+
+                    // Now delete it:
+                    await tx.queryOne(C`
+                        ${entryMatch}
+                        OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}|${Entry.rel.HAS_FEATURE_DATA}]->(data)
+                        DETACH DELETE data
+                        DETACH DELETE entry
                     `.RETURN({}));
                     break;
                 }

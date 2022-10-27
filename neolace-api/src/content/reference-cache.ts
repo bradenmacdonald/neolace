@@ -10,6 +10,7 @@ export const ReferenceCacheSchema = Schema({
         id: vnidString,
         name: string,
         color: Schema.enum(EntryTypeColor),
+        colorCustom: string.strictOptional(),
         abbreviation: string,
     })),
     entries: Record(string, Schema({

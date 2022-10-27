@@ -7,8 +7,6 @@ import { api } from "lib/api";
  */
 export const entryNode = "entryNode";
 
-const colorSets = api.entryTypeColors;
-
 G6.registerNode(
     entryNode,
     {
@@ -41,7 +39,7 @@ G6.registerNode(
             const fontSize = 16;
             const maxTextWidth = width - leftRectWidth - (textPadding * 2) - 5; // The 5 is because the text truncation algorithm doesn't work perfectly with our preferred font; with this little fix it always seems good.
 
-            const [bgColor, darkColor, textColor] = (cfg.color && cfg.color in colorSets) ? colorSets[cfg.color as api.EntryTypeColor] : colorSets[api.EntryTypeColor.Default];
+            const colors = api.getEntryTypeColor({color: cfg.color as api.EntryTypeColor, colorCustom: cfg.colorCustom as string|undefined});
 
             // Draw the selection rectangle, which forms an outer border when this node is selected.
             // Most of the time (when not selected), it is invisible.
@@ -54,7 +52,7 @@ G6.registerNode(
                     width: width + selectRectThickness,
                     height: height + selectRectThickness,
                     radius,
-                    stroke: textColor,
+                    stroke: colors.textColor,
                     lineWidth: selectRectThickness,
                 },
                 className: `entryNode-selectRect`,
@@ -85,7 +83,7 @@ G6.registerNode(
                     width: leftRectWidth + radius, // We will use a "clip" to hide the right side of this rectangle so only the left side has rounded edges
                     height,
                     radius,
-                    fill: darkColor,
+                    fill: colors.darkerBackgroundColor,
                 },
                 className: `entryNode-leftRect`,
                 name: `entryNode-leftRect`,
@@ -101,7 +99,7 @@ G6.registerNode(
                     width: width - leftRectWidth + radius, // We will use a "clip" to hide the left side of this rectangle so only the right side has rounded edges
                     height,
                     radius,
-                    fill: bgColor,
+                    fill: colors.backgroundColor,
                 },
                 className: `entryNode-rightRect`,
                 name: `entryNode-rightRect`,
@@ -117,7 +115,7 @@ G6.registerNode(
             const labelTextTruncated = truncateString(labelText, maxTextWidth, fontSize);
             group.addShape("text", {
                 attrs: {
-                    fill: textColor,
+                    fill: colors.textColor,
                     fontSize,
                     fontFamily: "Inter Var",
                     fontWeight: "bold",
@@ -135,7 +133,7 @@ G6.registerNode(
             if (cfg.leftLetter) {
                 group.addShape("text", {
                     attrs: {
-                        fill: textColor,
+                        fill: colors.textColor,
                         opacity: 0.2,
                         fontSize,
                         fontFamily: "Inter Var",

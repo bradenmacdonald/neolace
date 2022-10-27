@@ -24,21 +24,21 @@ export const EntitySymbol: React.FunctionComponent<{
             </span>
         );
     } else if (value.type === "EntryType") {
-        const entryTypeColor = refCache.entryTypes[value.id]?.color ?? api.EntryTypeColor.Default;
+        const entryTypeColor = api.getEntryTypeColor(refCache.entryTypes[value.id]);
         return (
-            <span className={`${rounded} py-[3px] px-2 ${defaultBg} ${selected ? '!bg-sky-300' : ''} ${className}`} style={{color: api.entryTypeColors[entryTypeColor][2]}}>
+            <span className={`${rounded} py-[3px] px-2 ${defaultBg} ${selected ? '!bg-sky-300' : ''} ${className}`} style={{color: entryTypeColor.textColor}}>
                 <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
             </span>
         );
     } else if (value.type === "Entry") {
         const entryTypeData = refCache.entryTypes[refCache.entries[value.id]?.entryType.id];
-        const entryTypeColor = api.entryTypeColors[entryTypeData?.color] ?? api.EntryTypeColor.Default;
+        const entryTypeColor = api.getEntryTypeColor(entryTypeData);
         return (
             <span
                 style={{
-                    "--entry-type-color-0": entryTypeColor[0],
-                    "--entry-type-color-1": entryTypeColor[1],
-                    "--entry-type-color-2": entryTypeColor[2],
+                    "--entry-type-color-0": entryTypeColor.backgroundColor,
+                    "--entry-type-color-1": entryTypeColor.darkerBackgroundColor,
+                    "--entry-type-color-2": entryTypeColor.textColor,
                 } as React.CSSProperties}
                 className={`
                     ${rounded} py-[2px] min-w-[2em] text-center inline-block

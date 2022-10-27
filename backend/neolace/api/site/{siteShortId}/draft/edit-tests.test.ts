@@ -326,6 +326,90 @@ group("edit tests", () => {
         });
     });
 
+    group("Deleting an entry", () => {
+        test("We can delete an entry, but only if it has no relationships", async () => {
+            // Get an API client, logged in as a bot that belongs to an admin
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+            const entryId = defaultData.entries.jeffreyPine.id;
+
+            // Try to delete an entry. It should fail:
+            const doDelete = () => doEdit(client, { code: api.DeleteEntry.code, data: { entryId } });
+            await assertRejects(
+                doDelete,
+                api.InvalidEdit,
+                "For now, entries with relationships cannot be deleted. Remove the relationships, then delete the entry.",
+            );
+
+            // Now delete the relationship:
+            const entryData = await client.getEntry(entryId, { flags: [api.GetEntryFlags.IncludeRawProperties] });
+            const propertyValue = entryData.propertiesRaw?.find((p) =>
+                p.propertyId === defaultData.schema.properties._parentGenus.id
+            );
+            const relationshipId = propertyValue?.facts[0].id;
+            if (!relationshipId) {
+                throw new Error("Test error - couldn't determine relationship property fact ID.");
+            }
+            await doEdit(client, {
+                code: api.DeletePropertyValue.code,
+                data: { entryId, propertyFactId: relationshipId },
+            });
+
+            // Now the delete should succeed:
+            await doDelete();
+
+            await assertRejects(() => client.getEntry(entryId), api.NotFound);
+        });
+    });
+
+    group("Schema edit: Deleting an entry type", () => {
+        test("We can delete an entry type, but only if no entries exist of that type", async () => {
+            // Get an API client, logged in as a bot that belongs to an admin
+            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+
+            // first, create the entry type (in the schema)
+            const entryTypeId = VNID();
+            await doEdit(client, {
+                code: api.CreateEntryType.code,
+                data: {
+                    id: entryTypeId,
+                    name: "Temp Entry Type",
+                },
+            });
+
+            // Create an entry of that type
+            const entryId = VNID();
+            await doEdit(client, {
+                code: api.CreateEntry.code,
+                data: {
+                    id: entryId,
+                    description: "Test entry",
+                    friendlyId: "entry-test",
+                    name: "Test Entry",
+                    type: entryTypeId,
+                },
+            });
+
+            // Now try to delete the property from the schema. It should fail:
+            const doDelete = () => doEdit(client, { code: api.DeleteEntryType.code, data: { entryTypeId } });
+            await assertRejects(
+                doDelete,
+                api.InvalidEdit,
+                "Entry types cannot be deleted while there are still entries of that type.",
+            );
+
+            // Now delete the entry:
+            await doEdit(client, { code: api.DeleteEntry.code, data: { entryId } });
+
+            // Now the delete should succeed:
+            await doDelete();
+
+            const schema = await client.getSiteSchema({ siteId: defaultData.site.shortId });
+
+            assertFalse(Object.keys(schema.entryTypes).includes(entryTypeId));
+        });
+    });
+
     group("Schema edit: Deleting a property", () => {
         test("We can delete a property, but only if no entries exist with values set for that property", async () => {
             // Get an API client, logged in as a bot that belongs to an admin

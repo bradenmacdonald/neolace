@@ -33,16 +33,16 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
         );
     }
 
-    const colors = api.entryTypeColors[refCache.entryTypes[entry.entryType.id]?.color ?? api.EntryTypeColor.Default];
+    const color = api.getEntryTypeColor(refCache.entryTypes[entry.entryType.id]);
     const abbrev = refCache.entryTypes[entry.entryType.id]?.abbreviation ?? "";
 
     const widget = (
         <span
             className="text-sm font-medium font-sans"
             style={{
-                "--entry-type-color-0": colors[0],
-                "--entry-type-color-1": colors[1],
-                "--entry-type-color-2": colors[2],
+                "--entry-type-color-0": color.backgroundColor,
+                "--entry-type-color-1": color.darkerBackgroundColor,
+                "--entry-type-color-2": color.textColor,
             } as React.CSSProperties}
         >
             <span className="rounded-l-md py-[2px] min-w-[2em] text-center inline-block bg-entry-type-color-1 text-entry-type-color-2">
