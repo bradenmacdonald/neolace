@@ -2,7 +2,7 @@ import React from "react";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import { PluginDefinition } from "components/utils/ui-plugins";
-import { UiChangeOperation, UISlotWidget } from "components/widgets/UISlot";
+import { UiChangeOperation } from "components/widgets/UISlot";
 import type { HouseOfSecurityProps } from "./plugin-components/HouseOfSecurity";
 import { Spinner } from "components/widgets/Spinner";
 import { usePermission } from "lib/api";
@@ -40,7 +40,13 @@ const HideExceptForAdmin: React.FC<{widget: React.ReactElement}> = ({widget}) =>
 export const plugin: PluginDefinition = {
     id: "cams",
     getPageForPath(_site, path) {
-        if (path === "/members-only") {
+        if (path === "/research-briefs") {
+            return "research-briefs";
+        } else if (path === "/posters-presentations") {
+            return "posters-presentations";
+        } else if (path === "/early-papers") {
+            return "early-papers";
+        } else if (path === "/members-only") {
             return "members-only";
         } else if (path === "/members-login") {
             return "members-login";
