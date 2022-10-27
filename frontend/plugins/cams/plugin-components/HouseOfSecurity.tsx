@@ -43,7 +43,7 @@ export const HouseOfSecurity: React.FunctionComponent<HouseOfSecurityProps> = (p
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    return <div className="relative max-w-[800px]">
+    return <div className="relative max-w-[600px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <svg width="100%" height="100%" viewBox="0 0 1067 800" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlSpace="preserve" style={{fillRule: "evenodd", clipRule: "evenodd", strokeLinecap: "round", strokeLinejoin: "round", strokeMiterlimit: 1.5}}>
             <g transform="matrix(1.33333,0,0,1.33333,0,0)">
