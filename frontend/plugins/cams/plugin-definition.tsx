@@ -2,9 +2,11 @@ import React from "react";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import { PluginDefinition } from "components/utils/ui-plugins";
-import { UiChangeOperation } from "components/widgets/UISlot";
+import { UiChangeOperation, UISlotWidget } from "components/widgets/UISlot";
 import type { HouseOfSecurityProps } from "./plugin-components/HouseOfSecurity";
 import { Spinner } from "components/widgets/Spinner";
+import { usePermission } from "lib/api";
+import { CorePerm } from "neolace-api";
 
 // These are loaded dynamically to keep the plugin definition script as small as possible, since all plugin definitions
 // are loaded and sent to the browser.
@@ -28,6 +30,13 @@ const HouseOfSecurity = dynamic<HouseOfSecurityProps>(
     { ssr: false, loading: () => <><Spinner/></> },
 );
 
+/** This is a React widget that wraps the system links in the bottom left and hides them */
+const HideExceptForAdmin: React.FC<{widget: React.ReactElement}> = ({widget}) => {
+    const hasEditPermission = usePermission(CorePerm.proposeNewEntry);
+    return hasEditPermission ? <>{widget}</> : null;
+}
+
+
 export const plugin: PluginDefinition = {
     id: "cams",
     getPageForPath(_site, path) {
@@ -43,8 +52,9 @@ export const plugin: PluginDefinition = {
             "leftNavBottom": [
                 // Hide the normal system links, because we don't want users clicking "login" and going to the realm home site:
                 {
-                    op: UiChangeOperation.Hide,
+                    op: UiChangeOperation.Wrap,
                     widgetId: "systemLinks",
+                    wrapper: HideExceptForAdmin,
                 },
             ],
             "globalHeader": [
