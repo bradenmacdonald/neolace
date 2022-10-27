@@ -81,6 +81,7 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, on
         friendlyIdPrefix?: string;
         description?: string;
         color?: api.EntryTypeColor;
+        colorCustom?: string;
     }) => {
         pushEdit({ code: "UpdateEntryType", data: { id: entryTypeId, ...data } });
     }, [entryTypeId, pushEdit]);
@@ -206,7 +207,7 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, on
                                 node: (
                                     <>
                                         <span
-                                            style={{ color: api.entryTypeColors[option.id as api.EntryTypeColor]?.[1] }}
+                                            style={{ color: api.getEntryTypeColor({color: option.id as api.EntryTypeColor, colorCustom: entryType.colorCustom}).darkerBackgroundColor }}
                                         >
                                             <Icon icon="square-fill" />
                                         </span>{" "}

@@ -56,6 +56,7 @@ export const UpdateEntryType = SchemaEditType({
         description: string.strictOptional(),
         friendlyIdPrefix: string.strictOptional(),
         color: Schema.enum(EntryTypeColor).strictOptional(),
+        colorCustom: string.strictOptional(),
         abbreviation: string.min(0).max(2).strictOptional(),
     }),
     apply: (currentSchema, data) => {

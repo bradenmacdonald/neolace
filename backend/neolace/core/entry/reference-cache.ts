@@ -112,7 +112,7 @@ export class ReferenceCache {
         // Entry types referenced:
         const entryTypeReferences = await lookupContext.tx.pull(
             EntryType,
-            (et) => et.id.name.color.abbreviation.site((s) => s.id),
+            (et) => et.id.name.color.colorCustom.abbreviation.site((s) => s.id),
             {
                 where: C`@this.id IN ${Array.from(this._entryTypeIdsUsed)}`,
             },
@@ -125,6 +125,9 @@ export class ReferenceCache {
                 color: reference.color as EntryTypeColor ?? EntryTypeColor.Default,
                 abbreviation: reference.abbreviation ?? "",
             };
+            if (reference.color === EntryTypeColor.Custom && reference.colorCustom) {
+                data.entryTypes[reference.id].colorCustom = reference.colorCustom;
+            }
         }
 
         // Properties referenced:

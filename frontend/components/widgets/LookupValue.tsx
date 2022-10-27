@@ -14,7 +14,6 @@ import { EntryValue } from "./EntryValue";
 import { UiPluginsContext } from "../utils/ui-plugins";
 import { Icon } from "./Icon";
 import { LookupQuantityValue } from "./LookupQuantityValue";
-import { Blurhash } from "react-blurhash";
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -157,9 +156,9 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         }
         case "EntryType": {
             const entryTypeName = refCache.entryTypes[value.id]?.name ?? value.id;
-            const entryTypeColor = refCache.entryTypes[value.id]?.color ?? api.EntryTypeColor.Default;
+            const entryTypeColor = api.getEntryTypeColor(refCache.entryTypes[value.id]);
             return <span className="text-sm font-medium font-sans">
-                <span className={`rounded-l-md py-[3px] px-2 bg-gray-200`} style={{color: api.entryTypeColors[entryTypeColor][2]}}>
+                <span className={`rounded-l-md py-[3px] px-2 bg-gray-200`} style={{color: entryTypeColor.textColor}}>
                     <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
                 </span>
                 <span className={`rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700`}>{entryTypeName}</span>

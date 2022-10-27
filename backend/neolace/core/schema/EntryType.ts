@@ -24,6 +24,10 @@ export class EntryType extends VNodeType {
         }),
         /** Color to represent this entry type */
         color: Field.String.Check(check.Schema.enum(api.EntryTypeColor)),
+        colorCustom: Field.String.Check((v) => {
+            if (typeof v === "string" && v.match(/^[0-9A-F]{18}$/)) return v;
+            throw new Error("Invalid custom color");
+        }),
         /** One or two letters used to represent this entry as an abbreviation */
         abbreviation: Field.String.Check(check.string.min(0).max(2)),
     };

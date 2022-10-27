@@ -15,27 +15,9 @@ export enum EntryTypeColor {
     Violet = "violet",
     Pink = "pink",
     Rose = "rose",
+    /** A custom theme color, set separately in 'colorCustom' */
+    Custom = "custom",
 }
-
-export const entryTypeColors: Record<EntryTypeColor, readonly [backgroundColor: string, darkerBackgroundColor: string, textColor: string]> = Object.freeze({
-    // [overall background color, darker left rectangle color, text color]
-    // These colors come from https://tailwindcss.com/docs/customizing-colors and are typically the
-    // [color-100, color-200, and color-800] variants from that pallete
-    [EntryTypeColor.Default]: ["#F1F5F9", "#CBD5E1", "#0F172A"],  // Default is "Slate" color
-    [EntryTypeColor.Red]: ["#FECACA", "#FCA5A5", "#991B1B"],
-    [EntryTypeColor.Orange]: ["#FFEDD5", "#FED7AA", "#9A3412"],
-    [EntryTypeColor.Yellow]: ["#FEF9C3", "#FEF08A", "#A16207"],
-    [EntryTypeColor.Lime]: ["#ECFCCB", "#D9F99D", "#3F6212"],
-    [EntryTypeColor.Emerald]: ["#D1FAE5", "#A7F3D0", "##065F46"],
-    [EntryTypeColor.Teal]: ["#CCFBF1", "#99f6e4", "#115E59"],
-    [EntryTypeColor.Cyan]: ["#CFFAFE", "#A5F3FC", "#155E75"],
-    [EntryTypeColor.Blue]: ["#DBEAFE", "#BFDBFE", "#3730A3"],
-    [EntryTypeColor.Indigo]: ["#E0E7FF", "#C7D2FE", "#3730A3"],
-    [EntryTypeColor.Violet]: ["#EDE9FE", "#DDD6FE", "#5B21B6"],
-    [EntryTypeColor.Pink]: ["#FCE7F3", "#FBCFE8", "#9D174D"],
-    [EntryTypeColor.Rose]: ["#FFE4E6", "#FECDD3", "#9F1239"],
-});
-
 
 export const EntryTypeSchema = Schema({
     id: vnidString,
@@ -46,6 +28,8 @@ export const EntryTypeSchema = Schema({
     friendlyIdPrefix: string,
     /** Color to represent this entry type */
     color: Schema.enum(EntryTypeColor),
+    /** If using a custom color, this is its definition as background color, dark background color, text color in hex */
+    colorCustom: string.regexp(/^[0-9A-F]{18}$/).strictOptional(),
     /** One or two letters used to represent this entry as an abbreviation */
     abbreviation: string.min(0).max(2),
 

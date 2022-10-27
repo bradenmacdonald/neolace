@@ -97,8 +97,8 @@ export const ListSchemaProperties: React.FunctionComponent<Props> = (props) => {
                                     className="text-xs rounded-lg py-[2px] px-[4px] mx-1 inline-block min-w-[1.5em] text-center cursor-default"
                                     title={schema.entryTypes[entryType]?.name}
                                     style={{
-                                        backgroundColor: api.entryTypeColors[schema.entryTypes[entryType]?.color ?? api.EntryTypeColor.Default][0],
-                                        color: api.entryTypeColors[schema.entryTypes[entryType]?.color ?? api.EntryTypeColor.Default][2],
+                                        backgroundColor: api.getEntryTypeColor(schema.entryTypes[entryType]).backgroundColor,
+                                        color: api.getEntryTypeColor(schema.entryTypes[entryType]).textColor,
                                     }}
                                 >{schema.entryTypes[entryType]?.abbreviation || "\u2003"}</span>
                             ))}
