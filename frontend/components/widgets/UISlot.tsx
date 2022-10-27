@@ -5,11 +5,15 @@ import { UiPluginsContext, UiSlotId } from "components/utils/ui-plugins";
 export enum UiChangeOperation {
     Insert = "insert",
     Hide = "hide",
+    Modify = "modify",
+    Wrap = "wrap",
 }
 
 export type UiSlotChange =
     | { op: UiChangeOperation.Insert; widget: UISlotWidget<unknown> }
-    | { op: UiChangeOperation.Hide; widgetId: string };
+    | { op: UiChangeOperation.Hide; widgetId: string }
+    | { op: UiChangeOperation.Modify; widgetId: string, fn: (widget: UISlotWidget<unknown>) => UISlotWidget<unknown> }
+    | { op: UiChangeOperation.Wrap; widgetId: string, wrapper: React.FC<{widget: React.ReactElement}> };
 
 /**
  * Some widget that appears in a UI slot
@@ -45,16 +49,28 @@ export const UISlot = function <ContentType = React.ReactElement>(props: Props<C
     const pluginsData = React.useContext(UiPluginsContext);
 
     const contents = React.useMemo(() => {
-        const contents = [...props.defaultContents ?? []];
+        const contents: (UISlotWidget<ContentType> & {wrappers?: React.FC<{widget: React.ReactElement}>[]})[] = [...props.defaultContents ?? []];
         for (const p of pluginsData.plugins) {
             for (const change of (p.uiSlotChanges?.[props.slotId as UiSlotId] ?? [])) {
                 if (change.op === UiChangeOperation.Insert) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    contents.push(change.widget as UISlotWidget<any>);
+                    contents.push(change.widget as UISlotWidget<ContentType>);
                 } else if (change.op === UiChangeOperation.Hide) {
                     const widget = contents.find((w) => w.id === change.widgetId);
                     if (widget) {
                         widget.hidden = true;
+                    }
+                } else if (change.op === UiChangeOperation.Modify) {
+                    const widgetIdx = contents.findIndex((w) => w.id === change.widgetId);
+                    if (widgetIdx >= 0) {
+                        const widget = {...contents[widgetIdx]};
+                        contents[widgetIdx] = change.fn(widget) as UISlotWidget<ContentType>;
+                    }
+                } else if (change.op === UiChangeOperation.Wrap) {
+                    const widgetIdx = contents.findIndex((w) => w.id === change.widgetId);
+                    if (widgetIdx >= 0) {
+                        const newWidget = {wrappers: [], ...contents[widgetIdx]};
+                        newWidget.wrappers.push(change.wrapper as React.FC<{widget: React.ReactElement}>);
+                        contents[widgetIdx] = newWidget;
                     }
                 } else {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,7 +85,11 @@ export const UISlot = function <ContentType = React.ReactElement>(props: Props<C
 
     return (
         <>
-            {contents.map((c) => c.hidden ? null : props.renderWidget(c))}
+            {contents.map((c) =>
+                c.hidden ? null :
+                c.wrappers ? c.wrappers.reduce((widget, wrapper) => React.createElement(wrapper, {widget}), props.renderWidget(c)) :
+                props.renderWidget(c)
+            )}
         </>
     );
 };
