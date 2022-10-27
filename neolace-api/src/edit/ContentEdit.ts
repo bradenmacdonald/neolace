@@ -333,6 +333,36 @@ export const DeletePropertyValue = ContentEditType({
     },
 });
 
+export const DeleteEntry = ContentEditType({
+    changeType: EditChangeType.Content,
+    code: "DeleteEntry",
+    dataSchema: Schema({
+        entryId: vnidString,
+    }),
+    apply: (baseEntry, data, _currentSchema) => {
+        if (baseEntry.id === data.entryId) {
+            return {
+                ...baseEntry,
+                name: "",
+                friendlyId: "",
+                description: "",
+                entryType: baseEntry.entryType,
+                features: {},
+                propertiesRaw: [],
+            };
+        }
+        return baseEntry;
+    },
+    describe: (data) => `Delete \`Entry ${data.entryId}\``,
+    consolidate(thisEdit, earlierEdit) {
+        if (earlierEdit.data.entryId === thisEdit.data.entryId) {
+            // We don't need any edits that occurred before this entry was deleted.
+            return thisEdit;
+        }
+        return undefined;
+    },
+});
+
 export const _allContentEditTypes = {
     CreateEntry,
     SetEntryName,
@@ -342,6 +372,7 @@ export const _allContentEditTypes = {
     AddPropertyValue,
     UpdatePropertyValue,
     DeletePropertyValue,
+    DeleteEntry,
 };
 
 export type AnyContentEdit = (
@@ -353,4 +384,5 @@ export type AnyContentEdit = (
     | Edit<typeof AddPropertyValue>
     | Edit<typeof UpdatePropertyValue>
     | Edit<typeof DeletePropertyValue>
+    | Edit<typeof DeleteEntry>
 );

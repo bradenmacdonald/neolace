@@ -132,8 +132,13 @@ export function diffSchema(
 
         // Delete any removed EntryTypes:
         const deletedEntryTypeIds = difference(oldEntryTypeIds, newEntryTypeIds);
-        if (deletedEntryTypeIds.size > 0) {
-            throw new Error("Deleting EntryTypes from the schema is not implemented.");
+        for (const deletedTypeId of deletedEntryTypeIds) {
+            result.edits.push({
+                code: "DeleteEntryType",
+                data: {
+                    entryTypeId: VNID(deletedTypeId),
+                },
+            });
         }
 
         // Create any newly added EntryTypes:
