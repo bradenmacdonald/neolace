@@ -12,7 +12,7 @@ on:
 
 env:
   # deno-version: ">=1.26.0 <1.27.0" - disabling this because often the docker images are published days after the release, causing a build error
-  deno-version: "1.26.0"
+  deno-version: "1.27.0"
   docker-registry: ghcr.io
 
 jobs:
@@ -26,10 +26,10 @@ jobs:
 
     steps:
       - name: Setup repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v1.1.0
+        uses: denoland/setup-deno@v1.1.1
         with:
           deno-version: ${{ env.deno-version }}
 
@@ -54,10 +54,10 @@ jobs:
 
     steps:
       - name: Setup repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v1.1.0
+        uses: denoland/setup-deno@v1.1.1
         with:
           deno-version: ${{ env.deno-version }}
 
@@ -81,10 +81,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v1.1.0
+        uses: denoland/setup-deno@v1.1.1
         with:
           deno-version: ${{ env.deno-version }}
 
@@ -115,9 +115,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Deno
-        uses: denoland/setup-deno@v1.1.0
+        uses: denoland/setup-deno@v1.1.1
         with:
           deno-version: ${{ env.deno-version }}
       - uses: actions/setup-node@v3
@@ -155,17 +155,17 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Detect deno version using the same mechanism as the other Deno jobs in this file (e.g. "v1.16.x" becomes "1.16.4")
       - name: Detect which Deno version to use
         id: deno-version
-        uses: denoland/setup-deno@v1.1.0
+        uses: denoland/setup-deno@v1.1.1
         with:
           deno-version: ${{ env.deno-version }}
 
       - name: Log in to the Container registry
-        uses: docker/login-action@42d299face0c5c43a0487c477f595ac9cf22f1a7
+        uses: docker/login-action@v2.1.0
         with:
           registry: ${{ env.docker-registry }}
           username: ${{ github.actor }}
@@ -179,7 +179,7 @@ jobs:
         uses: tj-actions/branch-names@7f0a69aa8e80f46987e8979c73ac9923d6a3c004
 
       - name: Determine tag to use
-        uses: haya14busa/action-cond@fcf25c40aad2d8f13112d74eb825a2d48a9726bc
+        uses: haya14busa/action-cond@dependabot/npm_and_yarn/actions/core-1.9.1
         id: tag-condition
         with:
           # Are we running on main (the default branch) or a PR that will merge into main?
@@ -191,7 +191,7 @@ jobs:
           if_false: ghcr.io/neolace-dev/neolace-${{ matrix.component }}:${{ steps.branch-name.outputs.current_branch }}
 
       - name: Build ${{ matrix.component }} Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        uses: docker/build-push-action@v3.2.0
         with:
           file: ${{ matrix.component }}/Dockerfile
           context: .
@@ -209,7 +209,7 @@ jobs:
       - name: Push ${{ matrix.component }} Docker image
         # For now we are only pushing if this is built on main, but we always build to test that the build works.
         if: github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        uses: docker/build-push-action@v3.2.0
         with:
           file: ${{ matrix.component }}/Dockerfile
           context: .
