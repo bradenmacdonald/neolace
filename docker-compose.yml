@@ -22,17 +22,17 @@ version: '3'
 x-service-templates:
   neo4j:
     &neo4j-defaults
-    image: neo4j:4.4.10
+    image: neo4j:5.1.0
     environment:
       # Set default password to "neolace"
       NEO4J_AUTH: neo4j/neolace
       # We need trigger functionality, which is part of "APOC" and must be enabled:
-      NEO4J_dbms_directories_plugins: /var/lib/neo4j/labs
+      NEO4J_server_directories_plugins: /var/lib/neo4j/labs
       NEO4J_dbms_security_procedures_unrestricted: apoc.*
       # Enable trigger functionality:
-      NEO4J_apoc_trigger_enabled: "true"
+      apoc.trigger.enabled: "true"
       # The following is needed for apoc.export.cypher.all, even though we're only exporting to memory, not disk.
-      NEO4J_apoc_export_file_enabled: "true"
+      apoc.export.file.enabled: "true"
   authn:
     &authn-defaults
     image: keratin/authn-server:1.15.0
