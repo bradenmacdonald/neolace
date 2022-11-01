@@ -2,7 +2,7 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 import { assert, assertEquals, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { EntryValue, IntegerValue, PageValue } from "../../values.ts";
 import { AllEntries } from "./allEntries.ts";
 
@@ -34,6 +34,7 @@ group("allEntries.ts", () => {
                     data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
                 },
             ],
+            editSource: UseSystemSource,
         }));
 
         const plantDbContext = new TestLookupContext({ siteId: defaultData.site.id });

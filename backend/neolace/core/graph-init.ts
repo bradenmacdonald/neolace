@@ -19,6 +19,7 @@ import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { getPlugins } from "neolace/plugins/loader.ts";
 import { AppliedEdit } from "neolace/core/edit/AppliedEdit.ts";
+import { EditSource, ImportSource, SystemSource } from "./edit/EditSource.ts";
 
 export function registerVNodeTypes(graph: Vertex) {
     graph.registerVNodeTypes([
@@ -33,6 +34,9 @@ export function registerVNodeTypes(graph: Vertex) {
         DraftEdit,
         DraftFile,
         Draft,
+        EditSource,
+        SystemSource,
+        ImportSource,
         // core/entry
         Entry,
         PropertyFact,

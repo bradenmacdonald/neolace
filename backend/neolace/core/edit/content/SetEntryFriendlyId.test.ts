@@ -8,7 +8,7 @@ import {
     TestLookupContext,
 } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { StringValue } from "neolace/core/lookup/values.ts";
 import { InvalidEdit, VNID } from "neolace/deps/neolace-api.ts";
 
@@ -30,6 +30,7 @@ group("SetEntryFriendlyId edit implementation", () => {
             edits: [
                 { code: "SetEntryFriendlyId", data: { entryId: ponderosaPine.id, friendlyId: "s-new-friendly-id" } },
             ],
+            editSource: UseSystemSource,
         }));
         assertEquals(await getFriendlyId(), "s-new-friendly-id");
         assertEquals(
@@ -49,6 +50,7 @@ group("SetEntryFriendlyId edit implementation", () => {
                     data: { entryId: ponderosaPine.id, friendlyId: ponderosaPine.friendlyId },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         assertEquals(await getFriendlyId(), ponderosaPine.friendlyId);
         // We confirm now that no changes were actually made:
@@ -68,6 +70,7 @@ group("SetEntryFriendlyId edit implementation", () => {
                             data: { entryId: invalidEntryId, friendlyId: "s-new-friendly-id" },
                         },
                     ],
+                    editSource: UseSystemSource,
                 })),
             "ApplyEdits action failed during apply() method",
         );
@@ -89,6 +92,7 @@ group("SetEntryFriendlyId edit implementation", () => {
                             data: { entryId: ponderosaPine.id, friendlyId: "s-new-friendly-id" },
                         },
                     ],
+                    editSource: UseSystemSource,
                 })),
             "ApplyEdits action failed during apply() method",
         );

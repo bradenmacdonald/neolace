@@ -1,8 +1,12 @@
 import { EditChangeType, EditList, getEditType } from "neolace/deps/neolace-api.ts";
-import { C, defineAction, VNID } from "neolace/deps/vertex-framework.ts";
-import { Draft, Entry, EntryType, Site } from "neolace/core/mod.ts";
+import { C, defineAction, isVNID, VNID } from "neolace/deps/vertex-framework.ts";
+import { Entry, EntryType, Site } from "neolace/core/mod.ts";
 import { EditHadNoEffect, editImplementations } from "./implementations.ts";
 import { AppliedEdit } from "./AppliedEdit.ts";
+import { EditSource, ImportSource, SystemSource } from "./EditSource.ts";
+
+export const UseImportSource = Symbol("ImportSource");
+export const UseSystemSource = Symbol("ImportSource");
 
 /**
  * Apply a set of edits (to schema and/or content)
@@ -11,12 +15,15 @@ export const ApplyEdits = defineAction({
     type: "ApplyEdits",
     parameters: {} as {
         siteId: VNID;
-        /** The ID of the draft whose edits we are applying. This is required if any of the edits need to access files uploaded to the draft. */
-        draftId?: VNID;
+        /** The ID of the edit source that the edits are coming from; a draft ID, connection ID, or ImportSource or SystemSource. */
+        editSource: VNID | typeof UseSystemSource | typeof UseImportSource;
         edits: EditList;
     },
     resultData: {},
     apply: async (tx, data) => {
+        if (data.editSource === undefined) {
+            throw new Error(`Missing editSource in call to applyEdits.`);
+        }
         const siteId = data.siteId;
         const modifiedNodes = new Set<VNID>();
         const descriptions: string[] = [];
@@ -43,7 +50,12 @@ export const ApplyEdits = defineAction({
             }
 
             // Actually do the edit:
-            const result = await implementation(tx, edit.data, siteId, data.draftId);
+            const result = await implementation(
+                tx,
+                edit.data,
+                siteId,
+                isVNID(data.editSource) ? data.editSource : undefined,
+            );
             if (result === EditHadNoEffect) {
                 // This particular edit had no effect. We don't need to record it.
             } else {
@@ -68,27 +80,53 @@ export const ApplyEdits = defineAction({
         }
 
         if (appliedEditsData.length > 0) {
-            await tx.queryOne(C`
+            let editSourceId: VNID;
+            if (data.editSource === UseSystemSource || data.editSource === UseImportSource) {
+                // This is complicated code to run a MERGE to ensure that the special "SystemSource" or "ImportSource" exists for the current site.
+                // We use a merge to avoid issues with competing transactions.
+                const SourceClass = data.editSource === UseSystemSource ? SystemSource : ImportSource;
+                const query = C`
+                    MATCH (site:${Site} {id: ${siteId}})
+                    MERGE (editSource:${SourceClass}:${C(EditSource.label)})-[:${EditSource.rel.FOR_SITE}]->(site)
+                    ON CREATE
+                        SET editSource.id = ${VNID()}
+                    RETURN editSource.id`;
+                const result = await tx.run(query.queryString, query.params);
+                if (result.records.length !== 1) {
+                    throw new Error("Failed to create SystemSource/ImportSource for that site.");
+                }
+                editSourceId = result.records[0].get("editSource.id");
+                if (result.summary.counters.updates().nodesCreated > 0) {
+                    modifiedNodes.add(editSourceId);
+                }
+            } else if (isVNID(data.editSource)) {
+                editSourceId = data.editSource; // Probably a Draft or a Connection
+            } else {
+                throw new Error("Missing the editSource for the edits, which is required.");
+            }
+            await tx.query(C`
                 MATCH (site:${Site} {id: ${siteId}})
-                ${data.draftId ? C`MATCH (draft:${Draft} {id: ${data.draftId}})` : C``}
-                // TODO: match connection if connection ID
+                MATCH (editSource:${EditSource} {id: ${editSourceId}})
+                WITH site, editSource
                 UNWIND ${appliedEditsData} AS appliedEdit
 
                 CREATE (ae:${AppliedEdit} {id: appliedEdit.id})
-                ${data.draftId ? C`CREATE (ae)-[:${AppliedEdit.rel.HAS_EDIT_SOURCE}]->(draft)` : C``}
+                CREATE (ae)-[:${AppliedEdit.rel.HAS_EDIT_SOURCE}]->(editSource)
                 SET ae += appliedEdit.fields
 
-                // Mark which entries were modified by this edit specifically:
-                WITH ae, appliedEdit
-                OPTIONAL MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-                WHERE entry.id IN appliedEdit.modifiedNodes
+                // Mark which entries were modified by this edit:
+                WITH site, ae, appliedEdit
+                MATCH (entry:${Entry} WHERE entry.id IN appliedEdit.modifiedNodes)-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
                 CREATE (ae)-[:${AppliedEdit.rel.MODIFIED}]->(entry)
-            `.RETURN({}));
+            `);
+            for (const ae of appliedEditsData) {
+                modifiedNodes.add(ae.id);
+            }
         }
 
         return {
             resultData: {},
-            modifiedNodes: [...modifiedNodes, ...appliedEditsData.map((ae) => ae.id)],
+            modifiedNodes: Array.from(modifiedNodes),
             description: descriptions.length > 0 ? descriptions.join(", ") : "(no changes)",
         };
     },

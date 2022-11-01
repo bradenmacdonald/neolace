@@ -9,7 +9,7 @@ import {
     WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
-import { Draft } from "neolace/core/edit/Draft.ts";
+import { EditSource } from "./EditSource.ts";
 
 /**
  * An AppliedEdit is a specific change that has actually been applied to the database, made by the user within a Draft
@@ -33,7 +33,7 @@ export class AppliedEdit extends VNodeType {
 
     static readonly rel = this.hasRelationshipsFromThisTo({
         HAS_EDIT_SOURCE: {
-            to: [Draft /* , Connection */],
+            to: [EditSource],
             properties: {},
             cardinality: VNodeType.Rel.ToOneOrNone,
         },

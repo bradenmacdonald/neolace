@@ -10,7 +10,7 @@ import {
 } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { AccessMode, CreateSite, UpdateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { Always, EntryTypesCondition, NotCondition, PermissionGrant } from "neolace/core/permissions/grant.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 import { EntryValue, StringValue } from "../../values.ts";
@@ -53,6 +53,7 @@ group("entry.ts", () => {
                     data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                 },
             ],
+            editSource: UseSystemSource,
         }));
 
         const otherSiteContext = new TestLookupContext({ siteId: otherSiteId });

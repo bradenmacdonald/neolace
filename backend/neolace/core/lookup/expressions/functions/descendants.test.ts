@@ -3,7 +3,7 @@ import { PropertyType } from "neolace/deps/neolace-api.ts";
 import { assertEquals, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { AnnotatedValue, IntegerValue, MakeAnnotatedEntryValue, PageValue } from "../../values.ts";
 import { This } from "../this.ts";
 import { Count } from "./count.ts";
@@ -331,6 +331,7 @@ group("descendants.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
 
             // Check the descendants of F
@@ -448,6 +449,7 @@ group("descendants.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
 
             // Check the descendant of D

@@ -5,6 +5,7 @@ import { User } from "neolace/core/User.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
 import { DataFile } from "neolace/core/objstore/DataFile.ts";
 import { Draft, DraftEdit, DraftFile } from "./Draft.ts";
+import { EditSource } from "./EditSource.ts";
 
 export const UpdateDraft = defaultUpdateFor(Draft, (d) => d.title.description, {
     otherUpdates: async (
@@ -101,7 +102,7 @@ export const CreateDraft = defineAction({
         await tx.queryOne(C`
             MATCH (site:${Site} {id: ${data.siteId}})
             MATCH (author:${User} {id: ${data.authorId}})
-            CREATE (draft:${Draft} {id: ${id}})
+            CREATE (draft:${Draft}:${C(EditSource.label)} {id: ${id}})
             SET draft.title = ${data.title}
             SET draft.description = ${data.description ?? ""}
             SET draft.status = ${DraftStatus.Open}
@@ -151,7 +152,7 @@ export const AcceptDraft = defineAction({
 
         const { modifiedNodes } = await ApplyEdits.apply(tx, {
             siteId: draft.site!.id,
-            draftId: data.id,
+            editSource: data.id,
             edits: editsConsolidated,
         });
 

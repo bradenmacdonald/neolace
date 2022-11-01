@@ -4,7 +4,7 @@ import { EditList, PropertyMode, PropertyType } from "neolace/deps/neolace-api.t
 import { assertEquals, beforeAll, group, resetDBToBlankSnapshot, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
@@ -34,6 +34,7 @@ group("properties.ts", () => {
                 edits: [
                     { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
                 ],
+                editSource: UseSystemSource,
             }));
         });
 
@@ -56,6 +57,7 @@ group("properties.ts", () => {
                     },
                     { code: "CreateProperty", data: { id: propertyId, name: "Property", appliesTo: [{ entryType }] } },
                 ],
+                editSource: UseSystemSource,
             }));
             await graph.runAsSystem(ApplyEdits({
                 siteId,
@@ -70,6 +72,7 @@ group("properties.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
             // Now just read the value from the graph, so we're only testing the write functions, not the read ones:
             const result = await graph.read((tx) =>
@@ -122,6 +125,7 @@ group("properties.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
             // Say that (entry B) IS A (entry a)
             const valueExpression = `entry("${entryA}")`;
@@ -140,6 +144,7 @@ group("properties.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
             // Now just read the value from the graph, so we're only testing the write functions, not the read ones:
             const result = await graph.read((tx) =>
@@ -218,6 +223,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
             });
 
@@ -339,6 +345,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
 
                 assertEquals(await graph.read((tx) => getEntryProperties(A, { tx })), [
@@ -498,6 +505,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
 
                 // Define the expected property values:
@@ -677,6 +685,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
                 // Check properties of B:
                 assertEquals(
@@ -800,6 +809,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
                 // Check properties of A:
                 assertEquals(
@@ -978,6 +988,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
             });
             test("'slots' allow partial inheritance where _some_ inherited values get overwritten, others don't.", async () => {
@@ -1049,6 +1060,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
                 // Now with slots disabled, electric car won't inherit steering wheel, because having any value for
                 // "has parts" will override ALL inherited values.
@@ -1121,6 +1133,7 @@ group("properties.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
 
             const edits: EditList = [];
@@ -1226,7 +1239,7 @@ group("properties.ts", () => {
                 });
             }
 
-            await graph.runAsSystem(ApplyEdits({ siteId, edits }));
+            await graph.runAsSystem(ApplyEdits({ siteId, edits, editSource: UseSystemSource }));
 
             // Get the properties of A with rank <= 2:
             assertEquals(await graph.read((tx) => getEntryProperties(A, { tx, maxRank: 2 })), [

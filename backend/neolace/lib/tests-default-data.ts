@@ -7,7 +7,7 @@ import { getGraph } from "neolace/core/graph.ts";
 import { CreateBot, CreateUser } from "../core/User.ts";
 import { AccessMode, CreateSite } from "neolace/core/Site.ts";
 import { CreateGroup } from "neolace/core/permissions/Group.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseImportSource } from "neolace/core/edit/ApplyEdits.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
 import { __forScriptsOnly as objStoreUtils } from "neolace/core/objstore/objstore.ts";
 import { schema } from "../sample-data/plantdb/schema.ts";
@@ -213,7 +213,9 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     await ensureFilesExist();
 
     // Create some initial entry data, specifically entries about plants.
-    await graph.runAsSystem(ApplyEdits({ siteId: data.site.id, edits: makePlantDbContent }));
+    await graph.runAsSystem(
+        ApplyEdits({ siteId: data.site.id, edits: makePlantDbContent, editSource: UseImportSource }),
+    );
     await createImages(data.site.id);
 
     const defaultDataSnapshot = await graph.snapshotDataForTesting();

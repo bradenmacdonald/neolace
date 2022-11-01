@@ -14,6 +14,7 @@ import { Entry } from "neolace/core/entry/Entry.ts";
 import { Site } from "neolace/core/Site.ts";
 import { User } from "neolace/core/User.ts";
 import { DataFile } from "neolace/core/objstore/DataFile.ts";
+import { EditSource } from "./EditSource.ts";
 
 /**
  * A DraftEdit is a specific change within a Draft.
@@ -97,7 +98,7 @@ export class DraftFile extends VNodeType {
  * Most changes to a site's content happen via Drafts. A user can push a set of edits as a draft, and optionally wait
  * for others to review the draft, then accept the draft.
  */
-export class Draft extends VNodeType {
+export class Draft extends EditSource {
     static readonly label = "Draft";
 
     static readonly properties = {

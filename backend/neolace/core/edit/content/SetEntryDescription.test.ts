@@ -8,7 +8,7 @@ import {
     TestLookupContext,
 } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { StringValue } from "neolace/core/lookup/values.ts";
 import { InvalidEdit, VNID } from "neolace/deps/neolace-api.ts";
 
@@ -30,6 +30,7 @@ group("SetEntryDescription edit implementation", () => {
             edits: [
                 { code: "SetEntryDescription", data: { entryId: ponderosaPine.id, description: "new description" } },
             ],
+            editSource: UseSystemSource,
         }));
         assertEquals(await getFriendlyId(), "new description");
         assertEquals(
@@ -49,6 +50,7 @@ group("SetEntryDescription edit implementation", () => {
                     data: { entryId: ponderosaPine.id, description: ponderosaPine.description },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         assertEquals(await getFriendlyId(), ponderosaPine.description);
         // We confirm now that no changes were actually made:
@@ -68,6 +70,7 @@ group("SetEntryDescription edit implementation", () => {
                             data: { entryId: invalidEntryId, description: "new description" },
                         },
                     ],
+                    editSource: UseSystemSource,
                 })),
             "ApplyEdits action failed during apply() method",
         );
@@ -89,6 +92,7 @@ group("SetEntryDescription edit implementation", () => {
                             data: { entryId: ponderosaPine.id, description: "new description" },
                         },
                     ],
+                    editSource: UseSystemSource,
                 })),
             "ApplyEdits action failed during apply() method",
         );

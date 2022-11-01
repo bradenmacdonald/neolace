@@ -4,7 +4,7 @@ import { dedent } from "neolace/lib/dedent.ts";
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { getEntryFeatureData } from "../get-feature-data.ts";
 
@@ -25,6 +25,7 @@ group("Article.ts", () => {
             edits: [
                 { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
             ],
+            editSource: UseSystemSource,
         }));
 
         // Now get the schema, without the "Article" feature enabled yet:
@@ -48,6 +49,7 @@ group("Article.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         // Now check the updated schema:
         const afterSchema = await graph.read((tx) => getCurrentSchema(tx, siteId));
@@ -71,6 +73,7 @@ group("Article.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         // The schema should return to the initial version:
         assertEquals(
@@ -113,6 +116,7 @@ group("Article.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
 
         // At first, since the "Article" feature is enabled for this entry type, it has the default Article data:
@@ -146,6 +150,7 @@ group("Article.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
 
         ////////////////////////////////////////////////////////////////////////////
