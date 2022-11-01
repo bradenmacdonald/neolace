@@ -86,7 +86,7 @@ export const SetEntryFriendlyId = ContentEditType({
         }
         return updatedEntry;
     },
-    describe: (data) => `Change \`Entry ${data.entryId}\` ID to "${data.friendlyId}"`,
+    describe: (data) => `Changed friendly ID of \`Entry ${data.entryId}\` to "${data.friendlyId}"`,
     consolidate(thisEdit, earlierEdit) {
         if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // This rename overwrites the previous ID change.

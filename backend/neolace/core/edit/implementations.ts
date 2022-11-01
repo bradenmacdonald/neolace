@@ -15,7 +15,7 @@ export type EditImplementation<EditType extends api.EditType> = (
      * TODO: we could make the temporary file uploads independent of drafts.
      */
     draftId?: VNID,
-) => Promise<{ modifiedNodes: VNID[] } | typeof EditHadNoEffect>;
+) => Promise<{ modifiedNodes: VNID[]; oldValues?: Record<string, unknown> } | typeof EditHadNoEffect>;
 
 export function defineImplementation<EditType extends api.ContentEditType | api.SchemaEditType>(
     editType: EditType,
