@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { checkPermissionsRequiredForEdits, getDraft } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
-import { UpdateDraft } from "neolace/core/edit/Draft.ts";
+import { UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
 
 /**
  * Add an additional edit to a draft

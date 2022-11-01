@@ -2,7 +2,7 @@ import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { schema } from "./schema.ts";
 import { files } from "./datafiles.ts";
 
-import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
+import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { entryData } from "./content.ts";
 import { ImageSizingMode } from "neolace/deps/neolace-api.ts";

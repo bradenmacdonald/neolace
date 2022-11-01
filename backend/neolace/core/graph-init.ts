@@ -18,6 +18,7 @@ import { DataFile } from "neolace/core/objstore/DataFile.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { getPlugins } from "neolace/plugins/loader.ts";
+import { AppliedEdit } from "neolace/core/edit/AppliedEdit.ts";
 
 export function registerVNodeTypes(graph: Vertex) {
     graph.registerVNodeTypes([
@@ -28,6 +29,7 @@ export function registerVNodeTypes(graph: Vertex) {
         BotUser,
         Site,
         // core/edit
+        AppliedEdit,
         DraftEdit,
         DraftFile,
         Draft,

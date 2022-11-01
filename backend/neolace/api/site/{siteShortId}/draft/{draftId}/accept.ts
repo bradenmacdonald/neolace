@@ -1,7 +1,8 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { consolidateEdits } from "neolace/deps/neolace-api.ts";
-import { AcceptDraft, Draft } from "neolace/core/edit/Draft.ts";
+import { Draft } from "neolace/core/mod.ts";
+import { AcceptDraft } from "neolace/core/edit/Draft-actions.ts";
 import { checkPermissionsRequiredForEdits } from "../_helpers.ts";
 
 export class AcceptDraftResource extends NeolaceHttpResource {

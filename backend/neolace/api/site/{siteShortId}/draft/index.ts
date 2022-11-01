@@ -3,10 +3,11 @@ import { C, Field } from "neolace/deps/vertex-framework.ts";
 
 import { Site } from "neolace/core/Site.ts";
 import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { CreateDraft, Draft } from "neolace/core/edit/Draft.ts";
+import { Draft } from "neolace/core/edit/Draft.ts";
+import { CreateDraft } from "neolace/core/edit/Draft-actions.ts";
 import { checkPermissionsRequiredForEdits, getDraft } from "./_helpers.ts";
 import { makeCypherCondition } from "neolace/core/permissions/check.ts";
-import { User } from "../../../../core/User.ts";
+import { User } from "neolace/core/User.ts";
 
 export class DraftIndexResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/draft"];
