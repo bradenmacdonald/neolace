@@ -313,7 +313,7 @@ export const DeletePropertyFact = ContentEditType({
         }
         return updatedEntry;
     },
-    describe: (data) => `Deleted \`PropertyFact ${data.propertyFactId}\` property value`,
+    describe: (data) => `Deleted \`PropertyFact ${data.propertyFactId}\` from \`Entry ${data.entryId}\``,
     consolidate(thisEdit, earlierEdit) {
         if (
             (earlierEdit.code === UpdatePropertyFact.code) &&

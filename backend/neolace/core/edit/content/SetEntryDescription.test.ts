@@ -77,7 +77,7 @@ group("SetEntryDescription edit implementation", () => {
         assertEquals(result.appliedEditIds, []);
     });
 
-    test("SetEntryDescription cannot change change the description of an entry that doesn't exist", async () => {
+    test("SetEntryDescription cannot change the description of an entry that doesn't exist", async () => {
         const graph = await getGraph();
         const invalidEntryId = VNID("_foobar843758943");
         const err = await assertRejects(
@@ -100,7 +100,7 @@ group("SetEntryDescription edit implementation", () => {
         assertEquals(err.cause.message, "Cannot set change the entry's description - entry does not exist.");
     });
 
-    test("SetEntryDescription cannot change change the name of an entry from another site", async () => {
+    test("SetEntryDescription cannot change the name of an entry from another site", async () => {
         const graph = await getGraph();
         const err = await assertRejects(
             () =>

@@ -77,7 +77,7 @@ group("SetEntryFriendlyId edit implementation", () => {
         assertEquals(result.appliedEditIds, []);
     });
 
-    test("SetEntryFriendlyId cannot change change the friendlyId of an entry that doesn't exist", async () => {
+    test("SetEntryFriendlyId cannot change the friendlyId of an entry that doesn't exist", async () => {
         const graph = await getGraph();
         const invalidEntryId = VNID("_foobar843758943");
         const err = await assertRejects(
@@ -100,7 +100,7 @@ group("SetEntryFriendlyId edit implementation", () => {
         assertEquals(err.cause.message, "Cannot set change the entry's friendly ID - entry does not exist.");
     });
 
-    test("SetEntryFriendlyId cannot change change the name of an entry from another site", async () => {
+    test("SetEntryFriendlyId cannot change the name of an entry from another site", async () => {
         const graph = await getGraph();
         const err = await assertRejects(
             () =>

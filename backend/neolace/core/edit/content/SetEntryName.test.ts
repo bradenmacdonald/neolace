@@ -69,7 +69,7 @@ group("SetEntryName edit implementation", () => {
         assertEquals(result.appliedEditIds, []);
     });
 
-    test("SetEntryName cannot change change the name of an entry that doesn't exist", async () => {
+    test("SetEntryName cannot change the name of an entry that doesn't exist", async () => {
         const graph = await getGraph();
         const invalidEntryId = VNID("_foobar843758943");
         const err = await assertRejects(
@@ -89,7 +89,7 @@ group("SetEntryName edit implementation", () => {
         assertEquals(err.cause.message, "Cannot set change the entry's name - entry does not exist.");
     });
 
-    test("SetEntryName cannot change change the name of an entry from another site", async () => {
+    test("SetEntryName cannot change the name of an entry from another site", async () => {
         const graph = await getGraph();
         const err = await assertRejects(
             () =>
