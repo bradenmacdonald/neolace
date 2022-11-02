@@ -19,7 +19,9 @@ export const ApplyEdits = defineAction({
         editSource: VNID | typeof UseSystemSource | typeof UseImportSource;
         edits: EditList;
     },
-    resultData: {},
+    resultData: {} as {
+        appliedEditIds: VNID[];
+    },
     apply: async (tx, data) => {
         if (data.editSource === undefined) {
             throw new Error(`Missing editSource in call to applyEdits.`);
@@ -125,7 +127,9 @@ export const ApplyEdits = defineAction({
         }
 
         return {
-            resultData: {},
+            resultData: {
+                appliedEditIds: appliedEditsData.map((appliedEdit) => appliedEdit.id),
+            },
             modifiedNodes: Array.from(modifiedNodes),
             description: descriptions.length > 0 ? descriptions.join(", ") : "(no changes)",
         };

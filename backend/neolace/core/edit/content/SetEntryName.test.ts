@@ -11,6 +11,7 @@ import { getGraph } from "neolace/core/graph.ts";
 import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { StringValue } from "neolace/core/lookup/values.ts";
 import { InvalidEdit, VNID } from "neolace/deps/neolace-api.ts";
+import { AppliedEdit } from "../AppliedEdit.ts";
 
 group("SetEntryName edit implementation", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
@@ -32,6 +33,24 @@ group("SetEntryName edit implementation", () => {
         }));
         assertEquals(await getName(), "New Name Woo");
         assertEquals(result.actionDescription, `Renamed \`Entry ${ponderosaPine.id}\` to "New Name Woo"`);
+        assertEquals(result.appliedEditIds.length, 1);
+    });
+
+    test("SetEntryName records the previous name.", async () => {
+        const graph = await getGraph();
+        const originalName = ponderosaPine.name;
+        assertEquals(await getName(), originalName);
+        const result = await graph.runAsSystem(ApplyEdits({
+            siteId,
+            edits: [
+                { code: "SetEntryName", data: { entryId: ponderosaPine.id, name: "New Name Woo" } },
+            ],
+            editSource: UseSystemSource,
+        }));
+        assertEquals(await getName(), "New Name Woo");
+        assertEquals(result.appliedEditIds.length, 1);
+        const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData(), { key: result.appliedEditIds[0] });
+        assertEquals(appliedEdit.oldData, { name: originalName });
     });
 
     test("SetEntryName will not change the graph if the name is the same.", async () => {
@@ -47,6 +66,7 @@ group("SetEntryName edit implementation", () => {
         assertEquals(await getName(), ponderosaPine.name);
         // We confirm now that no changes were actually made:
         assertEquals(result.actionDescription, "(no changes)");
+        assertEquals(result.appliedEditIds, []);
     });
 
     test("SetEntryName cannot change change the name of an entry that doesn't exist", async () => {
