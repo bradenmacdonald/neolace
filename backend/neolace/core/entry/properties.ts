@@ -1,4 +1,5 @@
 import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import type { RawPropertyData } from "neolace/deps/neolace-api.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
@@ -294,4 +295,35 @@ export async function getEntriesProperty(
     return getEntryProperties(entryIds, { tx, specificPropertyId }) as Promise<
         (EntryPropertyValueSet & { entryId: VNID })[]
     >;
+}
+
+/**
+ * Get the "raw properties" for an entry - ALL the properties that are explicitly set on this particular entry.
+ * This doesn't evaluate the lookup expressions of the property values, nor does it include inherited properties.
+ *
+ * This is mostly useful when editing an entry, and/or for test cases and debugging.
+ */
+export async function getRawProperties(
+    { tx, entryId }: { tx: WrappedTransaction; entryId: VNID },
+): Promise<RawPropertyData[]> {
+    const allProps = await tx.query(C`
+        MATCH (entry:${Entry} {id: ${entryId}})
+        MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
+        WITH prop, pf
+        ORDER BY prop.rank, prop.name, pf.rank
+        WITH prop, collect(pf { .id, .valueExpression, .note, .rank, .slot }) AS facts
+    `.RETURN({
+        "prop.id": Field.VNID,
+        "facts": Field.List(Field.Record({
+            "id": Field.VNID,
+            "valueExpression": Field.String,
+            "note": Field.String,
+            "rank": Field.Int,
+            "slot": Field.String,
+        })),
+    }));
+    return allProps.map((row) => ({
+        propertyId: row["prop.id"],
+        facts: row["facts"],
+    }));
 }
