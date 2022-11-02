@@ -14,7 +14,7 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
             userEmailUnique: {
                 forward: async (dbWrite) => {
                     await dbWrite(async (tx) => {
-                        await tx.run("CREATE CONSTRAINT user_email_uniq ON (u:Human) ASSERT u.email IS UNIQUE");
+                        await tx.run("CREATE CONSTRAINT user_email_uniq FOR (u:Human) REQUIRE u.email IS UNIQUE");
                     });
                 },
                 backward: async (dbWrite) => {
@@ -26,7 +26,7 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
             userAuthNIdUnique: {
                 forward: async (dbWrite) => {
                     await dbWrite(async (tx) => {
-                        await tx.run("CREATE CONSTRAINT user_authnId_uniq ON (u:Human) ASSERT u.authnId IS UNIQUE");
+                        await tx.run("CREATE CONSTRAINT user_authnId_uniq FOR (u:Human) REQUIRE u.authnId IS UNIQUE");
                     });
                 },
                 backward: async (dbWrite) => {
@@ -38,7 +38,7 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
             botAuthTokenUnique: {
                 forward: async (dbWrite) => {
                     await dbWrite(async (tx) => {
-                        await tx.run("CREATE CONSTRAINT bot_authtoken_uniq ON (u:Bot) ASSERT u.authToken IS UNIQUE");
+                        await tx.run("CREATE CONSTRAINT bot_authtoken_uniq FOR (u:Bot) REQUIRE u.authToken IS UNIQUE");
                     });
                 },
                 backward: async (dbWrite) => {
@@ -50,7 +50,7 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
             siteDomainUnique: {
                 forward: async (dbWrite) => {
                     await dbWrite(async (tx) => {
-                        await tx.run("CREATE CONSTRAINT site_domain_uniq ON (s:Site) ASSERT s.domain IS UNIQUE");
+                        await tx.run("CREATE CONSTRAINT site_domain_uniq FOR (s:Site) REQUIRE s.domain IS UNIQUE");
                     });
                 },
                 backward: async (dbWrite) => {
@@ -62,7 +62,7 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
             siteCodeUnique: {
                 forward: async (dbWrite) => {
                     await dbWrite(async (tx) => {
-                        await tx.run("CREATE CONSTRAINT site_sitecode_uniq ON (s:Site) ASSERT s.siteCode IS UNIQUE");
+                        await tx.run("CREATE CONSTRAINT site_sitecode_uniq FOR (s:Site) REQUIRE s.siteCode IS UNIQUE");
                     });
                 },
                 backward: async (dbWrite) => {
@@ -75,7 +75,7 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 forward: async (dbWrite) => {
                     await dbWrite(async (tx) => {
                         await tx.run(
-                            "CREATE CONSTRAINT propertyfact_directrelneo4jid_uniq ON (pf:PropertyFact) ASSERT pf.directRelNeo4jId IS UNIQUE",
+                            "CREATE CONSTRAINT propertyfact_directrelneo4jid_uniq FOR (pf:PropertyFact) REQUIRE pf.directRelNeo4jId IS UNIQUE",
                         );
                     });
                 },

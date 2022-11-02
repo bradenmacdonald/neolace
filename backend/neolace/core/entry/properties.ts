@@ -126,18 +126,19 @@ export async function getEntryProperties<TC extends true | undefined = undefined
                 (prop.rank <= ${maxRank})
             
             WITH entry, prop, length(path) AS distance, nodes(path)[length(path) - 2] AS ancestor, nodes(path)[length(path) - 1] AS pf
+            WITH entry, prop, distance, ancestor, collect({
+                propertyFactId: pf.id,
+                valueExpression: pf.valueExpression,
+                note: pf.note,
+                rank: pf.rank,
+                slot: pf.slot,
+                source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
+            }) AS facts
 
             RETURN {
                 entryId: entry.id,
                 property: prop {.id, .name, .rank, default: null, .displayAs},
-                facts: collect({
-                    propertyFactId: pf.id,
-                    valueExpression: pf.valueExpression,
-                    note: pf.note,
-                    rank: pf.rank,
-                    slot: pf.slot,
-                    source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
-                })
+                facts: facts
             } AS propertyData
 
             
@@ -168,18 +169,19 @@ export async function getEntryProperties<TC extends true | undefined = undefined
             UNWIND facts as f
             WITH entry, prop, f WHERE f.distance = minDistance
             WITH entry, prop, f.pf AS pf, f.distance AS distance, f.ancestor AS ancestor
+            WITH entry, prop, collect({
+                propertyFactId: pf.id,
+                valueExpression: pf.valueExpression,
+                note: pf.note,
+                rank: pf.rank,
+                slot: pf.slot,
+                source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
+            }) AS facts
 
             RETURN {
                 entryId: entry.id,
                 property: prop {.id, .name, .rank, default: null, .displayAs},
-                facts: collect({
-                    propertyFactId: pf.id,
-                    valueExpression: pf.valueExpression,
-                    note: pf.note,
-                    rank: pf.rank,
-                    slot: pf.slot,
-                    source: CASE distance WHEN 2 THEN {from: "ThisEntry"} ELSE {from: "AncestorEntry", entryId: ancestor.id} END
-                })
+                facts: facts
             } AS propertyData
             
             ///////////////////////////////////////////////////////////////////////////////////
