@@ -109,14 +109,14 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                     friendlyId: <code>{edit.data.friendlyId}</code>,
                 }} />
             }
-            case "AddPropertyValue": {
+            case "AddPropertyFact": {
                 return <FormattedMessage defaultMessage="Added a new property value to {entry} - {property}: {value}" id="fktjWL" values={{
                     entry: <>{entryLink({entryId: edit.data.entryId})}</>,
                     property: <strong>{schema?.properties[edit.data.propertyId]?.name}</strong>,
                     value: <FriendlyValueDisplay lookupValue={edit.data.valueExpression} />,
                 }} />
             }
-            case "UpdatePropertyValue": {
+            case "UpdatePropertyFact": {
                 return <FormattedMessage defaultMessage="Updated property value on {entry} - fact {propertyFactId}: {value}" id="M6/W4Z" values={{
                     entry: <>{entryLink({entryId: edit.data.entryId})}</>,
                     propertyFactId: <>{edit.data.propertyFactId}</>,

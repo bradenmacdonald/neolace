@@ -85,7 +85,7 @@ export const makePlantDbContent: EditList = [
     },
     // Class "Pinopsida" IS A member of division "Tracheophyta"
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.classPinopsida.id,
             propertyId: schema.properties._parentDivision.id,
@@ -106,7 +106,7 @@ export const makePlantDbContent: EditList = [
     },
     // order "Pinales" IS A member of class "Pinopsida"
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.orderPinales.id,
             propertyId: schema.properties._parentClass.id,
@@ -127,7 +127,7 @@ export const makePlantDbContent: EditList = [
     },
     // family "Pinaceae" IS A member of order "Pinales"
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.familyPinaceae.id,
             propertyId: schema.properties._parentOrder.id,
@@ -148,7 +148,7 @@ export const makePlantDbContent: EditList = [
     },
     // Genus "Pinus" IS A member of family "Pinaceae"
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.genusPinus.id,
             propertyId: schema.properties._parentFamily.id,
@@ -169,7 +169,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.ponderosaPine.id,
             propertyId: schema.properties._parentGenus.id,
@@ -178,7 +178,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.ponderosaPine.id,
             propertyId: schema.properties._propScientificName.id,
@@ -187,7 +187,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.ponderosaPine.id,
             propertyId: schema.properties._propWikidataQID.id,
@@ -248,7 +248,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.stonePine.id,
             propertyId: schema.properties._parentGenus.id,
@@ -257,7 +257,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.stonePine.id,
             propertyId: schema.properties._propScientificName.id,
@@ -277,7 +277,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.jackPine.id,
             propertyId: schema.properties._parentGenus.id,
@@ -286,7 +286,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.jackPine.id,
             propertyId: schema.properties._propScientificName.id,
@@ -306,7 +306,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.japaneseRedPine.id,
             propertyId: schema.properties._parentGenus.id,
@@ -315,7 +315,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.japaneseRedPine.id,
             propertyId: schema.properties._propScientificName.id,
@@ -335,7 +335,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.japaneseWhitePine.id,
             propertyId: schema.properties._parentGenus.id,
@@ -355,7 +355,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.jeffreyPine.id,
             propertyId: schema.properties._parentGenus.id,
@@ -375,7 +375,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.pinyonPine.id,
             propertyId: schema.properties._parentGenus.id,
@@ -395,7 +395,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.westernWhitePine.id,
             propertyId: schema.properties._parentGenus.id,
@@ -416,7 +416,7 @@ export const makePlantDbContent: EditList = [
     },
     // family "Cupressaceae" IS A member of order "Pinales"
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.familyCupressaceae.id,
             propertyId: schema.properties._parentOrder.id,
@@ -437,7 +437,7 @@ export const makePlantDbContent: EditList = [
     },
     // Genus "Cupressus" IS A member of family "Cupressaceae"
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.genusCupressus.id,
             propertyId: schema.properties._parentFamily.id,
@@ -458,7 +458,7 @@ export const makePlantDbContent: EditList = [
     },
     // Species "Cupressus sempervirens" IS A member of genus "Cupressus"
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.mediterraneanCypress.id,
             propertyId: schema.properties._parentGenus.id,
@@ -479,7 +479,7 @@ export const makePlantDbContent: EditList = [
     },
     // Genus "Thuja" IS A member of family "Cupressaceae"
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.genusThuja.id,
             propertyId: schema.properties._parentFamily.id,
@@ -500,7 +500,7 @@ export const makePlantDbContent: EditList = [
     },
     // Species "Thuja plicata" IS A member of genus "Thuja"
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.westernRedcedar.id,
             propertyId: schema.properties._parentGenus.id,
@@ -537,7 +537,7 @@ export const makePlantDbContent: EditList = [
     },
     // A male cone is a type of cone
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.pollenCone.id,
             propertyId: schema.properties._partIsAPart.id,
@@ -558,7 +558,7 @@ export const makePlantDbContent: EditList = [
     },
     // A female cone is a type of cone
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.seedCone.id,
             propertyId: schema.properties._partIsAPart.id,
@@ -569,7 +569,7 @@ export const makePlantDbContent: EditList = [
 
     // All conifers (Class Pinopsida) have both male and female cones:
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.classPinopsida.id,
             propertyId: schema.properties._hasPart.id,
@@ -579,7 +579,7 @@ export const makePlantDbContent: EditList = [
         },
     },
     {
-        code: "AddPropertyValue",
+        code: "AddPropertyFact",
         data: {
             entryId: entryData.classPinopsida.id,
             propertyId: schema.properties._hasPart.id,

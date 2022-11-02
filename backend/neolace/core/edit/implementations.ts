@@ -26,15 +26,15 @@ export function defineImplementation<EditType extends api.ContentEditType | api.
 }
 
 // Content edit implementations:
-import { doAddPropertyValue } from "./content/AddPropertyValue.ts";
+import { doAddPropertyFact } from "./content/AddPropertyFact.ts";
 import { doCreateEntry } from "./content/CreateEntry.ts";
 import { doDeleteEntry } from "./content/DeleteEntry.ts";
-import { doDeletePropertyValue } from "./content/DeletePropertyValue.ts";
+import { doDeletePropertyFact } from "./content/DeletePropertyFact.ts";
 import { doSetEntryDescription } from "./content/SetEntryDescription.ts";
 import { doSetEntryFriendlyId } from "./content/SetEntryFriendlyId.ts";
 import { doSetEntryName } from "./content/SetEntryName.ts";
 import { doUpdateEntryFeature } from "./content/UpdateEntryFeature.ts";
-import { doUpdatePropertyValue } from "./content/UpdatePropertyValue.ts";
+import { doUpdatePropertyFact } from "./content/UpdatePropertyFact.ts";
 // Schema edit implementations:
 import { doCreateEntryType } from "./schema/CreateEntryType.ts";
 import { doCreateProperty } from "./schema/CreateProperty.ts";
@@ -46,15 +46,15 @@ import { doUpdateProperty } from "./schema/UpdateProperty.ts";
 
 export const editImplementations: Partial<Record<EditCode, EditImplementation<api.EditType>>> = Object.freeze({
     // Content edits:
-    [doAddPropertyValue.code]: doAddPropertyValue.impl,
+    [doAddPropertyFact.code]: doAddPropertyFact.impl,
     [doCreateEntry.code]: doCreateEntry.impl,
     [doDeleteEntry.code]: doDeleteEntry.impl,
-    [doDeletePropertyValue.code]: doDeletePropertyValue.impl,
+    [doDeletePropertyFact.code]: doDeletePropertyFact.impl,
     [doSetEntryDescription.code]: doSetEntryDescription.impl,
     [doSetEntryFriendlyId.code]: doSetEntryFriendlyId.impl,
     [doSetEntryName.code]: doSetEntryName.impl,
     [doUpdateEntryFeature.code]: doUpdateEntryFeature.impl,
-    [doUpdatePropertyValue.code]: doUpdatePropertyValue.impl,
+    [doUpdatePropertyFact.code]: doUpdatePropertyFact.impl,
     // Schema edits:
     [doCreateEntryType.code]: doCreateEntryType.impl,
     [doCreateProperty.code]: doCreateProperty.impl,

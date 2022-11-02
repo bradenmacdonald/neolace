@@ -204,7 +204,7 @@ group("HeroImage.ts", () => {
             siteId,
             edits: [
                 {
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: {
                         entryId: entryId,
                         propertyId: hasFeatureImage,

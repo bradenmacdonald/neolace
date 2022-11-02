@@ -1,9 +1,9 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { DeletePropertyValue, InvalidEdit } from "neolace/deps/neolace-api.ts";
+import { DeletePropertyFact, InvalidEdit } from "neolace/deps/neolace-api.ts";
 import { defineImplementation } from "neolace/core/edit/implementations.ts";
 import { Entry, EntryType, Property, PropertyFact, Site } from "neolace/core/mod.ts";
 
-export const doDeletePropertyValue = defineImplementation(DeletePropertyValue, async (tx, data, siteId) => {
+export const doDeletePropertyFact = defineImplementation(DeletePropertyFact, async (tx, data, siteId) => {
     const propertyFactId = data.propertyFactId;
     let modifiedEntry;
     try {
@@ -18,7 +18,7 @@ export const doDeletePropertyValue = defineImplementation(DeletePropertyValue, a
     } catch (err: unknown) {
         if (err instanceof EmptyResultError) {
             throw new InvalidEdit(
-                DeletePropertyValue.code,
+                DeletePropertyFact.code,
                 { propertyFactId: propertyFactId },
                 `That property fact does not exist on that entry.`,
             );

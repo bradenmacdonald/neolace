@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.146.0/testing/asserts.ts";
 import { VNID } from "../types.ts";
-import { AddPropertyValue, DeletePropertyValue, UpdatePropertyValue } from "./ContentEdit.ts";
+import { AddPropertyFact, DeletePropertyFact, UpdatePropertyFact } from "./ContentEdit.ts";
 import {
     type AnyEdit,
     consolidateEdits,
@@ -153,7 +153,7 @@ Deno.test("Consolidate edits", async (t) => {
         // Create a couple of edits that won't be changed by what we're doing here.
         const unrelatedEdit1: AnyEdit = { code: SetEntryName.code, data: { entryId: entryC, name: "C name" } };
         const unrelatedEdit2: AnyEdit = {
-            code: UpdatePropertyValue.code,
+            code: UpdatePropertyFact.code,
             data: { entryId: entryA, propertyFactId: VNID(), note: "new note" },
         };
         const propId = VNID();
@@ -161,32 +161,32 @@ Deno.test("Consolidate edits", async (t) => {
         const oldEdits: AnyEdit[] = [
             // This new property value will get updated and then erased, so should consolidate to nothing:
             {
-                code: AddPropertyValue.code,
+                code: AddPropertyFact.code,
                 data: { entryId: entryA, propertyFactId: fact1, propertyId: propId, valueExpression: "1 first value" },
             },
             unrelatedEdit1,
             // These two updates to 'fact2' should get consolidated:
             {
-                code: UpdatePropertyValue.code,
+                code: UpdatePropertyFact.code,
                 data: { entryId: entryA, propertyFactId: fact2, valueExpression: "2 first value" },
             },
             {
-                code: UpdatePropertyValue.code,
+                code: UpdatePropertyFact.code,
                 data: { entryId: entryA, propertyFactId: fact2, valueExpression: "2 second value" },
             },
             unrelatedEdit2,
             {
-                code: UpdatePropertyValue.code,
+                code: UpdatePropertyFact.code,
                 data: { entryId: entryA, propertyFactId: fact1, valueExpression: "1 second value" },
             },
-            { code: DeletePropertyValue.code, data: { entryId: entryA, propertyFactId: fact1 } },
+            { code: DeletePropertyFact.code, data: { entryId: entryA, propertyFactId: fact1 } },
         ];
         assertEquals(consolidateEdits(oldEdits), [
             // The 'Add' has been removed since it was later deleted.
             unrelatedEdit1,
             // The two updates to 'fact2' should be consolidated:
             {
-                code: UpdatePropertyValue.code,
+                code: UpdatePropertyFact.code,
                 data: { entryId: entryA, propertyFactId: fact2, valueExpression: "2 second value" },
             },
             unrelatedEdit2,
@@ -207,7 +207,7 @@ Deno.test("Consolidate edits", async (t) => {
             },
         };
         const secondEdit: AnyEdit = {
-            code: "AddPropertyValue",
+            code: "AddPropertyFact",
             data: {
                 entryId: entryA,
                 propertyId: VNID(),

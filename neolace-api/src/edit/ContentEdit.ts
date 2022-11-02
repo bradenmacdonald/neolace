@@ -175,9 +175,9 @@ export const UpdateEntryFeature = ContentEditType({
     describe: (data) => `Updated ${data.feature.featureType} Feature of \`Entry ${data.entryId}\``,
 });
 
-export const AddPropertyValue = ContentEditType({
+export const AddPropertyFact = ContentEditType({
     changeType: EditChangeType.Content,
-    code: "AddPropertyValue",
+    code: "AddPropertyFact",
     dataSchema: Schema({
         /** The Entry where we are adding a new property value */
         entryId: vnidString,
@@ -225,9 +225,9 @@ export const AddPropertyValue = ContentEditType({
     describe: (data) => `Added value for \`Property ${data.propertyId}\` property on \`Entry ${data.entryId}\``,
 });
 
-export const UpdatePropertyValue = ContentEditType({
+export const UpdatePropertyFact = ContentEditType({
     changeType: EditChangeType.Content,
-    code: "UpdatePropertyValue",
+    code: "UpdatePropertyFact",
     dataSchema: Schema({
         /**
          * The ID of the entry this property fact/value is attached to. (This is technically not necessary since it can
@@ -276,9 +276,9 @@ export const UpdatePropertyValue = ContentEditType({
     },
     describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value`,
     consolidate(thisEdit, earlierEdit) {
-        // This can be consolidated with a previous UpdatePropertyValue or AddPropertyValue edit.
+        // This can be consolidated with a previous UpdatePropertyFact or AddPropertyFact edit.
         if (
-            (earlierEdit.code === thisEdit.code || earlierEdit.code === AddPropertyValue.code) &&
+            (earlierEdit.code === thisEdit.code || earlierEdit.code === AddPropertyFact.code) &&
             earlierEdit.data.propertyFactId === thisEdit.data.propertyFactId
         ) {
             return {code: earlierEdit.code, data: {...earlierEdit.data, ...thisEdit.data}};
@@ -287,9 +287,9 @@ export const UpdatePropertyValue = ContentEditType({
     },
 });
 
-export const DeletePropertyValue = ContentEditType({
+export const DeletePropertyFact = ContentEditType({
     changeType: EditChangeType.Content,
-    code: "DeletePropertyValue",
+    code: "DeletePropertyFact",
     dataSchema: Schema({
         /**
          * The ID of the entry this property fact/value is attached to. (This is technically not necessary since it can
@@ -316,14 +316,14 @@ export const DeletePropertyValue = ContentEditType({
     describe: (data) => `Deleted \`PropertyFact ${data.propertyFactId}\` property value`,
     consolidate(thisEdit, earlierEdit) {
         if (
-            (earlierEdit.code === UpdatePropertyValue.code) &&
+            (earlierEdit.code === UpdatePropertyFact.code) &&
             earlierEdit.data.propertyFactId === thisEdit.data.propertyFactId
         ) {
             // Ignore any updates if the property gets deleted
             return thisEdit;
         }
         if (
-            (earlierEdit.code === AddPropertyValue.code) &&
+            (earlierEdit.code === AddPropertyFact.code) &&
             earlierEdit.data.propertyFactId === thisEdit.data.propertyFactId
         ) {
             // Add + Delete combine to nothing.
@@ -369,9 +369,9 @@ export const _allContentEditTypes = {
     SetEntryFriendlyId,
     SetEntryDescription,
     UpdateEntryFeature,
-    AddPropertyValue,
-    UpdatePropertyValue,
-    DeletePropertyValue,
+    AddPropertyFact,
+    UpdatePropertyFact,
+    DeletePropertyFact,
     DeleteEntry,
 };
 
@@ -381,8 +381,8 @@ export type AnyContentEdit = (
     | Edit<typeof SetEntryFriendlyId>
     | Edit<typeof SetEntryDescription>
     | Edit<typeof UpdateEntryFeature>
-    | Edit<typeof AddPropertyValue>
-    | Edit<typeof UpdatePropertyValue>
-    | Edit<typeof DeletePropertyValue>
+    | Edit<typeof AddPropertyFact>
+    | Edit<typeof UpdatePropertyFact>
+    | Edit<typeof DeletePropertyFact>
     | Edit<typeof DeleteEntry>
 );

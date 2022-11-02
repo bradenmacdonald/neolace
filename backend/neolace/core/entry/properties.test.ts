@@ -63,7 +63,7 @@ group("properties.ts", () => {
                 siteId,
                 edits: [
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId,
                             propertyId,
@@ -134,7 +134,7 @@ group("properties.ts", () => {
                 siteId,
                 edits: [
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: entryB,
                             propertyId,
@@ -214,7 +214,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: prop1,
@@ -335,7 +335,7 @@ group("properties.ts", () => {
                             data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: entryIsA,
@@ -430,7 +430,7 @@ group("properties.ts", () => {
                             data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop1,
@@ -439,7 +439,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop2,
@@ -448,7 +448,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop3,
@@ -462,7 +462,7 @@ group("properties.ts", () => {
                             data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: entryIsA,
@@ -472,7 +472,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: prop2,
@@ -486,7 +486,7 @@ group("properties.ts", () => {
                             data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: C,
                                 propertyId: entryIsA,
@@ -496,7 +496,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: C,
                                 propertyId: prop3,
@@ -626,7 +626,7 @@ group("properties.ts", () => {
                             data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop1,
@@ -641,7 +641,7 @@ group("properties.ts", () => {
                         },
                         // B inherits from A
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: entryIsA,
@@ -650,7 +650,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: prop1,
@@ -660,7 +660,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: prop1,
@@ -676,7 +676,7 @@ group("properties.ts", () => {
                         },
                         // C inherits from B
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: C,
                                 propertyId: entryIsA,
@@ -776,7 +776,7 @@ group("properties.ts", () => {
                             data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop1,
@@ -787,7 +787,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop1,
@@ -798,7 +798,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop1,
@@ -934,7 +934,7 @@ group("properties.ts", () => {
                             data: { id: car, name: "Car", type: entryType, friendlyId: "v-car", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: car,
                                 propertyId: entryHasPart,
@@ -945,7 +945,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: car,
                                 propertyId: entryHasPart,
@@ -967,7 +967,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: electricCar,
                                 propertyId: entryIsA,
@@ -977,7 +977,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: electricCar,
                                 propertyId: entryHasPart,
@@ -1124,7 +1124,7 @@ group("properties.ts", () => {
                     },
                     // B inherits from A:
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: B,
                             propertyId: entryIsA,
@@ -1173,7 +1173,7 @@ group("properties.ts", () => {
                 });
                 const propertyFactId = VNID();
                 edits.push({
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: { entryId: A, propertyId: id, propertyFactId, valueExpression: `"A${i}"` },
                 });
                 aPropertyValues.push({
@@ -1191,7 +1191,7 @@ group("properties.ts", () => {
             // B will inherit eight properties (0..7) from A, but will overwrite two of them:
             const factIdB6 = VNID();
             edits.push({
-                code: "AddPropertyValue",
+                code: "AddPropertyFact",
                 data: {
                     entryId: B,
                     propertyId: aPropertyValues[6].property.id,
@@ -1201,7 +1201,7 @@ group("properties.ts", () => {
             });
             const factIdB7 = VNID();
             edits.push({
-                code: "AddPropertyValue",
+                code: "AddPropertyFact",
                 data: {
                     entryId: B,
                     propertyId: aPropertyValues[7].property.id,
@@ -1224,7 +1224,7 @@ group("properties.ts", () => {
                 });
                 const propertyFactId = VNID();
                 edits.push({
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: { entryId: B, propertyId: id, propertyFactId, valueExpression: `"B${i}"` },
                 });
                 bPropertyValues.push({

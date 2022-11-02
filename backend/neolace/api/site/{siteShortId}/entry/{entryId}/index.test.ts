@@ -462,14 +462,14 @@ group("entry/index.test.ts", () => {
                     removeSimpleProperties: [defaultData.schema.entryTypes._ETSPECIES.simplePropValues._CFSpeciesParts.id],
                 }},
                 // Delete the other properties from Ponderosa Pine:
-                {code: api.UpdatePropertyValue.code, data: {
+                {code: api.UpdatePropertyFact.code, data: {
                     entry: defaultData.entries.ponderosaPine.id,
                     property: defaultData.entries.propertyScientificName.id,
                     valueExpression: "",  // Delete this property value
                     note: "",
                 }},
                 // Delete the other properties from Ponderosa Pine:
-                {code: api.UpdatePropertyValue.code, data: {
+                {code: api.UpdatePropertyFact.code, data: {
                     entry: defaultData.entries.ponderosaPine.id,
                     property: defaultData.entries.propertyWikidataItemId.id,
                     valueExpression: "",  // Delete this property value

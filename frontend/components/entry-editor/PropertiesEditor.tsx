@@ -80,7 +80,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
     const handleAddNewProperty = React.useCallback((propId: string) => {
         if (!entryId) return;
         addUnsavedEdit({
-            code: api.AddPropertyValue.code,
+            code: api.AddPropertyFact.code,
             data: {
                 entryId,
                 propertyId: VNID(propId),

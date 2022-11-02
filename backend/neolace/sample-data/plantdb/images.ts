@@ -43,7 +43,7 @@ export async function createImages(siteId: VNID) {
             },
             // This image relates to the ponderosa pine:
             {
-                code: "AddPropertyValue",
+                code: "AddPropertyFact",
                 data: {
                     entryId: entryData.imgPonderosaTrunk.id,
                     propertyId: schema.properties._imgRelTo.id,
@@ -53,7 +53,7 @@ export async function createImages(siteId: VNID) {
             },
             // This image is used as the hero image for the ponderosa pine
             {
-                code: "AddPropertyValue",
+                code: "AddPropertyFact",
                 data: {
                     entryId: entryData.ponderosaPine.id,
                     propertyId: schema.properties._hasHeroImage.id,

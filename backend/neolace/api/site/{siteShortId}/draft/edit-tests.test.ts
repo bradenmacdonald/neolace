@@ -91,7 +91,7 @@ group("edit tests", () => {
 
             // Now we give it a value:
             await doEdit(client, {
-                code: api.AddPropertyValue.code,
+                code: api.AddPropertyFact.code,
                 data: {
                     entryId,
                     propertyId,
@@ -108,7 +108,7 @@ group("edit tests", () => {
             // Now we give it a second value:
 
             await doEdit(client, {
-                code: api.AddPropertyValue.code,
+                code: api.AddPropertyFact.code,
                 data: {
                     entryId,
                     propertyId,
@@ -142,7 +142,7 @@ group("edit tests", () => {
             // delete a property fact that does not exist:
             const err = await assertRejects(() =>
                 doEdit(client, {
-                    code: api.AddPropertyValue.code,
+                    code: api.AddPropertyFact.code,
                     data: {
                         entryId: ponderosaEntryId,
                         propertyId,
@@ -187,7 +187,7 @@ group("edit tests", () => {
 
             // Now we change the property value:
             await doEdit(client, {
-                code: api.UpdatePropertyValue.code,
+                code: api.UpdatePropertyFact.code,
                 data: {
                     entryId,
                     propertyFactId,
@@ -224,7 +224,7 @@ group("edit tests", () => {
             // Now we change the property value:
             const newGenusId = defaultData.entries.genusThuja.id;
             await doEdit(client, {
-                code: api.UpdatePropertyValue.code,
+                code: api.UpdatePropertyFact.code,
                 data: {
                     entryId,
                     propertyFactId,
@@ -261,7 +261,7 @@ group("edit tests", () => {
 
             // now delete the property value
             await doEdit(client, {
-                code: api.DeletePropertyValue.code,
+                code: api.DeletePropertyFact.code,
                 data: {
                     entryId: originalEntry.id,
                     propertyFactId: VNID((propertyFact.value.annotations?.propertyFactId as api.StringValue).value),
@@ -295,7 +295,7 @@ group("edit tests", () => {
             // now delete the property fact that does not exist, on a real entry:
             const err = await assertRejects(() =>
                 doEdit(client, {
-                    code: api.DeletePropertyValue.code,
+                    code: api.DeletePropertyFact.code,
                     data: { entryId, propertyFactId: (newVNID) },
                 })
             );
@@ -319,7 +319,7 @@ group("edit tests", () => {
             // Now delete a property fact that doesn't match with the entry ID:
             const entryId = defaultData.entries.ponderosaPine.id;
             const err = await assertRejects(
-                () => doEdit(client, { code: api.DeletePropertyValue.code, data: { entryId, propertyFactId } }),
+                () => doEdit(client, { code: api.DeletePropertyFact.code, data: { entryId, propertyFactId } }),
             );
             assertInstanceOf(err, api.InvalidEdit);
             assertEquals(err.message, `That property fact does not exist on that entry.`);
@@ -351,7 +351,7 @@ group("edit tests", () => {
                 throw new Error("Test error - couldn't determine relationship property fact ID.");
             }
             await doEdit(client, {
-                code: api.DeletePropertyValue.code,
+                code: api.DeletePropertyFact.code,
                 data: { entryId, propertyFactId: relationshipId },
             });
 
@@ -431,7 +431,7 @@ group("edit tests", () => {
             const entryId = defaultData.entries.jackPine.id;
             const propertyFactId = VNID();
             await doEdit(client, {
-                code: api.AddPropertyValue.code,
+                code: api.AddPropertyFact.code,
                 data: {
                     entryId,
                     propertyId,
@@ -449,7 +449,7 @@ group("edit tests", () => {
             );
 
             // Now delete the property fact from the entry:
-            await doEdit(client, { code: api.DeletePropertyValue.code, data: { entryId, propertyFactId } });
+            await doEdit(client, { code: api.DeletePropertyFact.code, data: { entryId, propertyFactId } });
 
             // Now the delete should succeed:
             await doDelete();

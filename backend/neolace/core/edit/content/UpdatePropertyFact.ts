@@ -1,10 +1,10 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { InvalidEdit, PropertyType, UpdatePropertyValue } from "neolace/deps/neolace-api.ts";
+import { InvalidEdit, PropertyType, UpdatePropertyFact } from "neolace/deps/neolace-api.ts";
 import { defineImplementation, EditHadNoEffect } from "neolace/core/edit/implementations.ts";
 import { Entry, EntryType, Property, PropertyFact, Site } from "neolace/core/mod.ts";
 import { directRelTypeForPropertyType, parseLookupExpressionToEntryId } from "neolace/core/entry/PropertyFact.ts";
 
-export const doUpdatePropertyValue = defineImplementation(UpdatePropertyValue, async (tx, data, siteId) => {
+export const doUpdatePropertyFact = defineImplementation(UpdatePropertyFact, async (tx, data, siteId) => {
     const propertyFactId = data.propertyFactId;
     const updatedFields: Record<string, unknown> = {};
     if (data.valueExpression !== undefined) {
@@ -36,7 +36,7 @@ export const doUpdatePropertyValue = defineImplementation(UpdatePropertyValue, a
     } catch (err: unknown) {
         if (err instanceof EmptyResultError) {
             throw new InvalidEdit(
-                UpdatePropertyValue.code,
+                UpdatePropertyFact.code,
                 { entryId: data.entryId, propertyFactId: propertyFactId },
                 `That property fact does not exist on that entry.`,
             );
@@ -69,7 +69,7 @@ export const doUpdatePropertyValue = defineImplementation(UpdatePropertyValue, a
         } catch (err) {
             if (err instanceof EmptyResultError) {
                 throw new InvalidEdit(
-                    UpdatePropertyValue.code,
+                    UpdatePropertyFact.code,
                     {
                         propertyFactId: data.propertyFactId,
                         toEntryId: toEntryId,

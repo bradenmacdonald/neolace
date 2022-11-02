@@ -140,7 +140,7 @@ group("graph()", () => {
                 },
                 // B is a A
                 {
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: {
                         entryId: B,
                         valueExpression: `entry("${A}")`,
@@ -150,7 +150,7 @@ group("graph()", () => {
                 },
                 // C is a A
                 {
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: {
                         entryId: C,
                         valueExpression: `entry("${A}")`,
@@ -160,7 +160,7 @@ group("graph()", () => {
                 },
                 // D is a B
                 {
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: {
                         entryId: D,
                         valueExpression: `entry("${B}")`,
@@ -170,7 +170,7 @@ group("graph()", () => {
                 },
                 // D is a C
                 {
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: {
                         entryId: D,
                         valueExpression: `entry("${C}")`,
@@ -180,7 +180,7 @@ group("graph()", () => {
                 },
                 // A is a D
                 {
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: {
                         entryId: A,
                         valueExpression: `entry("${D}")`,

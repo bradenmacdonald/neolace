@@ -232,7 +232,7 @@ group("descendants.ts", () => {
                     },
                     // C is a A
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: C,
                             valueExpression: `entry("${A}")`,
@@ -242,7 +242,7 @@ group("descendants.ts", () => {
                     },
                     // D is a A
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: D,
                             valueExpression: `entry("${A}")`,
@@ -252,7 +252,7 @@ group("descendants.ts", () => {
                     },
                     // D is a B
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: D,
                             valueExpression: `entry("${B}")`,
@@ -262,7 +262,7 @@ group("descendants.ts", () => {
                     },
                     // E is a B
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: E,
                             valueExpression: `entry("${B}")`,
@@ -272,7 +272,7 @@ group("descendants.ts", () => {
                     },
                     // F is a C
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: F,
                             valueExpression: `entry("${C}")`,
@@ -282,7 +282,7 @@ group("descendants.ts", () => {
                     },
                     // F is a D
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: F,
                             valueExpression: `entry("${D}")`,
@@ -292,7 +292,7 @@ group("descendants.ts", () => {
                     },
                     // H is a F
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: H,
                             valueExpression: `entry("${F}")`,
@@ -302,7 +302,7 @@ group("descendants.ts", () => {
                     },
                     // H is a E
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: H,
                             valueExpression: `entry("${E}")`,
@@ -312,7 +312,7 @@ group("descendants.ts", () => {
                     },
                     // I is a E
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: I,
                             valueExpression: `entry("${E}")`,
@@ -322,7 +322,7 @@ group("descendants.ts", () => {
                     },
                     // I is a G
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: I,
                             valueExpression: `entry("${G}")`,
@@ -400,7 +400,7 @@ group("descendants.ts", () => {
                     },
                     // B is a A
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: B,
                             valueExpression: `entry("${A}")`,
@@ -410,7 +410,7 @@ group("descendants.ts", () => {
                     },
                     // C is a A
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: C,
                             valueExpression: `entry("${A}")`,
@@ -420,7 +420,7 @@ group("descendants.ts", () => {
                     },
                     // D is a B
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: D,
                             valueExpression: `entry("${B}")`,
@@ -430,7 +430,7 @@ group("descendants.ts", () => {
                     },
                     // D is a C
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: D,
                             valueExpression: `entry("${C}")`,
@@ -440,7 +440,7 @@ group("descendants.ts", () => {
                     },
                     // A is a D
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: A,
                             valueExpression: `entry("${D}")`,

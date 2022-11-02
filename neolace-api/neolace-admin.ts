@@ -522,7 +522,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                         throw new Error(`Invalid property value on entry ${entryId} (${friendlyId})`);
                     }
                     edits.push({
-                        code: api.AddPropertyValue.code,
+                        code: api.AddPropertyFact.code,
                         data: {
                             entryId,
                             propertyId: idMap[humanKey] as VNID,
