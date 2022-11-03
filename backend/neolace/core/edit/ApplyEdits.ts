@@ -39,7 +39,6 @@ export const ApplyEdits = defineAction({
                 data: string; // JSON encoded object
                 /** oldData: for edits that overwrite or delete data, this can hold information about the old value. */
                 oldData: string; // JSON encoded object
-                timestamp: Date;
             };
             modifiedNodes: VNID[];
         }[] = [];
@@ -74,7 +73,6 @@ export const ApplyEdits = defineAction({
                         changeType: editTypeDefinition.changeType,
                         data: JSON.stringify(edit.data),
                         oldData: JSON.stringify(result.oldValues ?? {}),
-                        timestamp: new Date(),
                     },
                     modifiedNodes: result.modifiedNodes,
                 });
@@ -115,6 +113,7 @@ export const ApplyEdits = defineAction({
                 CREATE (ae:${AppliedEdit} {id: appliedEdit.id})
                 CREATE (ae)-[:${AppliedEdit.rel.HAS_EDIT_SOURCE}]->(editSource)
                 SET ae += appliedEdit.fields
+                SET ae.timestamp = datetime.realtime()
 
                 // Mark which entries were modified by this edit:
                 WITH site, ae, appliedEdit
