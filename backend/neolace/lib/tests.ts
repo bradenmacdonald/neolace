@@ -37,11 +37,18 @@ export function group(name: string, tests: () => unknown) {
                     let timeout: number | undefined;
                     await Promise.race([
                         stopGraphDatabaseConnection(),
-                        new Promise((r) => timeout = setTimeout(r, 2_000)), // Wait at most 2s to close the connection. Sometimes this hangs forever with Neo4j 4.4 (fine in 4.3)
+                        // Wait at most 2s to close the connection. Sometimes this hangs forever with Neo4j 4.4 (fine in 4.3):
+                        new Promise((r) => timeout = setTimeout(r, 2_000)),
                     ]);
-                    if (timeout !== undefined) {
-                        clearTimeout(timeout);
+                    while (timeout === undefined) {
+                        // Deno requires us to clean up the timer if it hasn't fired yet, but it's possible that if
+                        // stopGraphDatabaseConnection() executed VERY fast, the timer hasn't even been created yet. If
+                        // it gets created later and we don't clear it or let it timeout, Deno throws an error:
+                        // "A timer...was started during the test, but not fired/cleared during the test."
+                        // So we need to wait for it to exist.
+                        await new Promise((r) => setTimeout(r, 100)); // Sleep and then continue
                     }
+                    clearTimeout(timeout);
                     await stopRedis();
                 });
                 level++;
