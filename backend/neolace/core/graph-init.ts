@@ -4,7 +4,10 @@ import { Group } from "neolace/core/permissions/Group.ts";
 import { Site } from "neolace/core/Site.ts";
 import { BotUser, HumanUser, User } from "neolace/core/User.ts";
 // core/edit
+import { Connection } from "./edit/Connection.ts";
 import { Draft, DraftEdit, DraftFile } from "neolace/core/edit/Draft.ts";
+import { AppliedEdit } from "neolace/core/edit/AppliedEdit.ts";
+import { EditSource, SystemSource } from "./edit/EditSource.ts";
 // core/entry
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
@@ -18,8 +21,6 @@ import { DataFile } from "neolace/core/objstore/DataFile.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { getPlugins } from "neolace/plugins/loader.ts";
-import { AppliedEdit } from "neolace/core/edit/AppliedEdit.ts";
-import { EditSource, ImportSource, SystemSource } from "./edit/EditSource.ts";
 
 export function registerVNodeTypes(graph: Vertex) {
     graph.registerVNodeTypes([
@@ -31,12 +32,12 @@ export function registerVNodeTypes(graph: Vertex) {
         Site,
         // core/edit
         AppliedEdit,
+        Connection,
         DraftEdit,
         DraftFile,
         Draft,
         EditSource,
         SystemSource,
-        ImportSource,
         // core/entry
         Entry,
         PropertyFact,

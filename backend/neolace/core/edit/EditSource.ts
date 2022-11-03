@@ -43,10 +43,3 @@ export class EditSource extends VNodeType {
 export class SystemSource extends EditSource {
     static readonly label = "SystemSource";
 }
-
-/**
- * The Import Source is the "source" for all edits that come from using the import tools to bulk import content.
- */
-export class ImportSource extends EditSource {
-    static readonly label = "ImportSource";
-}

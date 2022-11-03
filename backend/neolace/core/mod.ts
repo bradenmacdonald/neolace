@@ -11,3 +11,4 @@ export { Property } from "./schema/Property.ts";
 export { Entry } from "./entry/Entry.ts";
 export { PropertyFact } from "./entry/PropertyFact.ts";
 export { Draft } from "./edit/Draft.ts";
+export { Connection } from "./edit/Connection.ts";

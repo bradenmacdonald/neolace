@@ -1,6 +1,7 @@
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
+import { UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 
 export class SchemaIndexResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/schema"];
@@ -29,7 +30,8 @@ export class SchemaIndexResource extends NeolaceHttpResource {
         const { siteId } = await this.getSiteDetails(request);
         const graph = await getGraph();
 
-        await graph.runAs(user.id, ImportSchema({ siteId, schema: bodyData }));
+        // TODO: allow specifying a Connection friendlyId and then use that connection as the edit source?
+        await graph.runAs(user.id, ImportSchema({ siteId, schema: bodyData, editSource: UseSystemSource }));
 
         return {}; // No response
     });

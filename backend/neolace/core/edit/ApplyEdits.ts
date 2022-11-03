@@ -3,10 +3,9 @@ import { C, defineAction, isVNID, VNID } from "neolace/deps/vertex-framework.ts"
 import { Entry, EntryType, Site } from "neolace/core/mod.ts";
 import { EditHadNoEffect, editImplementations } from "./implementations.ts";
 import { AppliedEdit } from "./AppliedEdit.ts";
-import { EditSource, ImportSource, SystemSource } from "./EditSource.ts";
+import { EditSource, SystemSource } from "./EditSource.ts";
 
-export const UseImportSource = Symbol("ImportSource");
-export const UseSystemSource = Symbol("ImportSource");
+export const UseSystemSource = Symbol("SystemSource");
 
 /**
  * Apply a set of edits (to schema and/or content)
@@ -15,8 +14,8 @@ export const ApplyEdits = defineAction({
     type: "ApplyEdits",
     parameters: {} as {
         siteId: VNID;
-        /** The ID of the edit source that the edits are coming from; a draft ID, connection ID, or ImportSource or SystemSource. */
-        editSource: VNID | typeof UseSystemSource | typeof UseImportSource;
+        /** The ID of the edit source that the edits are coming from; a draft ID, connection ID, or SystemSource. */
+        editSource: VNID | typeof UseSystemSource;
         edits: EditList;
     },
     resultData: {} as {
@@ -81,19 +80,18 @@ export const ApplyEdits = defineAction({
 
         if (appliedEditsData.length > 0) {
             let editSourceId: VNID;
-            if (data.editSource === UseSystemSource || data.editSource === UseImportSource) {
-                // This is complicated code to run a MERGE to ensure that the special "SystemSource" or "ImportSource" exists for the current site.
+            if (data.editSource === UseSystemSource) {
+                // This is complicated code to run a MERGE to ensure that the special "SystemSource" exists for the current site.
                 // We use a merge to avoid issues with competing transactions.
-                const SourceClass = data.editSource === UseSystemSource ? SystemSource : ImportSource;
                 const query = C`
                     MATCH (site:${Site} {id: ${siteId}})
-                    MERGE (editSource:${SourceClass}:${C(EditSource.label)})-[:${EditSource.rel.FOR_SITE}]->(site)
+                    MERGE (editSource:${SystemSource}:${C(EditSource.label)})-[:${EditSource.rel.FOR_SITE}]->(site)
                     ON CREATE
                         SET editSource.id = ${VNID()}
                     RETURN editSource.id`;
                 const result = await tx.run(query.queryString, query.params);
                 if (result.records.length !== 1) {
-                    throw new Error("Failed to create SystemSource/ImportSource for that site.");
+                    throw new Error("Failed to create SystemSource for that site.");
                 }
                 editSourceId = result.records[0].get("editSource.id");
                 if (result.summary.counters.updates().nodesCreated > 0) {

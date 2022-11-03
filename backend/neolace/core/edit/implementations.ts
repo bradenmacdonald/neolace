@@ -10,11 +10,11 @@ export type EditImplementation<EditType extends api.EditType> = (
     data: api.Edit<EditType>["data"],
     siteId: VNID,
     /**
-     * The ID of the draft whose edits we are applying.
+     * The ID of the Draft or Connection whose edits we are applying.
      * This is required if any of the edits need to access files uploaded to the draft.
      * TODO: we could make the temporary file uploads independent of drafts.
      */
-    draftId?: VNID,
+    editSourceId?: VNID,
 ) => Promise<{ modifiedNodes: VNID[]; oldValues?: Record<string, unknown> } | typeof EditHadNoEffect>;
 
 export function defineImplementation<EditType extends api.ContentEditType | api.SchemaEditType>(

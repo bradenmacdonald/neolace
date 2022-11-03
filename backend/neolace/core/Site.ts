@@ -31,7 +31,7 @@ const siteCodeRegex = /^[0-9A-Za-y][0-9A-Za-z]{4}$/;
 // Characters allowed in the site code, in ASCII sort order:
 const siteCodeChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 // There are 5 characters in each site code:
-const siteCodeLength = 5;
+export const siteCodeLength = 5;
 // This is the total number of possible site codes: 901,356,496
 // The first character cannot start with "z"; this is reserved for future expansion.
 const siteCodesMaxCount = (siteCodeChars.length - 1) * Math.pow(siteCodeChars.length, siteCodeLength - 1);

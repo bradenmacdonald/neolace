@@ -1,6 +1,6 @@
 import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
 import { defineAction, VNID } from "neolace/deps/vertex-framework.ts";
-import { ApplyEdits, UseImportSource } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { diffSchema, getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 
 /**
@@ -11,6 +11,7 @@ export const ImportSchema = defineAction({
     parameters: {} as {
         siteId: VNID;
         schema: SiteSchemaData;
+        editSource: VNID | typeof UseSystemSource;
     },
     resultData: {},
     apply: async (tx, data) => {
@@ -19,7 +20,7 @@ export const ImportSchema = defineAction({
         const result = await ApplyEdits.apply(tx, {
             siteId: data.siteId,
             edits: editSet.edits,
-            editSource: UseImportSource,
+            editSource: data.editSource,
         });
 
         const numEntryTypes = Object.keys(data.schema.entryTypes).length;

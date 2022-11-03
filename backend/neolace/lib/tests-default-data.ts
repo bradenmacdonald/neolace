@@ -7,7 +7,7 @@ import { getGraph } from "neolace/core/graph.ts";
 import { CreateBot, CreateUser } from "../core/User.ts";
 import { AccessMode, CreateSite } from "neolace/core/Site.ts";
 import { CreateGroup } from "neolace/core/permissions/Group.ts";
-import { ApplyEdits, UseImportSource } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
 import { __forScriptsOnly as objStoreUtils } from "neolace/core/objstore/objstore.ts";
 import { schema } from "../sample-data/plantdb/schema.ts";
@@ -207,14 +207,14 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     })).then((result) => data.site.usersGroupId = result.id);
 
     // Import the schema
-    await graph.runAsSystem(ImportSchema({ siteId: data.site.id, schema: data.schema }));
+    await graph.runAsSystem(ImportSchema({ siteId: data.site.id, schema: data.schema, editSource: UseSystemSource }));
 
     // Import the files
     await ensureFilesExist();
 
     // Create some initial entry data, specifically entries about plants.
     await graph.runAsSystem(
-        ApplyEdits({ siteId: data.site.id, edits: makePlantDbContent, editSource: UseImportSource }),
+        ApplyEdits({ siteId: data.site.id, edits: makePlantDbContent, editSource: UseSystemSource }),
     );
     await createImages(data.site.id);
 
