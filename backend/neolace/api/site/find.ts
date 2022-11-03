@@ -24,7 +24,7 @@ export class SiteFindByDomainResource extends NeolaceHttpResource {
         const graph = await getGraph();
         const site = await graph.pullOne(
             Site,
-            (s) => s.name.description.domain.url().footerContent.shortId().frontendConfig(),
+            (s) => s.name.description.domain.url().footerContent.shortId().frontendConfig,
             {
                 where: C`@this.domain = ${domain}`,
             },

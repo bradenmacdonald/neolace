@@ -8,7 +8,6 @@ import {
     DerivedProperty,
     Field,
     RawVNode,
-    ValidationError,
     VirtualPropType,
     VNID,
     VNodeType,
@@ -130,7 +129,7 @@ export class Site extends VNodeType {
          *     }
          * }
          */
-        frontendConfigJSON: Field.String.Check(check.string.max(10_000)),
+        frontendConfig: Field.JsonObjString,
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({
@@ -154,19 +153,12 @@ export class Site extends VNodeType {
     }));
     static readonly derivedProperties = this.hasDerivedProperties({
         shortId,
-        frontendConfig,
         url,
     });
 
     static async validate(dbObject: RawVNode<typeof this>): Promise<void> {
-        // Validate the frontendConfigJSON field:
-        let frontendConfigJSON;
-        try {
-            frontendConfigJSON = JSON.parse(dbObject.frontendConfigJSON);
-        } catch (_err: unknown) {
-            throw new ValidationError(`frontendConfigJSON is not valid JSON.`);
-        }
-        FrontendConfigSchema(frontendConfigJSON);
+        // Validate the frontendConfig field:
+        FrontendConfigSchema(dbObject.frontendConfig);
     }
 }
 
@@ -211,17 +203,6 @@ export function url(): DerivedProperty<string> {
         Site,
         (s) => s.domain,
         (s) => `${config.siteUrlPrefix}${s.domain}${config.siteUrlSuffix}`,
-    );
-}
-
-/**
- * A derived property that provides the "frontend config", parsed from JSON
- */
-export function frontendConfig(): DerivedProperty<FrontendConfigData> {
-    return DerivedProperty.make(
-        Site,
-        (s) => s.frontendConfigJSON,
-        (s) => JSON.parse(s.frontendConfigJSON),
     );
 }
 
@@ -289,7 +270,7 @@ export const UpdateSite = defaultUpdateFor(
             if (args.frontendConfig) {
                 await tx.queryOne(C`
                 MATCH (site:${Site} {id: ${nodeSnapshot.id}})
-                SET site.frontendConfigJSON = ${JSON.stringify(args.frontendConfig)}
+                SET site.frontendConfig = ${JSON.stringify(args.frontendConfig)}
             `.RETURN({}));
             }
             return {};
@@ -352,7 +333,7 @@ export const CreateSite = defineAction({
                 footerContent: ${data.footerContent || ""},
                 domain: ${data.domain},
                 accessMode: ${data.accessMode ?? AccessMode.PublicContributions},
-                frontendConfigJSON: ${JSON.stringify(data.frontendConfig ?? {})},
+                frontendConfig: ${JSON.stringify(data.frontendConfig ?? {})},
                 publicGrantStrings: ${data.publicGrantStrings ?? []}
             })
         `.RETURN({}));
