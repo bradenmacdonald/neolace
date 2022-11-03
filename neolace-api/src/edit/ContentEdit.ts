@@ -274,7 +274,7 @@ export const UpdatePropertyFact = ContentEditType({
         }
         return updatedEntry;
     },
-    describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value`,
+    describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value from \`Entry ${data.entryId}\``,
     consolidate(thisEdit, earlierEdit) {
         // This can be consolidated with a previous UpdatePropertyFact or AddPropertyFact edit.
         if (
