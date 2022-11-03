@@ -28,8 +28,8 @@ export class Group extends VNodeType {
         ...VNodeType.properties,
         // Name of this group
         name: Field.String,
-        // What permissions grants this group has (can be conditional), serialized as strings. TODO: Remove "NullOr"
-        grantStrings: Field.NullOr.List(Field.String),
+        // What permissions grants this group has (can be conditional), serialized as strings.
+        grantStrings: Field.List(Field.String),
     };
 
     static async validate(dbObject: RawVNode<typeof Group>, tx: WrappedTransaction): Promise<void> {
