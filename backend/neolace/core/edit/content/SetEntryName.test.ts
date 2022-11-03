@@ -49,7 +49,7 @@ group("SetEntryName edit implementation", () => {
         }));
         assertEquals(await getName(), "New Name Woo");
         assertEquals(result.appliedEditIds.length, 1);
-        const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData(), { key: result.appliedEditIds[0] });
+        const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData, { key: result.appliedEditIds[0] });
         assertEquals(appliedEdit.oldData, { name: originalName });
     });
 

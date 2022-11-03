@@ -54,7 +54,7 @@ group("SetEntryFriendlyId edit implementation", () => {
         }));
         assertEquals(await getFriendlyId(), "s-new-friendly-id");
         assertEquals(result.appliedEditIds.length, 1);
-        const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData(), { key: result.appliedEditIds[0] });
+        const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData, { key: result.appliedEditIds[0] });
         assertEquals(appliedEdit.oldData, { friendlyId: original });
     });
 

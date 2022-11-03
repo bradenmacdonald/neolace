@@ -23,7 +23,7 @@ export const UpdateDraft = defaultUpdateFor(Draft, (d) => d.title.description, {
             const editsExpanded = args.addEdits.map((e) => ({
                 id: VNID(),
                 code: e.code,
-                dataJSON: JSON.stringify(e.data),
+                dataJson: JSON.stringify(e.data),
                 changeType: getEditType(e.code).changeType,
             }));
 
@@ -33,7 +33,7 @@ export const UpdateDraft = defaultUpdateFor(Draft, (d) => d.title.description, {
                 CREATE (edit:${DraftEdit} {id: editData.id})
                 CREATE (draft)-[:${Draft.rel.HAS_EDIT}]->(edit)
                 SET edit.code = editData.code
-                SET edit.dataJSON = editData.dataJSON
+                SET edit.data = editData.dataJson
                 SET edit.changeType = editData.changeType
                 SET edit.timestamp = datetime.realtime()
             `);
@@ -135,7 +135,7 @@ export const AcceptDraft = defineAction({
     },
     resultData: {} as { id: VNID },
     apply: async (tx, data) => {
-        const draft = await tx.pullOne(Draft, (d) => d.status.site((s) => s.id).edits((e) => e.code.data()), {
+        const draft = await tx.pullOne(Draft, (d) => d.status.site((s) => s.id).edits((e) => e.code.data), {
             key: data.id,
         });
         if (draft.status !== DraftStatus.Open) {

@@ -62,7 +62,7 @@ group("DeletePropertyFact edit implementation", () => {
         }));
         assertEquals(await getScientificName(graph), undefined);
         assertEquals(result.appliedEditIds.length, 1);
-        const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData(), { key: result.appliedEditIds[0] });
+        const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData, { key: result.appliedEditIds[0] });
         const { id: _, ...oldFactDetails } = originalValue.facts[0];
         assertEquals(appliedEdit.oldData, {
             fact: oldFactDetails,

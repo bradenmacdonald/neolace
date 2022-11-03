@@ -17,7 +17,7 @@ import { DataFile } from "neolace/core/objstore/DataFile.ts";
 import { EditSource } from "./EditSource.ts";
 
 /**
- * A DraftEdit is a specific change within a Draft.
+ * A DraftEdit is a proposed edit within a Draft.
  */
 export class DraftEdit extends VNodeType {
     static readonly label = "DraftEdit";
@@ -27,7 +27,7 @@ export class DraftEdit extends VNodeType {
         code: Field.String,
         // changeType: is this a content edit or a schema edit?
         changeType: Field.String.Check(check.Schema.enum(EditChangeType)),
-        dataJSON: Field.String.Check(check.string.max(1_000_000)),
+        data: Field.JsonObjString,
         timestamp: Field.DateTime,
     };
 
@@ -35,9 +35,7 @@ export class DraftEdit extends VNodeType {
 
     static virtualProperties = this.hasVirtualProperties({});
 
-    static derivedProperties = this.hasDerivedProperties({
-        data: dataFromJson,
-    });
+    static derivedProperties = this.hasDerivedProperties({});
 
     static async validate(dbObject: RawVNode<typeof DraftEdit>, _tx: WrappedTransaction): Promise<void> {
         // Validate that "code", "changeType", and "data" are all consistent:
@@ -45,22 +43,9 @@ export class DraftEdit extends VNodeType {
         if (dbObject.changeType !== editType.changeType) {
             throw new FieldValidationError("changeType", "Edit's code does not match its changeType.");
         }
-        const data = JSON.parse(dbObject.dataJSON);
-        try {
-            editType.dataSchema(data);
-        } catch (err) {
-            throw new FieldValidationError("data", err.message);
-        }
+        // Validate that the edit data matches the schema for that edit type:
+        editType.dataSchema(dbObject.data);
     }
-}
-
-// deno-lint-ignore no-explicit-any
-export function dataFromJson(): DerivedProperty<any> {
-    return DerivedProperty.make(
-        DraftEdit,
-        (edit) => edit.dataJSON,
-        (editData) => JSON.parse(editData.dataJSON),
-    );
 }
 
 /**

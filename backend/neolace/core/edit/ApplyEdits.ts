@@ -36,9 +36,9 @@ export const ApplyEdits = defineAction({
                 code: string;
                 /** changeType: is this a content edit or a schema edit? */
                 changeType: EditChangeType;
-                dataJSON: string;
+                data: string; // JSON encoded object
                 /** oldData: for edits that overwrite or delete data, this can hold information about the old value. */
-                oldDataJSON: string;
+                oldData: string; // JSON encoded object
                 timestamp: Date;
             };
             modifiedNodes: VNID[];
@@ -72,8 +72,8 @@ export const ApplyEdits = defineAction({
                     fields: {
                         code: edit.code,
                         changeType: editTypeDefinition.changeType,
-                        dataJSON: JSON.stringify(edit.data),
-                        oldDataJSON: JSON.stringify(result.oldValues ?? {}),
+                        data: JSON.stringify(edit.data),
+                        oldData: JSON.stringify(result.oldValues ?? {}),
                         timestamp: new Date(),
                     },
                     modifiedNodes: result.modifiedNodes,

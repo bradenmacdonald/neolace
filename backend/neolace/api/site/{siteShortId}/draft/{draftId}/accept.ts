@@ -22,7 +22,7 @@ export class AcceptDraftResource extends NeolaceHttpResource {
         await this.requirePermission(request, api.CorePerm.viewDraft, { draftId });
 
         // Make sure the draft exists on this site:
-        const draft = await graph.pullOne(Draft, (d) => d.site((s) => s.id).edits((e) => e.code.data()), {
+        const draft = await graph.pullOne(Draft, (d) => d.site((s) => s.id).edits((e) => e.code.data), {
             key: draftId,
         });
         if (draft.site?.id !== siteId) {

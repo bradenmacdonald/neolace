@@ -54,7 +54,7 @@ group("SetEntryDescription edit implementation", () => {
         }));
         assertEquals(await getDescription(), "new description");
         assertEquals(result.appliedEditIds.length, 1);
-        const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData(), { key: result.appliedEditIds[0] });
+        const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData, { key: result.appliedEditIds[0] });
         assertEquals(appliedEdit.oldData, { description: original });
     });
 
