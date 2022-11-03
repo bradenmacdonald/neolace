@@ -15,12 +15,12 @@ export class SiteHomeResource extends NeolaceHttpResource {
         await this.requirePermission(request, api.CorePerm.viewSite);
         const { siteId } = await this.getSiteDetails(request);
 
-        const siteData = await graph.pullOne(Site, (s) => s.homePageMD, { key: siteId });
+        const siteData = await graph.pullOne(Site, (s) => s.homePageContent, { key: siteId });
         const refCache = new ReferenceCache({ siteId });
-        refCache.extractMarkdownReferences(siteData.homePageMD ?? "", { currentEntryId: undefined });
+        refCache.extractMarkdownReferences(siteData.homePageContent ?? "", { currentEntryId: undefined });
 
         return {
-            homePageMD: siteData.homePageMD ?? "",
+            homePageContent: siteData.homePageContent ?? "",
             referenceCache: await graph.read((tx) => refCache.getData(new LookupContext({ tx, siteId }))),
         };
     });

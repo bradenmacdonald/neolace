@@ -18,12 +18,12 @@ group("UpdateEntryFeature edit implementation", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
     const siteId = defaultData.site.id;
     const ponderosaPine = defaultData.entries.ponderosaPine;
-    const getArticleMD = (graph: Vertex) =>
-        graph.read((tx) => getEntryFeaturesData(ponderosaPine.id, { tx })).then((fd) => fd.Article?.articleMD);
+    const getArticleContent = (graph: Vertex) =>
+        graph.read((tx) => getEntryFeaturesData(ponderosaPine.id, { tx })).then((fd) => fd.Article?.articleContent);
 
     test("UpdateEntryFeature can change an entry's article text", async () => {
         const graph = await getGraph();
-        const originalArticleText = await getArticleMD(graph);
+        const originalArticleText = await getArticleContent(graph);
         assert(originalArticleText?.includes("The bark helps to distinguish it from other species."));
         const result = await graph.runAsSystem(ApplyEdits({
             siteId,
@@ -31,19 +31,19 @@ group("UpdateEntryFeature edit implementation", () => {
                 code: "UpdateEntryFeature",
                 data: {
                     entryId: ponderosaPine.id,
-                    feature: { featureType: "Article", articleMD: "New article content" },
+                    feature: { featureType: "Article", articleContent: "New article content" },
                 },
             }],
             editSource: UseSystemSource,
         }));
-        assertEquals(await getArticleMD(graph), "New article content");
+        assertEquals(await getArticleContent(graph), "New article content");
         assertEquals(result.actionDescription, `Updated Article feature of \`Entry ${ponderosaPine.id}\``);
         assertEquals(result.appliedEditIds.length, 1);
     });
 
     test("UpdateEntryFeature records the previous name.", async () => {
         const graph = await getGraph();
-        const originalArticleText = await getArticleMD(graph);
+        const originalArticleText = await getArticleContent(graph);
         assert(originalArticleText?.includes("The bark helps to distinguish it from other species."));
         const result = await graph.runAsSystem(ApplyEdits({
             siteId,
@@ -51,19 +51,19 @@ group("UpdateEntryFeature edit implementation", () => {
                 code: "UpdateEntryFeature",
                 data: {
                     entryId: ponderosaPine.id,
-                    feature: { featureType: "Article", articleMD: "New article content" },
+                    feature: { featureType: "Article", articleContent: "New article content" },
                 },
             }],
             editSource: UseSystemSource,
         }));
         assertEquals(result.appliedEditIds.length, 1);
         const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData, { key: result.appliedEditIds[0] });
-        assertEquals(appliedEdit.oldData, { articleMD: originalArticleText as string });
+        assertEquals(appliedEdit.oldData, { articleContent: originalArticleText as string });
     });
 
     test("UpdateEntryFeature will not change the graph if the article text is the same.", async () => {
         const graph = await getGraph();
-        const originalArticleText = await getArticleMD(graph);
+        const originalArticleText = await getArticleContent(graph);
         assert(originalArticleText?.includes("The bark helps to distinguish it from other species."));
         const result = await graph.runAsSystem(ApplyEdits({
             siteId,
@@ -71,13 +71,13 @@ group("UpdateEntryFeature edit implementation", () => {
                 code: "UpdateEntryFeature",
                 data: {
                     entryId: ponderosaPine.id,
-                    feature: { featureType: "Article", articleMD: originalArticleText },
+                    feature: { featureType: "Article", articleContent: originalArticleText },
                 },
             }],
             editSource: UseSystemSource,
         }));
         // We confirm now that no changes were actually made:
-        assertEquals(await getArticleMD(graph), originalArticleText);
+        assertEquals(await getArticleContent(graph), originalArticleText);
         assertEquals(result.actionDescription, "(no changes)");
         assertEquals(result.appliedEditIds, []);
     });
@@ -93,7 +93,7 @@ group("UpdateEntryFeature edit implementation", () => {
                         code: "UpdateEntryFeature",
                         data: {
                             entryId: invalidEntryId,
-                            feature: { featureType: "Article", articleMD: "new article text" },
+                            feature: { featureType: "Article", articleContent: "new article text" },
                         },
                     }],
                     editSource: UseSystemSource,
@@ -119,7 +119,7 @@ group("UpdateEntryFeature edit implementation", () => {
                         code: "UpdateEntryFeature",
                         data: {
                             entryId: ponderosaPine.id,
-                            feature: { featureType: "Article", articleMD: "new text" },
+                            feature: { featureType: "Article", articleContent: "new text" },
                         },
                     }],
                     editSource: UseSystemSource,

@@ -128,7 +128,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         slugId: `site-home`, // The shortId of this site is "home"
         adminUser: data.users.admin.id,
         accessMode: AccessMode.PublicReadOnly,
-        homePageMD: dedent`
+        homePageContent: dedent`
             # Welcome to Neolace Development
 
             A Neolace installation is called a "Realm", and can have one or more sites. This is the home site for your
@@ -152,7 +152,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             * [**User Interface Demo Page**](/ui): Shows various UI components that can be used to develop the Neolace
               frontend and/or frontend plugins.
         `,
-        footerMD: `Powered by [Neolace](https://www.neolace.com/).`,
+        footerContent: `Powered by [Neolace](https://www.neolace.com/).`,
         frontendConfig: {
             headerLinks: [
                 { text: "Home", href: "/" },
@@ -172,7 +172,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         slugId: `site-${data.site.shortId}`,
         adminUser: data.users.admin.id,
         accessMode: data.site.initialAccessMode,
-        homePageMD: dedent`
+        homePageContent: dedent`
             # Welcome to PlantDB
 
             This is a demo site that contains a small amount of content useful for developing Neolace.
@@ -181,7 +181,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
 
             Check out [**ponderosa pine**](/entry/s-pinus-ponderosa), the featured article.
         `,
-        footerMD: `Powered by [Neolace](https://www.neolace.com/).`,
+        footerContent: `Powered by [Neolace](https://www.neolace.com/).`,
         frontendConfig: {
             headerLinks: [
                 { text: "Home", href: "/" },

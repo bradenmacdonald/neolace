@@ -71,8 +71,6 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
         properties: Object.fromEntries(Object.values(prevRefCache.properties).map((prop) => [prop.id, {
             ...prop,
             // Add in placeholders for the following fields which aren't used in ReferenceCache but are used in the full schema:
-            description: undefined,
-            descriptionMD: prop.description,  // TODO: Fix these names to be consistent: description or descriptionMD
             appliesTo: [],
         }])),
     };
@@ -118,8 +116,6 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
         lookups: [...prevRefCache.lookups],
         properties: Object.fromEntries(Object.values(schema.properties).map((prop) => [prop.id, {
             ...prop,
-            description: prop.descriptionMD,
-            descriptionMD: undefined,
             standardURL: prop.standardURL ?? "",
             displayAs: prop.displayAs ?? "",
             appliesTo: undefined,

@@ -133,7 +133,7 @@ export class ReferenceCache {
         // Properties referenced:
         const propertyReferences = await lookupContext.tx.pull(
             Property,
-            (p) => p.id.name.type.descriptionMD.standardURL.rank.displayAs.site((s) => s.id),
+            (p) => p.id.name.type.description.standardURL.rank.displayAs.site((s) => s.id),
             { where: C`@this.id IN ${Array.from(this.propertyIdsUsed)}` },
         );
         for (const prop of propertyReferences) {
@@ -148,7 +148,7 @@ export class ReferenceCache {
                 id: prop.id,
                 name: prop.name,
                 type: prop.type as PropertyType,
-                description: prop.descriptionMD,
+                description: prop.description,
                 standardURL: prop.standardURL,
                 rank: prop.rank,
                 displayAs: prop.displayAs,

@@ -210,7 +210,7 @@ group("properties.ts", () => {
                                 name: "Property 1",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                             },
                         },
                         {
@@ -306,7 +306,7 @@ group("properties.ts", () => {
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 1,
                             },
                         },
@@ -319,7 +319,7 @@ group("properties.ts", () => {
                                 type: PropertyType.RelOther,
                                 mode: PropertyMode.Auto,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 1,
                                 default: `this.reverse(prop=prop("${entryIsA}"))`,
                             },
@@ -387,7 +387,7 @@ group("properties.ts", () => {
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 1,
                             },
                         },
@@ -398,7 +398,7 @@ group("properties.ts", () => {
                                 name: "Property 1",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 inheritable: true,
                             },
                         },
@@ -409,7 +409,7 @@ group("properties.ts", () => {
                                 name: "Property 2",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 inheritable: true,
                             },
                         },
@@ -420,7 +420,7 @@ group("properties.ts", () => {
                                 name: "Property 3",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 inheritable: false,
                             },
                         },
@@ -605,7 +605,7 @@ group("properties.ts", () => {
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 1,
                             },
                         },
@@ -616,7 +616,7 @@ group("properties.ts", () => {
                                 name: "Property 1",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 inheritable: true,
                             },
                         },
@@ -766,7 +766,7 @@ group("properties.ts", () => {
                                 name: "Property 1",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 inheritable: true,
                             },
                         },
@@ -880,7 +880,7 @@ group("properties.ts", () => {
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 1,
                             },
                         },
@@ -891,7 +891,7 @@ group("properties.ts", () => {
                                 name: "Has Part",
                                 type: PropertyType.RelOther,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 2,
                                 inheritable: true,
                                 enableSlots: true,
@@ -1109,7 +1109,7 @@ group("properties.ts", () => {
                             name: "Is a",
                             type: PropertyType.RelIsA,
                             appliesTo: [{ entryType }],
-                            descriptionMD: "",
+                            description: "",
                             rank: 99,
                         },
                     },
@@ -1150,7 +1150,7 @@ group("properties.ts", () => {
                 };
                 edits.push({
                     code: "CreateProperty",
-                    data: { appliesTo: [{ entryType }], descriptionMD: "", mode: PropertyMode.Auto, ...args },
+                    data: { appliesTo: [{ entryType }], description: "", mode: PropertyMode.Auto, ...args },
                 });
                 autoPropertyValues.push({
                     property: { ...args },
@@ -1169,7 +1169,7 @@ group("properties.ts", () => {
                 };
                 edits.push({
                     code: "CreateProperty",
-                    data: { ...propArgs, appliesTo: [{ entryType }], descriptionMD: "", inheritable: i < 8 },
+                    data: { ...propArgs, appliesTo: [{ entryType }], description: "", inheritable: i < 8 },
                 });
                 const propertyFactId = VNID();
                 edits.push({
@@ -1220,7 +1220,7 @@ group("properties.ts", () => {
                 };
                 edits.push({
                     code: "CreateProperty",
-                    data: { ...propArgs, appliesTo: [{ entryType }], descriptionMD: "" },
+                    data: { ...propArgs, appliesTo: [{ entryType }], description: "" },
                 });
                 const propertyFactId = VNID();
                 edits.push({

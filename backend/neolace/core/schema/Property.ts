@@ -25,7 +25,7 @@ export class Property extends VNodeType {
         /** Name of this property, displayed as the label when viewing an entry with this property value */
         name: Field.String,
         /** Description of this property (markdown) */
-        descriptionMD: Field.String.Check(check.string.trim().max(5_000)),
+        description: Field.String.Check(check.string.trim().max(5_000)),
         /** What type of property is this - a relationship, or some other simple property? */
         type: Field.String.Check(check.Schema.enum(PropertyType)),
         /** Is this a property that can be set manually? Or MUST be set? Or is it computed automatically? */
@@ -56,7 +56,7 @@ export class Property extends VNodeType {
          */
         displayAs: Field.String,
         /** Text shown to users when they go to edit this property value. */
-        editNoteMD: Field.String,
+        editNote: Field.String,
         /** Enabling "slots" allows partial overriding of inherited properties, useful for "HAS PART" relationships */
         enableSlots: Field.Boolean,
     };

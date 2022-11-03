@@ -222,7 +222,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         name={defineMessage({ defaultMessage: "Article", id: "jx7Hn3" })}
                         hidden={entryType === undefined || entryType.enabledFeatures.Article === undefined}
                     >
-                        <code><pre>{entry?.features.Article?.articleMD}</pre></code>
+                        <code><pre>{entry?.features.Article?.articleContent}</pre></code>
                     </Tab>
                     <Tab
                         id="image"

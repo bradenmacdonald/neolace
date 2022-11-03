@@ -5,7 +5,7 @@ import { dedent } from "neolace/lib/dedent.ts";
 import type { UpdateSite } from "neolace/core/Site.ts";
 
 export const siteData: Partial<Parameters<typeof UpdateSite>[0]> = {
-    homePageMD: dedent`
+    homePageContent: dedent`
         # Neolace Documentation
 
         We are currently developing the documentation for Neolace. We will be adding to this site regularly over the
@@ -34,7 +34,7 @@ export const siteData: Partial<Parameters<typeof UpdateSite>[0]> = {
 
         { allEntries().filter(entryType=entryType("_5oX5jvGNB6hQzuu08iQs5b")) }
     `,
-    footerMD: dedent`
+    footerContent: dedent`
         © Copyright 2022 MacDonald Thoughtstuff Inc.
         All documentation text and multimedia on this site are licensed under the [CC BY-SA 4.0 license](https://creativecommons.org/licenses/by-sa/4.0/).
     `,

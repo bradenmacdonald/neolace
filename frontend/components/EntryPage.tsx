@@ -257,7 +257,7 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                         entry.features?.Article ?
                             <RenderMDT 
                                 // The Markdown (MDT) of this article
-                                mdt={entry.features.Article.articleMD}
+                                mdt={entry.features.Article.articleContent}
                                 // The page already has an <h1> (the entry title, above), so we "shift" all headings in
                                 // the markdown so that the first heading in the markdown will be rendered here as an <h2>.
                                 // This is because each HTML page should only have one <h1> heading.

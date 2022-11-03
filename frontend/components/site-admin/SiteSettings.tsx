@@ -69,7 +69,7 @@ export const SiteSettingsAdminTool: React.FunctionComponent<AdminComponentProps>
                     {/* Footer */}
                     <AutoControl
                         id="id"
-                        value={site.footerMD}
+                        value={site.footerContent}
                         label={defineMessage({defaultMessage: "Footer text", id: "rqv4zM"})}
                     >
                         <MDTEditor />

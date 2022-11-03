@@ -125,7 +125,7 @@ export const SetEntryDescription = ContentEditType({
 
 export const UpdateEntryArticleSchema = Schema({
     /** Replace the entire article text with this new text */
-    articleMD: string.strictOptional(),
+    articleContent: string.strictOptional(),
 });
 
 export const UpdateEntryFilesSchema = Schema({

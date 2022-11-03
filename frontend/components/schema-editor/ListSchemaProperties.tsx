@@ -47,7 +47,7 @@ export const ListSchemaProperties: React.FunctionComponent<Props> = (props) => {
 
         if (searchKeyword) {
             const keywordLower = searchKeyword.toLowerCase();
-            props = props.filter((p) => p.name.toLowerCase().includes(keywordLower) || p.descriptionMD.toLowerCase().includes(keywordLower))
+            props = props.filter((p) => p.name.toLowerCase().includes(keywordLower) || p.description.toLowerCase().includes(keywordLower))
         }
 
         return props;
@@ -104,7 +104,7 @@ export const ListSchemaProperties: React.FunctionComponent<Props> = (props) => {
                             ))}
                             <br />
 
-                            <div className="text-sm"><InlineMDT mdt={prop.descriptionMD} context={mdtContext}/></div>
+                            <div className="text-sm"><InlineMDT mdt={prop.description} context={mdtContext}/></div>
                         </li>
                     ))
                 }

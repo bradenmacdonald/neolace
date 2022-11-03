@@ -15,7 +15,7 @@ group("find.ts", () => {
                 domain: "plantdb.local.neolace.net",
                 url: "http://plantdb.local.neolace.net:4445",
                 description: "",
-                footerMD: "Powered by [Neolace](https://www.neolace.com/).",
+                footerContent: "Powered by [Neolace](https://www.neolace.com/).",
                 frontendConfig: {
                     headerLinks: [
                         { text: "Home", href: "/" },

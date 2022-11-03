@@ -11,14 +11,14 @@ export const doCreateProperty = defineImplementation(CreateProperty, async (tx, 
         MERGE (p)-[:${Property.rel.FOR_SITE}]->(site)
         SET p += ${{
         name: "New Property",
-        descriptionMD: "",
+        description: "",
         rank: 15,
         // Property type - note that this cannot be changed once the property is created.
         type: data.type ?? PropertyType.Value,
         mode: PropertyMode.Optional,
         inheritable: data.inheritable ?? false,
         standardURL: "",
-        editNoteMD: "",
+        editNote: "",
         displayAs: "",
         default: "",
         valueConstraint: "",

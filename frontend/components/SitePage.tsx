@@ -270,7 +270,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     <UISlot slotId="footer" defaultContents={[...(props.footerSlot ?? []), {
                         id: "siteFooter",
                         priority: 80,
-                        content: <RenderMDT mdt={site.footerMD} context={new MDTContext({entryId: undefined})} />,
+                        content: <RenderMDT mdt={site.footerContent} context={new MDTContext({entryId: undefined})} />,
                     }]} renderWidget={defaultRender} />
                 </footer>
                 <div className='h-8 md:h-0'>{/* Padding on mobile that goes behind the bottom footer */}</div>

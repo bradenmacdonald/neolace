@@ -98,11 +98,11 @@ export class Site extends VNodeType {
         /**
          * Markdown text for the home page. This defines the content of the home page.
          */
-        homePageMD: Field.String.Check(check.string.max(100_000)),
+        homePageContent: Field.String.Check(check.string.max(100_000)),
         /**
          * Markdown text for the footer, shown on all pages.
          */
-        footerMD: Field.String.Check(check.string.max(10_000)),
+        footerContent: Field.String.Check(check.string.max(10_000)),
 
         /** Access Mode: Determines what parts of the site are usable without logging in */
         accessMode: Field.String.Check(check.Schema.enum(AccessMode)),
@@ -283,7 +283,7 @@ export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
 // Action to make changes to an existing Site:
 export const UpdateSite = defaultUpdateFor(
     Site,
-    (s) => s.slugId.description.homePageMD.footerMD.domain.accessMode.publicGrantStrings,
+    (s) => s.slugId.description.homePageContent.footerContent.domain.accessMode.publicGrantStrings,
     {
         otherUpdates: async (args: { frontendConfig?: FrontendConfigData }, tx, nodeSnapshot) => {
             if (args.frontendConfig) {
@@ -307,8 +307,8 @@ export const CreateSite = defineAction({
         slugId: string;
         domain: string;
         description?: string;
-        homePageMD?: string;
-        footerMD?: string;
+        homePageContent?: string;
+        footerContent?: string;
         siteCode?: string;
         adminUser?: VNID;
         accessMode?: AccessMode;
@@ -348,8 +348,8 @@ export const CreateSite = defineAction({
                 slugId: ${data.slugId},
                 siteCode: ${siteCode},
                 description: ${data.description || ""},
-                homePageMD: ${data.homePageMD || ""},
-                footerMD: ${data.footerMD || ""},
+                homePageContent: ${data.homePageContent || ""},
+                footerContent: ${data.footerContent || ""},
                 domain: ${data.domain},
                 accessMode: ${data.accessMode ?? AccessMode.PublicContributions},
                 frontendConfigJSON: ${JSON.stringify(data.frontendConfig ?? {})},
