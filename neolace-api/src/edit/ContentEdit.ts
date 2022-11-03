@@ -172,7 +172,7 @@ export const UpdateEntryFeature = ContentEditType({
     apply: () => {
         throw new Error("This edit type is not implemented yet.");
     },
-    describe: (data) => `Updated ${data.feature.featureType} Feature of \`Entry ${data.entryId}\``,
+    describe: (data) => `Updated ${data.feature.featureType} feature of \`Entry ${data.entryId}\``,
 });
 
 export const AddPropertyFact = ContentEditType({

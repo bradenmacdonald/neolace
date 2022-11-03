@@ -1,6 +1,6 @@
 import { C, EmptyResultError } from "neolace/deps/vertex-framework.ts";
-import { InvalidEdit, UpdateEntryFeature, VNID } from "neolace/deps/neolace-api.ts";
-import { defineImplementation } from "neolace/core/edit/implementations.ts";
+import { InvalidEdit, UpdateEntryFeature } from "neolace/deps/neolace-api.ts";
+import { defineImplementation, EditHadNoEffect } from "neolace/core/edit/implementations.ts";
 import { Entry, EntryType, Site } from "neolace/core/mod.ts";
 import { features } from "neolace/core/entry/features/all-features.ts";
 
@@ -33,15 +33,17 @@ export const doUpdateEntryFeature = defineImplementation(UpdateEntryFeature, asy
     }
 
     // Edit the feature:
-    const modifiedNodes: VNID[] = [data.entryId];
-    await feature.editFeature(
+    const { modifiedNodes, oldValues } = await feature.editFeature(
         data.entryId,
         // deno-lint-ignore no-explicit-any
         data.feature as any,
         tx,
-        (id) => modifiedNodes.push(id),
         draftId,
     );
-
-    return { modifiedNodes };
+    if (modifiedNodes.length === 0) {
+        return EditHadNoEffect;
+    } else {
+        modifiedNodes.push(data.entryId);
+        return { modifiedNodes, oldValues };
+    }
 });

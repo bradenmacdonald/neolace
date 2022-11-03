@@ -50,9 +50,8 @@ export interface EntryTypeFeature<
         entryId: VNID,
         editData: Type<UFS>,
         tx: WrappedTransaction,
-        markNodeAsModified: (vnid: VNID) => void,
         draftId?: VNID,
-    ): Promise<void>;
+    ): Promise<{ modifiedNodes: VNID[]; oldValues: Record<string, unknown> }>;
 
     /**
      * Load the details of this feature for a single entry.

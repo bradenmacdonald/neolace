@@ -49,7 +49,7 @@ export const FilesFeature = EntryTypeFeature({
         // We need to mark the FilesFeatureEnabled node as modified:
         markNodeAsModified(result["feature.id"]);
     },
-    async editFeature(entryId, editData, tx, markNodeAsModified): Promise<void> {
+    async editFeature(entryId, editData, tx) {
         // Associate the Entry with the FilesData node
         const result = await tx.queryOne(C`
             MATCH (e:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})
@@ -82,7 +82,12 @@ export const FilesFeature = EntryTypeFeature({
             // from both Neo4j and object storage.
         }
 
-        markNodeAsModified(filesDataId);
+        return {
+            modifiedNodes: [filesDataId],
+            oldValues: {
+                // For now there is no use in specifying old values, because this can't be undone.
+            },
+        };
     },
 
     /**

@@ -50,7 +50,7 @@ export const ImageFeature = EntryTypeFeature({
         // We need to mark the ImageFeatureEnabled node as modified:
         markNodeAsModified(result["feature.id"]);
     },
-    async editFeature(entryId, editData, tx, markNodeAsModified): Promise<void> {
+    async editFeature(entryId, editData, tx) {
         // Associate the Entry with the ImageData node
         const result = await tx.queryOne(C`
             MATCH (e:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})
@@ -74,9 +74,15 @@ export const ImageFeature = EntryTypeFeature({
                     WHERE NOT oldFile = dataFile
                 DELETE oldFile
             `);
+            // TODO: delete the file from the underlying storage layer?
         }
 
-        markNodeAsModified(imageDataId);
+        return {
+            modifiedNodes: [imageDataId],
+            oldValues: {
+                // For now we can't really put an "old value" here; there is no way to undo changing an image.
+            },
+        };
     },
 
     /**
