@@ -87,7 +87,7 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
             //
             case "CreateEntry": {
                 return <FormattedMessage defaultMessage="Created new {entryType} entry: {entry}, with friendly ID {friendlyId}" id="wGmmfj" values={{
-                    entry: <><strong>{entryLink({...edit.data, entryId: edit.data.id})}</strong></>,
+                    entry: <><strong>{entryLink({...edit.data})}</strong></>,
                     entryType: <>{schema?.entryTypes[edit.data.type]?.name}</>,
                     friendlyId: <code>{edit.data.friendlyId}</code>,
                 }} />

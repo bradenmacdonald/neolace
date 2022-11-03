@@ -36,7 +36,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
         addUnsavedEdit({
             code: api.CreateEntry.code,
             data: {
-                id: entry.id,
+                entryId: entry.id,
                 type: api.VNID(type),
                 name: entry.name,
                 description: entry.description ?? "",

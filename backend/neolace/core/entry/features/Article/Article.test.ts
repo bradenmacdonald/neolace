@@ -108,7 +108,7 @@ group("Article.ts", () => {
                 {
                     code: "CreateEntry",
                     data: {
-                        id: entryId,
+                        entryId,
                         type: entryType,
                         name: "Test Entry",
                         friendlyId: "other-entry",

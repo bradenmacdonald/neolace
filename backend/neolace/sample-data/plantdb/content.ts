@@ -58,6 +58,12 @@ export const entryData = {
     },
 };
 
+/** Rename the 'id' field to 'entryId' so we can pass these to CreateEntry */
+const convert = (entryData: { id: VNID; friendlyId: string; name: string; description: string }) => {
+    const { id: entryId, ...rest } = entryData;
+    return { entryId, ...rest };
+};
+
 export const makePlantDbContent: EditList = [
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Create entries for various tree species:
@@ -67,7 +73,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.divisionTracheophyta,
+            ...convert(entryData.divisionTracheophyta),
             type: schema.entryTypes._ETDIVISION.id,
             description:
                 (entryData.divisionTracheophyta.description =
@@ -78,7 +84,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.classPinopsida,
+            ...convert(entryData.classPinopsida),
             type: schema.entryTypes._ETCLASS.id,
             description: (entryData.classPinopsida.description = "Class ***Pinopsida*** contains all extant conifers."),
         },
@@ -97,7 +103,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.orderPinales,
+            ...convert(entryData.orderPinales),
             type: schema.entryTypes._ETORDER.id,
             description: (entryData.orderPinales.description = `
                     Order ***Pinales*** contains all extant conifers, such as the [pine family (Pinaceae)](/entry/${entryData.familyPinaceae.id}) and yew family (Taxaceae).
@@ -118,7 +124,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.familyPinaceae,
+            ...convert(entryData.familyPinaceae),
             type: schema.entryTypes._ETFAMILY.id,
             description: (entryData.familyPinaceae.description = `
                         Family ***Pinaceae*** is the **pine family**. It includes cedars, firs, hemlocks, larches, spruces, and of course pines.
@@ -139,7 +145,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.genusPinus,
+            ...convert(entryData.genusPinus),
             type: schema.entryTypes._ETGENUS.id,
             description: (entryData.genusPinus.description = `
                             Genus ***Pinus***, commonly known as "pines".
@@ -161,7 +167,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.ponderosaPine,
+            ...convert(entryData.ponderosaPine),
             type: schema.entryTypes._ETSPECIES.id,
             description: (entryData.ponderosaPine.description = `
                                 ***Pinus ponderosa*** (ponderosa pine) is a species of large pine tree in North America, whose bark resembles puzzle pieces.
@@ -240,7 +246,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.stonePine,
+            ...convert(entryData.stonePine),
             type: schema.entryTypes._ETSPECIES.id,
             description: (entryData.stonePine.description = `
                                 ***Pinus pinea***, known as the **stone pine**, is a pine tree native to the Mediterranean, known and cutivated for their edible pine nuts.
@@ -269,7 +275,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.jackPine,
+            ...convert(entryData.jackPine),
             type: schema.entryTypes._ETSPECIES.id,
             description: (entryData.jackPine.description = `
                                 ***Pinus banksiana***, commonly called **jack pine**, is a pine tree native to eastern North America.
@@ -298,7 +304,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.japaneseRedPine,
+            ...convert(entryData.japaneseRedPine),
             type: schema.entryTypes._ETSPECIES.id,
             description: (entryData.japaneseRedPine.description = `
                                 ***Pinus densiflora***, also known as the **Japanese red pine**, the **Japanese pine**, or **Korean red pine**, is a species of pine tree native to Japan, the Korean Peninsula, northeastern China and the southeast of Russia.
@@ -327,7 +333,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.japaneseWhitePine,
+            ...convert(entryData.japaneseWhitePine),
             type: schema.entryTypes._ETSPECIES.id,
             description: (entryData.japaneseWhitePine.description = `
                                 ***Pinus parviflora***, also known as **Japanese white pine**, **five-needle pine**, or **Ulleungdo white pine**, is a pine tree species native to Korea and Japan.
@@ -347,7 +353,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.jeffreyPine,
+            ...convert(entryData.jeffreyPine),
             type: schema.entryTypes._ETSPECIES.id,
             description: (entryData.jeffreyPine.description = `
                                 ***Pinus jeffreyi***, commonly called the **Jeffrey pine**, is a pine tree found mainly in California as well as surrounding regions.
@@ -367,7 +373,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.pinyonPine,
+            ...convert(entryData.pinyonPine),
             type: schema.entryTypes._ETSPECIES.id,
             description: (entryData.pinyonPine.description = `
                                 ***Pinus cembroides***, also known as **pinyon pine**, **Mexican nut pine**, and **Mexican stone pine**, is a pine found in North America, primarily in Mexico. It lives in areas with little rainfall, and has edible pine nuts.
@@ -387,7 +393,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.westernWhitePine,
+            ...convert(entryData.westernWhitePine),
             type: schema.entryTypes._ETSPECIES.id,
             description: (entryData.westernWhitePine.description = `
                                 ***Pinus monticola***, the **Western white pine** (also called **silver pine**, and **California mountain pine**), is a large pine found in Western Canada and the United States.
@@ -407,7 +413,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.familyCupressaceae,
+            ...convert(entryData.familyCupressaceae),
             type: schema.entryTypes._ETFAMILY.id,
             description: (entryData.familyCupressaceae.description = `
                         Family ***Cupressaceae*** is the **cypress family**. It includes the trees and shrubs with the common name "cypress", as well as several others such as the junipers and redwoods.
@@ -428,7 +434,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.genusCupressus,
+            ...convert(entryData.genusCupressus),
             type: schema.entryTypes._ETGENUS.id,
             description: (entryData.genusCupressus.description = `
                             Genus ***Cupressus*** contains the conifer species that have the common name "cypress", such as the [mediterranean cypress](/entry/${entryData.mediterraneanCypress.id}).
@@ -449,7 +455,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.mediterraneanCypress,
+            ...convert(entryData.mediterraneanCypress),
             type: schema.entryTypes._ETSPECIES.id,
             description: (entryData.mediterraneanCypress.description = `
                                 ***Cupressus sempervirens***, the **Mediterranean cypress** is a cypress tree native to the Mediterranean Basin. It grows up to 35m tall and can be very long-lived, with some trees known to be more than 1,000 years old.
@@ -470,7 +476,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.genusThuja,
+            ...convert(entryData.genusThuja),
             type: schema.entryTypes._ETGENUS.id,
             description: (entryData.genusThuja.description = `
                             Genus ***Thuja*** has several species of coniferous trees that are part of the cypress family. Thujas are commonly known as Members are commonly known as **arborvitaes** or **cedars**, although they should not be confused with true cedars, a separate genus.
@@ -491,7 +497,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.westernRedcedar,
+            ...convert(entryData.westernRedcedar),
             type: schema.entryTypes._ETSPECIES.id,
             description: (entryData.westernRedcedar.description = `
                                 ***Thuja plicata***, the **western redcedar**, is a large conifer that is among the most widespread trees in the Pacific Northwest.
@@ -517,7 +523,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.cone,
+            ...convert(entryData.cone),
             type: schema.entryTypes._ETPLANTPART.id,
             description: (entryData.cone.description = `
             A **cone** (formally "strobilus") is a reproductive organ found on conifers.
@@ -528,7 +534,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.pollenCone,
+            ...convert(entryData.pollenCone),
             type: schema.entryTypes._ETPLANTPART.id,
             description: (entryData.pollenCone.description = `
                 A **pollen cone** or **male cone** (formally "microstrobilus") is a small reproductive organ bearing pollen found on conifers, not to be confused with the familiar [seed cone](/entry/${entryData.seedCone.id}).
@@ -549,7 +555,7 @@ export const makePlantDbContent: EditList = [
     {
         code: "CreateEntry",
         data: {
-            ...entryData.seedCone,
+            ...convert(entryData.seedCone),
             type: schema.entryTypes._ETPLANTPART.id,
             description: (entryData.seedCone.description = `
                 A **seed cone** or **female cone** (formally "megastrobilus") is a varied reproductive organ found on conifers. Examples include the well-known "pine cone".

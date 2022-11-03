@@ -17,8 +17,8 @@ group("index.ts", () => {
                     {
                         code: "CreateEntry",
                         data: {
+                            entryId,
                             name: "A new Entry",
-                            id: entryId,
                             description: "Testing",
                             friendlyId: "new-entry",
                             type: defaultData.schema.entryTypes._ETSPECIES.id,

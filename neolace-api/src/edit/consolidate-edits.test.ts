@@ -80,11 +80,11 @@ Deno.test("Consolidate edits", async (t) => {
         const oldEdits: AnyEdit[] = [
             {
                 code: CreateEntry.code,
-                data: { id: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
+                data: { entryId: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
             },
             {
                 code: CreateEntry.code,
-                data: { id: entryB, name: "B name", friendlyId: "B", type: type1, description: "Entry B" },
+                data: { entryId: entryB, name: "B name", friendlyId: "B", type: type1, description: "Entry B" },
             },
             { code: SetEntryDescription.code, data: { entryId: entryA, description: "New A description" } },
             { code: SetEntryFriendlyId.code, data: { entryId: entryA, friendlyId: "A-new" } },
@@ -94,7 +94,7 @@ Deno.test("Consolidate edits", async (t) => {
             {
                 code: CreateEntry.code,
                 data: {
-                    id: entryA,
+                    entryId: entryA,
                     name: "A name new",
                     friendlyId: "A-new",
                     type: type1,
@@ -103,7 +103,7 @@ Deno.test("Consolidate edits", async (t) => {
             },
             {
                 code: CreateEntry.code,
-                data: { id: entryB, name: "B name", friendlyId: "B", type: type1, description: "Entry B" },
+                data: { entryId: entryB, name: "B name", friendlyId: "B", type: type1, description: "Entry B" },
             },
         ]);
     });
@@ -113,17 +113,17 @@ Deno.test("Consolidate edits", async (t) => {
         const oldEdits: AnyEdit[] = [
             {
                 code: CreateEntry.code,
-                data: { id: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
+                data: { entryId: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
             },
             {
                 code: CreateEntry.code,
-                data: { id: entryA, name: "A name 2", friendlyId: "A2", type: type2, description: "Entry A2" },
+                data: { entryId: entryA, name: "A name 2", friendlyId: "A2", type: type2, description: "Entry A2" },
             },
         ];
         assertEquals(consolidateEdits(oldEdits), [
             {
                 code: CreateEntry.code,
-                data: { id: entryA, name: "A name 2", friendlyId: "A2", type: type2, description: "Entry A2" },
+                data: { entryId: entryA, name: "A name 2", friendlyId: "A2", type: type2, description: "Entry A2" },
             },
         ]);
     });
@@ -138,13 +138,13 @@ Deno.test("Consolidate edits", async (t) => {
             { code: SetEntryFriendlyId.code, data: { entryId: entryA, friendlyId: "A" } },
             {
                 code: CreateEntry.code,
-                data: { id: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
+                data: { entryId: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
             },
         ];
         assertEquals(consolidateEdits(oldEdits), [
             {
                 code: CreateEntry.code,
-                data: { id: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
+                data: { entryId: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
             },
         ]);
     });
@@ -199,7 +199,7 @@ Deno.test("Consolidate edits", async (t) => {
         const firstEdit: AnyEdit = {
             code: "CreateEntry",
             data: {
-                id: entryA,
+                entryId: entryA,
                 type: type1,
                 name: "Aerial lift",
                 description: "A **aerial lift** has yet to be described",

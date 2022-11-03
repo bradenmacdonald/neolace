@@ -296,39 +296,39 @@ group("ancestors.ts", () => {
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                        data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                        data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                        data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
+                        data: { entryId: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: E, name: "Entry E", type: entryType, friendlyId: "e", description: "" },
+                        data: { entryId: E, name: "Entry E", type: entryType, friendlyId: "e", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: F, name: "Entry F", type: entryType, friendlyId: "f", description: "" },
+                        data: { entryId: F, name: "Entry F", type: entryType, friendlyId: "f", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: G, name: "Entry G", type: entryType, friendlyId: "g", description: "" },
+                        data: { entryId: G, name: "Entry G", type: entryType, friendlyId: "g", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: H, name: "Entry H", type: entryType, friendlyId: "h", description: "" },
+                        data: { entryId: H, name: "Entry H", type: entryType, friendlyId: "h", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: I, name: "Entry I", type: entryType, friendlyId: "i", description: "" },
+                        data: { entryId: I, name: "Entry I", type: entryType, friendlyId: "i", description: "" },
                     },
                     // C is a A
                     {
@@ -484,19 +484,19 @@ group("ancestors.ts", () => {
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                        data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                        data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                        data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
+                        data: { entryId: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
                     },
                     // B is a A
                     {

@@ -94,12 +94,11 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
             }
         } else {
             edit = edit as AnyContentEdit;
-            if (edit.code === "CreateEntry") {
-                const {type, ...otherData} = edit.data;
-                entries[edit.data.id] = {...otherData, entryType: {id: type}};
-            } else {
-                const entryId = edit.data.entryId;
-                if (!(entryId in entries)) {
+            const entryId = edit.data.entryId;
+                if (edit.code === "CreateEntry") {
+                    const {type, entryId: _, ...otherData} = edit.data;
+                    entries[entryId] = {id: entryId, ...otherData, entryType: {id: type}};
+                } else if (!(entryId in entries)) {
                     continue;
                 } else if (edit.code === "SetEntryName") {
                     entries[entryId].name = edit.data.name;
@@ -110,7 +109,6 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
                 } else {
                     // Doesn't affect the data that we keep in refCache, so ignore it.
                 }
-            }
         }
     }
     const refCache: ReferenceCacheData = {

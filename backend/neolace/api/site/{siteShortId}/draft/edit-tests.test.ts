@@ -344,7 +344,7 @@ group("edit tests", () => {
             await doEdit(client, {
                 code: api.CreateEntry.code,
                 data: {
-                    id: entryId,
+                    entryId: entryId,
                     description: "Test entry",
                     friendlyId: "entry-test",
                     name: "Test Entry",

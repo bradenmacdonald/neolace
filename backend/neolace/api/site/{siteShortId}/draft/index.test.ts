@@ -177,7 +177,7 @@ group("index.ts", () => {
                     {
                         code: api.CreateEntry.code,
                         data: api.CreateEntry.dataSchema({
-                            id: VNID(),
+                            entryId: VNID(),
                             name: "A New Entry",
                             friendlyId: "test-entry",
                             description: "",

@@ -491,7 +491,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
             edits.push({
                 code: api.CreateEntry.code,
                 data: {
-                    id: entryId,
+                    entryId,
                     type: entryType.id,
                     name: metadata.name,
                     description: replaceIdsInMarkdownAndLookupExpressions(idMap, metadata.description ?? "", false),

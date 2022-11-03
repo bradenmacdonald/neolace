@@ -110,7 +110,7 @@ group("Image.ts", () => {
                 {
                     code: "CreateEntry",
                     data: {
-                        id: entryId,
+                        entryId,
                         type: entryType,
                         name: "Test Image",
                         friendlyId: "img-test",

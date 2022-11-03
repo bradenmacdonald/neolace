@@ -153,7 +153,7 @@ group("HeroImage.ts", () => {
                 {
                     code: "CreateEntry",
                     data: {
-                        id: entryId,
+                        entryId,
                         type: entryType,
                         name: "Test WithImage",
                         friendlyId: "test",
@@ -164,7 +164,7 @@ group("HeroImage.ts", () => {
                 {
                     code: "CreateEntry",
                     data: {
-                        id: imageId,
+                        entryId: imageId,
                         type: imageType,
                         name: "Test Image",
                         friendlyId: "img",

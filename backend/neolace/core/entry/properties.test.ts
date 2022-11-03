@@ -48,7 +48,7 @@ group("properties.ts", () => {
                     {
                         code: "CreateEntry",
                         data: {
-                            id: entryId,
+                            entryId,
                             name: "Entry",
                             type: entryType,
                             description: "Testing",
@@ -98,7 +98,7 @@ group("properties.ts", () => {
                     {
                         code: "CreateEntry",
                         data: {
-                            id: entryA,
+                            entryId: entryA,
                             name: "Entry A",
                             type: entryType,
                             description: "Testing",
@@ -108,7 +108,7 @@ group("properties.ts", () => {
                     {
                         code: "CreateEntry",
                         data: {
-                            id: entryB,
+                            entryId: entryB,
                             name: "Entry B",
                             type: entryType,
                             description: "Testing",
@@ -197,11 +197,11 @@ group("properties.ts", () => {
                         { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
                         {
                             code: "CreateEntry",
-                            data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
                             code: "CreateEntry",
-                            data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                         },
                         {
                             code: "CreateProperty",
@@ -327,12 +327,12 @@ group("properties.ts", () => {
                         // Create entry A:
                         {
                             code: "CreateEntry",
-                            data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         // Create entry B and its properties:
                         {
                             code: "CreateEntry",
-                            data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
@@ -427,7 +427,7 @@ group("properties.ts", () => {
                         // Create entry A and its properties:
                         {
                             code: "CreateEntry",
-                            data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
@@ -459,7 +459,7 @@ group("properties.ts", () => {
                         // Create entry B and its properties:
                         {
                             code: "CreateEntry",
-                            data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
@@ -483,7 +483,7 @@ group("properties.ts", () => {
                         // Create entry C and its properties:
                         {
                             code: "CreateEntry",
-                            data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                            data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
@@ -623,7 +623,7 @@ group("properties.ts", () => {
                         // Create A
                         {
                             code: "CreateEntry",
-                            data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
@@ -637,7 +637,7 @@ group("properties.ts", () => {
                         // Create B
                         {
                             code: "CreateEntry",
-                            data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                         },
                         // B inherits from A
                         {
@@ -672,7 +672,7 @@ group("properties.ts", () => {
                         // Create C
                         {
                             code: "CreateEntry",
-                            data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                            data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
                         },
                         // C inherits from B
                         {
@@ -773,7 +773,7 @@ group("properties.ts", () => {
                         // Create A
                         {
                             code: "CreateEntry",
-                            data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
@@ -901,7 +901,7 @@ group("properties.ts", () => {
                         {
                             code: "CreateEntry",
                             data: {
-                                id: steeringWheel,
+                                entryId: steeringWheel,
                                 name: "Steering Wheel",
                                 type: componentType,
                                 friendlyId: "c-sw",
@@ -911,7 +911,7 @@ group("properties.ts", () => {
                         {
                             code: "CreateEntry",
                             data: {
-                                id: combustionEngine,
+                                entryId: combustionEngine,
                                 name: "Combustion Engine",
                                 type: componentType,
                                 friendlyId: "c-ce",
@@ -921,7 +921,7 @@ group("properties.ts", () => {
                         {
                             code: "CreateEntry",
                             data: {
-                                id: electricMotor,
+                                entryId: electricMotor,
                                 name: "Electric Motor",
                                 type: componentType,
                                 friendlyId: "c-em",
@@ -931,7 +931,7 @@ group("properties.ts", () => {
                         // Create entry "Car": has part "Steering Wheel" in slot "sw", "Combustion Engine" in slot "motor"
                         {
                             code: "CreateEntry",
-                            data: { id: car, name: "Car", type: entryType, friendlyId: "v-car", description: "" },
+                            data: { entryId: car, name: "Car", type: entryType, friendlyId: "v-car", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
@@ -959,7 +959,7 @@ group("properties.ts", () => {
                         {
                             code: "CreateEntry",
                             data: {
-                                id: electricCar,
+                                entryId: electricCar,
                                 name: "Electric Car",
                                 type: entryType,
                                 friendlyId: "v-e-car",
@@ -1116,11 +1116,11 @@ group("properties.ts", () => {
                     // Create entry A and B:
                     {
                         code: "CreateEntry",
-                        data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                        data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                        data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                     },
                     // B inherits from A:
                     {

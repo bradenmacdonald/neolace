@@ -25,6 +25,7 @@ export async function createImages(siteId: VNID) {
             {
                 code: "CreateEntry",
                 data: {
+                    entryId: entryData.imgPonderosaTrunk.id,
                     ...entryData.imgPonderosaTrunk,
                     type: schema.entryTypes._ETIMAGE.id,
                     description: (entryData.imgPonderosaTrunk.description = `

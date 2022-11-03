@@ -50,7 +50,7 @@ group("entry.ts", () => {
                 { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
                 {
                     code: "CreateEntry",
-                    data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                    data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                 },
             ],
             editSource: UseSystemSource,

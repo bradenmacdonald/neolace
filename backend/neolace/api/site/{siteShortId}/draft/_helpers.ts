@@ -69,7 +69,7 @@ export async function checkPermissionsRequiredForEdits(
     if (previousEdits) {
         for (const e of previousEdits) {
             if (e.code === "CreateEntry") {
-                hasNewEntriesOfTypes.set(e.data.id, e.data.type); // add an entry to the map, associating the entry ID with the entryTypeId
+                hasNewEntriesOfTypes.set(e.data.entryId, e.data.type); // add an entry to the map, associating the entry ID with the entryTypeId
             }
         }
     }
@@ -81,7 +81,7 @@ export async function checkPermissionsRequiredForEdits(
         } else if (editType.changeType === api.EditChangeType.Content) {
             const entryEdit = e as api.AnyContentEdit; // Tell TypeScript that this is definitely a content edit now
             if (entryEdit.code === "CreateEntry") {
-                hasNewEntriesOfTypes.set(entryEdit.data.id, entryEdit.data.type); // add an entry to the map, associating the entry ID with the entryTypeId
+                hasNewEntriesOfTypes.set(entryEdit.data.entryId, entryEdit.data.type); // add an entry to the map, associating the entry ID with the entryTypeId
             } else {
                 hasChangesToEntries.add(entryEdit.data.entryId);
             }

@@ -49,11 +49,3 @@ export class DraftEditsResource extends NeolaceHttpResource {
         return {};
     });
 }
-
-export function getEditEntryId(edit: api.AnyContentEdit): VNID {
-    if (edit.code === "CreateEntry") {
-        return edit.data.id;
-    } else {
-        return edit.data.entryId;
-    }
-}

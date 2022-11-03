@@ -18,14 +18,14 @@ export const CreateEntry = ContentEditType({
     changeType: EditChangeType.Content,
     code: "CreateEntry",
     dataSchema: Schema({
-        id: vnidString,
+        entryId: vnidString,
         friendlyId: string,
         name: string,
         type: vnidString,
         description: string,
     }),
     apply: (baseEntry, data, currentSchema) => {
-        if (baseEntry.id === data.id) {
+        if (baseEntry.id === data.entryId) {
             return {
                 ...baseEntry,
                 name: data.name,
@@ -38,12 +38,12 @@ export const CreateEntry = ContentEditType({
         }
         return baseEntry;
     },
-    describe: (data) => `Created \`Entry ${data.id}\` "${data.name}"`,
+    describe: (data) => `Created \`Entry ${data.entryId}\` "${data.name}"`,
     consolidate(thisEdit, earlierEdit) {
-        if (earlierEdit.code === thisEdit.code && earlierEdit.data.id === thisEdit.data.id) {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // There can only be one "Create Entry" for each entry, and the latest one wins.
             return thisEdit;
-        } else if (earlierEdit.data.entryId === thisEdit.data.id) {
+        } else if (earlierEdit.data.entryId === thisEdit.data.entryId) {
             // Some other edit took place before this entry was even created? Overwrite that with this.
             return thisEdit;
         }
@@ -67,7 +67,7 @@ export const SetEntryName = ContentEditType({
         if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // This rename overwrites the previous rename.
             return thisEdit;
-        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.id === thisEdit.data.entryId) {
+        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // Just update the "CreateEntry" to include this name
             return {code: CreateEntry.code, data: {...earlierEdit.data, name: thisEdit.data.name}};
         }
@@ -91,7 +91,7 @@ export const SetEntryFriendlyId = ContentEditType({
         if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // This rename overwrites the previous ID change.
             return thisEdit;
-        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.id === thisEdit.data.entryId) {
+        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // Just update the "CreateEntry" to include this ID
             return {code: CreateEntry.code, data: {...earlierEdit.data, friendlyId: thisEdit.data.friendlyId}};
         }
@@ -115,7 +115,7 @@ export const SetEntryDescription = ContentEditType({
         if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // This rename overwrites the previous description edit.
             return thisEdit;
-        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.id === thisEdit.data.entryId) {
+        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // Just update the "CreateEntry" to include this ID
             return {code: CreateEntry.code, data: {...earlierEdit.data, description: thisEdit.data.description}};
         }

@@ -109,7 +109,7 @@ group("Files.ts", () => {
                 {
                     code: "CreateEntry",
                     data: {
-                        id: entryId,
+                        entryId,
                         type: entryType,
                         name: "Test With Files",
                         friendlyId: "files-test",
