@@ -5,6 +5,9 @@ type EditCode = api.AnyEdit["code"];
 
 export const EditHadNoEffect = Symbol("EditHadNoEffect");
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Regular edits (to content and schema)
+
 export type EditImplementation<EditType extends api.EditType> = (
     tx: WrappedTransaction,
     data: api.Edit<EditType>["data"],
@@ -17,6 +20,7 @@ export type EditImplementation<EditType extends api.EditType> = (
     editSourceId?: VNID,
 ) => Promise<{ modifiedNodes: VNID[]; oldValues?: Record<string, unknown> } | typeof EditHadNoEffect>;
 
+// Helper function to get the typing correct when defining edit implementations
 export function defineImplementation<EditType extends api.ContentEditType | api.SchemaEditType>(
     editType: EditType,
     impl: EditImplementation<EditType>,
@@ -25,42 +29,25 @@ export function defineImplementation<EditType extends api.ContentEditType | api.
     return { code, impl };
 }
 
-// Content edit implementations:
-import { doAddPropertyFact } from "./content/AddPropertyFact.ts";
-import { doCreateEntry } from "./content/CreateEntry.ts";
-import { doDeleteEntry } from "./content/DeleteEntry.ts";
-import { doDeletePropertyFact } from "./content/DeletePropertyFact.ts";
-import { doSetEntryDescription } from "./content/SetEntryDescription.ts";
-import { doSetEntryFriendlyId } from "./content/SetEntryFriendlyId.ts";
-import { doSetEntryName } from "./content/SetEntryName.ts";
-import { doUpdateEntryFeature } from "./content/UpdateEntryFeature.ts";
-import { doUpdatePropertyFact } from "./content/UpdatePropertyFact.ts";
-// Schema edit implementations:
-import { doCreateEntryType } from "./schema/CreateEntryType.ts";
-import { doCreateProperty } from "./schema/CreateProperty.ts";
-import { doDeleteEntryType } from "./schema/DeleteEntryType.ts";
-import { doDeleteProperty } from "./schema/DeleteProperty.ts";
-import { doUpdateEntryType } from "./schema/UpdateEntryType.ts";
-import { doUpdateEntryTypeFeature } from "./schema/UpdateEntryTypeFeature.ts";
-import { doUpdateProperty } from "./schema/UpdateProperty.ts";
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Bulk edits (to content, via a Connection/Connector Plugin)
 
-export const editImplementations: Partial<Record<EditCode, EditImplementation<api.EditType>>> = Object.freeze({
-    // Content edits:
-    [doAddPropertyFact.code]: doAddPropertyFact.impl,
-    [doCreateEntry.code]: doCreateEntry.impl,
-    [doDeleteEntry.code]: doDeleteEntry.impl,
-    [doDeletePropertyFact.code]: doDeletePropertyFact.impl,
-    [doSetEntryDescription.code]: doSetEntryDescription.impl,
-    [doSetEntryFriendlyId.code]: doSetEntryFriendlyId.impl,
-    [doSetEntryName.code]: doSetEntryName.impl,
-    [doUpdateEntryFeature.code]: doUpdateEntryFeature.impl,
-    [doUpdatePropertyFact.code]: doUpdatePropertyFact.impl,
-    // Schema edits:
-    [doCreateEntryType.code]: doCreateEntryType.impl,
-    [doCreateProperty.code]: doCreateProperty.impl,
-    [doDeleteEntryType.code]: doDeleteEntryType.impl,
-    [doDeleteProperty.code]: doDeleteProperty.impl,
-    [doUpdateEntryType.code]: doUpdateEntryType.impl,
-    [doUpdateEntryTypeFeature.code]: doUpdateEntryTypeFeature.impl,
-    [doUpdateProperty.code]: doUpdateProperty.impl,
-});
+export type BulkAppliedEditData = api.AnyContentEdit & {
+    modifiedNodes: VNID[];
+    oldData: Record<string, unknown>; // TODO: add strong typing for this field, specific to each edit.
+};
+
+export type BulkEditImplementation<EditType extends api.EditType> = (
+    tx: WrappedTransaction,
+    data: api.Edit<EditType>["data"][],
+    siteId: VNID,
+    connectionId?: VNID,
+) => Promise<{ appliedEdits: BulkAppliedEditData[] }>;
+
+// Helper function to get the typing correct when defining bulk edit implementations
+export function defineBulkImplementation<EditType extends api.BulkEditType>(
+    _editType: EditType,
+    impl: BulkEditImplementation<EditType>,
+) {
+    return impl;
+}

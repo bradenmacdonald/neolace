@@ -1,9 +1,50 @@
-import { EditChangeType, EditList, getEditType } from "neolace/deps/neolace-api.ts";
+import { AnyEdit, EditChangeType, EditList, EditType, getEditType } from "neolace/deps/neolace-api.ts";
 import { C, defineAction, isVNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { Entry, EntryType, Site } from "neolace/core/mod.ts";
-import { EditHadNoEffect, editImplementations } from "./implementations.ts";
+import { EditHadNoEffect, EditImplementation } from "./implementations.ts";
 import { AppliedEdit } from "./AppliedEdit.ts";
 import { EditSource, SystemSource } from "./EditSource.ts";
+
+// Content edit implementations:
+import { doAddPropertyFact } from "./content/AddPropertyFact.ts";
+import { doCreateEntry } from "./content/CreateEntry.ts";
+import { doDeleteEntry } from "./content/DeleteEntry.ts";
+import { doDeletePropertyFact } from "./content/DeletePropertyFact.ts";
+import { doSetEntryDescription } from "./content/SetEntryDescription.ts";
+import { doSetEntryFriendlyId } from "./content/SetEntryFriendlyId.ts";
+import { doSetEntryName } from "./content/SetEntryName.ts";
+import { doUpdateEntryFeature } from "./content/UpdateEntryFeature.ts";
+import { doUpdatePropertyFact } from "./content/UpdatePropertyFact.ts";
+// Schema edit implementations:
+import { doCreateEntryType } from "./schema/CreateEntryType.ts";
+import { doCreateProperty } from "./schema/CreateProperty.ts";
+import { doDeleteEntryType } from "./schema/DeleteEntryType.ts";
+import { doDeleteProperty } from "./schema/DeleteProperty.ts";
+import { doUpdateEntryType } from "./schema/UpdateEntryType.ts";
+import { doUpdateEntryTypeFeature } from "./schema/UpdateEntryTypeFeature.ts";
+import { doUpdateProperty } from "./schema/UpdateProperty.ts";
+
+// Edits that are used with ApplyEdit
+export const editImplementations: Partial<Record<AnyEdit["code"], EditImplementation<EditType>>> = Object.freeze({
+    // Content edits:
+    [doAddPropertyFact.code]: doAddPropertyFact.impl,
+    [doCreateEntry.code]: doCreateEntry.impl,
+    [doDeleteEntry.code]: doDeleteEntry.impl,
+    [doDeletePropertyFact.code]: doDeletePropertyFact.impl,
+    [doSetEntryDescription.code]: doSetEntryDescription.impl,
+    [doSetEntryFriendlyId.code]: doSetEntryFriendlyId.impl,
+    [doSetEntryName.code]: doSetEntryName.impl,
+    [doUpdateEntryFeature.code]: doUpdateEntryFeature.impl,
+    [doUpdatePropertyFact.code]: doUpdatePropertyFact.impl,
+    // Schema edits:
+    [doCreateEntryType.code]: doCreateEntryType.impl,
+    [doCreateProperty.code]: doCreateProperty.impl,
+    [doDeleteEntryType.code]: doDeleteEntryType.impl,
+    [doDeleteProperty.code]: doDeleteProperty.impl,
+    [doUpdateEntryType.code]: doUpdateEntryType.impl,
+    [doUpdateEntryTypeFeature.code]: doUpdateEntryTypeFeature.impl,
+    [doUpdateProperty.code]: doUpdateProperty.impl,
+});
 
 export const UseSystemSource = Symbol("SystemSource");
 
@@ -104,7 +145,7 @@ export const ApplyEdits = defineAction({
             }
             await tx.query(C`
                 MATCH (site:${Site} {id: ${siteId}})
-                MATCH (editSource:${EditSource} {id: ${editSourceId}})
+                MATCH (editSource:${EditSource} {id: ${editSourceId}})-[:${EditSource.rel.FOR_SITE}]->(site)
                 WITH site, editSource
                 UNWIND ${appliedEditsData} AS appliedEdit
 
