@@ -6,10 +6,7 @@ import { slugIdToFriendlyId } from "../../Site.ts";
 import { Neo4jError } from "https://raw.githubusercontent.com/neo4j/neo4j-javascript-driver/5.1.0/packages/neo4j-driver-deno/lib/mod.ts";
 
 /**
- * The bulk updates edit type is designed to do some basic edits in an extremely efficient way.
- * The basic idea is to get as much done as possible in a single Neo4j statement, using UNWIND to iterate over a list of
- * edits, and pushing as much logic into the database layer as possible so that many rows can be inserted at once with
- * less overhead than other approaches with many separate statements and transactions.
+ * Upsert (Create or Update) entries as needed, setting their name and description.
  */
 export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async (tx, edits_, siteId, connectionId) => {
     // In order to make these bulk edits as efficient as possible, most of the work is done inside Neo4j.
@@ -60,9 +57,9 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
                 ELSE {} END
         WITH idx, entry, oldValues, entry.changed AS changed
         REMOVE entry.changed
-        RETURN collect({idx: idx, entryId: entry.id, changed: changed, oldValues: oldValues}) AS upsertEntryByIdChanges
+        RETURN collect({idx: idx, entryId: entry.id, changed: changed, oldValues: oldValues}) AS changes
     `.givesShape({
-        upsertEntryByIdChanges: Field.List(
+        changes: Field.List(
             Field.Record({
                 idx: Field.Int,
                 id: Field.VNID,
@@ -82,7 +79,7 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
         }
     });
 
-    if (result.upsertEntryByIdChanges.length !== edits.length) {
+    if (result.changes.length !== edits.length) {
         throw new InvalidEdit(
             UpsertEntryById.code,
             {},
@@ -92,7 +89,7 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
 
     const appliedEdits: BulkAppliedEditData[] = [];
 
-    for (const outcome of result.upsertEntryByIdChanges) {
+    for (const outcome of result.changes) {
         const edit = edits[outcome.idx];
         if (!outcome.changed) {
             continue;

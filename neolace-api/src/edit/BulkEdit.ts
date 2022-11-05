@@ -65,7 +65,7 @@ export const UpsertEntryById = BulkEditType({
 
 export const UpsertEntryByFriendlyId = BulkEditType({
     changeType: EditChangeType.Bulk,
-    code: "UpsertEntryById",
+    code: "UpsertEntryByFriendlyId",
     dataSchema: Schema({
         where: Schema({
             entryTypeId: vnidString,

@@ -26,8 +26,11 @@ export const testHelpers = (defaultData: TestSetupData["data"]) => {
             context.evaluateExprConcrete(`entry("${entry.id}").name`).then((val) => (val as StringValue).value),
         getDescription: (entry: { id: VNID }) =>
             context.evaluateExprConcrete(`entry("${entry.id}").description`).then((val) => (val as StringValue).value),
-        assertExists: (entry: { id: VNID }) =>
-            context.evaluateExprConcrete(`entry("${entry.id}")`).then((val) => assertInstanceOf(val, EntryValue)),
+        assertExists: (entry: { id: VNID } | { friendlyId: string }) =>
+            context.evaluateExprConcrete(`entry("${"id" in entry ? entry.id : entry.friendlyId}")`).then((val) => {
+                assertInstanceOf(val, EntryValue);
+                return { id: val.id };
+            }),
         assertNotExists: (entry: { id: VNID }) =>
             assertRejects(
                 () => context.evaluateExprConcrete(`entry("${entry.id}")`),

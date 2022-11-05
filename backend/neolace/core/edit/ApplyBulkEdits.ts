@@ -1,10 +1,18 @@
-import { AnyBulkEdit, BulkEditType, Edit, EditChangeType, UpsertEntryById } from "neolace/deps/neolace-api.ts";
+import {
+    AnyBulkEdit,
+    BulkEditType,
+    Edit,
+    EditChangeType,
+    UpsertEntryByFriendlyId,
+    UpsertEntryById,
+} from "neolace/deps/neolace-api.ts";
 import { C, defineAction, VNID } from "neolace/deps/vertex-framework.ts";
 import { Connection, Entry, EntryType, Site } from "neolace/core/mod.ts";
 import { BulkAppliedEditData } from "./implementations.ts";
 import { AppliedEdit } from "./AppliedEdit.ts";
 
 import { doUpsertEntryById } from "./bulk/UpsertEntryById.ts";
+import { doUpsertEntryByFriendlyId } from "./bulk/UpsertEntryByFriendlyId.ts";
 
 /** Helper method to filter an array of bulk edits to only the edits of a particular type, with correct typing. */
 const filterEdits = <EditType extends BulkEditType>(edits: AnyBulkEdit[], editType: EditType) =>
@@ -27,9 +35,21 @@ export const ApplyBulkEdits = defineAction({
         const appliedEdits: BulkAppliedEditData[] = [];
 
         // We apply edits in this order:
+
+        // Upserts:
         const upsertsById = filterEdits(data.edits, UpsertEntryById);
         if (upsertsById.length > 0) {
             const outcome = await doUpsertEntryById(tx, upsertsById.map((e) => e.data), data.siteId, data.connectionId);
+            appliedEdits.push(...outcome.appliedEdits);
+        }
+        const upsertsByFriendlyId = filterEdits(data.edits, UpsertEntryByFriendlyId);
+        if (upsertsByFriendlyId.length > 0) {
+            const outcome = await doUpsertEntryByFriendlyId(
+                tx,
+                upsertsByFriendlyId.map((e) => e.data),
+                data.siteId,
+                data.connectionId,
+            );
             appliedEdits.push(...outcome.appliedEdits);
         }
 
