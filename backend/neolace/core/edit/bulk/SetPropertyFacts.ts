@@ -34,13 +34,14 @@ export const doSetPropertyFacts = defineBulkImplementation(
             UNWIND range(0, size(edits)) AS idx
             WITH site, connection, idx, edits[idx] AS edit
 
-            MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)-[:${EntryType.rel.FOR_SITE}]->(site)
+            MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
             WHERE
                 CASE WHEN edit.entryWith.friendlyId IS NOT NULL THEN
                     exists( (entry)<-[:IDENTIFIES]-(:SlugId {slugId: site.siteCode + edit.entryWith.friendlyId}) )
                 ELSE
                     entry.id = edit.entryWith.entryId
                 END
+                AND exists( (entryType)-[:${EntryType.rel.FOR_SITE}]->(site) )
 
             UNWIND edit.set AS setProp
 
