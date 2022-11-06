@@ -87,7 +87,8 @@ export const ApplyBulkEdits = defineAction({
 
                 // Mark which entries were modified by this edit:
                 WITH site, ae, appliedEdit
-                MATCH (entry:${Entry} WHERE entry.id IN appliedEdit.modifiedNodes)-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+                MATCH (entry:${Entry} WHERE entry.id IN appliedEdit.modifiedNodes)
+                    WHERE exists((entry)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site))
                 CREATE (ae)-[:${AppliedEdit.rel.MODIFIED}]->(entry)
             `);
             for (const ae of appliedEditsData) {
