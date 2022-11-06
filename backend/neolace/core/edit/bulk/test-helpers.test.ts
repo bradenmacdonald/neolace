@@ -9,6 +9,7 @@ import { ApplyBulkEdits } from "../ApplyBulkEdits.ts";
 import { TestSetupData } from "neolace/lib/tests-default-data.ts";
 import { AppliedEdit } from "../AppliedEdit.ts";
 import { ApplyEdits, UseSystemSource } from "../ApplyEdits.ts";
+import { getRawProperties } from "neolace/core/entry/properties.ts";
 
 export const testHelpers = (defaultData: TestSetupData["data"]) => {
     const siteId = defaultData.site.id;
@@ -26,6 +27,15 @@ export const testHelpers = (defaultData: TestSetupData["data"]) => {
             context.evaluateExprConcrete(`entry("${entry.id}").name`).then((val) => (val as StringValue).value),
         getDescription: (entry: { id: VNID }) =>
             context.evaluateExprConcrete(`entry("${entry.id}").description`).then((val) => (val as StringValue).value),
+
+        /** Get all the facts (values) for a particular property on a particular entry */
+        getPropertyFacts: async (entry: { id: VNID }, propertyId: VNID) => {
+            const graph = await getGraph();
+            const allRawProps = await graph.read((tx) => getRawProperties({ tx, entryId: entry.id }));
+            const rawProp = allRawProps.find((rp) => rp.propertyId === propertyId);
+            return rawProp?.facts ?? [];
+        },
+
         assertExists: (entry: { id: VNID } | { friendlyId: string }) =>
             context.evaluateExprConcrete(`entry("${"id" in entry ? entry.id : entry.friendlyId}")`).then((val) => {
                 assertInstanceOf(val, EntryValue);

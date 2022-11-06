@@ -3,6 +3,7 @@ import {
     BulkEditType,
     Edit,
     EditChangeType,
+    SetPropertyFacts,
     UpsertEntryByFriendlyId,
     UpsertEntryById,
 } from "neolace/deps/neolace-api.ts";
@@ -13,6 +14,7 @@ import { AppliedEdit } from "./AppliedEdit.ts";
 
 import { doUpsertEntryById } from "./bulk/UpsertEntryById.ts";
 import { doUpsertEntryByFriendlyId } from "./bulk/UpsertEntryByFriendlyId.ts";
+import { doSetPropertyFacts } from "./bulk/SetPropertyFacts.ts";
 
 /** Helper method to filter an array of bulk edits to only the edits of a particular type, with correct typing. */
 const filterEdits = <EditType extends BulkEditType>(edits: AnyBulkEdit[], editType: EditType) =>
@@ -39,17 +41,22 @@ export const ApplyBulkEdits = defineAction({
         // Upserts:
         const upsertsById = filterEdits(data.edits, UpsertEntryById);
         if (upsertsById.length > 0) {
-            const outcome = await doUpsertEntryById(tx, upsertsById.map((e) => e.data), data.siteId, data.connectionId);
+            const editsData = upsertsById.map((e) => e.data);
+            const outcome = await doUpsertEntryById(tx, editsData, data.siteId, data.connectionId);
             appliedEdits.push(...outcome.appliedEdits);
         }
         const upsertsByFriendlyId = filterEdits(data.edits, UpsertEntryByFriendlyId);
         if (upsertsByFriendlyId.length > 0) {
-            const outcome = await doUpsertEntryByFriendlyId(
-                tx,
-                upsertsByFriendlyId.map((e) => e.data),
-                data.siteId,
-                data.connectionId,
-            );
+            const editsData = upsertsByFriendlyId.map((e) => e.data);
+            const outcome = await doUpsertEntryByFriendlyId(tx, editsData, data.siteId, data.connectionId);
+            appliedEdits.push(...outcome.appliedEdits);
+        }
+
+        // Properties:
+        const setPropertyFacts = filterEdits(data.edits, SetPropertyFacts);
+        if (setPropertyFacts.length > 0) {
+            const editsData = setPropertyFacts.map((e) => e.data);
+            const outcome = await doSetPropertyFacts(tx, editsData, data.siteId, data.connectionId);
             appliedEdits.push(...outcome.appliedEdits);
         }
 

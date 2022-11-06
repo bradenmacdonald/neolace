@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { vnidString, } from "../api-schemas.ts";
-import { Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
+import { array, Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "./Edit.ts";
 
 /**
@@ -19,7 +19,6 @@ import { Edit, EditChangeType, EditType } from "./Edit.ts";
  */
 export interface BulkEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = any> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Bulk;
-    isBulkEdit: true,
 }
 
 // This helper function just makes the typing easier to set.
@@ -28,14 +27,14 @@ function BulkEditType<Code extends string, DataSchema extends SchemaValidatorFun
 }
 
 /** Different ways to specify an entry */
-// const BulkEditEntryLookup = Schema.either(
-//     /** Look up an entry based on its ID: */
-//     Schema({entryId: vnidString}),
-//     /** Look up an entry based on its friendly ID: */
-//     Schema({friendlyId: string}),
-//     /** Look up an entry based on a property value: */
-//     Schema({entryTypeId: vnidString, propertyId: vnidString, exactValueExpression: string}),
-// );
+const BulkEditEntryLookup = Schema.either(
+    /** Look up an entry based on its ID: */
+    Schema({entryId: vnidString}),
+    /** Look up an entry based on its friendly ID: */
+    Schema({friendlyId: string}),
+    /** Look up an entry based on a property value: */
+    // Schema({entryTypeId: vnidString, propertyId: vnidString, exactValueExpression: string}),
+);
 
 export const UpsertEntryById = BulkEditType({
     changeType: EditChangeType.Bulk,
@@ -59,7 +58,6 @@ export const UpsertEntryById = BulkEditType({
             friendlyId: string.strictOptional(),
         }).strictOptional(),
     }),
-    isBulkEdit: true,
     describe: (_data) => `Bulk Updated Entries`,
 });
 
@@ -83,16 +81,36 @@ export const UpsertEntryByFriendlyId = BulkEditType({
             description: string.strictOptional(),
         }).strictOptional(),
     }),
-    isBulkEdit: true,
+    describe: (_data) => `Bulk Updated Entries`,
+});
+
+export const SetPropertyFacts = BulkEditType({
+    changeType: EditChangeType.Bulk,
+    code: "SetPropertyFacts",
+    dataSchema: Schema({
+        entryWith: BulkEditEntryLookup,
+        // If the entry doesn't yet exist, create it and set the following fields. If it does exist, ignore
+        // these fields.
+        set: array.of(Schema({
+            propertyId: vnidString,
+            facts: array.of(Schema({
+                valueExpression: string,
+                note: string.strictOptional(),
+                slot: string.strictOptional(),
+            })),
+        })),
+    }),
     describe: (_data) => `Bulk Updated Entries`,
 });
 
 export const _allBulkEditTypes = {
     UpsertEntryById,
     UpsertEntryByFriendlyId,
+    SetPropertyFacts,
 };
 
 export type AnyBulkEdit = (
     | Edit<typeof UpsertEntryById>
     | Edit<typeof UpsertEntryByFriendlyId>
+    | Edit<typeof SetPropertyFacts>
 );
