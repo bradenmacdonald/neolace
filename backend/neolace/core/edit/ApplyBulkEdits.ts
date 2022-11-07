@@ -4,6 +4,7 @@ import {
     Edit,
     EditChangeType,
     SetPropertyFacts,
+    SetRelationships,
     UpsertEntryByFriendlyId,
     UpsertEntryById,
 } from "neolace/deps/neolace-api.ts";
@@ -15,6 +16,7 @@ import { AppliedEdit } from "./AppliedEdit.ts";
 import { doUpsertEntryById } from "./bulk/UpsertEntryById.ts";
 import { doUpsertEntryByFriendlyId } from "./bulk/UpsertEntryByFriendlyId.ts";
 import { doSetPropertyFacts } from "./bulk/SetPropertyFacts.ts";
+import { doSetRelationships } from "./bulk/SetRelationships.ts";
 
 /** Helper method to filter an array of bulk edits to only the edits of a particular type, with correct typing. */
 const filterEdits = <EditType extends BulkEditType>(edits: AnyBulkEdit[], editType: EditType) =>
@@ -57,6 +59,13 @@ export const ApplyBulkEdits = defineAction({
         if (setPropertyFacts.length > 0) {
             const editsData = setPropertyFacts.map((e) => e.data);
             const outcome = await doSetPropertyFacts(tx, editsData, data.siteId, data.connectionId);
+            appliedEdits.push(...outcome.appliedEdits);
+        }
+        // Relationship properties:
+        const setRelationships = filterEdits(data.edits, SetRelationships);
+        if (setRelationships.length > 0) {
+            const editsData = setRelationships.map((e) => e.data);
+            const outcome = await doSetRelationships(tx, editsData, data.siteId, data.connectionId);
             appliedEdits.push(...outcome.appliedEdits);
         }
 

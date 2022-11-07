@@ -103,14 +103,35 @@ export const SetPropertyFacts = BulkEditType({
     describe: (_data) => `Bulk Updated Entries`,
 });
 
+export const SetRelationships = BulkEditType({
+    changeType: EditChangeType.Bulk,
+    code: "SetRelationships",
+    dataSchema: Schema({
+        entryWith: BulkEditEntryLookup,
+        // If the entry doesn't yet exist, create it and set the following fields. If it does exist, ignore
+        // these fields.
+        set: array.of(Schema({
+            propertyId: vnidString,
+            toEntries: array.of(Schema({
+                entryWith: BulkEditEntryLookup,
+                note: string.strictOptional(),
+                slot: string.strictOptional(),
+            })),
+        })),
+    }),
+    describe: (_data) => `Bulk Updated Entries`,
+});
+
 export const _allBulkEditTypes = {
     UpsertEntryById,
     UpsertEntryByFriendlyId,
     SetPropertyFacts,
+    SetRelationships,
 };
 
 export type AnyBulkEdit = (
     | Edit<typeof UpsertEntryById>
     | Edit<typeof UpsertEntryByFriendlyId>
     | Edit<typeof SetPropertyFacts>
+    | Edit<typeof SetRelationships>
 );

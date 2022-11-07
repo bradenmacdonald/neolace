@@ -1,7 +1,7 @@
 import { C } from "neolace/deps/vertex-framework.ts";
 import { assertInstanceOf, assertRejects, TestLookupContext } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { EntryValue, StringValue } from "neolace/core/lookup/values.ts";
+import { AnnotatedValue, EntryValue, PageValue, StringValue } from "neolace/core/lookup/values.ts";
 import { AnyBulkEdit, VNID } from "neolace/deps/neolace-api.ts";
 import { LookupEvaluationError } from "neolace/core/lookup/errors.ts";
 import { getConnection } from "../connections.ts";
@@ -27,6 +27,13 @@ export const testHelpers = (defaultData: TestSetupData["data"]) => {
             context.evaluateExprConcrete(`entry("${entry.id}").name`).then((val) => (val as StringValue).value),
         getDescription: (entry: { id: VNID }) =>
             context.evaluateExprConcrete(`entry("${entry.id}").description`).then((val) => (val as StringValue).value),
+        /** Evaluate a lookup expresion like 'this.get(prop=prop("...")) that returns a list of entries. */
+        evaluateEntryListLookup: (entry: { id: VNID }, expr: string) =>
+            context.evaluateExprConcrete(expr, entry.id).then((val) => {
+                return (val as PageValue<AnnotatedValue | EntryValue>).values.map((ev) =>
+                    ev instanceof AnnotatedValue ? (ev.value as EntryValue).id : ev.id
+                );
+            }),
 
         /** Get all the facts (values) for a particular property on a particular entry */
         getPropertyFacts: async (entry: { id: VNID }, propertyId: VNID) => {

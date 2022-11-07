@@ -194,6 +194,20 @@ group("SetPropertyFacts bulk edit implementation", () => {
         // Now, check the edits:
         const appliedEdits = await getAppliedEdits(result);
         assertEquals(appliedEdits, [
+            // Delete the old "scientific name" value for ponderosa pine:
+            {
+                code: "DeletePropertyFact",
+                data: {
+                    entryId: ponderosaPine.id,
+                    propertyFactId: ponderosaSciNameBefore[0].id,
+                },
+                oldData: {
+                    valueExpression: ponderosaSciNameBefore[0].valueExpression,
+                    note: ponderosaSciNameBefore[0].note,
+                    slot: "",
+                    rank: 1,
+                },
+            },
             // Set the two new "scientific name" values for ponderosa pine:
             {
                 code: "AddPropertyFact",
@@ -220,20 +234,6 @@ group("SetPropertyFacts bulk edit implementation", () => {
                     rank: 2,
                 },
                 oldData: {},
-            },
-            // Delete the old "scientific name" value for ponderosa pine:
-            {
-                code: "DeletePropertyFact",
-                data: {
-                    entryId: ponderosaPine.id,
-                    propertyFactId: ponderosaSciNameBefore[0].id,
-                },
-                oldData: {
-                    valueExpression: ponderosaSciNameBefore[0].valueExpression,
-                    note: ponderosaSciNameBefore[0].note,
-                    slot: "",
-                    rank: 1,
-                },
             },
             // Delete the old "wikidata QID" value for ponderosa pine:
             {
