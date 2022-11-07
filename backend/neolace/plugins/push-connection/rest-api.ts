@@ -1,4 +1,5 @@
-import { api, ApplyEdits, getConnection, getGraph, NeolaceHttpResource } from "neolace/plugins/api.ts";
+import { api, getConnection, getGraph, NeolaceHttpResource } from "neolace/plugins/api.ts";
+import { ApplyBulkEdits } from "../../core/edit/ApplyBulkEdits.ts";
 import { thisPlugin } from "./mod.ts";
 
 /**
@@ -14,10 +15,10 @@ export class PushEditResource extends NeolaceHttpResource {
     POST = this.method({
         requestBodySchema: api.schemas.Schema({
             /** A single edit to apply */
-            edit: api.CreateEditSchema,
+            edits: api.schemas.array.of(api.BulkEditSchema),
         }),
         responseSchema: api.schemas.Schema({
-            appliedEditId: api.schemas.nullable(api.schemas.vnidString),
+            appliedEditIds: api.schemas.array.of(api.schemas.vnidString),
         }),
         description: "Push entry data into a Neolace site",
     }, async ({ request, bodyData }) => {
@@ -36,38 +37,46 @@ export class PushEditResource extends NeolaceHttpResource {
         if (typeof friendlyId !== "string") {
             throw new api.InvalidFieldValue([{ fieldPath: "friendlyId", message: "friendly ID missing/invalid." }]);
         }
-        const connection = await getConnection({
-            create: request.queryParam("create") !== undefined,
-            friendlyId,
-            plugin: "push-connection",
-            siteId,
-        });
-
-        // Validate the edit
-        const editType = api.getEditType(bodyData.edit.code);
-        if (editType.changeType !== api.EditChangeType.Content) {
-            throw new api.InvalidFieldValue([{
-                fieldPath: "edit.code",
-                message: "Only content edits can be used with the Push connection REST API.",
-            }]);
+        let connection;
+        try {
+            connection = await getConnection({
+                create: request.queryParam("create") !== undefined,
+                friendlyId,
+                plugin: "push-connection",
+                siteId,
+            });
+        } catch (err) {
+            if (err instanceof Error && err.message.includes("not found")) {
+                throw new api.NotFound(err.message);
+            }
+            throw err;
         }
-        editType.dataSchema(bodyData.edit.data); // This does the validation.
+
+        // Validate the edits
+        for (const edit of bodyData.edits) {
+            const editType = api.getEditType(edit.code);
+            if (editType.changeType !== api.EditChangeType.Bulk) {
+                throw new api.InvalidFieldValue([{
+                    fieldPath: "edit.code",
+                    message: "Only bulk edits can be used with the Push connection REST API.",
+                }]);
+            }
+            editType.dataSchema(edit.data); // This does the validation.
+        }
 
         const graph = await getGraph();
         const result = await graph.runAs(
             user.id,
-            ApplyEdits({
+            ApplyBulkEdits({
                 siteId,
-                editSource: connection.id,
-                edits: [bodyData.edit],
+                connectionId: connection.id,
+                edits: bodyData.edits,
             }),
         );
 
         // Response:
         return {
-            // If the edit made changes, this will return the ID of the appliedEdit object. Otherwise, it will return
-            // null to indicate that the edit was a no-op (e.g. changing an entry's name to the name it already has)
-            appliedEditId: result.appliedEditIds.length === 1 ? result.appliedEditIds[0] : null,
+            appliedEditIds: result.appliedEditIds,
         };
     });
 }

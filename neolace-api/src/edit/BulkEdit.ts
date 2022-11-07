@@ -135,3 +135,10 @@ export type AnyBulkEdit = (
     | Edit<typeof SetPropertyFacts>
     | Edit<typeof SetRelationships>
 );
+
+export const BulkEditSchema = Schema.either(
+    Schema({code: UpsertEntryById.code, data: UpsertEntryById.dataSchema}),
+    Schema({code: UpsertEntryByFriendlyId.code, data: UpsertEntryByFriendlyId.dataSchema}),
+    Schema({code: SetPropertyFacts.code, data: SetPropertyFacts.dataSchema}),
+    Schema({code: SetRelationships.code, data: SetRelationships.dataSchema}),
+).transform(e => e as AnyBulkEdit);

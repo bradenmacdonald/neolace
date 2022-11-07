@@ -98,6 +98,7 @@ export const config = (() => {
 
         plugins: [
             { mod: "search" },
+            { mod: "push-connection" },
         ],
     };
     // Allow defaults to be overriden by environment variables:
