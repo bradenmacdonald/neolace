@@ -34,14 +34,24 @@ export const doSetRelationships = defineBulkImplementation(
             UNWIND range(0, size(edits)) AS idx
             WITH site, connection, idx, edits[idx] AS edit
 
-            MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
-            WHERE
-                CASE WHEN edit.entryWith.friendlyId IS NOT NULL THEN
-                    entry.slugId = site.siteCode + edit.entryWith.friendlyId
-                ELSE
-                    entry.id = edit.entryWith.entryId
-                END
-                AND exists( (entryType)-[:${EntryType.rel.FOR_SITE}]->(site) )
+            // Match the entry, using either entryId or friendlyId.
+            // We need to use a subquery and union in order to force use of our unique indexes.
+            // Writing it as MATCH (entry:...) WHERE CASE ... THEN entry.friendlyId = ... ELSE entry.id = ... END
+            // works but is horribly inefficient since it doesn't use the indexes.
+            CALL {
+                WITH edit, site
+                MATCH (entry:${Entry} {slugId: site.siteCode + edit.entryWith.friendlyId})
+                    WHERE edit.entryWith.friendlyId IS NOT NULL
+                    RETURN entry
+                UNION
+                WITH edit, site
+                MATCH (entry:${Entry} {id: edit.entryWith.entryId})
+                    WHERE edit.entryWith.entryId IS NOT NULL
+                    RETURN entry
+            }
+            
+            // Make sure the entry is on the same site:
+            MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
 
             UNWIND edit.set AS setProp
 
@@ -56,14 +66,20 @@ export const doSetRelationships = defineBulkImplementation(
                 WITH site, setProp, entry, property
                 UNWIND setProp.toEntries AS toEntrySpec
 
-                MATCH (toEntry:${Entry})
-                    WHERE
-                        CASE WHEN toEntrySpec.entryWith.friendlyId IS NOT NULL THEN
-                            toEntry.slugId = site.siteCode + toEntrySpec.entryWith.friendlyId
-                        ELSE
-                            toEntry.id = toEntrySpec.entryWith.entryId
-                        END
-                        AND exists( (toEntry)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site) )
+                // Find the target entry of this relationship:
+                CALL {
+                    WITH toEntrySpec, site
+                    MATCH (toEntry:${Entry} {slugId: site.siteCode + toEntrySpec.entryWith.friendlyId})
+                        WHERE toEntrySpec.entryWith.friendlyId IS NOT NULL
+                        RETURN toEntry
+                    UNION
+                    WITH toEntrySpec, site
+                    MATCH (toEntry:${Entry} {id: toEntrySpec.entryWith.entryId})
+                        WHERE toEntrySpec.entryWith.entryId IS NOT NULL
+                        RETURN toEntry
+                }
+
+                MATCH (toEntry)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
 
                 MERGE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {
                     valueExpression: 'entry("' + toEntry.id + '")',
@@ -77,12 +93,12 @@ export const doSetRelationships = defineBulkImplementation(
                     ON MATCH SET
                         pf.keep = true
 
-                FOREACH (x IN CASE WHEN property.type = ${PropertyType.RelIsA} THEN [1] ELSE [] END |
-                    MERGE (entry)-[rel:${Entry.rel.IS_A}]->(toEntry)
+                FOREACH (x IN CASE WHEN pf.added AND property.type = ${PropertyType.RelIsA} THEN [1] ELSE [] END |
+                    CREATE (entry)-[rel:${Entry.rel.IS_A}]->(toEntry)
                     SET pf.directRelNeo4jId = id(rel)
                 )
-                FOREACH (x IN CASE WHEN property.type = ${PropertyType.RelOther} THEN [1] ELSE [] END |
-                    MERGE (entry)-[rel:${Entry.rel.RELATES_TO}]->(toEntry)
+                FOREACH (x IN CASE WHEN pf.added AND property.type = ${PropertyType.RelOther} THEN [1] ELSE [] END |
+                    CREATE (entry)-[rel:${Entry.rel.RELATES_TO}]->(toEntry)
                     SET pf.directRelNeo4jId = id(rel)
                 )
             }
