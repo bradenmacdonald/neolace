@@ -55,7 +55,7 @@ export const doSetPropertyFacts = defineBulkImplementation(
                 MERGE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {
                     valueExpression: fact.valueExpression,
                     note: fact.note,
-                    rank: fact.rank,
+                    rank: toInteger(fact.rank),
                     slot: fact.slot
                 })-[:${PropertyFact.rel.FOR_PROP}]->(property)
                     ON CREATE SET
@@ -127,9 +127,10 @@ export const doSetPropertyFacts = defineBulkImplementation(
                         continue;
                     }
                     appliedEdits.push({
-                        code: "UpdatePropertyFact",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: outcome.entryId,
+                            propertyId: setProp.propertyId,
                             propertyFactId: fact.id,
                             valueExpression: fact.valueExpression,
                             note: fact.note,

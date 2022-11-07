@@ -196,9 +196,10 @@ group("SetPropertyFacts bulk edit implementation", () => {
         assertEquals(appliedEdits, [
             // Set the two new "scientific name" values for ponderosa pine:
             {
-                code: "UpdatePropertyFact",
+                code: "AddPropertyFact",
                 data: {
                     entryId: ponderosaPine.id,
+                    propertyId: scientificNameProp.id,
                     propertyFactId: ponderosaSciName[0].id, // We don't know this ID in advance
                     valueExpression: ponderosaSciName[0].valueExpression,
                     note: ponderosaSciName[0].note,
@@ -208,9 +209,10 @@ group("SetPropertyFacts bulk edit implementation", () => {
                 oldData: {},
             },
             {
-                code: "UpdatePropertyFact",
+                code: "AddPropertyFact",
                 data: {
                     entryId: ponderosaPine.id,
+                    propertyId: scientificNameProp.id,
                     propertyFactId: ponderosaSciName[1].id, // We don't know this ID in advance
                     valueExpression: ponderosaSciName[1].valueExpression,
                     note: ponderosaSciName[1].note,
@@ -249,9 +251,10 @@ group("SetPropertyFacts bulk edit implementation", () => {
             },
             // Add a second "scientific name" value to jack pine, leaving the first unchanged:
             {
-                code: "UpdatePropertyFact",
+                code: "AddPropertyFact",
                 data: {
                     entryId: jackPine.id,
+                    propertyId: scientificNameProp.id,
                     propertyFactId: jackPineSciName[1].id, // We don't know this ID in advance
                     valueExpression: jackPineSciName[1].valueExpression,
                     note: jackPineSciName[1].note,
@@ -262,9 +265,10 @@ group("SetPropertyFacts bulk edit implementation", () => {
             },
             // Add a wikidata QID value to jack pine, which previously didn't have one:
             {
-                code: "UpdatePropertyFact",
+                code: "AddPropertyFact",
                 data: {
                     entryId: jackPine.id,
+                    propertyId: wikidataQidProp.id,
                     propertyFactId: jackPineQid[0].id, // We don't know this ID in advance
                     valueExpression: jackPineQid[0].valueExpression,
                     note: jackPineQid[0].note,
