@@ -34,39 +34,59 @@ export const doSetPropertyFacts = defineBulkImplementation(
             UNWIND range(0, size(edits)) AS idx
             WITH site, connection, idx, edits[idx] AS edit
 
-            MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
-            WHERE
-                CASE WHEN edit.entryWith.friendlyId IS NOT NULL THEN
-                    entry.slugId = site.siteCode + edit.entryWith.friendlyId
-                ELSE
-                    entry.id = edit.entryWith.entryId
-                END
-                AND exists( (entryType)-[:${EntryType.rel.FOR_SITE}]->(site) )
+            CALL {
+                WITH edit, site
+                MATCH (entry:${Entry} {slugId: site.siteCode + edit.entryWith.friendlyId})
+                    WHERE edit.entryWith.friendlyId IS NOT NULL
+                    RETURN entry
+                UNION
+                WITH edit, site
+                MATCH (entry:${Entry} {id: edit.entryWith.entryId})
+                    WHERE edit.entryWith.entryId IS NOT NULL
+                    RETURN entry
+            }
+
+            // Make sure the entry is part of the correct site:
+            MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
 
             UNWIND edit.set AS setProp
 
             MATCH (property:${Property} {id: setProp.propertyId, type: ${PropertyType.Value}})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
             // Collect the data of all the existing facts set for this property on this entry, so we can see what changed later:
-            OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(oldFact:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
+            OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(oldFact:${PropertyFact})
+                WHERE exists( (oldFact)-[:${PropertyFact.rel.FOR_PROP}]->(property) )
             WITH idx, site, setProp, entry, property, collect(oldFact {.id, .valueExpression, .note, .rank, .slot}) AS oldFacts
 
             // Create new property facts if matching facts don't already exist:
-            FOREACH (fact IN setProp.facts |
-                MERGE (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact} {
+            CALL {
+                WITH entry, setProp
+                UNWIND setProp.facts AS fact
+                MATCH (entry)-[:PROP_FACT]->(pf:${PropertyFact} {
                     valueExpression: fact.valueExpression,
                     note: fact.note,
                     rank: toInteger(fact.rank),
                     slot: fact.slot
-                })-[:${PropertyFact.rel.FOR_PROP}]->(property)
-                    ON CREATE SET
-                        pf.id = fact.id,
-                        pf.keep = true
-                    ON MATCH SET
-                        pf.keep = true
+                })
+                SET pf.keep = true
+                RETURN collect(fact.id) AS existingFacts
+            }
+
+            FOREACH (fact IN [x IN setProp.facts WHERE NOT x.id IN existingFacts] |
+                CREATE (pf:${PropertyFact} {
+                    id: fact.id,
+                    keep: true,
+                    valueExpression: fact.valueExpression,
+                    note: fact.note,
+                    rank: toInteger(fact.rank),
+                    slot: fact.slot
+                })
+                CREATE (entry)-[:${Entry.rel.PROP_FACT}]->(pf)
+                CREATE (pf)-[:${PropertyFact.rel.FOR_PROP}]->(property)
             )
 
             WITH idx, site, entry, property, oldFacts
-            OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
+            OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})
+                WHERE exists( (pf)-[:${PropertyFact.rel.FOR_PROP}]->(property) )
             WITH idx, site, entry.id AS entryId, property.id AS propertyId, oldFacts, collect(pf) AS propFacts
 
             WITH idx, site, entryId, propertyId, oldFacts, propFacts,
