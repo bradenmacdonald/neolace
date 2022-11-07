@@ -67,15 +67,15 @@ export const doSetPropertyFacts = defineBulkImplementation(
 
             WITH idx, site, entry, property, oldFacts
             OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
-            WITH idx, site, entry.id AS entryId, oldFacts, collect(pf) AS propFacts
+            WITH idx, site, entry.id AS entryId, property.id AS propertyId, oldFacts, collect(pf) AS propFacts
 
-            WITH idx, site, entryId, oldFacts, propFacts,
+            WITH idx, site, entryId, propertyId, oldFacts, propFacts,
                 [x in propFacts WHERE x.keep IS NULL | x.id] AS deleteFactIds
 
             FOREACH (pf IN propFacts | REMOVE pf.keep)
             FOREACH (pf IN [x in propFacts WHERE x.id IN deleteFactIds] | DETACH DELETE pf)
 
-            WITH idx, entryId, collect({deletedFactIds: deleteFactIds, oldFacts: oldFacts}) AS data
+            WITH idx, entryId, collect({propertyId: propertyId, deletedFactIds: deleteFactIds, oldFacts: oldFacts}) AS data
 
             RETURN collect({idx: idx, entryId: entryId, data: data}) AS changes
         `.givesShape({
@@ -84,6 +84,7 @@ export const doSetPropertyFacts = defineBulkImplementation(
                     idx: Field.Int,
                     entryId: Field.VNID,
                     data: Field.List(Field.Record({
+                        propertyId: Field.VNID,
                         deletedFactIds: Field.List(Field.VNID),
                         oldFacts: Field.NullOr.List(Field.Record({
                             id: Field.VNID,

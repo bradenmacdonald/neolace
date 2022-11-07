@@ -48,9 +48,9 @@ export const testHelpers = (defaultData: TestSetupData["data"]) => {
                 assertInstanceOf(val, EntryValue);
                 return { id: val.id };
             }),
-        assertNotExists: (entry: { id: VNID }) =>
+        assertNotExists: (entry: { id: VNID } | { friendlyId: string }) =>
             assertRejects(
-                () => context.evaluateExprConcrete(`entry("${entry.id}")`),
+                () => context.evaluateExprConcrete(`entry("${"id" in entry ? entry.id : entry.friendlyId}")`),
                 LookupEvaluationError,
                 "not found",
             ),
