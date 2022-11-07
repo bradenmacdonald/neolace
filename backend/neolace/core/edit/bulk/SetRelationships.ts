@@ -17,9 +17,9 @@ export const doSetRelationships = defineBulkImplementation(
             set: edit.set.map((p) => ({
                 propertyId: p.propertyId,
                 toEntries: p.toEntries.map((f, idx) => ({
-                    note: "", // Set default because note cannot be null
-                    slot: "", // Set default because slot cannot be null
-                    ...f,
+                    entryWith: f.entryWith,
+                    note: f.note ?? "", // Set default because note cannot be null
+                    slot: f.slot ?? "", // Set default because slot cannot be null
                     rank: idx + 1, // Set rank automatically (1,2,3,...)
                     id: VNID(), // Add in a VNID in case we have to create this new PropertyFact
                 })),
