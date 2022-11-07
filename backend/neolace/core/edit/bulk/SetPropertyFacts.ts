@@ -37,7 +37,7 @@ export const doSetPropertyFacts = defineBulkImplementation(
             MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
             WHERE
                 CASE WHEN edit.entryWith.friendlyId IS NOT NULL THEN
-                    exists( (entry)<-[:IDENTIFIES]-(:SlugId {slugId: site.siteCode + edit.entryWith.friendlyId}) )
+                    entry.slugId = site.siteCode + edit.entryWith.friendlyId
                 ELSE
                     entry.id = edit.entryWith.entryId
                 END

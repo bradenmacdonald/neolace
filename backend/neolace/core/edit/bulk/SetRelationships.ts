@@ -37,7 +37,7 @@ export const doSetRelationships = defineBulkImplementation(
             MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
             WHERE
                 CASE WHEN edit.entryWith.friendlyId IS NOT NULL THEN
-                    exists( (entry)<-[:IDENTIFIES]-(:SlugId {slugId: site.siteCode + edit.entryWith.friendlyId}) )
+                    entry.slugId = site.siteCode + edit.entryWith.friendlyId
                 ELSE
                     entry.id = edit.entryWith.entryId
                 END
@@ -59,7 +59,7 @@ export const doSetRelationships = defineBulkImplementation(
                 MATCH (toEntry:${Entry})
                     WHERE
                         CASE WHEN toEntrySpec.entryWith.friendlyId IS NOT NULL THEN
-                            exists( (toEntry)<-[:IDENTIFIES]-(:SlugId {slugId: site.siteCode + toEntrySpec.entryWith.friendlyId}) )
+                            toEntry.slugId = site.siteCode + toEntrySpec.entryWith.friendlyId
                         ELSE
                             toEntry.id = toEntrySpec.entryWith.entryId
                         END
