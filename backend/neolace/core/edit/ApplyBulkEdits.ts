@@ -113,7 +113,7 @@ export const ApplyBulkEdits = defineAction({
                 appliedEditIds: appliedEditsData.map((appliedEdit) => appliedEdit.id),
             },
             modifiedNodes: Array.from(modifiedNodes),
-            description: `Bulk updated entries with ${appliedEdits.length} changes.`,
+            description: `Bulk updated entries - made ${appliedEdits.length} changes for ${data.edits.length} edits.`,
         };
     },
 });

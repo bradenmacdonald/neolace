@@ -22,9 +22,11 @@ export function applyEditsToEntry(baseEntry: Readonly<EditableEntryData>, baseSc
         const editType = getEditType(edit.code);
         if (editType.changeType === EditChangeType.Content) {
             entry = editType.apply(entry, edit.data, schema);
-        } else {
+        } else if (editType.changeType === EditChangeType.Schema) {
             // Update the schema as we go since the "current" schema affect an edit.
             schema = editType.apply(schema, edit.data);
+        } else {
+            throw new Error("Unsupported edit type (e.g. bulk edits won't work with this API).");
         }
     }
     return entry;
