@@ -21,33 +21,34 @@ export const doUpsertEntryByFriendlyId = defineBulkImplementation(
 
         // Every bulk update should execute in a single statement, using UNWIND:
         const result = await tx.queryOne(C`
-        MATCH (site:${Site} {id: ${siteId}})
-        MATCH (connection:${Connection} {id: ${connectionId}})-[:${Connection.rel.FOR_SITE}]->(site)
-        WITH site, connection, ${edits} AS edits
-        UNWIND range(0, size(edits)) AS idx
-        WITH site, connection, idx, edits[idx] AS edit
+            MATCH (site:${Site} {id: ${siteId}})
+            MATCH (connection:${Connection} {id: ${connectionId}})-[:${Connection.rel.FOR_SITE}]->(site)
+            WITH site, connection, ${edits} AS edits
+            UNWIND range(0, size(edits)) AS idx
+            WITH site, connection, idx, edits[idx] AS edit
 
-        MATCH (entryType:${EntryType} {id: edit.where.entryTypeId})-[:${EntryType.rel.FOR_SITE}]->(site)
-        OPTIONAL MATCH (oldEntry:${Entry} {slugId: site.siteCode + edit.where.friendlyId})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
-        WITH idx, edit, entryType, site, oldEntry {.name, .description, .slugId} as oldValues
+            MATCH (entryType:${EntryType} {id: edit.where.entryTypeId})-[:${EntryType.rel.FOR_SITE}]->(site)
+            OPTIONAL MATCH (oldEntry:${Entry} {slugId: site.siteCode + edit.where.friendlyId})
+                WHERE exists( (oldEntry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType) )
+            WITH idx, edit, entryType, site, oldEntry {.name, .description, .slugId} as oldValues
 
-        MERGE (entry:${Entry} {slugId: site.siteCode + edit.where.friendlyId})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
-            ON CREATE SET
-                entry.id = edit.setOnCreate.entryId,
-                entry.name = coalesce(edit.set.name, edit.setOnCreate.name, ""),
-                entry.description = coalesce(edit.set.description, edit.setOnCreate.description, ""),
-                entry.changed = true
-            ON MATCH SET
-                entry += CASE WHEN edit.set.name IS NOT NULL AND edit.set.name <> entry.name THEN
-                    {name: edit.set.name, changed: true}
-                ELSE {} END,
-                entry += CASE WHEN edit.set.description IS NOT NULL AND edit.set.description <> entry.description THEN
-                    {description: edit.set.description, changed: true}
-                ELSE {} END
-        WITH idx, entry, oldValues, entry.changed AS changed
-        REMOVE entry.changed
-        RETURN collect({idx: idx, entryId: entry.id, changed: changed, oldValues: oldValues}) AS changes
-    `.givesShape({
+            MERGE (entry:${Entry} {slugId: site.siteCode + edit.where.friendlyId})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
+                ON CREATE SET
+                    entry.id = edit.setOnCreate.entryId,
+                    entry.name = coalesce(edit.set.name, edit.setOnCreate.name, ""),
+                    entry.description = coalesce(edit.set.description, edit.setOnCreate.description, ""),
+                    entry.changed = true
+                ON MATCH SET
+                    entry += CASE WHEN edit.set.name IS NOT NULL AND edit.set.name <> entry.name THEN
+                        {name: edit.set.name, changed: true}
+                    ELSE {} END,
+                    entry += CASE WHEN edit.set.description IS NOT NULL AND edit.set.description <> entry.description THEN
+                        {description: edit.set.description, changed: true}
+                    ELSE {} END
+            WITH idx, entry, oldValues, entry.changed AS changed
+            REMOVE entry.changed
+            RETURN collect({idx: idx, entryId: entry.id, changed: changed, oldValues: oldValues}) AS changes
+        `.givesShape({
             changes: Field.List(
                 Field.Record({
                     idx: Field.Int,
