@@ -5,6 +5,7 @@ import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
 import { schema as plantDbSchema } from "neolace/sample-data/plantdb/schema.ts";
 import { ImportSchema } from "./import-schema.ts";
+import { UseSystemSource } from "../edit/ApplyEdits.ts";
 
 group("import-schema.ts", () => {
     // Note: importSchema() is used for the test fixtures so is also tested by all the tests in
@@ -33,6 +34,7 @@ group("import-schema.ts", () => {
             await graph.runAsSystem(ImportSchema({
                 siteId: site.id,
                 schema: plantDbSchema,
+                editSource: UseSystemSource,
             }));
 
             // Now validate it

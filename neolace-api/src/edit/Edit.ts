@@ -4,6 +4,7 @@ import { Type, SchemaValidatorFunction } from "../deps/computed-types.ts";
 export enum EditChangeType {
     Schema = "schema",
     Content = "content",
+    Bulk = "bulk",
 }
 
 export interface EditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> {

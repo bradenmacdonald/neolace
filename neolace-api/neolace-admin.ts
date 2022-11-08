@@ -390,7 +390,7 @@ async function exportCommand({siteId, outFolder, ...options}: {siteId: string, e
 
                 let markdown = `---\n${stringifyYaml(metadata, {lineWidth: 120})}---\n`;
                 if (entryType.enabledFeatures.Article !== undefined) {
-                    const articleMd = replaceIdsInMarkdownAndLookupExpressions(friendlyIds, entryData.features?.Article?.articleMD!);
+                    const articleMd = replaceIdsInMarkdownAndLookupExpressions(friendlyIds, entryData.features?.Article?.articleContent!);
                     markdown += articleMd + "\n";
                 }
                 await Deno.writeTextFile(thisEntryTypeDir + '/' + record.friendlyId + '.md', markdown);
@@ -438,8 +438,8 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                     const fileParts = fileContents.split(/^---$/m, 3);
                     // deno-lint-ignore no-explicit-any
                     const metadata = parseYaml(fileParts[1]) as Record<string, any>;
-                    const articleMD = fileParts[2].trim();
-                    yield {metadata, articleMD, entryType, friendlyId: file.name.substring(0, file.name.length - 3), folder};
+                    const articleContent = fileParts[2].trim();
+                    yield {metadata, articleContent, entryType, friendlyId: file.name.substring(0, file.name.length - 3), folder};
                 } catch (err) {
                     log.error(`Error while trying to parse file ${folder}/${file.name}`);
                     throw err;
@@ -491,7 +491,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
             edits.push({
                 code: api.CreateEntry.code,
                 data: {
-                    id: entryId,
+                    entryId,
                     type: entryType.id,
                     name: metadata.name,
                     description: replaceIdsInMarkdownAndLookupExpressions(idMap, metadata.description ?? "", false),
@@ -522,7 +522,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                         throw new Error(`Invalid property value on entry ${entryId} (${friendlyId})`);
                     }
                     edits.push({
-                        code: api.AddPropertyValue.code,
+                        code: api.AddPropertyFact.code,
                         data: {
                             entryId,
                             propertyId: idMap[humanKey] as VNID,
@@ -555,8 +555,8 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
         log.info("Setting article text...");
         const edits: api.AnyContentEdit[] = [];
         let numArticles = 0;
-        for await (const {metadata, friendlyId, articleMD} of iterateEntries()) {
-            if (!articleMD) {
+        for await (const {metadata, friendlyId, articleContent} of iterateEntries()) {
+            if (!articleContent) {
                 continue;
             }
             const entryId = metadata.id ?? idMap[friendlyId];
@@ -566,7 +566,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                     entryId,
                     feature: {
                         featureType: "Article",
-                        articleMD: replaceIdsInMarkdownAndLookupExpressions(idMap, articleMD, false),
+                        articleContent: replaceIdsInMarkdownAndLookupExpressions(idMap, articleContent, false),
                     },
                 },
             });

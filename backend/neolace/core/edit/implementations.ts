@@ -5,18 +5,22 @@ type EditCode = api.AnyEdit["code"];
 
 export const EditHadNoEffect = Symbol("EditHadNoEffect");
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Regular edits (to content and schema)
+
 export type EditImplementation<EditType extends api.EditType> = (
     tx: WrappedTransaction,
     data: api.Edit<EditType>["data"],
     siteId: VNID,
     /**
-     * The ID of the draft whose edits we are applying.
+     * The ID of the Draft or Connection whose edits we are applying.
      * This is required if any of the edits need to access files uploaded to the draft.
      * TODO: we could make the temporary file uploads independent of drafts.
      */
-    draftId?: VNID,
-) => Promise<{ modifiedNodes: VNID[] } | typeof EditHadNoEffect>;
+    editSourceId?: VNID,
+) => Promise<{ modifiedNodes: VNID[]; oldValues?: Record<string, unknown> } | typeof EditHadNoEffect>;
 
+// Helper function to get the typing correct when defining edit implementations
 export function defineImplementation<EditType extends api.ContentEditType | api.SchemaEditType>(
     editType: EditType,
     impl: EditImplementation<EditType>,
@@ -25,42 +29,25 @@ export function defineImplementation<EditType extends api.ContentEditType | api.
     return { code, impl };
 }
 
-// Content edit implementations:
-import { doAddPropertyValue } from "./content/AddPropertyValue.ts";
-import { doCreateEntry } from "./content/CreateEntry.ts";
-import { doDeleteEntry } from "./content/DeleteEntry.ts";
-import { doDeletePropertyValue } from "./content/DeletePropertyValue.ts";
-import { doSetEntryDescription } from "./content/SetEntryDescription.ts";
-import { doSetEntryFriendlyId } from "./content/SetEntryFriendlyId.ts";
-import { doSetEntryName } from "./content/SetEntryName.ts";
-import { doUpdateEntryFeature } from "./content/UpdateEntryFeature.ts";
-import { doUpdatePropertyValue } from "./content/UpdatePropertyValue.ts";
-// Schema edit implementations:
-import { doCreateEntryType } from "./schema/CreateEntryType.ts";
-import { doCreateProperty } from "./schema/CreateProperty.ts";
-import { doDeleteEntryType } from "./schema/DeleteEntryType.ts";
-import { doDeleteProperty } from "./schema/DeleteProperty.ts";
-import { doUpdateEntryType } from "./schema/UpdateEntryType.ts";
-import { doUpdateEntryTypeFeature } from "./schema/UpdateEntryTypeFeature.ts";
-import { doUpdateProperty } from "./schema/UpdateProperty.ts";
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Bulk edits (to content, via a Connection/Connector Plugin)
 
-export const editImplementations: Partial<Record<EditCode, EditImplementation<api.EditType>>> = Object.freeze({
-    // Content edits:
-    [doAddPropertyValue.code]: doAddPropertyValue.impl,
-    [doCreateEntry.code]: doCreateEntry.impl,
-    [doDeleteEntry.code]: doDeleteEntry.impl,
-    [doDeletePropertyValue.code]: doDeletePropertyValue.impl,
-    [doSetEntryDescription.code]: doSetEntryDescription.impl,
-    [doSetEntryFriendlyId.code]: doSetEntryFriendlyId.impl,
-    [doSetEntryName.code]: doSetEntryName.impl,
-    [doUpdateEntryFeature.code]: doUpdateEntryFeature.impl,
-    [doUpdatePropertyValue.code]: doUpdatePropertyValue.impl,
-    // Schema edits:
-    [doCreateEntryType.code]: doCreateEntryType.impl,
-    [doCreateProperty.code]: doCreateProperty.impl,
-    [doDeleteEntryType.code]: doDeleteEntryType.impl,
-    [doDeleteProperty.code]: doDeleteProperty.impl,
-    [doUpdateEntryType.code]: doUpdateEntryType.impl,
-    [doUpdateEntryTypeFeature.code]: doUpdateEntryTypeFeature.impl,
-    [doUpdateProperty.code]: doUpdateProperty.impl,
-});
+export type BulkAppliedEditData = api.AnyContentEdit & {
+    modifiedNodes: VNID[];
+    oldData: Record<string, unknown>; // TODO: add strong typing for this field, specific to each edit.
+};
+
+export type BulkEditImplementation<EditType extends api.EditType> = (
+    tx: WrappedTransaction,
+    data: api.Edit<EditType>["data"][],
+    siteId: VNID,
+    connectionId?: VNID,
+) => Promise<{ appliedEdits: BulkAppliedEditData[] }>;
+
+// Helper function to get the typing correct when defining bulk edit implementations
+export function defineBulkImplementation<EditType extends api.BulkEditType>(
+    _editType: EditType,
+    impl: BulkEditImplementation<EditType>,
+) {
+    return impl;
+}

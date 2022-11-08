@@ -3,7 +3,7 @@ import { PropertyType } from "neolace/deps/neolace-api.ts";
 import { assertEquals, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { AnnotatedValue, IntegerValue, MakeAnnotatedEntryValue, PageValue } from "../../values.ts";
 import { This } from "../this.ts";
 import { Count } from "./count.ts";
@@ -196,43 +196,43 @@ group("descendants.ts", () => {
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                        data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                        data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                        data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
+                        data: { entryId: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: E, name: "Entry E", type: entryType, friendlyId: "e", description: "" },
+                        data: { entryId: E, name: "Entry E", type: entryType, friendlyId: "e", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: F, name: "Entry F", type: entryType, friendlyId: "f", description: "" },
+                        data: { entryId: F, name: "Entry F", type: entryType, friendlyId: "f", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: G, name: "Entry G", type: entryType, friendlyId: "g", description: "" },
+                        data: { entryId: G, name: "Entry G", type: entryType, friendlyId: "g", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: H, name: "Entry H", type: entryType, friendlyId: "h", description: "" },
+                        data: { entryId: H, name: "Entry H", type: entryType, friendlyId: "h", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: I, name: "Entry I", type: entryType, friendlyId: "i", description: "" },
+                        data: { entryId: I, name: "Entry I", type: entryType, friendlyId: "i", description: "" },
                     },
                     // C is a A
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: C,
                             valueExpression: `entry("${A}")`,
@@ -242,7 +242,7 @@ group("descendants.ts", () => {
                     },
                     // D is a A
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: D,
                             valueExpression: `entry("${A}")`,
@@ -252,7 +252,7 @@ group("descendants.ts", () => {
                     },
                     // D is a B
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: D,
                             valueExpression: `entry("${B}")`,
@@ -262,7 +262,7 @@ group("descendants.ts", () => {
                     },
                     // E is a B
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: E,
                             valueExpression: `entry("${B}")`,
@@ -272,7 +272,7 @@ group("descendants.ts", () => {
                     },
                     // F is a C
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: F,
                             valueExpression: `entry("${C}")`,
@@ -282,7 +282,7 @@ group("descendants.ts", () => {
                     },
                     // F is a D
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: F,
                             valueExpression: `entry("${D}")`,
@@ -292,7 +292,7 @@ group("descendants.ts", () => {
                     },
                     // H is a F
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: H,
                             valueExpression: `entry("${F}")`,
@@ -302,7 +302,7 @@ group("descendants.ts", () => {
                     },
                     // H is a E
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: H,
                             valueExpression: `entry("${E}")`,
@@ -312,7 +312,7 @@ group("descendants.ts", () => {
                     },
                     // I is a E
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: I,
                             valueExpression: `entry("${E}")`,
@@ -322,7 +322,7 @@ group("descendants.ts", () => {
                     },
                     // I is a G
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: I,
                             valueExpression: `entry("${G}")`,
@@ -331,6 +331,7 @@ group("descendants.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
 
             // Check the descendants of F
@@ -383,23 +384,23 @@ group("descendants.ts", () => {
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                        data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                        data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                        data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
+                        data: { entryId: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
                     },
                     // B is a A
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: B,
                             valueExpression: `entry("${A}")`,
@@ -409,7 +410,7 @@ group("descendants.ts", () => {
                     },
                     // C is a A
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: C,
                             valueExpression: `entry("${A}")`,
@@ -419,7 +420,7 @@ group("descendants.ts", () => {
                     },
                     // D is a B
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: D,
                             valueExpression: `entry("${B}")`,
@@ -429,7 +430,7 @@ group("descendants.ts", () => {
                     },
                     // D is a C
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: D,
                             valueExpression: `entry("${C}")`,
@@ -439,7 +440,7 @@ group("descendants.ts", () => {
                     },
                     // A is a D
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: A,
                             valueExpression: `entry("${D}")`,
@@ -448,6 +449,7 @@ group("descendants.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
 
             // Check the descendant of D

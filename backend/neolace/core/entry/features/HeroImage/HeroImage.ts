@@ -56,11 +56,12 @@ export const HeroImageFeature = EntryTypeFeature({
         markNodeAsModified(result["feature.id"]);
     },
 
-    async editFeature(_entryId, _editData, _tx, _markNodeAsModified): Promise<void> {
+    async editFeature(_entryId, _editData) {
         // There is no special edit type to change an entry's hero image.
         // The feature image is determined by a lookup expression, which usually references some standard relationship
         // or property. To change the hero image, then, you have to edit that relationship or property using the normal
         // edit API.
+        return { modifiedNodes: [], oldValues: {} };
     },
 
     /**

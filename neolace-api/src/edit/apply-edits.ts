@@ -22,9 +22,11 @@ export function applyEditsToEntry(baseEntry: Readonly<EditableEntryData>, baseSc
         const editType = getEditType(edit.code);
         if (editType.changeType === EditChangeType.Content) {
             entry = editType.apply(entry, edit.data, schema);
-        } else {
+        } else if (editType.changeType === EditChangeType.Schema) {
             // Update the schema as we go since the "current" schema affect an edit.
             schema = editType.apply(schema, edit.data);
+        } else {
+            throw new Error("Unsupported edit type (e.g. bulk edits won't work with this API).");
         }
     }
     return entry;
@@ -71,8 +73,6 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
         properties: Object.fromEntries(Object.values(prevRefCache.properties).map((prop) => [prop.id, {
             ...prop,
             // Add in placeholders for the following fields which aren't used in ReferenceCache but are used in the full schema:
-            description: undefined,
-            descriptionMD: prop.description,  // TODO: Fix these names to be consistent: description or descriptionMD
             appliesTo: [],
         }])),
     };
@@ -94,12 +94,11 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
             }
         } else {
             edit = edit as AnyContentEdit;
-            if (edit.code === "CreateEntry") {
-                const {type, ...otherData} = edit.data;
-                entries[edit.data.id] = {...otherData, entryType: {id: type}};
-            } else {
-                const entryId = edit.data.entryId;
-                if (!(entryId in entries)) {
+            const entryId = edit.data.entryId;
+                if (edit.code === "CreateEntry") {
+                    const {type, entryId: _, ...otherData} = edit.data;
+                    entries[entryId] = {id: entryId, ...otherData, entryType: {id: type}};
+                } else if (!(entryId in entries)) {
                     continue;
                 } else if (edit.code === "SetEntryName") {
                     entries[entryId].name = edit.data.name;
@@ -110,7 +109,6 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
                 } else {
                     // Doesn't affect the data that we keep in refCache, so ignore it.
                 }
-            }
         }
     }
     const refCache: ReferenceCacheData = {
@@ -120,8 +118,6 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
         lookups: [...prevRefCache.lookups],
         properties: Object.fromEntries(Object.values(schema.properties).map((prop) => [prop.id, {
             ...prop,
-            description: prop.descriptionMD,
-            descriptionMD: undefined,
             standardURL: prop.standardURL ?? "",
             displayAs: prop.displayAs ?? "",
             appliesTo: undefined,

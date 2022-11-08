@@ -1,14 +1,17 @@
-import { C, EmptyResultError } from "neolace/deps/vertex-framework.ts";
+import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
 import { InvalidEdit, SetEntryName } from "neolace/deps/neolace-api.ts";
-import { defineImplementation } from "neolace/core/edit/implementations.ts";
+import { defineImplementation, EditHadNoEffect } from "neolace/core/edit/implementations.ts";
 import { Entry, EntryType, Site } from "neolace/core/mod.ts";
 
 export const doSetEntryName = defineImplementation(SetEntryName, async (tx, data, siteId) => {
+    let result;
     try {
-        await tx.queryOne(C`
+        result = await tx.queryOne(C`
             MATCH (e:${Entry} {id: ${data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-            SET e.name = ${data.name}
-        `.RETURN({}));
+            WITH e, e.name as oldName, ${data.name} as newName
+            WITH e, oldName, newName, oldName <> newName AS isDifferent
+            SET e += CASE WHEN isDifferent THEN {name: newName} ELSE {} END
+        `.RETURN({ oldName: Field.String, "isDifferent": Field.Boolean }));
     } catch (err: unknown) {
         if (err instanceof EmptyResultError) {
             throw new InvalidEdit(
@@ -19,7 +22,15 @@ export const doSetEntryName = defineImplementation(SetEntryName, async (tx, data
         }
         throw err;
     }
+
+    if (!result.isDifferent) {
+        return EditHadNoEffect;
+    }
+
     return {
         modifiedNodes: [data.entryId],
+        oldValues: {
+            name: result.oldName,
+        },
     };
 });

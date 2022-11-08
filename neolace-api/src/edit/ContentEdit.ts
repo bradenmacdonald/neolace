@@ -18,14 +18,14 @@ export const CreateEntry = ContentEditType({
     changeType: EditChangeType.Content,
     code: "CreateEntry",
     dataSchema: Schema({
-        id: vnidString,
+        entryId: vnidString,
         friendlyId: string,
         name: string,
         type: vnidString,
         description: string,
     }),
     apply: (baseEntry, data, currentSchema) => {
-        if (baseEntry.id === data.id) {
+        if (baseEntry.id === data.entryId) {
             return {
                 ...baseEntry,
                 name: data.name,
@@ -38,12 +38,12 @@ export const CreateEntry = ContentEditType({
         }
         return baseEntry;
     },
-    describe: (data) => `Created \`Entry ${data.id}\` "${data.name}"`,
+    describe: (data) => `Created \`Entry ${data.entryId}\` "${data.name}"`,
     consolidate(thisEdit, earlierEdit) {
-        if (earlierEdit.code === thisEdit.code && earlierEdit.data.id === thisEdit.data.id) {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // There can only be one "Create Entry" for each entry, and the latest one wins.
             return thisEdit;
-        } else if (earlierEdit.data.entryId === thisEdit.data.id) {
+        } else if (earlierEdit.data.entryId === thisEdit.data.entryId) {
             // Some other edit took place before this entry was even created? Overwrite that with this.
             return thisEdit;
         }
@@ -67,7 +67,7 @@ export const SetEntryName = ContentEditType({
         if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // This rename overwrites the previous rename.
             return thisEdit;
-        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.id === thisEdit.data.entryId) {
+        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // Just update the "CreateEntry" to include this name
             return {code: CreateEntry.code, data: {...earlierEdit.data, name: thisEdit.data.name}};
         }
@@ -86,12 +86,12 @@ export const SetEntryFriendlyId = ContentEditType({
         }
         return updatedEntry;
     },
-    describe: (data) => `Change \`Entry ${data.entryId}\` ID to "${data.friendlyId}"`,
+    describe: (data) => `Changed friendly ID of \`Entry ${data.entryId}\` to "${data.friendlyId}"`,
     consolidate(thisEdit, earlierEdit) {
         if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // This rename overwrites the previous ID change.
             return thisEdit;
-        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.id === thisEdit.data.entryId) {
+        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // Just update the "CreateEntry" to include this ID
             return {code: CreateEntry.code, data: {...earlierEdit.data, friendlyId: thisEdit.data.friendlyId}};
         }
@@ -115,7 +115,7 @@ export const SetEntryDescription = ContentEditType({
         if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // This rename overwrites the previous description edit.
             return thisEdit;
-        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.id === thisEdit.data.entryId) {
+        } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // Just update the "CreateEntry" to include this ID
             return {code: CreateEntry.code, data: {...earlierEdit.data, description: thisEdit.data.description}};
         }
@@ -125,7 +125,7 @@ export const SetEntryDescription = ContentEditType({
 
 export const UpdateEntryArticleSchema = Schema({
     /** Replace the entire article text with this new text */
-    articleMD: string.strictOptional(),
+    articleContent: string.strictOptional(),
 });
 
 export const UpdateEntryFilesSchema = Schema({
@@ -172,12 +172,12 @@ export const UpdateEntryFeature = ContentEditType({
     apply: () => {
         throw new Error("This edit type is not implemented yet.");
     },
-    describe: (data) => `Updated ${data.feature.featureType} Feature of \`Entry ${data.entryId}\``,
+    describe: (data) => `Updated ${data.feature.featureType} feature of \`Entry ${data.entryId}\``,
 });
 
-export const AddPropertyValue = ContentEditType({
+export const AddPropertyFact = ContentEditType({
     changeType: EditChangeType.Content,
-    code: "AddPropertyValue",
+    code: "AddPropertyFact",
     dataSchema: Schema({
         /** The Entry where we are adding a new property value */
         entryId: vnidString,
@@ -225,9 +225,9 @@ export const AddPropertyValue = ContentEditType({
     describe: (data) => `Added value for \`Property ${data.propertyId}\` property on \`Entry ${data.entryId}\``,
 });
 
-export const UpdatePropertyValue = ContentEditType({
+export const UpdatePropertyFact = ContentEditType({
     changeType: EditChangeType.Content,
-    code: "UpdatePropertyValue",
+    code: "UpdatePropertyFact",
     dataSchema: Schema({
         /**
          * The ID of the entry this property fact/value is attached to. (This is technically not necessary since it can
@@ -274,11 +274,11 @@ export const UpdatePropertyValue = ContentEditType({
         }
         return updatedEntry;
     },
-    describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value`,
+    describe: (data) => `Updated \`PropertyFact ${data.propertyFactId}\` property value from \`Entry ${data.entryId}\``,
     consolidate(thisEdit, earlierEdit) {
-        // This can be consolidated with a previous UpdatePropertyValue or AddPropertyValue edit.
+        // This can be consolidated with a previous UpdatePropertyFact or AddPropertyFact edit.
         if (
-            (earlierEdit.code === thisEdit.code || earlierEdit.code === AddPropertyValue.code) &&
+            (earlierEdit.code === thisEdit.code || earlierEdit.code === AddPropertyFact.code) &&
             earlierEdit.data.propertyFactId === thisEdit.data.propertyFactId
         ) {
             return {code: earlierEdit.code, data: {...earlierEdit.data, ...thisEdit.data}};
@@ -287,9 +287,9 @@ export const UpdatePropertyValue = ContentEditType({
     },
 });
 
-export const DeletePropertyValue = ContentEditType({
+export const DeletePropertyFact = ContentEditType({
     changeType: EditChangeType.Content,
-    code: "DeletePropertyValue",
+    code: "DeletePropertyFact",
     dataSchema: Schema({
         /**
          * The ID of the entry this property fact/value is attached to. (This is technically not necessary since it can
@@ -313,17 +313,17 @@ export const DeletePropertyValue = ContentEditType({
         }
         return updatedEntry;
     },
-    describe: (data) => `Deleted \`PropertyFact ${data.propertyFactId}\` property value`,
+    describe: (data) => `Deleted \`PropertyFact ${data.propertyFactId}\` from \`Entry ${data.entryId}\``,
     consolidate(thisEdit, earlierEdit) {
         if (
-            (earlierEdit.code === UpdatePropertyValue.code) &&
+            (earlierEdit.code === UpdatePropertyFact.code) &&
             earlierEdit.data.propertyFactId === thisEdit.data.propertyFactId
         ) {
             // Ignore any updates if the property gets deleted
             return thisEdit;
         }
         if (
-            (earlierEdit.code === AddPropertyValue.code) &&
+            (earlierEdit.code === AddPropertyFact.code) &&
             earlierEdit.data.propertyFactId === thisEdit.data.propertyFactId
         ) {
             // Add + Delete combine to nothing.
@@ -369,9 +369,9 @@ export const _allContentEditTypes = {
     SetEntryFriendlyId,
     SetEntryDescription,
     UpdateEntryFeature,
-    AddPropertyValue,
-    UpdatePropertyValue,
-    DeletePropertyValue,
+    AddPropertyFact,
+    UpdatePropertyFact,
+    DeletePropertyFact,
     DeleteEntry,
 };
 
@@ -381,8 +381,8 @@ export type AnyContentEdit = (
     | Edit<typeof SetEntryFriendlyId>
     | Edit<typeof SetEntryDescription>
     | Edit<typeof UpdateEntryFeature>
-    | Edit<typeof AddPropertyValue>
-    | Edit<typeof UpdatePropertyValue>
-    | Edit<typeof DeletePropertyValue>
+    | Edit<typeof AddPropertyFact>
+    | Edit<typeof UpdatePropertyFact>
+    | Edit<typeof DeletePropertyFact>
     | Edit<typeof DeleteEntry>
 );

@@ -4,11 +4,11 @@ import { ImageSizingMode, PropertyType } from "neolace/deps/neolace-api.ts";
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { getEntryFeatureData } from "../get-feature-data.ts";
-import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
+import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
 
 group("HeroImage.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
@@ -29,6 +29,7 @@ group("HeroImage.ts", () => {
             edits: [
                 { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
             ],
+            editSource: UseSystemSource,
         }));
 
         // Now get the schema, without the "Image" feature enabled yet:
@@ -54,6 +55,7 @@ group("HeroImage.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         // Now check the updated schema:
         const afterSchema = await graph.read((tx) => getCurrentSchema(tx, siteId));
@@ -79,6 +81,7 @@ group("HeroImage.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         // The schema should return to the initial version:
         assertEquals(
@@ -150,7 +153,7 @@ group("HeroImage.ts", () => {
                 {
                     code: "CreateEntry",
                     data: {
-                        id: entryId,
+                        entryId,
                         type: entryType,
                         name: "Test WithImage",
                         friendlyId: "test",
@@ -161,7 +164,7 @@ group("HeroImage.ts", () => {
                 {
                     code: "CreateEntry",
                     data: {
-                        id: imageId,
+                        entryId: imageId,
                         type: imageType,
                         name: "Test Image",
                         friendlyId: "img",
@@ -201,7 +204,7 @@ group("HeroImage.ts", () => {
             siteId,
             edits: [
                 {
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: {
                         entryId: entryId,
                         propertyId: hasFeatureImage,
@@ -211,6 +214,7 @@ group("HeroImage.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
 
         ////////////////////////////////////////////////////////////////////////////

@@ -4,7 +4,7 @@ import { dedent } from "neolace/lib/dedent.ts";
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { getEntryFeatureData } from "../get-feature-data.ts";
 
@@ -25,6 +25,7 @@ group("Article.ts", () => {
             edits: [
                 { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
             ],
+            editSource: UseSystemSource,
         }));
 
         // Now get the schema, without the "Article" feature enabled yet:
@@ -48,6 +49,7 @@ group("Article.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         // Now check the updated schema:
         const afterSchema = await graph.read((tx) => getCurrentSchema(tx, siteId));
@@ -71,6 +73,7 @@ group("Article.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         // The schema should return to the initial version:
         assertEquals(
@@ -105,7 +108,7 @@ group("Article.ts", () => {
                 {
                     code: "CreateEntry",
                     data: {
-                        id: entryId,
+                        entryId,
                         type: entryType,
                         name: "Test Entry",
                         friendlyId: "other-entry",
@@ -113,12 +116,13 @@ group("Article.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
 
         // At first, since the "Article" feature is enabled for this entry type, it has the default Article data:
         const before = await graph.read((tx) => getEntryFeatureData(entryId, { featureType: "Article", tx }));
         assertEquals(before, {
-            articleMD: "",
+            articleContent: "",
             headings: [],
         });
 
@@ -133,7 +137,7 @@ group("Article.ts", () => {
                         entryId,
                         feature: {
                             featureType: "Article",
-                            articleMD: dedent`
+                            articleContent: dedent`
                     # Heading 1
 
                     # Same Heading
@@ -146,13 +150,14 @@ group("Article.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
 
         ////////////////////////////////////////////////////////////////////////////
         // Now we should see the article on the entry and also get its headings:
         const after = await graph.read((tx) => getEntryFeatureData(entryId, { featureType: "Article", tx }));
         assertEquals(after, {
-            articleMD:
+            articleContent:
                 "# Heading 1\n\n# Same Heading\n\n# Same Heading\n\nThis is some text. The heading above is repeated, but should get a unique ID.",
             headings: [
                 { title: "Heading 1", id: "heading-1" },

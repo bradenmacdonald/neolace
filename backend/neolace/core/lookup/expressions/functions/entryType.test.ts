@@ -2,7 +2,7 @@ import { VNID } from "neolace/deps/vertex-framework.ts";
 import { assertEquals, assertRejects, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { EntryTypeValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { EntryTypeFunction } from "./entryType.ts";
@@ -40,9 +40,10 @@ group("entryType.ts", () => {
                 { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
                 {
                     code: "CreateEntry",
-                    data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                    data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                 },
             ],
+            editSource: UseSystemSource,
         }));
 
         const otherSiteContext = new TestLookupContext({ siteId: otherSiteId });

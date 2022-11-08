@@ -115,7 +115,7 @@ export const PropertySchema = Schema({
     /** Name of this property, displayed as the label when viewing an entry with this property value */
     name: string,
     /** Description of this property (markdown) */
-    descriptionMD: string,
+    description: string,
     /** What type of property is this - a relationship, or some other simple property? (Cannot be changed) */
     type: Schema.enum(PropertyType),
     /** What EntryTypes can have this property? */
@@ -160,8 +160,8 @@ export const PropertySchema = Schema({
      */
     displayAs: string.strictOptional(),
     // TODO: get rid of "displayAs", replace it with "transformEachForDisplay" and "transformAllForDisplay"
-    /** Text shown to users when they go to edit this property value. */
-    editNoteMD: string.strictOptional(),
+    /** Markdown text shown to users when they go to edit this property value. */
+    editNote: string.strictOptional(),
     // TODO: hasSlot, hasWeight, hasSource
 });
 export type PropertyData = Type<typeof PropertySchema>;

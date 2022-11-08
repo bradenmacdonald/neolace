@@ -53,7 +53,7 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
         }
         if (canViewFeatures) {
             articleText = await markdownToPlainText(
-                api.MDT.tokenizeMDT(features?.Article?.articleMD ?? ""),
+                api.MDT.tokenizeMDT(features?.Article?.articleContent ?? ""),
                 lookupContext,
             );
         }

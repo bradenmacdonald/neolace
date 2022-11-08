@@ -24,7 +24,7 @@ export class SiteFindByDomainResource extends NeolaceHttpResource {
         const graph = await getGraph();
         const site = await graph.pullOne(
             Site,
-            (s) => s.name.description.domain.url().footerMD.shortId().frontendConfig(),
+            (s) => s.name.description.domain.url().footerContent.shortId().frontendConfig,
             {
                 where: C`@this.domain = ${domain}`,
             },
@@ -42,7 +42,7 @@ export class SiteFindByDomainResource extends NeolaceHttpResource {
 
         if (!this.hasPermission(request, api.CorePerm.viewSite, {})) {
             // If the user doesn't have permission to view the site, they're not allowed to see the footer or frontend config:
-            site.footerMD = "";
+            site.footerContent = "";
             site.frontendConfig = {};
         }
 

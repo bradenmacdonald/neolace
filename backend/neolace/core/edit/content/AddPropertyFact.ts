@@ -1,10 +1,10 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { AddPropertyValue, InvalidEdit, PropertyType } from "neolace/deps/neolace-api.ts";
+import { AddPropertyFact, InvalidEdit, PropertyType } from "neolace/deps/neolace-api.ts";
 import { defineImplementation } from "neolace/core/edit/implementations.ts";
 import { Entry, EntryType, Property, PropertyFact, Site } from "neolace/core/mod.ts";
 import { directRelTypeForPropertyType, parseLookupExpressionToEntryId } from "neolace/core/entry/PropertyFact.ts";
 
-export const doAddPropertyValue = defineImplementation(AddPropertyValue, async (tx, data, siteId) => {
+export const doAddPropertyFact = defineImplementation(AddPropertyFact, async (tx, data, siteId) => {
     const valueExpression = data.valueExpression;
     const updatedPropertyFactFields: Record<string, unknown> = {
         valueExpression,
@@ -43,7 +43,7 @@ export const doAddPropertyValue = defineImplementation(AddPropertyValue, async (
             `.RETURN({ "property.name": Field.String }));
             if (checkProperties.length === 0) {
                 throw new InvalidEdit(
-                    AddPropertyValue.code,
+                    AddPropertyFact.code,
                     { propertyId: data.propertyId },
                     `Property with ID ${data.propertyId} was not found in the site's schema.`,
                 );
@@ -51,7 +51,7 @@ export const doAddPropertyValue = defineImplementation(AddPropertyValue, async (
                 // If we get there, the property exists but doesn't apply to that entry type.
                 const propertyName = checkProperties[0]["property.name"];
                 throw new InvalidEdit(
-                    AddPropertyValue.code,
+                    AddPropertyFact.code,
                     { propertyId: data.propertyId, propertyName, entryId: data.entryId },
                     `The "${propertyName}" property does not apply to entries of that type.`,
                 );
@@ -81,7 +81,7 @@ export const doAddPropertyValue = defineImplementation(AddPropertyValue, async (
         } catch (err) {
             if (err instanceof EmptyResultError) {
                 throw new InvalidEdit(
-                    AddPropertyValue.code,
+                    AddPropertyFact.code,
                     {
                         propertyId: data.propertyId,
                         toEntryId: toEntryId,

@@ -3,11 +3,11 @@ import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { getEntryFeaturesData } from "../get-feature-data.ts";
-import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
+import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
 
 group("Files.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
@@ -26,6 +26,7 @@ group("Files.ts", () => {
             edits: [
                 { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
             ],
+            editSource: UseSystemSource,
         }));
 
         // Now get the schema, without the "Files" feature enabled yet:
@@ -49,6 +50,7 @@ group("Files.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         // Now check the updated schema:
         const afterSchema = await graph.read((tx) => getCurrentSchema(tx, siteId));
@@ -72,6 +74,7 @@ group("Files.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         // The schema should return to the initial version:
         assertEquals(
@@ -106,7 +109,7 @@ group("Files.ts", () => {
                 {
                     code: "CreateEntry",
                     data: {
-                        id: entryId,
+                        entryId,
                         type: entryType,
                         name: "Test With Files",
                         friendlyId: "files-test",
@@ -114,6 +117,7 @@ group("Files.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
 
         // At first, even though the "Files" feature is enabled for this entry type, it has no image data:
@@ -245,6 +249,7 @@ group("Files.ts", () => {
                     },
                 },
             ],
+            editSource: UseSystemSource,
         }));
         const after4 = await graph.read((tx) => getEntryFeaturesData(entryId, { tx }));
         assertEquals(after4.Files, {

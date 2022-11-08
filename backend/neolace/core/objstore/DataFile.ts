@@ -5,7 +5,6 @@ import {
     DerivedProperty,
     Field,
     RawVNode,
-    ValidationError,
     VNID,
     VNodeType,
     WrappedTransaction,
@@ -43,22 +42,16 @@ export class DataFile extends VNodeType {
          * Any data in this field must be something that can be derived purely from the file contents; in other words,
          * this is data about what the file is, not about how it is being used.
          */
-        metadataJSON: Field.String,
+        metadata: Field.NullOr.JsonObjString,
     };
 
     static derivedProperties = this.hasDerivedProperties({
         publicUrl,
-        metadata,
     });
 
     static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
-        if (dbObject.metadataJSON) {
-            try {
-                const data = JSON.parse(dbObject.metadataJSON);
-                FileMetadataSchema(data); // Validate the metadata against the schema
-            } catch (_err) {
-                throw new ValidationError(`Invalid DataFile metadata: ${dbObject.metadataJSON}`);
-            }
+        if (dbObject.metadata) {
+            FileMetadataSchema(dbObject.metadata); // Validate the metadata against the schema
         }
     }
 }
@@ -84,7 +77,7 @@ export const CreateDataFile = defineAction({
             sha256Hash: data.sha256Hash,
             contentType: data.contentType,
             size: BigInt(data.size),
-            metadataJSON: JSON.stringify(data.metadata),
+            metadata: JSON.stringify(data.metadata),
         }}
         `.RETURN({}));
         const description = `Created ${DataFile.withId(data.id)}`;
@@ -108,19 +101,6 @@ export function publicUrl(): DerivedProperty<string> {
                 return `${config.objStorePublicUrlPrefixForImages}/${data.filename}`;
             }
             return `${config.objStorePublicUrlPrefix}/${data.filename}`; // This doesn't use publicUrlForDataFile below because this is synchronous.
-        },
-    );
-}
-
-/**
- * Get the metadata, which depends on the file type
- */
-export function metadata(): DerivedProperty<FileMetadata> {
-    return DerivedProperty.make(
-        DataFile,
-        (df) => df.metadataJSON,
-        (data) => {
-            return JSON.parse(data.metadataJSON ?? "{}");
         },
     );
 }

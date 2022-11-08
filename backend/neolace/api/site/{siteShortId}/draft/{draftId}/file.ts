@@ -4,7 +4,7 @@ import { C, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getDraft } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
-import { AddFileToDraft } from "neolace/core/edit/Draft.ts";
+import { AddFileToDraft } from "neolace/core/edit/Draft-actions.ts";
 import { uploadFileToObjStore } from "neolace/core/objstore/objstore.ts";
 import { bin2hex } from "neolace/lib/bin2hex.ts";
 

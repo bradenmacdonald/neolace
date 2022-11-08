@@ -12,16 +12,17 @@ group("home.ts", () => {
         const graph = await getGraph();
         const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
 
-        const homePageMD = `This is some test content that links to [a cool tree](/entry/${ponderosaPine.friendlyId}).`;
+        const homePageContent =
+            `This is some test content that links to [a cool tree](/entry/${ponderosaPine.friendlyId}).`;
 
         await graph.runAsSystem(UpdateSite({
             key: defaultData.site.id,
-            homePageMD,
+            homePageContent,
         }));
 
         const result = await client.getSiteHomePage();
 
-        assertEquals(result.homePageMD, homePageMD);
+        assertEquals(result.homePageContent, homePageContent);
         const refCacheEntries = Object.values(result.referenceCache.entries);
         assertEquals(
             refCacheEntries.map((e) => ({ name: e.name, friendlyId: e.friendlyId })),

@@ -8,7 +8,6 @@ import {
     DerivedProperty,
     Field,
     RawVNode,
-    ValidationError,
     VirtualPropType,
     VNID,
     VNodeType,
@@ -32,7 +31,7 @@ const siteCodeRegex = /^[0-9A-Za-y][0-9A-Za-z]{4}$/;
 // Characters allowed in the site code, in ASCII sort order:
 const siteCodeChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 // There are 5 characters in each site code:
-const siteCodeLength = 5;
+export const siteCodeLength = 5;
 // This is the total number of possible site codes: 901,356,496
 // The first character cannot start with "z"; this is reserved for future expansion.
 const siteCodesMaxCount = (siteCodeChars.length - 1) * Math.pow(siteCodeChars.length, siteCodeLength - 1);
@@ -98,11 +97,11 @@ export class Site extends VNodeType {
         /**
          * Markdown text for the home page. This defines the content of the home page.
          */
-        homePageMD: Field.String.Check(check.string.max(100_000)),
+        homePageContent: Field.String.Check(check.string.max(100_000)),
         /**
          * Markdown text for the footer, shown on all pages.
          */
-        footerMD: Field.String.Check(check.string.max(10_000)),
+        footerContent: Field.String.Check(check.string.max(10_000)),
 
         /** Access Mode: Determines what parts of the site are usable without logging in */
         accessMode: Field.String.Check(check.Schema.enum(AccessMode)),
@@ -130,7 +129,7 @@ export class Site extends VNodeType {
          *     }
          * }
          */
-        frontendConfigJSON: Field.String.Check(check.string.max(10_000)),
+        frontendConfig: Field.JsonObjString,
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({
@@ -154,19 +153,12 @@ export class Site extends VNodeType {
     }));
     static readonly derivedProperties = this.hasDerivedProperties({
         shortId,
-        frontendConfig,
         url,
     });
 
     static async validate(dbObject: RawVNode<typeof this>): Promise<void> {
-        // Validate the frontendConfigJSON field:
-        let frontendConfigJSON;
-        try {
-            frontendConfigJSON = JSON.parse(dbObject.frontendConfigJSON);
-        } catch (_err: unknown) {
-            throw new ValidationError(`frontendConfigJSON is not valid JSON.`);
-        }
-        FrontendConfigSchema(frontendConfigJSON);
+        // Validate the frontendConfig field:
+        FrontendConfigSchema(dbObject.frontendConfig);
     }
 }
 
@@ -211,17 +203,6 @@ export function url(): DerivedProperty<string> {
         Site,
         (s) => s.domain,
         (s) => `${config.siteUrlPrefix}${s.domain}${config.siteUrlSuffix}`,
-    );
-}
-
-/**
- * A derived property that provides the "frontend config", parsed from JSON
- */
-export function frontendConfig(): DerivedProperty<FrontendConfigData> {
-    return DerivedProperty.make(
-        Site,
-        (s) => s.frontendConfigJSON,
-        (s) => JSON.parse(s.frontendConfigJSON),
     );
 }
 
@@ -283,13 +264,13 @@ export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
 // Action to make changes to an existing Site:
 export const UpdateSite = defaultUpdateFor(
     Site,
-    (s) => s.slugId.description.homePageMD.footerMD.domain.accessMode.publicGrantStrings,
+    (s) => s.slugId.description.homePageContent.footerContent.domain.accessMode.publicGrantStrings,
     {
         otherUpdates: async (args: { frontendConfig?: FrontendConfigData }, tx, nodeSnapshot) => {
             if (args.frontendConfig) {
                 await tx.queryOne(C`
                 MATCH (site:${Site} {id: ${nodeSnapshot.id}})
-                SET site.frontendConfigJSON = ${JSON.stringify(args.frontendConfig)}
+                SET site.frontendConfig = ${JSON.stringify(args.frontendConfig)}
             `.RETURN({}));
             }
             return {};
@@ -307,8 +288,8 @@ export const CreateSite = defineAction({
         slugId: string;
         domain: string;
         description?: string;
-        homePageMD?: string;
-        footerMD?: string;
+        homePageContent?: string;
+        footerContent?: string;
         siteCode?: string;
         adminUser?: VNID;
         accessMode?: AccessMode;
@@ -348,11 +329,11 @@ export const CreateSite = defineAction({
                 slugId: ${data.slugId},
                 siteCode: ${siteCode},
                 description: ${data.description || ""},
-                homePageMD: ${data.homePageMD || ""},
-                footerMD: ${data.footerMD || ""},
+                homePageContent: ${data.homePageContent || ""},
+                footerContent: ${data.footerContent || ""},
                 domain: ${data.domain},
                 accessMode: ${data.accessMode ?? AccessMode.PublicContributions},
-                frontendConfigJSON: ${JSON.stringify(data.frontendConfig ?? {})},
+                frontendConfig: ${JSON.stringify(data.frontendConfig ?? {})},
                 publicGrantStrings: ${data.publicGrantStrings ?? []}
             })
         `.RETURN({}));

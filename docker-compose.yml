@@ -33,6 +33,10 @@ x-service-templates:
       apoc.trigger.enabled: "true"
       # The following is needed for apoc.export.cypher.all, even though we're only exporting to memory, not disk.
       apoc.export.file.enabled: "true"
+      # Enable a transaction timeout so we don't get long transactions that run forever:
+      NEO4J_db_transaction_timeout: "120s"
+      NEO4J_db_lock_acquisition_timeout: "30s"
+
   authn:
     &authn-defaults
     image: keratin/authn-server:1.15.0

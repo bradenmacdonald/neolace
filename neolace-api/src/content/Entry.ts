@@ -48,7 +48,7 @@ export enum ImageSizingMode {
 
 export const EntryFeaturesSchema = Schema({
     Article: Schema({
-        articleMD: string,
+        articleContent: string,
         headings: array.of(Schema({title: string, id: string})),
     }).strictOptional(),
 

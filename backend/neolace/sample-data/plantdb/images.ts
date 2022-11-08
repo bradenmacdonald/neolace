@@ -2,7 +2,7 @@ import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { schema } from "./schema.ts";
 import { files } from "./datafiles.ts";
 
-import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
+import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { entryData } from "./content.ts";
 import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
@@ -25,6 +25,7 @@ export async function createImages(siteId: VNID) {
             {
                 code: "CreateEntry",
                 data: {
+                    entryId: entryData.imgPonderosaTrunk.id,
                     ...entryData.imgPonderosaTrunk,
                     type: schema.entryTypes._ETIMAGE.id,
                     description: (entryData.imgPonderosaTrunk.description = `
@@ -43,7 +44,7 @@ export async function createImages(siteId: VNID) {
             },
             // This image relates to the ponderosa pine:
             {
-                code: "AddPropertyValue",
+                code: "AddPropertyFact",
                 data: {
                     entryId: entryData.imgPonderosaTrunk.id,
                     propertyId: schema.properties._imgRelTo.id,
@@ -53,7 +54,7 @@ export async function createImages(siteId: VNID) {
             },
             // This image is used as the hero image for the ponderosa pine
             {
-                code: "AddPropertyValue",
+                code: "AddPropertyFact",
                 data: {
                     entryId: entryData.ponderosaPine.id,
                     propertyId: schema.properties._hasHeroImage.id,

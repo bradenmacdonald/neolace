@@ -17,5 +17,9 @@ export { GetEntryFlags } from "neolace/deps/neolace-api.ts";
 export { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 export { entryToIndexDocument } from "neolace/core/entry/entry-to-index-doc.ts";
 
+// Connections and actions:
+export { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+export { getConnection } from "neolace/core/edit/connections.ts";
+
 // Neolace lib functions
 export { createRandomToken } from "neolace/lib/secure-token.ts";

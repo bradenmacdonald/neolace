@@ -1,5 +1,5 @@
 import { C, EmptyResultError } from "neolace/deps/vertex-framework.ts";
-import { api, corePerm, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getHomeSite, Site } from "neolace/core/Site.ts";
 
 export class SitesResource extends NeolaceHttpResource {
@@ -24,7 +24,7 @@ export class SitesResource extends NeolaceHttpResource {
         const graph = await getGraph();
         const site = await graph.pullOne(
             Site,
-            (s) => s.name.description.domain.url().footerMD.shortId().frontendConfig(),
+            (s) => s.name.description.domain.url().footerContent.shortId().frontendConfig(),
             {
                 where: C`@this.domain = ${domain}`,
             },
@@ -40,9 +40,9 @@ export class SitesResource extends NeolaceHttpResource {
             throw new api.ApiError("Internal error - domain mismatch.", 500);
         }
 
-        if (!this.hasPermission(request, corePerm.viewSite.name, {})) {
+        if (!this.hasPermission(request, api.CorePerm.viewSite, {})) {
             // If the user doesn't have permission to view the site, they're not allowed to see the footer or frontend config:
-            site.footerMD = "";
+            site.footerContent = "";
             site.frontendConfig = {};
         }
 

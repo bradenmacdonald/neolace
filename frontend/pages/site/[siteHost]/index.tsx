@@ -10,7 +10,7 @@ import { MDTContext, RenderMDT } from "components/markdown-mdt/mdt";
 interface PageProps {
     site: SiteData;
     /** Markdown content for the homepage */
-    homepageMD: string;
+    homepageContent: string;
     refCache: api.ReferenceCacheData;
 }
 interface PageUrlQuery extends ParsedUrlQuery {
@@ -28,8 +28,8 @@ const HomePage: NextPage<PageProps> = function (props) {
                 <SitePage title={props.site.name}>
                     {/* Below, 100vh-11.6rem pushes the footer down to the bottom of the screen but prevents scrolling if there's only a single line in the footer */}
                     <div className="max-w-6xl mx-auto neo-typography md:min-h-[calc(100vh-11.6rem)]">
-                        {props.homepageMD ?
-                            <RenderMDT mdt={props.homepageMD} context={mdtContext} />
+                        {props.homepageContent ?
+                            <RenderMDT mdt={props.homepageContent} context={mdtContext} />
                         :
                             <>
                                 <h1>
@@ -74,7 +74,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     return {
         props: {
             site,
-            homepageMD: homePage.homePageMD,
+            homepageContent: homePage.homePageContent,
             refCache: homePage.referenceCache,
         },
     };

@@ -11,7 +11,7 @@ import {
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { EntryTypeColor, SiteSchemaData } from "neolace/deps/neolace-api.ts";
 
 group("schema.ts", () => {
@@ -33,6 +33,7 @@ group("schema.ts", () => {
                 edits: [
                     { code: "CreateEntryType", data: { id, name } },
                 ],
+                editSource: UseSystemSource,
             }));
 
             assertEquals(await getSchema(), {
@@ -67,6 +68,7 @@ group("schema.ts", () => {
                 edits: [
                     { code: "CreateEntryType", data: { id, name } },
                 ],
+                editSource: UseSystemSource,
             }));
 
             // Now try to create an entry with the same ID in the default site:
@@ -76,6 +78,7 @@ group("schema.ts", () => {
                     edits: [
                         { code: "CreateEntryType", data: { id, name } },
                     ],
+                    editSource: UseSystemSource,
                 }))
             );
             assertInstanceOf(err, Error);

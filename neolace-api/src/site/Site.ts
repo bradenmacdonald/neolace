@@ -45,7 +45,7 @@ export const SiteDetailsSchema = Schema({
     /**
      * The footer text (as Markdown) to display on every page of this site.
      */
-    footerMD: string,
+    footerContent: string,
 
     /**
      * Configuration related to the frontend, such as:
@@ -72,7 +72,7 @@ export type SiteDetailsData = Type<typeof SiteDetailsSchema>;
     /**
      * Markdown text for the home page. This defines the content of the home page.
      */
-    homePageMD: string,
+    homePageContent: string,
     /** Some details about any entries mentioned in the home page. */
     referenceCache: ReferenceCacheSchema,
 });

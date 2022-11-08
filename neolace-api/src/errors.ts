@@ -1,3 +1,4 @@
+import type { AnyBulkEdit } from "./edit/BulkEdit.ts";
 import type { AnyContentEdit } from "./edit/ContentEdit.ts";
 import type { AnySchemaEdit } from "./schema/SchemaEdit.ts";
 
@@ -89,7 +90,7 @@ export class InvalidFieldValue extends InvalidRequest {
 export class InvalidEdit extends InvalidRequest {
     constructor(
         // The code string identifying the edit that failed:
-        public readonly editCode: AnySchemaEdit["code"]|AnyContentEdit["code"],
+        public readonly editCode: AnySchemaEdit["code"]|AnyContentEdit["code"]|AnyBulkEdit["code"],
         /**
          * entryId or any other information useful to locating which edit failed. Most error details should be in this
          * data field, NOT in the message, in order to make the errors more machine readable and translatable into

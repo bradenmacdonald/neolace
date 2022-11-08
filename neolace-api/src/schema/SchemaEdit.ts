@@ -208,7 +208,7 @@ export const UpdateProperty = SchemaEditType({
         id: vnidString,
         // For these properties, use 'undefined' to mean 'no change':
         name: string.strictOptional(),
-        descriptionMD: string.strictOptional(),
+        description: string.strictOptional(),
         appliesTo: array.of(Schema({ entryType: vnidString })).strictOptional(),
         mode: Schema.enum(PropertyMode).strictOptional(),
         isA: array.of(vnidString).strictOptional(),
@@ -220,7 +220,7 @@ export const UpdateProperty = SchemaEditType({
         inheritable: boolean.strictOptional(),
         standardURL: string.strictOptional(),
         displayAs: string.strictOptional(),
-        editNoteMD: string.strictOptional(),
+        editNote: string.strictOptional(),
     }),
     apply: (currentSchema, data) => {
 
@@ -240,7 +240,7 @@ export const UpdateProperty = SchemaEditType({
             newProp.appliesTo = data.appliesTo;
         }
 
-        for (const field of ["name", "descriptionMD", "mode", "isA", "rank"] as const) {
+        for (const field of ["name", "description", "mode", "isA", "rank"] as const) {
             if (data[field] !== undefined) {
                 (newProp as any)[field] = data[field];
             }
@@ -254,7 +254,7 @@ export const UpdateProperty = SchemaEditType({
             }
         }
 
-        for (const field of ["valueConstraint", "default", "standardURL", "editNoteMD", "displayAs"] as const) {
+        for (const field of ["valueConstraint", "default", "standardURL", "editNote", "displayAs"] as const) {
             const value = data[field];
             if (value !== undefined) {
                 if (value === "") {
@@ -291,7 +291,7 @@ export const CreateProperty = SchemaEditType({
         id: vnidString,
         name: string,
         type: Schema.enum(PropertyType).strictOptional(),
-        descriptionMD: string.strictOptional(),
+        description: string.strictOptional(),
         appliesTo: array.of(Schema({ entryType: vnidString })).strictOptional(),
         mode: Schema.enum(PropertyMode).strictOptional(),
         isA: array.of(vnidString).strictOptional(),
@@ -303,7 +303,7 @@ export const CreateProperty = SchemaEditType({
         inheritable: boolean.strictOptional(),
         standardURL: string.strictOptional(),
         displayAs: string.strictOptional(),
-        editNoteMD: string.strictOptional(),
+        editNote: string.strictOptional(),
     }),
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
@@ -311,7 +311,7 @@ export const CreateProperty = SchemaEditType({
             properties: {...currentSchema.properties, [data.id]: {
                 id: data.id,
                 appliesTo: [],
-                descriptionMD: "",
+                description: "",
                 name: "New Property",
                 type: data.type ?? PropertyType.Value,
                 mode: PropertyMode.Optional,

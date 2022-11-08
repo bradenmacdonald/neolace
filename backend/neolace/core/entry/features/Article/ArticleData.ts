@@ -11,7 +11,7 @@ export class ArticleData extends EntryFeatureData {
     static properties = {
         ...EntryFeatureData.properties,
         // The markdown text of the article
-        articleMD: Field.String.Check(check.string.max(10_000_000)),
+        articleContent: Field.String.Check(check.string.max(10_000_000)),
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({});

@@ -4,7 +4,7 @@ import { EditList, PropertyMode, PropertyType } from "neolace/deps/neolace-api.t
 import { assertEquals, beforeAll, group, resetDBToBlankSnapshot, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
@@ -34,6 +34,7 @@ group("properties.ts", () => {
                 edits: [
                     { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
                 ],
+                editSource: UseSystemSource,
             }));
         });
 
@@ -47,7 +48,7 @@ group("properties.ts", () => {
                     {
                         code: "CreateEntry",
                         data: {
-                            id: entryId,
+                            entryId,
                             name: "Entry",
                             type: entryType,
                             description: "Testing",
@@ -56,12 +57,13 @@ group("properties.ts", () => {
                     },
                     { code: "CreateProperty", data: { id: propertyId, name: "Property", appliesTo: [{ entryType }] } },
                 ],
+                editSource: UseSystemSource,
             }));
             await graph.runAsSystem(ApplyEdits({
                 siteId,
                 edits: [
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId,
                             propertyId,
@@ -70,6 +72,7 @@ group("properties.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
             // Now just read the value from the graph, so we're only testing the write functions, not the read ones:
             const result = await graph.read((tx) =>
@@ -95,7 +98,7 @@ group("properties.ts", () => {
                     {
                         code: "CreateEntry",
                         data: {
-                            id: entryA,
+                            entryId: entryA,
                             name: "Entry A",
                             type: entryType,
                             description: "Testing",
@@ -105,7 +108,7 @@ group("properties.ts", () => {
                     {
                         code: "CreateEntry",
                         data: {
-                            id: entryB,
+                            entryId: entryB,
                             name: "Entry B",
                             type: entryType,
                             description: "Testing",
@@ -122,6 +125,7 @@ group("properties.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
             // Say that (entry B) IS A (entry a)
             const valueExpression = `entry("${entryA}")`;
@@ -130,7 +134,7 @@ group("properties.ts", () => {
                 siteId,
                 edits: [
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: entryB,
                             propertyId,
@@ -140,6 +144,7 @@ group("properties.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
             // Now just read the value from the graph, so we're only testing the write functions, not the read ones:
             const result = await graph.read((tx) =>
@@ -192,11 +197,11 @@ group("properties.ts", () => {
                         { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
                         {
                             code: "CreateEntry",
-                            data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
                             code: "CreateEntry",
-                            data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                         },
                         {
                             code: "CreateProperty",
@@ -205,11 +210,11 @@ group("properties.ts", () => {
                                 name: "Property 1",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: prop1,
@@ -218,6 +223,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
             });
 
@@ -300,7 +306,7 @@ group("properties.ts", () => {
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 1,
                             },
                         },
@@ -313,7 +319,7 @@ group("properties.ts", () => {
                                 type: PropertyType.RelOther,
                                 mode: PropertyMode.Auto,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 1,
                                 default: `this.reverse(prop=prop("${entryIsA}"))`,
                             },
@@ -321,15 +327,15 @@ group("properties.ts", () => {
                         // Create entry A:
                         {
                             code: "CreateEntry",
-                            data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         // Create entry B and its properties:
                         {
                             code: "CreateEntry",
-                            data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: entryIsA,
@@ -339,6 +345,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
 
                 assertEquals(await graph.read((tx) => getEntryProperties(A, { tx })), [
@@ -380,7 +387,7 @@ group("properties.ts", () => {
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 1,
                             },
                         },
@@ -391,7 +398,7 @@ group("properties.ts", () => {
                                 name: "Property 1",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 inheritable: true,
                             },
                         },
@@ -402,7 +409,7 @@ group("properties.ts", () => {
                                 name: "Property 2",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 inheritable: true,
                             },
                         },
@@ -413,17 +420,17 @@ group("properties.ts", () => {
                                 name: "Property 3",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 inheritable: false,
                             },
                         },
                         // Create entry A and its properties:
                         {
                             code: "CreateEntry",
-                            data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop1,
@@ -432,7 +439,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop2,
@@ -441,7 +448,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop3,
@@ -452,10 +459,10 @@ group("properties.ts", () => {
                         // Create entry B and its properties:
                         {
                             code: "CreateEntry",
-                            data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: entryIsA,
@@ -465,7 +472,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: prop2,
@@ -476,10 +483,10 @@ group("properties.ts", () => {
                         // Create entry C and its properties:
                         {
                             code: "CreateEntry",
-                            data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                            data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: C,
                                 propertyId: entryIsA,
@@ -489,7 +496,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: C,
                                 propertyId: prop3,
@@ -498,6 +505,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
 
                 // Define the expected property values:
@@ -597,7 +605,7 @@ group("properties.ts", () => {
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 1,
                             },
                         },
@@ -608,17 +616,17 @@ group("properties.ts", () => {
                                 name: "Property 1",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 inheritable: true,
                             },
                         },
                         // Create A
                         {
                             code: "CreateEntry",
-                            data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop1,
@@ -629,11 +637,11 @@ group("properties.ts", () => {
                         // Create B
                         {
                             code: "CreateEntry",
-                            data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                         },
                         // B inherits from A
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: entryIsA,
@@ -642,7 +650,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: prop1,
@@ -652,7 +660,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: B,
                                 propertyId: prop1,
@@ -664,11 +672,11 @@ group("properties.ts", () => {
                         // Create C
                         {
                             code: "CreateEntry",
-                            data: { id: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                            data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
                         },
                         // C inherits from B
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: C,
                                 propertyId: entryIsA,
@@ -677,6 +685,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
                 // Check properties of B:
                 assertEquals(
@@ -757,17 +766,17 @@ group("properties.ts", () => {
                                 name: "Property 1",
                                 type: PropertyType.Value,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 inheritable: true,
                             },
                         },
                         // Create A
                         {
                             code: "CreateEntry",
-                            data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop1,
@@ -778,7 +787,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop1,
@@ -789,7 +798,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: A,
                                 propertyId: prop1,
@@ -800,6 +809,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
                 // Check properties of A:
                 assertEquals(
@@ -870,7 +880,7 @@ group("properties.ts", () => {
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 1,
                             },
                         },
@@ -881,7 +891,7 @@ group("properties.ts", () => {
                                 name: "Has Part",
                                 type: PropertyType.RelOther,
                                 appliesTo: [{ entryType }],
-                                descriptionMD: "",
+                                description: "",
                                 rank: 2,
                                 inheritable: true,
                                 enableSlots: true,
@@ -891,7 +901,7 @@ group("properties.ts", () => {
                         {
                             code: "CreateEntry",
                             data: {
-                                id: steeringWheel,
+                                entryId: steeringWheel,
                                 name: "Steering Wheel",
                                 type: componentType,
                                 friendlyId: "c-sw",
@@ -901,7 +911,7 @@ group("properties.ts", () => {
                         {
                             code: "CreateEntry",
                             data: {
-                                id: combustionEngine,
+                                entryId: combustionEngine,
                                 name: "Combustion Engine",
                                 type: componentType,
                                 friendlyId: "c-ce",
@@ -911,7 +921,7 @@ group("properties.ts", () => {
                         {
                             code: "CreateEntry",
                             data: {
-                                id: electricMotor,
+                                entryId: electricMotor,
                                 name: "Electric Motor",
                                 type: componentType,
                                 friendlyId: "c-em",
@@ -921,10 +931,10 @@ group("properties.ts", () => {
                         // Create entry "Car": has part "Steering Wheel" in slot "sw", "Combustion Engine" in slot "motor"
                         {
                             code: "CreateEntry",
-                            data: { id: car, name: "Car", type: entryType, friendlyId: "v-car", description: "" },
+                            data: { entryId: car, name: "Car", type: entryType, friendlyId: "v-car", description: "" },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: car,
                                 propertyId: entryHasPart,
@@ -935,7 +945,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: car,
                                 propertyId: entryHasPart,
@@ -949,7 +959,7 @@ group("properties.ts", () => {
                         {
                             code: "CreateEntry",
                             data: {
-                                id: electricCar,
+                                entryId: electricCar,
                                 name: "Electric Car",
                                 type: entryType,
                                 friendlyId: "v-e-car",
@@ -957,7 +967,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: electricCar,
                                 propertyId: entryIsA,
@@ -967,7 +977,7 @@ group("properties.ts", () => {
                             },
                         },
                         {
-                            code: "AddPropertyValue",
+                            code: "AddPropertyFact",
                             data: {
                                 entryId: electricCar,
                                 propertyId: entryHasPart,
@@ -978,6 +988,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
             });
             test("'slots' allow partial inheritance where _some_ inherited values get overwritten, others don't.", async () => {
@@ -1049,6 +1060,7 @@ group("properties.ts", () => {
                             },
                         },
                     ],
+                    editSource: UseSystemSource,
                 }));
                 // Now with slots disabled, electric car won't inherit steering wheel, because having any value for
                 // "has parts" will override ALL inherited values.
@@ -1097,22 +1109,22 @@ group("properties.ts", () => {
                             name: "Is a",
                             type: PropertyType.RelIsA,
                             appliesTo: [{ entryType }],
-                            descriptionMD: "",
+                            description: "",
                             rank: 99,
                         },
                     },
                     // Create entry A and B:
                     {
                         code: "CreateEntry",
-                        data: { id: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                        data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { id: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                        data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
                     },
                     // B inherits from A:
                     {
-                        code: "AddPropertyValue",
+                        code: "AddPropertyFact",
                         data: {
                             entryId: B,
                             propertyId: entryIsA,
@@ -1121,6 +1133,7 @@ group("properties.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
 
             const edits: EditList = [];
@@ -1137,7 +1150,7 @@ group("properties.ts", () => {
                 };
                 edits.push({
                     code: "CreateProperty",
-                    data: { appliesTo: [{ entryType }], descriptionMD: "", mode: PropertyMode.Auto, ...args },
+                    data: { appliesTo: [{ entryType }], description: "", mode: PropertyMode.Auto, ...args },
                 });
                 autoPropertyValues.push({
                     property: { ...args },
@@ -1156,11 +1169,11 @@ group("properties.ts", () => {
                 };
                 edits.push({
                     code: "CreateProperty",
-                    data: { ...propArgs, appliesTo: [{ entryType }], descriptionMD: "", inheritable: i < 8 },
+                    data: { ...propArgs, appliesTo: [{ entryType }], description: "", inheritable: i < 8 },
                 });
                 const propertyFactId = VNID();
                 edits.push({
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: { entryId: A, propertyId: id, propertyFactId, valueExpression: `"A${i}"` },
                 });
                 aPropertyValues.push({
@@ -1178,7 +1191,7 @@ group("properties.ts", () => {
             // B will inherit eight properties (0..7) from A, but will overwrite two of them:
             const factIdB6 = VNID();
             edits.push({
-                code: "AddPropertyValue",
+                code: "AddPropertyFact",
                 data: {
                     entryId: B,
                     propertyId: aPropertyValues[6].property.id,
@@ -1188,7 +1201,7 @@ group("properties.ts", () => {
             });
             const factIdB7 = VNID();
             edits.push({
-                code: "AddPropertyValue",
+                code: "AddPropertyFact",
                 data: {
                     entryId: B,
                     propertyId: aPropertyValues[7].property.id,
@@ -1207,11 +1220,11 @@ group("properties.ts", () => {
                 };
                 edits.push({
                     code: "CreateProperty",
-                    data: { ...propArgs, appliesTo: [{ entryType }], descriptionMD: "" },
+                    data: { ...propArgs, appliesTo: [{ entryType }], description: "" },
                 });
                 const propertyFactId = VNID();
                 edits.push({
-                    code: "AddPropertyValue",
+                    code: "AddPropertyFact",
                     data: { entryId: B, propertyId: id, propertyFactId, valueExpression: `"B${i}"` },
                 });
                 bPropertyValues.push({
@@ -1226,7 +1239,7 @@ group("properties.ts", () => {
                 });
             }
 
-            await graph.runAsSystem(ApplyEdits({ siteId, edits }));
+            await graph.runAsSystem(ApplyEdits({ siteId, edits, editSource: UseSystemSource }));
 
             // Get the properties of A with rank <= 2:
             assertEquals(await graph.read((tx) => getEntryProperties(A, { tx, maxRank: 2 })), [

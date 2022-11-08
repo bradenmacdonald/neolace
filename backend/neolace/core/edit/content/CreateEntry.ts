@@ -7,13 +7,13 @@ export const doCreateEntry = defineImplementation(CreateEntry, async (tx, data, 
     if (data.friendlyId.length > 55) {
         throw new InvalidEdit(
             CreateEntry.code,
-            { entryId: data.id },
+            { entryId: data.entryId },
             `The friendlyId "${data.friendlyId}" is too long.`,
         );
     }
     await tx.queryOne(C`
         MATCH (et:${EntryType} {id: ${data.type}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-        CREATE (e:${Entry} {id: ${data.id}})
+        CREATE (e:${Entry} {id: ${data.entryId}})
         CREATE (e)-[:${Entry.rel.IS_OF_TYPE}]->(et)
         SET e.slugId = site.siteCode + ${data.friendlyId}
         SET e += ${{
@@ -23,6 +23,6 @@ export const doCreateEntry = defineImplementation(CreateEntry, async (tx, data, 
     `.RETURN({}));
 
     return {
-        modifiedNodes: [data.id],
+        modifiedNodes: [data.entryId],
     };
 });

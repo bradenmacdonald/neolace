@@ -56,7 +56,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             p
                 .id
                 .name
-                .descriptionMD
+                .description
                 .type
                 .mode
                 .valueConstraint
@@ -65,7 +65,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
                 .enableSlots
                 .standardURL
                 .rank
-                .editNoteMD
+                .editNote
                 .displayAs
                 .appliesTo((et) => et.id)
                 .parentProperties((pp) => pp.id),
@@ -77,7 +77,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
         result.properties[p.id] = {
             id: p.id,
             name: p.name,
-            descriptionMD: p.descriptionMD,
+            description: p.description,
             type: p.type as PropertyType,
             mode: p.mode as PropertyMode,
             rank: p.rank,
@@ -87,7 +87,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
             ...(p.inheritable && { inheritable: p.inheritable }),
             ...(p.enableSlots && { enableSlots: p.enableSlots }),
             ...(p.valueConstraint && { valueConstraint: p.valueConstraint }),
-            ...(p.editNoteMD && { editNoteMD: p.editNoteMD }),
+            ...(p.editNote && { editNote: p.editNote }),
             ...(p.standardURL && { standardURL: p.standardURL }),
             ...(p.displayAs && { displayAs: p.displayAs }),
         };
@@ -257,13 +257,13 @@ export function diffSchema(
             for (
                 const key of [
                     "name",
-                    "descriptionMD",
+                    "description",
                     "mode",
                     "valueConstraint",
                     "default",
                     "standardURL",
                     "rank",
-                    "editNoteMD",
+                    "editNote",
                     "displayAs",
                     "inheritable",
                     "enableSlots",

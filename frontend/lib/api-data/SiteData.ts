@@ -38,7 +38,7 @@ export function useSiteData(options: { fallback?: SiteData } = {}): { site: Site
             description: "",
             domain,
             url: "",
-            footerMD: "━━━━━━━━━━━━━━",
+            footerContent: "━━━━━━━━━━━━━━",
             shortId: "",
             frontendConfig: {},
             isHomeSite: false,

@@ -23,7 +23,7 @@ group("file.ts", () => {
         const mockEdit: api.AnyContentEdit = {
             code: "CreateEntry",
             data: {
-                id: VNID("_123"),
+                entryId: VNID("_123"),
                 type: defaultData.schema.entryTypes._ETSPECIES.id,
                 name: "",
                 description: "",

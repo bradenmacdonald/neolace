@@ -11,8 +11,8 @@ import {
 } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
-import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 import { Always, PermissionGrant } from "neolace/core/permissions/grant.ts";
@@ -53,7 +53,7 @@ group("files.ts", () => {
                     {
                         code: "CreateEntry",
                         data: {
-                            id: entryId,
+                            entryId: entryId,
                             type: entryType,
                             name: "Test With Files",
                             friendlyId: "files-test",
@@ -61,6 +61,7 @@ group("files.ts", () => {
                         },
                     },
                 ],
+                editSource: UseSystemSource,
             }));
         };
 

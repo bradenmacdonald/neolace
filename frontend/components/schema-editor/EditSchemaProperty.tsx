@@ -25,7 +25,7 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyId, 
     const prop: api.PropertyData = schema?.properties[propertyId] ?? {
         id: propertyId,
         name: "",
-        descriptionMD: "",
+        description: "",
         type: api.PropertyType.Value,
         appliesTo: [],
         rank: 10,
@@ -161,9 +161,9 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyId, 
         <AutoControl
             id="prop-desc"
             label={defineMessage({ defaultMessage: "Description", id: 'Q8Qw5B' })}
-            value={prop.descriptionMD}
+            value={prop.description}
             hint={defineMessage({defaultMessage: "Explain clearly what this property is.", id: 'zlcodI'})}
-            onChangeFinished={(descriptionMD) => updateProperty({descriptionMD})}
+            onChangeFinished={(description) => updateProperty({description})}
         >
             <MDTEditor inlineOnly={true} />
         </AutoControl>
@@ -238,9 +238,9 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyId, 
         <AutoControl
             id="prop-edit-note"
             label={defineMessage({ defaultMessage: "Edit Note", id: '79ml4Z' })}
-            value={prop.editNoteMD}
+            value={prop.editNote}
             hint={defineMessage({defaultMessage: "Optionally, provide advice to editors who may be making changes to this property's value.", id: '/4dbk+'})}
-            onChangeFinished={(editNoteMD) => updateProperty({editNoteMD})}
+            onChangeFinished={(editNote) => updateProperty({editNote})}
         >
             <MDTEditor inlineOnly={true} />
         </AutoControl>

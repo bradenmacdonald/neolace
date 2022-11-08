@@ -46,7 +46,7 @@ export const doUpdateProperty = defineImplementation(UpdateProperty, async (tx, 
     for (
         const field of [
             "name",
-            "descriptionMD",
+            "description",
             "mode",
             "valueConstraint",
             "default",
@@ -54,7 +54,7 @@ export const doUpdateProperty = defineImplementation(UpdateProperty, async (tx, 
             "standardURL",
             "rank",
             "displayAs",
-            "editNoteMD",
+            "editNote",
             "enableSlots",
         ] as const
     ) {

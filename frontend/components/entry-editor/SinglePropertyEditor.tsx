@@ -44,7 +44,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                 }}
                 onClick={() => {
                     addUnsavedEdit({
-                        code: api.AddPropertyValue.code,
+                        code: api.AddPropertyFact.code,
                         data: {
                             entryId,
                             propertyId: prop.id,
@@ -73,7 +73,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                                 value={fact.valueExpression}
                                 onChange={(newValue) => {
                                     addUnsavedEdit({
-                                        code: api.UpdatePropertyValue.code,
+                                        code: api.UpdatePropertyFact.code,
                                         data: { entryId, propertyFactId: fact.id, valueExpression: newValue },
                                     });
                                 }}
@@ -87,7 +87,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                                 })}
                                 onClick={() => {
                                     addUnsavedEdit({
-                                        code: api.DeletePropertyValue.code,
+                                        code: api.DeletePropertyFact.code,
                                         data: { entryId, propertyFactId: fact.id },
                                     });
                                 }}
@@ -100,7 +100,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                                 })}
                                 onClick={() => {
                                     addUnsavedEdit({
-                                        code: api.AddPropertyValue.code,
+                                        code: api.AddPropertyFact.code,
                                         data: { entryId, propertyId: prop.id, propertyFactId: api.VNID(), valueExpression: "" },
                                     });
                                 }}

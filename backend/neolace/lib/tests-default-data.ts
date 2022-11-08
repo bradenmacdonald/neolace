@@ -7,7 +7,7 @@ import { getGraph } from "neolace/core/graph.ts";
 import { CreateBot, CreateUser } from "../core/User.ts";
 import { AccessMode, CreateSite } from "neolace/core/Site.ts";
 import { CreateGroup } from "neolace/core/permissions/Group.ts";
-import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
+import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
 import { __forScriptsOnly as objStoreUtils } from "neolace/core/objstore/objstore.ts";
 import { schema } from "../sample-data/plantdb/schema.ts";
@@ -128,7 +128,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         slugId: `site-home`, // The shortId of this site is "home"
         adminUser: data.users.admin.id,
         accessMode: AccessMode.PublicReadOnly,
-        homePageMD: dedent`
+        homePageContent: dedent`
             # Welcome to Neolace Development
 
             A Neolace installation is called a "Realm", and can have one or more sites. This is the home site for your
@@ -152,7 +152,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             * [**User Interface Demo Page**](/ui): Shows various UI components that can be used to develop the Neolace
               frontend and/or frontend plugins.
         `,
-        footerMD: `Powered by [Neolace](https://www.neolace.com/).`,
+        footerContent: `Powered by [Neolace](https://www.neolace.com/).`,
         frontendConfig: {
             headerLinks: [
                 { text: "Home", href: "/" },
@@ -172,7 +172,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         slugId: `site-${data.site.shortId}`,
         adminUser: data.users.admin.id,
         accessMode: data.site.initialAccessMode,
-        homePageMD: dedent`
+        homePageContent: dedent`
             # Welcome to PlantDB
 
             This is a demo site that contains a small amount of content useful for developing Neolace.
@@ -181,7 +181,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
 
             Check out [**ponderosa pine**](/entry/s-pinus-ponderosa), the featured article.
         `,
-        footerMD: `Powered by [Neolace](https://www.neolace.com/).`,
+        footerContent: `Powered by [Neolace](https://www.neolace.com/).`,
         frontendConfig: {
             headerLinks: [
                 { text: "Home", href: "/" },
@@ -207,13 +207,15 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     })).then((result) => data.site.usersGroupId = result.id);
 
     // Import the schema
-    await graph.runAsSystem(ImportSchema({ siteId: data.site.id, schema: data.schema }));
+    await graph.runAsSystem(ImportSchema({ siteId: data.site.id, schema: data.schema, editSource: UseSystemSource }));
 
     // Import the files
     await ensureFilesExist();
 
     // Create some initial entry data, specifically entries about plants.
-    await graph.runAsSystem(ApplyEdits({ siteId: data.site.id, edits: makePlantDbContent }));
+    await graph.runAsSystem(
+        ApplyEdits({ siteId: data.site.id, edits: makePlantDbContent, editSource: UseSystemSource }),
+    );
     await createImages(data.site.id);
 
     const defaultDataSnapshot = await graph.snapshotDataForTesting();

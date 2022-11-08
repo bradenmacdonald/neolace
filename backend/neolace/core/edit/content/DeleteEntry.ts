@@ -32,5 +32,6 @@ export const doDeleteEntry = defineImplementation(DeleteEntry, async (tx, data, 
     `.RETURN({}));
     return {
         modifiedNodes: [data.entryId],
+        // TODO: In future, return the oldValues data required to re-create the entry?
     };
 });

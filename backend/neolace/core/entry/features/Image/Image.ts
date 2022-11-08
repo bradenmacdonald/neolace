@@ -10,6 +10,7 @@ import { ImageData } from "./ImageData.ts";
 import { EntryFeatureData } from "../EntryFeatureData.ts";
 import { DataFile } from "neolace/core/objstore/DataFile.ts";
 import { Draft, DraftFile } from "neolace/core/edit/Draft.ts";
+import { ImageMetadata } from "neolace/core/objstore/detect-metadata.ts";
 
 const featureType = "Image" as const;
 
@@ -50,7 +51,7 @@ export const ImageFeature = EntryTypeFeature({
         // We need to mark the ImageFeatureEnabled node as modified:
         markNodeAsModified(result["feature.id"]);
     },
-    async editFeature(entryId, editData, tx, markNodeAsModified): Promise<void> {
+    async editFeature(entryId, editData, tx) {
         // Associate the Entry with the ImageData node
         const result = await tx.queryOne(C`
             MATCH (e:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})
@@ -74,9 +75,15 @@ export const ImageFeature = EntryTypeFeature({
                     WHERE NOT oldFile = dataFile
                 DELETE oldFile
             `);
+            // TODO: delete the file from the underlying storage layer?
         }
 
-        markNodeAsModified(imageDataId);
+        return {
+            modifiedNodes: [imageDataId],
+            oldValues: {
+                // For now we can't really put an "old value" here; there is no way to undo changing an image.
+            },
+        };
     },
 
     /**
@@ -88,26 +95,27 @@ export const ImageFeature = EntryTypeFeature({
         }
         const dataFile = (await tx.pullOne(
             ImageData,
-            (id) => id.dataFile((df) => df.publicUrl().contentType.size.metadata()),
+            (id) => id.dataFile((df) => df.publicUrl().contentType.size.metadata),
             { key: data.id },
         )).dataFile;
         if (dataFile === null) {
             return undefined;
         }
+        const metadata: ImageMetadata = dataFile.metadata as ImageMetadata ?? {};
         return {
             imageUrl: dataFile.publicUrl,
             contentType: dataFile.contentType,
             size: Number(dataFile.size),
             sizing: (data.sizing ?? ImageSizingMode.Contain) as ImageSizingMode,
-            width: "width" in dataFile.metadata ? dataFile.metadata.width : undefined,
-            height: "height" in dataFile.metadata ? dataFile.metadata.height : undefined,
-            blurHash: "blurHash" in dataFile.metadata ? dataFile.metadata.blurHash : undefined,
-            borderColor: "borderColor" in dataFile.metadata && dataFile.metadata.borderColor !== undefined
+            width: "width" in metadata ? metadata.width : undefined,
+            height: "height" in metadata ? metadata.height : undefined,
+            blurHash: "blurHash" in metadata ? metadata.blurHash : undefined,
+            borderColor: "borderColor" in metadata && metadata.borderColor !== undefined
                 ? [
-                    dataFile.metadata.borderColor & 0xff,
-                    (dataFile.metadata.borderColor >> 8) & 0xff,
-                    (dataFile.metadata.borderColor >> 16) & 0xff,
-                    (dataFile.metadata.borderColor >> 24) & 0xff,
+                    metadata.borderColor & 0xff,
+                    (metadata.borderColor >> 8) & 0xff,
+                    (metadata.borderColor >> 16) & 0xff,
+                    (metadata.borderColor >> 24) & 0xff,
                 ]
                 : undefined,
         };

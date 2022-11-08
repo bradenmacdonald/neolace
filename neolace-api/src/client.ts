@@ -2,7 +2,7 @@
 import { PasswordlessLoginResponse, UserDataResponse, VerifyEmailRequest, EmailTokenResponse, CreateHumanUserResponse } from "./user.ts";
 import * as errors from "./errors.ts";
 import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
-import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags, DraftStatus } from "./edit/index.ts";
+import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags, DraftStatus, AnyBulkEdit } from "./edit/index.ts";
 import { EntryData, EntrySummaryData, EvaluateLookupData, GetEntryFlags } from "./content/index.ts";
 import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData, SiteUserMyPermissionsData } from "./site/Site.ts";
 import { SiteUserSummaryData } from "./site/SiteAdmin.ts";
@@ -389,6 +389,14 @@ export class NeolaceApiClient {
     public getSearchConnection(options?: {siteId?: string}): Promise<SiteSearchConnectionData> {
         const siteId = this.getSiteId(options);
         return this.call(`/site/${siteId}/search/connection`);
+    }
+
+    public pushBulkEdits(edits: AnyBulkEdit[], options: {siteId?: string, connectionId: string, createConnection?: boolean}): Promise<{appliedEditIds: string[]}> {
+        const siteId = this.getSiteId(options);
+        return this.call(`/site/${siteId}/connection/push/${options.connectionId}/edit/?${options.createConnection ? 'create=true' : ''}`, {
+            method: "POST",
+            data: {edits},
+        });
     }
 }
 
