@@ -1,10 +1,11 @@
 import * as log from "std/log/mod.ts";
+import * as SendGrid from "https://deno.land/x/sendgrid@0.0.3/mod.ts";
 
 export enum MailProvider {
     /** For development: just log emails to the console; don't actually send anything. */
     Console = "console",
-    /** https://postmarkapp.com/ */
-    Postmark = "postmark",
+    /** SendGrid: https://sendgrid.com/ */
+    SendGrid = "sendgrid",
 }
 
 export interface Recipient {
@@ -32,8 +33,8 @@ export abstract class Mailer {
     public static init(provider: MailProvider | string, config: Record<string, unknown> = {}): Mailer {
         if (provider === MailProvider.Console) {
             return new ConsoleMailer();
-        } else if (provider === MailProvider.Postmark) {
-            return new PostmarkMailer(config);
+        } else if (provider === MailProvider.SendGrid) {
+            return new SendGridMailer(config);
         } else {
             throw new Error(`Invalid mailer configuration; unknown provider "${provider}"`);
         }
@@ -80,25 +81,39 @@ class ConsoleMailer extends Mailer {
     }
 }
 
-interface PostmarkConfig {
-    apiToken: string;
+interface SendGridConfig {
+    apiKey: string;
 }
 
-class PostmarkMailer extends Mailer {
-    #config: PostmarkConfig;
+class SendGridMailer extends Mailer {
+    #config: SendGridConfig;
 
-    constructor(readonly config: Record<string, unknown>) {
+    constructor(config: Record<string, unknown>) {
         super();
-        if (typeof config.apiToken !== "string" || !config.apiToken) {
-            throw new Error(`PostmarkMailer: missing required config value for "apiToken".`);
+        if (typeof config.apiKey !== "string" || !config.apiKey) {
+            throw new Error(`SendGridMailer: missing required config value for "apiKey".`);
         }
-        this.#config = {
-            apiToken: config.apiToken,
-        };
+        this.#config = { apiKey: config.apiKey };
     }
 
-    public async sendEmail(_email: Email): Promise<void> {
-        throw new Error("Postmark sender hasn't been implemented yet.");
+    public async sendEmail(email: Email): Promise<void> {
+        const result = await SendGrid.sendSimpleMail({
+            subject: email.subject,
+            to: typeof email.to === "string" ? [{ email: email.to }] : email.to,
+            cc: email.cc,
+            bcc: email.bcc,
+            from: email.from,
+            content: [
+                { type: "text/plain", value: email.bodyPlainText },
+                ...(email.bodyHtml ? [{ type: "text/html", value: email.bodyHtml }] : []),
+            ],
+            ...(email.replyTo ? { replyTo: { email: email.replyTo } } : {}),
+        }, { apiKey: this.#config.apiKey });
+        if (!result.success) {
+            const message = `Failed to send email using SendGrid: ${result.errors?.join(", ")}`;
+            log.error(message);
+            throw new Error(message);
+        }
     }
 }
 
