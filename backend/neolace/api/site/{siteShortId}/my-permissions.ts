@@ -1,10 +1,12 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
+import * as log from "std/log/mod.ts";
+import { C, EmptyResultError, Field, VNID } from "neolace/deps/vertex-framework.ts";
 
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { ActionObject } from "neolace/core/permissions/action.ts";
 import { getAllPerms, PermissionName } from "neolace/core/permissions/permissions.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
-import { checkPermissions } from "../../../core/permissions/check.ts";
+import { checkPermissions } from "neolace/core/permissions/check.ts";
+import { EntryType, Site } from "neolace/core/mod.ts";
 
 export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/my-permissions"];
@@ -14,6 +16,7 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
         description: "List my permissions",
         notes: "This lists all the permissions that the current user has on the current site, in a given context.",
     }, async ({ request }) => {
+        const { siteId } = await this.getSiteDetails(request);
         // Permissions and parameters:
 
         const object: ActionObject = {};
@@ -34,8 +37,24 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
         if (object.entryId !== undefined && object.entryTypeId === undefined) {
             // Compute entryTypeId automatically, if entryId is specified:
             const graph = await getGraph();
-            const etData = await graph.pullOne(Entry, (e) => e.type((t) => t.id), { key: object.entryId });
-            object.entryTypeId = etData.type?.id;
+            try {
+                const etData = await graph.read((tx) =>
+                    tx.queryOne(C`
+                    MATCH (entry:${Entry} {id: ${object.entryId}})-[:${Entry.rel.IS_OF_TYPE}]-(entryType:${EntryType})
+                        WHERE exists( (entryType)-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${siteId}}) )
+                `.RETURN({ "entryType.id": Field.VNID }))
+                );
+                object.entryTypeId = etData["entryType.id"];
+            } catch (err) {
+                if (err instanceof EmptyResultError) {
+                    // Most likely this entry has been deleted. Don't throw a 500 error, just assume the user has no
+                    // permissions related to this entry or its type.
+                    log.warning(`Tried to check user permissions for non-existent entry (entryId: ${object.entryId})`);
+                    object.entryId = undefined;
+                } else {
+                    throw err; // Some other unexpected error
+                }
+            }
         }
 
         const result: Record<string, { hasPerm: boolean }> = {};
