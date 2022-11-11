@@ -19,6 +19,12 @@ From the `frontend` folder, while the frontend is not running, run:
 
     ANALYZE=true npm run build
 
+## Troubleshooting
+
+### Neo4j fails to start: `Neo4j is already running`
+
+If you see this error, you can fix by running `docker compose up neo4j --force-recreate`.
+
 ## How to test imgproxy locally
 
 In production, we usually serve images via a CDN which sends its requests to
