@@ -1,10 +1,11 @@
+import * as log from "std/log/mod.ts";
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { Site, slugIdToFriendlyId } from "neolace/core/Site.ts";
+import { Site, siteShortIdFromId, slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
-import { EraseEntries } from "neolace/core/entry/EraseEntriesAction.ts";
 import { makeCypherCondition } from "neolace/core/permissions/check.ts";
+import { Property, PropertyFact } from "neolace/core/mod.ts";
 
 export class EntryListResource extends NeolaceHttpResource {
     public paths = ["/site/:siteShortId/entry/"];
@@ -87,8 +88,8 @@ export class EntryListResource extends NeolaceHttpResource {
         // Permissions and parameters:
         await this.requirePermission(request, "DANGER!!" as api.PermissionName); // Only a user with the "*" global permission grant will match this
         const { siteId } = await this.getSiteDetails(request);
+        const siteShortId = await siteShortIdFromId(siteId);
         const graph = await getGraph();
-        const user = this.requireUser(request);
 
         if (request.queryParam("confirm") !== "danger") {
             throw new api.InvalidRequest(
@@ -97,7 +98,71 @@ export class EntryListResource extends NeolaceHttpResource {
             );
         }
 
-        await graph.runAs(user.id, EraseEntries({ siteId }));
+        log.warning(`Irreversibly deleting all entries from site ${siteShortId}`);
+
+        // This doesn't use an Action because we can't handle high volume deletions within a single action.
+        // We need to use CALL { ... } IN TRANSACTIONS, which requires using auto-commit mode, which is different from
+        // the write transactions used for Vertex Framework actions.
+        await graph._restrictedAllowWritesWithoutAction(async () => {
+            const deletePropertyFacts = C`
+                MATCH (site:${Site} {id: ${siteId}})
+                MATCH (pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)-[:${Property.rel.FOR_SITE}]->(site)
+                CALL {
+                    WITH pf
+                    DETACH DELETE pf
+                } IN TRANSACTIONS OF 200 ROWS
+            `;
+            const deleteEntryFeatures = C`
+                MATCH (site:${Site} {id: ${siteId}})
+                MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]-(et)-[:FOR_SITE]->(site)
+                MATCH (entry)-[:${Entry.rel.HAS_FEATURE_DATA}]->(ef)
+                CALL {
+                    WITH ef
+                    DETACH DELETE ef
+                } IN TRANSACTIONS OF 200 ROWS
+            `;
+            const deleteSlugIds = C`
+                MATCH (site:${Site} {id: ${siteId}})
+                MATCH (slug:SlugId)-[:IDENTIFIES]->(entry:${Entry})
+                    WHERE exists ( (entry)-[:${Entry.rel.IS_OF_TYPE}]-(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site) )
+                CALL {
+                    WITH slug
+                    DETACH DELETE slug
+                } IN TRANSACTIONS OF 200 ROWS
+            `;
+            const deleteEntries = C`
+                MATCH (site:${Site} {id: ${siteId}})
+                MATCH (entry:${Entry})
+                    WHERE exists ( (entry)-[:${Entry.rel.IS_OF_TYPE}]-(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site) )
+                CALL {
+                    WITH entry
+                    DETACH DELETE entry
+                } IN TRANSACTIONS OF 50 ROWS
+            `;
+            // Do the deletion in autocommit transactions:
+            log.info(`Deletion part 1/4 - deleting property facts from ${siteShortId}...`);
+            await graph._restrictedWrite({
+                text: deletePropertyFacts.queryString,
+                parameters: deletePropertyFacts.params,
+            });
+            console.log(`Deleting entry features...`);
+            log.info(`Deletion part 2/4 - deleting entry features from ${siteShortId}...`);
+            await graph._restrictedWrite({
+                text: deleteEntryFeatures.queryString,
+                parameters: deleteEntryFeatures.params,
+            });
+            log.info(`Deletion part 3/4 - deleting slug IDs from ${siteShortId}...`);
+            await graph._restrictedWrite({
+                text: deleteSlugIds.queryString,
+                parameters: deleteSlugIds.params,
+            });
+            log.info(`Deletion part 4/4 - deleting entries from ${siteShortId}...`);
+            await graph._restrictedWrite({
+                text: deleteEntries.queryString,
+                parameters: deleteEntries.params,
+            });
+            log.info(`Deleted all entries from site ${siteShortId}.`);
+        });
         return {};
     });
 }
