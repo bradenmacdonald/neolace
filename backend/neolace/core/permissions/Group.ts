@@ -32,18 +32,23 @@ export class Group extends VNodeType {
         grantStrings: Field.List(Field.String),
     };
 
-    static async validate(dbObject: RawVNode<typeof Group>, tx: WrappedTransaction): Promise<void> {
+    static async validate(dbObject: RawVNode<typeof Group>): Promise<void> {
         // Check the depth of this group:
-        await tx.pullOne(Group, (g) => g.site((s) => s), { key: dbObject.id }).then((g) => {
+        if (dbObject.grantStrings === null) {
+            throw new ValidationError("Group grantStrings should not be null for new or updated groups.");
+        }
+    }
+
+    static override async validateExt(vnodeIds: VNID[], tx: WrappedTransaction): Promise<void> {
+        // Check the depth of this group:
+        const rows = await tx.pull(Group, (g) => g.site((s) => s), { where: C`@this.id IN ${vnodeIds}` });
+        for (const g of rows) {
             if (g.site === null) {
                 // The superclass validation should already have caught a missing Site, so the only reason Site would
                 // be null here is if the "site" virtual prop isn't able to find the site, because the path between the
                 // group and the site is longer than GroupMaxDepth
                 throw new Error(`User groups cannot be nested more than ${GroupMaxDepth} levels deep.`);
             }
-        });
-        if (dbObject.grantStrings === null) {
-            throw new ValidationError("Group grantStrings should not be null for new or updated groups.");
         }
     }
 

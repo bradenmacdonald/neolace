@@ -145,7 +145,6 @@ export class EntryListResource extends NeolaceHttpResource {
                 text: deletePropertyFacts.queryString,
                 parameters: deletePropertyFacts.params,
             });
-            console.log(`Deleting entry features...`);
             log.info(`Deletion part 2/4 - deleting entry features from ${siteShortId}...`);
             await graph._restrictedWrite({
                 text: deleteEntryFeatures.queryString,

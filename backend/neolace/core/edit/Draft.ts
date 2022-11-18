@@ -8,7 +8,6 @@ import {
     RawVNode,
     VirtualPropType,
     VNodeType,
-    WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { Site } from "neolace/core/Site.ts";
@@ -37,7 +36,7 @@ export class DraftEdit extends VNodeType {
 
     static derivedProperties = this.hasDerivedProperties({});
 
-    static async validate(dbObject: RawVNode<typeof DraftEdit>, _tx: WrappedTransaction): Promise<void> {
+    static async validate(dbObject: RawVNode<typeof DraftEdit>): Promise<void> {
         // Validate that "code", "changeType", and "data" are all consistent:
         const editType = getEditType(dbObject.code);
         if (dbObject.changeType !== editType.changeType) {
@@ -157,7 +156,7 @@ export class Draft extends EditSource {
         hasContentChanges,
     });
 
-    static async validate(_dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
+    static async validate(): Promise<void> {
         // We don't verify if user is part of Site, because users can open a Draft then be removed from a Site but
         // their Draft should live on.
     }

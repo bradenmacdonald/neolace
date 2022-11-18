@@ -6,6 +6,7 @@ import {
     RawVNode,
     ValidationError,
     VirtualPropType,
+    VNID,
     VNodeType,
     WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
@@ -101,21 +102,24 @@ export class Property extends VNodeType {
         // numRelatedImages,
     });
 
-    static async validate(dbObject: RawVNode<typeof Property>, tx: WrappedTransaction): Promise<void> {
+    static async validate(dbObject: RawVNode<typeof Property>): Promise<void> {
         // IS A relationships cannot be marked as inheritable. They define inheritance.
         if (dbObject.type === PropertyType.RelIsA && dbObject.inheritable) {
             throw new ValidationError(`"IS A" relationship properties cannot be marked as inheritable.`);
         }
+    }
 
+    static override async validateExt(vnodeIds: VNID[], tx: WrappedTransaction): Promise<void> {
         // Make sure each related entry type or property is from the same site:
-        await tx.pullOne(
+        const data = await tx.pull(
             Property,
             (p) =>
                 p.site((s) => s.id).appliesTo((et) => et.site((s) => s.id)).parentProperties((p) =>
                     p.site((s) => s.id)
                 ),
-            { key: dbObject.id },
-        ).then((p) => {
+            { where: C`@this.id IN ${vnodeIds}` },
+        );
+        for (const p of data) {
             const siteId = p.site?.id;
             if (siteId === undefined) throw new Error("Site missing - shouldn't happen");
             p.appliesTo.forEach((et) => {
@@ -128,6 +132,6 @@ export class Property extends VNodeType {
                     throw new ValidationError("isA [Parent Property] is from a different Site.");
                 }
             });
-        });
+        }
     }
 }

@@ -24,7 +24,7 @@ export class User extends VNodeType {
         fullName: Field.String.Check(check.string.max(100)),
     };
 
-    static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
+    static async validate(dbObject: RawVNode<typeof this>): Promise<void> {
         // Mostly done automatically by Vertex Framework
         const isHuman = dbObject._labels.includes(HumanUser.label);
         const isBot = dbObject._labels.includes(BotUser.label);

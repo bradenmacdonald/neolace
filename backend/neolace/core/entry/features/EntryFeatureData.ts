@@ -1,4 +1,4 @@
-import { RawVNode, VNodeType, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { RawVNode, VNodeType } from "neolace/deps/vertex-framework.ts";
 
 /**
  * Abstract base class for data stored on each Entry related to an "entry feature", which adds capabilities to an
@@ -19,7 +19,7 @@ export class EntryFeatureData extends VNodeType {
 
     static derivedProperties = this.hasDerivedProperties({});
 
-    static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
+    static async validate(dbObject: RawVNode<typeof this>): Promise<void> {
         if (dbObject._labels.length !== 3) {
             throw new Error(
                 `Every EntryFeatureData VNode should have exactly three labels: VNode, EntryFeature, and _______Feature (a specific feature type)`,

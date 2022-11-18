@@ -1,6 +1,6 @@
 import * as check from "neolace/deps/computed-types.ts";
 import { EditChangeType, getEditType } from "neolace/deps/neolace-api.ts";
-import { Field, FieldValidationError, RawVNode, VNodeType, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { Field, FieldValidationError, RawVNode, VNodeType } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EditSource } from "./EditSource.ts";
 
@@ -41,7 +41,7 @@ export class AppliedEdit extends VNodeType {
 
     static derivedProperties = this.hasDerivedProperties({});
 
-    static async validate(dbObject: RawVNode<typeof AppliedEdit>, _tx: WrappedTransaction): Promise<void> {
+    static override async validate(dbObject: RawVNode<typeof AppliedEdit>): Promise<void> {
         // Validate that "code", "changeType", and "data" are all consistent:
         const editType = getEditType(dbObject.code);
         if (dbObject.changeType !== editType.changeType) {

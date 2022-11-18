@@ -26,6 +26,6 @@ export class ArticleEnabled extends EnabledFeature {
 
     static derivedProperties = this.hasDerivedProperties({});
 
-    // static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
+    // static async validate(): Promise<void> {
     // }
 }
