@@ -1,4 +1,4 @@
-import { C, RawVNode, VirtualPropType, VNodeType, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { C, VirtualPropType, VNodeType } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { EnabledFeature } from "neolace/core/entry/features/EnabledFeature.ts";
 
@@ -28,7 +28,7 @@ export class FilesFeatureEnabled extends EnabledFeature {
 
     static derivedProperties = this.hasDerivedProperties({});
 
-    static async validate(_dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
+    static async validate(): Promise<void> {
         // No specific validation
     }
 }

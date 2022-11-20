@@ -1,14 +1,5 @@
 import * as check from "neolace/deps/computed-types.ts";
-import {
-    C,
-    defineAction,
-    DerivedProperty,
-    Field,
-    RawVNode,
-    VNID,
-    VNodeType,
-    WrappedTransaction,
-} from "neolace/deps/vertex-framework.ts";
+import { C, defineAction, DerivedProperty, Field, RawVNode, VNID, VNodeType } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
 import { FileMetadata, FileMetadataSchema } from "./detect-metadata.ts";
 import { getSignedDownloadUrl } from "./objstore.ts";
@@ -49,7 +40,7 @@ export class DataFile extends VNodeType {
         publicUrl,
     });
 
-    static async validate(dbObject: RawVNode<typeof this>, _tx: WrappedTransaction): Promise<void> {
+    static async validate(dbObject: RawVNode<typeof this>): Promise<void> {
         if (dbObject.metadata) {
             FileMetadataSchema(dbObject.metadata); // Validate the metadata against the schema
         }

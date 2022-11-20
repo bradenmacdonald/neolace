@@ -1,10 +1,8 @@
 import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
-    EmptyResultError,
     Field,
     getRelationshipType,
-    RawVNode,
     ValidationError,
     VirtualPropType,
     VNID,
@@ -16,6 +14,7 @@ import { Site } from "neolace/core/Site.ts";
 import { EntryType } from "../schema/EntryType.ts";
 import { Property } from "../schema/Property.ts";
 import { Entry } from "./Entry.ts";
+import { environment } from "../../app/config.ts";
 
 export function directRelTypeForPropertyType(propType: PropertyType) {
     return (
@@ -109,84 +108,95 @@ export class PropertyFact extends VNodeType {
 
     static defaultOrderBy = "@this.id";
 
-    static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
-        // Validate:
-        const data = await tx.pullOne(PropertyFact, (pf) =>
-            pf
-                .entry((e) => e.id.type((et) => et.id.site((s) => s.id)))
-                .property((p) => p.id.name.type.mode.enableSlots.site((s) => s.id)), { key: dbObject.id });
-        const property = data.property;
-        if (property === null) throw new Error("Internal error - property unexpectedly null.");
-
-        const siteId = data.entry?.type?.site?.id;
-        if (siteId === null) throw new Error(`PropertyFact: siteId unexpectedly null`);
-
-        if (property.site?.id !== siteId) {
-            throw new Error(`PropertyFact: property and entry are from different sites.`);
+    static override async validateExt(vnodeIds: VNID[], tx: WrappedTransaction): Promise<void> {
+        // This whole function is just extra assertions to help catch bugs in our code (specifically in the core Actions
+        // which modify properties or relationships). We definitely want it on in dev and test modes, but in production
+        // it is not as useful, and disabling it speeds bulk import up by approximately 25% (e.g. 300s not 400s).
+        if (environment === "production") {
+            return;
         }
-
-        // Validate that this type of property can be used with this type of entry
-        try {
-            await tx.queryOne(C`
-                MATCH (prop:${Property} {id: ${property.id}})
-                MATCH (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(et:${EntryType} {id: ${data.entry?.type?.id}})
-            `.RETURN({}));
-        } catch (err) {
-            if (err instanceof EmptyResultError) {
-                throw new ValidationError("That Property cannot be applied to an Entry of that Entry Type.");
-            } else {
-                throw err;
-            }
-        }
-
-        // If property mode is auto, PropertyFacts are not allowed - the property is instead computed automatically.
-        if (property.mode === PropertyMode.Auto) {
-            throw new ValidationError(
-                `The ${property.name} property is an Automatic property so a value cannot be set explicitly.`,
+        // Start validation, making sure that this PropertyFact's Entry, Property, and EntryType are from the same site:
+        // Note: we have carefully written and tested this query in a way that its performance doesn't get too much
+        // worse as the size of the database grows, which can otherwise happen. However, this is still relatively slow.
+        const rows = await tx.query(C`
+            MATCH (pf:${PropertyFact})
+                WHERE pf.id IN ${vnodeIds}
+            MATCH (pf)<-[:${Entry.rel.PROP_FACT}]-(entry:${Entry})
+            MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site})
+            MATCH (pf)-[:${PropertyFact.rel.FOR_PROP}]->(property:${Property})
+                WHERE exists( (property)-[:${Property.rel.APPLIES_TO_TYPE}]->(et) )
+                AND   exists( (property)-[:${Property.rel.FOR_SITE}]->(site) )
+        `.RETURN({
+            "property.name": Field.String,
+            "property.mode": Field.String,
+            "property.type": Field.String,
+            "pf.valueExpression": Field.String,
+            "pf.directRelNeo4jId": Field.BigInt,
+            "entry.id": Field.VNID,
+        }));
+        if (rows.length !== vnodeIds.length) {
+            throw new Error(
+                "PropertyFact validation failed - perhaps Property and EntryType are missing or from different sites?",
             );
         }
 
-        // TODO: validate uniqueness? (if required/enabled for the entrytype/property)
+        const relationshipsToValidate: {
+            fromEntryId: VNID;
+            toEntryId: VNID;
+            directRelType: string;
+            directRelNeo4jId: bigint;
+        }[] = [];
 
-        // Additional validation based on the property type.
-        const valueExpression = dbObject.valueExpression;
-        if (property.type === PropertyType.Value) {
-            // This property fact can have any value type.
-            // TODO: Support constraints - validate that the value is of the correct type, or can be casted to it.
-        } else {
-            // This is an explicit IS_A, HAS_A, or RELATES_TO, or OTHER relationship
-            // (and at this point we know it's not an "Auto" mode property)
-
-            // There is a relationship FROM the current entry TO the entry with this id:
-            const toEntryId = parseLookupExpressionToEntryId(valueExpression);
-            // First, validate that this value is pointing to a real entry on the same site.
-            await tx.queryOne(C`
-                MATCH (e:${Entry} {id: ${toEntryId}})
-                MATCH (e)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-            `.RETURN({ "e.id": Field.VNID }));
-
-            // For relationship properties, we also need a direct Entry-[:REL_TYPE]->Entry relationship created on the
-            // graph, which makes ancestor lookups much more efficient, and also makes generally working with the graph
-            // directly much nicer.
-            const explicitRelType = directRelTypeForPropertyType(property.type as PropertyType);
-            if (explicitRelType === null) {
-                throw new Error("Internal error - unexpected property type");
+        for (const data of rows) {
+            // If property mode is auto, PropertyFacts are not allowed - the property is instead computed automatically.
+            if (data["property.mode"] === PropertyMode.Auto) {
+                throw new ValidationError(
+                    `The ${
+                        data["property.name"]
+                    } property is an Automatic property so a value cannot be set explicitly.`,
+                );
             }
-            const directRelCheck = await tx.query(C`
-                MATCH (entry:${Entry} {id: ${data.entry?.id}})
-                MATCH (entry)-[directRel:${explicitRelType}]->(toEntry:${Entry})
-                WHERE id(directRel) = ${dbObject.directRelNeo4jId}
-            `.RETURN({ "toEntry.id": Field.VNID }));
-            if (directRelCheck.length === 0) {
-                throw new ValidationError(
-                    `PropertyFact ${dbObject.id} is missing the direct (Entry)-[${
-                        getRelationshipType(explicitRelType)
-                    }]->(Entry) relationship.`,
-                );
-            } else if (directRelCheck[0]["toEntry.id"] !== toEntryId) {
-                throw new ValidationError(
-                    `PropertyFact ${dbObject.id} has a direct relationship pointing to the wrong entry.`,
-                );
+
+            // TODO: validate uniqueness? (if required/enabled for the entrytype/property)
+
+            // Additional validation based on the property type.
+            if (data["property.type"] === PropertyType.RelIsA || data["property.type"] === PropertyType.RelOther) {
+                // This is an explicit IS_A or RELATES_TO relationship
+                // (and at this point we know it's not an "Auto" mode property)
+                // There is a relationship FROM the PropertyFact's entry TO the entry with this id:
+                const toEntryId = parseLookupExpressionToEntryId(data["pf.valueExpression"]);
+                const directRelType = directRelTypeForPropertyType(data["property.type"] as PropertyType);
+                if (directRelType === null) {
+                    throw new Error("This shouldn't happen - direct rel type is null for a relationship property");
+                }
+                relationshipsToValidate.push({
+                    fromEntryId: data["entry.id"],
+                    toEntryId,
+                    directRelType: getRelationshipType(directRelType),
+                    directRelNeo4jId: data["pf.directRelNeo4jId"],
+                });
+            }
+        }
+
+        if (relationshipsToValidate.length > 0) {
+            // Validate that relationships point to entries on the same site:
+            const relCheck = await tx.query(C`
+                UNWIND ${relationshipsToValidate} as rel
+                MATCH (fromE:${Entry} {id: rel.fromEntryId})
+                MATCH (fromE)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site})
+                MATCH (toE:${Entry} {id: rel.toEntryId})
+                   WHERE exists( (toE)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site) )
+
+                // Also validate that there is a direct relationship between fromEntry and toEntry:
+                // (For relationship properties, we also need a direct Entry-[:IS_A/RELATES_TO]->Entry relationship
+                // created on the graph, which makes ancestor lookups much more efficient, and also makes generally
+                // working with the graph directly much nicer.)
+                MATCH (fromE)-[directRel:${Entry.rel.IS_A}|${Entry.rel.RELATES_TO}]->(toE)
+                   WHERE id(directRel) = rel.directRelNeo4jId AND type(directRel) = rel.directRelType
+            `.RETURN({}));
+            // This query will return one row for every relationship that MATCHed all of the above criteria, or otherwise fewer rows.
+            if (relCheck.length !== relationshipsToValidate.length) {
+                throw new ValidationError("Found an invalid relationship during PropertyFact validation.");
             }
         }
     }

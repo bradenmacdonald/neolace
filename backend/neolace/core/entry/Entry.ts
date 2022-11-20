@@ -3,7 +3,6 @@ import {
     C,
     DerivedProperty,
     Field,
-    RawVNode,
     ValidationError,
     VirtualPropType,
     VNID,
@@ -85,28 +84,31 @@ export class Entry extends VNodeType {
         friendlyId,
     });
 
-    static async validate(dbObject: RawVNode<typeof this>, tx: WrappedTransaction): Promise<void> {
+    static override async validateExt(vnodeIds: VNID[], tx: WrappedTransaction): Promise<void> {
         // Check that the slugId is prefixed with the site code.
-        const entryData = await tx.pullOne(Entry, (e) => e.type((t) => t.friendlyIdPrefix.site((s) => s.siteCode)), {
-            key: dbObject.id,
+        const rows = await tx.pull(Entry, (e) => e.slugId.type((t) => t.friendlyIdPrefix.site((s) => s.siteCode)), {
+            where: C`@this.id IN ${vnodeIds}`,
         });
-        const siteCode = entryData.type?.site?.siteCode;
-        if (!siteCode) {
-            throw new ValidationError("Entry is unexpectedly not linked to a site with a sitecode.");
-        }
-        if (dbObject.slugId.substr(0, 5) !== siteCode) {
-            throw new ValidationError("Entry's slugId does not start with the site code.");
-        }
+        for (const entryData of rows) {
+            const siteCode = entryData.type?.site?.siteCode;
+            if (!siteCode) {
+                throw new ValidationError("Entry is unexpectedly not linked to a site with a sitecode.");
+            }
+            if (entryData.slugId.substring(0, 5) !== siteCode) {
+                throw new ValidationError("Entry's slugId does not start with the site code.");
+            }
 
-        // Check the friendlyIdPrefix:
-        const friendlyIdPrefix = entryData.type?.friendlyIdPrefix;
-        if (friendlyIdPrefix && !dbObject.slugId.substr(5).startsWith(friendlyIdPrefix)) {
-            throw new ValidationError(`Invalid friendlyId; expected it to start with ${friendlyIdPrefix}`);
+            // Check the friendlyIdPrefix:
+            const friendlyIdPrefix = entryData.type?.friendlyIdPrefix;
+            if (friendlyIdPrefix && !entryData.slugId.substring(5).startsWith(friendlyIdPrefix)) {
+                throw new ValidationError(`Invalid friendlyId; expected it to start with ${friendlyIdPrefix}`);
+            }
         }
 
         // Validate that all IS_A/RELATES_TO relationships have corresponding PropertyFacts
         const isACheck = await tx.query(C`
-            MATCH (entry:${this} {id: ${dbObject.id}})
+            MATCH (entry:${this})
+                WHERE entry.id IN ${vnodeIds}
             MATCH (entry)-[rel:${this.rel.IS_A}|${this.rel.RELATES_TO}]->(otherEntry:VNode)
             WITH entry, id(rel) AS expectedId
             OPTIONAL MATCH (entry)-[:${this.rel.PROP_FACT}]->(relFact:${PropertyFact} {directRelNeo4jId: expectedId})
@@ -114,7 +116,7 @@ export class Entry extends VNodeType {
         `.givesShape({ expectedId: Field.VNID, actualId: Field.VNID }));
         if (!isACheck.every((row) => row.actualId === row.expectedId)) {
             throw new ValidationError(
-                `Entry ${dbObject.id} (${dbObject.slugId}) has a stranded direct relationship without a corresponding PropertyFact`,
+                `An Entry has a stranded direct relationship without a corresponding PropertyFact`,
             );
         }
     }
