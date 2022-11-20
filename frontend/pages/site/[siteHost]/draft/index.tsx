@@ -61,14 +61,14 @@ const ListOfDrafts: React.FunctionComponent<{ status: api.DraftStatus }> = ({ st
     });
 
     if (error) {
-        return <ErrorMessage>Unable to load drafts: {error}</ErrorMessage>;
+        return <ErrorMessage>Unable to load drafts: {String(error)}</ErrorMessage>;
     }
 
     return (
         <ol>
             {(data?.values || []).map((draft) => (
-                <li key={draft.id}>
-                    <Link href={`/draft/${draft.id}`}>
+                <li key={draft.idNum}>
+                    <Link href={`/draft/${draft.idNum}`}>
                         <span className="font-semibold">{draft.title}</span>
                     </Link>{" "}
                     | {draft.author.fullName} |{" "}

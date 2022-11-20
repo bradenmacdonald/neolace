@@ -1,9 +1,8 @@
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { getDraft } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
-import { VNID } from "neolace/deps/vertex-framework.ts";
+import { getDraft, getDraftIdFromRequest } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
 
 export class DraftResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/draft/:draftId"];
+    public paths = ["/site/:siteShortId/draft/:draftIdNum"];
 
     GET = this.method({
         responseSchema: api.DraftSchema,
@@ -11,12 +10,12 @@ export class DraftResource extends NeolaceHttpResource {
     }, async ({ request }) => {
         // Permissions and parameters:
         const { siteId } = await this.getSiteDetails(request);
-        const draftId = VNID(request.pathParam("draftId") ?? "");
+        const draftId = await getDraftIdFromRequest(request, siteId);
         await this.requirePermission(request, api.CorePerm.viewDraft, { draftId });
-        const graph = await getGraph();
         const flags = this.getRequestFlags(request, api.GetDraftFlags);
 
         // Response:
-        return await graph.read((tx) => getDraft(draftId, siteId, tx, flags));
+        const graph = await getGraph();
+        return await graph.read((tx) => getDraft(draftId, tx, flags));
     });
 }

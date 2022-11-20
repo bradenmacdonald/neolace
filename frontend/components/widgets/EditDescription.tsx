@@ -30,7 +30,7 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                 // This is an active draft. Show a link to allow the user to make further edits to this entry, but only
                 // if the user has permission to edit this draft.
                 if (permissions?.[api.CorePerm.editDraft]?.hasPerm) {
-                    return <Link href={`/draft/${draft.id}/entry/${entryId}/edit`}>{name}</Link>;
+                    return <Link href={`/draft/${draft.idNum}/entry/${entryId}/edit`}>{name}</Link>;
                 } else {
                     return <>{name}</>;
                 }

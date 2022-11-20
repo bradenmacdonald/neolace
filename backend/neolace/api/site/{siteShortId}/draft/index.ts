@@ -66,7 +66,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
         ).catch(adaptErrors("title", "description", adaptErrors.remap("data", "edits.?.data")));
 
         // Response:
-        return await graph.read((tx) => getDraft(id, siteId, tx));
+        return await graph.read((tx) => getDraft(id, tx));
     });
 
     GET = this.method({
@@ -104,13 +104,13 @@ export class DraftIndexResource extends NeolaceHttpResource {
                     MATCH (draft:${Draft})-[:${Draft.rel.AUTHORED_BY}]->(author:${User})
 
                     RETURN
-                        draft {.id, .title, .description, .created, .status},
+                        draft {.idNum, .title, .description, .created, .status},
                         {fullName: author.fullName, slugId: author.slugId} AS author
                     ORDER BY draft.created DESC
                     SKIP ${skip} LIMIT ${pageSize}
                 `.givesShape({
                     draft: Field.Record({
-                        id: Field.VNID,
+                        idNum: Field.Int,
                         title: Field.String,
                         description: Field.String,
                         created: Field.DateTime,

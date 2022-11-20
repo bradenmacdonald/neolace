@@ -1,12 +1,11 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
 import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { consolidateEdits } from "neolace/deps/neolace-api.ts";
 import { Draft } from "neolace/core/mod.ts";
 import { AcceptDraft } from "neolace/core/edit/Draft-actions.ts";
-import { checkPermissionsRequiredForEdits } from "../_helpers.ts";
+import { checkPermissionsRequiredForEdits, getDraftIdFromRequest } from "../_helpers.ts";
 
 export class AcceptDraftResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/draft/:draftId/accept"];
+    public paths = ["/site/:siteShortId/draft/:draftIdNum/accept"];
 
     POST = this.method({
         responseSchema: api.schemas.Schema({}),
@@ -15,7 +14,7 @@ export class AcceptDraftResource extends NeolaceHttpResource {
         // Permissions and parameters:
         const userId = this.requireUser(request).id;
         const { siteId } = await this.getSiteDetails(request);
-        const draftId = VNID(request.pathParam("draftId") ?? "");
+        const draftId = await getDraftIdFromRequest(request, siteId);
         const graph = await getGraph();
 
         // First permissions check:

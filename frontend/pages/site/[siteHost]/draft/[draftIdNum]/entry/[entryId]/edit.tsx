@@ -33,7 +33,7 @@ import { EditDescription } from "components/widgets/EditDescription";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
-    draftId: string;
+    draftIdNum: string;
     entryId: string;
 }
 
@@ -46,7 +46,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
     const router = useRouter();
     const user = useUser();
     const query = router.query as PageUrlQuery;
-    const draftId = query.draftId as api.VNID | NEW;
+    const draftIdNum = query.draftIdNum === "_" ? "_" : parseInt(query.draftIdNum);
 
     // *IF* we are creating a new entry from scratch, this will be its new VNID. Note that VNID() only works on the
     // client in this case, and generating it on the server wouldn't make sense anyways.
@@ -61,7 +61,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
     }, []);
 
     const draftContext: DraftContextData = {
-        draftId,
+        draftIdNum,
         unsavedEdits,
     };
     const [draft, _, draftError] = useDraft({draftContext});
@@ -85,7 +85,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
             return alert("Inconsistent state: cannot save changes to a draft with errors.");
         }
         setIsSaving(true);
-        if (draftId === NEW) {
+        if (draftIdNum === NEW) {
             // We're creating a new draft:
             await client.createDraft({
                 title: newDraftTitle.trim() || defaultDraftTitle,
@@ -94,7 +94,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
             }, { siteId: site.shortId }).then(
                 (newDraft) => { // If successful:
                     if (applyImmediately) {
-                        client.acceptDraft(newDraft.id, {siteId: site.shortId}).then(() => {
+                        client.acceptDraft(newDraft.idNum, {siteId: site.shortId}).then(() => {
                             // The draft has been accepted immediately:
                             router.push(`/entry/${entry?.friendlyId}`);
                         }, (applyError) => {
@@ -106,10 +106,10 @@ const DraftEntryEditPage: NextPage = function (_props) {
                                 }, { error: String((applyError instanceof Error ? applyError?.message : undefined) ?? applyError) }),
                             );
                             // The draft failed to apply. Go to the draft page.
-                            router.push(`/draft/${newDraft.id}`);
+                            router.push(`/draft/${newDraft.idNum}`);
                         });
                     } else {
-                        router.push(`/draft/${newDraft.id}`);
+                        router.push(`/draft/${newDraft.idNum}`);
                     }
                 },
                 (error) => {
@@ -126,10 +126,10 @@ const DraftEntryEditPage: NextPage = function (_props) {
         } else {
             try {
                 for (const edit of unsavedEdits) {
-                    await client.addEditToDraft(edit, {draftId, siteId: site.shortId});
+                    await client.addEditToDraft(edit, {idNum: draftIdNum, siteId: site.shortId});
                 }
                 setIsSaving(false);
-                router.push(`/draft/${draftId}`);
+                router.push(`/draft/${draftIdNum}`);
             } catch (error) {
                 setIsSaving(false);
                 console.error(error);
@@ -141,7 +141,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                 );
             }
         }
-    }, [draftError, draftId, newDraftTitle, defaultDraftTitle, unsavedEdits, site.shortId, router, intl, entry?.friendlyId]);
+    }, [draftError, draftIdNum, newDraftTitle, defaultDraftTitle, unsavedEdits, site.shortId, router, intl, entry?.friendlyId]);
 
     const [schema] = useSchema({draftContext});
     const entryType = entry ? schema?.entryTypes[entry.entryType.id] : undefined;
@@ -172,7 +172,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                     <Breadcrumb href={`/draft/`}>
                         <FormattedMessage id="2atspc" defaultMessage="Drafts" />
                     </Breadcrumb>
-                    <Breadcrumb href={draft ? `/draft/${draft.id}` : undefined}>
+                    <Breadcrumb href={draft ? `/draft/${draft.idNum}` : undefined}>
                         {draft ? draft.title : <FormattedMessage id="CaAyve" defaultMessage="New Draft" />}
                     </Breadcrumb>
                     <Breadcrumb>

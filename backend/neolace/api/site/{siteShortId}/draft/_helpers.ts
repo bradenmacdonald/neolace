@@ -1,41 +1,63 @@
-import { api, getGraph } from "neolace/api/mod.ts";
+import { api, getGraph, NeolaceHttpRequest } from "neolace/api/mod.ts";
 import { C, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Draft } from "neolace/core/edit/Draft.ts";
-import { Site } from "neolace/core/Site.ts";
 import { ActionObject, ActionSubject } from "neolace/core/permissions/action.ts";
 import { checkPermissionsForAll } from "neolace/core/permissions/check.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
+
+/** Get a draft's unique VNID from the idNum path parameter in the current request */
+export async function getDraftIdFromRequest(request: NeolaceHttpRequest, siteId: VNID) {
+    const draftIdNumStr = request.pathParam("draftIdNum") ?? "";
+    const idNum = parseInt(draftIdNumStr);
+    if (idNum <= 0 || isNaN(idNum)) {
+        throw new api.InvalidFieldValue([{
+            fieldPath: "draftIdNum",
+            message: `Expected an integer draft idNum (got: ${draftIdNumStr})`,
+        }]);
+    }
+    return await getDraftId(idNum, siteId);
+}
+
+/** Get a draft's unique VNID from its site-specific idNum */
+export async function getDraftId(idNum: number, siteId: VNID): Promise<VNID> {
+    const graph = await getGraph();
+    const data = await graph.read((tx) =>
+        tx.pullOne(Draft, (d) => d.id, {
+            where: C`@this.siteNamespace = ${siteId} AND @this.idNum = ${idNum}`,
+        })
+    );
+    return data.id;
+}
 
 /**
  * A helper function to get a draft
  */
 export async function getDraft(
-    id: VNID,
-    siteId: VNID,
+    draftId: VNID,
     tx: WrappedTransaction,
     flags: Set<api.GetDraftFlags> = new Set(),
 ): Promise<api.DraftData> {
     const draftData = await tx.pullOne(Draft, (d) =>
         d
+            .idNum
             .title
             .description
             .author((a) => a.username().fullName)
             .created
             .status
             .if("edits", (d) => d.edits((e) => e.id.code.changeType.timestamp.data)), {
-        key: id,
-        where: C`EXISTS { MATCH (@this)-[:${Draft.rel.FOR_SITE}]->(:${Site} {id: ${siteId}}) }`,
+        key: draftId,
         flags: Array.from(flags),
     });
 
     const author = draftData.author;
     if (author === null) {
-        throw new Error(`Internal error, author shouldn't be null on Draft ${id}.`);
+        throw new Error(`Internal error, author shouldn't be null on Draft ${draftId}.`);
     }
 
     // TODO: fix this so we can just "return draftData"; currently it doesn't work because the "author" virtual prop is sometimes nullable
     return {
-        id,
+        idNum: draftData.idNum,
         author,
         created: draftData.created,
         title: draftData.title,

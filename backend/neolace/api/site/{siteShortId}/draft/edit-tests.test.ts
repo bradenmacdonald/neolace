@@ -18,7 +18,7 @@ async function doEdit(client: api.NeolaceApiClient, ...edits: api.AnyEdit[]): Pr
     return client.createDraft({
         ...draftDefaults,
         edits,
-    }).then((draft) => client.acceptDraft(draft.id));
+    }).then((draft) => client.acceptDraft(draft.idNum));
 }
 
 group("edit tests", () => {

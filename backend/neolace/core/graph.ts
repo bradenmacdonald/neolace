@@ -84,6 +84,29 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 },
                 dependsOn: [],
             },
+            // The "UniqueId" node type (which is not a VNode) has a unique index on 'name'
+            // See https://stackoverflow.com/q/32040409
+            uniqueIdGenerator: {
+                forward: async (dbWrite) => {
+                    await dbWrite("CREATE CONSTRAINT uniqueid_name_uniq FOR (uid:UniqueId) REQUIRE uid.name IS UNIQUE");
+                },
+                backward: async (dbWrite) => {
+                    await dbWrite("DROP CONSTRAINT uniqueid_name_uniq IF EXISTS");
+                },
+                dependsOn: [],
+            },
+            // The Draft VNode type has a unique index on 'siteNamespace, idNum'
+            draftUniqueIdNumber: {
+                forward: async (dbWrite) => {
+                    await dbWrite(
+                        "CREATE CONSTRAINT draft_idnumber_uniq FOR (d:Draft) REQUIRE (d.siteNamespace, d.idNum) IS UNIQUE",
+                    );
+                },
+                backward: async (dbWrite) => {
+                    await dbWrite("DROP CONSTRAINT draft_idnumber_uniq IF EXISTS");
+                },
+                dependsOn: [],
+            },
         },
     });
 

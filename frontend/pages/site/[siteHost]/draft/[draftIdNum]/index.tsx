@@ -19,7 +19,7 @@ const noEdits = [] as const;
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
-    draftId: string;
+    draftIdNum: string;
 }
 
 const DraftDetailsPage: NextPage = function (_props) {
@@ -29,8 +29,8 @@ const DraftDetailsPage: NextPage = function (_props) {
     const user = useUser();
     const router = useRouter();
     const query = router.query as PageUrlQuery;
-    const draftId = query.draftId as api.VNID | NEW;
-    const draftContext: DraftContextData = { draftId, unsavedEdits: noEdits, };
+    const draftIdNum = query.draftIdNum === "_" ? "_" : parseInt(query.draftIdNum);
+    const draftContext: DraftContextData = { draftIdNum, unsavedEdits: noEdits, };
     const [draft, _unsavedChanges, draftError, mutateDraft] = useDraft({draftContext});
     const canEditDraft = usePermission(CorePerm.editDraft, {draftContext});
     const canProposeNewEntry = usePermission(CorePerm.proposeNewEntry, {draftContext});
@@ -39,7 +39,7 @@ const DraftDetailsPage: NextPage = function (_props) {
     const acceptDraft = React.useCallback(async () => {
         if (!draft || !site || draft.status !== api.DraftStatus.Open) return;
         setUpdatingDraft(true);
-        await client.acceptDraft(draft.id, { siteId: site.shortId });
+        await client.acceptDraft(draft.idNum, { siteId: site.shortId });
         // Optimistically mark this as accepted:
         await mutateDraft({ ...draft, status: api.DraftStatus.Accepted });
         setUpdatingDraft(false);
@@ -122,7 +122,7 @@ const DraftDetailsPage: NextPage = function (_props) {
                         <Button
                             icon="plus-lg"
                             disabled={draft.status !== api.DraftStatus.Open || !canEditDraft || !canProposeNewEntry}
-                            onClick={() => router.push(`/draft/${draftId}/entry/_/edit`)}
+                            onClick={() => router.push(`/draft/${draftIdNum}/entry/_/edit`)}
                         >
                             <FormattedMessage id="lE5OgU" defaultMessage="Create a new entry (in this draft)" />
                         </Button>
