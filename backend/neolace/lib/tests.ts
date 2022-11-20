@@ -31,25 +31,13 @@ export function group(name: string, tests: () => unknown) {
     if (level === 0) {
         describe(
             name,
-            { sanitizeOps: false }, // TODO: leaving this enabled causes some occasional flaky sanitizer test failures. Is the Neo4j driver not properly closing the websocket every time?
+            { sanitizeOps: true },
             () => {
                 afterAll(async () => {
-                    let timeout: number | undefined;
-                    await Promise.race([
+                    await Promise.all([
                         stopGraphDatabaseConnection(),
-                        // Wait at most 2s to close the connection. Sometimes this hangs forever with Neo4j 4.4 (fine in 4.3):
-                        new Promise((r) => timeout = setTimeout(r, 2_000)),
+                        stopRedis(),
                     ]);
-                    while (timeout === undefined) {
-                        // Deno requires us to clean up the timer if it hasn't fired yet, but it's possible that if
-                        // stopGraphDatabaseConnection() executed VERY fast, the timer hasn't even been created yet. If
-                        // it gets created later and we don't clear it or let it timeout, Deno throws an error:
-                        // "A timer...was started during the test, but not fired/cleared during the test."
-                        // So we need to wait for it to exist.
-                        await new Promise((r) => setTimeout(r, 100)); // Sleep and then continue
-                    }
-                    clearTimeout(timeout);
-                    await stopRedis();
                 });
                 level++;
                 tests();
@@ -100,8 +88,7 @@ try {
 const { emptySnapshot, defaultDataSnapshot, data } = JSON.parse(dataStr) as TestSetupData;
 
 if (environment !== "test") {
-    // TODO: is there a way to auto-detect when we're run via 'deno test'?
-    log.error("Please run tests using ENV_TYPE=test");
+    log.error("Please run tests using ENV_TYPE=test (and the required permissions)");
     Deno.exit(1);
 }
 
