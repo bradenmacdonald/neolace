@@ -58,18 +58,6 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 },
                 dependsOn: [],
             },
-            // Sites have unique "site code" values:
-            siteCodeUnique: {
-                forward: async (dbWrite) => {
-                    await dbWrite(async (tx) => {
-                        await tx.run("CREATE CONSTRAINT site_sitecode_uniq FOR (s:Site) REQUIRE s.siteCode IS UNIQUE");
-                    });
-                },
-                backward: async (dbWrite) => {
-                    await dbWrite((tx) => tx.run("DROP CONSTRAINT site_sitecode_uniq IF EXISTS"));
-                },
-                dependsOn: [],
-            },
             // The "directRelNeo4jId" field of PropertyFact nodes must be unique:
             propFactUniqueRelId: {
                 forward: async (dbWrite) => {
@@ -95,6 +83,18 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 },
                 dependsOn: [],
             },
+            // The Entry VNode type has a unique index on 'siteNamespace, friendlyId'
+            entryUniqueFriendlyId: {
+                forward: async (dbWrite) => {
+                    await dbWrite(
+                        "CREATE CONSTRAINT entry_friendlyid_uniq FOR (e:Entry) REQUIRE (e.siteNamespace, e.friendlyId) IS UNIQUE",
+                    );
+                },
+                backward: async (dbWrite) => {
+                    await dbWrite("DROP CONSTRAINT entry_friendlyid_uniq IF EXISTS");
+                },
+                dependsOn: [],
+            },
             // The Draft VNode type has a unique index on 'siteNamespace, idNum'
             draftUniqueIdNumber: {
                 forward: async (dbWrite) => {
@@ -104,6 +104,18 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 },
                 backward: async (dbWrite) => {
                     await dbWrite("DROP CONSTRAINT draft_idnumber_uniq IF EXISTS");
+                },
+                dependsOn: [],
+            },
+            // The Connection VNode type has a unique index on 'siteNamespace, friendlyId'
+            connectionUniqueFriendlyId: {
+                forward: async (dbWrite) => {
+                    await dbWrite(
+                        "CREATE CONSTRAINT connection_friendlyid_uniq FOR (c:Connection) REQUIRE (c.siteNamespace, c.friendlyId) IS UNIQUE",
+                    );
+                },
+                backward: async (dbWrite) => {
+                    await dbWrite("DROP CONSTRAINT connection_friendlyid_uniq IF EXISTS");
                 },
                 dependsOn: [],
             },

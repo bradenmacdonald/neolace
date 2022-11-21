@@ -46,12 +46,12 @@ export class BasicSearch extends LookupFunctionOneArg {
         const cypherQuery = C`
             CALL {
                 MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${context.siteId}})
-                WHERE (${entryPermissionPredicate}) AND (toLower(entry.name) CONTAINS ${keyword} OR toLower(entry.slugId) CONTAINS ${keyword})
+                WHERE (${entryPermissionPredicate}) AND (toLower(entry.name) CONTAINS ${keyword} OR toLower(entry.friendlyId) CONTAINS ${keyword})
                 RETURN
                     "Entry" AS type,
                     entry.id AS id,
                     entry.name AS name,
-                    CASE WHEN toLower(entry.name) = ${keyword} OR substring(entry.slugId, 5) = ${keyword} THEN 1 ELSE 0 END AS isExactMatch
+                    CASE WHEN toLower(entry.name) = ${keyword} OR entry.friendlyId = ${keyword} THEN 1 ELSE 0 END AS isExactMatch
 
                 UNION ALL
 

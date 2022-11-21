@@ -1,7 +1,6 @@
 import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
-    DerivedProperty,
     Field,
     ValidationError,
     VirtualPropType,
@@ -11,7 +10,6 @@ import {
 } from "neolace/deps/vertex-framework.ts";
 
 import { EntryType } from "neolace/core/schema/EntryType.ts";
-import { slugIdToFriendlyId } from "neolace/core/Site.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { getGraph } from "neolace/core/graph.ts";
@@ -28,9 +26,14 @@ export class Entry extends VNodeType {
     static label = "Entry";
     static properties = {
         ...VNodeType.properties,
-        // slugId: The friendlyId along with a Site-specific prefix.
-        // See arch-decisions/007-sites-multitenancy for details.
-        slugId: Field.Slug,
+        /**
+         * The VNID of the site with which this Entry is associated. This just exists so that Neo4j can create a unique
+         * constraint on [site, idNum]. This should always be the same as the ID of the associated site node:
+         * (thisEntry)-IS_OF_TYPE->(entryType)-FOR_SITE->(:Site)
+         */
+        siteNamespace: Field.VNID,
+        /** The friendly ID of this entry, used in the URL. Site-specific. Can be changed. */
+        friendlyId: Field.Slug,
         // The name of this entry
         // This does not need to be unique or include disambiguation - so just put "Drive", not "Drive (computer science)"
         name: Field.String,
@@ -80,27 +83,27 @@ export class Entry extends VNodeType {
         },
     }));
 
-    static derivedProperties = this.hasDerivedProperties({
-        friendlyId,
-    });
-
     static override async validateExt(vnodeIds: VNID[], tx: WrappedTransaction): Promise<void> {
-        // Check that the slugId is prefixed with the site code.
-        const rows = await tx.pull(Entry, (e) => e.slugId.type((t) => t.friendlyIdPrefix.site((s) => s.siteCode)), {
-            where: C`@this.id IN ${vnodeIds}`,
-        });
+        // Check that the siteNamespace matches the site, and the friendlyId has the correct prefix, if applicable
+        const rows = await tx.pull(
+            Entry,
+            (e) => e.siteNamespace.friendlyId.type((t) => t.friendlyIdPrefix.site((s) => s.id)),
+            {
+                where: C`@this.id IN ${vnodeIds}`,
+            },
+        );
         for (const entryData of rows) {
-            const siteCode = entryData.type?.site?.siteCode;
-            if (!siteCode) {
-                throw new ValidationError("Entry is unexpectedly not linked to a site with a sitecode.");
+            const siteId = entryData.type?.site?.id;
+            if (!siteId) {
+                throw new ValidationError("Entry is unexpectedly not linked to a site.");
             }
-            if (entryData.slugId.substring(0, 5) !== siteCode) {
-                throw new ValidationError("Entry's slugId does not start with the site code.");
+            if (entryData.siteNamespace !== siteId) {
+                throw new ValidationError("Entry has incorrect siteNamespace.");
             }
 
             // Check the friendlyIdPrefix:
             const friendlyIdPrefix = entryData.type?.friendlyIdPrefix;
-            if (friendlyIdPrefix && !entryData.slugId.substring(5).startsWith(friendlyIdPrefix)) {
+            if (friendlyIdPrefix && !entryData.friendlyId.startsWith(friendlyIdPrefix)) {
                 throw new ValidationError(`Invalid friendlyId; expected it to start with ${friendlyIdPrefix}`);
             }
         }
@@ -120,18 +123,6 @@ export class Entry extends VNodeType {
             );
         }
     }
-}
-
-/**
- * A property that provides the slugId without its site-specific prefix
- * See arch-decisions/007-sites-multitenancy for details.
- */
-export function friendlyId(): DerivedProperty<string> {
-    return DerivedProperty.make(
-        Entry,
-        (e) => e.slugId,
-        (e) => slugIdToFriendlyId(e.slugId),
-    );
 }
 
 /** Cached helper function to look up an entry's siteId (Site VNID) */

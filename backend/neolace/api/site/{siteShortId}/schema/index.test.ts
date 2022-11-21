@@ -54,7 +54,7 @@ group("schema/index.ts", () => {
                 ],
             });
             // Accept the draft:
-            await client.acceptDraft(result.id);
+            await client.acceptDraft(result.idNum);
             // Now the new entry type should exist:
             assertEquals(await client.getSiteSchema(), {
                 entryTypes: {

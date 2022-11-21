@@ -27,7 +27,6 @@ const {id: siteId} = await graph.pullOne(Site, s => s.id, {key: "site-docs"}).ca
         name: "Neolace documentation",
         domain: "docs.local.neolace.net",
         slugId: `site-docs`,
-        siteCode: "NDOCS",
         adminUser: adminUserId,
     }));
 });

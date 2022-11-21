@@ -29,7 +29,7 @@ export class Link extends LookupFunctionWithArgs {
         let defaultTextString: string, url: string;
 
         if (hrefValue instanceof EntryValue) {
-            const data = await context.tx.pullOne(Entry, (e) => e.name.friendlyId(), { key: hrefValue.id });
+            const data = await context.tx.pullOne(Entry, (e) => e.name.friendlyId, { key: hrefValue.id });
             url = `/entry/${data.friendlyId}`;
             defaultTextString = data.name;
         } else if (hrefValue instanceof ImageValue) {

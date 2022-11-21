@@ -23,7 +23,7 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
                 .id
                 .name
                 .description
-                .friendlyId()
+                .friendlyId
                 .type((et) => et.id.name.site((s) => s.id)), { key: entryId }),
         properties: await getEntryProperties(entryId, { tx, limit: 1_000 }),
         // features (e.g. article text):

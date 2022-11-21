@@ -1,7 +1,6 @@
 import { api } from "neolace/api/mod.ts";
-import { EmptyResultError, isVNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { C, EmptyResultError, isVNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
-import { siteCodeForSite } from "neolace/core/Site.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { LookupError } from "neolace/core/lookup/errors.ts";
 import {
@@ -48,16 +47,17 @@ export async function getEntry(
     flags: Set<api.GetEntryFlags> = new Set(),
 ): Promise<api.EntryData> {
     // If 'vnidOrFriendlyId' is a VNID, use it as-is; otherwise if it's a friendlyID we need to prepend the site prefix
-    const siteCode = await siteCodeForSite(siteId);
-    const key = isVNID(vnidOrFriendlyId) ? vnidOrFriendlyId : siteCode + vnidOrFriendlyId;
+    const where = isVNID(vnidOrFriendlyId)
+        ? C`@this.id = ${vnidOrFriendlyId}`
+        : C`@this.siteNamespace = ${siteId} AND @this.friendlyId = ${vnidOrFriendlyId}`;
 
     const entryData = await tx.pullOne(Entry, (e) =>
         e
             .id
             .name
             .description
-            .friendlyId()
-            .type((et) => et.id.name.site((s) => s.id)), { key }).catch((err) => {
+            .friendlyId
+            .type((et) => et.id.name.site((s) => s.id)), { where }).catch((err) => {
             if (err instanceof EmptyResultError) {
                 throw new api.NotFound(`Entry with key "${vnidOrFriendlyId}" not found.`);
             } else {

@@ -1,7 +1,7 @@
 import * as log from "std/log/mod.ts";
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { Site, siteShortIdFromId, slugIdToFriendlyId } from "neolace/core/Site.ts";
+import { Site, siteShortIdFromId } from "neolace/core/Site.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { makeCypherCondition } from "neolace/core/permissions/check.ts";
@@ -55,17 +55,17 @@ export class EntryListResource extends NeolaceHttpResource {
         const result = await graph.read((tx) =>
             tx.query(C`
             ${baseQuery}
-            RETURN entry.id AS id, entry.name AS name, entry.slugId AS slugId, entryType.id AS type
+            RETURN entry.id AS id, entry.name AS name, entry.friendlyId AS friendlyId, entryType.id AS type
             ORDER BY id
             SKIP ${C(String(skip))} LIMIT ${C(String(limit + 1n))}
-        `.givesShape({ "id": Field.VNID, "name": Field.String, "slugId": Field.String, "type": Field.VNID }))
+        `.givesShape({ "id": Field.VNID, "name": Field.String, "friendlyId": Field.String, "type": Field.VNID }))
         );
         const hasMore = result.length > limit; // As a simple way to check if there are more results even without knowing the total count, we retrieve 1 more than the limit, then return all results except the extra one
         const values = result.slice(0, Number(limit)).map((row) => ({
-            id: row["id"],
+            id: row.id,
             type: { id: row.type },
-            name: row["name"],
-            friendlyId: slugIdToFriendlyId(row["slugId"]),
+            name: row.name,
+            friendlyId: row.friendlyId,
         }));
 
         // Response:

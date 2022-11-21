@@ -2,7 +2,6 @@ import { api } from "neolace/api/mod.ts";
 import { C, isVNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { EntryTypeColor, PropertyType, ReferenceCacheData } from "neolace/deps/neolace-api.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
-import { siteCodeForSite } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import type { LookupContext } from "neolace/core/lookup/context.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
@@ -42,7 +41,6 @@ export class ReferenceCache {
     }
 
     async getData(lookupContext: LookupContext): Promise<ReferenceCacheData> {
-        const siteCode = await siteCodeForSite(this.siteId);
         const data: ReferenceCacheData = {
             entryTypes: {},
             entries: {},
@@ -77,11 +75,13 @@ export class ReferenceCache {
         // Entries referenced:
         const entryReferences = await lookupContext.tx.pull(
             Entry,
-            (e) => e.id.name.description.friendlyId().type((et) => et.id.site((s) => s.id)),
+            (e) => e.id.name.description.friendlyId.type((et) => et.id.site((s) => s.id)),
             {
-                where: C`@this.id IN ${Array.from(this.entryIdsUsed)} OR @this.slugId IN ${
-                    Array.from(this.friendlyIdsUsed).map((friendlyId) => siteCode + friendlyId)
-                }`,
+                where: C`@this.id IN ${
+                    Array.from(this.entryIdsUsed)
+                } OR (@this.siteNamespace = ${this.siteId} AND @this.friendlyId IN ${
+                    Array.from(this.friendlyIdsUsed)
+                })`,
             },
         );
         for (const reference of entryReferences) {

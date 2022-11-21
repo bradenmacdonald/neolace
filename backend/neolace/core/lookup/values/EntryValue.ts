@@ -59,7 +59,7 @@ export class EntryValue extends ConcreteValue implements IHasLiteralExpression {
             );
         } else if (attrName === "friendlyId") {
             return new StringValue(
-                (await context.tx.pullOne(Entry, (e) => e.friendlyId(), { key: this.id })).friendlyId,
+                (await context.tx.pullOne(Entry, (e) => e.friendlyId, { key: this.id })).friendlyId,
             );
         }
         return undefined;

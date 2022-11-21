@@ -15,8 +15,9 @@ export const doCreateEntry = defineImplementation(CreateEntry, async (tx, data, 
         MATCH (et:${EntryType} {id: ${data.type}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
         CREATE (e:${Entry} {id: ${data.entryId}})
         CREATE (e)-[:${Entry.rel.IS_OF_TYPE}]->(et)
-        SET e.slugId = site.siteCode + ${data.friendlyId}
+        SET e.siteNamespace = site.id
         SET e += ${{
+        friendlyId: data.friendlyId,
         name: data.name,
         description: data.description,
     }}

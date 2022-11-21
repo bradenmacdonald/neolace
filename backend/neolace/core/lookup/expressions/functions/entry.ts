@@ -1,7 +1,7 @@
 import { C, EmptyResultError, Field, isVNID } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
-import { Site, siteCodeForSite } from "neolace/core/Site.ts";
+import { Site } from "neolace/core/Site.ts";
 
 import { LookupExpression } from "../base.ts";
 import { EntryValue, LookupValue, StringValue } from "../../values.ts";
@@ -24,8 +24,10 @@ export class EntryFunction extends LookupFunctionOneArg {
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
         const idString = (await this.idExpr.getValueAs(StringValue, context)).value;
-        // If the idString is a VNID we can use it as-is, but for friendlyid we need to convert it to "slugId":
-        const key = isVNID(idString) ? idString : (await siteCodeForSite(context.siteId)) + idString;
+        // Allow looking up entries by ID (VNID) or friendlyId:
+        const key = isVNID(idString)
+            ? C`{id: ${idString}}`
+            : C`{siteNamespace: ${context.siteId}, friendlyId: ${idString}}`;
 
         // Check if the user has permission to view this entry:
         const permissionsPredicate = await makeCypherCondition(context.subject, corePerm.viewEntry.name, {}, [
@@ -34,7 +36,7 @@ export class EntryFunction extends LookupFunctionOneArg {
         ]);
         try {
             const data = await context.tx.queryOne(C`
-                MATCH (entry:${Entry}), entry HAS KEY ${key},
+                MATCH (entry:${Entry} ${key}),
                     (entry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType}),
                     (entryType)-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${context.siteId}})
                 WHERE ${permissionsPredicate}
