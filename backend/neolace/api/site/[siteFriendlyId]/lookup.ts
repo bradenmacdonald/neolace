@@ -1,7 +1,7 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
-import { getEntry } from "./entry/{entryId}/_helpers.ts";
+import { getEntry } from "./entry/[entryId]/_helpers.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 import { ErrorValue } from "neolace/core/lookup/values.ts";
 import { LookupParseError } from "neolace/core/lookup/errors.ts";
