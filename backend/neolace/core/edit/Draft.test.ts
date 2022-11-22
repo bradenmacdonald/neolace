@@ -28,7 +28,7 @@ group("Draft.ts", () => {
                 CreateSite({
                     name: "Test Site Alpha",
                     domain: "alpha.neolace.net",
-                    slugId: "site-alpha",
+                    friendlyId: "alpha",
                     adminUser: user.id,
                 }),
             );
@@ -36,7 +36,7 @@ group("Draft.ts", () => {
                 CreateSite({
                     name: "Test Site Beta",
                     domain: "beta.neolace.net",
-                    slugId: "site-beta",
+                    friendlyId: "beta",
                     adminUser: user.id,
                 }),
             );

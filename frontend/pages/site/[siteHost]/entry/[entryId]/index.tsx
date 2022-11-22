@@ -50,7 +50,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     let publicEntry: api.EntryData | undefined;
     try {
         publicEntry = await client.getEntry(context.params.entryId, {
-            siteId: site.shortId,
+            siteId: site.friendlyId,
             flags: [
                 api.GetEntryFlags.IncludePropertiesSummary,
                 api.GetEntryFlags.IncludeReferenceCache,

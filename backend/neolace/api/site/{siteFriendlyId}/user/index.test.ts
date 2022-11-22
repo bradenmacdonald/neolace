@@ -36,7 +36,7 @@ group("index.ts", () => {
     };
 
     test("An administrator with permissions can get a list of users associated with a site", async () => {
-        const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+        const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
         const result = await client.getSiteUsers();
 
@@ -76,7 +76,7 @@ group("index.ts", () => {
             addUsers: [explicitlyAddedBot.id],
         }));
 
-        const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+        const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
         const result = await client.getSiteUsers();
 
@@ -123,7 +123,7 @@ group("index.ts", () => {
             inheritPermissions: true,
         }));
 
-        const client = await getClient({ bot }, defaultData.site.shortId);
+        const client = await getClient({ bot }, defaultData.site.friendlyId);
 
         await assertRejects(
             () => client.getSiteUsers(),

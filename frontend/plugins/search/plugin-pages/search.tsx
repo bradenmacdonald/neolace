@@ -16,12 +16,12 @@ const SiteSearchPage: React.FunctionComponent<PluginPageProps> = function (props
     const [connectionError, setConnectionError] = React.useState<api.ApiError | undefined>();
 
     React.useEffect(() => {
-        if (!site.shortId) {
+        if (!site.friendlyId) {
             return; // This effect needs to wait until we have the site data.
         }
         // Get the search connection:
         let cancelled = false;
-        client.getSearchConnection({ siteId: site.shortId }).then((sc) => {
+        client.getSearchConnection({ siteId: site.friendlyId }).then((sc) => {
             if (!cancelled) {
                 setConnectionData(sc);
             }
@@ -32,7 +32,7 @@ const SiteSearchPage: React.FunctionComponent<PluginPageProps> = function (props
         return function cleanup() {
             cancelled = true;
         };
-    }, [site.shortId]);
+    }, [site.friendlyId]);
 
     const [adapter, setAdapter] = React.useState<TypesenseInstantSearchAdapter | undefined>();
     React.useEffect(() => {

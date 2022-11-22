@@ -46,15 +46,23 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 },
                 dependsOn: [],
             },
+            // Sites have unique "friendlyId" values:
+            siteFriendlyIdUnique: {
+                forward: async (dbWrite) => {
+                    await dbWrite("CREATE CONSTRAINT site_friendlyid_uniq FOR (s:Site) REQUIRE s.friendlyId IS UNIQUE");
+                },
+                backward: async (dbWrite) => {
+                    await dbWrite("DROP CONSTRAINT site_friendlyid_uniq IF EXISTS");
+                },
+                dependsOn: [],
+            },
             // Sites have unique "domain" values:
             siteDomainUnique: {
                 forward: async (dbWrite) => {
-                    await dbWrite(async (tx) => {
-                        await tx.run("CREATE CONSTRAINT site_domain_uniq FOR (s:Site) REQUIRE s.domain IS UNIQUE");
-                    });
+                    await dbWrite("CREATE CONSTRAINT site_domain_uniq FOR (s:Site) REQUIRE s.domain IS UNIQUE");
                 },
                 backward: async (dbWrite) => {
-                    await dbWrite((tx) => tx.run("DROP CONSTRAINT site_domain_uniq IF EXISTS"));
+                    await dbWrite("DROP CONSTRAINT site_domain_uniq IF EXISTS");
                 },
                 dependsOn: [],
             },

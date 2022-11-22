@@ -17,7 +17,7 @@ group("entry/index.test.ts", () => {
         const ponderosaPine = defaultData.entries.ponderosaPine;
 
         test("Throws an error when an entry doesn't exist", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             await assertRejects(
                 () => client.getEntry("non-existent-entry", {}),
@@ -38,7 +38,7 @@ group("entry/index.test.ts", () => {
         };
 
         test("Get basic information about an entry", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const result = await client.getEntry(ponderosaPine.friendlyId);
 
@@ -46,7 +46,7 @@ group("entry/index.test.ts", () => {
         });
 
         test("Get basic information about an entry plus a summary of properties", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const result = await client.getEntry(ponderosaPine.friendlyId, {
                 flags: [api.GetEntryFlags.IncludePropertiesSummary] as const,
@@ -223,7 +223,7 @@ group("entry/index.test.ts", () => {
         });
 
         test("Get basic information about an entry plus a 'reference cache' with details of entries mentioned in property summary", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const result = await client.getEntry(ponderosaPine.friendlyId, {
                 flags: [api.GetEntryFlags.IncludePropertiesSummary, api.GetEntryFlags.IncludeReferenceCache] as const,
@@ -380,7 +380,7 @@ group("entry/index.test.ts", () => {
         });
 
         test("Get basic information about an entry plus a 'reference cache' with details of entries mentioned in article text", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const result = await client.getEntry(ponderosaPine.friendlyId, {
                 flags: [api.GetEntryFlags.IncludeFeatures, api.GetEntryFlags.IncludeReferenceCache] as const,
@@ -447,7 +447,7 @@ group("entry/index.test.ts", () => {
         /*
         test("The summary of properties will display an error if a simple property value is invalid", async () => {
 
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const draft = await client.createDraft({title: "Change simple property value", description: null, edits: [
                 {code: api.UpdateEntryType.code, data: {
@@ -517,7 +517,7 @@ group("entry/index.test.ts", () => {
         });*/
 
         test("Can fetch all raw properties directly set on a given entry (e.g. for editing or export purposes", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const result = await client.getEntry(ponderosaPine.id, {
                 flags: [api.GetEntryFlags.IncludeRawProperties] as const,
@@ -562,7 +562,7 @@ group("entry/index.test.ts", () => {
         });
 
         test("Can look up an entry by friendlyId or VNID", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const [resultFriendlyId, resultVNID] = await Promise.all([
                 client.getEntry(ponderosaPine.friendlyId),

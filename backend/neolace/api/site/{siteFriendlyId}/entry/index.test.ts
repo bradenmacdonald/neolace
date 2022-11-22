@@ -16,7 +16,7 @@ group("entry/index.ts", () => {
         const genusEntryType = defaultData.schema.entryTypes._ETGENUS;
 
         test("Count the total number of entries", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const result = await client.getEntries();
             const entries = [];
@@ -27,7 +27,7 @@ group("entry/index.ts", () => {
         });
 
         test("Get all entries of a specific type", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             // Get all entries of type "genus"
             const result = await client.getEntries({ ofEntryType: genusEntryType.id });
@@ -56,7 +56,7 @@ group("entry/index.ts", () => {
     });
     group("Erase all entries API", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
-        const siteId = defaultData.site.shortId; // The API client uses shortIds as site identifiers, not VNID
+        const siteId = defaultData.site.friendlyId; // The API client uses friendlyIds as site identifiers, not VNID
 
         test("Does not erase entries without confirmation", async () => {
             const client = await getSystemClient();

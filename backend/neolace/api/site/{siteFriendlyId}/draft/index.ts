@@ -10,7 +10,7 @@ import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { User } from "neolace/core/User.ts";
 
 export class DraftIndexResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/draft"];
+    public paths = ["/site/:siteFriendlyId/draft"];
 
     POST = this.method({
         requestBodySchema: api.CreateDraftSchema,

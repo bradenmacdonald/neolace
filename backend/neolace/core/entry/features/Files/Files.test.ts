@@ -19,7 +19,7 @@ group("Files.ts", () => {
         const graph = await getGraph();
         // Create a site and entry type:
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId,
@@ -88,7 +88,7 @@ group("Files.ts", () => {
         const entryId = VNID();
         // Create a site with an image entry type:
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId,

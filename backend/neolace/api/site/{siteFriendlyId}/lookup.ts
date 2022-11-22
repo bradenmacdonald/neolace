@@ -7,7 +7,7 @@ import { ErrorValue } from "neolace/core/lookup/values.ts";
 import { LookupParseError } from "neolace/core/lookup/errors.ts";
 
 export class EvaluateLookupResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/lookup"];
+    public paths = ["/site/:siteFriendlyId/lookup"];
 
     GET = this.method({
         responseSchema: api.EvaluateLookupSchema,

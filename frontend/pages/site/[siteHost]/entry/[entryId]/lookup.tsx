@@ -117,7 +117,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     if (site === null) { return {notFound: true}; }
     let entry: api.EntryData;
     try {
-        entry = await client.getEntry(context.params.entryId, {siteId: site.shortId, flags: [
+        entry = await client.getEntry(context.params.entryId, {siteId: site.friendlyId, flags: [
             api.GetEntryFlags.IncludeFeatures,  // We need the article headings
             api.GetEntryFlags.IncludePropertiesSummary,  // To know if we show the "Properties" nav link or not
             api.GetEntryFlags.IncludeReferenceCache,

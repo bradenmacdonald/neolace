@@ -3,14 +3,14 @@ import {
     checkPermissionsRequiredForEdits,
     getDraft,
     getDraftIdFromRequest,
-} from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
+} from "neolace/api/site/{siteFriendlyId}/draft/_helpers.ts";
 import { UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
 
 /**
  * Add an additional edit to a draft
  */
 export class DraftEditsResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/draft/:draftIdNum/edit"];
+    public paths = ["/site/:siteFriendlyId/draft/:draftIdNum/edit"];
 
     POST = this.method({
         requestBodySchema: api.CreateEditSchema,

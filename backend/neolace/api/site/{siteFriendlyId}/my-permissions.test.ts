@@ -6,8 +6,8 @@ group("my-permissions.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
 
     test("It can get the permissions of an anonymous user", async () => {
-        //const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
-        const client = await getClient(undefined, defaultData.site.shortId);
+        //const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
+        const client = await getClient(undefined, defaultData.site.friendlyId);
 
         const result = await client.getMyPermissions();
 
@@ -26,7 +26,7 @@ group("my-permissions.ts", () => {
             fullName: "Regular User's Bot",
             inheritPermissions: true,
         }));
-        const client = await getClient({ bot: { authToken: regularUserBot.authToken } }, defaultData.site.shortId);
+        const client = await getClient({ bot: { authToken: regularUserBot.authToken } }, defaultData.site.friendlyId);
 
         const result = await client.getMyPermissions();
 
@@ -38,7 +38,7 @@ group("my-permissions.ts", () => {
     });
 
     test("It can get the permissions of an admin user", async () => {
-        const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+        const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
         const result = await client.getMyPermissions();
 
@@ -51,7 +51,7 @@ group("my-permissions.ts", () => {
 
     const max = 40;
     test(`It can get the permissions of an admin user in less than ${max}ms`, async () => {
-        const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+        const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
         // Run a couple times to warm up the caches:
         await client.getMyPermissions();

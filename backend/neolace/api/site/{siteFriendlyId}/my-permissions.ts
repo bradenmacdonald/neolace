@@ -9,7 +9,7 @@ import { checkPermissions } from "neolace/core/permissions/check.ts";
 import { EntryType, Site } from "neolace/core/mod.ts";
 
 export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/my-permissions"];
+    public paths = ["/site/:siteFriendlyId/my-permissions"];
 
     GET = this.method({
         responseSchema: api.SiteUserMyPermissionsSchema,

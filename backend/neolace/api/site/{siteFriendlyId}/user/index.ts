@@ -7,7 +7,7 @@ import { Group, GroupMaxDepth } from "neolace/core/permissions/Group.ts";
 import { Site } from "neolace/core/Site.ts";
 
 export class SiteUserIndexResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/user"];
+    public paths = ["/site/:siteFriendlyId/user"];
 
     GET = this.method({
         responseSchema: api.schemas.PaginatedResult(api.SiteUserSummary),

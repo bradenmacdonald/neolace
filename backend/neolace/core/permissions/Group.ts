@@ -8,7 +8,6 @@ import {
     ValidationError,
     VirtualPropType,
     VNID,
-    VNodeKey,
     VNodeType,
     VNodeTypeRef,
     WrappedTransaction,
@@ -84,8 +83,8 @@ VNodeTypeRef.resolve(GroupRef, Group);
 export const UpdateGroup = defaultUpdateFor(Group, (g) => g.name, {
     otherUpdates: async (
         args: {
-            // VNID or slugId of a Site or Group that this Group belongs to.
-            belongsTo?: VNodeKey;
+            // VNID of a Site or Group that this Group belongs to.
+            belongsTo?: VNID;
             // Add some users to this group:
             addUsers?: VNID[];
             // Remove some users from this group:
@@ -114,12 +113,12 @@ export const UpdateGroup = defaultUpdateFor(Group, (g) => g.name, {
 
         // Change which Group/Site this Group belongs to (groups can be nested)
         if (args.belongsTo !== undefined) {
-            // Helper function: given the key (VNID or slugId) of a Group or Site, return the VNID of the associated site
-            const getSiteIdForGS = (key: VNodeKey): Promise<VNID> =>
+            // Helper function: given the VNID of a Group or Site, return the VNID of the associated site
+            const getSiteIdForGS = (key: VNID): Promise<VNID> =>
                 tx.queryOne(C`
-                    MATCH (parent:VNode)-[:${Group.rel.BELONGS_TO}*0..${
+                    MATCH (parent:VNode {id: ${key}})-[:${Group.rel.BELONGS_TO}*0..${
                     C(String(GroupMaxDepth))
-                }]->(site:${Site}), parent HAS KEY ${key}
+                }]->(site:${Site})
                     WHERE parent:${Group} OR parent:${Site}
                 `.RETURN({ "site.id": Field.VNID })).then((r) => r["site.id"]);
 

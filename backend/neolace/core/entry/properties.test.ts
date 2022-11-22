@@ -27,7 +27,7 @@ group("properties.ts", () => {
                 id: siteId,
                 name: "Test Site",
                 domain: "test-site.neolace.net",
-                slugId: "site-test",
+                friendlyId: "test",
             }));
             await graph.runAsSystem(ApplyEdits({
                 siteId,
@@ -189,7 +189,7 @@ group("properties.ts", () => {
                 //   Entry A has no properties
                 //   Entry B has one property
                 const { id: siteId } = await graph.runAsSystem(
-                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
+                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
@@ -293,7 +293,7 @@ group("properties.ts", () => {
                 const pfBisA = VNID();
                 const propHasTypes = VNID();
                 const { id: siteId } = await graph.runAsSystem(
-                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
+                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
@@ -374,7 +374,7 @@ group("properties.ts", () => {
                 //   Property 3 is not inheritable, but the others are.
                 const pfA1 = VNID(), pfA2 = VNID(), pfA3 = VNID(), pfB2 = VNID(), pfC3 = VNID();
                 const { id: siteId } = await graph.runAsSystem(
-                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
+                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
@@ -592,7 +592,7 @@ group("properties.ts", () => {
                 //   Entry C inherits from B and has no direct properties.
                 const factIdB1v1 = VNID(), factIdB1v2 = VNID();
                 const { id: siteId } = await graph.runAsSystem(
-                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
+                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
@@ -753,7 +753,7 @@ group("properties.ts", () => {
                 //   Entry A has one property with three values in a specific order
                 const factIdA1v1 = VNID(), factIdA1v2 = VNID(), factIdA1v3 = VNID();
                 const { id: siteId } = await graph.runAsSystem(
-                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
+                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
@@ -865,7 +865,7 @@ group("properties.ts", () => {
                 //   Entry "Car" has part "Steering Wheel" in slot "sw", "Combustion Engine" in slot "motor"
                 //   Entry "Electric Car" inherits from "Car" and has part "Electic Motor" in slot "motor"
                 await graph.runAsSystem(
-                    CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
+                    CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
@@ -1096,7 +1096,7 @@ group("properties.ts", () => {
             //   So: A has 15 properties total (10 + 5)
             //       B has 42 properties total (30 + 5 + 6 + 1)
             const { id: siteId } = await graph.runAsSystem(
-                CreateSite({ name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
+                CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
             );
             await graph.runAsSystem(ApplyEdits({
                 siteId,

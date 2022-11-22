@@ -2,7 +2,7 @@ import { assertEquals, assertRejects, assertStrictEquals, group, setTestIsolatio
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateGroup, Group, GroupMaxDepth, UpdateGroup } from "neolace/core/permissions/Group.ts";
 import { CreateSite } from "neolace/core/Site.ts";
-import { VNodeKey } from "neolace/deps/vertex-framework.ts";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 
 group("Group.ts", () => {
     group("CreateGroup", () => {
@@ -25,8 +25,7 @@ group("Group.ts", () => {
             const graph = await getGraph();
             assertEquals(GroupMaxDepth, 4);
 
-            // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-            const getGroup = (key: VNodeKey) =>
+            const getGroup = (key: VNID) =>
                 graph.pullOne(Group, (g) => g.id.name.parentGroup((pg) => pg.id).site((s) => s.id), { key });
 
             // First check that there is a base users group (level 1, not a nested group)
@@ -102,7 +101,7 @@ group("Group.ts", () => {
                 CreateSite({
                     name: "Test Site 2",
                     domain: "test2.neolace.com",
-                    slugId: "site-test2",
+                    friendlyId: "test2",
                     adminUser: defaultData.users.admin.id,
                 }),
             );

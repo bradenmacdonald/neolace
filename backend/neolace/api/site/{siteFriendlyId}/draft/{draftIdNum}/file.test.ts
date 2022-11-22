@@ -32,8 +32,8 @@ group("file.ts", () => {
         };
 
         test("Does not allow an anonymous user to add a file to a draft", async () => {
-            const adminClient = await getClient(defaultData.users.admin, defaultData.site.shortId);
-            const anonClient = await getClient(undefined, defaultData.site.shortId);
+            const adminClient = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
+            const anonClient = await getClient(undefined, defaultData.site.friendlyId);
 
             const draft = await adminClient.createDraft({
                 title: "New Draft",
@@ -48,7 +48,7 @@ group("file.ts", () => {
         });
 
         test("Can upload a file to a draft", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
             const draft = await client.createDraft({
                 title: "New Draft",
                 description: "Testing file uploads",
@@ -69,7 +69,7 @@ group("file.ts", () => {
         });
 
         test("De-duplicates files where possible", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
             const draft = await client.createDraft({
                 title: "New Draft",
                 description: "Testing file uploads",

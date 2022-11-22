@@ -31,7 +31,7 @@ export const config = (() => {
         siteUrlSuffix: defaultTo(":5555", { production: "", test: ":4445" }),
 
         /**
-         * The shortId of the "home site" for this Realm. Every Realm has a home site, which is the site where users
+         * The friendlyId of the "home site" for this Realm. Every Realm has a home site, which is the site where users
          * log in, manage their account, and from where authorized users can create additional sites (if enabled).
          */
         realmHomeSiteId: "home",

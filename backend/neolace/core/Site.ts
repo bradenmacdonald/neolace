@@ -46,7 +46,6 @@ export enum AccessMode {
  */
 export class Site extends VNodeType {
     static readonly label = "Site";
-    static readonly slugIdPrefix = "site-";
     static readonly properties = {
         ...VNodeType.properties,
         /**
@@ -54,12 +53,9 @@ export class Site extends VNodeType {
          */
         name: Field.String.Check(check.string.min(2).max(120)),
         /**
-         * The slugId of this site. Must begin with "site-".
-         * In API URLs, the site's slugId is included without the "site-" prefix:
-         *     https://api.neolace.com/site/braden/entry/fr-joel
-         *                                  ^^^^^^- indicated slugId is "site-braden"
+         * The short (slug) string Identifier for this site.
          */
-        slugId: Field.Slug,
+        friendlyId: Field.Slug,
         /**
          * The canonical domain for this site, e.g. "mysite.neolace.com".
          *
@@ -112,16 +108,9 @@ export class Site extends VNodeType {
     };
 
     static readonly rel = this.hasRelationshipsFromThisTo({
-        // HAS_USER_ROLE: {
-        //     to: [User],
-        //     properties: {role: Joi.string().allow("admin", "editor", "contributor", "viewer").required()},
-        //     cardinality: VNodeType.Rel.ToManyUnique,
-        // },
-        // HAS_ENTRIES: {
-        //     to: [Entry],
-        //     cardinality: VNodeType.Rel.ToMany,
-        // },
+        // There are no relationships _from_ each Site - only _to_ each Site node.
     });
+
     static readonly virtualProperties = this.hasVirtualProperties(() => ({
         groupsFlat: {
             // A flattened list of all the user groups that this site has
@@ -130,8 +119,8 @@ export class Site extends VNodeType {
             target: Group,
         },
     }));
+
     static readonly derivedProperties = this.hasDerivedProperties({
-        shortId,
         url,
     });
 
@@ -147,32 +136,19 @@ VNodeTypeRef.resolve(SiteRef, Site);
 // Site helper functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/** Cache to look up a siteId (Site VNID) from a site's shortId (slugId without the "site-" prefix) */
-export const siteIdFromShortId = makeCachedLookup(
-    async (shortId: string) => (await getGraph()).vnidForKey(`site-${shortId}`),
+/** Cache to look up a siteId (Site VNID) from a site's friendlyId */
+export const siteIdFromFriendlyId = makeCachedLookup(
+    async (friendlyId: string) =>
+        (await getGraph()).pullOne(Site, (s) => s.id, { where: C`@this.friendlyId = ${friendlyId}` }).then((s) => s.id),
     10_000,
 );
 
-/** Cache to look up a site's shortId from its VNID */
-export const siteShortIdFromId = makeCachedLookup(
+/** Cache to look up a site's friendlyId from its VNID */
+export const siteFriendlyIdFromId = makeCachedLookup(
     async (siteId: VNID) =>
-        (await getGraph()).pullOne(Site, (s) => s.shortId(), { key: siteId }).then((s) => s.shortId),
+        (await getGraph()).pullOne(Site, (s) => s.friendlyId, { key: siteId }).then((s) => s.friendlyId),
     10_000,
 );
-
-/**
- * A derived property that provides the shortId of a Site.
- *
- * Note: Sites have "shortId", without the "site-" prefix, whereas Entries have "friendlyId", without the siteCode
- * prefix, which varies.
- */
-export function shortId(): DerivedProperty<string> {
-    return DerivedProperty.make(
-        Site,
-        (s) => s.slugId,
-        (s) => s.slugId.substring(5), // Remove the "site-" prefix
-    );
-}
 
 /**
  * A derived property that provides the full URL of a Site.
@@ -187,7 +163,7 @@ export function url(): DerivedProperty<string> {
 
 interface HomeSiteData {
     siteId: VNID;
-    shortId: string;
+    friendlyId: string;
     name: string;
     domain: string;
     url: string;
@@ -201,11 +177,13 @@ let mainSiteCache: Readonly<HomeSiteData>;
  */
 export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
     if (mainSiteCache === undefined) {
-        const shortId = config.realmHomeSiteId;
+        const friendlyId = config.realmHomeSiteId;
         const graph = await getGraph();
         let data;
         try {
-            data = await graph.pullOne(Site, (s) => s.id.name.domain.url(), { key: `site-${shortId}` });
+            data = await graph.pullOne(Site, (s) => s.id.name.domain.url(), {
+                where: C`@this.friendlyId = ${friendlyId}`,
+            });
         } catch (err) {
             throw new Error(
                 "Unable to load the home site. Check the realmHomeSiteId setting. In development, you may need to " +
@@ -215,7 +193,7 @@ export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
         }
         mainSiteCache = Object.freeze({
             siteId: data.id,
-            shortId,
+            friendlyId,
             name: data.name,
             domain: data.domain,
             url: data.url,
@@ -231,7 +209,7 @@ export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
 // Action to make changes to an existing Site:
 export const UpdateSite = defaultUpdateFor(
     Site,
-    (s) => s.slugId.description.homePageContent.footerContent.domain.accessMode.publicGrantStrings,
+    (s) => s.friendlyId.description.homePageContent.footerContent.domain.accessMode.publicGrantStrings,
     {
         otherUpdates: async (args: { frontendConfig?: FrontendConfigData }, tx, nodeSnapshot) => {
             if (args.frontendConfig) {
@@ -252,7 +230,7 @@ export const CreateSite = defineAction({
     parameters: {} as {
         id?: VNID;
         name: string;
-        slugId: string;
+        friendlyId: string;
         domain: string;
         description?: string;
         homePageContent?: string;
@@ -277,7 +255,7 @@ export const CreateSite = defineAction({
             CREATE (s:${Site} {
                 id: ${id},
                 name: ${data.name},
-                slugId: ${data.slugId},
+                friendlyId: ${data.friendlyId},
                 description: ${data.description || ""},
                 homePageContent: ${data.homePageContent || ""},
                 footerContent: ${data.footerContent || ""},

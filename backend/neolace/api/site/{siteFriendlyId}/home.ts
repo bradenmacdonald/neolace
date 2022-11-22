@@ -4,7 +4,7 @@ import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 
 export class SiteHomeResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/home"];
+    public paths = ["/site/:siteFriendlyId/home"];
 
     GET = this.method({
         responseSchema: api.SiteHomePageSchema,

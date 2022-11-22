@@ -4,7 +4,7 @@ import { ImportSchema } from "neolace/core/schema/import-schema.ts";
 import { UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 
 export class SchemaIndexResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/schema"];
+    public paths = ["/site/:siteFriendlyId/schema"];
 
     GET = this.method({
         responseSchema: api.SiteSchemaSchema,

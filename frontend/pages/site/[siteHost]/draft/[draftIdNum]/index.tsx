@@ -39,7 +39,7 @@ const DraftDetailsPage: NextPage = function (_props) {
     const acceptDraft = React.useCallback(async () => {
         if (!draft || !site || draft.status !== api.DraftStatus.Open) return;
         setUpdatingDraft(true);
-        await client.acceptDraft(draft.idNum, { siteId: site.shortId });
+        await client.acceptDraft(draft.idNum, { siteId: site.friendlyId });
         // Optimistically mark this as accepted:
         await mutateDraft({ ...draft, status: api.DraftStatus.Accepted });
         setUpdatingDraft(false);

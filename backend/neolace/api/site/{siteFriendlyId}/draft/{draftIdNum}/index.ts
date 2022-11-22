@@ -1,8 +1,8 @@
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { getDraft, getDraftIdFromRequest } from "neolace/api/site/{siteShortId}/draft/_helpers.ts";
+import { getDraft, getDraftIdFromRequest } from "neolace/api/site/{siteFriendlyId}/draft/_helpers.ts";
 
 export class DraftResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/draft/:draftIdNum"];
+    public paths = ["/site/:siteFriendlyId/draft/:draftIdNum"];
 
     GET = this.method({
         responseSchema: api.DraftSchema,

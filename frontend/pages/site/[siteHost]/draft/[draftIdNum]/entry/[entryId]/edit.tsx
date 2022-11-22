@@ -91,10 +91,10 @@ const DraftEntryEditPage: NextPage = function (_props) {
                 title: newDraftTitle.trim() || defaultDraftTitle,
                 description: "",
                 edits: unsavedEdits,
-            }, { siteId: site.shortId }).then(
+            }, { siteId: site.friendlyId }).then(
                 (newDraft) => { // If successful:
                     if (applyImmediately) {
-                        client.acceptDraft(newDraft.idNum, {siteId: site.shortId}).then(() => {
+                        client.acceptDraft(newDraft.idNum, {siteId: site.friendlyId}).then(() => {
                             // The draft has been accepted immediately:
                             router.push(`/entry/${entry?.friendlyId}`);
                         }, (applyError) => {
@@ -126,7 +126,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
         } else {
             try {
                 for (const edit of unsavedEdits) {
-                    await client.addEditToDraft(edit, {idNum: draftIdNum, siteId: site.shortId});
+                    await client.addEditToDraft(edit, {idNum: draftIdNum, siteId: site.friendlyId});
                 }
                 setIsSaving(false);
                 router.push(`/draft/${draftIdNum}`);
@@ -141,7 +141,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                 );
             }
         }
-    }, [draftError, draftIdNum, newDraftTitle, defaultDraftTitle, unsavedEdits, site.shortId, router, intl, entry?.friendlyId]);
+    }, [draftError, draftIdNum, newDraftTitle, defaultDraftTitle, unsavedEdits, site.friendlyId, router, intl, entry?.friendlyId]);
 
     const [schema] = useSchema({draftContext});
     const entryType = entry ? schema?.entryTypes[entry.entryType.id] : undefined;

@@ -38,10 +38,10 @@ export const SiteDetailsSchema = Schema({
      */
     description: string,
     /**
-     * The short ID is a slug-like string identifier that uniquely identifies this site and must be used to specify the
-     * site in any site-specific API requests.
+     * The friendly ID is a slug-like string identifier that uniquely identifies this site and must be used to specify
+     * the site in any site-specific API requests.
      */
-    shortId: string,
+    friendlyId: string,
     /**
      * The footer text (as Markdown) to display on every page of this site.
      */

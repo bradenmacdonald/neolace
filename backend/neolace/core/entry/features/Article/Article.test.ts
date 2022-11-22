@@ -18,7 +18,7 @@ group("Article.ts", () => {
         const graph = await getGraph();
         // Create a site with one entry type:
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId,
@@ -87,7 +87,7 @@ group("Article.ts", () => {
         const entryId = VNID();
         // Create a site with an entry type that has the article feature::
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId,

@@ -2,7 +2,7 @@
 // TODO: once we have a REST API to create/update sites, change this to use the REST API only.
 
 import * as log from "std/log/mod.ts";
-import { EmptyResultError, VNID } from "neolace/deps/vertex-framework.ts";
+import { C, EmptyResultError, VNID } from "neolace/deps/vertex-framework.ts";
  
 import { shutdown } from "neolace/app/shutdown.ts";
 import { getGraph } from "neolace/core/graph.ts";
@@ -20,13 +20,13 @@ const {id: adminUserId} = await graph.pullOne(User, u => u.id, {key: "user-admin
 });
 
 // Create the docs site:
-const {id: siteId} = await graph.pullOne(Site, s => s.id, {key: "site-docs"}).catch(err =>{
+const {id: siteId} = await graph.pullOne(Site, s => s.id, {where: C`@this.friendlyId = "docs"`}).catch(err =>{
     if (!(err instanceof EmptyResultError)) { throw err; }
     return graph.runAsSystem(CreateSite({
         id: VNID("_5KJ0sVd9pQrsLi4fYlBrR6"),
         name: "Neolace documentation",
         domain: "docs.local.neolace.net",
-        slugId: `site-docs`,
+        friendlyId: `docs`,
         adminUser: adminUserId,
     }));
 });

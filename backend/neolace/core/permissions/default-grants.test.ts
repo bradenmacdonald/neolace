@@ -19,21 +19,21 @@ group("default-grants.ts", () => {
         const { id: privateSite } = await graph.runAsSystem(CreateSite({
             domain: "private.example.com",
             name: "Private Site",
-            slugId: "site-private", // TODO: this should be shortId: "private"
+            friendlyId: "private",
             accessMode: AccessMode.Private,
         }));
 
         const { id: publicSite } = await graph.runAsSystem(CreateSite({
             domain: "public.example.com",
             name: "Public Contributions Site",
-            slugId: "site-public",
+            friendlyId: "public",
             accessMode: AccessMode.PublicContributions,
         }));
 
         const { id: readonlySite } = await graph.runAsSystem(CreateSite({
             domain: "readonly.example.com",
             name: "Read Only Site",
-            slugId: "site-readonly",
+            friendlyId: "readonly",
             accessMode: AccessMode.PublicReadOnly,
         }));
 

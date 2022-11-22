@@ -141,7 +141,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             id: "logout",
             priority: 60,
             content: {
-                url: site.isHomeSite ? "/account/logout" : `${site.homeSiteUrl}/account/logout?returnSite=${encodeURI(site.shortId)}`,
+                url: site.isHomeSite ? "/account/logout" : `${site.homeSiteUrl}/account/logout?returnSite=${encodeURI(site.friendlyId)}`,
                 label: <FormattedMessage id="PlBReU" defaultMessage="Log out" />,
                 icon: "door-closed",
             }
@@ -152,7 +152,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             id: "login",
             priority: 60,
             content: {
-                url: site.isHomeSite ? "/account/login" : `${site.homeSiteUrl}/account/login?returnSite=${encodeURI(site.shortId)}`,
+                url: site.isHomeSite ? "/account/login" : `${site.homeSiteUrl}/account/login?returnSite=${encodeURI(site.friendlyId)}`,
                 label: <FormattedMessage id="odXlk8" defaultMessage="Log in" />,
                 icon: "person-fill",
             }
@@ -235,7 +235,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                             {/* there are lots of problems with getting an SVG logo to scale properly on safari; be sure to test any changes here thoroughly */}
                             {
                                 // eslint-disable-next-line @next/next/no-img-element
-                                site.shortId ? <img alt={site.name} src={`/${site.shortId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
+                                site.friendlyId ? <img alt={site.name} src={`/${site.friendlyId}.svg`} id="neo-site-logo" className="w-full h-auto block" /> : site.name
                             }
                         </Link>
                     </DefaultUISlot>

@@ -1,14 +1,14 @@
 import * as log from "std/log/mod.ts";
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { Site, siteShortIdFromId } from "neolace/core/Site.ts";
+import { Site, siteFriendlyIdFromId } from "neolace/core/Site.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { Property, PropertyFact } from "neolace/core/mod.ts";
 
 export class EntryListResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/entry/"];
+    public paths = ["/site/:siteFriendlyId/entry/"];
 
     GET = this.method({
         responseSchema: api.schemas.StreamedResult(api.EntrySummarySchema),
@@ -88,7 +88,7 @@ export class EntryListResource extends NeolaceHttpResource {
         // Permissions and parameters:
         await this.requirePermission(request, "DANGER!!" as api.PermissionName); // Only a user with the "*" global permission grant will match this
         const { siteId } = await this.getSiteDetails(request);
-        const siteShortId = await siteShortIdFromId(siteId);
+        const siteFriendlyId = await siteFriendlyIdFromId(siteId);
         const graph = await getGraph();
 
         if (request.queryParam("confirm") !== "danger") {
@@ -98,7 +98,7 @@ export class EntryListResource extends NeolaceHttpResource {
             );
         }
 
-        log.warning(`Irreversibly deleting all entries from site ${siteShortId}`);
+        log.warning(`Irreversibly deleting all entries from site ${siteFriendlyId}`);
 
         // This doesn't use an Action because we can't handle high volume deletions within a single action.
         // We need to use CALL { ... } IN TRANSACTIONS, which requires using auto-commit mode, which is different from
@@ -140,27 +140,27 @@ export class EntryListResource extends NeolaceHttpResource {
                 } IN TRANSACTIONS OF 50 ROWS
             `;
             // Do the deletion in autocommit transactions:
-            log.info(`Deletion part 1/4 - deleting property facts from ${siteShortId}...`);
+            log.info(`Deletion part 1/4 - deleting property facts from ${siteFriendlyId}...`);
             await graph._restrictedWrite({
                 text: deletePropertyFacts.queryString,
                 parameters: deletePropertyFacts.params,
             });
-            log.info(`Deletion part 2/4 - deleting entry features from ${siteShortId}...`);
+            log.info(`Deletion part 2/4 - deleting entry features from ${siteFriendlyId}...`);
             await graph._restrictedWrite({
                 text: deleteEntryFeatures.queryString,
                 parameters: deleteEntryFeatures.params,
             });
-            log.info(`Deletion part 3/4 - deleting slug IDs from ${siteShortId}...`);
+            log.info(`Deletion part 3/4 - deleting slug IDs from ${siteFriendlyId}...`);
             await graph._restrictedWrite({
                 text: deleteSlugIds.queryString,
                 parameters: deleteSlugIds.params,
             });
-            log.info(`Deletion part 4/4 - deleting entries from ${siteShortId}...`);
+            log.info(`Deletion part 4/4 - deleting entries from ${siteFriendlyId}...`);
             await graph._restrictedWrite({
                 text: deleteEntries.queryString,
                 parameters: deleteEntries.params,
             });
-            log.info(`Deleted all entries from site ${siteShortId}.`);
+            log.info(`Deleted all entries from site ${siteFriendlyId}.`);
         });
         return {};
     });

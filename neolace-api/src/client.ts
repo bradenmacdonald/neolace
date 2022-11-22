@@ -21,7 +21,7 @@ export interface Config {
      * to pass a JWT (for human users).
      */
     authToken?: string;
-    /** Default site ID to use for requests involving a specific site. This is the site's shortId, e.g. "technotes" */
+    /** Default site ID to use for requests involving a specific site. This is the site's friendlyId, e.g. "technotes" */
     siteId?: string;
     getExtraHeadersForRequest?: (request: {method: HttpMethod, path: string}) => Promise<{[headerName: string]: string}>;
 }
@@ -163,8 +163,8 @@ export class NeolaceApiClient {
             email: options.email,
             data: options.data,
             returnUrl: options.returnUrl,
-            // siteId is optional for this API call:
-            siteId: options.siteId ?? this.siteId ?? undefined,
+            // siteFriendlyId is optional for this API call:
+            siteFriendlyId: options.siteId ?? this.siteId ?? undefined,
         };
         await this.call("/user/verify-email", {method: "POST", data});
     }
@@ -353,13 +353,13 @@ export class NeolaceApiClient {
      * @param options 
      * @returns 
      */
-    public async getMyPermissions(options: {entryId?: VNID, entryTypeId?: VNID, draftId?: VNID, [custom: `plugin:${string}`]: string, siteId?: string} = {}): Promise<SiteUserMyPermissionsData> {
+    public async getMyPermissions(options: {entryId?: VNID, entryTypeId?: VNID, draftIdNum?: number, [custom: `plugin:${string}`]: string, siteId?: string} = {}): Promise<SiteUserMyPermissionsData> {
         const siteId = this.getSiteId(options);
 
         const objectFields: Record<string, string> = {};
         for (const [k, v] of Object.entries(options)) {
             if (v !== undefined && k !== "siteId") {
-                objectFields[k] = v;
+                objectFields[k] = String(v);
             }
         }
         const args = new URLSearchParams(objectFields);

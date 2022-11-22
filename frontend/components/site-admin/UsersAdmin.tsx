@@ -21,9 +21,9 @@ export const SiteUsersAdminTool: React.FunctionComponent = function (_props) {
 
     // The key for caching the list of users. We include the current user's user name so that if the uesr logs out then
     // logs in again as a different admin user, they'll still see the correct results (though that's a rare case).
-    const key = `siteAdmin:${site.shortId}:${user.username}:users:list:page${page}`;
+    const key = `siteAdmin:${site.friendlyId}:${user.username}:users:list:page${page}`;
     const { data, error } = useSWR(key, async () => {
-        return await client.getSiteUsers({page, siteId: site.shortId});
+        return await client.getSiteUsers({page, siteId: site.friendlyId});
     }, {
         // refreshInterval: 10 * 60_000,
     });

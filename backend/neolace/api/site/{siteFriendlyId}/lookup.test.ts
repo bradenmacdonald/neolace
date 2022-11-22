@@ -13,7 +13,7 @@ group("lookup.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
 
     test("It can evaluate a lookup of a simple property", async () => {
-        const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+        const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
         const result = await client.evaluateLookupExpression(
             `this.get(prop=prop("${defaultData.schema.properties._propScientificName.id}"))`,
@@ -24,7 +24,7 @@ group("lookup.ts", () => {
     });
 
     test("It can evaluate an AUTO relationship property and return a reference cache with details of each entry", async () => {
-        const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+        const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
         const expr = `this.get(prop=prop("${defaultData.schema.properties._relImages.id}"))`;
         const result = await client.evaluateLookupExpression(
@@ -63,7 +63,7 @@ group("lookup.ts", () => {
     });
 
     test("It gives a parse error when the expression cannot be parsed", async () => {
-        const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+        const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
         const err = await assertRejects(() => client.evaluateLookupExpression("this won't parse."));
         assertInstanceOf(err, api.InvalidRequest);
@@ -71,7 +71,7 @@ group("lookup.ts", () => {
     });
 
     test("It gives an evaluation error when the expression can be parsed but is invalid", async () => {
-        const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+        const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
         const result = await client.evaluateLookupExpression(`date("tribble")`);
         assertEquals(result.resultValue, {

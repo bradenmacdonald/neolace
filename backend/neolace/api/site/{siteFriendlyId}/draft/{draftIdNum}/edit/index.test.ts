@@ -6,7 +6,7 @@ group("index.ts", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
         test("Allows adding an edit to a draft", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const entryId = VNID();
 

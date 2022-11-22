@@ -45,7 +45,7 @@ export function useDraft(
     const draftContext = context.draftContext || _autoDraftContext;
     const draftIdNum = draftContext.draftIdNum;
 
-    const key = `draft:${site.shortId}:${draftIdNum}`;
+    const key = `draft:${site.friendlyId}:${draftIdNum}`;
     const { data, error, mutate } = useSWR(key, async (): Promise<DraftDataWithEdits | undefined> => {
         if (siteError) {
             throw new api.ApiError("Site Error", 500);
@@ -53,14 +53,14 @@ export function useDraft(
         if (draftIdNum === "_" || draftIdNum === undefined) {
             return undefined;
         }
-        if (!site.shortId) {
+        if (!site.friendlyId) {
             return undefined; // We need to wait for the siteId before we can load the draft
         }
         return await client.getDraft(draftIdNum, {
             flags: [
                 api.GetDraftFlags.IncludeEdits,
             ] as const,
-            siteId: site.shortId,
+            siteId: site.friendlyId,
         });
     }, {
         // refreshInterval: 10 * 60_000,

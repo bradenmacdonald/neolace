@@ -23,14 +23,14 @@ group("index.ts", () => {
         group("An empty draft", () => {
             test("Creating an empty draft is allowed", async () => {
                 // Get an API client, logged in as a bot that belongs to an admin
-                const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+                const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
                 client.createDraft({ title: "A Test Draft", edits: [] });
             });
         });
 
         group("Invalid draft data", () => {
             test("cannot create a draft with an empty title", async () => {
-                const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+                const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
                 const err = await assertRejects(() =>
                     client.createDraft({
                         title: "",
@@ -45,7 +45,7 @@ group("index.ts", () => {
             });
 
             test("cannot create a draft with invalid edits", async () => {
-                const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+                const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
                 // Try creating a draft with an invalid edit code:
                 const err = await assertRejects(() =>
                     client.createDraft({
@@ -98,7 +98,7 @@ group("index.ts", () => {
             };
 
             test("an admin can create schema edits", async () => {
-                const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+                const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
                 const result = await client.createDraft(createDraftWithSchemaEdits);
                 assert(typeof result.idNum === "number" && result.idNum > 0);
             });
@@ -107,7 +107,7 @@ group("index.ts", () => {
                 const graph = await getGraph();
                 // If the site is "private" or "public read only", a user without explicit permissions cannot create content edits.
                 const { userData: userWithNoPermissions } = await createUserWithPermissions();
-                const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.shortId);
+                const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.friendlyId);
                 // Private site shouldn't work:
                 await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
                 await assertRejects(() => noPermsClient.createDraft(createDraftWithSchemaEdits), api.NotAuthorized);
@@ -137,7 +137,7 @@ group("index.ts", () => {
                             corePerm.proposeEditToSchema.name,
                         ]),
                     );
-                    const client = await getClient(userData, defaultData.site.shortId);
+                    const client = await getClient(userData, defaultData.site.friendlyId);
                     const result = await client.createDraft(createDraftWithSchemaEdits);
                     assert(typeof result.idNum === "number" && result.idNum > 0);
                 }
@@ -146,7 +146,7 @@ group("index.ts", () => {
                     const { userData } = await createUserWithPermissions(
                         new PermissionGrant(Always, [corePerm.viewSite.name, corePerm.proposeEditToSchema.name]),
                     );
-                    const client = await getClient(userData, defaultData.site.shortId);
+                    const client = await getClient(userData, defaultData.site.friendlyId);
                     await assertRejects(
                         () => client.createDraft(createDraftWithSchemaEdits),
                         api.NotAuthorized,
@@ -161,7 +161,7 @@ group("index.ts", () => {
                             corePerm.proposeEditToEntry.name,
                         ]),
                     );
-                    const client = await getClient(userData, defaultData.site.shortId);
+                    const client = await getClient(userData, defaultData.site.friendlyId);
                     await assertRejects(
                         () => client.createDraft(createDraftWithSchemaEdits),
                         api.NotAuthorized,
@@ -188,7 +188,7 @@ group("index.ts", () => {
             };
 
             test("an admin can create content edits", async () => {
-                const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+                const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
                 const result = await client.createDraft(createDraftWithContentEdits);
                 assert(typeof result.idNum === "number" && result.idNum > 0);
             });
@@ -197,7 +197,7 @@ group("index.ts", () => {
                 const graph = await getGraph();
                 // If the site is "private" or "public read only", a user without explicit permissions cannot create content edits.
                 const { userData: userWithNoPermissions } = await createUserWithPermissions();
-                const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.shortId);
+                const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.friendlyId);
                 // Private site shouldn't work:
                 await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
                 await assertRejects(() => noPermsClient.createDraft(createDraftWithContentEdits), api.NotAuthorized);
@@ -226,7 +226,7 @@ group("index.ts", () => {
                     const { userData } = await createUserWithPermissions(
                         new PermissionGrant(Always, [api.CorePerm.proposeEditToSchema]),
                     );
-                    const client = await getClient(userData, defaultData.site.shortId);
+                    const client = await getClient(userData, defaultData.site.friendlyId);
                     await assertRejects(() => client.createDraft(createDraftWithContentEdits), api.NotAuthorized);
                 }
                 // A user with only "edit entry" but not "create new entry" cannot create a new entry:
@@ -234,7 +234,7 @@ group("index.ts", () => {
                     const { userData } = await createUserWithPermissions(
                         new PermissionGrant(Always, [api.CorePerm.proposeEditToEntry]),
                     );
-                    const client = await getClient(userData, defaultData.site.shortId);
+                    const client = await getClient(userData, defaultData.site.friendlyId);
                     await assertRejects(() => client.createDraft(createDraftWithContentEdits), api.NotAuthorized);
                 }
                 // But a user with "propose new entries" permission can:
@@ -242,7 +242,7 @@ group("index.ts", () => {
                     const { userData } = await createUserWithPermissions(
                         new PermissionGrant(Always, [api.CorePerm.proposeNewEntry]),
                     );
-                    const client = await getClient(userData, defaultData.site.shortId);
+                    const client = await getClient(userData, defaultData.site.friendlyId);
                     const result = await client.createDraft(createDraftWithContentEdits);
                     assert(typeof result.idNum === "number" && result.idNum > 0);
                 }
@@ -254,7 +254,7 @@ group("index.ts", () => {
 
         test("Listing drafts on PlantDB site", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const drafts = await client.listDrafts();
             // The script that creates the PlantDB sample content currently only creates one draft:
@@ -276,7 +276,7 @@ group("index.ts", () => {
             const graph = await getGraph();
             // If the site is "private" or "public read only", a user without explicit permissions cannot create content edits.
             const { userData: userWithNoPermissions } = await createUserWithPermissions();
-            const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.shortId);
+            const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.friendlyId);
             // Private site shouldn't work:
             await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
             const results = await noPermsClient.listDrafts();

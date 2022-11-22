@@ -13,7 +13,7 @@ group("schema/index.ts", () => {
          */
         test("can get a site's schema", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
             const result = await client.getSiteSchema();
 
             assertEquals(result, defaultData.schema);
@@ -22,9 +22,9 @@ group("schema/index.ts", () => {
         test("permissions for getting a site's schema", async () => {
             const graph = await getGraph();
             // Get an API client as different users
-            const adminClient = await getClient(defaultData.users.admin, defaultData.site.shortId);
-            //const userClient = await getClient(defaultData.users.regularUser, defaultData.site.shortId);
-            const anonClient = await getClient(undefined, defaultData.site.shortId);
+            const adminClient = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
+            //const userClient = await getClient(defaultData.users.regularUser, defaultData.site.friendlyId);
+            const anonClient = await getClient(undefined, defaultData.site.friendlyId);
 
             // Make the site private:
             await graph.runAsSystem(UpdateSite({
@@ -40,7 +40,7 @@ group("schema/index.ts", () => {
         });
 
         test("can create a new entry type", async () => {
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
             assertEquals(await client.getSiteSchema(), defaultData.schema);
             // Create a draft with a new entry type:
             const result = await client.createDraft({

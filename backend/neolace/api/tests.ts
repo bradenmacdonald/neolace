@@ -29,13 +29,13 @@ export function group(name: string, tests: () => unknown) {
  */
 export async function getClient(
     user?: { bot: { authToken: string } },
-    siteShortId?: string,
+    siteFriendlyId?: string,
 ): Promise<api.NeolaceApiClient> {
     return new api.NeolaceApiClient({
         basePath: config.apiUrl,
         fetchApi: fetch,
         authToken: user?.bot.authToken,
-        siteId: siteShortId,
+        siteId: siteFriendlyId,
     });
 }
 

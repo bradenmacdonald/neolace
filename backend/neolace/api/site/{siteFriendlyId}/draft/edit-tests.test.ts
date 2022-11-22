@@ -28,7 +28,7 @@ group("edit tests", () => {
     group("Setting entry name and description", () => {
         test("We can change an entry's name and description", async () => {
             // Get an API client, logged in to PlantDB as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
             const before = await client.getEntry(ponderosaEntryId);
             await doEdit(
                 client,
@@ -44,7 +44,7 @@ group("edit tests", () => {
 
         test("We can NOT change another site's entry's name", async () => {
             // Get an API client, logged in to the *home site*, not to plant DB
-            const client = await getClient(defaultData.users.admin, defaultData.otherSite.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.otherSite.friendlyId);
             const err = await assertRejects(() =>
                 doEdit(client, {
                     code: api.SetEntryName.code,
@@ -58,7 +58,7 @@ group("edit tests", () => {
 
         test("We can NOT change another site's entry's description", async () => {
             // Get an API client, logged in to the *home site*, not to plant DB
-            const client = await getClient(defaultData.users.admin, defaultData.otherSite.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.otherSite.friendlyId);
             const err = await assertRejects(() =>
                 doEdit(client, {
                     code: api.SetEntryDescription.code,
@@ -78,7 +78,7 @@ group("edit tests", () => {
             // The property we'll be editing is "Other names"
             const propertyId = defaultData.schema.properties._propOtherNames.id;
             // Get an API client, logged in to PlantDB as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const getEntry = () =>
                 client.getEntry(entryId, { flags: [api.GetEntryFlags.IncludePropertiesSummary] as const });
@@ -136,7 +136,7 @@ group("edit tests", () => {
 
         test("When we create a relationship to a non-existent entry, we get a relevant error message.", async () => {
             // Get an API client, logged in to PlantDB as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
             const propertyId = defaultData.schema.properties._hasPart.id;
 
             // delete a property fact that does not exist:
@@ -169,7 +169,7 @@ group("edit tests", () => {
             const entryId = defaultData.entries.ponderosaPine.id;
             const propertyId = defaultData.schema.properties._propScientificName.id;
             // Get an API client, logged in to PlantDB as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const getEntry = () =>
                 client.getEntry(entryId, { flags: [api.GetEntryFlags.IncludePropertiesSummary] as const });
@@ -205,7 +205,7 @@ group("edit tests", () => {
             const entryId = defaultData.entries.ponderosaPine.id;
             const propertyId = defaultData.schema.properties._parentGenus.id;
             // Get an API client, logged in to PlantDB as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const getEntry = () =>
                 client.getEntry(entryId, { flags: [api.GetEntryFlags.IncludePropertiesSummary] as const });
@@ -246,7 +246,7 @@ group("edit tests", () => {
     group("Deleting property values", () => {
         test("We can delete a property on an entry", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
             const originalEntry = await client.getEntry(
                 defaultData.entries.genusCupressus.id,
                 { flags: [api.GetEntryFlags.IncludePropertiesSummary] as const },
@@ -291,7 +291,7 @@ group("edit tests", () => {
     group("Deleting an entry", () => {
         test("We can delete an entry, but only if it has no relationships", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             const entryId = defaultData.entries.jeffreyPine.id;
 
@@ -327,7 +327,7 @@ group("edit tests", () => {
     group("Schema edit: Deleting an entry type", () => {
         test("We can delete an entry type, but only if no entries exist of that type", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             // first, create the entry type (in the schema)
             const entryTypeId = VNID();
@@ -366,7 +366,7 @@ group("edit tests", () => {
             // Now the delete should succeed:
             await doDelete();
 
-            const schema = await client.getSiteSchema({ siteId: defaultData.site.shortId });
+            const schema = await client.getSiteSchema({ siteId: defaultData.site.friendlyId });
 
             assertFalse(Object.keys(schema.entryTypes).includes(entryTypeId));
         });
@@ -375,7 +375,7 @@ group("edit tests", () => {
     group("Schema edit: Deleting a property", () => {
         test("We can delete a property, but only if no entries exist with values set for that property", async () => {
             // Get an API client, logged in as a bot that belongs to an admin
-            const client = await getClient(defaultData.users.admin, defaultData.site.shortId);
+            const client = await getClient(defaultData.users.admin, defaultData.site.friendlyId);
 
             // first, create the property (in the schema)
             const propertyId = VNID();
@@ -416,7 +416,7 @@ group("edit tests", () => {
             // Now the delete should succeed:
             await doDelete();
 
-            const schema = await client.getSiteSchema({ siteId: defaultData.site.shortId });
+            const schema = await client.getSiteSchema({ siteId: defaultData.site.friendlyId });
 
             assertFalse(Object.keys(schema.properties).includes(propertyId));
         });
