@@ -78,4 +78,4 @@ declare class StateInline {
     Token: typeof Token;
 }
 
-export type { StateInline }
+export type { StateInline };

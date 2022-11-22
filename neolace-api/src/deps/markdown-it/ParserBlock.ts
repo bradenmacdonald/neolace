@@ -30,4 +30,4 @@ declare class ParserBlock {
     State: typeof StateBlock;
 }
 
-export type { ParserBlock }
+export type { ParserBlock };

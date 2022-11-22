@@ -90,8 +90,7 @@ export interface CustomInlineNode {
     children?: AnyInlineNode[];
 }
 
-
-export type AnyInlineNode = (
+export type AnyInlineNode =
     | TextNode
     | InlineCodeNode
     | InlineLookupNode
@@ -105,13 +104,12 @@ export type AnyInlineNode = (
     | StrikeThroughNode
     | FootnoteRefNode
     | InlineFootnoteNode
-    | CustomInlineNode
-);
+    | CustomInlineNode;
 
 ///////// Block Nodes
 
 export interface BlockNode {
-    block: true,
+    block: true;
 }
 
 export interface ParagraphNode extends BlockNode {
@@ -166,7 +164,7 @@ export interface FootnoteNode extends BlockNode {
     id: number;
     label?: string;
     /** anchorIds of all the references to this footnote */
-    anchors: string[],
+    anchors: string[];
     children: Node[];
 }
 export interface CustomBlockNode {
@@ -176,14 +174,34 @@ export interface CustomBlockNode {
 
 // Tables:
 
-interface TableNode extends BlockNode { type: "table"; children: (TableHeadNode|TableBodyNode)[]; }
-interface TableBodyNode extends BlockNode { type: "tbody"; children: TableRowNode<TableDataNode>[]; }
-interface TableHeadNode extends BlockNode { type: "thead"; children: TableRowNode<TableHeadingNode>[]; }
-interface TableRowNode<RowType> extends BlockNode { type: "tr", children: RowType[]; }
-interface TableDataNode extends BlockNode { type: "td", children: Node[]; align?: "left"|"center"|"right"; }
-interface TableHeadingNode extends BlockNode { type: "th", children: Node[]; align?: "left"|"center"|"right"; }
+interface TableNode extends BlockNode {
+    type: "table";
+    children: (TableHeadNode | TableBodyNode)[];
+}
+interface TableBodyNode extends BlockNode {
+    type: "tbody";
+    children: TableRowNode<TableDataNode>[];
+}
+interface TableHeadNode extends BlockNode {
+    type: "thead";
+    children: TableRowNode<TableHeadingNode>[];
+}
+interface TableRowNode<RowType> extends BlockNode {
+    type: "tr";
+    children: RowType[];
+}
+interface TableDataNode extends BlockNode {
+    type: "td";
+    children: Node[];
+    align?: "left" | "center" | "right";
+}
+interface TableHeadingNode extends BlockNode {
+    type: "th";
+    children: Node[];
+    align?: "left" | "center" | "right";
+}
 
-export type AnyBlockNode = (
+export type AnyBlockNode =
     | ParagraphNode
     | HeadingNode
     | BlockquoteNode
@@ -196,17 +214,16 @@ export type AnyBlockNode = (
     | TableNode
     | TableBodyNode
     | TableHeadNode
-    | TableRowNode<TableDataNode|TableHeadingNode>
+    | TableRowNode<TableDataNode | TableHeadingNode>
     | TableDataNode
     | TableHeadingNode
-    | CustomBlockNode
-);
+    | CustomBlockNode;
 
 // All node types:
 export type Node = AnyInlineNode | InlineNode | AnyBlockNode | FootnoteNode;
 
 // The nodes that can occur at the top level of a document:
-export type TopLevelNode = (
+export type TopLevelNode =
     | InlineNode
     | ParagraphNode
     | HeadingNode
@@ -216,8 +233,7 @@ export type TopLevelNode = (
     | BulletListNode
     | OrderedListNode
     | HorizontalRuleNode
-    | TableNode
-);
+    | TableNode;
 
 export interface RootNode {
     type: "mdt-document";

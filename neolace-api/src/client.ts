@@ -1,8 +1,22 @@
 // deno-lint-ignore-file no-explicit-any
-import { PasswordlessLoginResponse, UserDataResponse, VerifyEmailRequest, EmailTokenResponse, CreateHumanUserResponse } from "./user.ts";
+import {
+    CreateHumanUserResponse,
+    EmailTokenResponse,
+    PasswordlessLoginResponse,
+    UserDataResponse,
+    VerifyEmailRequest,
+} from "./user.ts";
 import * as errors from "./errors.ts";
 import { AnySchemaEdit, SiteSchemaData } from "./schema/index.ts";
-import { DraftData, CreateDraftSchema, DraftFileData, AnyContentEdit, GetDraftFlags, DraftStatus, AnyBulkEdit } from "./edit/index.ts";
+import {
+    AnyBulkEdit,
+    AnyContentEdit,
+    CreateDraftSchema,
+    DraftData,
+    DraftFileData,
+    DraftStatus,
+    GetDraftFlags,
+} from "./edit/index.ts";
 import { EntryData, EntrySummaryData, EvaluateLookupData, GetEntryFlags } from "./content/index.ts";
 import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData, SiteUserMyPermissionsData } from "./site/Site.ts";
 import { SiteUserSummaryData } from "./site/SiteAdmin.ts";
@@ -23,7 +37,9 @@ export interface Config {
     authToken?: string;
     /** Default site ID to use for requests involving a specific site. This is the site's friendlyId, e.g. "technotes" */
     siteId?: string;
-    getExtraHeadersForRequest?: (request: {method: HttpMethod, path: string}) => Promise<{[headerName: string]: string}>;
+    getExtraHeadersForRequest?: (
+        request: { method: HttpMethod; path: string },
+    ) => Promise<{ [headerName: string]: string }>;
 }
 
 interface RequestArgs {
@@ -32,7 +48,7 @@ interface RequestArgs {
     body?: BodyInit | null;
     headers?: Headers;
     redirect?: RequestRedirect;
-    noAuth?: boolean;  // If true, the "Authorization" header/token will never be sent for this request. Avoids 401 errors when getting a new token if current token is invalid.
+    noAuth?: boolean; // If true, the "Authorization" header/token will never be sent for this request. Avoids 401 errors when getting a new token if current token is invalid.
 }
 
 export class NeolaceApiClient {
@@ -51,12 +67,12 @@ export class NeolaceApiClient {
     }
 
     private async callRaw(path: string, _args: RequestArgs): Promise<Response> {
-        const {data, ...args} = _args;
+        const { data, ...args } = _args;
         if (args.headers === undefined) {
             args.headers = new Headers();
         }
         if (data) {
-            if ("body" in args) { throw new Error("Not allowed to pass both .data and .body to API client's callRaw()"); }
+            if ("body" in args) throw new Error("Not allowed to pass both .data and .body to API client's callRaw()");
             args.body = JSON.stringify(data);
             args.headers.set("Content-Type", "application/json");
         }
@@ -64,7 +80,11 @@ export class NeolaceApiClient {
             args.method = "GET";
         }
         if (this.getExtraHeadersForRequest) {
-            for (const [key, value] of Object.entries(await this.getExtraHeadersForRequest({method: args.method, path}))) {
+            for (
+                const [key, value] of Object.entries(
+                    await this.getExtraHeadersForRequest({ method: args.method, path }),
+                )
+            ) {
                 args.headers.set(key, value);
             }
         }
@@ -92,10 +112,10 @@ export class NeolaceApiClient {
             let errorData: any = {};
             try {
                 errorData = await response.json();
-            } catch {/* couldn't parse this as JSON... */}
+            } catch { /* couldn't parse this as JSON... */ }
 
             if (!errorData.message) {
-                errorData = {message: typeof errorData === "string" ? errorData : response.statusText};
+                errorData = { message: typeof errorData === "string" ? errorData : response.statusText };
             }
 
             if (response.status === 401) {
@@ -108,7 +128,10 @@ export class NeolaceApiClient {
                 } else if (errorData.reason === errors.InvalidRequestReason.InvalidEdit) {
                     throw new errors.InvalidEdit(errorData.editCode, errorData.context, errorData.message);
                 } else {
-                    throw new errors.InvalidRequest(errorData.reason ?? errors.InvalidRequestReason.OtherReason, errorData.message);
+                    throw new errors.InvalidRequest(
+                        errorData.reason ?? errors.InvalidRequestReason.OtherReason,
+                        errorData.message,
+                    );
                 }
             } else if (response.status === 404) {
                 throw new errors.NotFound(errorData.message);
@@ -120,7 +143,7 @@ export class NeolaceApiClient {
     }
 
     /** Helper method to get a siteId, either as given to the current method or falling back to the default. */
-    private getSiteId(methodOptions?: {siteId?: string}): string {
+    private getSiteId(methodOptions?: { siteId?: string }): string {
         if (methodOptions?.siteId) {
             return methodOptions.siteId;
         }
@@ -158,7 +181,9 @@ export class NeolaceApiClient {
      * returnUrl needs to include "{token}", which will get replaced with a secure token. Then
      * that updated link will be emailed to the user.
      */
-    public async requestEmailVerification(options: {email: string, returnUrl: string, data: Record<string, unknown>, siteId?: string}): Promise<void> {
+    public async requestEmailVerification(
+        options: { email: string; returnUrl: string; data: Record<string, unknown>; siteId?: string },
+    ): Promise<void> {
         const data: schemas.Type<typeof VerifyEmailRequest> = {
             email: options.email,
             data: options.data,
@@ -166,7 +191,7 @@ export class NeolaceApiClient {
             // siteFriendlyId is optional for this API call:
             siteFriendlyId: options.siteId ?? this.siteId ?? undefined,
         };
-        await this.call("/user/verify-email", {method: "POST", data});
+        await this.call("/user/verify-email", { method: "POST", data });
     }
 
     /**
@@ -175,7 +200,7 @@ export class NeolaceApiClient {
      * data was passed when creating the token.
      */
     public async checkVerificationToken(token: string): Promise<schemas.Type<typeof EmailTokenResponse>> {
-        return await this.call(`/user/verify-email?token=${token}`, {method: "GET"});
+        return await this.call(`/user/verify-email?token=${token}`, { method: "GET" });
     }
 
     /**
@@ -183,38 +208,40 @@ export class NeolaceApiClient {
      * First you must use requestEmailVerification() to verify the user's email address and get an email token.
      * This will return a temporary password which you can use to log the user in and/or to set a new password for them.
      */
-    public async registerHumanUser(data: {emailToken: string, fullName?: string, username?: string}): Promise<schemas.Type<typeof CreateHumanUserResponse>> {
-        return await this.call("/user", {method: "POST", data});
+    public async registerHumanUser(
+        data: { emailToken: string; fullName?: string; username?: string },
+    ): Promise<schemas.Type<typeof CreateHumanUserResponse>> {
+        return await this.call("/user", { method: "POST", data });
     }
 
     /**
      * Request passwordless login
      */
-    public async requestPasswordlessLogin(data: {email: string}): Promise<PasswordlessLoginResponse> {
-        return await this.call("/auth/request-login", {method: "POST", data, noAuth: true});
+    public async requestPasswordlessLogin(data: { email: string }): Promise<PasswordlessLoginResponse> {
+        return await this.call("/auth/request-login", { method: "POST", data, noAuth: true });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Site API Methods
 
-    public async getSite(criteria: {domain: string}): Promise<SiteDetailsData> {
-        return await this.call(`/site/find?domain=${encodeURIComponent(criteria.domain)}`, {method: "GET"});
+    public async getSite(criteria: { domain: string }): Promise<SiteDetailsData> {
+        return await this.call(`/site/find?domain=${encodeURIComponent(criteria.domain)}`, { method: "GET" });
     }
 
-    public async getSiteHomePage(options?: {siteId?: string}): Promise<SiteHomePageData> {
+    public async getSiteHomePage(options?: { siteId?: string }): Promise<SiteHomePageData> {
         const siteId = this.getSiteId(options);
-        return await this.call(`/site/${siteId}/home`, {method: "GET"});
+        return await this.call(`/site/${siteId}/home`, { method: "GET" });
     }
 
-    public async getSiteSchema(options?: {siteId?: string}): Promise<SiteSchemaData> {
+    public async getSiteSchema(options?: { siteId?: string }): Promise<SiteSchemaData> {
         const siteId = this.getSiteId(options);
-        return await this.call(`/site/${siteId}/schema`, {method: "GET"});
+        return await this.call(`/site/${siteId}/schema`, { method: "GET" });
     }
 
     /** Replace a site's schema with the provided schema */
-    public async replaceSiteSchema(schema: SiteSchemaData, options?: {siteId?: string}): Promise<void> {
+    public async replaceSiteSchema(schema: SiteSchemaData, options?: { siteId?: string }): Promise<void> {
         const siteId = this.getSiteId(options);
-        await this.call(`/site/${siteId}/schema`, {method: "PUT", data: schema});
+        await this.call(`/site/${siteId}/schema`, { method: "PUT", data: schema });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,13 +250,13 @@ export class NeolaceApiClient {
     public evaluateLookupExpression(
         expression: string,
         options: {
-            entryKey?: VNID|string,
-            siteId?: string,
-            pageSize?: number,
-        } = {}
+            entryKey?: VNID | string;
+            siteId?: string;
+            pageSize?: number;
+        } = {},
     ): Promise<EvaluateLookupData> {
         const siteId = this.getSiteId(options);
-        const query = new URLSearchParams({expression,});
+        const query = new URLSearchParams({ expression });
         if (options.entryKey) {
             query.set("entryKey", options.entryKey);
         }
@@ -245,12 +272,16 @@ export class NeolaceApiClient {
     private _parseDraft(rawDraft: any): DraftData {
         rawDraft.created = new Date(rawDraft.created);
         if (rawDraft.edits) {
-            rawDraft.edits.forEach((e: any) => { e.timestamp = Date.parse(e.timestamp); })
+            rawDraft.edits.forEach((e: any) => {
+                e.timestamp = Date.parse(e.timestamp);
+            });
         }
         return rawDraft;
     }
 
-    public async listDrafts(options?: {siteId?: string, page?: number, status?: DraftStatus}): Promise<schemas.PaginatedResultData<DraftData>> {
+    public async listDrafts(
+        options?: { siteId?: string; page?: number; status?: DraftStatus },
+    ): Promise<schemas.PaginatedResultData<DraftData>> {
         const siteId = this.getSiteId(options);
         const args = new URLSearchParams();
         if (options?.page !== undefined) {
@@ -259,37 +290,58 @@ export class NeolaceApiClient {
         if (options?.status !== undefined) {
             args.set("status", options.status.toString());
         }
-        const data = await this.call(`/site/${siteId}/draft/?` + args.toString(), {method: "GET"}) as any;
+        const data = await this.call(`/site/${siteId}/draft/?` + args.toString(), { method: "GET" }) as any;
         data.values = data.values.map(this._parseDraft);
         return data;
     }
 
-    public async getDraft<Flags extends readonly GetDraftFlags[]|undefined = undefined>(idNum: number, options?: {flags: Flags, siteId?: string}): Promise<ApplyFlags<typeof GetDraftFlags, Flags, DraftData>> {
+    public async getDraft<Flags extends readonly GetDraftFlags[] | undefined = undefined>(
+        idNum: number,
+        options?: { flags: Flags; siteId?: string },
+    ): Promise<ApplyFlags<typeof GetDraftFlags, Flags, DraftData>> {
         const siteId = this.getSiteId(options);
-        return this._parseDraft(await this.call(`/site/${siteId}/draft/${idNum}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""), {method: "GET"})) as any;
+        return this._parseDraft(
+            await this.call(
+                `/site/${siteId}/draft/${idNum}` +
+                    (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""),
+                { method: "GET" },
+            ),
+        ) as any;
     }
 
-    public async createDraft(data: schemas.Type<typeof CreateDraftSchema>, options?: {siteId?: string}): Promise<DraftData> {
+    public async createDraft(
+        data: schemas.Type<typeof CreateDraftSchema>,
+        options?: { siteId?: string },
+    ): Promise<DraftData> {
         const siteId = this.getSiteId(options);
-        const result = await this.call(`/site/${siteId}/draft`, {method: "POST", data: {
-            title: data.title,
-            description: data.description,
-            edits: data.edits ?? [],
-        }});
+        const result = await this.call(`/site/${siteId}/draft`, {
+            method: "POST",
+            data: {
+                title: data.title,
+                description: data.description,
+                edits: data.edits ?? [],
+            },
+        });
         return this._parseDraft(result);
     }
 
-    public async addEditToDraft(edit: AnySchemaEdit|AnyContentEdit, options: {idNum: number, siteId?: string}): Promise<void> {
+    public async addEditToDraft(
+        edit: AnySchemaEdit | AnyContentEdit,
+        options: { idNum: number; siteId?: string },
+    ): Promise<void> {
         const siteId = this.getSiteId(options);
-        await this.call(`/site/${siteId}/draft/${options.idNum}/edit`, {method: "POST", data: edit});
+        await this.call(`/site/${siteId}/draft/${options.idNum}/edit`, { method: "POST", data: edit });
     }
 
-    public async uploadFileToDraft(fileData: Blob, options: {idNum: number, siteId?: string}): Promise<DraftFileData> {
+    public async uploadFileToDraft(
+        fileData: Blob,
+        options: { idNum: number; siteId?: string },
+    ): Promise<DraftFileData> {
         const siteId = this.getSiteId(options);
         const hash = await crypto.subtle.digest("SHA-256", await fileData.arrayBuffer());
         const hashHex = bin2hex(new Uint8Array(hash));
         const formData = new FormData();
-        formData.append('file', fileData);
+        formData.append("file", fileData);
         const result = await this.call(`/site/${siteId}/draft/${options.idNum}/file?sha256Hash=${hashHex}`, {
             method: "POST",
             body: formData,
@@ -297,31 +349,41 @@ export class NeolaceApiClient {
         return result;
     }
 
-    public async acceptDraft(idNum: number, options?: {siteId?: string}): Promise<void> {
+    public async acceptDraft(idNum: number, options?: { siteId?: string }): Promise<void> {
         const siteId = this.getSiteId(options);
-        await this.call(`/site/${siteId}/draft/${idNum}/accept`, {method: "POST"});
+        await this.call(`/site/${siteId}/draft/${idNum}/accept`, { method: "POST" });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Entry API Methods
 
-    public getEntry<Flags extends readonly GetEntryFlags[]|undefined = undefined>(key: string, options: {flags?: Flags, siteId?: string} = {}): Promise<ApplyFlags<typeof GetEntryFlags, Flags, EntryData>> {
+    public getEntry<Flags extends readonly GetEntryFlags[] | undefined = undefined>(
+        key: string,
+        options: { flags?: Flags; siteId?: string } = {},
+    ): Promise<ApplyFlags<typeof GetEntryFlags, Flags, EntryData>> {
         const siteId = this.getSiteId(options);
-        return this.call(`/site/${siteId}/entry/${encodeURIComponent(key)}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""));
+        return this.call(
+            `/site/${siteId}/entry/${encodeURIComponent(key)}` +
+                (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""),
+        );
     }
 
     /**
      * Get a basic list of all entries on the site that the current user can view, optionally filtered by type.
-     * 
+     *
      * This is a very simple API, and for performance reasons results are ordered by ID, not by name. Use the search API
      * via getSearchConnection for more flexible ways of retrieving the list of entries.
      */
-    public async getEntries(options: {ofEntryType?: VNID, siteId?: string} = {}): Promise<{totalCount: number}&AsyncIterable<EntrySummaryData>> {
+    public async getEntries(
+        options: { ofEntryType?: VNID; siteId?: string } = {},
+    ): Promise<{ totalCount: number } & AsyncIterable<EntrySummaryData>> {
         const siteId = this.getSiteId(options);
-        const firstPage: schemas.StreamedResultData<EntrySummaryData> = await this.call(`/site/${siteId}/entry/` + (options.ofEntryType ? `?entryType=${options.ofEntryType}` : ""));
+        const firstPage: schemas.StreamedResultData<EntrySummaryData> = await this.call(
+            `/site/${siteId}/entry/` + (options.ofEntryType ? `?entryType=${options.ofEntryType}` : ""),
+        );
         let currentPage = firstPage;
         return {
-            totalCount: firstPage.totalCount!,  // The first page always includes the total count
+            totalCount: firstPage.totalCount!, // The first page always includes the total count
             [Symbol.asyncIterator]: () => ({
                 next: async (): Promise<IteratorResult<EntrySummaryData>> => {
                     if (currentPage.values.length > 0) {
@@ -337,7 +399,7 @@ export class NeolaceApiClient {
                             value: currentPage.values.shift()!,
                         };
                     } else {
-                        return {done: true, value: undefined};
+                        return { done: true, value: undefined };
                     }
                 },
             }),
@@ -350,10 +412,18 @@ export class NeolaceApiClient {
     /**
      * Get the permissions that the user has, in a specific context.
      * For example, to determine if the user has 'edit.entry' permission, pass in the entryId and entryTypeId
-     * @param options 
-     * @returns 
+     * @param options
+     * @returns
      */
-    public async getMyPermissions(options: {entryId?: VNID, entryTypeId?: VNID, draftIdNum?: number, [custom: `plugin:${string}`]: string, siteId?: string} = {}): Promise<SiteUserMyPermissionsData> {
+    public async getMyPermissions(
+        options: {
+            entryId?: VNID;
+            entryTypeId?: VNID;
+            draftIdNum?: number;
+            [custom: `plugin:${string}`]: string;
+            siteId?: string;
+        } = {},
+    ): Promise<SiteUserMyPermissionsData> {
         const siteId = this.getSiteId(options);
 
         const objectFields: Record<string, string> = {};
@@ -364,39 +434,51 @@ export class NeolaceApiClient {
         }
         const args = new URLSearchParams(objectFields);
 
-        return await this.call(`/site/${siteId}/my-permissions?${args.toString()}`, {method: "GET"});
+        return await this.call(`/site/${siteId}/my-permissions?${args.toString()}`, { method: "GET" });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Site administration API methods
 
-    public async getSiteUsers(options?: {page?: number, siteId?: string}): Promise<schemas.PaginatedResultData<SiteUserSummaryData>> {
+    public async getSiteUsers(
+        options?: { page?: number; siteId?: string },
+    ): Promise<schemas.PaginatedResultData<SiteUserSummaryData>> {
         const siteId = this.getSiteId(options);
-        return await this.call(`/site/${siteId}/user` + (options?.page ? `?page=${options.page}` : ""), {method: "GET"});
+        return await this.call(`/site/${siteId}/user` + (options?.page ? `?page=${options.page}` : ""), {
+            method: "GET",
+        });
     }
 
     /**
      * Erase all entries on the site. This is dangerous! Mostly useful for development.
      */
-    public async eraseAllEntriesDangerously(options: {confirm?: "danger", siteId?: string} = {}): Promise<void> {
+    public async eraseAllEntriesDangerously(options: { confirm?: "danger"; siteId?: string } = {}): Promise<void> {
         const siteId = this.getSiteId(options);
-        await this.call(`/site/${siteId}/entry/?confirm=${options.confirm}`, {method: 'DELETE'});
+        await this.call(`/site/${siteId}/entry/?confirm=${options.confirm}`, { method: "DELETE" });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Built-in plugin methods
 
-    public getSearchConnection(options?: {siteId?: string}): Promise<SiteSearchConnectionData> {
+    public getSearchConnection(options?: { siteId?: string }): Promise<SiteSearchConnectionData> {
         const siteId = this.getSiteId(options);
         return this.call(`/site/${siteId}/search/connection`);
     }
 
-    public pushBulkEdits(edits: AnyBulkEdit[], options: {siteId?: string, connectionId: string, createConnection?: boolean}): Promise<{appliedEditIds: string[]}> {
+    public pushBulkEdits(
+        edits: AnyBulkEdit[],
+        options: { siteId?: string; connectionId: string; createConnection?: boolean },
+    ): Promise<{ appliedEditIds: string[] }> {
         const siteId = this.getSiteId(options);
-        return this.call(`/site/${siteId}/connection/push/${options.connectionId}/edit/?${options.createConnection ? 'create=true' : ''}`, {
-            method: "POST",
-            data: {edits},
-        });
+        return this.call(
+            `/site/${siteId}/connection/push/${options.connectionId}/edit/?${
+                options.createConnection ? "create=true" : ""
+            }`,
+            {
+                method: "POST",
+                data: { edits },
+            },
+        );
     }
 }
 
@@ -405,36 +487,35 @@ export class NeolaceApiClient {
  *
  * This allows us to provide detailed typing for API responses that contain conditional fields (where certain fields in
  * the response may or may not be included based on whether or not certain "flags" were set when the request was made.)
- * 
+ *
  * See getEntry() and the test cases for details.
  */
 export type ApplyFlags<
     // The Enum type containing all the available flags
     AllFlags extends Record<string, string>,
     // An array that contains the flags that the user has requested for the current request
-    EnabledFlags extends readonly string[]|undefined,
+    EnabledFlags extends readonly string[] | undefined,
     // The overall data type that we'll return, where some fields may or may not be included based on whether the flag
     // (whose enum _value_ matches the field name) is enabled or not.
-    DataType
-> = (
-
-    EnabledFlags extends ArrayInnerType<EnabledFlags>[] ?
-        // We don't know which flags are enabled until runtime.
-        DataType
+    DataType,
+> = EnabledFlags extends ArrayInnerType<EnabledFlags>[] // We don't know which flags are enabled until runtime.
+    ? DataType
+    // We know now (at compile time) which flags are enabled and which aren't:
     : 
-        // We know now (at compile time) which flags are enabled and which aren't:
-        {
+        & {
             // Unconditionally include all the normal properties that aren't controlled by flags
-            [Key in keyof DataType as (Key extends EnumValues<AllFlags> ? never : Key)]: DataType[Key]
-        } & {
-            // But conditionally include the fields that _are_ controlled by flags:
-            [Key in keyof DataType as Key extends EnumValues<AllFlags> ? Key : never]-?:
-                Key extends ToStringUnion<EnabledFlags> ? DataType[Key] : undefined//`requires the ${Key&string} flag`
+            [Key in keyof DataType as (Key extends EnumValues<AllFlags> ? never : Key)]: DataType[Key];
         }
-);
+        & {
+            // But conditionally include the fields that _are_ controlled by flags:
+            [Key in keyof DataType as Key extends EnumValues<AllFlags> ? Key : never]-?: Key extends
+                ToStringUnion<EnabledFlags> ? DataType[Key] : undefined; //`requires the ${Key&string} flag`
+        };
 
-type ArrayInnerType <T> = T extends ((infer V)[]) ? V : never;
-type ToStringUnion <T> = T extends readonly [infer Type1, ...infer Rest] ? (Type1 extends string ? `${Type1}` : never)|ToStringUnion<Rest> : never;
+type ArrayInnerType<T> = T extends ((infer V)[]) ? V : never;
+type ToStringUnion<T> = T extends readonly [infer Type1, ...infer Rest]
+    ? (Type1 extends string ? `${Type1}` : never) | ToStringUnion<Rest>
+    : never;
 
 /** Helper to get the *values* of a string enum as a combined string type, like "Value1"|"Value2" */
 type EnumValues<Enum> = Enum extends Record<string, string> ? `${Enum[keyof Enum]}` : never;

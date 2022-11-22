@@ -1,4 +1,4 @@
-import { Schema, string, boolean, normalString, object } from "./api-schemas.ts";
+import { boolean, normalString, object, Schema, string } from "./api-schemas.ts";
 
 export interface PasswordlessLoginResponse {
     /** Determines whether or not the user's passwordless login request succeeded */
@@ -16,7 +16,7 @@ export const UserDataResponse = Schema.either(
         ownedByUsername: string,
         username: normalString,
         fullName: normalString,
-    }
+    },
 );
 
 /**
@@ -38,7 +38,6 @@ export const CreateHumanUserResponse = Schema({
     userData: UserDataResponse,
 });
 
-
 /**
  * Before registering a user account, that user's email address must be verified using this API.
  * This request will cause the system to send an email to the specified user.
@@ -48,7 +47,7 @@ export const VerifyEmailRequest = Schema({
     email: normalString,
     /** Optional: which site the user wants to use. This will affect the branding of the email */
     siteFriendlyId: normalString.strictOptional(),
-    /** 
+    /**
      * The sent email should include a link that takes the user to this URL to continue with registration.
      * The link should include the string "{token}" which will be replaced with the email validation token
      * that proves the user got the email.
@@ -68,5 +67,5 @@ export const VerifyEmailRequest = Schema({
 export const EmailTokenResponse = Schema({
     email: normalString,
     // deno-lint-ignore no-explicit-any
-    data: object.transform(x => x as Record<string, any>),
+    data: object.transform((x) => x as Record<string, any>),
 });

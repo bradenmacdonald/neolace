@@ -8,14 +8,12 @@ const idCacheKey = Symbol("idCache");
  * A plugin for markdown-it that gives each "heading" node a unique friendly slug like "heading-text".
  */
 export function HeadingIdPlugin(md: MarkdownIt): void {
-
     const generateHeadingId = (state: any) => {
-
         const idCache: Set<string> = state[idCacheKey] ?? (state[idCacheKey] = new Set());
 
         state.tokens.forEach(function (token: Token, i: number) {
-            if (token.type === 'heading_open') {
-                const text = md.renderer.render(state.tokens[i + 1].children, md.options)
+            if (token.type === "heading_open") {
+                const text = md.renderer.render(state.tokens[i + 1].children, md.options);
                 const slugId = makeUnique(slugify(text));
                 token.attrSet("slugId", slugId);
             }
@@ -27,11 +25,11 @@ export function HeadingIdPlugin(md: MarkdownIt): void {
                 return id;
             }
             let i = 2;
-            while (idCache.has(`${id}-${i}`)) { i++; }
+            while (idCache.has(`${id}-${i}`)) i++;
             idCache.add(`${id}-${i}`);
             return `${id}-${i}`;
         }
-    }
+    };
 
     md.core.ruler.push("named_headings", generateHeadingId);
 }

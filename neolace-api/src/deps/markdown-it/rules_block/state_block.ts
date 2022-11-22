@@ -5,7 +5,7 @@ import type { Token } from "../Token.ts";
 type MarkdownIt = any;
 
 declare namespace StateBlock {
-    type ParentType = 'blockquote' | 'list' | 'root' | 'paragraph' | 'reference' | 'footnote';
+    type ParentType = "blockquote" | "list" | "root" | "paragraph" | "reference" | "footnote";
 }
 
 declare class StateBlock {
@@ -134,4 +134,4 @@ declare class StateBlock {
     Token: typeof Token;
 }
 
-export type { StateBlock }
+export type { StateBlock };

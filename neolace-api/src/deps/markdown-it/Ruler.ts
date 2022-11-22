@@ -166,4 +166,4 @@ declare class Ruler<T> {
     getRules(chainName: string): T[];
 }
 
-export type {Ruler}
+export type { Ruler };

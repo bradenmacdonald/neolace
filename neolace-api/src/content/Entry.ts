@@ -1,7 +1,6 @@
-import { Schema, Type, string, vnidString, array, number } from "../api-schemas.ts";
+import { array, number, Schema, string, Type, vnidString } from "../api-schemas.ts";
 import { LookupValueSchema } from "./lookup-value.ts";
 import { ReferenceCacheSchema } from "./reference-cache.ts";
-
 
 export enum GetEntryFlags {
     IncludePropertiesSummary = "propertiesSummary",
@@ -16,7 +15,6 @@ export enum GetEntryFlags {
      */
     IncludeRawProperties = "propertiesRaw",
 }
-
 
 /**
  * Defines the information needed to display a property value in the frontend
@@ -49,7 +47,7 @@ export enum ImageSizingMode {
 export const EntryFeaturesSchema = Schema({
     Article: Schema({
         articleContent: string,
-        headings: array.of(Schema({title: string, id: string})),
+        headings: array.of(Schema({ title: string, id: string })),
     }).strictOptional(),
 
     Files: Schema({
@@ -87,10 +85,6 @@ export const EntryFeaturesSchema = Schema({
 });
 export type EntryFeaturesData = Type<typeof EntryFeaturesSchema>;
 
-
-
-
-
 export const BaseEntrySchema = Schema({
     id: vnidString,
     name: string,
@@ -114,13 +108,13 @@ export const EntrySchema = Schema.merge(BaseEntrySchema, {
 });
 export type EntryData = Type<typeof EntrySchema>;
 export type EditableEntryData = Type<typeof BaseEntrySchema> & {
-    features: NonNullable<EntryData["features"]>,
-    propertiesRaw: NonNullable<EntryData["propertiesRaw"]>,
+    features: NonNullable<EntryData["features"]>;
+    propertiesRaw: NonNullable<EntryData["propertiesRaw"]>;
 };
 
 export const EntrySummarySchema = Schema({
     id: vnidString,
-    type: Schema({id: vnidString}),
+    type: Schema({ id: vnidString }),
     name: string,
     friendlyId: string,
 });

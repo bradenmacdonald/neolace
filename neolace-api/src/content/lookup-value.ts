@@ -5,7 +5,7 @@ import { ImageSizingMode } from "./Entry.ts";
 /** A "lookup value" / query result / computed fact that has been serialized to JSON */
 export interface LookupValue {
     type: string;
-    annotations?: Record<string, AnyLookupValue>
+    annotations?: Record<string, AnyLookupValue>;
 }
 
 export interface PageValue extends LookupValue {
@@ -14,7 +14,7 @@ export interface PageValue extends LookupValue {
     startedAt: number;
     pageSize: number;
     totalCount: number;
-    source?: {expr: string; entryId?: VNID; };
+    source?: { expr: string; entryId?: VNID };
 }
 
 export interface ListValue extends LookupValue {
@@ -64,13 +64,13 @@ export interface GraphValue extends LookupValue {
         name: string;
         entryType: VNID;
         isFocusEntry?: boolean;
-    }[],
+    }[];
     rels: {
         relId: VNID;
         relType: VNID;
         fromEntryId: VNID;
         toEntryId: VNID;
-    }[],
+    }[];
 }
 
 export interface ImageValue extends LookupValue {
@@ -85,12 +85,12 @@ export interface ImageValue extends LookupValue {
     blurHash?: string;
     borderColor?: [R: number, G: number, B: number, A: number];
     // Should this image be a link?
-    link?: EntryValue|StringValue;
+    link?: EntryValue | StringValue;
     // How the image should be displayed:
     format: ImageDisplayFormat;
-    caption?: InlineMarkdownString|StringValue;
-    maxWidth?: number;  // maximum width in pixels (CSS reference pixel at 96dpi), for "logo" format only
-    sizing: ImageSizingMode,
+    caption?: InlineMarkdownString | StringValue;
+    maxWidth?: number; // maximum width in pixels (CSS reference pixel at 96dpi), for "logo" format only
+    sizing: ImageSizingMode;
 }
 
 export interface BooleanValue extends LookupValue {
@@ -111,18 +111,18 @@ export interface QuantityValue extends LookupValue {
     /** Helpful conversions that users may wish to see */
     conversions?: {
         /** The most important/expected conversion to display, if relevant */
-        primary?: { magnitude: number; units: string; };
+        primary?: { magnitude: number; units: string };
         /** Conversion to base SI units, if not already in base units */
-        base?: { magnitude: number; units: string; };
+        base?: { magnitude: number; units: string };
         /** Conversion to US Customary System */
-        uscs?: { magnitude: number; units: string; };
-    }
+        uscs?: { magnitude: number; units: string };
+    };
 }
 
 export interface RangeValue extends LookupValue {
     type: "Range";
-    min: IntegerValue|QuantityValue|DateValue|StringValue;
-    max: IntegerValue|QuantityValue|DateValue|StringValue;
+    min: IntegerValue | QuantityValue | DateValue | StringValue;
+    max: IntegerValue | QuantityValue | DateValue | StringValue;
 }
 
 export interface DateValue extends LookupValue {
@@ -151,7 +151,7 @@ export interface ErrorValue extends LookupValue {
     message: string;
 }
 
-export type AnyLookupValue = (
+export type AnyLookupValue =
     | PageValue
     | EntryValue
     | EntryTypeValue
@@ -167,7 +167,6 @@ export type AnyLookupValue = (
     | StringValue
     | InlineMarkdownString
     | NullValue
-    | ErrorValue
-);
+    | ErrorValue;
 
-export const LookupValueSchema = object.transform(v => v as AnyLookupValue);
+export const LookupValueSchema = object.transform((v) => v as AnyLookupValue);

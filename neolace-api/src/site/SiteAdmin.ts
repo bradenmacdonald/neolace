@@ -6,7 +6,7 @@ export const SiteUserSummary = Schema({
     fullName: string,
     isBot: boolean,
     /** If this is a bot, which human user is it associated with? */
-    ownedBy: Schema({username: string, fullName: string}).strictOptional(),
+    ownedBy: Schema({ username: string, fullName: string }).strictOptional(),
     /** The groups that this user is part of. This may be undefined if the current user doesn't have permission to see this information. */
     groups: array.of(Schema({
         id: vnidString,

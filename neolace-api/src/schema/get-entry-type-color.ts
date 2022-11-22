@@ -1,8 +1,11 @@
 import { EntryTypeColor } from "./SiteSchemaData.ts";
 
-const defaultColor = ["#F1F5F9", "#CBD5E1", "#0F172A"] as const;  // Default is "Slate" color
+const defaultColor = ["#F1F5F9", "#CBD5E1", "#0F172A"] as const; // Default is "Slate" color
 
-const entryTypeColors: Record<EntryTypeColor, readonly [backgroundColor: string, darkerBackgroundColor: string, textColor: string]> = Object.freeze({
+const entryTypeColors: Record<
+    EntryTypeColor,
+    readonly [backgroundColor: string, darkerBackgroundColor: string, textColor: string]
+> = Object.freeze({
     // [overall background color, darker left rectangle color, text color]
     // These colors come from https://tailwindcss.com/docs/customizing-colors and are typically the
     // [color-100, color-200, and color-800] variants from that pallete
@@ -22,9 +25,10 @@ const entryTypeColors: Record<EntryTypeColor, readonly [backgroundColor: string,
     [EntryTypeColor.Rose]: ["#FFE4E6", "#FECDD3", "#9F1239"],
 });
 
-export function getEntryTypeColor(entryTypeData: {color: EntryTypeColor|undefined, colorCustom?: string}|undefined): { backgroundColor: string, darkerBackgroundColor: string, textColor: string } {
-
-    const {color, colorCustom} = entryTypeData ?? {};
+export function getEntryTypeColor(
+    entryTypeData: { color: EntryTypeColor | undefined; colorCustom?: string } | undefined,
+): { backgroundColor: string; darkerBackgroundColor: string; textColor: string } {
+    const { color, colorCustom } = entryTypeData ?? {};
 
     if (color === EntryTypeColor.Custom && colorCustom) {
         // This is a custom color:
