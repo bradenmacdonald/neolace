@@ -10,6 +10,8 @@ COPY backend /neolace/backend
 COPY neolace-api /neolace/neolace-api
 
 # Cache dependencies and check types
+# Unfortunately the esm.sh server seems to serve files with some minor changes, so it's breaking the lock file checking, even with a pinned esm.sh version
+RUN rm deno.lock
 RUN deno cache neolace/api/server.ts
 RUN deno cache neolace/plugins/*/mod.ts
 
