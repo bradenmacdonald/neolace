@@ -8,6 +8,6 @@
             "type": "shell",
             "command": "./_compile.ts",
             "problemMatcher": []
-        },
+        }
     ]
 }

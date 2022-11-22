@@ -43,4 +43,4 @@ declare class ParserInline {
     State: typeof StateInline;
 }
 
-export type { ParserInline }
+export type { ParserInline };

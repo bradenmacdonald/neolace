@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { vnidString, } from "../api-schemas.ts";
+import { vnidString } from "../api-schemas.ts";
 import { array, Schema, SchemaValidatorFunction, string } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "./Edit.ts";
 
@@ -17,21 +17,24 @@ import { Edit, EditChangeType, EditType } from "./Edit.ts";
  * creation will show up in the history as a "CreateEntry" event, not as either "CreateEntry" or "UpsertById" or
  * "UpsertByFriendlyId")
  */
-export interface BulkEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = any> extends EditType<Code, DataSchema> {
+export interface BulkEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = any>
+    extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Bulk;
 }
 
 // This helper function just makes the typing easier to set.
-function BulkEditType<Code extends string, DataSchema extends SchemaValidatorFunction<any>>(args: BulkEditType<Code, DataSchema>): BulkEditType<Code, DataSchema> {
+function BulkEditType<Code extends string, DataSchema extends SchemaValidatorFunction<any>>(
+    args: BulkEditType<Code, DataSchema>,
+): BulkEditType<Code, DataSchema> {
     return args;
 }
 
 /** Different ways to specify an entry */
 const BulkEditEntryLookup = Schema.either(
     /** Look up an entry based on its ID: */
-    Schema({entryId: vnidString}),
+    Schema({ entryId: vnidString }),
     /** Look up an entry based on its friendly ID: */
-    Schema({friendlyId: string}),
+    Schema({ friendlyId: string }),
     /** Look up an entry based on a property value: */
     // Schema({entryTypeId: vnidString, propertyId: vnidString, exactValueExpression: string}),
 );
@@ -129,16 +132,15 @@ export const _allBulkEditTypes = {
     SetRelationships,
 };
 
-export type AnyBulkEdit = (
+export type AnyBulkEdit =
     | Edit<typeof UpsertEntryById>
     | Edit<typeof UpsertEntryByFriendlyId>
     | Edit<typeof SetPropertyFacts>
-    | Edit<typeof SetRelationships>
-);
+    | Edit<typeof SetRelationships>;
 
 export const BulkEditSchema = Schema.either(
-    Schema({code: UpsertEntryById.code, data: UpsertEntryById.dataSchema}),
-    Schema({code: UpsertEntryByFriendlyId.code, data: UpsertEntryByFriendlyId.dataSchema}),
-    Schema({code: SetPropertyFacts.code, data: SetPropertyFacts.dataSchema}),
-    Schema({code: SetRelationships.code, data: SetRelationships.dataSchema}),
-).transform(e => e as AnyBulkEdit);
+    Schema({ code: UpsertEntryById.code, data: UpsertEntryById.dataSchema }),
+    Schema({ code: UpsertEntryByFriendlyId.code, data: UpsertEntryByFriendlyId.dataSchema }),
+    Schema({ code: SetPropertyFacts.code, data: SetPropertyFacts.dataSchema }),
+    Schema({ code: SetRelationships.code, data: SetRelationships.dataSchema }),
+).transform((e) => e as AnyBulkEdit);

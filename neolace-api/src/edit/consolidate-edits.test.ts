@@ -203,7 +203,7 @@ Deno.test("Consolidate edits", async (t) => {
                 type: type1,
                 name: "Aerial lift",
                 description: "A **aerial lift** has yet to be described",
-                friendlyId: "tc-trnsprt-cable-top"
+                friendlyId: "tc-trnsprt-cable-top",
             },
         };
         const secondEdit: AnyEdit = {
@@ -212,36 +212,39 @@ Deno.test("Consolidate edits", async (t) => {
                 entryId: entryA,
                 propertyId: VNID(),
                 propertyFactId: VNID(),
-                valueExpression: "entry(\"_5tEE5QD4ucSGpKcwioQv0x\")"
-            }
+                valueExpression: 'entry("_5tEE5QD4ucSGpKcwioQv0x")',
+            },
         };
         const thirdEdit: AnyEdit = {
             code: "SetEntryDescription",
             data: {
                 "entryId": entryA,
                 "description": "A **aerial lift** is something like a gondola that hangs from a wire rope.",
-            }
+            },
         };
         assertEquals(consolidateEdits([firstEdit, secondEdit, thirdEdit]), [
-            {code: "CreateEntry", data: {...firstEdit.data, description: thirdEdit.data.description}},
+            { code: "CreateEntry", data: { ...firstEdit.data, description: thirdEdit.data.description } },
             secondEdit,
         ]);
     });
 
     await t.step("Changing entry type name after creating it", () => {
-        assertEquals(consolidateEdits([
-            {code: "CreateEntryType", data: {id: type1, name: "Old name 1"}},
-            {code: "CreateEntryType", data: {id: type2, name: "Old name 2"}},
-            {code: "CreateEntryType", data: {id: type3, name: "Type 3"}},
-            {code: "UpdateEntryType", data: {id: type1, name: "New Name 1"}},
-            {code: "UpdateEntryType", data: {id: type2, name: "New Name 2", description: "description 2"}},
-            {code: "UpdateEntryType", data: {id: type3, description: "description 3. Name wasn't changed."}},
-        ]), [
-            {code: "CreateEntryType", data: {id: type1, name: "New Name 1"}},
-            {code: "CreateEntryType", data: {id: type2, name: "New Name 2"}},
-            {code: "UpdateEntryType", data: {id: type2, description: "description 2"}}, // Note that this moved up. Shouldn't be a problem? Would be better if it stayed put though.
-            {code: "CreateEntryType", data: {id: type3, name: "Type 3"}},
-            {code: "UpdateEntryType", data: {id: type3, description: "description 3. Name wasn't changed."}},
-        ]);
+        assertEquals(
+            consolidateEdits([
+                { code: "CreateEntryType", data: { id: type1, name: "Old name 1" } },
+                { code: "CreateEntryType", data: { id: type2, name: "Old name 2" } },
+                { code: "CreateEntryType", data: { id: type3, name: "Type 3" } },
+                { code: "UpdateEntryType", data: { id: type1, name: "New Name 1" } },
+                { code: "UpdateEntryType", data: { id: type2, name: "New Name 2", description: "description 2" } },
+                { code: "UpdateEntryType", data: { id: type3, description: "description 3. Name wasn't changed." } },
+            ]),
+            [
+                { code: "CreateEntryType", data: { id: type1, name: "New Name 1" } },
+                { code: "CreateEntryType", data: { id: type2, name: "New Name 2" } },
+                { code: "UpdateEntryType", data: { id: type2, description: "description 2" } }, // Note that this moved up. Shouldn't be a problem? Would be better if it stayed put though.
+                { code: "CreateEntryType", data: { id: type3, name: "Type 3" } },
+                { code: "UpdateEntryType", data: { id: type3, description: "description 3. Name wasn't changed." } },
+            ],
+        );
     });
 });

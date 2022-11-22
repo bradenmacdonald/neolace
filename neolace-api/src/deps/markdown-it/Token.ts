@@ -104,13 +104,10 @@ declare class Token {
     attrGet(name: string): string | null;
 
     /**
-     *
      * Join value to existing attribute via space. Or create new attribute if not
      * exists. Useful to operate with token classes.
      */
     attrJoin(name: string, value: string): void;
 }
 
-export type {
-    Token
-}
+export type { Token };

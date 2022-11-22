@@ -1,4 +1,4 @@
-import { Schema, Type, string, vnidString, array, DateType, object, number, } from "../api-schemas.ts";
+import { array, DateType, number, object, Schema, string, Type, vnidString } from "../api-schemas.ts";
 import { VNID } from "../types.ts";
 import type { AnyEdit } from "./AnyEdit.ts";
 import { EditChangeType } from "./Edit.ts";
@@ -13,11 +13,11 @@ export enum GetDraftFlags {
     IncludeEdits = "edits",
 }
 
-export const CreateEditSchema = Schema({code: string, data: object}).transform(e => e as AnyEdit);
+export const CreateEditSchema = Schema({ code: string, data: object }).transform((e) => e as AnyEdit);
 
 /**
  * Parameters used when creating a new draft.
- * 
+ *
  * This has nothing to do with the Site's "Schema"; Schema here just means the shape of this data structure, which
  * can be accessed programatically.
  */
@@ -35,12 +35,12 @@ export const DraftEditSchema = Schema({
     changeType: Schema.enum(EditChangeType),
     data: object.strictOptional(),
     timestamp: DateType,
-}).transform(e => e as AnyEdit & { id: VNID, changeType: EditChangeType, timestamp: Date });
+}).transform((e) => e as AnyEdit & { id: VNID; changeType: EditChangeType; timestamp: Date });
 export type DraftEditData = Type<typeof DraftEditSchema>;
 
 export const DraftSchema = Schema({
     idNum: number,
-    author: Schema({username: string, fullName: string}),
+    author: Schema({ username: string, fullName: string }),
     title: string,
     description: string,
     status: Schema.enum(DraftStatus),

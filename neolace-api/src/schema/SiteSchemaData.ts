@@ -1,4 +1,4 @@
-import { Schema, Type, string, number, vnidString, array, boolean, Record, } from "../api-schemas.ts";
+import { array, boolean, number, Record, Schema, string, Type, vnidString } from "../api-schemas.ts";
 
 /** The available color options for each entry */
 export enum EntryTypeColor {
@@ -34,19 +34,15 @@ export const EntryTypeSchema = Schema({
     abbreviation: string.min(0).max(2),
 
     enabledFeatures: Schema({
-        Article: Schema({
-        }).strictOptional(),
-        Files: Schema({
-        }).strictOptional(),
-        Image: Schema({
-        }).strictOptional(),
+        Article: Schema({}).strictOptional(),
+        Files: Schema({}).strictOptional(),
+        Image: Schema({}).strictOptional(),
         HeroImage: Schema({
             lookupExpression: string,
         }).strictOptional(),
     }),
 });
 export type EntryTypeData = Type<typeof EntryTypeSchema>;
-
 
 export enum PropertyType {
     /**
@@ -175,8 +171,8 @@ export const SiteSchemaSchema = Schema({
  * A complete specification of the schema of a neolace site.
  */
 export interface SiteSchemaData {
-    entryTypes: {[id: string]: EntryTypeData};
-    properties: {[id: string]: PropertyData};
+    entryTypes: { [id: string]: EntryTypeData };
+    properties: { [id: string]: PropertyData };
 }
 // This also works but is a bit verbose because it doesn't use our named interfaces:
 //export type SiteSchemaData = Type<typeof SiteSchemaSchema>;

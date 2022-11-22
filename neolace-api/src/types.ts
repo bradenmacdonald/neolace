@@ -5,7 +5,6 @@
 // Our code for compiling to Node.js doesn't support HTTP imports ^ so we have copied the code below. It's very stable
 // anyways.
 
-
 /**
  * A simple TypeScript UUIDv4 implementation for Deno
  *
@@ -31,30 +30,34 @@ class UUIDv4 {
             for (let i = 0; i < 16; i++) {
                 // Parsing each digit separately gives more robust error handling; otherwise errors in second digit get ignored.
                 const value = parseInt(hexDigits.charAt(i * 2), 16) * 16 + parseInt(hexDigits.charAt(i * 2 + 1), 16);
-                if (isNaN(value)) { throw new Error(`Invalid UUID string "${stringValue}"`); }
+                if (isNaN(value)) throw new Error(`Invalid UUID string "${stringValue}"`);
                 // We need to check NaN before storing into this._value, or NaN gets silently converted to 0
                 this._value[i] = value;
             }
         } else {
             // Generate a new random UUIDv4:
             crypto.getRandomValues(this._value);
-            this._value[6] = (this._value[6] & 0x0f) | (UUIDv4.VERSION<<4);
-            this._value[8] = (this._value[8] & 0xbf) | (UUIDv4.VARIANT<<6);
+            this._value[6] = (this._value[6] & 0x0f) | (UUIDv4.VERSION << 4);
+            this._value[8] = (this._value[8] & 0xbf) | (UUIDv4.VARIANT << 6);
         }
     }
 
     /**
      * Custom JSON serialization
      */
-    public toJSON(): string { return this.toString(); }
+    public toJSON(): string {
+        return this.toString();
+    }
 
     /**
      * Get the primitive value (enables correct sorting)
      * Except note that equality checking won't work.
      */
-    public valueOf(): string { return this.toString(); }
+    public valueOf(): string {
+        return this.toString();
+    }
 
-    /** 
+    /**
      * Get this UUID as a BigInt
      */
     public toBigInt(): bigint {
@@ -73,7 +76,7 @@ export type VNID = NominalType<string, "VNID">;
 export function VNID(encodedString?: string): VNID {
     if (encodedString === undefined) {
         // Generate a new VNID.
-        return encodeVNID(new UUIDv4())
+        return encodeVNID(new UUIDv4());
     } else {
         // Validate that an arbitrary string is a VNID (type safety check)
         decodeVNID(encodedString as VNID); // This will raise an exception if the value is not a valid VNID
@@ -84,7 +87,7 @@ export function VNID(encodedString?: string): VNID {
 /** Is the given value a VNID string? */
 export function isVNID(value: unknown): value is VNID {
     try {
-        decodeVNID(value as VNID);  // It is safe to pass non-strings to this function
+        decodeVNID(value as VNID); // It is safe to pass non-strings to this function
         return true;
     } catch {
         return false;
@@ -95,7 +98,6 @@ export function isVNID(value: unknown): value is VNID {
 function encodeVNID(value: UUIDv4): VNID {
     return "_" + toBase62(value.toBigInt()) as VNID;
 }
-
 
 // Character set for VNIDs - this is base62, in ASCII sort order
 const vnidCharset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -119,7 +121,7 @@ function toBase62(number: bigint): string {
 
 /**
  * Given a VNID string (base 62 encoded UUID with "_" prefix), decode it to a UUID.
- * 
+ *
  * Use decodeVNID(VNID(foo)) to parse a string value; do not use decodeVNID(foo as VNID)
  */
 function decodeVNID(value: VNID): UUIDv4 {

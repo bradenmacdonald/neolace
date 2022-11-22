@@ -20,7 +20,7 @@ export function FootnotePlugin(md: MarkdownIt): void {
 
     // Process footnote block definition
     const footnote_def: ParserBlock.RuleBlock = (state, startLine, endLine, silent) => {
-        if (!state.env.collectFootnotes) return false;  // Only inline footnotes are allowed, not these references that would be moved to the end of the document.
+        if (!state.env.collectFootnotes) return false; // Only inline footnotes are allowed, not these references that would be moved to the end of the document.
         const start = state.bMarks[startLine] + state.tShift[startLine];
         const max = state.eMarks[startLine];
 
@@ -102,7 +102,7 @@ export function FootnotePlugin(md: MarkdownIt): void {
         state.tokens.push(closeToken);
 
         return true;
-    }
+    };
 
     /** Process inline footnotes (^[...])  */
     const footnote_inline: ParserInline.RuleInline = (state, silent) => {
@@ -127,7 +127,7 @@ export function FootnotePlugin(md: MarkdownIt): void {
             if (!state.env.footnotes.list) state.env.footnotes.list = [];
             const footnoteId = state.env.footnotes.list.length;
 
-            const tokens: Token[] = []
+            const tokens: Token[] = [];
             state.md.inline.parse(
                 state.src.slice(labelStart, labelEnd),
                 state.md,
@@ -153,17 +153,16 @@ export function FootnotePlugin(md: MarkdownIt): void {
                 state.tokens.push(...tokens);
                 state.push("footnote_inline_close", "", -1);
             }
-
         }
 
         state.pos = labelEnd + 1;
         state.posMax = max;
         return true;
-    }
+    };
 
     /** Process footnote references ([^...])  */
     const footnote_ref: ParserInline.RuleInline = (state, silent) => {
-        if (!state.env.collectFootnotes) return false;  // Only inline footnotes are allowed, not these references that would be moved to the end of the document.
+        if (!state.env.collectFootnotes) return false; // Only inline footnotes are allowed, not these references that would be moved to the end of the document.
 
         const max = state.posMax;
         const start = state.pos;
@@ -213,7 +212,7 @@ export function FootnotePlugin(md: MarkdownIt): void {
         state.pos = pos;
         state.posMax = max;
         return true;
-    }
+    };
 
     // Glue footnote tokens to end of token stream
     function footnote_tail(state: any) {
@@ -222,7 +221,7 @@ export function FootnotePlugin(md: MarkdownIt): void {
         let insideRef = false;
         const refTokens: Record<string, Token[]> = {};
 
-        if (!state.env.collectFootnotes) return;  // Only inline footnotes are allowed, not moved to the end of the document.
+        if (!state.env.collectFootnotes) return; // Only inline footnotes are allowed, not moved to the end of the document.
         if (!state.env.footnotes) return;
 
         state.tokens = state.tokens.filter(function (tok: Token) {
@@ -248,7 +247,7 @@ export function FootnotePlugin(md: MarkdownIt): void {
         const openBlockToken = new state.Token("footnotes_open", "", 1);
         state.tokens.push(openBlockToken);
 
-        let lastParagraph: Token|null = null;
+        let lastParagraph: Token | null = null;
         let tokens: Token[] = [];
         for (let i = 0, l = list.length; i < l; i++) {
             const openToken = new state.Token("footnote_open", "", 1);

@@ -7,12 +7,12 @@
         "sourceMap": false,
         "forceConsistentCasingInFileNames": true,
         "module": "CommonJS",
-        "lib": ["dom","dom.iterable","es2021"],
+        "lib": ["dom", "dom.iterable", "es2021"],
         "moduleResolution": "Node",
         "strict": true,
         "target": "ES2019",
-        "typeRoots" : ["./node_modules/@types"],
-        "declaration": true,
+        "typeRoots": ["./node_modules/@types"],
+        "declaration": true
     },
-    "include": ["src/**/*.ts"],
+    "include": ["src/**/*.ts"]
 }

@@ -11,10 +11,9 @@ await build({
     test: false,
     // Emit ES6 style output, not CommonJS nor UMD
     scriptModule: false,
-    shims: {
-    },
+    shims: {},
     compilerOptions: {
-        lib: ["dom","dom.iterable","es2021"],
+        lib: ["dom", "dom.iterable", "es2021"],
     },
     package: {
         // package.json properties

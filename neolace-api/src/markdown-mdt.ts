@@ -2,59 +2,59 @@
 import markdown from "./deps/markdown-it.min.js";
 import type { Token } from "./deps/markdown-it/Token.ts";
 import {
-    Node,
-    InlineNode,
-    RootNode,
-    AnyInlineNode,
     AnyBlockNode,
-    TextNode,
-    ParagraphNode,
-    InlineLookupNode,
-    CustomInlineNode,
+    AnyInlineNode,
     CustomBlockNode,
+    CustomInlineNode,
+    InlineLookupNode,
+    InlineNode,
+    Node,
+    ParagraphNode,
+    RootNode,
+    TextNode,
 } from "./markdown-mdt-ast.ts";
 export type {
-    Node,
-    InlineNode,
-    RootNode,
-    AnyInlineNode,
     AnyBlockNode,
-    TextNode,
-    ParagraphNode,
-    InlineLookupNode,
-    CustomInlineNode,
+    AnyInlineNode,
     CustomBlockNode,
-}
+    CustomInlineNode,
+    InlineLookupNode,
+    InlineNode,
+    Node,
+    ParagraphNode,
+    RootNode,
+    TextNode,
+};
 import { HeadingIdPlugin } from "./markdown-mdt-heading-id-plugin.ts";
 import { LookupExpressionPlugin } from "./markdown-mdt-lookup-plugin.ts";
 import { SubPlugin } from "./markdown-mdt-sub-plugin.ts";
 import { FootnotePlugin } from "./markdown-mdt-footnote-plugin.ts";
 
 const parser = markdown("commonmark", {
-    breaks: false,  // Don't convert \n in paragraphs into <br>
-    html: false,  // We don't allow arbitrary HTML
-    linkify: false,  // Do not URL-like strings to links - they're ugly and likely spam
-    typographer: false,  // (TM) → ™, (C) → ©, ... → …, and smart quotes, etc.
-    xhtmlOut: false,  // Use HTML5, not XHTML
+    breaks: false, // Don't convert \n in paragraphs into <br>
+    html: false, // We don't allow arbitrary HTML
+    linkify: false, // Do not URL-like strings to links - they're ugly and likely spam
+    typographer: false, // (TM) → ™, (C) → ©, ... → …, and smart quotes, etc.
+    xhtmlOut: false, // Use HTML5, not XHTML
 })
-.disable("image") // Disable inline images
-.enable("strikethrough") // Enable ~~strikethrough~~
-.enable("table") // Enable tables (GitHub-style)
-.use(HeadingIdPlugin) // Give each heading an ID
-.use(LookupExpressionPlugin) // Parse { lookup expressions }
-.use(SubPlugin) // Allow use of <sub> and <sup> tags
-.use(FootnotePlugin); // Allow footnotes of various forms
+    .disable("image") // Disable inline images
+    .enable("strikethrough") // Enable ~~strikethrough~~
+    .enable("table") // Enable tables (GitHub-style)
+    .use(HeadingIdPlugin) // Give each heading an ID
+    .use(LookupExpressionPlugin) // Parse { lookup expressions }
+    .use(SubPlugin) // Allow use of <sub> and <sup> tags
+    .use(FootnotePlugin); // Allow footnotes of various forms
 
-const isCustomInlineNode = (node: Node): node is CustomInlineNode => node.type.startsWith("custom-") && !("block" in node);
-const isCustomBlockNode = (node: Node): node is CustomBlockNode => node.type.startsWith("custom-") && ("block" in node && node.block === true);
-
+const isCustomInlineNode = (node: Node): node is CustomInlineNode =>
+    node.type.startsWith("custom-") && !("block" in node);
+const isCustomBlockNode = (node: Node): node is CustomBlockNode =>
+    node.type.startsWith("custom-") && ("block" in node && node.block === true);
 
 export interface Options {
     inline?: boolean;
     /** If collectFootnotes is disabled, only inline footnotes like ^[this] are supported */
     collectFootnotes?: boolean;
 }
-
 
 export function tokenizeMDT(mdtString: string, options: Options = {}): RootNode {
     const env = {
@@ -66,7 +66,7 @@ export function tokenizeMDT(mdtString: string, options: Options = {}): RootNode 
 }
 
 export function tokenizeInlineMDT(mdtString: string): InlineNode {
-    const root = tokenizeMDT(mdtString, {inline: true});
+    const root = tokenizeMDT(mdtString, { inline: true });
     if (root.children.length !== 1) {
         throw new Error(`Expected a single inline node from MDT document.`);
     }
@@ -91,7 +91,7 @@ function buildAST(tokens: Token[]): RootNode {
 
     const addChild = (node: Node): void => {
         // Special case handling for footnotes, which live outside of the document:
-        if ((node as any).type === "footnotes") {  
+        if ((node as any).type === "footnotes") {
             root.footnotes = root.footnotes ?? [];
             return;
         } else if (node.type === "footnote") {
@@ -100,16 +100,20 @@ function buildAST(tokens: Token[]): RootNode {
         }
         // Normal handling, to add a node to the current node:
         if ((currNode as any).children === undefined) {
-            throw new Error(`Tried to add child ${JSON.stringify(node)} to node ${JSON.stringify(currNode)} which is missing .children = []`);
+            throw new Error(
+                `Tried to add child ${JSON.stringify(node)} to node ${
+                    JSON.stringify(currNode)
+                } which is missing .children = []`,
+            );
         }
         (currNode as any).children.push(node);
-    }
+    };
 
     const pushTokens = (token: Token): void => {
         if (token.hidden) {
-            return;  // Ignore "hidden" tokens, i.e. paragraphs that wrap list items
+            return; // Ignore "hidden" tokens, i.e. paragraphs that wrap list items
         } else if (token.type === "text" && token.content === "") {
-            return;  // Special case: elide empty text nodes.
+            return; // Special case: elide empty text nodes.
         }
 
         const type = getTokenType(token);
@@ -171,7 +175,7 @@ function getTokenType(token: Token): Node["type"] {
         type = token.type.slice(0, -5);
     } else if (token.nesting === -1 && token.type.endsWith("_close")) {
         type = token.type.slice(0, -6);
-    } else { type = token.type; }
+    } else type = token.type;
 
     // Conversions:
     if (type === "fence") {
@@ -198,7 +202,7 @@ function tokenToNode(token: Token): Node {
         // This node contains text content:
         node.text = token.content;
     } else if (type === "code_inline" || type === "code_block" || type === "lookup_inline" || type === "lookup_block") {
-        node.children = [{type: "text", text: token.content}];
+        node.children = [{ type: "text", text: token.content }];
     } else {
         // Otherwise it might contain child nodes:
         if (token.content) {
@@ -222,7 +226,7 @@ function tokenToNode(token: Token): Node {
     } else if (type === "heading") {
         // Determine the heading level from the tag, e.g. "h2" -> 2
         node.level = parseInt(token.tag.slice(1), 10);
-        node.slugId = token.attrGet("slugId");  // From out "heading ID" plugin
+        node.slugId = token.attrGet("slugId"); // From out "heading ID" plugin
     } else if (type === "ordered_list") {
         const listStart = token.attrGet("start");
         if (listStart) {
@@ -282,14 +286,14 @@ export function renderInlineToHTML(inlineNode: Node): string {
             case "strong":
             case "em":
             case "sup":
-            case "sub": 
+            case "sub":
             case "s": {
                 start = `<${childNode.type}>`, end = `</${childNode.type}>`;
                 break;
             }
             case "link": {
                 start = `<a href="${childNode.href}">`;
-                end = "</a>"
+                end = "</a>";
                 break;
             }
         }
@@ -305,10 +309,10 @@ export function renderInlineToHTML(inlineNode: Node): string {
 
 /**
  * Render inline MDT to a single line of plain text, ignoring all formatting like bold, links, etc.
- * @param inlineNode 
+ * @param inlineNode
  * @returns a plain text string
  */
-export function renderInlineToPlainText(inlineNode: Node, {lookupToText = (lookup: string) => lookup} = {}): string {
+export function renderInlineToPlainText(inlineNode: Node, { lookupToText = (lookup: string) => lookup } = {}): string {
     if (inlineNode.type !== "inline") {
         throw new Error(`renderInlineToPlainText() can only render inline nodes to plain text, not ${inlineNode}`);
     }
@@ -340,11 +344,11 @@ export function renderInlineToPlainText(inlineNode: Node, {lookupToText = (looku
  * Render an MDT document to plain text, ignoring all formatting like bold, links, etc.
  * @returns a plain text string
  */
-export function renderToPlainText(node: RootNode, {lookupToText = (lookup: string) => lookup} = {}): string {
+export function renderToPlainText(node: RootNode, { lookupToText = (lookup: string) => lookup } = {}): string {
     let text = "";
     const renderNode = (node: Node): void => {
         if (node.type === "inline") {
-            text += renderInlineToPlainText(node, {lookupToText});
+            text += renderInlineToPlainText(node, { lookupToText });
             text += "\n\n";
         } else if (node.type === "lookup_block") {
             text += lookupToText(node.children[0].text) + "\n\n";
@@ -358,10 +362,9 @@ export function renderToPlainText(node: RootNode, {lookupToText = (lookup: strin
     return text;
 }
 
-
-const escapeData: [bad: string|RegExp, good: string][]  = [
+const escapeData: [bad: string | RegExp, good: string][] = [
     ["*", "\\*"],
-    ["[", "\\["],  // Escape possible links and footnotes
+    ["[", "\\["], // Escape possible links and footnotes
     ["]", "\\]"],
     ["{", "\\{"],
     ["}", "\\}"],

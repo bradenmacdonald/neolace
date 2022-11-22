@@ -6,4 +6,4 @@
  *
  * License: Apache License 2.0
  */
-export * from "https://esm.sh/chevrotain@10.1.2/?pin=v99";
+export * from "https://esm.sh/chevrotain@10.4.2/?pin=v99";

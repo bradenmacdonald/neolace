@@ -68,13 +68,15 @@ jobs:
       # Type checking the test suite is very slow so we do it asynchronously now too, while the actual tests themselves run in a separate job
 
       - name: Type check test suite setup
-        run: deno check neolace/scripts/test-setup.ts
+        # Note: we don't want --no-lock here, but esm.sh is serving some flaky lodash modules (for Chevrotain) with
+        # different hashes, so we have to disable it for now :/
+        run: deno check neolace/scripts/test-setup.ts --no-lock
         working-directory: ./backend
 
       - name: Type check tests
         env:
           ENV_TYPE: test
-        run: deno test --check --no-run
+        run: deno test --check --no-run --no-lock
         working-directory: ./backend
 
   test-backend:
@@ -103,7 +105,9 @@ jobs:
       - name: Run tests (backend)
         env:
           ENV_TYPE: test
-        run: deno test --allow-net --allow-env --allow-read --no-check
+        # Note: we don't want --no-lock here, but esm.sh is serving some flaky lodash modules (for Chevrotain) with
+        # different hashes, so we have to disable it for now :/
+        run: deno test --allow-net --allow-env --allow-read --no-check --no-lock
         working-directory: ./backend
         timeout-minutes: 10
 

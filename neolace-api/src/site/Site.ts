@@ -1,18 +1,18 @@
-import { Schema, Type, string, array, boolean, Record, number, object } from "../api-schemas.ts";
+import { array, boolean, number, object, Record, Schema, string, Type } from "../api-schemas.ts";
 import { ReferenceCacheSchema } from "../content/reference-cache.ts";
 import { PermissionName } from "../permissions.ts";
 import { VNID } from "../types.ts";
 
-const rgbTuple = array.min(3).max(3).of(number).transform(x => x as [number, number, number]);
+const rgbTuple = array.min(3).max(3).of(number).transform((x) => x as [number, number, number]);
 
 export const FrontendConfigSchema = Schema({
-    headerLinks: array.of(Schema({text: string, href: string})).strictOptional(),
+    headerLinks: array.of(Schema({ text: string, href: string })).strictOptional(),
     integrations: Schema({
-        plausibleAnalytics: Schema({enabled: boolean}).strictOptional(),
+        plausibleAnalytics: Schema({ enabled: boolean }).strictOptional(),
     }).strictOptional(),
     redirects: Record(string, string).strictOptional(),
     features: Schema({
-        hoverPreview: Schema({enabled: boolean}).strictOptional(),
+        hoverPreview: Schema({ enabled: boolean }).strictOptional(),
     }).strictOptional(),
     theme: Schema({
         headingColor: rgbTuple,
@@ -68,7 +68,7 @@ export type SiteDetailsData = Type<typeof SiteDetailsSchema>;
 /**
  * Data type that gives information about a Site's home page
  */
- export const SiteHomePageSchema = Schema({
+export const SiteHomePageSchema = Schema({
     /**
      * Markdown text for the home page. This defines the content of the home page.
      */
@@ -101,7 +101,10 @@ export interface EntryIndexDocument {
 }
 
 /** Data about what permissions the user has, in a given context */
-export const SiteUserMyPermissionsSchema = Record(string, Schema({
-    hasPerm: boolean,
-}));
-export type SiteUserMyPermissionsData = Record<PermissionName, {hasPerm: boolean}>;
+export const SiteUserMyPermissionsSchema = Record(
+    string,
+    Schema({
+        hasPerm: boolean,
+    }),
+);
+export type SiteUserMyPermissionsData = Record<PermissionName, { hasPerm: boolean }>;

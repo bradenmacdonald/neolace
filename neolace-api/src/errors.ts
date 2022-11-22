@@ -25,7 +25,7 @@ export class ConnectionError extends ApiError {
 
 /**
  * Neolace doesn't know who you are.
- * 
+ *
  * Note that the HTTP status code for this is "401 Unauthorized", which
  * is confusing - the HTTP spec predates the modern usage convention.
  */
@@ -61,7 +61,6 @@ export class NotFound extends ApiError {
  * is invalid or inconsistent.
  */
 export class InvalidRequest extends ApiError {
-
     readonly reason: InvalidRequestReason;
 
     constructor(reason: InvalidRequestReason, message: string) {
@@ -75,9 +74,9 @@ export class InvalidRequest extends ApiError {
  * One or more of the fields you provided is invalid, e.g. blank, too short, too long, invalid character, etc.
  */
 export class InvalidFieldValue extends InvalidRequest {
-    readonly fieldErrors: {fieldPath: string, message: string}[];
-    constructor(fieldErrors: {fieldPath: string, message: string}[]) {
-        const message = fieldErrors.map(fe => `${fe.fieldPath}: ${fe.message}`).join(", ");
+    readonly fieldErrors: { fieldPath: string; message: string }[];
+    constructor(fieldErrors: { fieldPath: string; message: string }[]) {
+        const message = fieldErrors.map((fe) => `${fe.fieldPath}: ${fe.message}`).join(", ");
         super(InvalidRequestReason.InvalidFieldValue, message);
         this.fieldErrors = fieldErrors;
         this.name = "InvalidFieldValue";
@@ -90,7 +89,7 @@ export class InvalidFieldValue extends InvalidRequest {
 export class InvalidEdit extends InvalidRequest {
     constructor(
         // The code string identifying the edit that failed:
-        public readonly editCode: AnySchemaEdit["code"]|AnyContentEdit["code"]|AnyBulkEdit["code"],
+        public readonly editCode: AnySchemaEdit["code"] | AnyContentEdit["code"] | AnyBulkEdit["code"],
         /**
          * entryId or any other information useful to locating which edit failed. Most error details should be in this
          * data field, NOT in the message, in order to make the errors more machine readable and translatable into

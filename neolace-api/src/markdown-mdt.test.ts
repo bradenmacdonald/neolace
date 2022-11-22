@@ -1,12 +1,11 @@
 import { assertEquals } from "./markdown-mdt-test-helpers.ts";
 import {
-    tokenizeInlineMDT,
-    tokenizeMDT,
+    escapeText,
     renderInlineToPlainText,
     renderToPlainText,
-    escapeText,
+    tokenizeInlineMDT,
+    tokenizeMDT,
 } from "./markdown-mdt.ts";
-
 
 Deno.test("MDT - renderInlineToPlainText() strips markdown formatting out", () => {
     const mdtInlineToText = (text: string) => renderInlineToPlainText(tokenizeInlineMDT(text));
@@ -16,16 +15,17 @@ Deno.test("MDT - renderInlineToPlainText() strips markdown formatting out", () =
 });
 
 Deno.test("MDT - renderInlineToPlainText() can evaluate lookup expressions", () => {
-    const parsed = tokenizeInlineMDT("The answer is {1 + 1}.")
+    const parsed = tokenizeInlineMDT("The answer is {1 + 1}.");
     assertEquals(renderInlineToPlainText(parsed), "The answer is 1 + 1."); // No evaluation by default
     assertEquals(
-        renderInlineToPlainText(parsed, {lookupToText: (expr) => expr === "1 + 1" ? "2" : "??"}),
+        renderInlineToPlainText(parsed, { lookupToText: (expr) => expr === "1 + 1" ? "2" : "??" }),
         "The answer is 2.",
     );
 });
 
 Deno.test("MDT - renderToPlainText() strips markdown formatting out", () => {
-    const mdtInlineToText = (text: string) => renderToPlainText(tokenizeMDT(text), {lookupToText: (_expr) => "computed value"});
+    const mdtInlineToText = (text: string) =>
+        renderToPlainText(tokenizeMDT(text), { lookupToText: (_expr) => "computed value" });
     assertEquals(
         mdtInlineToText(`
 # Heading
@@ -59,6 +59,12 @@ Deno.test("MDT - escape() can escape text for Markdown", () => {
     assertEquals(escapeText("> Not a blockquote"), "\\> Not a blockquote");
     // '>' doesn't need to be escaped if not at start of a line:
     assertEquals(escapeText("But 4 > 3 is OK to say"), "But 4 > 3 is OK to say");
-    assertEquals(escapeText("<html> is not escaped but nor will it render as HTML"), "<html> is not escaped but nor will it render as HTML");
-    assertEquals(escapeText("This is { not a lookup } and {neither is this}"), "This is \\{ not a lookup \\} and \\{neither is this\\}");
+    assertEquals(
+        escapeText("<html> is not escaped but nor will it render as HTML"),
+        "<html> is not escaped but nor will it render as HTML",
+    );
+    assertEquals(
+        escapeText("This is { not a lookup } and {neither is this}"),
+        "This is \\{ not a lookup \\} and \\{neither is this\\}",
+    );
 });

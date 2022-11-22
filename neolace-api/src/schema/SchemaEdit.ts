@@ -1,15 +1,20 @@
 // deno-lint-ignore-file no-explicit-any
-import { vnidString, Schema, string, array, Type, number } from "../api-schemas.ts";
+import { array, number, Schema, string, Type, vnidString } from "../api-schemas.ts";
 import { boolean, SchemaValidatorFunction } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
-import { SiteSchemaData, PropertyType, PropertyMode, EntryTypeColor } from "./SiteSchemaData.ts";
+import { EntryTypeColor, PropertyMode, PropertyType, SiteSchemaData } from "./SiteSchemaData.ts";
 
-export interface SchemaEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>> extends EditType<Code, DataSchema> {
+export interface SchemaEditType<
+    Code extends string = string,
+    DataSchema extends SchemaValidatorFunction<any> = SchemaValidatorFunction<any>,
+> extends EditType<Code, DataSchema> {
     changeType: EditChangeType.Schema;
     apply: (currentSchema: Readonly<SiteSchemaData>, data: Type<DataSchema>) => SiteSchemaData;
 }
 
-function SchemaEditType<Code extends string, DataSchema extends SchemaValidatorFunction<any>>(args: SchemaEditType<Code, DataSchema>): SchemaEditType<Code, DataSchema> {
+function SchemaEditType<Code extends string, DataSchema extends SchemaValidatorFunction<any>>(
+    args: SchemaEditType<Code, DataSchema>,
+): SchemaEditType<Code, DataSchema> {
     return args;
 }
 
@@ -21,7 +26,6 @@ export const CreateEntryType = SchemaEditType({
         id: vnidString,
     }),
     apply: (currentSchema, data) => {
-
         if (data.id in currentSchema.entryTypes) {
             throw new Error(`ID ${data.id} is already in this schema.`);
         }
@@ -44,7 +48,7 @@ export const CreateEntryType = SchemaEditType({
 
         return Object.freeze(newSchema);
     },
-    describe: (data) => `Created \`EntryType ${data.id}\``,  // TODO: get withId to accept a second "fallback" parameter so we can pass in "Name" and display that even before the object with this ID is saved into the database.
+    describe: (data) => `Created \`EntryType ${data.id}\``, // TODO: get withId to accept a second "fallback" parameter so we can pass in "Name" and display that even before the object with this ID is saved into the database.
 });
 
 export const UpdateEntryType = SchemaEditType({
@@ -62,13 +66,13 @@ export const UpdateEntryType = SchemaEditType({
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
             ...currentSchema,
-            entryTypes: {...currentSchema.entryTypes},
+            entryTypes: { ...currentSchema.entryTypes },
         };
         const originalEntryType = newSchema.entryTypes[data.id];
         if (originalEntryType === undefined) {
             throw new Error(`EntryType with ID ${data.id} not found.`);
         }
-        const newEntryType = {...originalEntryType};
+        const newEntryType = { ...originalEntryType };
 
         for (const key of ["name", "description", "friendlyIdPrefix", "color", "abbreviation"] as const) {
             if (data[key] !== undefined) {
@@ -88,20 +92,20 @@ export const UpdateEntryType = SchemaEditType({
             return {
                 code: "UpdateEntryType",
                 data: { ...earlierEdit.data, ...thisEdit.data },
-            }
+            };
         } else if (
             earlierEdit.code === CreateEntryType.code &&
             thisEdit.data.id === earlierEdit.data.id &&
             thisEdit.data.name !== undefined
         ) {
             // If an entry type was created and then later its name was changed, put the final name into the CreateEntryType edit.
-            const {name, id, ...otherUpdates} = thisEdit.data;
-            const newCreateEdit = {code: CreateEntryType.code, data: {id: earlierEdit.data.id, name}};
+            const { name, id, ...otherUpdates } = thisEdit.data;
+            const newCreateEdit = { code: CreateEntryType.code, data: { id: earlierEdit.data.id, name } };
             if (Object.keys(otherUpdates).length > 0) {
                 // Move the change to "name" into the CreateEntryType edit, and keep the other changes in this edit:
-                return [newCreateEdit, {code: "UpdateEntryType", data: {id, ...otherUpdates}}];
+                return [newCreateEdit, { code: "UpdateEntryType", data: { id, ...otherUpdates } }];
             } else {
-                return newCreateEdit;  // We can delete this UpdateEntryType since it only changed the name, which is now reflected in the CreateEntryType
+                return newCreateEdit; // We can delete this UpdateEntryType since it only changed the name, which is now reflected in the CreateEntryType
             }
         }
         return undefined;
@@ -118,7 +122,12 @@ export const UpdateEntryTypeFeature = SchemaEditType({
         entryTypeId: vnidString,
         feature: Schema.either(
             {
-                featureType: Schema.either("Article" as const, "Files" as const, "Image" as const, "HeroImage" as const),
+                featureType: Schema.either(
+                    "Article" as const,
+                    "Files" as const,
+                    "Image" as const,
+                    "HeroImage" as const,
+                ),
                 enabled: false as const,
             },
             {
@@ -142,20 +151,20 @@ export const UpdateEntryTypeFeature = SchemaEditType({
                 config: Schema({
                     lookupExpression: string,
                 }),
-            }
+            },
         ),
     }),
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
             ...currentSchema,
-            entryTypes: {...currentSchema.entryTypes},
+            entryTypes: { ...currentSchema.entryTypes },
         };
         const originalEntryType = newSchema.entryTypes[data.entryTypeId];
         if (originalEntryType === undefined) {
             throw new Error(`EntryType with ID ${data.entryTypeId} not found.`);
         }
-        const newEntryType = {...originalEntryType};
-        newEntryType.enabledFeatures = {...newEntryType.enabledFeatures};  // Shallow copy the object so we can modify it
+        const newEntryType = { ...originalEntryType };
+        newEntryType.enabledFeatures = { ...newEntryType.enabledFeatures }; // Shallow copy the object so we can modify it
 
         if (data.feature.enabled) {
             const feature = data.feature;
@@ -189,10 +198,9 @@ export const DeleteEntryType = SchemaEditType({
         entryTypeId: vnidString,
     }),
     apply: (currentSchema, data) => {
-
         const newSchema: SiteSchemaData = {
             ...currentSchema,
-            entryTypes: {...currentSchema.entryTypes},
+            entryTypes: { ...currentSchema.entryTypes },
         };
         delete newSchema.entryTypes[data.entryTypeId];
 
@@ -223,20 +231,19 @@ export const UpdateProperty = SchemaEditType({
         editNote: string.strictOptional(),
     }),
     apply: (currentSchema, data) => {
-
         const currentValues = currentSchema.properties[data.id];
         if (currentValues === undefined) {
             throw new Error(`Property with ID ${data.id} not found.`);
         }
 
-        const newProp = {...currentValues};
+        const newProp = { ...currentValues };
 
         if (data.appliesTo !== undefined) {
-            data.appliesTo.forEach(({entryType}) => {
+            data.appliesTo.forEach(({ entryType }) => {
                 if (currentSchema.entryTypes[entryType] === undefined) {
                     throw new Error(`No such entry type with ID ${entryType}`);
                 }
-            })
+            });
             newProp.appliesTo = data.appliesTo;
         }
 
@@ -267,7 +274,7 @@ export const UpdateProperty = SchemaEditType({
 
         const newSchema: SiteSchemaData = {
             ...currentSchema,
-            properties: {...currentSchema.properties, [data.id]: newProp},
+            properties: { ...currentSchema.properties, [data.id]: newProp },
         };
         return Object.freeze(newSchema);
     },
@@ -277,7 +284,7 @@ export const UpdateProperty = SchemaEditType({
             return {
                 code: thisEdit.code,
                 data: { ...earlierEdit.data, ...thisEdit.data },
-            }
+            };
         }
         return undefined;
     },
@@ -308,18 +315,21 @@ export const CreateProperty = SchemaEditType({
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
             ...currentSchema,
-            properties: {...currentSchema.properties, [data.id]: {
-                id: data.id,
-                appliesTo: [],
-                description: "",
-                name: "New Property",
-                type: data.type ?? PropertyType.Value,
-                mode: PropertyMode.Optional,
-                // Default rank is 15
-                rank: 15,
-                inheritable: data.inheritable ?? false,
-                enableSlots: data.enableSlots ?? false,
-            }},
+            properties: {
+                ...currentSchema.properties,
+                [data.id]: {
+                    id: data.id,
+                    appliesTo: [],
+                    description: "",
+                    name: "New Property",
+                    type: data.type ?? PropertyType.Value,
+                    mode: PropertyMode.Optional,
+                    // Default rank is 15
+                    rank: 15,
+                    inheritable: data.inheritable ?? false,
+                    enableSlots: data.enableSlots ?? false,
+                },
+            },
         };
         return UpdateProperty.apply(newSchema, data);
     },
@@ -329,7 +339,7 @@ export const CreateProperty = SchemaEditType({
             return {
                 code: thisEdit.code,
                 data: { ...earlierEdit.data, ...thisEdit.data },
-            }
+            };
         }
         return undefined;
     },
@@ -342,14 +352,13 @@ export const DeleteProperty = SchemaEditType({
         id: vnidString,
     }),
     apply: (currentSchema, data) => {
-        const newProperties = {...currentSchema.properties};
+        const newProperties = { ...currentSchema.properties };
         delete newProperties[data.id];
         const newSchema: SiteSchemaData = { ...currentSchema, properties: newProperties };
         return UpdateProperty.apply(newSchema, data);
     },
     describe: (data) => `Deleted \`Property ${data.id}\``,
 });
-
 
 export const _allSchemaEditTypes = {
     CreateEntryType,
@@ -361,12 +370,11 @@ export const _allSchemaEditTypes = {
     DeleteProperty,
 };
 
-export type AnySchemaEdit = (
+export type AnySchemaEdit =
     | Edit<typeof CreateEntryType>
     | Edit<typeof UpdateEntryType>
     | Edit<typeof UpdateEntryTypeFeature>
     | Edit<typeof DeleteEntryType>
     | Edit<typeof UpdateProperty>
     | Edit<typeof CreateProperty>
-    | Edit<typeof DeleteProperty>
-);
+    | Edit<typeof DeleteProperty>;

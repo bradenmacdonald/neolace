@@ -1,3 +1,4 @@
+// deno-fmt-ignore-file
 // imports rewritten with <3 from denoporter - https://github.com/SirJosh3917/denoporter
 
 import { isPrimitive, Primitive } from "./utils.ts";
