@@ -87,7 +87,7 @@ group("Site.ts", () => {
             }));
             // Read the resulting site and its groups:
             const siteResult = await graph.pullOne(Site, (s) => s.groupsFlat((g) => g.allProps), {
-                where: C`@this.friendlyId = "test1"`,
+                with: { friendlyId: "test1" },
             });
             assertStrictEquals(siteResult.groupsFlat.length, 1);
             assertStrictEquals(siteResult.groupsFlat[0].name, "Administrators");

@@ -1,4 +1,4 @@
-import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
+import { EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, log, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { authClient } from "neolace/core/authn-client.ts";
 import { HumanUser } from "neolace/core/User.ts";
@@ -14,7 +14,7 @@ export class RequestLoginResource extends NeolaceHttpResource {
         const graph = await getGraph();
         const { email } = bodyData;
         try {
-            const user = await graph.pullOne(HumanUser, (u) => u.id.authnId, { where: C`@this.email = ${email}` });
+            const user = await graph.pullOne(HumanUser, (u) => u.id.authnId, { with: { email } });
             if (user.authnId < 0) {
                 throw new api.InvalidFieldValue([{
                     fieldPath: "email",

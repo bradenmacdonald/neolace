@@ -54,7 +54,7 @@ export async function getConnection({ friendlyId, siteId, plugin, create = false
     let result;
     try {
         result = await graph.pullOne(Connection, (c) => c.id.name.plugin.config, {
-            where: C`@this.siteNamespace = ${siteId} AND @this.friendlyId = ${friendlyId}`,
+            with: { siteNamespace: siteId, friendlyId },
         });
     } catch (err) {
         if (err instanceof EmptyResultError) {

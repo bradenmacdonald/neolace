@@ -1,6 +1,6 @@
 import * as log from "std/log/mod.ts";
 import { authClient } from "neolace/core/authn-client.ts";
-import { C, EmptyResultError, SYSTEM_VNID } from "neolace/deps/vertex-framework.ts";
+import { EmptyResultError, SYSTEM_VNID } from "neolace/deps/vertex-framework.ts";
 
 import { config } from "neolace/app/config.ts";
 import { Drash, getGraph, NeolaceHttpRequest } from "./mod.ts";
@@ -32,7 +32,7 @@ export class NeolaceAuthService extends Drash.Service {
             let user;
             try {
                 user = await graph.pullOne(HumanUser, (u) => u.allProps, {
-                    where: C`@this.authnId = ${authInfo.accountId}`,
+                    with: { authnId: authInfo.accountId },
                 });
             } catch (err) {
                 if (err instanceof EmptyResultError) {
@@ -70,9 +70,7 @@ export class NeolaceAuthService extends Drash.Service {
                 }
             }
         } else {
-            const users = await graph.pull(BotUser, (u) => u.id.fullName.username, {
-                where: C`@this.authToken = ${authToken}`,
-            });
+            const users = await graph.pull(BotUser, (u) => u.id.fullName.username, { with: { authToken } });
             if (users.length > 1) {
                 throw new Error("Multiple users matched same auth token!");
             } else if (users.length === 0) {

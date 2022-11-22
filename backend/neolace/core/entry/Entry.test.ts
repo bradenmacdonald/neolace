@@ -23,7 +23,7 @@ group("Entry.ts", () => {
         const getEntry = async (siteId: VNID, friendlyId: string) => {
             const graph = await getGraph();
             return await graph.pullOne(Entry, (e) => e.id.name.friendlyId, {
-                where: C`@this.siteNamespace = ${siteId} AND @this.friendlyId = ${friendlyId}`,
+                with: { siteNamespace: siteId, friendlyId },
             });
         };
 

@@ -1,4 +1,4 @@
-import { C, Field } from "neolace/deps/vertex-framework.ts";
+import { Field } from "neolace/deps/vertex-framework.ts";
 
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getRedis } from "neolace/core/redis.ts";
@@ -70,7 +70,7 @@ export class VerifyUserEmailResource extends NeolaceHttpResource {
 
         // And make sure the email address isn't already used:
         const graph = await getGraph();
-        const checkEmail = await graph.pull(HumanUser, (u) => u.id, { where: C`@this.email = ${email}` });
+        const checkEmail = await graph.pull(HumanUser, (u) => u.id, { with: { email } });
         if (checkEmail.length !== 0) {
             throw new api.InvalidRequest(
                 api.InvalidRequestReason.EmailAlreadyRegistered,

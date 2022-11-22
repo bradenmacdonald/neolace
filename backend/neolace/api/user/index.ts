@@ -1,4 +1,4 @@
-import { C, VNID } from "neolace/deps/vertex-framework.ts";
+import { VNID } from "neolace/deps/vertex-framework.ts";
 
 import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { CreateUser, HumanUser } from "neolace/core/User.ts";
@@ -22,11 +22,11 @@ export class UserIndexResource extends NeolaceHttpResource {
         }
 
         // Get the email address from the token - this ensures that the email address has been verified already.
-        const email = (await checkValidationToken(bodyData.emailToken)).email;
+        const email: string = (await checkValidationToken(bodyData.emailToken)).email;
 
         // Make sure no account with that email already exists:
         const graph = await getGraph();
-        const checkEmail = await graph.pull(HumanUser, (u) => u.id, { where: C`@this.email = ${email}` });
+        const checkEmail = await graph.pull(HumanUser, (u) => u.id, { with: { email } });
         if (checkEmail.length !== 0) {
             throw new api.InvalidRequest(
                 api.InvalidRequestReason.EmailAlreadyRegistered,

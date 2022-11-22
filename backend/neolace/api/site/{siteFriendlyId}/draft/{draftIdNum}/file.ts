@@ -1,6 +1,6 @@
 import { readableStreamFromIterable } from "std/streams/conversion.ts";
 import { crypto } from "std/crypto/mod.ts";
-import { C, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
+import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getDraft, getDraftIdFromRequest } from "neolace/api/site/{siteFriendlyId}/draft/_helpers.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
@@ -61,7 +61,7 @@ export class DraftFileResource extends NeolaceHttpResource {
             // sha256Hash, because it's possible that the user could know the hash but not the contents of a private
             // file on the site or even on another site in the realm.
             const existingDataFiles = await graph.read((tx) =>
-                tx.pull(DataFile, (df) => df.id, { where: C`@this.sha256Hash = ${hashProvided}` })
+                tx.pull(DataFile, (df) => df.id, { with: { sha256Hash: hashProvided } })
             );
             if (existingDataFiles.length) {
                 // A file with the same hash has already been uploaded.

@@ -91,7 +91,7 @@ group("files.ts", () => {
                 AddFileToDraft({ draftId: draft.id, dataFileId: dataFile.id }),
             );
             await graph.runAsSystem(UpdateDraft({
-                key: draft.id,
+                id: draft.id,
                 addEdits: [
                     {
                         code: "UpdateEntryFeature",
@@ -159,7 +159,7 @@ group("files.ts", () => {
             const graph = await getGraph();
             // First make the site private:
             await graph.runAsSystem(UpdateSite({
-                key: defaultData.site.id,
+                id: defaultData.site.id,
                 accessMode: AccessMode.Private,
             }));
 

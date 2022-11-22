@@ -39,7 +39,7 @@ export class DraftEditsResource extends NeolaceHttpResource {
         await graph.runAs(
             user.id,
             UpdateDraft({
-                key: draftId,
+                id: draftId,
                 // deno-lint-ignore no-explicit-any
                 addEdits: [{ code: bodyData.code as any, data: bodyData.data as any }],
                 // note that DraftEdit will validate the data before committing the transaction

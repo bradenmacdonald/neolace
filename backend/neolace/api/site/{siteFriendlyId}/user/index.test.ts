@@ -72,7 +72,7 @@ group("index.ts", () => {
         }));
         // The "explicitlyAddedBot" gets added to the site's user group:
         await graph.runAsSystem(UpdateGroup({
-            key: defaultData.site.usersGroupId,
+            id: defaultData.site.usersGroupId,
             addUsers: [explicitlyAddedBot.id],
         }));
 

@@ -150,7 +150,7 @@ group("Image.ts", () => {
             AddFileToDraft({ draftId: draft.id, dataFileId: dataFile.id }),
         );
         await graph.runAsSystem(UpdateDraft({
-            key: draft.id,
+            id: draft.id,
             addEdits: [
                 {
                     code: "UpdateEntryFeature",

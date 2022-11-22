@@ -16,7 +16,7 @@ group("home.ts", () => {
             `This is some test content that links to [a cool tree](/entry/${ponderosaPine.friendlyId}).`;
 
         await graph.runAsSystem(UpdateSite({
-            key: defaultData.site.id,
+            id: defaultData.site.id,
             homePageContent,
         }));
 

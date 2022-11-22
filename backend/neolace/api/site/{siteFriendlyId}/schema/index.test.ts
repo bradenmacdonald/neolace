@@ -28,7 +28,7 @@ group("schema/index.ts", () => {
 
             // Make the site private:
             await graph.runAsSystem(UpdateSite({
-                key: defaultData.site.id,
+                id: defaultData.site.id,
                 accessMode: AccessMode.Private,
             }));
             // Now the admin user should be able to get the schema, but not the anonymous client:

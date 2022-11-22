@@ -139,7 +139,7 @@ VNodeTypeRef.resolve(SiteRef, Site);
 /** Cache to look up a siteId (Site VNID) from a site's friendlyId */
 export const siteIdFromFriendlyId = makeCachedLookup(
     async (friendlyId: string) =>
-        (await getGraph()).pullOne(Site, (s) => s.id, { where: C`@this.friendlyId = ${friendlyId}` }).then((s) => s.id),
+        (await getGraph()).pullOne(Site, (s) => s.id, { with: { friendlyId } }).then((s) => s.id),
     10_000,
 );
 
@@ -181,9 +181,7 @@ export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
         const graph = await getGraph();
         let data;
         try {
-            data = await graph.pullOne(Site, (s) => s.id.name.domain.url(), {
-                where: C`@this.friendlyId = ${friendlyId}`,
-            });
+            data = await graph.pullOne(Site, (s) => s.id.name.domain.url(), { with: { friendlyId } });
         } catch (err) {
             throw new Error(
                 "Unable to load the home site. Check the realmHomeSiteId setting. In development, you may need to " +

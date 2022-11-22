@@ -109,16 +109,16 @@ group("index.ts", () => {
                 const { userData: userWithNoPermissions } = await createUserWithPermissions();
                 const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.friendlyId);
                 // Private site shouldn't work:
-                await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
+                await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, id: defaultData.site.id }));
                 await assertRejects(() => noPermsClient.createDraft(createDraftWithSchemaEdits), api.NotAuthorized);
                 // And "public read only" shouldn't work:
                 await graph.runAsSystem(
-                    UpdateSite({ accessMode: AccessMode.PublicReadOnly, key: defaultData.site.id }),
+                    UpdateSite({ accessMode: AccessMode.PublicReadOnly, id: defaultData.site.id }),
                 );
                 await assertRejects(() => noPermsClient.createDraft(createDraftWithSchemaEdits), api.NotAuthorized);
                 // But "public contributions" site should accept it:
                 await graph.runAsSystem(
-                    UpdateSite({ accessMode: AccessMode.PublicContributions, key: defaultData.site.id }),
+                    UpdateSite({ accessMode: AccessMode.PublicContributions, id: defaultData.site.id }),
                 );
                 const result = await noPermsClient.createDraft(createDraftWithSchemaEdits);
                 assert(typeof result.idNum === "number" && result.idNum > 0);
@@ -127,7 +127,7 @@ group("index.ts", () => {
             test("test permissions - user with explicit permissions", async () => {
                 const graph = await getGraph();
                 // On a site in private mode:
-                await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
+                await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, id: defaultData.site.id }));
                 // A user with "propose schema changes" can create a draft with schema edits:
                 {
                     const { userData } = await createUserWithPermissions(
@@ -199,16 +199,16 @@ group("index.ts", () => {
                 const { userData: userWithNoPermissions } = await createUserWithPermissions();
                 const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.friendlyId);
                 // Private site shouldn't work:
-                await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
+                await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, id: defaultData.site.id }));
                 await assertRejects(() => noPermsClient.createDraft(createDraftWithContentEdits), api.NotAuthorized);
                 // And "public read only" shouldn't work:
                 await graph.runAsSystem(
-                    UpdateSite({ accessMode: AccessMode.PublicReadOnly, key: defaultData.site.id }),
+                    UpdateSite({ accessMode: AccessMode.PublicReadOnly, id: defaultData.site.id }),
                 );
                 await assertRejects(() => noPermsClient.createDraft(createDraftWithContentEdits), api.NotAuthorized);
                 // But "public contributions" site should accept it:
                 await graph.runAsSystem(
-                    UpdateSite({ accessMode: AccessMode.PublicContributions, key: defaultData.site.id }),
+                    UpdateSite({ accessMode: AccessMode.PublicContributions, id: defaultData.site.id }),
                 );
                 const result = await noPermsClient.createDraft(createDraftWithContentEdits);
                 assert(typeof result.idNum === "number" && result.idNum > 0);
@@ -218,7 +218,7 @@ group("index.ts", () => {
                 const graph = await getGraph();
                 // Set the site to "public read only":
                 await graph.runAsSystem(
-                    UpdateSite({ accessMode: AccessMode.PublicReadOnly, key: defaultData.site.id }),
+                    UpdateSite({ accessMode: AccessMode.PublicReadOnly, id: defaultData.site.id }),
                 );
 
                 // A user with only "propose schema changes" cannot propose content edits:
@@ -278,7 +278,7 @@ group("index.ts", () => {
             const { userData: userWithNoPermissions } = await createUserWithPermissions();
             const noPermsClient = await getClient(userWithNoPermissions, defaultData.site.friendlyId);
             // Private site shouldn't work:
-            await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, key: defaultData.site.id }));
+            await graph.runAsSystem(UpdateSite({ accessMode: AccessMode.Private, id: defaultData.site.id }));
             const results = await noPermsClient.listDrafts();
             // It always succeeds but will simply return no drafts, as the drafts that the user doesn't have
             // permission to see are filtered out:

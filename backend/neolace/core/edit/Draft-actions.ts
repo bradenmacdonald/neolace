@@ -124,7 +124,7 @@ export const CreateDraft = defineAction({
 
         const otherModifiedNodes: VNID[] = [];
         if (data.edits.length > 0) {
-            const { modifiedNodes } = await UpdateDraft.apply(tx, { key: id, addEdits: data.edits });
+            const { modifiedNodes } = await UpdateDraft.apply(tx, { id, addEdits: data.edits });
             otherModifiedNodes.push(...modifiedNodes);
         }
 
@@ -147,7 +147,7 @@ export const AcceptDraft = defineAction({
     resultData: {} as { id: VNID },
     apply: async (tx, data) => {
         const draft = await tx.pullOne(Draft, (d) => d.status.site((s) => s.id).edits((e) => e.code.data), {
-            key: data.id,
+            id: data.id,
         });
         if (draft.status !== DraftStatus.Open) {
             throw new Error("Draft is not open.");

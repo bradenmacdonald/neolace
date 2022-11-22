@@ -20,7 +20,7 @@ export async function createImages(siteId: VNID) {
         AddFileToDraft({ draftId: draft.id, dataFileId: files.ponderosaPineImg.id }),
     );
     await graph.runAsSystem(UpdateDraft({
-        key: draft.id,
+        id: draft.id,
         addEdits: [
             {
                 code: "CreateEntry",

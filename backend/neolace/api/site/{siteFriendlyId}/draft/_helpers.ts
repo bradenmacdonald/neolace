@@ -1,5 +1,5 @@
 import { api, getGraph, NeolaceHttpRequest } from "neolace/api/mod.ts";
-import { C, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Draft } from "neolace/core/edit/Draft.ts";
 import { ActionObject, ActionSubject } from "neolace/core/permissions/action.ts";
 import { checkPermissionsForAll } from "neolace/core/permissions/check.ts";
@@ -21,11 +21,7 @@ export async function getDraftIdFromRequest(request: NeolaceHttpRequest, siteId:
 /** Get a draft's unique VNID from its site-specific idNum */
 export async function getDraftId(idNum: number, siteId: VNID): Promise<VNID> {
     const graph = await getGraph();
-    const data = await graph.read((tx) =>
-        tx.pullOne(Draft, (d) => d.id, {
-            where: C`@this.siteNamespace = ${siteId} AND @this.idNum = ${idNum}`,
-        })
-    );
+    const data = await graph.read((tx) => tx.pullOne(Draft, (d) => d.id, { with: { siteNamespace: siteId, idNum } }));
     return data.id;
 }
 

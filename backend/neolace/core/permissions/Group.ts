@@ -127,7 +127,7 @@ export const UpdateGroup = defaultUpdateFor(Group, (g) => g.name, {
                 from: [Group, id],
                 rel: Group.rel.BELONGS_TO,
                 to: args.belongsTo,
-            })).prevTo.key;
+            })).prevTo.id;
 
             // Check which site this will belong to.
             const newSiteId = await getSiteIdForGS(args.belongsTo);

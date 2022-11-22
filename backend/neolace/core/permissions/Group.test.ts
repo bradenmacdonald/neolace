@@ -112,7 +112,7 @@ group("Group.ts", () => {
                     graph.runAs(
                         defaultData.users.admin.id,
                         UpdateGroup({
-                            key: defaultData.site.usersGroupId,
+                            id: defaultData.site.usersGroupId,
                             belongsTo: site2details.id,
                         }),
                     ),
@@ -126,7 +126,7 @@ group("Group.ts", () => {
                     graph.runAs(
                         defaultData.users.admin.id,
                         UpdateGroup({
-                            key: defaultData.site.usersGroupId,
+                            id: defaultData.site.usersGroupId,
                             belongsTo: site2details.adminGroup,
                         }),
                     ),

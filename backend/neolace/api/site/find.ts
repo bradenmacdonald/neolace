@@ -1,4 +1,4 @@
-import { C, EmptyResultError } from "neolace/deps/vertex-framework.ts";
+import { EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getHomeSite, Site } from "neolace/core/Site.ts";
 
@@ -25,9 +25,7 @@ export class SiteFindByDomainResource extends NeolaceHttpResource {
         const site = await graph.pullOne(
             Site,
             (s) => s.name.description.domain.url().footerContent.friendlyId.frontendConfig,
-            {
-                where: C`@this.domain = ${domain}`,
-            },
+            { with: { domain } },
         ).catch((err) => {
             if (err instanceof EmptyResultError) {
                 throw new api.NotFound(`Site with domain "${domain}" not found.`);

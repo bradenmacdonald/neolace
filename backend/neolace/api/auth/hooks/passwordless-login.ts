@@ -1,4 +1,4 @@
-import { C, EmptyResultError } from "neolace/deps/vertex-framework.ts";
+import { EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, log, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { mailer, makeSystemEmail } from "neolace/core/mailer/mailer.ts";
 import { HumanUser } from "neolace/core/User.ts";
@@ -23,7 +23,7 @@ export class PasswordlessLoginWebhookResource extends NeolaceHttpResource {
         const graph = await getGraph();
         let userData;
         try {
-            userData = await graph.pullOne(HumanUser, (u) => u.email, { where: C`@this.authnId = ${accountId}` });
+            userData = await graph.pullOne(HumanUser, (u) => u.email, { with: { authnId: accountId } });
         } catch (err) {
             if (err instanceof EmptyResultError) {
                 throw new api.NotFound("User with that authn account ID was not found.");
