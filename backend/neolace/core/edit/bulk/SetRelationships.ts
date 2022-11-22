@@ -40,7 +40,7 @@ export const doSetRelationships = defineBulkImplementation(
             // works but is horribly inefficient since it doesn't use the indexes.
             CALL {
                 WITH edit, site
-                MATCH (entry:${Entry} {slugId: site.siteCode + edit.entryWith.friendlyId})
+                MATCH (entry:${Entry} {siteNamespace: site.id, friendlyId: edit.entryWith.friendlyId})
                     WHERE edit.entryWith.friendlyId IS NOT NULL
                     RETURN entry
                 UNION
@@ -69,7 +69,7 @@ export const doSetRelationships = defineBulkImplementation(
                 // Find the target entry of this relationship:
                 CALL {
                     WITH toEntrySpec, site
-                    MATCH (toEntry:${Entry} {slugId: site.siteCode + toEntrySpec.entryWith.friendlyId})
+                    MATCH (toEntry:${Entry} {siteNamespace: site.id, friendlyId: toEntrySpec.entryWith.friendlyId})
                         WHERE toEntrySpec.entryWith.friendlyId IS NOT NULL
                         RETURN toEntry
                     UNION

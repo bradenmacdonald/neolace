@@ -10,7 +10,7 @@ import { PathError } from "neolace/deps/computed-types.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { ActionObject, ActionSubject } from "neolace/core/permissions/action.ts";
 import { hasPermission } from "neolace/core/permissions/check.ts";
-import { getHomeSite, siteCodeForSite, siteIdFromShortId } from "neolace/core/Site.ts";
+import { getHomeSite, siteIdFromFriendlyId } from "neolace/core/Site.ts";
 
 interface AuthenticatedUserData {
     isBot: boolean;
@@ -142,31 +142,29 @@ export class NeolaceHttpResource extends Drash.Resource {
     }
 
     /**
-     * Get siteId and siteCode from the siteShortId parameter that's in the URL.
+     * Get the siteId from the siteFriendlyId parameter that's in the URL.
      *
-     * Most of our REST API methods include a human-readable "shortId" for the Site in the URL, like this:
+     * Most of our REST API methods include a human-readable "friendlyId" for the Site in the URL, like this:
      * https://api.neolace.com/site/braden/entry/fr-joel
-     *                              ^^^^^^ - shortId is "braden", and so the full slugId would be "site-braden"
-     * This helper function looks up the Site based on this shortId and returns the siteId (VNID) and siteCode (the code
-     * used to give Entries for the site a slugId namespace).
+     *                              ^^^^^^ - friendlyId is "braden"
+     * This helper function looks up the Site based on this friendlyId and returns the siteId (VNID).
      *
-     * This method will throw an exception if the site shortId is not in the URL or is not valid.
+     * This method will throw an exception if the site friendlyId is not in the URL or is not valid.
      *
      * @param request The current REST API request
      * @returns
      */
-    protected async getSiteDetails(request: NeolaceHttpRequest): Promise<{ siteId: VNID; siteCode: string }> {
-        const siteShortId = request.pathParam("siteShortId");
-        if (typeof siteShortId !== "string") {
-            throw new Error("Expected the API endpoint URL to contain a siteShortId parameter.");
+    protected async getSiteDetails(request: NeolaceHttpRequest): Promise<{ siteId: VNID }> {
+        const siteFriendlyId = request.pathParam("siteFriendlyId");
+        if (typeof siteFriendlyId !== "string") {
+            throw new Error("Expected the API endpoint URL to contain a siteFriendlyId parameter.");
         }
         try {
-            const siteId = await siteIdFromShortId(siteShortId);
-            const siteCode = await siteCodeForSite(siteId);
-            return { siteId, siteCode };
+            const siteId = await siteIdFromFriendlyId(siteFriendlyId);
+            return { siteId };
         } catch (err) {
             if (err instanceof EmptyResultError) {
-                throw new api.NotFound(`Site with short ID ${siteShortId} not found.`);
+                throw new api.NotFound(`Site with short ID ${siteFriendlyId} not found.`);
             } else {
                 throw err;
             }
@@ -200,7 +198,7 @@ export class NeolaceHttpResource extends Drash.Resource {
     }
 
     protected async getPermissionSubject(request: NeolaceHttpRequest): Promise<ActionSubject> {
-        const siteId = request.pathParam("siteShortId")
+        const siteId = request.pathParam("siteFriendlyId")
             ? (await this.getSiteDetails(request)).siteId
             : (await getHomeSite()).siteId;
         const userId = request.user?.id ?? undefined;
@@ -344,9 +342,9 @@ export function adaptErrors(...mapping: (string | ConvertErrorPathToField)[]) {
  * Simple helper function for adaptErrors.
  *
  * Example:
- *     .catch(adaptErrors(..., adaptErrors.remap("slugId", "username")))
- * The above example means that any errors in validting the "slugId" field should be remapped to the "username" field,
- * and the API consumer will see a message that the "username" field was invalid.
+ *     .catch(adaptErrors(..., adaptErrors.remap("internalField", "externalField")))
+ * The above example means that any errors in validating the "internalField" field should be remapped to the
+ * "externalField" field, and the API consumer will see a message that the "externalField" field was invalid.
  */
 adaptErrors.remap = (errorPath: string, requestPath: string) => (field: string) =>
     field === errorPath ? requestPath : undefined;

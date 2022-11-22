@@ -8,7 +8,7 @@ import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-da
 import { Entry } from "./Entry.ts";
 import { getEntryProperties } from "./properties.ts";
 import * as V from "neolace/core/lookup/values.ts";
-import { siteShortIdFromId } from "neolace/core/Site.ts";
+import { siteFriendlyIdFromId } from "neolace/core/Site.ts";
 import { checkPermissions } from "neolace/core/permissions/check.ts";
 
 /**
@@ -23,7 +23,7 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
                 .id
                 .name
                 .description
-                .friendlyId()
+                .friendlyId
                 .type((et) => et.id.name.site((s) => s.id)), { key: entryId }),
         properties: await getEntryProperties(entryId, { tx, limit: 1_000 }),
         // features (e.g. article text):
@@ -70,7 +70,7 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
                     stringValues.push(await lookupValueToPlainText(value, lookupContext));
                 } catch {
                     log.warning(
-                        `Cannot parse property value for search index: site ${await siteShortIdFromId(
+                        `Cannot parse property value for search index: site ${await siteFriendlyIdFromId(
                             siteId,
                         )} entry ${entryData.friendlyId}, property ${propValue.property.name}`,
                     );

@@ -10,7 +10,7 @@ const ONE_HOUR = 60 * 60; // Number of seconds in an hour
  * them to search for content directly.
  */
 export class SearchConnectionResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/search/connection"];
+    public paths = ["/site/:siteFriendlyId/search/connection"];
 
     GET = this.method({
         responseSchema: api.SiteSearchConnectionSchema,

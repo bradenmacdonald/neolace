@@ -42,7 +42,7 @@ group("entry.ts", () => {
         // Create another site with three entries:
         const otherSiteId = VNID(), entryType = VNID(), A = VNID();
         await graph.runAsSystem(
-            CreateSite({ id: otherSiteId, name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
+            CreateSite({ id: otherSiteId, name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId: otherSiteId,
@@ -80,7 +80,7 @@ group("entry.ts - permissions", () => {
         // First make the PlantDB site private:
         const graph = await getGraph();
         await graph.runAsSystem(UpdateSite({
-            key: defaultData.site.id,
+            id: defaultData.site.id,
             accessMode: AccessMode.Private,
         }));
 

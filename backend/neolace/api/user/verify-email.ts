@@ -1,10 +1,10 @@
-import { C, Field } from "neolace/deps/vertex-framework.ts";
+import { Field } from "neolace/deps/vertex-framework.ts";
 
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getRedis } from "neolace/core/redis.ts";
 import { createRandomToken } from "neolace/lib/secure-token.ts";
 import { mailer, makeSystemEmail } from "neolace/core/mailer/mailer.ts";
-import { siteIdFromShortId } from "neolace/core/Site.ts";
+import { siteIdFromFriendlyId } from "neolace/core/Site.ts";
 import { dedent } from "neolace/lib/dedent.ts";
 import { HumanUser } from "neolace/core/User.ts";
 
@@ -70,7 +70,7 @@ export class VerifyUserEmailResource extends NeolaceHttpResource {
 
         // And make sure the email address isn't already used:
         const graph = await getGraph();
-        const checkEmail = await graph.pull(HumanUser, (u) => u.id, { where: C`@this.email = ${email}` });
+        const checkEmail = await graph.pull(HumanUser, (u) => u.id, { with: { email } });
         if (checkEmail.length !== 0) {
             throw new api.InvalidRequest(
                 api.InvalidRequestReason.EmailAlreadyRegistered,
@@ -80,9 +80,9 @@ export class VerifyUserEmailResource extends NeolaceHttpResource {
 
         const token = await saveValidationToken({ email, data: bodyData.data as Record<string, unknown> });
 
-        // The API always accepts the site "shortId" but we need the site VNID if we're sending
+        // The API always accepts the site "friendlyId" but we need the site VNID if we're sending
         // the validation email as coming from a specific site and not the overall realm.
-        const siteId = bodyData.siteId ? await siteIdFromShortId(bodyData.siteId) : undefined;
+        const siteId = bodyData.siteFriendlyId ? await siteIdFromFriendlyId(bodyData.siteFriendlyId) : undefined;
 
         // Send the user an email with the link:
         const msg = await makeSystemEmail({

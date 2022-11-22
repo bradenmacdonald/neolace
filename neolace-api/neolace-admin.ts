@@ -473,8 +473,8 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
     let part = 1;
     const _pushEdits = async (edits: api.AnyContentEdit[], force = false) => {
         if (edits.length > 20 || (force && edits.length > 0)) {
-            const {id: draftId} = await client.createDraft({title: `Import Part ${part++}`, description: "", edits}, {siteId});
-            await client.acceptDraft(draftId, {siteId});
+            const {idNum} = await client.createDraft({title: `Import Part ${part++}`, description: "", edits}, {siteId});
+            await client.acceptDraft(idNum, {siteId});
             edits.length = 0;
         }
     }
@@ -581,10 +581,10 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
     {
         log.info("Setting entry files...");
 
-        let draftId: VNID|undefined;
-        const getDraftId = async (): Promise<VNID> => draftId ?? await client.createDraft(
+        let draftIdNum: number|undefined;
+        const getDraftId = async (): Promise<number> => draftIdNum ?? await client.createDraft(
             {title: `Import Part ${part++}`, description: "", edits: [],
-        }, {siteId}).then((d) => draftId = d.id);
+        }, {siteId}).then((d) => draftIdNum = d.idNum);
 
         let numFiles = 0;
         for await (const {metadata, friendlyId, folder} of iterateEntries()) {
@@ -593,7 +593,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                 const fileContents = await Deno.readFile(folder + "/" + metadata.image);
                 const extension = metadata.image.split(".").pop()
                 const fileBlob = new Blob([fileContents], {type: contentTypeFromExtension(extension)});
-                const draftFile = await client.uploadFileToDraft(fileBlob, {draftId: await getDraftId(), siteId});
+                const draftFile = await client.uploadFileToDraft(fileBlob, {idNum: await getDraftId(), siteId});
                 await client.addEditToDraft({
                     code: api.UpdateEntryFeature.code,
                     data: {
@@ -604,7 +604,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                             ...(metadata.imageSizing ? {setSizing: metadata.imageSizing} : {}),
                         },
                     },
-                }, {draftId: await getDraftId(), siteId});
+                }, {idNum: await getDraftId(), siteId});
                 numFiles++;
             }
             if (metadata.files) {
@@ -615,7 +615,7 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                         throw new Error(`Failed to open file ${fullFilePath}`, {cause: err});
                     });
                     const fileBlob = new Blob([fileContents], {type: contentTypeFromExtension(extension)});
-                    const draftFile = await client.uploadFileToDraft(fileBlob, {draftId: await getDraftId(), siteId});
+                    const draftFile = await client.uploadFileToDraft(fileBlob, {idNum: await getDraftId(), siteId});
                     await client.addEditToDraft({
                         code: api.UpdateEntryFeature.code,
                         data: {
@@ -627,13 +627,13 @@ async function importSchemaAndContent({siteId, sourceFolder}: {siteId: string, s
                                 draftFileId: draftFile.draftFileId,
                             },
                         },
-                    }, {draftId: await getDraftId(), siteId});
+                    }, {idNum: await getDraftId(), siteId});
                     numFiles++;
                 }
             }
         }
-        if (draftId !== undefined) {
-            await client.acceptDraft(draftId, {siteId});
+        if (draftIdNum !== undefined) {
+            await client.acceptDraft(draftIdNum, {siteId});
             log.info(`${numFiles} files updated`);
         } else {
             log.info(`No files to update.`);

@@ -9,10 +9,10 @@ export { NeolaceHttpResource } from "neolace/api/mod.ts";
 export { checkPermissions, hasPermission, makeCypherCondition } from "neolace/core/permissions/check.ts";
 export { Always, PermissionGrant } from "neolace/core/permissions/grant.ts";
 
-export { Site, siteCodeForSite, siteIdFromShortId, siteShortIdFromId } from "neolace/core/Site.ts";
+export { Site, siteFriendlyIdFromId, siteIdFromFriendlyId } from "neolace/core/Site.ts";
 export { Entry } from "neolace/core/entry/Entry.ts";
 export { EntryType } from "neolace/core/schema/EntryType.ts";
-export { getEntry } from "neolace/api/site/{siteShortId}/entry/{entryId}/_helpers.ts";
+export { getEntry } from "neolace/api/site/{siteFriendlyId}/entry/{entryId}/_helpers.ts";
 export { GetEntryFlags } from "neolace/deps/neolace-api.ts";
 export { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 export { entryToIndexDocument } from "neolace/core/entry/entry-to-index-doc.ts";

@@ -15,22 +15,21 @@ const graph = await getGraph();
 log.info("Creating site...");
  
 // Get the admin user
-const {id: adminUserId} = await graph.pullOne(User, u => u.id, {key: "user-admin"}).catch(() => {
+const {id: adminUserId} = await graph.pullOne(User, u => u.id, {with: {username: "admin"}}).catch(() => {
     throw new Error("Admin user is missing - run 'Erase database and create default sites' to fix.");
 });
 
 // Create the docs site:
-const {id: siteId} = await graph.pullOne(Site, s => s.id, {key: "site-docs"}).catch(err =>{
+const {id: siteId} = await graph.pullOne(Site, s => s.id, {with: {friendlyId: "docs"}}).catch(err =>{
     if (!(err instanceof EmptyResultError)) { throw err; }
     return graph.runAsSystem(CreateSite({
         id: VNID("_5KJ0sVd9pQrsLi4fYlBrR6"),
         name: "Neolace documentation",
         domain: "docs.local.neolace.net",
-        slugId: `site-docs`,
-        siteCode: "NDOCS",
+        friendlyId: `docs`,
         adminUser: adminUserId,
     }));
 });
 
-await graph.runAsSystem(UpdateSite({key: siteId, ...siteData}));
+await graph.runAsSystem(UpdateSite({id: siteId, ...siteData}));
 await shutdown();

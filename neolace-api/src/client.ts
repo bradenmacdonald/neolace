@@ -21,7 +21,7 @@ export interface Config {
      * to pass a JWT (for human users).
      */
     authToken?: string;
-    /** Default site ID to use for requests involving a specific site. This is the site's shortId, e.g. "technotes" */
+    /** Default site ID to use for requests involving a specific site. This is the site's friendlyId, e.g. "technotes" */
     siteId?: string;
     getExtraHeadersForRequest?: (request: {method: HttpMethod, path: string}) => Promise<{[headerName: string]: string}>;
 }
@@ -163,8 +163,8 @@ export class NeolaceApiClient {
             email: options.email,
             data: options.data,
             returnUrl: options.returnUrl,
-            // siteId is optional for this API call:
-            siteId: options.siteId ?? this.siteId ?? undefined,
+            // siteFriendlyId is optional for this API call:
+            siteFriendlyId: options.siteId ?? this.siteId ?? undefined,
         };
         await this.call("/user/verify-email", {method: "POST", data});
     }
@@ -264,9 +264,9 @@ export class NeolaceApiClient {
         return data;
     }
 
-    public async getDraft<Flags extends readonly GetDraftFlags[]|undefined = undefined>(draftId: string, options?: {flags: Flags, siteId?: string}): Promise<ApplyFlags<typeof GetDraftFlags, Flags, DraftData>> {
+    public async getDraft<Flags extends readonly GetDraftFlags[]|undefined = undefined>(idNum: number, options?: {flags: Flags, siteId?: string}): Promise<ApplyFlags<typeof GetDraftFlags, Flags, DraftData>> {
         const siteId = this.getSiteId(options);
-        return this._parseDraft(await this.call(`/site/${siteId}/draft/${draftId}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""), {method: "GET"})) as any;
+        return this._parseDraft(await this.call(`/site/${siteId}/draft/${idNum}` + (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""), {method: "GET"})) as any;
     }
 
     public async createDraft(data: schemas.Type<typeof CreateDraftSchema>, options?: {siteId?: string}): Promise<DraftData> {
@@ -279,27 +279,27 @@ export class NeolaceApiClient {
         return this._parseDraft(result);
     }
 
-    public async addEditToDraft(edit: AnySchemaEdit|AnyContentEdit, options: {draftId: string, siteId?: string}): Promise<void> {
+    public async addEditToDraft(edit: AnySchemaEdit|AnyContentEdit, options: {idNum: number, siteId?: string}): Promise<void> {
         const siteId = this.getSiteId(options);
-        await this.call(`/site/${siteId}/draft/${options.draftId}/edit`, {method: "POST", data: edit});
+        await this.call(`/site/${siteId}/draft/${options.idNum}/edit`, {method: "POST", data: edit});
     }
 
-    public async uploadFileToDraft(fileData: Blob, options: {draftId: string, siteId?: string}): Promise<DraftFileData> {
+    public async uploadFileToDraft(fileData: Blob, options: {idNum: number, siteId?: string}): Promise<DraftFileData> {
         const siteId = this.getSiteId(options);
         const hash = await crypto.subtle.digest("SHA-256", await fileData.arrayBuffer());
         const hashHex = bin2hex(new Uint8Array(hash));
         const formData = new FormData();
         formData.append('file', fileData);
-        const result = await this.call(`/site/${siteId}/draft/${options.draftId}/file?sha256Hash=${hashHex}`, {
+        const result = await this.call(`/site/${siteId}/draft/${options.idNum}/file?sha256Hash=${hashHex}`, {
             method: "POST",
             body: formData,
         });
         return result;
     }
 
-    public async acceptDraft(draftId: string, options?: {siteId?: string}): Promise<void> {
+    public async acceptDraft(idNum: number, options?: {siteId?: string}): Promise<void> {
         const siteId = this.getSiteId(options);
-        await this.call(`/site/${siteId}/draft/${draftId}/accept`, {method: "POST"});
+        await this.call(`/site/${siteId}/draft/${idNum}/accept`, {method: "POST"});
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -353,13 +353,13 @@ export class NeolaceApiClient {
      * @param options 
      * @returns 
      */
-    public async getMyPermissions(options: {entryId?: VNID, entryTypeId?: VNID, draftId?: VNID, [custom: `plugin:${string}`]: string, siteId?: string} = {}): Promise<SiteUserMyPermissionsData> {
+    public async getMyPermissions(options: {entryId?: VNID, entryTypeId?: VNID, draftIdNum?: number, [custom: `plugin:${string}`]: string, siteId?: string} = {}): Promise<SiteUserMyPermissionsData> {
         const siteId = this.getSiteId(options);
 
         const objectFields: Record<string, string> = {};
         for (const [k, v] of Object.entries(options)) {
             if (v !== undefined && k !== "siteId") {
-                objectFields[k] = v;
+                objectFields[k] = String(v);
             }
         }
         const args = new URLSearchParams(objectFields);

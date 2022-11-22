@@ -10,7 +10,7 @@ import { thisPlugin } from "./mod.ts";
  * schema edits if there is some use case not covered by the existing built-in APIs.
  */
 export class PushEditResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteShortId/connection/push/:connectionFriendlyId/edit/"];
+    public paths = ["/site/:siteFriendlyId/connection/push/:connectionFriendlyId/edit/"];
 
     POST = this.method({
         requestBodySchema: api.schemas.Schema({

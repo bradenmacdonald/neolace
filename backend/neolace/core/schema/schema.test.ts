@@ -58,7 +58,7 @@ group("schema.ts", () => {
             const graph = await getGraph();
             // Create another site:
             const site2 = await graph.runAsSystem(
-                CreateSite({ name: "Other Site", slugId: "site-other", domain: "other.neolace.net" }),
+                CreateSite({ name: "Other Site", friendlyId: "other", domain: "other.neolace.net" }),
             );
             // Create a new entry type in site2:
             const id = VNID();

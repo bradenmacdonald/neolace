@@ -5,7 +5,10 @@ import {
     DerivedProperty,
     Field,
     FieldValidationError,
+    getRelationshipType,
+    RawRelationships,
     RawVNode,
+    ValidationError,
     VirtualPropType,
     VNodeType,
 } from "neolace/deps/vertex-framework.ts";
@@ -87,6 +90,13 @@ export class Draft extends EditSource {
 
     static readonly properties = {
         ...VNodeType.properties,
+        /**
+         * The VNID of the site with which this draft is associated. This just exists so that Neo4j can create a unique
+         * constraint on [site, idNum]. This should always be the same as the ID of the FOR_SITE->(:Site) node.
+         */
+        siteNamespace: Field.VNID,
+        /** The site-specific unqiue permanent identifier for this Draft. */
+        idNum: Field.Int,
         title: Field.String.Check(check.string.min(1).max(1_000)),
         description: Field.String,
         created: Field.DateTime,
@@ -156,7 +166,17 @@ export class Draft extends EditSource {
         hasContentChanges,
     });
 
-    static async validate(): Promise<void> {
+    static override async validate(
+        rawNode: RawVNode<typeof this>,
+        relationships: RawRelationships[],
+    ): Promise<void> {
+        // Validate that siteNamespace is correct.
+        const forSiteRel = relationships.find((r) => r.relType === getRelationshipType(this.rel.FOR_SITE));
+        const siteId = forSiteRel?.targetId;
+        if (siteId !== rawNode.siteNamespace || siteId === undefined) {
+            throw new ValidationError("Draft has incorrect siteNamespace.");
+        }
+
         // We don't verify if user is part of Site, because users can open a Draft then be removed from a Site but
         // their Draft should live on.
     }

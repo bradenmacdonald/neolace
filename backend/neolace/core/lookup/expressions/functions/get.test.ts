@@ -192,7 +192,7 @@ group("get.ts - permissions", () => {
         // First make the PlantDB site private:
         const graph = await getGraph();
         await graph.runAsSystem(UpdateSite({
-            key: defaultData.site.id,
+            id: defaultData.site.id,
             accessMode: AccessMode.Private,
         }));
 
@@ -249,7 +249,7 @@ group("get.ts - permissions", () => {
         // First make the PlantDB site private:
         const graph = await getGraph();
         await graph.runAsSystem(UpdateSite({
-            key: defaultData.site.id,
+            id: defaultData.site.id,
             accessMode: AccessMode.Private,
         }));
 

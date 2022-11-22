@@ -36,7 +36,7 @@ export function useEditableEntry(
     const [draft, unsavedEdits, draftError] = useDraft(context);
 
     // Get the "base version" of the entry (currently published version), if it exists.
-    const key = `entry-edit:${site.shortId}:${entryId}`;
+    const key = `entry-edit:${site.friendlyId}:${entryId}`;
     const { data: baseEntry, error } = useSWR(key, async () => {
         if (siteError) {
             throw new api.ApiError("Site Error", 500);
@@ -44,7 +44,7 @@ export function useEditableEntry(
         if (!api.isVNID(entryId)) {
             throw new api.ApiError(`"${entryId}" is not a valid VNID`, 500);
         }
-        if (!site.shortId) {
+        if (!site.friendlyId) {
             return undefined; // We need to wait for the siteId before we can load the entry
         }
         let data: api.EditableEntryData = {
@@ -64,7 +64,7 @@ export function useEditableEntry(
                         api.GetEntryFlags.IncludeFeatures,
                         api.GetEntryFlags.IncludeRawProperties,
                     ] as const,
-                    siteId: site.shortId,
+                    siteId: site.friendlyId,
                 });
             } catch (err) {
                 if (err instanceof api.NotFound) {

@@ -24,14 +24,17 @@ For example:
 
 ## Identifiers
 
-Vertex Framework uses "slugIds" that share a common namespace. In order to support multi-tenancy, Neolace sites use slugIds that are prefixed with a **site code**. The site code is a 5 character code using the 62 alphanumeric characters (0-9, a-z, A-Z), so a site code may look like `AB3xx`.
+There are (at least) three types of identifiers used in Neolace:
 
-Example:
+* `id` - (almost) every node in the database has a VNID (a short string like `_5o1X44sypzAwEEAgnrtl1N`) as its primary key, in the `id` property. This is built in to Vertex Framework.
+   - these VNIDs are permanent
+   - these VNIDs are globally unique
+   - generally these VNIDs are internal to Neolace, but some are exposed via its APIs. For example, the VNID of Entries is exposed via the API, but not those of Sites, Drafts, or users.
+* `friendlyId` - a friendly ID is a string ID like `home` that is used as a secondary key for some entities such as Entries.
+   - friendlyIds can sometimes be changed (e.g. the friendlyId of Entries can be changed)
+   - friendlyIds are site-specific (so two different sites on the same realm can have different entries with the same friendlyid)
+* `idNum` - a numeric identifier used for some entities like Drafts
+   - idNums increment sequentially (1, 2, 3, 4...) and are permanent (cannot be changed)
+   - idNums are site-specific
 
-* A TechNotes Entry has "ID" of `t-wind-turbine-rotor-r4-spxt`
-* The site code for TechNotes is `TNDB0`
-* In the graph database (vertex framework), it gets stored as slugId `TNDB0t-wind-turbine-rotor-r4-spxt`
-
-The site code cannot start with `z`, to allow for future expansion. With these restrictions, each Neolace Realm can support 61*62*62*62*62 = 901,356,496 Sites.
-
-**The `slugId` with the site code prefix is considered purely internal** (to give each Site a separate namespace for identifiers), so only the `siteSlugId` (without the site code prefix) and `id` (VNID/UUID) fields are exposed via the API.
+Because of how Neo4j unique constraints work, any node type that uses a site-specific `friendlyId` or `idNum` must have a property called `siteNamespace` which is set to the VNID of the associated Site. (Even though that makes the data less normalized, as the Site can be determined through relationships.) That way, a unique index can be declared on both fields. When looking up such a node, it's necessary to specify both the `siteNamespace` property and the `friendlyId` or `idNum` values, to ensure that the unique index is used.

@@ -11,7 +11,7 @@ group("find.ts", () => {
 
             assertEquals(result, {
                 name: "PlantDB",
-                shortId: "plantdb",
+                friendlyId: "plantdb",
                 domain: "plantdb.local.neolace.net",
                 url: "http://plantdb.local.neolace.net:4445",
                 description: "",

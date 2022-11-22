@@ -28,11 +28,11 @@ export const doUpsertEntryByFriendlyId = defineBulkImplementation(
             WITH site, connection, idx, edits[idx] AS edit
 
             MATCH (entryType:${EntryType} {id: edit.where.entryTypeId})-[:${EntryType.rel.FOR_SITE}]->(site)
-            OPTIONAL MATCH (oldEntry:${Entry} {slugId: site.siteCode + edit.where.friendlyId})
+            OPTIONAL MATCH (oldEntry:${Entry} {siteNamespace: site.id, friendlyId: edit.where.friendlyId})
                 WHERE exists( (oldEntry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType) )
-            WITH idx, edit, entryType, site, oldEntry {.name, .description, .slugId} as oldValues
+            WITH idx, edit, entryType, site, oldEntry {.name, .description, .friendlyId} as oldValues
 
-            MERGE (entry:${Entry} {slugId: site.siteCode + edit.where.friendlyId})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
+            MERGE (entry:${Entry} {siteNamespace: site.id, friendlyId: edit.where.friendlyId})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
                 ON CREATE SET
                     entry.id = edit.setOnCreate.entryId,
                     entry.name = coalesce(edit.set.name, edit.setOnCreate.name, ""),

@@ -22,7 +22,7 @@ group("HeroImage.ts", () => {
         // Create a site and entry type:
         const graph = await getGraph();
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId,
@@ -107,7 +107,7 @@ group("HeroImage.ts", () => {
         const dataFileUrl = (await graph.pullOne(DataFile, (df) => df.publicUrl(), { key: dataFile.id })).publicUrl;
         // Create a site with a regular entry type and an image entry type:
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", slugId: "site-test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
         );
         const draft = await graph.runAsSystem(CreateDraft({
             title: "Hero Image Test Draft",
@@ -177,7 +177,7 @@ group("HeroImage.ts", () => {
             AddFileToDraft({ draftId: draft.id, dataFileId: dataFile.id }),
         );
         await graph.runAsSystem(UpdateDraft({
-            key: draft.id,
+            id: draft.id,
             addEdits: [
                 {
                     code: "UpdateEntryFeature",

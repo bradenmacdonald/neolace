@@ -2,17 +2,16 @@ import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
 import { InvalidEdit, SetEntryFriendlyId } from "neolace/deps/neolace-api.ts";
 import { defineImplementation, EditHadNoEffect } from "neolace/core/edit/implementations.ts";
 import { Entry, EntryType, Site } from "neolace/core/mod.ts";
-import { slugIdToFriendlyId } from "neolace/core/Site.ts";
 
 export const doSetEntryFriendlyId = defineImplementation(SetEntryFriendlyId, async (tx, data, siteId) => {
     let result;
     try {
         result = await tx.queryOne(C`
             MATCH (e:${Entry} {id: ${data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-            WITH e, e.slugId as oldSlugId, (site.siteCode + ${data.friendlyId}) as newSlugId
-            WITH e, oldSlugId, newSlugId, oldSlugId <> newSlugId AS isDifferent
-            SET e += CASE WHEN isDifferent THEN {slugId: newSlugId} ELSE {} END
-        `.RETURN({ "oldSlugId": Field.Slug, "isDifferent": Field.Boolean }));
+            WITH e, e.friendlyId as oldFriendlyId, ${data.friendlyId} as newFriendlyId
+            WITH e, oldFriendlyId, newFriendlyId, oldFriendlyId <> newFriendlyId AS isDifferent
+            SET e += CASE WHEN isDifferent THEN {friendlyId: newFriendlyId} ELSE {} END
+        `.RETURN({ "oldFriendlyId": Field.Slug, "isDifferent": Field.Boolean }));
     } catch (err: unknown) {
         if (err instanceof EmptyResultError) {
             throw new InvalidEdit(
@@ -30,7 +29,7 @@ export const doSetEntryFriendlyId = defineImplementation(SetEntryFriendlyId, asy
     return {
         modifiedNodes: [data.entryId],
         oldValues: {
-            friendlyId: slugIdToFriendlyId(result.oldSlugId),
+            friendlyId: result.oldFriendlyId,
         },
     };
 });

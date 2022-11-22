@@ -9,7 +9,7 @@ import { UseSystemSource } from "../edit/ApplyEdits.ts";
 
 group("import-schema.ts", () => {
     // Note: importSchema() is used for the test fixtures so is also tested by all the tests in
-    // neolace/api/site/{siteShortId}/schema/index.test.ts
+    // neolace/api/site/{siteFriendlyId}/schema/index.test.ts
 
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
@@ -19,7 +19,7 @@ group("import-schema.ts", () => {
             const site = await graph.runAsSystem(CreateSite({
                 name: "Test Site",
                 domain: "test.neolace.com",
-                slugId: "site-test",
+                friendlyId: "test",
                 //adminUser: ,
             }));
             const getSchema = (): Promise<SiteSchemaData> => graph.read((tx) => getCurrentSchema(tx, site.id));

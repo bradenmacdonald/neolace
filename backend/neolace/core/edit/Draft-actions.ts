@@ -95,30 +95,41 @@ export const CreateDraft = defineAction({
         title: string;
         description?: string;
     },
-    resultData: {} as { id: VNID },
+    resultData: {} as { id: VNID; idNum: number },
     apply: async (tx, data) => {
         const id = data.id ?? VNID();
 
-        await tx.queryOne(C`
+        const result = await tx.queryOne(C`
+            // Match site and author:
             MATCH (site:${Site} {id: ${data.siteId}})
             MATCH (author:${User} {id: ${data.authorId}})
+
+            // Generate a site-specific idNum for this draft:
+            MERGE (uid:UniqueId {name: "draft-" + site.id})
+            ON CREATE SET uid.lastId = 1
+            ON MATCH SET uid.lastId = uid.lastId + 1
+            WITH site, author, uid.lastId AS idNum
+
+            // Create the draft:
             CREATE (draft:${Draft}:${C(EditSource.label)} {id: ${id}})
+            SET draft.siteNamespace = site.id
+            SET draft.idNum = idNum
             SET draft.title = ${data.title}
             SET draft.description = ${data.description ?? ""}
             SET draft.status = ${DraftStatus.Open}
             SET draft.created = datetime()
             CREATE (draft)-[:${Draft.rel.FOR_SITE}]->(site)
             CREATE (draft)-[:${Draft.rel.AUTHORED_BY}]->(author)
-        `.RETURN({}));
+        `.RETURN({ idNum: Field.Int }));
 
         const otherModifiedNodes: VNID[] = [];
         if (data.edits.length > 0) {
-            const { modifiedNodes } = await UpdateDraft.apply(tx, { key: id, addEdits: data.edits });
+            const { modifiedNodes } = await UpdateDraft.apply(tx, { id, addEdits: data.edits });
             otherModifiedNodes.push(...modifiedNodes);
         }
 
         return {
-            resultData: { id },
+            resultData: { id, idNum: result.idNum },
             modifiedNodes: [id, ...otherModifiedNodes],
             description: `Created ${Draft.withId(id)}`,
         };
@@ -136,7 +147,7 @@ export const AcceptDraft = defineAction({
     resultData: {} as { id: VNID },
     apply: async (tx, data) => {
         const draft = await tx.pullOne(Draft, (d) => d.status.site((s) => s.id).edits((e) => e.code.data), {
-            key: data.id,
+            id: data.id,
         });
         if (draft.status !== DraftStatus.Open) {
             throw new Error("Draft is not open.");

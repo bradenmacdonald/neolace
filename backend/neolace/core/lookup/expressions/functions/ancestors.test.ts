@@ -284,7 +284,7 @@ group("ancestors.ts", () => {
 
             const graph = await getGraph();
             await graph.runAsSystem(
-                CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
+                CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
             );
             await graph.runAsSystem(ApplyEdits({
                 siteId,
@@ -472,7 +472,7 @@ group("ancestors.ts", () => {
 
             const graph = await getGraph();
             await graph.runAsSystem(
-                CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", slugId: "site-test" }),
+                CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
             );
             await graph.runAsSystem(ApplyEdits({
                 siteId,

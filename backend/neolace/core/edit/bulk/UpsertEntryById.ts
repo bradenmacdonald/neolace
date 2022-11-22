@@ -2,7 +2,6 @@ import { C, Field } from "neolace/deps/vertex-framework.ts";
 import { InvalidEdit, UpsertEntryById } from "neolace/deps/neolace-api.ts";
 import { BulkAppliedEditData, defineBulkImplementation } from "neolace/core/edit/implementations.ts";
 import { Connection, Entry, EntryType, Site } from "neolace/core/mod.ts";
-import { slugIdToFriendlyId } from "../../Site.ts";
 import { Neo4jError } from "https://raw.githubusercontent.com/neo4j/neo4j-javascript-driver/5.1.0/packages/neo4j-driver-deno/lib/mod.ts";
 
 /**
@@ -37,13 +36,14 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
 
         MATCH (entryType:${EntryType} {id: edit.where.entryTypeId})-[:${EntryType.rel.FOR_SITE}]->(site)
         OPTIONAL MATCH (oldEntry:${Entry} {id: edit.where.entryId})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
-        WITH idx, edit, entryType, site, oldEntry {.name, .description, .slugId} as oldValues
+        WITH idx, edit, entryType, site, oldEntry {.name, .description, .friendlyId} as oldValues
 
         MERGE (entry:${Entry} {id: edit.where.entryId})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
             ON CREATE SET
                 entry.name = coalesce(edit.set.name, edit.setOnCreate.name, ""),
                 entry.description = coalesce(edit.set.description, edit.setOnCreate.description, ""),
-                entry.slugId = site.siteCode + coalesce(edit.set.friendlyId, edit.setOnCreate.friendlyId, ""),
+                entry.siteNamespace = site.id,
+                entry.friendlyId = coalesce(edit.set.friendlyId, edit.setOnCreate.friendlyId, ""),
                 entry.changed = true
             ON MATCH SET
                 entry += CASE WHEN edit.set.name IS NOT NULL AND edit.set.name <> entry.name THEN
@@ -52,8 +52,8 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
                 entry += CASE WHEN edit.set.description IS NOT NULL AND edit.set.description <> entry.description THEN
                     {description: edit.set.description, changed: true}
                 ELSE {} END,
-                entry += CASE WHEN edit.set.friendlyId IS NOT NULL AND (site.siteCode + edit.set.friendlyId) <> entry.slugId THEN
-                    {slugId: site.siteCode + edit.set.friendlyId, changed: true}
+                entry += CASE WHEN edit.set.friendlyId IS NOT NULL AND edit.set.friendlyId <> entry.friendlyId THEN
+                    {friendlyId: edit.set.friendlyId, changed: true}
                 ELSE {} END
         WITH idx, entry, oldValues, entry.changed AS changed
         REMOVE entry.changed
@@ -125,11 +125,11 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
                     modifiedNodes: [edit.where.entryId],
                 });
             }
-            if (edit.set?.friendlyId && edit.set.friendlyId !== slugIdToFriendlyId(outcome.oldValues.slugId)) {
+            if (edit.set?.friendlyId && edit.set.friendlyId !== outcome.oldValues.friendlyId) {
                 appliedEdits.push({
                     code: "SetEntryFriendlyId",
                     data: { entryId: edit.where.entryId, friendlyId: edit.set.friendlyId },
-                    oldData: { friendlyId: slugIdToFriendlyId(outcome.oldValues.slugId) },
+                    oldData: { friendlyId: outcome.oldValues.friendlyId },
                     modifiedNodes: [edit.where.entryId],
                 });
             }

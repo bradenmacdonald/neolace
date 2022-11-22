@@ -47,7 +47,7 @@ export const VerifyEmailRequest = Schema({
     /** The user's email that we want to verify */
     email: normalString,
     /** Optional: which site the user wants to use. This will affect the branding of the email */
-    siteId: normalString.strictOptional(),
+    siteFriendlyId: normalString.strictOptional(),
     /** 
      * The sent email should include a link that takes the user to this URL to continue with registration.
      * The link should include the string "{token}" which will be replaced with the email validation token

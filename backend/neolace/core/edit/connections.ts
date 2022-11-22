@@ -1,7 +1,6 @@
 import { C, defineAction, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { VNID } from "neolace/deps/neolace-api.ts";
 import { Connection, getGraph, Site } from "neolace/core/mod.ts";
-import { siteCodeForSite } from "../Site.ts";
 import { EditSource } from "./EditSource.ts";
 
 export { Connection };
@@ -28,7 +27,8 @@ const CreateConnection = defineAction({
             MATCH (site:${Site} {id: ${data.siteId}})
             CREATE (c:${Connection}:${C(EditSource.label)} {id: ${data.id}})
             CREATE (c)-[:${Connection.rel.FOR_SITE}]->(site)
-            SET c.slugId = "connection-" + site.siteCode + ${data.friendlyId}
+            SET c.siteNamespace = site.id
+            SET c.friendlyId = ${data.friendlyId}
             SET c += ${{
             name: data.friendlyId,
             plugin: data.plugin,
@@ -51,12 +51,10 @@ export async function getConnection({ friendlyId, siteId, plugin, create = false
     create: boolean;
 }): Promise<ConnectionData> {
     const graph = await getGraph();
-    const siteCode = await siteCodeForSite(siteId);
-    const fullSlugId = Connection.slugIdPrefix + siteCode + friendlyId;
     let result;
     try {
         result = await graph.pullOne(Connection, (c) => c.id.name.plugin.config, {
-            key: fullSlugId,
+            with: { siteNamespace: siteId, friendlyId },
         });
     } catch (err) {
         if (err instanceof EmptyResultError) {

@@ -1,4 +1,4 @@
-import { C, VirtualPropType, VNodeType } from "neolace/deps/vertex-framework.ts";
+import { C, RawRelationships, RawVNode, VirtualPropType, VNodeType } from "neolace/deps/vertex-framework.ts";
 import { Site } from "neolace/core/Site.ts";
 
 /**
@@ -31,7 +31,7 @@ export class EditSource extends VNodeType {
         },
     });
 
-    static async validate(): Promise<void> {
+    static override async validate(_rawNode: RawVNode<typeof this>, _rels: RawRelationships[]): Promise<void> {
         // No custom validation
     }
 }

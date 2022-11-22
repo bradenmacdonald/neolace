@@ -46,7 +46,7 @@ const LoginPage: NextPage<PageProps> = function (props) {
             await client.requestEmailVerification({
                 email: userEmail,
                 data: { fullName: userFullName },
-                siteId: props.site.shortId,
+                siteId: props.site.friendlyId,
                 returnUrl: new URL("/account/confirm", location.href).toString() + "/{token}/",
             });
             setSubmittedSuccessfully(true);
@@ -59,7 +59,7 @@ const LoginPage: NextPage<PageProps> = function (props) {
         } finally {
             setIsSubmitting(false);
         }
-    }, [userFullName, userEmail, props.site.shortId]);
+    }, [userFullName, userEmail, props.site.friendlyId]);
 
     if (user.status === UserStatus.LoggedIn) {
         return <Redirect to="/" />;

@@ -36,7 +36,7 @@ export const doSetPropertyFacts = defineBulkImplementation(
 
             CALL {
                 WITH edit, site
-                MATCH (entry:${Entry} {slugId: site.siteCode + edit.entryWith.friendlyId})
+                MATCH (entry:${Entry} {siteNamespace: site.id, friendlyId: edit.entryWith.friendlyId})
                     WHERE edit.entryWith.friendlyId IS NOT NULL
                     RETURN entry
                 UNION
