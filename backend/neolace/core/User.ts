@@ -2,7 +2,6 @@ import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
     defineAction,
-    DerivedProperty,
     Field,
     RawVNode,
     ValidationError,
@@ -15,11 +14,10 @@ import { createRandomToken } from "neolace/lib/secure-token.ts";
 
 export class User extends VNodeType {
     static label = "User";
-    static readonly slugIdPrefix = "user-";
     static readonly properties = {
         ...VNodeType.properties,
-        // slugId: starts with "user-", then follows a unique code. Can be changed any time.
-        slugId: Field.Slug,
+        // The user's unique username. Note however that it can be changed.
+        username: Field.Slug,
         // Optional full name
         fullName: Field.String.Check(check.string.max(100)),
     };
@@ -35,7 +33,6 @@ export class User extends VNodeType {
 
     static readonly derivedProperties = this.hasDerivedProperties({
         //isBot,
-        username,
     });
 }
 
@@ -87,18 +84,9 @@ export class BotUser extends User {
     });
 }
 
-/** Get the username of a user */
-export function username(): DerivedProperty<string> {
-    return DerivedProperty.make(
-        User,
-        (user) => user.slugId,
-        (user) => user.slugId.substring(User.slugIdPrefix.length),
-    );
-}
-
 async function isUsernameTaken(tx: WrappedTransaction, username: string): Promise<boolean> {
     const result = await tx.query(C`
-        MATCH (:SlugId {slugId: ${User.slugIdPrefix + username}})-[:IDENTIFIES]->(u:${User})
+        MATCH (u:${User} {username: ${username}})
     `.RETURN({}));
     return result.length > 0;
 }
@@ -144,7 +132,7 @@ export const CreateUser = defineAction({
                 id: ${data.id},
                 authnId: ${BigInt(data.authnId)},
                 email: ${data.email},
-                slugId: ${User.slugIdPrefix + username},
+                username: ${username},
                 fullName: ${data.fullName || ""}
             })
         `.RETURN({}));
@@ -181,7 +169,7 @@ export const CreateBot = defineAction({
             MATCH (owner:${HumanUser} {id: ${data.ownedByUser}})
             CREATE (u:Bot:User:VNode {
                 id: ${vnid},
-                slugId: ${User.slugIdPrefix + data.username},
+                username: ${data.username},
                 authToken: ${authToken},
                 fullName: ${data.fullName || ""}
             })-[:${BotUser.rel.OWNED_BY} {inheritPermissions: ${data.inheritPermissions ?? false}}]->(owner)

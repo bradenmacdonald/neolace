@@ -342,9 +342,9 @@ export function adaptErrors(...mapping: (string | ConvertErrorPathToField)[]) {
  * Simple helper function for adaptErrors.
  *
  * Example:
- *     .catch(adaptErrors(..., adaptErrors.remap("slugId", "username")))
- * The above example means that any errors in validting the "slugId" field should be remapped to the "username" field,
- * and the API consumer will see a message that the "username" field was invalid.
+ *     .catch(adaptErrors(..., adaptErrors.remap("internalField", "externalField")))
+ * The above example means that any errors in validating the "internalField" field should be remapped to the
+ * "externalField" field, and the API consumer will see a message that the "externalField" field was invalid.
  */
 adaptErrors.remap = (errorPath: string, requestPath: string) => (field: string) =>
     field === errorPath ? requestPath : undefined;

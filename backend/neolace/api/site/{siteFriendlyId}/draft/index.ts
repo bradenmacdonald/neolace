@@ -105,7 +105,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
 
                     RETURN
                         draft {.idNum, .title, .description, .created, .status},
-                        {fullName: author.fullName, slugId: author.slugId} AS author
+                        {fullName: author.fullName, username: author.username} AS author
                     ORDER BY draft.created DESC
                     SKIP ${skip} LIMIT ${pageSize}
                 `.givesShape({
@@ -118,7 +118,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
                     }),
                     author: Field.Record({
                         fullName: Field.String,
-                        slugId: Field.Slug,
+                        username: Field.Slug,
                     }),
                 }));
             }),
@@ -134,10 +134,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
         const result: api.schemas.PaginatedResultData<api.DraftData> = {
             values: data.map((row) => ({
                 ...row.draft,
-                author: {
-                    fullName: row.author.fullName,
-                    username: row.author.slugId.substring(User.slugIdPrefix.length),
-                },
+                author: row.author,
             })),
             totalCount: countData["count(draft)"],
         };

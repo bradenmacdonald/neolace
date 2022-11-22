@@ -42,7 +42,7 @@ export async function getDraft(
             .idNum
             .title
             .description
-            .author((a) => a.username().fullName)
+            .author((a) => a.username.fullName)
             .created
             .status
             .if("edits", (d) => d.edits((e) => e.id.code.changeType.timestamp.data)), {

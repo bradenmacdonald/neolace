@@ -68,9 +68,9 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
                 WITH totalCount, row[0] AS user, row[1] AS owner, row[2] AS groups
                 // Now return just the page we want:
                 RETURN
-                    substring(user.slugId, ${User.slugIdPrefix.length}) AS username,
+                    user.username AS username,
                     user.fullName AS fullName,
-                    CASE WHEN owner.slugId IS NULL THEN NULL ELSE substring(owner.slugId, ${User.slugIdPrefix.length}) END AS ownerSlugId,
+                    CASE WHEN owner.username IS NULL THEN NULL ELSE owner.username END AS ownerUsername,
                     owner.fullName AS ownerFullName,
                     groups AS groups,
                     totalCount
@@ -79,7 +79,7 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
             `.givesShape({
                 username: Field.String,
                 fullName: Field.String,
-                ownerSlugId: Field.NullOr.String,
+                ownerUsername: Field.NullOr.String,
                 ownerFullName: Field.NullOr.String,
                 groups: Field.List(Field.Record({ id: Field.VNID, name: Field.String })),
                 totalCount: Field.Int,
@@ -95,8 +95,8 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
                 username: row.username,
                 fullName: row.fullName,
                 isBot: row.ownerFullName !== null,
-                ownedBy: row.ownerSlugId === null ? undefined : {
-                    username: row.ownerSlugId,
+                ownedBy: row.ownerUsername === null ? undefined : {
+                    username: row.ownerUsername,
                     fullName: row.ownerFullName!,
                 },
                 groups: row.groups,

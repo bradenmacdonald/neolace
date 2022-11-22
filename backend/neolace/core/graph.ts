@@ -10,6 +10,18 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
         neo4jPassword: config.neo4jPassword,
         debugLogging: false,
         extraMigrations: {
+            // Users have unique usernames:
+            usernameUnique: {
+                forward: async (dbWrite) => {
+                    await dbWrite(async (tx) => {
+                        await tx.run("CREATE CONSTRAINT user_username_uniq FOR (u:Human) REQUIRE u.username IS UNIQUE");
+                    });
+                },
+                backward: async (dbWrite) => {
+                    await dbWrite((tx) => tx.run("DROP CONSTRAINT user_username_uniq IF EXISTS"));
+                },
+                dependsOn: [],
+            },
             // Users have unique email addresses:
             userEmailUnique: {
                 forward: async (dbWrite) => {

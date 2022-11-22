@@ -31,7 +31,7 @@ export class NeolaceAuthService extends Drash.Service {
 
             let user;
             try {
-                user = await graph.pullOne(HumanUser, (u) => u.allProps.username(), {
+                user = await graph.pullOne(HumanUser, (u) => u.allProps, {
                     where: C`@this.authnId = ${authInfo.accountId}`,
                 });
             } catch (err) {
@@ -70,7 +70,7 @@ export class NeolaceAuthService extends Drash.Service {
                 }
             }
         } else {
-            const users = await graph.pull(BotUser, (u) => u.id.fullName.username(), {
+            const users = await graph.pull(BotUser, (u) => u.id.fullName.username, {
                 where: C`@this.authToken = ${authToken}`,
             });
             if (users.length > 1) {

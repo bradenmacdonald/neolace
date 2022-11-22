@@ -1,6 +1,6 @@
 import { api, Drash, getGraph, log } from "neolace/api/mod.ts";
-import { BotUser, HumanUser, User } from "neolace/core/User.ts";
-import { isVNID, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
+import { BotUser, HumanUser } from "neolace/core/User.ts";
+import { C, isVNID, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 
 /**
  * A helper function to get the profile of a specific user.
@@ -20,11 +20,13 @@ export async function getPublicUserData(
     }
 
     const graph = await getGraph();
-    const key = isVNID(usernameOrVNID) ? usernameOrVNID : User.slugIdPrefix + usernameOrVNID; // The user's VNID or slugId
+    const filter = {
+        where: isVNID(usernameOrVNID) ? C`@this.id = ${usernameOrVNID}` : C`@this.username = ${usernameOrVNID}`,
+    };
 
     // TODO: Create a Vertex Framework Proxy object that allows loading either a Human or a Bot
 
-    const humanResult = await graph.pull(HumanUser, (u) => u.fullName.username(), { key });
+    const humanResult = await graph.pull(HumanUser, (u) => u.fullName.username, filter);
     if (humanResult.length === 1) {
         // This is a human user
         return {
@@ -34,7 +36,7 @@ export async function getPublicUserData(
         };
     } else if (humanResult.length > 1) throw new Error("Inconsistent - Multiple users matched");
 
-    const botResult = await graph.pull(BotUser, (u) => u.fullName.username().ownedBy((h) => h.username()), { key });
+    const botResult = await graph.pull(BotUser, (u) => u.fullName.username.ownedBy((h) => h.username), filter);
     if (botResult.length === 0) {
         if (isVNID(usernameOrVNID)) {
             log.error(`Failed to fetch user with key ${usernameOrVNID}`);

@@ -50,8 +50,8 @@ export class UserIndexResource extends NeolaceHttpResource {
             fullName: bodyData.fullName,
             username: bodyData.username, // Auto-generate a username if it is not specified
         })).catch(
-            adaptErrors("email", "fullName", adaptErrors.remap("slugId", "username")),
-        ); // An error in the "slugId" property gets remapped into the "username" field
+            adaptErrors("email", "fullName", "username"),
+        );
 
         const userData = await getPublicUserData(result.id);
         console.log(`Created new user ${userId} with username ${userData.username}`);
