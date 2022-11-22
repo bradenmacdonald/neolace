@@ -1,4 +1,4 @@
-#!/usr/bin/env deno run --allow-env --allow-net --allow-read --allow-write
+#!/usr/bin/env deno run --allow-env --allow-net --allow-read --allow-write --no-lock
 /**
  * Admin script for Neolace.
  *

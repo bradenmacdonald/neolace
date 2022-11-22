@@ -62,14 +62,14 @@ jobs:
           deno-version: ${{ env.deno-version }}
 
       - name: Type check backend
-        run: deno check neolace/api/server.ts
+        # Note: we don't want to use --no-lock, but esm.sh is serving some flaky lodash modules (for Chevrotain) with
+        # different hashes, so we have to disable it for now :/
+        run: deno check neolace/api/server.ts --no-lock
         working-directory: ./backend
 
-      # Type checking the test suite is very slow so we do it asynchronously now too, while the actual tests themselves run in a separate job
+      # Type checking the test suite is a bit slow so we do it asynchronously now too, while the actual tests themselves run in a separate job
 
       - name: Type check test suite setup
-        # Note: we don't want --no-lock here, but esm.sh is serving some flaky lodash modules (for Chevrotain) with
-        # different hashes, so we have to disable it for now :/
         run: deno check neolace/scripts/test-setup.ts --no-lock
         working-directory: ./backend
 
@@ -99,14 +99,14 @@ jobs:
       - name: Test Suite setup (backend)
         env:
           ENV_TYPE: test
-        run: deno run --allow-net --allow-read --allow-env --allow-write neolace/scripts/test-setup.ts
+        # Note: we don't want --no-lock here, but esm.sh is serving some flaky lodash modules (for Chevrotain) with
+        # different hashes, so we have to disable it for now :/
+        run: deno run --allow-net --allow-read --allow-env --allow-write --no-lock neolace/scripts/test-setup.ts
         working-directory: ./backend
 
       - name: Run tests (backend)
         env:
           ENV_TYPE: test
-        # Note: we don't want --no-lock here, but esm.sh is serving some flaky lodash modules (for Chevrotain) with
-        # different hashes, so we have to disable it for now :/
         run: deno test --allow-net --allow-env --allow-read --no-check --no-lock
         working-directory: ./backend
         timeout-minutes: 10
