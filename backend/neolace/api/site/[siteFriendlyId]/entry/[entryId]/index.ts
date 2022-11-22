@@ -1,5 +1,5 @@
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { getEntry } from "neolace/api/site/{siteFriendlyId}/entry/{entryId}/_helpers.ts";
+import { getEntry } from "neolace/api/site/[siteFriendlyId]/entry/[entryId]/_helpers.ts";
 
 export class EntryResource extends NeolaceHttpResource {
     public paths = ["/site/:siteFriendlyId/entry/:entryKey"];

@@ -2,7 +2,7 @@ import { readableStreamFromIterable } from "std/streams/conversion.ts";
 import { crypto } from "std/crypto/mod.ts";
 import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { getDraft, getDraftIdFromRequest } from "neolace/api/site/{siteFriendlyId}/draft/_helpers.ts";
+import { getDraft, getDraftIdFromRequest } from "neolace/api/site/[siteFriendlyId]/draft/_helpers.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { AddFileToDraft } from "neolace/core/edit/Draft-actions.ts";
 import { uploadFileToObjStore } from "neolace/core/objstore/objstore.ts";

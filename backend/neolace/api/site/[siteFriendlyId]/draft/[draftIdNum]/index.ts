@@ -1,5 +1,5 @@
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { getDraft, getDraftIdFromRequest } from "neolace/api/site/{siteFriendlyId}/draft/_helpers.ts";
+import { getDraft, getDraftIdFromRequest } from "neolace/api/site/[siteFriendlyId]/draft/_helpers.ts";
 
 export class DraftResource extends NeolaceHttpResource {
     public paths = ["/site/:siteFriendlyId/draft/:draftIdNum"];

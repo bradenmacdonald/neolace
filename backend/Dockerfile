@@ -10,8 +10,6 @@ COPY backend /neolace/backend
 COPY neolace-api /neolace/neolace-api
 
 # Cache dependencies and check types
-RUN apk add git
-RUN cd / && git clone https://github.com/neolace-dev/vertex-framework.git
 RUN deno cache neolace/api/server.ts
 RUN deno cache neolace/plugins/*/mod.ts
 

@@ -3,7 +3,7 @@ import {
     checkPermissionsRequiredForEdits,
     getDraft,
     getDraftIdFromRequest,
-} from "neolace/api/site/{siteFriendlyId}/draft/_helpers.ts";
+} from "neolace/api/site/[siteFriendlyId]/draft/_helpers.ts";
 import { UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
 
 /**
