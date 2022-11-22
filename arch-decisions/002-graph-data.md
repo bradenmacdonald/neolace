@@ -12,12 +12,10 @@ Neolace interacts with Neo4j via an intermediary framework called Vertex Framewo
 
 All data is represented as either a node in the graph or a relationship between nodes. Neolace (and Vertex Framework) use only strongly typed nodes, which are called "VNodes". Each type of node (each VNodeType) has a label (e.g. `Entry`), a schema (set of allowed/required properties and relationships), and validation (arbitrary code to check constraints).
 
-Every VNode ("object") is identified by a UUID.
+Every VNode ("object") is identified by a primary key called a VNID (a type of UUID).
 
 * Neo4j node IDs are meant for internal use only and are not suitable for this purpose (they can be recycled etc.)
 * UUIDs allow the client to generate its own ID in advance of writing to the database, which can be handy for e.g. offline edits
-
-Most VNodes are also identified by a `shortId`, which is a short slug-like string such as `user-bob` or `boeing-747`. The "current" `shortId` of a VNode may be changed (e.g. a user changing their username, or an article changing its URL slug), but previously used `shortId`s will continue to work and point to the same VNode. This is considered important for the Neolace use case, where shortIds will be a key part of URLs and links between articles/entries.
 
 For details on VNodes and Vertex Framework, see the Vertex Framework documentation.
 
@@ -35,5 +33,3 @@ Each Action tracks carefully which VNodes it modifies, and then validation of ea
 
 * This provides a complete change history of every VNode and its relationships.
 * This provides fairly strong schema enforcement which Neo4j otherwise does not support (although changes to the validation schema do not apply retroactively, and it relies on actions accurately declaring which VhNodes they have modified).
-
-Actions can generally be "inverted" to create a new Action that undoes the original action. This, in combination with the Action log/history, allows auditing and reverting changes to the graph as needed.

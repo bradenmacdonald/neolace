@@ -10,4 +10,3 @@ Its key features are:
   * Entries, depending on their type, can have an article text, like a wiki article.
 * Entry relationships are semantically meaningful (the system understands that if "Falcon 9 FT" is a rocket, then anything that's true of all rockets is true of "Falcon 9 FT")
 * Changes to the content go through a change review process, like pull requests on GitHub.
-* Other Neolace databases and external systems can be referenced in a read-only manner ("external entries")
