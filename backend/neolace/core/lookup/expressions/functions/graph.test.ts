@@ -24,7 +24,7 @@ group("graph()", () => {
     const ponderosaPine = defaultData.entries.ponderosaPine;
     const context = new TestLookupContext({ siteId, entryId: ponderosaPine.id });
 
-    const entryType = VNID(), entryIsA = VNID();
+    const entryTypeKey = "test-entry-type", entryIsA = "prop-is-a";
     const A = VNID(),
         B = VNID(),
         C = VNID(),
@@ -37,60 +37,60 @@ group("graph()", () => {
         assertEquals(value.entries, [
             {
                 entryId: defaultData.entries.ponderosaPine.id,
-                entryType: defaultData.schema.entryTypes._ETSPECIES.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETSPECIES.key,
                 name: "Ponderosa Pine",
                 isFocusEntry: true,
             },
             {
                 entryId: defaultData.entries.genusPinus.id,
-                entryType: defaultData.schema.entryTypes._ETGENUS.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETGENUS.key,
                 name: "Pinus",
             },
             {
                 entryId: defaultData.entries.familyPinaceae.id,
-                entryType: defaultData.schema.entryTypes._ETFAMILY.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETFAMILY.key,
                 name: "Pinaceae",
             },
             {
                 entryId: defaultData.entries.orderPinales.id,
-                entryType: defaultData.schema.entryTypes._ETORDER.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETORDER.key,
                 name: "Pinales",
             },
             {
                 entryId: defaultData.entries.classPinopsida.id,
-                entryType: defaultData.schema.entryTypes._ETCLASS.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETCLASS.key,
                 name: "Pinopsida",
             },
             {
                 entryId: defaultData.entries.divisionTracheophyta.id,
-                entryType: defaultData.schema.entryTypes._ETDIVISION.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETDIVISION.key,
                 name: "Tracheophyta",
             },
         ]);
         const expectedRels = [
             {
                 fromEntryId: defaultData.entries.classPinopsida.id,
-                relType: defaultData.schema.properties._parentDivision.id,
+                relTypeKey: defaultData.schema.properties.parentDivision.key,
                 toEntryId: defaultData.entries.divisionTracheophyta.id,
             },
             {
                 fromEntryId: defaultData.entries.orderPinales.id,
-                relType: defaultData.schema.properties._parentClass.id,
+                relTypeKey: defaultData.schema.properties.parentClass.key,
                 toEntryId: defaultData.entries.classPinopsida.id,
             },
             {
                 fromEntryId: defaultData.entries.familyPinaceae.id,
-                relType: defaultData.schema.properties._parentOrder.id,
+                relTypeKey: defaultData.schema.properties.parentOrder.key,
                 toEntryId: defaultData.entries.orderPinales.id,
             },
             {
                 fromEntryId: defaultData.entries.genusPinus.id,
-                relType: defaultData.schema.properties._parentFamily.id,
+                relTypeKey: defaultData.schema.properties.parentFamily.key,
                 toEntryId: defaultData.entries.familyPinaceae.id,
             },
             {
                 fromEntryId: defaultData.entries.ponderosaPine.id,
-                relType: defaultData.schema.properties._parentGenus.id,
+                relTypeKey: defaultData.schema.properties.parentGenus.key,
                 toEntryId: defaultData.entries.genusPinus.id,
             },
         ];
@@ -117,26 +117,26 @@ group("graph()", () => {
         await graph.runAsSystem(ApplyEdits({
             siteId,
             edits: [
-                { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                 {
                     code: "CreateProperty",
-                    data: { id: entryIsA, type: PropertyType.RelIsA, name: "is a", appliesTo: [{ entryType }] },
+                    data: { key: entryIsA, type: PropertyType.RelIsA, name: "is a", appliesTo: [{ entryTypeKey }] },
                 },
                 {
                     code: "CreateEntry",
-                    data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                    data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                 },
                 {
                     code: "CreateEntry",
-                    data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                    data: { entryId: B, name: "Entry B", entryTypeKey, key: "b", description: "" },
                 },
                 {
                     code: "CreateEntry",
-                    data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                    data: { entryId: C, name: "Entry C", entryTypeKey, key: "c", description: "" },
                 },
                 {
                     code: "CreateEntry",
-                    data: { entryId: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
+                    data: { entryId: D, name: "Entry D", entryTypeKey, key: "d", description: "" },
                 },
                 // B is a A
                 {
@@ -144,7 +144,7 @@ group("graph()", () => {
                     data: {
                         entryId: B,
                         valueExpression: `entry("${A}")`,
-                        propertyId: entryIsA,
+                        propertyKey: entryIsA,
                         propertyFactId: VNID(),
                     },
                 },
@@ -154,7 +154,7 @@ group("graph()", () => {
                     data: {
                         entryId: C,
                         valueExpression: `entry("${A}")`,
-                        propertyId: entryIsA,
+                        propertyKey: entryIsA,
                         propertyFactId: VNID(),
                     },
                 },
@@ -164,7 +164,7 @@ group("graph()", () => {
                     data: {
                         entryId: D,
                         valueExpression: `entry("${B}")`,
-                        propertyId: entryIsA,
+                        propertyKey: entryIsA,
                         propertyFactId: VNID(),
                     },
                 },
@@ -174,7 +174,7 @@ group("graph()", () => {
                     data: {
                         entryId: D,
                         valueExpression: `entry("${C}")`,
-                        propertyId: entryIsA,
+                        propertyKey: entryIsA,
                         propertyFactId: VNID(),
                     },
                 },
@@ -184,7 +184,7 @@ group("graph()", () => {
                     data: {
                         entryId: A,
                         valueExpression: `entry("${D}")`,
-                        propertyId: entryIsA,
+                        propertyKey: entryIsA,
                         propertyFactId: VNID(),
                     },
                 },
@@ -200,23 +200,23 @@ group("graph()", () => {
         assertEquals<typeof value.entries>(value.entries, [
             {
                 entryId: A,
-                entryType: entryType,
+                entryTypeKey,
                 name: "Entry A",
                 isFocusEntry: true,
             },
             {
                 entryId: D,
-                entryType: entryType,
+                entryTypeKey,
                 name: "Entry D",
             },
             {
                 entryId: B,
-                entryType: entryType,
+                entryTypeKey,
                 name: "Entry B",
             },
             {
                 entryId: C,
-                entryType: entryType,
+                entryTypeKey,
                 name: "Entry C",
             },
         ]);
@@ -225,27 +225,27 @@ group("graph()", () => {
         const expectedRels = [
             {
                 fromEntryId: A,
-                relType: entryIsA,
+                relTypeKey: entryIsA,
                 toEntryId: D,
             },
             {
                 fromEntryId: B,
-                relType: entryIsA,
+                relTypeKey: entryIsA,
                 toEntryId: A,
             },
             {
                 fromEntryId: C,
-                relType: entryIsA,
+                relTypeKey: entryIsA,
                 toEntryId: A,
             },
             {
                 fromEntryId: D,
-                relType: entryIsA,
+                relTypeKey: entryIsA,
                 toEntryId: C,
             },
             {
                 fromEntryId: D,
-                relType: entryIsA,
+                relTypeKey: entryIsA,
                 toEntryId: B,
             },
         ];

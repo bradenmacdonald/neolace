@@ -1,15 +1,5 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
-import {
-    assertEquals,
-    assertInstanceOf,
-    assertRejects,
-    assertStringIncludes,
-    group,
-    setTestIsolation,
-    test,
-} from "neolace/lib/tests.ts";
+import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { CreateSite } from "neolace/core/Site.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { EntryTypeColor, SiteSchemaData } from "neolace/deps/neolace-api.ts";
@@ -18,6 +8,8 @@ group("schema.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
     const getSchema = (): Promise<SiteSchemaData> =>
         getGraph().then((graph) => graph.read((tx) => getCurrentSchema(tx, defaultData.site.id)));
+    const getSchemaOtherSite = (): Promise<SiteSchemaData> =>
+        getGraph().then((graph) => graph.read((tx) => getCurrentSchema(tx, defaultData.otherSite.id)));
 
     group("Schema Changes", () => {
         test("can add a new entry type.", async () => {
@@ -26,12 +18,12 @@ group("schema.ts", () => {
             assertEquals(await getSchema(), defaultData.schema);
 
             // Create a new entry type:
-            const id = VNID();
+            const key = "ET1";
             const name = "NewEntryType";
             await graph.runAsSystem(ApplyEdits({
                 siteId: defaultData.site.id,
                 edits: [
-                    { code: "CreateEntryType", data: { id, name } },
+                    { code: "CreateEntryType", data: { key, name } },
                 ],
                 editSource: UseSystemSource,
             }));
@@ -40,11 +32,11 @@ group("schema.ts", () => {
                 entryTypes: {
                     ...defaultData.schema.entryTypes,
                     // Here is the new entry type:
-                    [id]: {
-                        id,
+                    [key]: {
+                        key,
                         name,
                         description: "",
-                        friendlyIdPrefix: "",
+                        keyPrefix: "",
                         enabledFeatures: {},
                         color: EntryTypeColor.Default,
                         abbreviation: "",
@@ -54,35 +46,29 @@ group("schema.ts", () => {
             });
         });
 
-        test("cannot add an entry type with the same ID as already exists for another site", async () => {
+        test("can add an entry type with the same key as already exists for another site", async () => {
             const graph = await getGraph();
-            // Create another site:
-            const site2 = await graph.runAsSystem(
-                CreateSite({ name: "Other Site", friendlyId: "other", domain: "other.neolace.net" }),
-            );
-            // Create a new entry type in site2:
-            const id = VNID();
-            const name = "NewEntryType";
+            // Create two entry types on different sites with the same key but different names:
+            const key = "ET1";
             await graph.runAsSystem(ApplyEdits({
-                siteId: site2.id,
+                siteId: defaultData.site.id,
                 edits: [
-                    { code: "CreateEntryType", data: { id, name } },
+                    { code: "CreateEntryType", data: { key, name: "ET on Default Site" } },
+                ],
+                editSource: UseSystemSource,
+            }));
+            await graph.runAsSystem(ApplyEdits({
+                siteId: defaultData.otherSite.id,
+                edits: [
+                    { code: "CreateEntryType", data: { key, name: "ET on Other Site" } },
                 ],
                 editSource: UseSystemSource,
             }));
 
-            // Now try to create an entry with the same ID in the default site:
-            const err = await assertRejects(() =>
-                graph.runAsSystem(ApplyEdits({
-                    siteId: defaultData.site.id,
-                    edits: [
-                        { code: "CreateEntryType", data: { id, name } },
-                    ],
-                    editSource: UseSystemSource,
-                }))
-            );
-            assertInstanceOf(err, Error);
-            assertStringIncludes(err.message, "already exists with label `VNode` and property `id`");
+            const updatedSchema = await getSchema();
+            const otherUpdatedSchema = await getSchemaOtherSite();
+            assertEquals(updatedSchema.entryTypes[key].name, "ET on Default Site");
+            assertEquals(otherUpdatedSchema.entryTypes[key].name, "ET on Other Site");
         });
     });
 });

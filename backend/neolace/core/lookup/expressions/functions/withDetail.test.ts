@@ -14,7 +14,7 @@ group("withDetails()", () => {
     const context = new TestLookupContext({ siteId, entryId: ponderosaPine.id, defaultPageSize: 15n });
 
     const scientificNameProp = new LiteralExpression(
-        new PropertyValue(defaultData.schema.properties._propScientificName.id),
+        new PropertyValue(defaultData.schema.properties.propScientificName.key),
     );
 
     test("It can annotate set of entries with details coming from a property value", async () => {

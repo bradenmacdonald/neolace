@@ -27,9 +27,9 @@ export async function createImages(siteId: VNID) {
                 data: {
                     entryId: entryData.imgPonderosaTrunk.id,
                     ...entryData.imgPonderosaTrunk,
-                    type: schema.entryTypes._ETIMAGE.id,
+                    entryTypeKey: schema.entryTypes.ETIMAGE.key,
                     description: (entryData.imgPonderosaTrunk.description = `
-                    A [ponderosa pine](/entry/${entryData.ponderosaPine.friendlyId}) at Butte Lake, Lassen Volcanic National Park, California 40°33'48"N 121°17'37"W, 1850m altitude.
+                    A [ponderosa pine](/entry/${entryData.ponderosaPine.key}) at Butte Lake, Lassen Volcanic National Park, California 40°33'48"N 121°17'37"W, 1850m altitude.
                     Photo by [Vlad & Marina Butsky](https://www.flickr.com/photos/butsky/), [published on Flickr](https://www.flickr.com/photos/butsky/1183753142/) under the
                     [Creative Commons Attribution 2.0 Generic (CC BY 2.0)](https://creativecommons.org/licenses/by/2.0/) license.
                 `.trim()),
@@ -47,7 +47,7 @@ export async function createImages(siteId: VNID) {
                 code: "AddPropertyFact",
                 data: {
                     entryId: entryData.imgPonderosaTrunk.id,
-                    propertyId: schema.properties._imgRelTo.id,
+                    propertyKey: schema.properties.imgRelTo.key,
                     valueExpression: `entry("${entryData.ponderosaPine.id}")`,
                     propertyFactId: VNID(),
                 },
@@ -57,7 +57,7 @@ export async function createImages(siteId: VNID) {
                 code: "AddPropertyFact",
                 data: {
                     entryId: entryData.ponderosaPine.id,
-                    propertyId: schema.properties._hasHeroImage.id,
+                    propertyKey: schema.properties.hasHeroImage.key,
                     valueExpression: `entry("${entryData.imgPonderosaTrunk.id}")`,
                     propertyFactId: VNID(),
                     note: "a ponderosa pine trunk in Lassen Volcanic National Park",

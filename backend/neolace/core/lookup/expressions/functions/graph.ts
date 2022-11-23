@@ -32,18 +32,25 @@ export class Graph extends LookupFunctionOneArg {
                 // Now we have the relationships between the entries, but key data about each relationship is stored
                 // on the corresponding PropertyFact and Property nodes, not on the relationship itself, so fetch those too:
                 OPTIONAL MATCH (pf:${PropertyFact} {directRelNeo4jId: id(rel)})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
-                WITH collect(rel {start: startNode(rel).id, end: endNode(rel).id, relId: pf.id, relType: prop.id}) AS rels, entries
+                WITH collect(rel {start: startNode(rel).id, end: endNode(rel).id, relId: pf.id, relTypeKey: prop.key}) AS rels, entries
                 WITH rels, entries
                 // Add the entry type information to the entries we are returning:
                 UNWIND entries AS entry
                 MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})
-                RETURN rels, collect(entry {.id, .name, type: et.id}) AS entries
+                RETURN rels, collect(entry {.id, .name, entryTypeKey: et.key}) AS entries
             `.givesShape(
                 {
                     rels: Field.List(
-                        Field.Record({ start: Field.VNID, end: Field.VNID, relId: Field.VNID, relType: Field.VNID }),
+                        Field.Record({
+                            start: Field.VNID,
+                            end: Field.VNID,
+                            relId: Field.VNID,
+                            relTypeKey: Field.String,
+                        }),
                     ),
-                    entries: Field.List(Field.Record({ id: Field.VNID, name: Field.String, type: Field.VNID })),
+                    entries: Field.List(
+                        Field.Record({ id: Field.VNID, name: Field.String, entryTypeKey: Field.String }),
+                    ),
                 },
             ));
         } catch (err) {
@@ -58,7 +65,7 @@ export class Graph extends LookupFunctionOneArg {
             return {
                 entryId: entry.id,
                 name: entry.name,
-                entryType: entry.type,
+                entryTypeKey: entry.entryTypeKey,
                 // If this entry is the "current" entry, indicate that:
                 ...(entry.id === context.entryId && { isFocusEntry: true }),
             };
@@ -67,7 +74,7 @@ export class Graph extends LookupFunctionOneArg {
         const relationships = graphData.rels.map((rel) => {
             return {
                 relId: rel.relId,
-                relType: rel.relType,
+                relTypeKey: rel.relTypeKey,
                 fromEntryId: rel.start,
                 toEntryId: rel.end,
             };

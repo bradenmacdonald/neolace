@@ -18,11 +18,11 @@ group("UpdatePropertyFact edit implementation", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
     const siteId = defaultData.site.id;
     const ponderosaPine = defaultData.entries.ponderosaPine;
-    const scientificNameProp = defaultData.schema.properties._propScientificName;
+    const scientificNameProp = defaultData.schema.properties.propScientificName;
     const getScientificName = (graph: Vertex) =>
         graph.read((tx) =>
             getRawProperties({ tx, entryId: ponderosaPine.id }).then(
-                (props) => props.find((p) => p.propertyId === scientificNameProp.id),
+                (props) => props.find((p) => p.propertyKey === scientificNameProp.key),
             )
         );
 

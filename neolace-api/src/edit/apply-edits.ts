@@ -65,16 +65,16 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
 
     let schema: SiteSchemaData = {
         entryTypes: Object.fromEntries(
-            Object.values(prevRefCache.entryTypes).map((et) => [et.id, {
+            Object.values(prevRefCache.entryTypes).map((et) => [et.key, {
                 ...et,
                 // Add in placeholders for the following fields which aren't used in ReferenceCache but are used in the full schema:
                 description: "",
-                friendlyIdPrefix: "",
+                keyPrefix: "",
                 enabledFeatures: {},
             }]),
         ),
         properties: Object.fromEntries(
-            Object.values(prevRefCache.properties).map((prop) => [prop.id, {
+            Object.values(prevRefCache.properties).map((prop) => [prop.key, {
                 ...prop,
                 // Add in placeholders for the following fields which aren't used in ReferenceCache but are used in the full schema:
                 appliesTo: [],
@@ -87,7 +87,7 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
         if (editType.changeType === EditChangeType.Schema) {
             edit = edit as AnySchemaEdit;
             if (edit.code === "UpdateProperty") {
-                if (schema.properties[edit.data.id] === undefined) {
+                if (schema.properties[edit.data.key] === undefined) {
                     // This property isn't yet in the reference cache.
                     continue; // Ignore it.
                 }
@@ -101,16 +101,16 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
             edit = edit as AnyContentEdit;
             const entryId = edit.data.entryId;
             if (edit.code === "CreateEntry") {
-                const { type, entryId: _, ...otherData } = edit.data;
-                entries[entryId] = { id: entryId, ...otherData, entryType: { id: type } };
+                const { entryTypeKey, entryId: _, ...otherData } = edit.data;
+                entries[entryId] = { id: entryId, ...otherData, entryType: { key: entryTypeKey } };
             } else if (!(entryId in entries)) {
                 continue;
             } else if (edit.code === "SetEntryName") {
                 entries[entryId].name = edit.data.name;
             } else if (edit.code === "SetEntryDescription") {
                 entries[entryId].description = edit.data.description;
-            } else if (edit.code === "SetEntryFriendlyId") {
-                entries[entryId].friendlyId = edit.data.friendlyId;
+            } else if (edit.code === "SetEntryKey") {
+                entries[entryId].key = edit.data.key;
             } else {
                 // Doesn't affect the data that we keep in refCache, so ignore it.
             }
@@ -122,7 +122,7 @@ export function applyEditsToReferenceCache(prevRefCache: Readonly<ReferenceCache
         // Any lookup values may now be invalid, but we leave them unchanged anyways as that's less problematic than removing them.
         lookups: [...prevRefCache.lookups],
         properties: Object.fromEntries(
-            Object.values(schema.properties).map((prop) => [prop.id, {
+            Object.values(schema.properties).map((prop) => [prop.key, {
                 ...prop,
                 standardURL: prop.standardURL ?? "",
                 displayAs: prop.displayAs ?? "",

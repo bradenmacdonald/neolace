@@ -14,21 +14,21 @@ group("SetPropertyFacts bulk edit implementation", () => {
         doBulkEdits,
         getAppliedEdits,
     } = testHelpers(defaultData);
-    const scientificNameProp = defaultData.schema.properties._propScientificName;
-    const wikidataQidProp = defaultData.schema.properties._propWikidataQID;
+    const scientificNameProp = defaultData.schema.properties.propScientificName;
+    const wikidataQidProp = defaultData.schema.properties.propWikidataQID;
 
     const checkPreconditions = async () => {
         // scientific name of ponderosa pine:
-        const ponderosaSciNameBefore = await getPropertyFacts(ponderosaPine, scientificNameProp.id);
+        const ponderosaSciNameBefore = await getPropertyFacts(ponderosaPine, scientificNameProp.key);
         assertEquals(ponderosaSciNameBefore.map((f) => f.valueExpression), [`"Pinus ponderosa"`]);
         // Wikidata QID of ponderosa pine:
-        const ponderosaQidBefore = await getPropertyFacts(ponderosaPine, wikidataQidProp.id);
+        const ponderosaQidBefore = await getPropertyFacts(ponderosaPine, wikidataQidProp.key);
         assertEquals(ponderosaQidBefore.map((f) => f.valueExpression), [`"Q460523"`]);
         // scientific name of jack pine
-        const jackPineSciNameBefore = await getPropertyFacts(jackPine, scientificNameProp.id);
+        const jackPineSciNameBefore = await getPropertyFacts(jackPine, scientificNameProp.key);
         assertEquals(jackPineSciNameBefore.map((f) => f.valueExpression), [`"Pinus banksiana"`]);
         // Wikidata QID of jack pine is not set yet:
-        const jackPineQidBefore = await getPropertyFacts(jackPine, wikidataQidProp.id);
+        const jackPineQidBefore = await getPropertyFacts(jackPine, wikidataQidProp.key);
         assertEquals(jackPineQidBefore.map((f) => f.valueExpression), []);
         return {
             ponderosaSciNameBefore,
@@ -51,14 +51,14 @@ group("SetPropertyFacts bulk edit implementation", () => {
                     entryWith: { entryId: ponderosaPine.id },
                     set: [
                         {
-                            propertyId: scientificNameProp.id,
+                            propertyKey: scientificNameProp.key,
                             facts: [
                                 { valueExpression: `"first new sci name value"`, note: "This is a new value." },
                                 { valueExpression: `"second new sci name value"` },
                             ],
                         },
                         {
-                            propertyId: wikidataQidProp.id,
+                            propertyKey: wikidataQidProp.key,
                             facts: [
                                 // unset all values for this property
                             ],
@@ -70,17 +70,17 @@ group("SetPropertyFacts bulk edit implementation", () => {
                 code: "SetPropertyFacts",
                 data: {
                     // This one we match by fiendly ID:
-                    entryWith: { friendlyId: jackPine.friendlyId },
+                    entryWith: { entryKey: jackPine.key },
                     set: [
                         {
-                            propertyId: scientificNameProp.id,
+                            propertyKey: scientificNameProp.key,
                             facts: [
                                 { valueExpression: `"first new sci name value for jack pine"` },
                                 { valueExpression: `"second new sci name value for jack pine"`, note: "JP note 2" },
                             ],
                         },
                         {
-                            propertyId: wikidataQidProp.id,
+                            propertyKey: wikidataQidProp.key,
                             facts: [
                                 { valueExpression: `"Q806838"` },
                             ],
@@ -91,7 +91,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
         ]);
 
         // Now check if it worked:
-        const ponderosaSciName = await getPropertyFacts(ponderosaPine, scientificNameProp.id);
+        const ponderosaSciName = await getPropertyFacts(ponderosaPine, scientificNameProp.key);
         assertEquals(ponderosaSciName.map((f) => f.valueExpression), [
             `"first new sci name value"`,
             `"second new sci name value"`,
@@ -99,10 +99,10 @@ group("SetPropertyFacts bulk edit implementation", () => {
         assertEquals(ponderosaSciName.map((f) => f.note), ["This is a new value.", ""]);
         assertEquals(ponderosaSciName.map((f) => f.rank), [1, 2]);
 
-        const ponderosaQid = await getPropertyFacts(ponderosaPine, wikidataQidProp.id);
+        const ponderosaQid = await getPropertyFacts(ponderosaPine, wikidataQidProp.key);
         assertEquals(ponderosaQid.map((f) => f.valueExpression), []);
 
-        const jackPineSciName = await getPropertyFacts(jackPine, scientificNameProp.id);
+        const jackPineSciName = await getPropertyFacts(jackPine, scientificNameProp.key);
         assertEquals(jackPineSciName.map((f) => f.valueExpression), [
             `"first new sci name value for jack pine"`,
             `"second new sci name value for jack pine"`,
@@ -110,7 +110,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
         assertEquals(jackPineSciName.map((f) => f.note), ["", "JP note 2"]);
         assertEquals(jackPineSciName.map((f) => f.rank), [1, 2]);
 
-        const jackPineQid = await getPropertyFacts(jackPine, wikidataQidProp.id);
+        const jackPineQid = await getPropertyFacts(jackPine, wikidataQidProp.key);
         assertEquals(jackPineQid.map((f) => f.valueExpression), [`"Q806838"`]);
         assertEquals(jackPineQid.map((f) => f.rank), [1]);
     });
@@ -128,14 +128,14 @@ group("SetPropertyFacts bulk edit implementation", () => {
                     entryWith: { entryId: ponderosaPine.id },
                     set: [
                         {
-                            propertyId: scientificNameProp.id,
+                            propertyKey: scientificNameProp.key,
                             facts: [
                                 { valueExpression: `"first new sci name value"`, note: "This is a new value." },
                                 { valueExpression: `"second new sci name value"` },
                             ],
                         },
                         {
-                            propertyId: wikidataQidProp.id,
+                            propertyKey: wikidataQidProp.key,
                             facts: [
                                 // unset all values for this property
                             ],
@@ -147,17 +147,17 @@ group("SetPropertyFacts bulk edit implementation", () => {
                 code: "SetPropertyFacts",
                 data: {
                     // This one we match by fiendly ID:
-                    entryWith: { friendlyId: jackPine.friendlyId },
+                    entryWith: { entryKey: jackPine.key },
                     set: [
                         {
-                            propertyId: scientificNameProp.id,
+                            propertyKey: scientificNameProp.key,
                             facts: [
                                 { valueExpression: `"Pinus banksiana"` }, // Note: unchanged
                                 { valueExpression: `"second new sci name value for jack pine"`, note: "JP note 2" },
                             ],
                         },
                         {
-                            propertyId: wikidataQidProp.id,
+                            propertyKey: wikidataQidProp.key,
                             facts: [
                                 { valueExpression: `"Q806838"` },
                             ],
@@ -168,7 +168,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
         ]);
 
         // Now check if it worked:
-        const ponderosaSciName = await getPropertyFacts(ponderosaPine, scientificNameProp.id);
+        const ponderosaSciName = await getPropertyFacts(ponderosaPine, scientificNameProp.key);
         assertEquals(ponderosaSciName.map((f) => f.valueExpression), [
             `"first new sci name value"`,
             `"second new sci name value"`,
@@ -176,10 +176,10 @@ group("SetPropertyFacts bulk edit implementation", () => {
         assertEquals(ponderosaSciName.map((f) => f.note), ["This is a new value.", ""]);
         assertEquals(ponderosaSciName.map((f) => f.rank), [1, 2]);
 
-        const ponderosaQid = await getPropertyFacts(ponderosaPine, wikidataQidProp.id);
+        const ponderosaQid = await getPropertyFacts(ponderosaPine, wikidataQidProp.key);
         assertEquals(ponderosaQid.map((f) => f.valueExpression), []);
 
-        const jackPineSciName = await getPropertyFacts(jackPine, scientificNameProp.id);
+        const jackPineSciName = await getPropertyFacts(jackPine, scientificNameProp.key);
         assertEquals(jackPineSciName.map((f) => f.valueExpression), [
             `"Pinus banksiana"`,
             `"second new sci name value for jack pine"`,
@@ -187,7 +187,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
         assertEquals(jackPineSciName.map((f) => f.note), ["", "JP note 2"]);
         assertEquals(jackPineSciName.map((f) => f.rank), [1, 2]);
 
-        const jackPineQid = await getPropertyFacts(jackPine, wikidataQidProp.id);
+        const jackPineQid = await getPropertyFacts(jackPine, wikidataQidProp.key);
         assertEquals(jackPineQid.map((f) => f.valueExpression), [`"Q806838"`]);
         assertEquals(jackPineQid.map((f) => f.rank), [1]);
 
@@ -213,7 +213,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
                 code: "AddPropertyFact",
                 data: {
                     entryId: ponderosaPine.id,
-                    propertyId: scientificNameProp.id,
+                    propertyKey: scientificNameProp.key,
                     propertyFactId: ponderosaSciName[0].id, // We don't know this ID in advance
                     valueExpression: ponderosaSciName[0].valueExpression,
                     note: ponderosaSciName[0].note,
@@ -226,7 +226,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
                 code: "AddPropertyFact",
                 data: {
                     entryId: ponderosaPine.id,
-                    propertyId: scientificNameProp.id,
+                    propertyKey: scientificNameProp.key,
                     propertyFactId: ponderosaSciName[1].id, // We don't know this ID in advance
                     valueExpression: ponderosaSciName[1].valueExpression,
                     note: ponderosaSciName[1].note,
@@ -254,7 +254,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
                 code: "AddPropertyFact",
                 data: {
                     entryId: jackPine.id,
-                    propertyId: scientificNameProp.id,
+                    propertyKey: scientificNameProp.key,
                     propertyFactId: jackPineSciName[1].id, // We don't know this ID in advance
                     valueExpression: jackPineSciName[1].valueExpression,
                     note: jackPineSciName[1].note,
@@ -268,7 +268,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
                 code: "AddPropertyFact",
                 data: {
                     entryId: jackPine.id,
-                    propertyId: wikidataQidProp.id,
+                    propertyKey: wikidataQidProp.key,
                     propertyFactId: jackPineQid[0].id, // We don't know this ID in advance
                     valueExpression: jackPineQid[0].valueExpression,
                     note: jackPineQid[0].note,
@@ -292,8 +292,8 @@ group("SetPropertyFacts bulk edit implementation", () => {
                     // This one we match by entryId:
                     entryWith: { entryId: ponderosaPine.id },
                     set: [
-                        { propertyId: scientificNameProp.id, facts: [{ valueExpression: `"Pinus ponderosa"` }] },
-                        { propertyId: wikidataQidProp.id, facts: [{ valueExpression: `"Q460523"` }] },
+                        { propertyKey: scientificNameProp.key, facts: [{ valueExpression: `"Pinus ponderosa"` }] },
+                        { propertyKey: wikidataQidProp.key, facts: [{ valueExpression: `"Q460523"` }] },
                     ],
                 },
             },
@@ -301,10 +301,10 @@ group("SetPropertyFacts bulk edit implementation", () => {
                 code: "SetPropertyFacts",
                 data: {
                     // This one we match by fiendly ID:
-                    entryWith: { friendlyId: jackPine.friendlyId },
+                    entryWith: { entryKey: jackPine.key },
                     set: [
-                        { propertyId: scientificNameProp.id, facts: [{ valueExpression: `"Pinus banksiana"` }] },
-                        { propertyId: wikidataQidProp.id, facts: [] },
+                        { propertyKey: scientificNameProp.key, facts: [{ valueExpression: `"Pinus banksiana"` }] },
+                        { propertyKey: wikidataQidProp.key, facts: [] },
                     ],
                 },
             },
@@ -325,7 +325,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
                             entryWith: { entryId: VNID() },
                             set: [
                                 {
-                                    propertyId: scientificNameProp.id,
+                                    propertyKey: scientificNameProp.key,
                                     facts: [
                                         { valueExpression: `"Foous barus"`, note: "This entry doesn't exist" },
                                     ],
@@ -340,7 +340,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
         assertInstanceOf(err.cause, InvalidEdit);
         assertEquals(
             err.cause.message,
-            "Unable to bulk set property facts. Check if entryId, friendlyID, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a relationship property.",
+            "Unable to bulk set property facts. Check if entryId, entryKey, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a relationship property.",
         );
     });
 
@@ -356,7 +356,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
                             entryWith: { entryId: genusEntry.id },
                             set: [
                                 {
-                                    propertyId: scientificNameProp.id,
+                                    propertyKey: scientificNameProp.key,
                                     facts: [
                                         {
                                             valueExpression: `"Foobar"`,
@@ -374,7 +374,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
         assertInstanceOf(err.cause, InvalidEdit);
         assertEquals(
             err.cause.message,
-            "Unable to bulk set property facts. Check if entryId, friendlyID, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a relationship property.",
+            "Unable to bulk set property facts. Check if entryId, entryKey, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a relationship property.",
         );
     });
 
@@ -388,7 +388,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
                             entryWith: { entryId: ponderosaPine.id },
                             set: [
                                 {
-                                    propertyId: defaultData.schema.properties._parentGenus.id,
+                                    propertyKey: defaultData.schema.properties.parentGenus.key,
                                     facts: [
                                         { valueExpression: `entry("${defaultData.entries.genusThuja.id}")` },
                                     ],
@@ -403,7 +403,7 @@ group("SetPropertyFacts bulk edit implementation", () => {
         assertInstanceOf(err.cause, InvalidEdit);
         assertEquals(
             err.cause.message,
-            "Unable to bulk set property facts. Check if entryId, friendlyID, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a relationship property.",
+            "Unable to bulk set property facts. Check if entryId, entryKey, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a relationship property.",
         );
     });
 });

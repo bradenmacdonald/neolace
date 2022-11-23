@@ -42,23 +42,23 @@ export class Filter extends LookupFunctionWithArgs {
         let cypherQuery = iterable.cypherQuery;
 
         if (this.entryTypeExpr) {
-            const entryTypes = await getEntryTypesIds(this.entryTypeExpr, context);
+            const entryTypes = await getEntryTypesKeys(this.entryTypeExpr, context);
 
             cypherQuery = C`
                 ${cypherQuery}
                 MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
-                WHERE entryType.id IN ${Array.from(entryTypes)}
+                WHERE entryType.key IN ${Array.from(entryTypes)}
                 WITH entry, annotations
             `;
         }
 
         if (this.excludeEntryTypeExpr) {
-            const notEntryTypes = await getEntryTypesIds(this.excludeEntryTypeExpr, context);
+            const notEntryTypes = await getEntryTypesKeys(this.excludeEntryTypeExpr, context);
 
             cypherQuery = C`
                 ${cypherQuery}
                 MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
-                WHERE NOT entryType.id IN ${Array.from(notEntryTypes)}
+                WHERE NOT entryType.key IN ${Array.from(notEntryTypes)}
                 WITH entry, annotations
             `;
         }
@@ -91,21 +91,21 @@ export class Filter extends LookupFunctionWithArgs {
 
 /**
  * Given an expression that is either an entry type literal or a list/iterable of entry types, return the unique set
- * of entry type IDs.
+ * of entry type keys.
  */
-async function getEntryTypesIds(expr: LookupExpression, context: LookupContext): Promise<Set<VNID>> {
+async function getEntryTypesKeys(expr: LookupExpression, context: LookupContext): Promise<Set<string>> {
     const entryTypesValue = await expr.getValueAsOneOf([EntryTypeValue, LazyIterableValue], context);
-    const entryTypes = new Set<VNID>();
+    const entryTypes = new Set<string>();
     if (entryTypesValue instanceof LazyIterableValue) {
         for await (const value of iterateOver(entryTypesValue)) {
             const asEntryType = await value.castTo(EntryTypeValue, context);
             if (asEntryType === undefined) {
                 throw new LookupEvaluationError(`Expected an entry type but got ${value.constructor.name}`);
             }
-            entryTypes.add(asEntryType.id);
+            entryTypes.add(asEntryType.key);
         }
     } else {
-        entryTypes.add(entryTypesValue.id);
+        entryTypes.add(entryTypesValue.key);
     }
     return entryTypes;
 }

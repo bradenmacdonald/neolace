@@ -7,8 +7,8 @@ group("filter.ts", () => {
     const siteId = defaultData.site.id;
     const context = new TestLookupContext({ siteId, entryId: defaultData.entries.ponderosaPine.id });
 
-    const genusType = new LiteralExpression(new V.EntryTypeValue(defaultData.schema.entryTypes._ETGENUS.id));
-    const orderType = new LiteralExpression(new V.EntryTypeValue(defaultData.schema.entryTypes._ETORDER.id));
+    const genusType = new LiteralExpression(new V.EntryTypeValue(defaultData.schema.entryTypes.ETGENUS.key));
+    const orderType = new LiteralExpression(new V.EntryTypeValue(defaultData.schema.entryTypes.ETORDER.key));
 
     test(`x.filter() returns x if x is a LazyEntrySet`, async () => {
         const entries = new AndAncestors(new This());

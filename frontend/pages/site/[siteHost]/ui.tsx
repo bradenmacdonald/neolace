@@ -53,24 +53,24 @@ const UiDemoPage: NextPage = function (props) {
             "_12345": {
                 id: api.VNID("_12345"),
                 description: "Description of the entry goes here.",
-                entryType: { id: api.VNID("_demoType") },
-                friendlyId: "demo-entry",
+                entryType: { key: "demo-type" },
+                key: "demo-entry",
                 name: "Demo Entry",
             },
         },
         entryTypes: {
-            "_demoType": {
-                id: api.VNID("_demoType"),
+            "demo-type": {
+                key: "demo-type",
                 name: "Type goes here",
                 abbreviation: "D",
                 color: api.EntryTypeColor.Cyan,
             },
         },
         properties: {
-            "_demoProp": {
+            "demo-prop": {
                 name: "Demoness",
                 description: "To what extent this is a demo.",
-                id: api.VNID("_demoProp"),
+                key: "demo-prop",
                 type: api.PropertyType.Value,
                 standardURL: "",
                 rank: 1,

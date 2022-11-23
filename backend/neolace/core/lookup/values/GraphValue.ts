@@ -10,12 +10,12 @@ export class GraphValue extends ConcreteValue {
         public readonly entries: {
             entryId: VNID;
             name: string;
-            entryType: VNID;
+            entryTypeKey: string;
             isFocusEntry?: boolean;
         }[],
         public readonly rels: {
             relId: VNID;
-            relType: VNID;
+            relTypeKey: string;
             fromEntryId: VNID;
             toEntryId: VNID;
         }[],

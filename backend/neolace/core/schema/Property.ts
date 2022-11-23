@@ -3,6 +3,7 @@ import { PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
 import {
     C,
     Field,
+    RawRelationships,
     RawVNode,
     ValidationError,
     VirtualPropType,
@@ -12,6 +13,7 @@ import {
 } from "neolace/deps/vertex-framework.ts";
 import { Site } from "neolace/core/Site.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
+import { keyProps, validateSiteNamespace } from "../key.ts";
 
 /**
  * A Property is used to define an allowed relationship between entries, or a type of data about an entry
@@ -23,6 +25,7 @@ export class Property extends VNodeType {
     static label = "Property";
     static properties = {
         ...VNodeType.properties,
+        ...keyProps,
         /** Name of this property, displayed as the label when viewing an entry with this property value */
         name: Field.String,
         /** Description of this property (markdown) */
@@ -102,11 +105,13 @@ export class Property extends VNodeType {
         // numRelatedImages,
     });
 
-    static async validate(dbObject: RawVNode<typeof Property>): Promise<void> {
+    static async validate(dbObject: RawVNode<typeof Property>, relationships: RawRelationships[]): Promise<void> {
         // IS A relationships cannot be marked as inheritable. They define inheritance.
         if (dbObject.type === PropertyType.RelIsA && dbObject.inheritable) {
             throw new ValidationError(`"IS A" relationship properties cannot be marked as inheritable.`);
         }
+        // Validate that siteNamespace is correct.
+        validateSiteNamespace(this, dbObject, relationships, this.rel.FOR_SITE);
     }
 
     static override async validateExt(vnodeIds: VNID[], tx: WrappedTransaction): Promise<void> {

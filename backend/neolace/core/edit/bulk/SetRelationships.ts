@@ -15,7 +15,7 @@ export const doSetRelationships = defineBulkImplementation(
         const edits = edits_.map((edit) => ({
             entryWith: edit.entryWith,
             set: edit.set.map((p) => ({
-                propertyId: p.propertyId,
+                propertyKey: p.propertyKey,
                 toEntries: p.toEntries.map((f, idx) => ({
                     entryWith: f.entryWith,
                     note: f.note ?? "", // Set default because note cannot be null
@@ -34,14 +34,14 @@ export const doSetRelationships = defineBulkImplementation(
             UNWIND range(0, size(edits)) AS idx
             WITH site, connection, idx, edits[idx] AS edit
 
-            // Match the entry, using either entryId or friendlyId.
+            // Match the entry, using either entryId or key.
             // We need to use a subquery and union in order to force use of our unique indexes.
-            // Writing it as MATCH (entry:...) WHERE CASE ... THEN entry.friendlyId = ... ELSE entry.id = ... END
+            // Writing it as MATCH (entry:...) WHERE CASE ... THEN entry.key = ... ELSE entry.id = ... END
             // works but is horribly inefficient since it doesn't use the indexes.
             CALL {
                 WITH edit, site
-                MATCH (entry:${Entry} {siteNamespace: site.id, friendlyId: edit.entryWith.friendlyId})
-                    WHERE edit.entryWith.friendlyId IS NOT NULL
+                MATCH (entry:${Entry} {siteNamespace: site.id, key: edit.entryWith.entryKey})
+                    WHERE edit.entryWith.entryKey IS NOT NULL
                     RETURN entry
                 UNION
                 WITH edit, site
@@ -55,7 +55,7 @@ export const doSetRelationships = defineBulkImplementation(
 
             UNWIND edit.set AS setProp
 
-            MATCH (property:${Property} {id: setProp.propertyId})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+            MATCH (property:${Property} {siteNamespace: site.id, key: setProp.propertyKey})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
                 WHERE property.type IN ${[PropertyType.RelIsA, PropertyType.RelOther]}
             // Collect the data of all the existing facts set for this property on this entry, so we can see what changed later:
             OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(oldFact:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
@@ -69,8 +69,8 @@ export const doSetRelationships = defineBulkImplementation(
                 // Find the target entry of this relationship:
                 CALL {
                     WITH toEntrySpec, site
-                    MATCH (toEntry:${Entry} {siteNamespace: site.id, friendlyId: toEntrySpec.entryWith.friendlyId})
-                        WHERE toEntrySpec.entryWith.friendlyId IS NOT NULL
+                    MATCH (toEntry:${Entry} {siteNamespace: site.id, key: toEntrySpec.entryWith.entryKey})
+                        WHERE toEntrySpec.entryWith.entryKey IS NOT NULL
                         RETURN toEntry
                     UNION
                     WITH toEntrySpec, site
@@ -159,7 +159,7 @@ export const doSetRelationships = defineBulkImplementation(
             throw new InvalidEdit(
                 SetRelationships.code,
                 {},
-                "Unable to bulk set relationship property facts. Check if entryId, friendlyID, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a value property.",
+                "Unable to bulk set relationship property facts. Check if entryId, key, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a value property.",
             );
         }
 
@@ -196,7 +196,7 @@ export const doSetRelationships = defineBulkImplementation(
                         code: "AddPropertyFact",
                         data: {
                             entryId: outcome.entryId,
-                            propertyId: edit.set[j].propertyId,
+                            propertyKey: edit.set[j].propertyKey,
                             propertyFactId: addedFact.id,
                             valueExpression: addedFact.valueExpression,
                             note: addedFact.note,

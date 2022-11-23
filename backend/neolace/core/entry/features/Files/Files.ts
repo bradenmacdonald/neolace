@@ -26,15 +26,15 @@ export const FilesFeature = EntryTypeFeature({
             MATCH (et:${EntryType})-[:FOR_SITE]->(:${Site} {id: ${siteId}}),
                   (et)-[:${EntryType.rel.HAS_FEATURE}]->(config:${FilesFeatureEnabled})
             WITH et, config
-            RETURN et.id AS entryTypeId
-        `.givesShape({ entryTypeId: Field.VNID }));
+            RETURN et.key AS entryTypeKey
+        `.givesShape({ entryTypeKey: Field.String }));
 
         configuredOnThisSite.forEach((config) => {
-            const entryTypeId: VNID = config.entryTypeId;
-            if (!(entryTypeId in mutableSchema.entryTypes)) {
+            const entryTypeKey: string = config.entryTypeKey;
+            if (!(entryTypeKey in mutableSchema.entryTypes)) {
                 throw new Error("EntryType not in schema");
             }
-            mutableSchema.entryTypes[entryTypeId].enabledFeatures[featureType] = {
+            mutableSchema.entryTypes[entryTypeKey].enabledFeatures[featureType] = {
                 /* No detailed configuration at this time */
             };
         });

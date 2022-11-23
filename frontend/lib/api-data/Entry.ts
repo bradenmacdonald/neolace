@@ -19,13 +19,13 @@ export function useEntry(
     const user = useUser();
     const userKey = user.username ?? "";
 
-    const key = `entry:${site.friendlyId}:${entryKey}:${userKey}:no-draft`;
+    const key = `entry:${site.key}:${entryKey}:${userKey}:no-draft`;
     const { data, error } = useSWR(key, async () => {
         if (siteError) {
             throw new api.ApiError("Site Error", 500);
         }
-        if (!site.friendlyId) {
-            return undefined; // We need to wait for the siteId before we can load the entry
+        if (!site.key) {
+            return undefined; // We need to wait for the siteKey before we can load the entry
         }
         const data: api.EntryData = await client.getEntry(entryKey, {
             flags: [
@@ -33,7 +33,7 @@ export function useEntry(
                 api.GetEntryFlags.IncludePropertiesSummary,
                 api.GetEntryFlags.IncludeReferenceCache,
             ] as const,
-            siteId: site.friendlyId,
+            siteKey: site.key,
         });
         return data;
     }, {
@@ -72,15 +72,15 @@ export function useEntrySummary(
 
     const useExistingRefCache = refCache.entries[entryKey] !== undefined;
 
-    const key = useExistingRefCache ? "" : `entry:${site.friendlyId}:${entryKey}:${userKey}:${draft?.idNum ?? "no-draft"}`;
+    const key = useExistingRefCache ? "" : `entry:${site.key}:${entryKey}:${userKey}:${draft?.idNum ?? "no-draft"}`;
     const { data, error } = useSWR(key, async () => {
         if (key === "") {
             return undefined; // This data is in the reference cache; no need to load anything from the server.
         }
-        if (!site.friendlyId) {
-            return undefined; // We need to wait for the siteId before we can load the entry
+        if (!site.key) {
+            return undefined; // We need to wait for the siteKey before we can load the entry
         }
-        return await client.evaluateLookupExpression(`entry("${entryKey}")`, { siteId: site.friendlyId });
+        return await client.evaluateLookupExpression(`entry("${entryKey}")`, { siteKey: site.key });
     }, {
         // refreshInterval: 10 * 60_000,
     });

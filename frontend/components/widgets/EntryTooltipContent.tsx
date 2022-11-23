@@ -19,13 +19,13 @@ export const EntryTooltipContent: React.FunctionComponent<Props> = (props: Props
     return entry ? <>
         <span className="text-base my-1">
             <Link
-                href={`/entry/${entry.friendlyId}`}
+                href={`/entry/${entry.key}`}
                 className="font-bold text-theme-link-color underline"
             >
                 {entry.name}
             </Link>{" "}
             {/* The entry type, in parentheses */}
-            ({refCache.entryTypes[entry.entryType.id]?.name})
+            ({refCache.entryTypes[entry.entryType.key]?.name})
         </span>
         {/* The entry description */}
         <p className="text-sm">

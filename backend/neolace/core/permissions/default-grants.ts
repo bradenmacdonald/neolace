@@ -1,7 +1,7 @@
 import * as log from "std/log/mod.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { getGraph } from "neolace/core/graph.ts";
-import { AccessMode, Site, siteFriendlyIdFromId } from "neolace/core/Site.ts";
+import { AccessMode, Site, siteKeyFromId } from "neolace/core/Site.ts";
 import { Always, DraftSelfAuthoredCondition, IfLoggedIn, PermissionGrant } from "./grant.ts";
 
 // These grants are always enabled for all sites
@@ -52,8 +52,8 @@ export async function getSitePublicGrants(siteId: VNID): Promise<PermissionGrant
         try {
             grants.push(PermissionGrant.parse(publicGrantString));
         } catch (err) {
-            const friendlyId = await siteFriendlyIdFromId(siteId);
-            log.error(`Unable to parse public grant string "${publicGrantString}" for site ${friendlyId}`, err);
+            const key = await siteKeyFromId(siteId);
+            log.error(`Unable to parse public grant string "${publicGrantString}" for site ${key}`, err);
         }
     }
     return grants;

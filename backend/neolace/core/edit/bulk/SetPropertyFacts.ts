@@ -15,7 +15,7 @@ export const doSetPropertyFacts = defineBulkImplementation(
         const edits = edits_.map((edit) => ({
             entryWith: edit.entryWith,
             set: edit.set.map((p) => ({
-                propertyId: p.propertyId,
+                propertyKey: p.propertyKey,
                 facts: p.facts.map((f, idx) => ({
                     valueExpression: f.valueExpression,
                     note: f.note ?? "", // Set default because note cannot be null
@@ -36,8 +36,8 @@ export const doSetPropertyFacts = defineBulkImplementation(
 
             CALL {
                 WITH edit, site
-                MATCH (entry:${Entry} {siteNamespace: site.id, friendlyId: edit.entryWith.friendlyId})
-                    WHERE edit.entryWith.friendlyId IS NOT NULL
+                MATCH (entry:${Entry} {siteNamespace: site.id, key: edit.entryWith.entryKey})
+                    WHERE edit.entryWith.entryKey IS NOT NULL
                     RETURN entry
                 UNION
                 WITH edit, site
@@ -51,7 +51,7 @@ export const doSetPropertyFacts = defineBulkImplementation(
 
             UNWIND edit.set AS setProp
 
-            MATCH (property:${Property} {id: setProp.propertyId, type: ${PropertyType.Value}})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+            MATCH (property:${Property} {siteNamespace: ${siteId}, key: setProp.propertyKey, type: ${PropertyType.Value}})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
             // Collect the data of all the existing facts set for this property on this entry, so we can see what changed later:
             OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(oldFact:${PropertyFact})
                 WHERE exists( (oldFact)-[:${PropertyFact.rel.FOR_PROP}]->(property) )
@@ -87,15 +87,15 @@ export const doSetPropertyFacts = defineBulkImplementation(
             WITH idx, site, entry, property, oldFacts
             OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})
                 WHERE exists( (pf)-[:${PropertyFact.rel.FOR_PROP}]->(property) )
-            WITH idx, site, entry.id AS entryId, property.id AS propertyId, oldFacts, collect(pf) AS propFacts
+            WITH idx, site, entry.id AS entryId, property.id AS propertyKey, oldFacts, collect(pf) AS propFacts
 
-            WITH idx, site, entryId, propertyId, oldFacts, propFacts,
+            WITH idx, site, entryId, propertyKey, oldFacts, propFacts,
                 [x in propFacts WHERE x.keep IS NULL | x.id] AS deleteFactIds
 
             FOREACH (pf IN propFacts | REMOVE pf.keep)
             FOREACH (pf IN [x in propFacts WHERE x.id IN deleteFactIds] | DETACH DELETE pf)
 
-            WITH idx, entryId, collect({propertyId: propertyId, deletedFactIds: deleteFactIds, oldFacts: oldFacts}) AS data
+            WITH idx, entryId, collect({propertyKey: propertyKey, deletedFactIds: deleteFactIds, oldFacts: oldFacts}) AS data
 
             RETURN collect({idx: idx, entryId: entryId, data: data}) AS changes
         `.givesShape({
@@ -104,7 +104,7 @@ export const doSetPropertyFacts = defineBulkImplementation(
                     idx: Field.Int,
                     entryId: Field.VNID,
                     data: Field.List(Field.Record({
-                        propertyId: Field.VNID,
+                        propertyKey: Field.String,
                         deletedFactIds: Field.List(Field.VNID),
                         oldFacts: Field.NullOr.List(Field.Record({
                             id: Field.VNID,
@@ -122,7 +122,7 @@ export const doSetPropertyFacts = defineBulkImplementation(
             throw new InvalidEdit(
                 SetPropertyFacts.code,
                 {},
-                "Unable to bulk set property facts. Check if entryId, friendlyID, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a relationship property.",
+                "Unable to bulk set property facts. Check if entryId, entryKey, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a relationship property.",
             );
         }
 
@@ -169,7 +169,7 @@ export const doSetPropertyFacts = defineBulkImplementation(
                         code: "AddPropertyFact",
                         data: {
                             entryId: outcome.entryId,
-                            propertyId: setProp.propertyId,
+                            propertyKey: setProp.propertyKey,
                             propertyFactId: fact.id,
                             valueExpression: fact.valueExpression,
                             note: fact.note,

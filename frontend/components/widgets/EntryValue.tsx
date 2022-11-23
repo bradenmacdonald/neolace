@@ -23,7 +23,7 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
         refCache.entries[props.entryId];
     if (entry === undefined) {
         // This entry is not in the reference cache! It should have been though...
-        // So we don't know its name and may not know its friendlyId either.
+        // So we don't know its name and may not know its key either.
         // In development, we want to highlight links that should be in the reference cache, but are not.
         const textColorClass = DEVELOPMENT_MODE ? "text-red-600 font-bold" : "";
         return (
@@ -33,8 +33,8 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
         );
     }
 
-    const color = api.getEntryTypeColor(refCache.entryTypes[entry.entryType.id]);
-    const abbrev = refCache.entryTypes[entry.entryType.id]?.abbreviation ?? "";
+    const color = api.getEntryTypeColor(refCache.entryTypes[entry.entryType.key]);
+    const abbrev = refCache.entryTypes[entry.entryType.key]?.abbreviation ?? "";
 
     const widget = (
         <span
@@ -68,7 +68,7 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
                 }
             >
                 {(attribs) => (
-                    <Link href={`/entry/${entry.friendlyId}`} className="unstyled" {...attribs}>
+                    <Link href={`/entry/${entry.key}`} className="unstyled" {...attribs}>
                         {widget}
                     </Link>
                 )}
@@ -76,7 +76,7 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
         );
     } else {
         return (
-            <Link href={`/entry/${entry.friendlyId}`} className="unstyled">
+            <Link href={`/entry/${entry.key}`} className="unstyled">
                 {widget}
             </Link>
         );

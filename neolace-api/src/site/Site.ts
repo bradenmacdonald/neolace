@@ -41,7 +41,7 @@ export const SiteDetailsSchema = Schema({
      * The friendly ID is a slug-like string identifier that uniquely identifies this site and must be used to specify
      * the site in any site-specific API requests.
      */
-    friendlyId: string,
+    key: string,
     /**
      * The footer text (as Markdown) to display on every page of this site.
      */
@@ -91,9 +91,9 @@ export type SiteSearchConnectionData = Type<typeof SiteSearchConnectionSchema>;
 /** A summary of an entry, suitable to store in a search index */
 export interface EntryIndexDocument {
     id: VNID;
-    friendlyId: string;
+    key: string;
     name: string;
-    type: string;
+    entryTypeKey: string;
     description: string;
     articleText: string;
     visibleToGroups: string[];

@@ -5,8 +5,8 @@ import {
     EditChangeType,
     SetPropertyFacts,
     SetRelationships,
-    UpsertEntryByFriendlyId,
     UpsertEntryById,
+    UpsertEntryByKey,
 } from "neolace/deps/neolace-api.ts";
 import { C, defineAction, VNID } from "neolace/deps/vertex-framework.ts";
 import { Connection, Entry, EntryType, Site } from "neolace/core/mod.ts";
@@ -14,7 +14,7 @@ import { BulkAppliedEditData } from "./implementations.ts";
 import { AppliedEdit } from "./AppliedEdit.ts";
 
 import { doUpsertEntryById } from "./bulk/UpsertEntryById.ts";
-import { doUpsertEntryByFriendlyId } from "./bulk/UpsertEntryByFriendlyId.ts";
+import { doUpsertEntryByKey } from "./bulk/UpsertEntryByKey.ts";
 import { doSetPropertyFacts } from "./bulk/SetPropertyFacts.ts";
 import { doSetRelationships } from "./bulk/SetRelationships.ts";
 
@@ -47,10 +47,10 @@ export const ApplyBulkEdits = defineAction({
             const outcome = await doUpsertEntryById(tx, editsData, data.siteId, data.connectionId);
             appliedEdits.push(...outcome.appliedEdits);
         }
-        const upsertsByFriendlyId = filterEdits(data.edits, UpsertEntryByFriendlyId);
-        if (upsertsByFriendlyId.length > 0) {
-            const editsData = upsertsByFriendlyId.map((e) => e.data);
-            const outcome = await doUpsertEntryByFriendlyId(tx, editsData, data.siteId, data.connectionId);
+        const upsertsByKey = filterEdits(data.edits, UpsertEntryByKey);
+        if (upsertsByKey.length > 0) {
+            const editsData = upsertsByKey.map((e) => e.data);
+            const outcome = await doUpsertEntryByKey(tx, editsData, data.siteId, data.connectionId);
             appliedEdits.push(...outcome.appliedEdits);
         }
 

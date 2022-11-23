@@ -24,14 +24,14 @@ export const EntitySymbol: React.FunctionComponent<{
             </span>
         );
     } else if (value.type === "EntryType") {
-        const entryTypeColor = api.getEntryTypeColor(refCache.entryTypes[value.id]);
+        const entryTypeColor = api.getEntryTypeColor(refCache.entryTypes[value.key]);
         return (
             <span className={`${rounded} py-[3px] px-2 ${defaultBg} ${selected ? '!bg-sky-300' : ''} ${className}`} style={{color: entryTypeColor.textColor}}>
                 <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
             </span>
         );
     } else if (value.type === "Entry") {
-        const entryTypeData = refCache.entryTypes[refCache.entries[value.id]?.entryType.id];
+        const entryTypeData = refCache.entryTypes[refCache.entries[value.id]?.entryType.key];
         const entryTypeColor = api.getEntryTypeColor(entryTypeData);
         return (
             <span

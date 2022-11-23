@@ -15,8 +15,8 @@ export interface ActionSubject {
 export interface ActionObject {
     /** The entry ID in question, if relevant */
     entryId?: VNID;
-    /** The entry type ID in question, if known/relevant */
-    entryTypeId?: VNID;
+    /** The entry type key in question, if known/relevant */
+    entryTypeKey?: string;
     /** The draft ID in question, if relevant */
     draftId?: VNID;
     [other: `plugin:${string}`]: unknown;

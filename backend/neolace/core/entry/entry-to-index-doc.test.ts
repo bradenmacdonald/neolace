@@ -10,17 +10,17 @@ group("entryToIndexDocument", () => {
     test("It gives the expected result for ponderosa pine", async () => {
         const data = await entryToIndexDocument(defaultData.entries.ponderosaPine.id);
         const propsExpected = {
-            [`prop${defaultData.schema.properties._parentGenus.id}`]: ["Pinus"],
-            [`prop${defaultData.schema.properties._hasHeroImage.id}`]: [defaultData.entries.imgPonderosaTrunk.name],
-            [`prop${defaultData.schema.properties._hasPart.id}`]: ["Pollen cone", "Seed cone"],
-            [`prop${defaultData.schema.properties._propScientificName.id}`]: ["Pinus ponderosa"],
-            [`prop${defaultData.schema.properties._propWikidataQID.id}`]: ["Q460523"],
+            [`prop-${defaultData.schema.properties.parentGenus.key}`]: ["Pinus"],
+            [`prop-${defaultData.schema.properties.hasHeroImage.key}`]: [defaultData.entries.imgPonderosaTrunk.name],
+            [`prop-${defaultData.schema.properties.hasPart.key}`]: ["Pollen cone", "Seed cone"],
+            [`prop-${defaultData.schema.properties.propScientificName.key}`]: ["Pinus ponderosa"],
+            [`prop-${defaultData.schema.properties.propWikidataQID.key}`]: ["Q460523"],
         };
         const expected: api.EntryIndexDocument = {
             id: defaultData.entries.ponderosaPine.id,
             name: defaultData.entries.ponderosaPine.name,
-            type: defaultData.schema.entryTypes._ETSPECIES.name,
-            friendlyId: defaultData.entries.ponderosaPine.friendlyId,
+            entryTypeKey: defaultData.schema.entryTypes.ETSPECIES.key,
+            key: defaultData.entries.ponderosaPine.key,
             description: data.description,
             articleText: data.articleText,
             visibleToGroups: ["public"],

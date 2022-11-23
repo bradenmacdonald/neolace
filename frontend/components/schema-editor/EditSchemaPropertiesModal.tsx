@@ -34,14 +34,14 @@ export const EditSchemaPropertiesModal: React.FunctionComponent<Props> = ({ onSa
     }, []);
 
     // If this has a property ID, we're viewing details of a single property; otherwise we're listing all properties.
-    const [showingPropertyDetails, showPropertyDetails] = React.useState<api.VNID|undefined>();
+    const [showingPropertyDetails, showPropertyDetails] = React.useState<string|undefined>();
 
     const scrollingDiv = React.useRef<HTMLDivElement>(null);
     /** Add a new property to the schema when the user clicks the add new property button. */
     const addNewProperty = React.useCallback(() => {
-        const id = api.VNID();
-        addSchemaEdit({code: "CreateProperty", data: {id, name: ""}});
-        showPropertyDetails(id);
+        const newPropKey = api.VNID().slice(1); // TODO: make this configurable
+        addSchemaEdit({code: "CreateProperty", data: {key: newPropKey, name: ""}});
+        showPropertyDetails(newPropKey);
         // If the list of properties is long, when we change to show the new property we need to scroll the modal back
         // to the top, or else we'll only see the bottom part of the "edit property" form.
         scrollingDiv.current?.scrollTo({top: 0});
@@ -84,7 +84,7 @@ export const EditSchemaPropertiesModal: React.FunctionComponent<Props> = ({ onSa
                             &lt;{" "}<FormattedMessage defaultMessage="Back to all properties" id="C0B87U" />
                         </ButtonLink><br /><br />
 
-                        <EditSchemaProperty propertyId={showingPropertyDetails} addSchemaEdit={addSchemaEdit} />
+                        <EditSchemaProperty propertyKey={showingPropertyDetails} addSchemaEdit={addSchemaEdit} />
 
                         <ButtonLink onClick={() => showPropertyDetails(undefined)}>
                             &lt;{" "}<FormattedMessage defaultMessage="Back to all properties" id="C0B87U" />

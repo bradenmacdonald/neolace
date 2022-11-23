@@ -2,14 +2,14 @@ import { array, number, Record, Schema, string, Type, vnidString } from "../api-
 import { EntryTypeColor, PropertyType } from "../schema/SiteSchemaData.ts";
 import { LookupValueSchema } from "./lookup-value.ts";
 
-// The "reference cache" contains details (name, friendlyId, entry type) for every entry mentioned in the entry's
+// The "reference cache" contains details (name, key, entry type) for every entry mentioned in the entry's
 // description, article text, computed facts, related object notes, and so on.
 export const ReferenceCacheSchema = Schema({
     // We can't use the VNID type as Record keys unfortunately, but the keys here are VNIDs
     entryTypes: Record(
         string,
         Schema({
-            id: vnidString,
+            key: string,
             name: string,
             color: Schema.enum(EntryTypeColor),
             colorCustom: string.strictOptional(),
@@ -20,16 +20,16 @@ export const ReferenceCacheSchema = Schema({
         string,
         Schema({
             id: vnidString,
+            key: string,
             name: string,
-            friendlyId: string,
             description: string,
-            entryType: Schema({ id: vnidString }),
+            entryType: Schema({ key: string }),
         }),
     ),
     properties: Record(
         string,
         Schema({
-            id: vnidString,
+            key: string,
             name: string,
             description: string,
             type: Schema.enum(PropertyType),

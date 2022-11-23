@@ -58,15 +58,15 @@ const EvaluateLookupPage: NextPage<PageProps> = function (props) {
                             <strong>{props.entry.name}</strong>
                         </>},
                         {id: "entryId", priority: 21, content: <>
-                            <code id="entry-id" data-entry-id={props.entry.id} className="font-mono font-light hidden">{props.entry.friendlyId}</code>
+                            <code id="entry-id" data-entry-id={props.entry.id} className="font-mono font-light hidden">{props.entry.key}</code>
                         </>},
                         {id: "tableOfContents", priority: 50, content: <>
                             <ul id="left-toc-headings">
-                                <li><Link  href={`/entry/${props.entry.friendlyId}#summary`}><FormattedMessage id="RrCui3" defaultMessage="Summary"/></Link></li>
-                                <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.friendlyId}#properties`}><FormattedMessage id="aI80kg" defaultMessage="Properties"/></Link></li>
+                                <li><Link  href={`/entry/${props.entry.key}#summary`}><FormattedMessage id="RrCui3" defaultMessage="Summary"/></Link></li>
+                                <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${props.entry.key}#properties`}><FormattedMessage id="aI80kg" defaultMessage="Properties"/></Link></li>
                                 {
                                     props.entry.features?.Article?.headings.map(heading =>
-                                        <li key={heading.id}><Link href={`/entry/${props.entry.friendlyId}#h-${heading.id}`}>{heading.title}</Link></li>
+                                        <li key={heading.id}><Link href={`/entry/${props.entry.key}#h-${heading.id}`}>{heading.title}</Link></li>
                                     )
                                 }
                             </ul>
@@ -117,7 +117,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     if (site === null) { return {notFound: true}; }
     let entry: api.EntryData;
     try {
-        entry = await client.getEntry(context.params.entryId, {siteId: site.friendlyId, flags: [
+        entry = await client.getEntry(context.params.entryId, {siteKey: site.key, flags: [
             api.GetEntryFlags.IncludeFeatures,  // We need the article headings
             api.GetEntryFlags.IncludePropertiesSummary,  // To know if we show the "Properties" nav link or not
             api.GetEntryFlags.IncludeReferenceCache,
@@ -129,11 +129,11 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         throw err;
     }
 
-    if (entry.friendlyId !== context.params.entryId) {
-        // If the entry was looked up by an old friendlyId or VNID, redirect so the current friendlyId is in the URL:
+    if (entry.key !== context.params.entryId) {
+        // If the entry was looked up by an old key or VNID, redirect so the current key is in the URL:
         return {
             redirect: {
-                destination: `/entry/${entry.friendlyId}/lookup`,
+                destination: `/entry/${entry.key}/lookup`,
                 permanent: true,
             },
         };

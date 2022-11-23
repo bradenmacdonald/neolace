@@ -1,5 +1,5 @@
 import { C, EmptyResultError, Field, VNID } from "neolace/deps/vertex-framework.ts";
-import { getGraph, Site, siteFriendlyIdFromId } from "neolace/plugins/api.ts";
+import { getGraph, Site, siteKeyFromId } from "neolace/plugins/api.ts";
 import { getTypeSenseClient } from "./typesense-client.ts";
 import { SearchPluginIndexConfig, UpdateSiteApiKey } from "./SearchPluginIndexConfig.ts";
 
@@ -10,8 +10,8 @@ import { SearchPluginIndexConfig, UpdateSiteApiKey } from "./SearchPluginIndexCo
  * should happen.
  */
 export async function getSiteCollectionAlias(siteId: VNID): Promise<string> {
-    const siteFriendlyId = await siteFriendlyIdFromId(siteId);
-    return `${siteFriendlyId}-entries`;
+    const siteKey = await siteKeyFromId(siteId);
+    return `${siteKey}-entries`;
 }
 
 /**
@@ -45,14 +45,14 @@ export async function getSiteSpecificApiKey(siteId: VNID): Promise<string> {
             throw err; // Something went wrong!
         }
     }
-    const [friendlyId, siteCollection] = await Promise.all([
-        siteFriendlyIdFromId(siteId),
+    const [key, siteCollection] = await Promise.all([
+        siteKeyFromId(siteId),
         getSiteCollectionAlias(siteId),
     ]);
 
     // Create a new API key and save it into the graph.
     const keyData = await client.keys().create({
-        description: `Entry Search key for ${friendlyId}`,
+        description: `Entry Search key for ${key}`,
         // This key can only be used for searching:
         actions: ["documents:search"],
         // This key can only search the collection of entries belonging to this site:

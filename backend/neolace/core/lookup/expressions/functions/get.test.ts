@@ -37,11 +37,11 @@ group("get.ts", () => {
     const context = new TestLookupContext({ siteId });
 
     // Expressions referencing some properties in the default PlantDB data set:
-    const makeProp = (id: string) => new PropFunction(new LiteralExpression(new StringValue(id)));
-    const scientificName = makeProp(defaultData.schema.properties._propScientificName.id);
-    const partIsAPart = makeProp(defaultData.schema.properties._partIsAPart.id);
-    const hasPart = makeProp(defaultData.schema.properties._hasPart.id);
-    const genusSpecies = makeProp(defaultData.schema.properties._genusSpecies.id);
+    const makeProp = (key: string) => new PropFunction(new LiteralExpression(new StringValue(key)));
+    const scientificName = makeProp(defaultData.schema.properties.propScientificName.key);
+    const partIsAPart = makeProp(defaultData.schema.properties.partIsAPart.key);
+    const hasPart = makeProp(defaultData.schema.properties.hasPart.key);
+    const genusSpecies = makeProp(defaultData.schema.properties.genusSpecies.key);
 
     // When retrieving the entry values from a relationship property, they are "annotated" with data like this:
     const defaultAnnotations = {
@@ -75,7 +75,7 @@ group("get.ts", () => {
             const value = await context.evaluateExprConcrete(
                 `
                 entry("${defaultData.entries.genusPinus.id}").descendants()
-                .get(prop=prop("${defaultData.schema.properties._propScientificName.id}"))
+                .get(prop=prop("${defaultData.schema.properties.propScientificName.key}"))
                 .sort()
             `,
                 defaultData.entries.ponderosaPine.id,
@@ -94,7 +94,7 @@ group("get.ts", () => {
 
     group("get() - auto property", () => {
         test(`Can retrieve an automatically-computed reverse relationship property value`, async () => {
-            // The 'genusSpecies' prop has this expression: this.reverse(prop=prop("_parentGenus"))
+            // The 'genusSpecies' prop has this expression: this.reverse(prop=prop("parentGenus"))
             // So it uses reverse() to reverse the 'parent genus' property of any species in the specified genus.
             const expression = new GetProperty(new This(), { prop: genusSpecies });
             const value = await context.evaluateExprConcrete(expression, defaultData.entries.genusThuja.id);
@@ -117,7 +117,7 @@ group("get.ts", () => {
             // this.get(prop=parentGenus)  when 'this' is Thuja.
             const expression1 = new GetProperty(
                 new LiteralExpression(new EntryValue(defaultData.entries.genusThuja.id)),
-                { prop: genusSpecies }, // This property in turn evalutes 'this.reverse(prop=prop("_parentGenus"))'
+                { prop: genusSpecies }, // This property in turn evalutes 'this.reverse(prop=prop("parentGenus"))'
             );
             const expression2 = new GetProperty(new This(), { prop: genusSpecies });
             const value1 = await context.evaluateExprConcrete(expression1, undefined);
@@ -184,9 +184,9 @@ group("get.ts - permissions", () => {
 
     // Literal expressions referencing some properties in the default PlantDB data set:
     const scientificName = new LiteralExpression(
-        new PropertyValue(defaultData.schema.properties._propScientificName.id),
+        new PropertyValue(defaultData.schema.properties.propScientificName.key),
     );
-    const parentGenus = new LiteralExpression(new PropertyValue(defaultData.schema.properties._parentGenus.id));
+    const parentGenus = new LiteralExpression(new PropertyValue(defaultData.schema.properties.parentGenus.key));
 
     test(`It enforces permissions for basic property values`, async () => {
         // First make the PlantDB site private:
@@ -234,7 +234,7 @@ group("get.ts - permissions", () => {
                         corePerm.viewEntry.name,
                         corePerm.viewSchema.name,
                     ]),
-                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETSPECIES.id]), [
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes.ETSPECIES.key]), [
                         corePerm.viewEntryProperty.name,
                     ]),
                 );
@@ -274,7 +274,7 @@ group("get.ts - permissions", () => {
                         corePerm.viewSite.name,
                         corePerm.viewSchema.name,
                     ]),
-                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETSPECIES.id]), [
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes.ETSPECIES.key]), [
                         corePerm.viewEntry.name,
                         corePerm.viewEntryProperty.name,
                     ]),
@@ -305,11 +305,11 @@ group("get.ts - permissions", () => {
                         corePerm.viewSite.name,
                         corePerm.viewSchema.name,
                     ]),
-                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETSPECIES.id]), [
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes.ETSPECIES.key]), [
                         corePerm.viewEntry.name,
                         corePerm.viewEntryProperty.name,
                     ]),
-                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETGENUS.id]), [
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes.ETGENUS.key]), [
                         corePerm.viewEntry.name,
                     ]),
                 );

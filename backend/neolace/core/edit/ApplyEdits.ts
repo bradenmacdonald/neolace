@@ -11,7 +11,7 @@ import { doCreateEntry } from "./content/CreateEntry.ts";
 import { doDeleteEntry } from "./content/DeleteEntry.ts";
 import { doDeletePropertyFact } from "./content/DeletePropertyFact.ts";
 import { doSetEntryDescription } from "./content/SetEntryDescription.ts";
-import { doSetEntryFriendlyId } from "./content/SetEntryFriendlyId.ts";
+import { doSetEntryKey } from "./content/SetEntryKey.ts";
 import { doSetEntryName } from "./content/SetEntryName.ts";
 import { doUpdateEntryFeature } from "./content/UpdateEntryFeature.ts";
 import { doUpdatePropertyFact } from "./content/UpdatePropertyFact.ts";
@@ -32,7 +32,7 @@ export const editImplementations: Partial<Record<AnyEdit["code"], EditImplementa
     [doDeleteEntry.code]: doDeleteEntry.impl,
     [doDeletePropertyFact.code]: doDeletePropertyFact.impl,
     [doSetEntryDescription.code]: doSetEntryDescription.impl,
-    [doSetEntryFriendlyId.code]: doSetEntryFriendlyId.impl,
+    [doSetEntryKey.code]: doSetEntryKey.impl,
     [doSetEntryName.code]: doSetEntryName.impl,
     [doUpdateEntryFeature.code]: doUpdateEntryFeature.impl,
     [doUpdatePropertyFact.code]: doUpdatePropertyFact.impl,

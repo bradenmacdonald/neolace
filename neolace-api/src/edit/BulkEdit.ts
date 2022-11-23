@@ -15,7 +15,7 @@ import { Edit, EditChangeType, EditType } from "./Edit.ts";
  * if they were made using the equivalent ContentEdits (CreateEntry, UpdatePropertyFact, etc.). This way, analyzing the
  * edit history of specific entries is simpler as only ContentEdits need to be considered. (For example, all entry
  * creation will show up in the history as a "CreateEntry" event, not as either "CreateEntry" or "UpsertById" or
- * "UpsertByFriendlyId")
+ * "UpsertByKey")
  */
 export interface BulkEditType<Code extends string = string, DataSchema extends SchemaValidatorFunction<any> = any>
     extends EditType<Code, DataSchema> {
@@ -33,10 +33,10 @@ function BulkEditType<Code extends string, DataSchema extends SchemaValidatorFun
 const BulkEditEntryLookup = Schema.either(
     /** Look up an entry based on its ID: */
     Schema({ entryId: vnidString }),
-    /** Look up an entry based on its friendly ID: */
-    Schema({ friendlyId: string }),
+    /** Look up an entry based on its key: */
+    Schema({ entryKey: string }),
     /** Look up an entry based on a property value: */
-    // Schema({entryTypeId: vnidString, propertyId: vnidString, exactValueExpression: string}),
+    // Schema({entryTypeKey: vnidString, propertyId: vnidString, exactValueExpression: string}),
 );
 
 export const UpsertEntryById = BulkEditType({
@@ -44,7 +44,7 @@ export const UpsertEntryById = BulkEditType({
     code: "UpsertEntryById",
     dataSchema: Schema({
         where: Schema({
-            entryTypeId: vnidString,
+            entryTypeKey: string,
             entryId: vnidString,
         }),
         // If the entry doesn't yet exist, create it and set the following fields. If it does exist, ignore
@@ -52,25 +52,25 @@ export const UpsertEntryById = BulkEditType({
         setOnCreate: Schema({
             name: string.strictOptional(),
             description: string.strictOptional(),
-            friendlyId: string.strictOptional(),
+            key: string.strictOptional(),
         }).strictOptional(),
         // In any case, set these fields:
         set: Schema({
             name: string.strictOptional(),
             description: string.strictOptional(),
-            friendlyId: string.strictOptional(),
+            key: string.strictOptional(),
         }).strictOptional(),
     }),
     describe: (_data) => `Bulk Updated Entries`,
 });
 
-export const UpsertEntryByFriendlyId = BulkEditType({
+export const UpsertEntryByKey = BulkEditType({
     changeType: EditChangeType.Bulk,
-    code: "UpsertEntryByFriendlyId",
+    code: "UpsertEntryByKey",
     dataSchema: Schema({
         where: Schema({
-            entryTypeId: vnidString,
-            friendlyId: string,
+            entryTypeKey: string,
+            entryKey: string,
         }),
         // If the entry doesn't yet exist, create it and set the following fields. If it does exist, ignore
         // these fields.
@@ -95,7 +95,7 @@ export const SetPropertyFacts = BulkEditType({
         // If the entry doesn't yet exist, create it and set the following fields. If it does exist, ignore
         // these fields.
         set: array.of(Schema({
-            propertyId: vnidString,
+            propertyKey: string,
             facts: array.of(Schema({
                 valueExpression: string,
                 note: string.strictOptional(),
@@ -114,7 +114,7 @@ export const SetRelationships = BulkEditType({
         // If the entry doesn't yet exist, create it and set the following fields. If it does exist, ignore
         // these fields.
         set: array.of(Schema({
-            propertyId: vnidString,
+            propertyKey: string,
             toEntries: array.of(Schema({
                 entryWith: BulkEditEntryLookup,
                 note: string.strictOptional(),
@@ -127,20 +127,20 @@ export const SetRelationships = BulkEditType({
 
 export const _allBulkEditTypes = {
     UpsertEntryById,
-    UpsertEntryByFriendlyId,
+    UpsertEntryByKey,
     SetPropertyFacts,
     SetRelationships,
 };
 
 export type AnyBulkEdit =
     | Edit<typeof UpsertEntryById>
-    | Edit<typeof UpsertEntryByFriendlyId>
+    | Edit<typeof UpsertEntryByKey>
     | Edit<typeof SetPropertyFacts>
     | Edit<typeof SetRelationships>;
 
 export const BulkEditSchema = Schema.either(
     Schema({ code: UpsertEntryById.code, data: UpsertEntryById.dataSchema }),
-    Schema({ code: UpsertEntryByFriendlyId.code, data: UpsertEntryByFriendlyId.dataSchema }),
+    Schema({ code: UpsertEntryByKey.code, data: UpsertEntryByKey.dataSchema }),
     Schema({ code: SetPropertyFacts.code, data: SetPropertyFacts.dataSchema }),
     Schema({ code: SetRelationships.code, data: SetRelationships.dataSchema }),
 ).transform((e) => e as AnyBulkEdit);

@@ -30,25 +30,25 @@ export const corePerm = definePermissions({
         name: CorePerm.viewEntry,
         description: "View the name, type, and ID of entries.",
         requires: [CorePerm.viewSite],
-        requiresObjectFields: ["entryId", "entryTypeId"],
+        requiresObjectFields: ["entryId", "entryTypeKey"],
     },
     viewEntryDescription: {
         name: CorePerm.viewEntryDescription,
         description: "View the description of entries.",
         requires: [CorePerm.viewEntry],
-        requiresObjectFields: ["entryId", "entryTypeId"],
+        requiresObjectFields: ["entryId", "entryTypeKey"],
     },
     viewEntryProperty: {
         name: CorePerm.viewEntryProperty,
         description: "View the properties of entries.",
         requires: [CorePerm.viewEntry],
-        requiresObjectFields: ["entryId", "entryTypeId"],
+        requiresObjectFields: ["entryId", "entryTypeKey"],
     },
     viewEntryFeatures: {
         name: CorePerm.viewEntryFeatures,
         description: "View the article text, image, files, or other content features of entries.",
         requires: [CorePerm.viewEntry],
-        requiresObjectFields: ["entryId", "entryTypeId"],
+        requiresObjectFields: ["entryId", "entryTypeKey"],
     },
     // TODO: permission to view change history of an entry
     // Schema //
@@ -69,7 +69,7 @@ export const corePerm = definePermissions({
             CorePerm.viewEntryFeatures,
             CorePerm.viewEntryDescription,
         ],
-        requiresObjectFields: ["entryId", "entryTypeId"],
+        requiresObjectFields: ["entryId", "entryTypeKey"],
     },
     proposeNewEntry: {
         name: CorePerm.proposeNewEntry,
@@ -87,7 +87,7 @@ export const corePerm = definePermissions({
         name: CorePerm.applyEditsToEntries,
         description: "Can the user approve/accept/apply edits to entries",
         requires: [CorePerm.viewEntry], // Does not necessarily require proposeEdits
-        requiresObjectFields: ["entryId", "entryTypeId"],
+        requiresObjectFields: ["entryId", "entryTypeKey"],
     },
     applyEditsToSchema: {
         name: CorePerm.applyEditsToSchema,

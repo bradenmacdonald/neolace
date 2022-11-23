@@ -1,4 +1,4 @@
-import { C, CypherQuery, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
+import { C, CypherQuery, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { ActionObject, ActionSubject } from "./action.ts";
@@ -212,44 +212,45 @@ export class SpecificUserCondition extends GrantCondition {
 }*/
 
 /**
- * Grant a permission only if the entry is one of these entry type(s)
+ * Grant a permission only if the entry is one of these entry type(s), specified using their key
  */
 export class EntryTypesCondition extends GrantCondition {
-    constructor(public readonly onlyEntryTypes: VNID[]) {
+    constructor(public readonly onlyEntryTypeKeys: string[]) {
         super();
     }
 
     public override async appliesTo(context: AppliesToContext) {
         // Do we know the entry type ID already?
-        if (context.object.entryTypeId) {
-            return this.onlyEntryTypes.includes(context.object.entryTypeId);
+        if (context.object.entryTypeKey) {
+            return this.onlyEntryTypeKeys.includes(context.object.entryTypeKey);
         }
         // No, so let's look up the entry type:
         if (!context.object.entryId) {
             return false;
         }
         const tx = await context.getTx();
-        const entryData = await tx.pullOne(Entry, (e) => e.type((et) => et.id), { key: context.object.entryId });
-        return entryData.type?.id ? this.onlyEntryTypes.includes(entryData.type.id) : false;
+        const entryData = await tx.pullOne(Entry, (e) => e.type((et) => et.key), { id: context.object.entryId });
+        return entryData.type?.key ? this.onlyEntryTypeKeys.includes(entryData.type.key) : false;
     }
 
     public override asCypherPredicate(context: CypherPredicateContext): CypherQuery {
-        if (this.onlyEntryTypes.length === 0) {
+        if (this.onlyEntryTypeKeys.length === 0) {
             return cFalse;
         }
         // Do we know the entry type ID already?
-        if (context.partialObject.entryTypeId) {
-            return this.onlyEntryTypes.includes(context.partialObject.entryTypeId) ? cTrue : cFalse;
+        if (context.partialObject.entryTypeKey) {
+            return this.onlyEntryTypeKeys.includes(context.partialObject.entryTypeKey) ? cTrue : cFalse;
         }
         // Otherwise we need to check it in the query:
         if (context.cypherVars.includes("entryType")) {
-            return C`entryType.id IN ${this.onlyEntryTypes}`;
+            return C`entryType.siteNamespace = ${context.subject.siteId} AND entryType.key IN ${this.onlyEntryTypeKeys}`;
         } else if (context.cypherVars.includes("entry")) {
-            const entryTypeIds = [...this.onlyEntryTypes]; // We already know this contains at least one ID
-            let predicate = C`(entry)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType} {id: ${entryTypeIds.pop()}})`;
-            while (entryTypeIds.length > 0) {
+            const entryTypeKeys = [...this.onlyEntryTypeKeys]; // We already know this contains at least one key
+            let predicate =
+                C`(entry)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType} {siteNamespace: ${context.subject.siteId}, key: ${entryTypeKeys.pop()}})`;
+            while (entryTypeKeys.length > 0) {
                 predicate =
-                    C`${predicate} OR (entry)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType} {id: ${entryTypeIds.pop()}})`;
+                    C`${predicate} OR (entry)-[:${Entry.rel.IS_OF_TYPE}]->(:${EntryType} {siteNamespace: ${context.subject.siteId}, key: ${entryTypeKeys.pop()}})`;
             }
             return predicate;
         }
@@ -258,15 +259,15 @@ export class EntryTypesCondition extends GrantCondition {
 
     public override equals(otherCondition: GrantCondition): boolean {
         return otherCondition instanceof EntryTypesCondition &&
-            areSetsEqual(new Set(this.onlyEntryTypes), new Set(otherCondition.onlyEntryTypes));
+            areSetsEqual(new Set(this.onlyEntryTypeKeys), new Set(otherCondition.onlyEntryTypeKeys));
     }
 
     public serialize(): string {
-        return `EntryTypes:${this.onlyEntryTypes.join(",")}`;
+        return `EntryTypes:${this.onlyEntryTypeKeys.join(",")}`;
     }
     public static override parse(s: string): EntryTypesCondition {
         if (!s.startsWith("EntryTypes:")) throw new Error("Not EntryTypesCondition");
-        return new EntryTypesCondition(s.substring(11).split(",").map((etId) => VNID(etId)));
+        return new EntryTypesCondition(s.substring(11).split(","));
     }
 }
 

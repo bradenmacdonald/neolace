@@ -70,7 +70,7 @@ group("image.ts", () => {
                     new LiteralExpression(new EntryValue(defaultData.entries.ponderosaPine.id)),
                     {
                         prop: new LiteralExpression(
-                            new PropertyValue(defaultData.schema.properties._hasHeroImage.id),
+                            new PropertyValue(defaultData.schema.properties.hasHeroImage.key),
                         ),
                     },
                 ),
@@ -95,7 +95,7 @@ group("image.ts", () => {
     test(`It works with multiple entry values`, async () => {
         const expression = new Image(
             parseLookupString(
-                `this.andDescendants().reverse(prop=prop("${defaultData.schema.properties._imgRelTo.id}"))`,
+                `this.andDescendants().reverse(prop=prop("${defaultData.schema.properties.imgRelTo.key}"))`,
             ),
             { format: new LiteralExpression(new StringValue("thumb")) },
         );

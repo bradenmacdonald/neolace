@@ -7,7 +7,7 @@ export { Connection };
 
 export interface ConnectionData {
     id: VNID;
-    friendlyId: string;
+    key: string;
     name: string;
     plugin: string;
     config: Record<string, unknown>;
@@ -17,7 +17,7 @@ const CreateConnection = defineAction({
     type: `CreateConnection` as const,
     parameters: {} as {
         id: VNID;
-        friendlyId: string;
+        key: string;
         siteId: VNID;
         plugin: string;
     },
@@ -28,9 +28,9 @@ const CreateConnection = defineAction({
             CREATE (c:${Connection}:${C(EditSource.label)} {id: ${data.id}})
             CREATE (c)-[:${Connection.rel.FOR_SITE}]->(site)
             SET c.siteNamespace = site.id
-            SET c.friendlyId = ${data.friendlyId}
+            SET c.key = ${data.key}
             SET c += ${{
-            name: data.friendlyId,
+            name: data.key,
             plugin: data.plugin,
             config: "{}",
         }}
@@ -43,8 +43,8 @@ const CreateConnection = defineAction({
     },
 });
 
-export async function getConnection({ friendlyId, siteId, plugin, create = false }: {
-    friendlyId: string;
+export async function getConnection({ key, siteId, plugin, create = false }: {
+    key: string;
     siteId: VNID;
     plugin: string;
     /** Create this connection if it doesn't exist? */
@@ -54,7 +54,7 @@ export async function getConnection({ friendlyId, siteId, plugin, create = false
     let result;
     try {
         result = await graph.pullOne(Connection, (c) => c.id.name.plugin.config, {
-            with: { siteNamespace: siteId, friendlyId },
+            with: { siteNamespace: siteId, key },
         });
     } catch (err) {
         if (err instanceof EmptyResultError) {
@@ -62,13 +62,13 @@ export async function getConnection({ friendlyId, siteId, plugin, create = false
                 const newId = VNID();
                 await graph.runAsSystem(CreateConnection({
                     id: newId,
-                    friendlyId,
+                    key,
                     siteId,
                     plugin,
                 }));
                 result = await graph.pullOne(Connection, (c) => c.id.name.plugin.config, { key: newId });
             } else {
-                throw new Error(`Connection "${friendlyId}" not found.`);
+                throw new Error(`Connection "${key}" not found.`);
             }
         } else {
             throw err;
@@ -81,7 +81,7 @@ export async function getConnection({ friendlyId, siteId, plugin, create = false
     }
     return {
         id: result.id,
-        friendlyId,
+        key,
         name: result.name,
         plugin,
         config: result.config,

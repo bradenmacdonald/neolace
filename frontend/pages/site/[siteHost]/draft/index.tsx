@@ -52,12 +52,12 @@ const ListOfDrafts: React.FunctionComponent<{ status: api.DraftStatus }> = ({ st
     const router = useRouter();
     const page = typeof router.query?.page === "string" ? parseInt(router.query?.page, 10) : 1;
 
-    const key = `draftsList:${site.friendlyId}:${userKey}:${status}:${page}`; // We include the user since different users may have different permissions to view drafts
+    const key = `draftsList:${site.key}:${userKey}:${status}:${page}`; // We include the user since different users may have different permissions to view drafts
     const { data, error } = useSWR(key, async () => {
-        if (!site.friendlyId) {
+        if (!site.key) {
             return { values: [], totalCount: 0 };
         }
-        return await client.listDrafts({ siteId: site.friendlyId, status, page });
+        return await client.listDrafts({ siteKey: site.key, status, page });
     });
 
     if (error) {

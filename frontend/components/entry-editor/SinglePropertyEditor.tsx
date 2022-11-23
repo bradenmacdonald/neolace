@@ -47,7 +47,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                         code: api.AddPropertyFact.code,
                         data: {
                             entryId,
-                            propertyId: prop.id,
+                            propertyKey: prop.key,
                             propertyFactId: api.VNID(),
                             valueExpression: "",
                         },
@@ -101,7 +101,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                                 onClick={() => {
                                     addUnsavedEdit({
                                         code: api.AddPropertyFact.code,
-                                        data: { entryId, propertyId: prop.id, propertyFactId: api.VNID(), valueExpression: "" },
+                                        data: { entryId, propertyKey: prop.key, propertyFactId: api.VNID(), valueExpression: "" },
                                     });
                                 }}
                             />

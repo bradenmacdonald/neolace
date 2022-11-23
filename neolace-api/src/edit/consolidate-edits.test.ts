@@ -6,16 +6,16 @@ import {
     consolidateEdits,
     CreateEntry,
     SetEntryDescription,
-    SetEntryFriendlyId,
+    SetEntryKey,
     SetEntryName,
 } from "./index.ts";
 
 const entryA = VNID("_entryA");
 const entryB = VNID("_entryB");
 const entryC = VNID("_entryC");
-const type1 = VNID("_type1");
-const type2 = VNID("_type2");
-const type3 = VNID("_type3");
+const type1 = "type-1";
+const type2 = "type-2";
+const type3 = "type-3";
 
 Deno.test("Consolidate edits", async (t) => {
     await t.step("two renames of the same entry", () => {
@@ -46,17 +46,17 @@ Deno.test("Consolidate edits", async (t) => {
 
     await t.step("changing entry IDs", () => {
         const oldEdits: AnyEdit[] = [
-            { code: SetEntryFriendlyId.code, data: { entryId: entryA, friendlyId: "A1" } },
-            { code: SetEntryFriendlyId.code, data: { entryId: entryB, friendlyId: "B1" } },
-            { code: SetEntryFriendlyId.code, data: { entryId: entryA, friendlyId: "A2" } },
-            { code: SetEntryFriendlyId.code, data: { entryId: entryB, friendlyId: "B2" } },
-            { code: SetEntryFriendlyId.code, data: { entryId: entryB, friendlyId: "B3" } },
-            { code: SetEntryFriendlyId.code, data: { entryId: entryC, friendlyId: "C1" } },
+            { code: SetEntryKey.code, data: { entryId: entryA, key: "A1" } },
+            { code: SetEntryKey.code, data: { entryId: entryB, key: "B1" } },
+            { code: SetEntryKey.code, data: { entryId: entryA, key: "A2" } },
+            { code: SetEntryKey.code, data: { entryId: entryB, key: "B2" } },
+            { code: SetEntryKey.code, data: { entryId: entryB, key: "B3" } },
+            { code: SetEntryKey.code, data: { entryId: entryC, key: "C1" } },
         ];
         assertEquals(consolidateEdits(oldEdits), [
-            { code: SetEntryFriendlyId.code, data: { entryId: entryA, friendlyId: "A2" } },
-            { code: SetEntryFriendlyId.code, data: { entryId: entryB, friendlyId: "B3" } },
-            { code: SetEntryFriendlyId.code, data: { entryId: entryC, friendlyId: "C1" } },
+            { code: SetEntryKey.code, data: { entryId: entryA, key: "A2" } },
+            { code: SetEntryKey.code, data: { entryId: entryB, key: "B3" } },
+            { code: SetEntryKey.code, data: { entryId: entryC, key: "C1" } },
         ]);
     });
 
@@ -80,14 +80,14 @@ Deno.test("Consolidate edits", async (t) => {
         const oldEdits: AnyEdit[] = [
             {
                 code: CreateEntry.code,
-                data: { entryId: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
+                data: { entryId: entryA, name: "A name", key: "A", entryTypeKey: type1, description: "Entry A" },
             },
             {
                 code: CreateEntry.code,
-                data: { entryId: entryB, name: "B name", friendlyId: "B", type: type1, description: "Entry B" },
+                data: { entryId: entryB, name: "B name", key: "B", entryTypeKey: type1, description: "Entry B" },
             },
             { code: SetEntryDescription.code, data: { entryId: entryA, description: "New A description" } },
-            { code: SetEntryFriendlyId.code, data: { entryId: entryA, friendlyId: "A-new" } },
+            { code: SetEntryKey.code, data: { entryId: entryA, key: "A-new" } },
             { code: SetEntryName.code, data: { entryId: entryA, name: "A name new" } },
         ];
         assertEquals(consolidateEdits(oldEdits), [
@@ -96,14 +96,14 @@ Deno.test("Consolidate edits", async (t) => {
                 data: {
                     entryId: entryA,
                     name: "A name new",
-                    friendlyId: "A-new",
-                    type: type1,
+                    key: "A-new",
+                    entryTypeKey: type1,
                     description: "New A description",
                 },
             },
             {
                 code: CreateEntry.code,
-                data: { entryId: entryB, name: "B name", friendlyId: "B", type: type1, description: "Entry B" },
+                data: { entryId: entryB, name: "B name", key: "B", entryTypeKey: type1, description: "Entry B" },
             },
         ]);
     });
@@ -113,17 +113,17 @@ Deno.test("Consolidate edits", async (t) => {
         const oldEdits: AnyEdit[] = [
             {
                 code: CreateEntry.code,
-                data: { entryId: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
+                data: { entryId: entryA, name: "A name", key: "A", entryTypeKey: type1, description: "Entry A" },
             },
             {
                 code: CreateEntry.code,
-                data: { entryId: entryA, name: "A name 2", friendlyId: "A2", type: type2, description: "Entry A2" },
+                data: { entryId: entryA, name: "A name 2", key: "A2", entryTypeKey: type2, description: "Entry A2" },
             },
         ];
         assertEquals(consolidateEdits(oldEdits), [
             {
                 code: CreateEntry.code,
-                data: { entryId: entryA, name: "A name 2", friendlyId: "A2", type: type2, description: "Entry A2" },
+                data: { entryId: entryA, name: "A name 2", key: "A2", entryTypeKey: type2, description: "Entry A2" },
             },
         ]);
     });
@@ -135,16 +135,16 @@ Deno.test("Consolidate edits", async (t) => {
             { code: SetEntryName.code, data: { entryId: entryA, name: "A old name, to be changed" } },
             { code: SetEntryName.code, data: { entryId: entryA, name: "A name" } },
             { code: SetEntryDescription.code, data: { entryId: entryA, description: "A desc" } },
-            { code: SetEntryFriendlyId.code, data: { entryId: entryA, friendlyId: "A" } },
+            { code: SetEntryKey.code, data: { entryId: entryA, key: "A" } },
             {
                 code: CreateEntry.code,
-                data: { entryId: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
+                data: { entryId: entryA, name: "A name", key: "A", entryTypeKey: type1, description: "Entry A" },
             },
         ];
         assertEquals(consolidateEdits(oldEdits), [
             {
                 code: CreateEntry.code,
-                data: { entryId: entryA, name: "A name", friendlyId: "A", type: type1, description: "Entry A" },
+                data: { entryId: entryA, name: "A name", key: "A", entryTypeKey: type1, description: "Entry A" },
             },
         ]);
     });
@@ -162,7 +162,7 @@ Deno.test("Consolidate edits", async (t) => {
             // This new property value will get updated and then erased, so should consolidate to nothing:
             {
                 code: AddPropertyFact.code,
-                data: { entryId: entryA, propertyFactId: fact1, propertyId: propId, valueExpression: "1 first value" },
+                data: { entryId: entryA, propertyFactId: fact1, propertyKey: propId, valueExpression: "1 first value" },
             },
             unrelatedEdit1,
             // These two updates to 'fact2' should get consolidated:
@@ -200,17 +200,17 @@ Deno.test("Consolidate edits", async (t) => {
             code: "CreateEntry",
             data: {
                 entryId: entryA,
-                type: type1,
+                entryTypeKey: type1,
                 name: "Aerial lift",
                 description: "A **aerial lift** has yet to be described",
-                friendlyId: "tc-trnsprt-cable-top",
+                key: "tc-trnsprt-cable-top",
             },
         };
         const secondEdit: AnyEdit = {
             code: "AddPropertyFact",
             data: {
                 entryId: entryA,
-                propertyId: VNID(),
+                propertyKey: "some-prop",
                 propertyFactId: VNID(),
                 valueExpression: 'entry("_5tEE5QD4ucSGpKcwioQv0x")',
             },
@@ -231,19 +231,19 @@ Deno.test("Consolidate edits", async (t) => {
     await t.step("Changing entry type name after creating it", () => {
         assertEquals(
             consolidateEdits([
-                { code: "CreateEntryType", data: { id: type1, name: "Old name 1" } },
-                { code: "CreateEntryType", data: { id: type2, name: "Old name 2" } },
-                { code: "CreateEntryType", data: { id: type3, name: "Type 3" } },
-                { code: "UpdateEntryType", data: { id: type1, name: "New Name 1" } },
-                { code: "UpdateEntryType", data: { id: type2, name: "New Name 2", description: "description 2" } },
-                { code: "UpdateEntryType", data: { id: type3, description: "description 3. Name wasn't changed." } },
+                { code: "CreateEntryType", data: { key: type1, name: "Old name 1" } },
+                { code: "CreateEntryType", data: { key: type2, name: "Old name 2" } },
+                { code: "CreateEntryType", data: { key: type3, name: "Type 3" } },
+                { code: "UpdateEntryType", data: { key: type1, name: "New Name 1" } },
+                { code: "UpdateEntryType", data: { key: type2, name: "New Name 2", description: "description 2" } },
+                { code: "UpdateEntryType", data: { key: type3, description: "description 3. Name wasn't changed." } },
             ]),
             [
-                { code: "CreateEntryType", data: { id: type1, name: "New Name 1" } },
-                { code: "CreateEntryType", data: { id: type2, name: "New Name 2" } },
-                { code: "UpdateEntryType", data: { id: type2, description: "description 2" } }, // Note that this moved up. Shouldn't be a problem? Would be better if it stayed put though.
-                { code: "CreateEntryType", data: { id: type3, name: "Type 3" } },
-                { code: "UpdateEntryType", data: { id: type3, description: "description 3. Name wasn't changed." } },
+                { code: "CreateEntryType", data: { key: type1, name: "New Name 1" } },
+                { code: "CreateEntryType", data: { key: type2, name: "New Name 2" } },
+                { code: "UpdateEntryType", data: { key: type2, description: "description 2" } }, // Note that this moved up. Shouldn't be a problem? Would be better if it stayed put though.
+                { code: "CreateEntryType", data: { key: type3, name: "Type 3" } },
+                { code: "UpdateEntryType", data: { key: type3, description: "description 3. Name wasn't changed." } },
             ],
         );
     });

@@ -19,7 +19,7 @@ import { corePerm } from "neolace/core/permissions/permissions.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 
 /**
- * basicSearch(term): search for entries, properties, and entry types whose name or friendlyID contains the specified
+ * basicSearch(term): search for entries, properties, and entry types whose name or key contains the specified
  * keyword.
  */
 export class BasicSearch extends LookupFunctionOneArg {
@@ -42,16 +42,16 @@ export class BasicSearch extends LookupFunctionOneArg {
         // Cypher clause/predicate that tells us if the user is allowed to view properties/entryTypes on this site.
         const schemaPermissionPredicate = await makeCypherCondition(context.subject, corePerm.viewSchema.name, {}, []);
 
-        // TODO: we should store the lowercase version of the name and friendlyId in the database, with a "full text" index
+        // TODO: we should store the lowercase version of the name and key in the database, with a "full text" index
         const cypherQuery = C`
             CALL {
                 MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${context.siteId}})
-                WHERE (${entryPermissionPredicate}) AND (toLower(entry.name) CONTAINS ${keyword} OR toLower(entry.friendlyId) CONTAINS ${keyword})
+                WHERE (${entryPermissionPredicate}) AND (toLower(entry.name) CONTAINS ${keyword} OR toLower(entry.key) CONTAINS ${keyword})
                 RETURN
                     "Entry" AS type,
-                    entry.id AS id,
+                    entry.id AS idOrKey,
                     entry.name AS name,
-                    CASE WHEN toLower(entry.name) = ${keyword} OR entry.friendlyId = ${keyword} THEN 1 ELSE 0 END AS isExactMatch
+                    CASE WHEN toLower(entry.name) = ${keyword} OR entry.key = ${keyword} THEN 1 ELSE 0 END AS isExactMatch
 
                 UNION ALL
 
@@ -61,7 +61,7 @@ export class BasicSearch extends LookupFunctionOneArg {
                   AND (toLower(entryTypeOrProperty.name) CONTAINS ${keyword})
                 RETURN
                     CASE WHEN entryTypeOrProperty:${EntryType} THEN "EntryType" ELSE "Property" END AS type,
-                    entryTypeOrProperty.id AS id,
+                    entryTypeOrProperty.key AS idOrKey,
                     entryTypeOrProperty.name AS name,
                     CASE WHEN toLower(entryTypeOrProperty.name) = ${keyword} THEN 1 ELSE 0 END AS isExactMatch
             }
@@ -73,23 +73,23 @@ export class BasicSearch extends LookupFunctionOneArg {
             async (offset, numItems) => {
                 const records = await context.tx.query(C`
                 ${cypherQuery}
-                RETURN type, id, name
-                ORDER BY isExactMatch DESC, name, type, id
+                RETURN type, idOrKey, name
+                ORDER BY isExactMatch DESC, name, type, idOrKey
                 SKIP ${C(String(BigInt(offset)))} LIMIT ${C(String(BigInt(numItems)))}
             `.givesShape({
                     "type": Field.String,
-                    "id": Field.VNID,
+                    "idOrKey": Field.Any,
                     "name": Field.String,
                 }));
 
                 const result: Array<EntryValue | EntryTypeValue | PropertyValue> = [];
                 for (const r of records) {
                     if (r.type === "Entry") {
-                        result.push(new EntryValue(r.id));
+                        result.push(new EntryValue(r.idOrKey));
                     } else if (r.type === "EntryType") {
-                        result.push(new EntryTypeValue(r.id));
+                        result.push(new EntryTypeValue(r.idOrKey));
                     } else if (r.type === "Property") {
-                        result.push(new PropertyValue(r.id));
+                        result.push(new PropertyValue(r.idOrKey));
                     } else throw new Error("Internal Error, unexpected type found in query result.");
                 }
                 return result;

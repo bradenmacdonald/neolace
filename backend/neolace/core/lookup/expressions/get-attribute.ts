@@ -6,7 +6,7 @@ import { LookupEvaluationError } from "../errors.ts";
 /**
  * This expression is used to get an attribute of a value.
  *
- * For example, entries have .id, .name, .friendlyId, .description as attributes.
+ * For example, entries have .id, .name, .key, .description as attributes.
  *
  * In addition, any value can have additional attributes added onto it using 'annotations'
  */

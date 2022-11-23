@@ -23,7 +23,7 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
 
     // Our little helper to render a link to an entry, based on lots of details about the user's permissions and whether
     // we're seeing this in an open draft (so further changes can be made) or not.
-    const entryLink = ({name, entryId, friendlyId}: {name?: string|React.ReactElement, entryId: api.VNID, friendlyId?: string}) => {
+    const entryLink = ({name, entryId, key}: {name?: string|React.ReactElement, entryId: api.VNID, key?: string}) => {
         name = name ?? <EntryName entryId={entryId} />
         if (draft) {
             if (draft.status === api.DraftStatus.Open) {
@@ -35,7 +35,7 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                     return <>{name}</>;
                 }
             } else if (draft.status === api.DraftStatus.Accepted) {
-                return <Link href={`/entry/${friendlyId ?? entryId}`}>{name}</Link>
+                return <Link href={`/entry/${key ?? entryId}`}>{name}</Link>
             }
         }
         return name;
@@ -52,7 +52,7 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                 }} />
             }
             case "UpdateEntryTypeFeature": {
-                const entryType = schema?.entryTypes[edit.data.entryTypeId]?.name ?? edit.data.entryTypeId;
+                const entryType = schema?.entryTypes[edit.data.entryTypeKey]?.name ?? edit.data.entryTypeKey;
                 if (data.feature.enabled && data.feature.featureType === "HeroImage") {
                     return <FormattedMessage defaultMessage="Enabled/updated the Hero Image feature for {entryType} entries, using lookup expression {expr}" id="OS5mRn" values={{
                         entryType,
@@ -76,9 +76,9 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                 }} />
             }
             case "UpdateProperty": {
-                const prop = schema?.properties[edit.data.id];
+                const prop = schema?.properties[edit.data.key];
                 return <FormattedMessage defaultMessage="Updated {propertyName} property ({fields})" id="E8NYSc" values={{
-                    propertyName: <strong>{prop?.name ?? edit.data.id}</strong>,
+                    propertyName: <strong>{prop?.name ?? edit.data.key}</strong>,
                     fields: Object.keys(edit.data).filter((k) => k !== "id").join(", "),
                 }} />
             }
@@ -86,10 +86,10 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
             // Content changes:
             //
             case "CreateEntry": {
-                return <FormattedMessage defaultMessage="Created new {entryType} entry: {entry}, with friendly ID {friendlyId}" id="wGmmfj" values={{
+                return <FormattedMessage defaultMessage="Created new {entryType} entry: {entry}, with friendly ID {key}" id="10rJBw" values={{
                     entry: <><strong>{entryLink({...edit.data})}</strong></>,
-                    entryType: <>{schema?.entryTypes[edit.data.type]?.name}</>,
-                    friendlyId: <code>{edit.data.friendlyId}</code>,
+                    entryType: <>{schema?.entryTypes[edit.data.entryTypeKey]?.name}</>,
+                    key: <code>{edit.data.key}</code>,
                 }} />
             }
             case "SetEntryName": {
@@ -103,16 +103,16 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                     entry: <><strong>{entryLink({entryId: edit.data.entryId})}</strong></>,
                 }} />
             }
-            case "SetEntryFriendlyId": {
-                return <FormattedMessage defaultMessage="Changed friendly ID of {entry} to {friendlyId}" id="eDXIzJ" values={{
-                    entry: <><strong>{entryLink({entryId: edit.data.entryId, friendlyId: edit.data.friendlyId})}</strong></>,
-                    friendlyId: <code>{edit.data.friendlyId}</code>,
+            case "SetEntryKey": {
+                return <FormattedMessage defaultMessage="Changed key of {entry} to {key}" id="/e0epF" values={{
+                    entry: <><strong>{entryLink({entryId: edit.data.entryId, key: edit.data.key})}</strong></>,
+                    key: <code>{edit.data.key}</code>,
                 }} />
             }
             case "AddPropertyFact": {
                 return <FormattedMessage defaultMessage="Added a new property value to {entry} - {property}: {value}" id="fktjWL" values={{
                     entry: <>{entryLink({entryId: edit.data.entryId})}</>,
-                    property: <strong>{schema?.properties[edit.data.propertyId]?.name}</strong>,
+                    property: <strong>{schema?.properties[edit.data.propertyKey]?.name}</strong>,
                     value: <FriendlyValueDisplay lookupValue={edit.data.valueExpression} />,
                 }} />
             }

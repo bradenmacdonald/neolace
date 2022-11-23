@@ -16,13 +16,13 @@ export const testHelpers = (defaultData: TestSetupData["data"]) => {
     const context = new TestLookupContext({ siteId });
     return {
         siteId,
-        species: defaultData.schema.entryTypes._ETSPECIES,
+        species: defaultData.schema.entryTypes.ETSPECIES,
         ponderosaPine: defaultData.entries.ponderosaPine,
         jackPine: defaultData.entries.jackPine,
         stonePine: defaultData.entries.stonePine,
 
-        getFriendlyId: (entry: { id: VNID }) =>
-            context.evaluateExprConcrete(`entry("${entry.id}").friendlyId`).then((val) => (val as StringValue).value),
+        getKey: (entry: { id: VNID }) =>
+            context.evaluateExprConcrete(`entry("${entry.id}").key`).then((val) => (val as StringValue).value),
         getName: (entry: { id: VNID }) =>
             context.evaluateExprConcrete(`entry("${entry.id}").name`).then((val) => (val as StringValue).value),
         getDescription: (entry: { id: VNID }) =>
@@ -36,21 +36,21 @@ export const testHelpers = (defaultData: TestSetupData["data"]) => {
             }),
 
         /** Get all the facts (values) for a particular property on a particular entry */
-        getPropertyFacts: async (entry: { id: VNID }, propertyId: VNID) => {
+        getPropertyFacts: async (entry: { id: VNID }, propertyKey: string) => {
             const graph = await getGraph();
             const allRawProps = await graph.read((tx) => getRawProperties({ tx, entryId: entry.id }));
-            const rawProp = allRawProps.find((rp) => rp.propertyId === propertyId);
+            const rawProp = allRawProps.find((rp) => rp.propertyKey === propertyKey);
             return rawProp?.facts ?? [];
         },
 
-        assertExists: (entry: { id: VNID } | { friendlyId: string }) =>
-            context.evaluateExprConcrete(`entry("${"id" in entry ? entry.id : entry.friendlyId}")`).then((val) => {
+        assertExists: (entry: { id: VNID } | { key: string }) =>
+            context.evaluateExprConcrete(`entry("${"id" in entry ? entry.id : entry.key}")`).then((val) => {
                 assertInstanceOf(val, EntryValue);
                 return { id: val.id };
             }),
-        assertNotExists: (entry: { id: VNID } | { friendlyId: string }) =>
+        assertNotExists: (entry: { id: VNID } | { key: string }) =>
             assertRejects(
-                () => context.evaluateExprConcrete(`entry("${"id" in entry ? entry.id : entry.friendlyId}")`),
+                () => context.evaluateExprConcrete(`entry("${"id" in entry ? entry.id : entry.key}")`),
                 LookupEvaluationError,
                 "not found",
             ),
@@ -59,7 +59,7 @@ export const testHelpers = (defaultData: TestSetupData["data"]) => {
             const graph = await getGraph();
             /** For now, BulkUpdateEntries only works as part of a Connection, not via Drafts or anything else. */
             const connection = await getConnection({
-                friendlyId: "bulk-test",
+                key: "bulk-test",
                 siteId: siteIdOverride,
                 create: true,
                 plugin: "none",
@@ -78,27 +78,27 @@ export const testHelpers = (defaultData: TestSetupData["data"]) => {
         /** Create an entry type and some entries on the other site, to use in tests */
         populateOtherSite: async () => {
             const graph = await getGraph();
-            const entryTypeId = VNID(), entryA = VNID(), entryB = VNID(), entryC = VNID();
+            const entryTypeKey = "ETTEST", entryA = VNID(), entryB = VNID(), entryC = VNID();
             await graph.runAsSystem(ApplyEdits({
                 siteId: defaultData.otherSite.id,
                 edits: [
-                    { code: "CreateEntryType", data: { id: entryTypeId, name: "EntryType" } },
+                    { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                     {
                         code: "CreateEntry",
-                        data: { entryId: entryA, name: "Entry A", type: entryTypeId, friendlyId: "a", description: "" },
+                        data: { entryId: entryA, name: "Entry A", entryTypeKey, key: "a", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: entryB, name: "Entry B", type: entryTypeId, friendlyId: "b", description: "" },
+                        data: { entryId: entryB, name: "Entry B", entryTypeKey, key: "b", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: entryC, name: "Entry C", type: entryTypeId, friendlyId: "c", description: "" },
+                        data: { entryId: entryC, name: "Entry C", entryTypeKey, key: "c", description: "" },
                     },
                 ],
                 editSource: UseSystemSource,
             }));
-            return { entryTypeId, entryA, entryB, entryC };
+            return { entryTypeKey, entryA, entryB, entryC };
         },
     };
 };

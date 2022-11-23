@@ -17,7 +17,7 @@ import {
 
 group("properties.ts", () => {
     group("set property values", () => {
-        const entryType = VNID();
+        const entryTypeKey = "ET-TEST";
         const siteId = VNID();
         beforeAll(async () => {
             const graph = await getGraph();
@@ -27,12 +27,12 @@ group("properties.ts", () => {
                 id: siteId,
                 name: "Test Site",
                 domain: "test-site.neolace.net",
-                friendlyId: "test",
+                key: "test",
             }));
             await graph.runAsSystem(ApplyEdits({
                 siteId,
                 edits: [
-                    { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                    { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                 ],
                 editSource: UseSystemSource,
             }));
@@ -41,7 +41,7 @@ group("properties.ts", () => {
         test("Define a new value property and set it on an entry", async () => {
             const graph = await getGraph();
             const entryId = VNID();
-            const propertyId = VNID();
+            const propertyKey = "P123";
             await graph.runAsSystem(ApplyEdits({
                 siteId,
                 edits: [
@@ -50,12 +50,15 @@ group("properties.ts", () => {
                         data: {
                             entryId,
                             name: "Entry",
-                            type: entryType,
+                            entryTypeKey,
                             description: "Testing",
-                            friendlyId: "te1",
+                            key: "te1",
                         },
                     },
-                    { code: "CreateProperty", data: { id: propertyId, name: "Property", appliesTo: [{ entryType }] } },
+                    {
+                        code: "CreateProperty",
+                        data: { key: propertyKey, name: "Property", appliesTo: [{ entryTypeKey }] },
+                    },
                 ],
                 editSource: UseSystemSource,
             }));
@@ -66,7 +69,7 @@ group("properties.ts", () => {
                         code: "AddPropertyFact",
                         data: {
                             entryId,
-                            propertyId,
+                            propertyKey,
                             propertyFactId: VNID(),
                             valueExpression: `"the value"`,
                         },
@@ -78,7 +81,7 @@ group("properties.ts", () => {
             const result = await graph.read((tx) =>
                 tx.query(C`
                 MATCH (entry:${Entry} {id: ${entryId}})
-                MATCH (prop:${Property} {id: ${propertyId}})
+                MATCH (prop:${Property} {siteNamespace: ${siteId}, key: ${propertyKey}})
                 MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(fact:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
             `.RETURN({ fact: Field.VNode(PropertyFact) }))
             );
@@ -91,7 +94,7 @@ group("properties.ts", () => {
         test("Define a new relationship property and set it on an entry", async () => {
             const graph = await getGraph();
             const entryA = VNID(), entryB = VNID();
-            const propertyId = VNID();
+            const propertyKey = "P234";
             await graph.runAsSystem(ApplyEdits({
                 siteId,
                 edits: [
@@ -100,9 +103,9 @@ group("properties.ts", () => {
                         data: {
                             entryId: entryA,
                             name: "Entry A",
-                            type: entryType,
+                            entryTypeKey,
                             description: "Testing",
-                            friendlyId: "te2a",
+                            key: "te2a",
                         },
                     },
                     {
@@ -110,18 +113,18 @@ group("properties.ts", () => {
                         data: {
                             entryId: entryB,
                             name: "Entry B",
-                            type: entryType,
+                            entryTypeKey,
                             description: "Testing",
-                            friendlyId: "te2b",
+                            key: "te2b",
                         },
                     },
                     {
                         code: "CreateProperty",
                         data: {
-                            id: propertyId,
+                            key: propertyKey,
                             name: "Is A",
                             type: PropertyType.RelIsA,
-                            appliesTo: [{ entryType }],
+                            appliesTo: [{ entryTypeKey }],
                         },
                     },
                 ],
@@ -137,7 +140,7 @@ group("properties.ts", () => {
                         code: "AddPropertyFact",
                         data: {
                             entryId: entryB,
-                            propertyId,
+                            propertyKey,
                             propertyFactId: VNID(),
                             valueExpression,
                             note,
@@ -150,7 +153,7 @@ group("properties.ts", () => {
             const result = await graph.read((tx) =>
                 tx.query(C`
                 MATCH (entry:${Entry} {id: ${entryB}})
-                MATCH (prop:${Property} {id: ${propertyId}})
+                MATCH (prop:${Property} {siteNamespace: ${siteId}, key: ${propertyKey}})
                 MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(fact:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
             `.RETURN({ fact: Field.VNode(PropertyFact) }))
             );
@@ -171,12 +174,14 @@ group("properties.ts", () => {
     });
 
     group("getEntryProperty() / getEntryProperties()", () => {
+        // Site ID
+        const siteId = VNID();
         // Entry Type IDs:
-        const entryType = VNID();
+        const entryTypeKey = "E789";
         // Entry IDs:
         const A = VNID(), B = VNID(), C = VNID();
         // Property IDs:
-        const entryIsA = VNID(), prop1 = VNID(), prop2 = VNID(), prop3 = VNID();
+        const entryIsA = "p-is-a", prop1 = "p1", prop2 = "p2", prop3 = "p3";
         // Property Fact IDs:
         const factIdA1 = VNID(), factIdB1 = VNID();
         const pfBisA = VNID(), pfCisB = VNID();
@@ -188,28 +193,28 @@ group("properties.ts", () => {
                 // Create a site with:
                 //   Entry A has no properties
                 //   Entry B has one property
-                const { id: siteId } = await graph.runAsSystem(
-                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+                await graph.runAsSystem(
+                    CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
                     edits: [
-                        { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                        { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                         {
                             code: "CreateEntry",
-                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                         },
                         {
                             code: "CreateEntry",
-                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", entryTypeKey, key: "b", description: "" },
                         },
                         {
                             code: "CreateProperty",
                             data: {
-                                id: prop1,
+                                key: prop1,
                                 name: "Property 1",
                                 type: PropertyType.Value,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                             },
                         },
@@ -217,7 +222,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: B,
-                                propertyId: prop1,
+                                propertyKey: prop1,
                                 propertyFactId: factIdB1,
                                 valueExpression: `"value for B prop1"`,
                             },
@@ -239,7 +244,7 @@ group("properties.ts", () => {
                 const graph = await getGraph();
                 // Get the properties of A
                 assertEquals(
-                    await graph.read((tx) => getEntryProperty({ entryId: A, propertyId: prop1, tx })),
+                    await graph.read((tx) => getEntryProperty({ entryId: A, propertyKey: prop1, tx })),
                     undefined,
                 );
             });
@@ -250,7 +255,7 @@ group("properties.ts", () => {
                 assertEquals(await graph.read((tx) => getEntryProperties(B, { tx })), [
                     {
                         property: {
-                            id: prop1,
+                            key: prop1,
                             rank: 15,
                             name: "Property 1",
                             default: null,
@@ -274,12 +279,12 @@ group("properties.ts", () => {
                 assertEquals(allProps.length, 1);
                 const expected = allProps[0];
                 assertEquals(
-                    await graph.read((tx) => getEntryProperty({ entryId: B, propertyId: expected.property.id, tx })),
+                    await graph.read((tx) => getEntryProperty({ entryId: B, propertyKey: expected.property.key, tx })),
                     expected,
                 );
                 // And if we give a random property ID, we should get no result:
                 assertEquals(
-                    await graph.read((tx) => getEntryProperty({ entryId: B, propertyId: prop3, tx })),
+                    await graph.read((tx) => getEntryProperty({ entryId: B, propertyKey: prop3, tx })),
                     undefined,
                 );
             });
@@ -291,21 +296,21 @@ group("properties.ts", () => {
                 // Create a site where B is an A, but A has an automatic reverse property
                 await resetDBToBlankSnapshot();
                 const pfBisA = VNID();
-                const propHasTypes = VNID();
-                const { id: siteId } = await graph.runAsSystem(
-                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+                const propHasTypes = "pr-has-types";
+                await graph.runAsSystem(
+                    CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
                     edits: [
-                        { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                        { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                         {
                             code: "CreateProperty",
                             data: {
-                                id: entryIsA,
+                                key: entryIsA,
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 rank: 1,
                             },
@@ -314,11 +319,11 @@ group("properties.ts", () => {
                         {
                             code: "CreateProperty",
                             data: {
-                                id: propHasTypes,
+                                key: propHasTypes,
                                 name: "Has types",
                                 type: PropertyType.RelOther,
                                 mode: PropertyMode.Auto,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 rank: 1,
                                 default: `this.reverse(prop=prop("${entryIsA}"))`,
@@ -327,18 +332,18 @@ group("properties.ts", () => {
                         // Create entry A:
                         {
                             code: "CreateEntry",
-                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                         },
                         // Create entry B and its properties:
                         {
                             code: "CreateEntry",
-                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", entryTypeKey, key: "b", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: B,
-                                propertyId: entryIsA,
+                                propertyKey: entryIsA,
                                 valueExpression: `entry("${A}")`,
                                 note: "B is an A",
                                 propertyFactId: pfBisA,
@@ -351,7 +356,7 @@ group("properties.ts", () => {
                 assertEquals(await graph.read((tx) => getEntryProperties(A, { tx })), [
                     {
                         property: {
-                            id: propHasTypes,
+                            key: propHasTypes,
                             rank: 1,
                             name: "Has types",
                             default: `this.reverse(prop=prop("${entryIsA}"))`,
@@ -373,20 +378,20 @@ group("properties.ts", () => {
                 //   C inherits from B which inherits from A
                 //   Property 3 is not inheritable, but the others are.
                 const pfA1 = VNID(), pfA2 = VNID(), pfA3 = VNID(), pfB2 = VNID(), pfC3 = VNID();
-                const { id: siteId } = await graph.runAsSystem(
-                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+                await graph.runAsSystem(
+                    CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
                     edits: [
-                        { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                        { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                         {
                             code: "CreateProperty",
                             data: {
-                                id: entryIsA,
+                                key: entryIsA,
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 rank: 1,
                             },
@@ -394,10 +399,10 @@ group("properties.ts", () => {
                         {
                             code: "CreateProperty",
                             data: {
-                                id: prop1,
+                                key: prop1,
                                 name: "Property 1",
                                 type: PropertyType.Value,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 inheritable: true,
                             },
@@ -405,10 +410,10 @@ group("properties.ts", () => {
                         {
                             code: "CreateProperty",
                             data: {
-                                id: prop2,
+                                key: prop2,
                                 name: "Property 2",
                                 type: PropertyType.Value,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 inheritable: true,
                             },
@@ -416,10 +421,10 @@ group("properties.ts", () => {
                         {
                             code: "CreateProperty",
                             data: {
-                                id: prop3,
+                                key: prop3,
                                 name: "Property 3",
                                 type: PropertyType.Value,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 inheritable: false,
                             },
@@ -427,13 +432,13 @@ group("properties.ts", () => {
                         // Create entry A and its properties:
                         {
                             code: "CreateEntry",
-                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: A,
-                                propertyId: prop1,
+                                propertyKey: prop1,
                                 valueExpression: `"A1"`,
                                 propertyFactId: pfA1,
                             },
@@ -442,7 +447,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: A,
-                                propertyId: prop2,
+                                propertyKey: prop2,
                                 valueExpression: `"A2"`,
                                 propertyFactId: pfA2,
                             },
@@ -451,7 +456,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: A,
-                                propertyId: prop3,
+                                propertyKey: prop3,
                                 valueExpression: `"A3"`,
                                 propertyFactId: pfA3,
                             },
@@ -459,13 +464,13 @@ group("properties.ts", () => {
                         // Create entry B and its properties:
                         {
                             code: "CreateEntry",
-                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", entryTypeKey, key: "b", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: B,
-                                propertyId: entryIsA,
+                                propertyKey: entryIsA,
                                 valueExpression: `entry("${A}")`,
                                 note: "B is an A",
                                 propertyFactId: pfBisA,
@@ -475,7 +480,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: B,
-                                propertyId: prop2,
+                                propertyKey: prop2,
                                 valueExpression: `"B2"`,
                                 propertyFactId: pfB2,
                             },
@@ -483,13 +488,13 @@ group("properties.ts", () => {
                         // Create entry C and its properties:
                         {
                             code: "CreateEntry",
-                            data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                            data: { entryId: C, name: "Entry C", entryTypeKey, key: "c", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: C,
-                                propertyId: entryIsA,
+                                propertyKey: entryIsA,
                                 valueExpression: `entry("${B}")`,
                                 note: "C is a B",
                                 propertyFactId: pfCisB,
@@ -499,7 +504,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: C,
-                                propertyId: prop3,
+                                propertyKey: prop3,
                                 valueExpression: `"C3"`,
                                 propertyFactId: pfC3,
                             },
@@ -510,17 +515,17 @@ group("properties.ts", () => {
 
                 // Define the expected property values:
                 const expectedPropValue = (
-                    propId: VNID,
+                    propKey: string,
                     propertyFactId: VNID,
                     value: string,
                     source: { from: "ThisEntry" } | { from: "AncestorEntry"; entryId: VNID } = { from: "ThisEntry" },
                 ) => {
                     return {
                         property: {
-                            id: propId,
+                            key: propKey,
                             rank: 15,
                             name: `Property ${
-                                propId === prop1 ? "1" : propId === prop2 ? "2" : propId === prop3 ? "3" : "X"
+                                propKey === prop1 ? "1" : propKey === prop2 ? "2" : propKey === prop3 ? "3" : "X"
                             }`,
                             default: null,
                         },
@@ -545,7 +550,7 @@ group("properties.ts", () => {
                 assertEquals(await graph.read((tx) => getEntryProperties(B, { tx })), [
                     // B is an A
                     {
-                        property: { id: entryIsA, rank: 1, name: "Type of", default: null },
+                        property: { key: entryIsA, rank: 1, name: "Type of", default: null },
                         facts: [{
                             propertyFactId: pfBisA,
                             note: "B is an A",
@@ -565,7 +570,7 @@ group("properties.ts", () => {
                 assertEquals(await graph.read((tx) => getEntryProperties(C, { tx })), [
                     // C is a B
                     {
-                        property: { id: entryIsA, rank: 1, name: "Type of", default: null },
+                        property: { key: entryIsA, rank: 1, name: "Type of", default: null },
                         facts: [{
                             propertyFactId: pfCisB,
                             note: "C is a B",
@@ -591,20 +596,20 @@ group("properties.ts", () => {
                 //   Entry B inherits from A and has the same property with *TWO VALUES*
                 //   Entry C inherits from B and has no direct properties.
                 const factIdB1v1 = VNID(), factIdB1v2 = VNID();
-                const { id: siteId } = await graph.runAsSystem(
-                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+                await graph.runAsSystem(
+                    CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
                     edits: [
-                        { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                        { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                         {
                             code: "CreateProperty",
                             data: {
-                                id: entryIsA,
+                                key: entryIsA,
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 rank: 1,
                             },
@@ -612,10 +617,10 @@ group("properties.ts", () => {
                         {
                             code: "CreateProperty",
                             data: {
-                                id: prop1,
+                                key: prop1,
                                 name: "Property 1",
                                 type: PropertyType.Value,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 inheritable: true,
                             },
@@ -623,13 +628,13 @@ group("properties.ts", () => {
                         // Create A
                         {
                             code: "CreateEntry",
-                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: A,
-                                propertyId: prop1,
+                                propertyKey: prop1,
                                 propertyFactId: factIdA1,
                                 valueExpression: `"value for A prop1"`,
                             },
@@ -637,14 +642,14 @@ group("properties.ts", () => {
                         // Create B
                         {
                             code: "CreateEntry",
-                            data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                            data: { entryId: B, name: "Entry B", entryTypeKey, key: "b", description: "" },
                         },
                         // B inherits from A
                         {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: B,
-                                propertyId: entryIsA,
+                                propertyKey: entryIsA,
                                 propertyFactId: pfBisA,
                                 valueExpression: `entry("${A}")`,
                             },
@@ -653,7 +658,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: B,
-                                propertyId: prop1,
+                                propertyKey: prop1,
                                 propertyFactId: factIdB1v1,
                                 valueExpression: `"value 1 for B prop1"`,
                                 note: "first",
@@ -663,7 +668,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: B,
-                                propertyId: prop1,
+                                propertyKey: prop1,
                                 propertyFactId: factIdB1v2,
                                 valueExpression: `"value 2 for B prop1"`,
                                 note: "second",
@@ -672,14 +677,14 @@ group("properties.ts", () => {
                         // Create C
                         {
                             code: "CreateEntry",
-                            data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                            data: { entryId: C, name: "Entry C", entryTypeKey, key: "c", description: "" },
                         },
                         // C inherits from B
                         {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: C,
-                                propertyId: entryIsA,
+                                propertyKey: entryIsA,
                                 propertyFactId: pfCisB,
                                 valueExpression: `entry("${B}")`,
                             },
@@ -689,10 +694,10 @@ group("properties.ts", () => {
                 }));
                 // Check properties of B:
                 assertEquals(
-                    await graph.read((tx) => getEntryProperty({ entryId: B, propertyId: prop1, tx })),
+                    await graph.read((tx) => getEntryProperty({ entryId: B, propertyKey: prop1, tx })),
                     {
                         property: {
-                            id: prop1,
+                            key: prop1,
                             name: "Property 1",
                             rank: 15,
                             default: null,
@@ -717,10 +722,10 @@ group("properties.ts", () => {
                 );
                 // Check properties of C (inherited):
                 assertEquals(
-                    await graph.read((tx) => getEntryProperty({ entryId: C, propertyId: prop1, tx })),
+                    await graph.read((tx) => getEntryProperty({ entryId: C, propertyKey: prop1, tx })),
                     {
                         property: {
-                            id: prop1,
+                            key: prop1,
                             name: "Property 1",
                             rank: 15,
                             default: null,
@@ -752,20 +757,20 @@ group("properties.ts", () => {
                 // Create a site with:
                 //   Entry A has one property with three values in a specific order
                 const factIdA1v1 = VNID(), factIdA1v2 = VNID(), factIdA1v3 = VNID();
-                const { id: siteId } = await graph.runAsSystem(
-                    CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+                await graph.runAsSystem(
+                    CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
                     edits: [
-                        { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                        { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                         {
                             code: "CreateProperty",
                             data: {
-                                id: prop1,
+                                key: prop1,
                                 name: "Property 1",
                                 type: PropertyType.Value,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 inheritable: true,
                             },
@@ -773,13 +778,13 @@ group("properties.ts", () => {
                         // Create A
                         {
                             code: "CreateEntry",
-                            data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                            data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: A,
-                                propertyId: prop1,
+                                propertyKey: prop1,
                                 propertyFactId: factIdA1v2,
                                 valueExpression: `"value 2 for A prop1"`,
                                 note: "second but added first",
@@ -790,7 +795,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: A,
-                                propertyId: prop1,
+                                propertyKey: prop1,
                                 propertyFactId: factIdA1v3,
                                 valueExpression: `"value 3 for A prop1"`,
                                 note: "third but added second",
@@ -801,7 +806,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: A,
-                                propertyId: prop1,
+                                propertyKey: prop1,
                                 propertyFactId: factIdA1v1,
                                 valueExpression: `"value 1 for A prop1"`,
                                 note: "first but added third",
@@ -813,9 +818,9 @@ group("properties.ts", () => {
                 }));
                 // Check properties of A:
                 assertEquals(
-                    await graph.read((tx) => getEntryProperty({ entryId: A, propertyId: prop1, tx })),
+                    await graph.read((tx) => getEntryProperty({ entryId: A, propertyKey: prop1, tx })),
                     {
-                        property: { id: prop1, name: "Property 1", rank: 15, default: null },
+                        property: { key: prop1, name: "Property 1", rank: 15, default: null },
                         facts: [
                             {
                                 propertyFactId: factIdA1v1,
@@ -845,9 +850,8 @@ group("properties.ts", () => {
         });
 
         group("slots", () => {
-            const siteId = VNID();
-            const componentType = VNID();
-            const entryHasPart = VNID();
+            const componentTypeKey = "ETCOMPONENT";
+            const entryHasPart = "has-part";
             const steeringWheel = VNID(),
                 combustionEngine = VNID(),
                 electricMotor = VNID(),
@@ -865,21 +869,21 @@ group("properties.ts", () => {
                 //   Entry "Car" has part "Steering Wheel" in slot "sw", "Combustion Engine" in slot "motor"
                 //   Entry "Electric Car" inherits from "Car" and has part "Electic Motor" in slot "motor"
                 await graph.runAsSystem(
-                    CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+                    CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
                 );
                 await graph.runAsSystem(ApplyEdits({
                     siteId,
                     edits: [
-                        { code: "CreateEntryType", data: { id: entryType, name: "Vehicle" } },
-                        { code: "CreateEntryType", data: { id: componentType, name: "Component" } },
+                        { code: "CreateEntryType", data: { key: entryTypeKey, name: "Vehicle" } },
+                        { code: "CreateEntryType", data: { key: componentTypeKey, name: "Component" } },
                         // Create relationship properties:
                         {
                             code: "CreateProperty",
                             data: {
-                                id: entryIsA,
+                                key: entryIsA,
                                 name: "Type of",
                                 type: PropertyType.RelIsA,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 rank: 1,
                             },
@@ -887,10 +891,10 @@ group("properties.ts", () => {
                         {
                             code: "CreateProperty",
                             data: {
-                                id: entryHasPart,
+                                key: entryHasPart,
                                 name: "Has Part",
                                 type: PropertyType.RelOther,
-                                appliesTo: [{ entryType }],
+                                appliesTo: [{ entryTypeKey }],
                                 description: "",
                                 rank: 2,
                                 inheritable: true,
@@ -903,8 +907,8 @@ group("properties.ts", () => {
                             data: {
                                 entryId: steeringWheel,
                                 name: "Steering Wheel",
-                                type: componentType,
-                                friendlyId: "c-sw",
+                                entryTypeKey: componentTypeKey,
+                                key: "c-sw",
                                 description: "",
                             },
                         },
@@ -913,8 +917,8 @@ group("properties.ts", () => {
                             data: {
                                 entryId: combustionEngine,
                                 name: "Combustion Engine",
-                                type: componentType,
-                                friendlyId: "c-ce",
+                                entryTypeKey: componentTypeKey,
+                                key: "c-ce",
                                 description: "",
                             },
                         },
@@ -923,21 +927,21 @@ group("properties.ts", () => {
                             data: {
                                 entryId: electricMotor,
                                 name: "Electric Motor",
-                                type: componentType,
-                                friendlyId: "c-em",
+                                entryTypeKey: componentTypeKey,
+                                key: "c-em",
                                 description: "",
                             },
                         },
                         // Create entry "Car": has part "Steering Wheel" in slot "sw", "Combustion Engine" in slot "motor"
                         {
                             code: "CreateEntry",
-                            data: { entryId: car, name: "Car", type: entryType, friendlyId: "v-car", description: "" },
+                            data: { entryId: car, name: "Car", entryTypeKey, key: "v-car", description: "" },
                         },
                         {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: car,
-                                propertyId: entryHasPart,
+                                propertyKey: entryHasPart,
                                 slot: "sw",
                                 valueExpression: `entry("${steeringWheel}")`,
                                 note: "wheel",
@@ -948,7 +952,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: car,
-                                propertyId: entryHasPart,
+                                propertyKey: entryHasPart,
                                 slot: "motor",
                                 valueExpression: `entry("${combustionEngine}")`,
                                 note: "engine",
@@ -961,8 +965,8 @@ group("properties.ts", () => {
                             data: {
                                 entryId: electricCar,
                                 name: "Electric Car",
-                                type: entryType,
-                                friendlyId: "v-e-car",
+                                entryTypeKey,
+                                key: "v-e-car",
                                 description: "",
                             },
                         },
@@ -970,7 +974,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: electricCar,
-                                propertyId: entryIsA,
+                                propertyKey: entryIsA,
                                 valueExpression: `entry("${car}")`,
                                 note: "wheel",
                                 propertyFactId: pfElectricCarIsCar,
@@ -980,7 +984,7 @@ group("properties.ts", () => {
                             code: "AddPropertyFact",
                             data: {
                                 entryId: electricCar,
-                                propertyId: entryHasPart,
+                                propertyKey: entryHasPart,
                                 slot: "motor",
                                 valueExpression: `entry("${electricMotor}")`,
                                 note: "motor",
@@ -995,9 +999,9 @@ group("properties.ts", () => {
                 const graph = await getGraph();
                 // Car is normal, has two parts:
                 assertEquals(
-                    await graph.read((tx) => getEntryProperty({ entryId: car, propertyId: entryHasPart, tx })),
+                    await graph.read((tx) => getEntryProperty({ entryId: car, propertyKey: entryHasPart, tx })),
                     {
-                        property: { id: entryHasPart, name: "Has Part", rank: 2, default: null },
+                        property: { key: entryHasPart, name: "Has Part", rank: 2, default: null },
                         facts: [
                             // These are sorted in alphabetical order by slot so "motor" comes before "sw" (steering wheel)
                             {
@@ -1023,9 +1027,9 @@ group("properties.ts", () => {
                 // Now with slots enabled, electric car should have "steering wheel" (inherited), and "Electric Motor" but not "Combustion Engine"
                 // Slots allow partial inheritance of "steering wheel", while "combustion engine" gets overwritten
                 assertEquals(
-                    await graph.read((tx) => getEntryProperty({ entryId: electricCar, propertyId: entryHasPart, tx })),
+                    await graph.read((tx) => getEntryProperty({ entryId: electricCar, propertyKey: entryHasPart, tx })),
                     {
-                        property: { id: entryHasPart, name: "Has Part", rank: 2, default: null },
+                        property: { key: entryHasPart, name: "Has Part", rank: 2, default: null },
                         facts: [
                             {
                                 propertyFactId: pfElectricCarHasMotor,
@@ -1055,7 +1059,7 @@ group("properties.ts", () => {
                         {
                             code: "UpdateProperty",
                             data: {
-                                id: entryHasPart,
+                                key: entryHasPart,
                                 enableSlots: false,
                             },
                         },
@@ -1065,9 +1069,9 @@ group("properties.ts", () => {
                 // Now with slots disabled, electric car won't inherit steering wheel, because having any value for
                 // "has parts" will override ALL inherited values.
                 assertEquals(
-                    await graph.read((tx) => getEntryProperty({ entryId: electricCar, propertyId: entryHasPart, tx })),
+                    await graph.read((tx) => getEntryProperty({ entryId: electricCar, propertyKey: entryHasPart, tx })),
                     {
-                        property: { id: entryHasPart, name: "Has Part", rank: 2, default: null },
+                        property: { key: entryHasPart, name: "Has Part", rank: 2, default: null },
                         facts: [
                             // However, slot values are still returned, since they are set:
                             {
@@ -1095,20 +1099,20 @@ group("properties.ts", () => {
             //
             //   So: A has 15 properties total (10 + 5)
             //       B has 42 properties total (30 + 5 + 6 + 1)
-            const { id: siteId } = await graph.runAsSystem(
-                CreateSite({ name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+            await graph.runAsSystem(
+                CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
             );
             await graph.runAsSystem(ApplyEdits({
                 siteId,
                 edits: [
-                    { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                    { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                     {
                         code: "CreateProperty",
                         data: {
-                            id: entryIsA,
+                            key: entryIsA,
                             name: "Is a",
                             type: PropertyType.RelIsA,
-                            appliesTo: [{ entryType }],
+                            appliesTo: [{ entryTypeKey }],
                             description: "",
                             rank: 99,
                         },
@@ -1116,18 +1120,18 @@ group("properties.ts", () => {
                     // Create entry A and B:
                     {
                         code: "CreateEntry",
-                        data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                        data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                        data: { entryId: B, name: "Entry B", entryTypeKey, key: "b", description: "" },
                     },
                     // B inherits from A:
                     {
                         code: "AddPropertyFact",
                         data: {
                             entryId: B,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: pfBisA,
                             valueExpression: `entry("${A}")`,
                         },
@@ -1141,16 +1145,16 @@ group("properties.ts", () => {
             // Create 5 non-editable Auto values that all entries of that type have:
             const autoPropertyValues: EntryPropertyValueSet[] = [];
             for (let i = 0; i < 5; i++) {
-                const id = VNID();
+                const key = `P${i}`;
                 const args = {
-                    id,
+                    key,
                     name: `Auto Property ${i}`,
                     rank: i,
                     default: `"AutoProp${i} value"`,
                 };
                 edits.push({
                     code: "CreateProperty",
-                    data: { appliesTo: [{ entryType }], description: "", mode: PropertyMode.Auto, ...args },
+                    data: { appliesTo: [{ entryTypeKey }], description: "", mode: PropertyMode.Auto, ...args },
                 });
                 autoPropertyValues.push({
                     property: { ...args },
@@ -1161,20 +1165,20 @@ group("properties.ts", () => {
             // Create 10 property values on entry A, the first 8 of which are inheritable
             const aPropertyValues: EntryPropertyValueSet[] = [];
             for (let i = 0; i < 10; i++) {
-                const id = VNID();
+                const key = `PA${i}`;
                 const propArgs = {
-                    id,
+                    key,
                     name: `Property ${i}`,
                     rank: i,
                 };
                 edits.push({
                     code: "CreateProperty",
-                    data: { ...propArgs, appliesTo: [{ entryType }], description: "", inheritable: i < 8 },
+                    data: { ...propArgs, appliesTo: [{ entryTypeKey }], description: "", inheritable: i < 8 },
                 });
                 const propertyFactId = VNID();
                 edits.push({
                     code: "AddPropertyFact",
-                    data: { entryId: A, propertyId: id, propertyFactId, valueExpression: `"A${i}"` },
+                    data: { entryId: A, propertyKey: key, propertyFactId, valueExpression: `"A${i}"` },
                 });
                 aPropertyValues.push({
                     property: { ...propArgs, default: null },
@@ -1194,7 +1198,7 @@ group("properties.ts", () => {
                 code: "AddPropertyFact",
                 data: {
                     entryId: B,
-                    propertyId: aPropertyValues[6].property.id,
+                    propertyKey: aPropertyValues[6].property.key,
                     propertyFactId: factIdB6,
                     valueExpression: `"B6"`,
                 },
@@ -1204,7 +1208,7 @@ group("properties.ts", () => {
                 code: "AddPropertyFact",
                 data: {
                     entryId: B,
-                    propertyId: aPropertyValues[7].property.id,
+                    propertyKey: aPropertyValues[7].property.key,
                     propertyFactId: factIdB7,
                     valueExpression: `"B7"`,
                 },
@@ -1212,20 +1216,20 @@ group("properties.ts", () => {
             // In addition to those two overwritten properties, B has 28 other properties set:
             const bPropertyValues = [];
             for (let i = 0; i < 28; i++) {
-                const id = VNID();
+                const key = `PB${i}`;
                 const propArgs = {
-                    id,
+                    key,
                     name: `B Property ${i}`,
                     rank: 20 + i,
                 };
                 edits.push({
                     code: "CreateProperty",
-                    data: { ...propArgs, appliesTo: [{ entryType }], description: "" },
+                    data: { ...propArgs, appliesTo: [{ entryTypeKey }], description: "" },
                 });
                 const propertyFactId = VNID();
                 edits.push({
                     code: "AddPropertyFact",
-                    data: { entryId: B, propertyId: id, propertyFactId, valueExpression: `"B${i}"` },
+                    data: { entryId: B, propertyKey: key, propertyFactId, valueExpression: `"B${i}"` },
                 });
                 bPropertyValues.push({
                     property: { ...propArgs, default: null },
@@ -1322,15 +1326,15 @@ group("properties.ts", () => {
                 defaultData.entries.jackPine.id,
                 defaultData.entries.japaneseRedPine.id,
             ];
-            const propertyId = defaultData.schema.properties._propScientificName.id;
-            const result = await graph.read((tx) => getEntriesProperty(tx, entryIds, propertyId));
+            const propertyKey = defaultData.schema.properties.propScientificName.key;
+            const result = await graph.read((tx) => getEntriesProperty(tx, entryIds, propertyKey));
             assertEquals(result.length, 3);
 
             const property = {
-                id: propertyId,
-                name: defaultData.schema.properties._propScientificName.name,
-                rank: defaultData.schema.properties._propScientificName.rank,
-                displayAs: defaultData.schema.properties._propScientificName.displayAs,
+                key: propertyKey,
+                name: defaultData.schema.properties.propScientificName.name,
+                rank: defaultData.schema.properties.propScientificName.rank,
+                displayAs: defaultData.schema.properties.propScientificName.displayAs,
                 default: null,
             };
 

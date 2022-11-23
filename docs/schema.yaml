@@ -2,7 +2,7 @@ entryTypes:
   - id: _ET_TUTORIAL
     name: Tutorial
     description: ''
-    friendlyIdPrefix: t-
+    keyPrefix: t-
     color: cyan
     abbreviation: T
     enabledFeatures:
@@ -10,7 +10,7 @@ entryTypes:
   - id: _ET_GUIDE
     name: Guide
     description: ''
-    friendlyIdPrefix: guide-
+    keyPrefix: guide-
     color: indigo
     abbreviation: G
     enabledFeatures:
@@ -18,7 +18,7 @@ entryTypes:
   - id: _ET_EXPLANATION
     name: Explanation
     description: ''
-    friendlyIdPrefix: ''
+    keyPrefix: ''
     color: orange
     abbreviation: EX
     enabledFeatures:
@@ -26,7 +26,7 @@ entryTypes:
   - id: _ET_REFERENCE
     name: Reference
     description: ''
-    friendlyIdPrefix: ''
+    keyPrefix: ''
     color: red
     abbreviation: R
     enabledFeatures:
@@ -34,14 +34,14 @@ entryTypes:
   - id: _ET_TERM
     name: Term
     description: A definition of a term
-    friendlyIdPrefix: term-
+    keyPrefix: term-
     color: yellow
     abbreviation: T
     enabledFeatures: {}
   - id: _ET_IMAGE
     name: Image
     description: An Image
-    friendlyIdPrefix: img-
+    keyPrefix: img-
     color: ''
     abbreviation: ''
     enabledFeatures:

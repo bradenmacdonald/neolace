@@ -29,11 +29,11 @@ export class Link extends LookupFunctionWithArgs {
         let defaultTextString: string, url: string;
 
         if (hrefValue instanceof EntryValue) {
-            const data = await context.tx.pullOne(Entry, (e) => e.name.friendlyId, { key: hrefValue.id });
-            url = `/entry/${data.friendlyId}`;
+            const data = await context.tx.pullOne(Entry, (e) => e.name.key, { id: hrefValue.id });
+            url = `/entry/${data.key}`;
             defaultTextString = data.name;
         } else if (hrefValue instanceof ImageValue) {
-            const entryData = await context.tx.pullOne(Entry, (e) => e.name, { key: hrefValue.data.entryId });
+            const entryData = await context.tx.pullOne(Entry, (e) => e.name, { id: hrefValue.data.entryId });
             url = hrefValue.data.imageUrl;
             defaultTextString = entryData.name;
         } else if (hrefValue instanceof FileValue) {

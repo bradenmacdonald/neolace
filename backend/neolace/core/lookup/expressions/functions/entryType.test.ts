@@ -14,15 +14,15 @@ group("entryType.ts", () => {
 
     test("Can look up an entry type by VNID", async () => {
         assertEquals(
-            await context.evaluateExpr(`entryType("${defaultData.schema.entryTypes._ETSPECIES.id}")`, undefined),
-            new EntryTypeValue(defaultData.schema.entryTypes._ETSPECIES.id),
+            await context.evaluateExpr(`entryType("${defaultData.schema.entryTypes.ETSPECIES.key}")`, undefined),
+            new EntryTypeValue(defaultData.schema.entryTypes.ETSPECIES.key),
         );
     });
 
     test("Can look up an entry type from an entry", async () => {
         assertEquals(
             await context.evaluateExpr(new EntryTypeFunction(new This()), defaultData.entries.classPinopsida.id),
-            new EntryTypeValue(defaultData.schema.entryTypes._ETCLASS.id),
+            new EntryTypeValue(defaultData.schema.entryTypes.ETCLASS.key),
         );
     });
 
@@ -30,17 +30,17 @@ group("entryType.ts", () => {
         const graph = await getGraph();
 
         // Create another site with three entries:
-        const otherSiteId = VNID(), entryType = VNID(), A = VNID();
+        const otherSiteId = VNID(), entryTypeKey = "ET1", A = VNID();
         await graph.runAsSystem(
-            CreateSite({ id: otherSiteId, name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+            CreateSite({ id: otherSiteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId: otherSiteId,
             edits: [
-                { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                 {
                     code: "CreateEntry",
-                    data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                    data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                 },
             ],
             editSource: UseSystemSource,
@@ -48,10 +48,10 @@ group("entryType.ts", () => {
 
         const otherSiteContext = new TestLookupContext({ siteId: otherSiteId });
 
-        const expr = `entryType("${defaultData.schema.entryTypes._ETSPECIES.id}")`;
+        const expr = `entryType("${defaultData.schema.entryTypes.ETSPECIES.key}")`;
         assertEquals(
             await context.evaluateExpr(expr, undefined),
-            new EntryTypeValue(defaultData.schema.entryTypes._ETSPECIES.id),
+            new EntryTypeValue(defaultData.schema.entryTypes.ETSPECIES.key),
         );
         await assertRejects(
             () => otherSiteContext.evaluateExpr(expr, undefined),

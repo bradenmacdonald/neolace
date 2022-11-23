@@ -101,7 +101,7 @@ group("Group.ts", () => {
                 CreateSite({
                     name: "Test Site 2",
                     domain: "test2.neolace.com",
-                    friendlyId: "test2",
+                    key: "test2",
                     adminUser: defaultData.users.admin.id,
                 }),
             );

@@ -24,7 +24,7 @@ export interface VoidEntryNode extends api.MDT.CustomInlineNode {
  */
 export interface VoidPropNode extends api.MDT.CustomInlineNode {
     type: "custom-void-property";
-    propertyId: api.VNID;
+    propertyKey: string;
     children: [{ type: "text"; text: "" }];
 }
 
@@ -34,7 +34,7 @@ export interface VoidPropNode extends api.MDT.CustomInlineNode {
  */
 export interface VoidEntryTypeNode extends api.MDT.CustomInlineNode {
     type: "custom-void-entry-type";
-    entryTypeId: api.VNID;
+    entryTypeKey: string;
     children: [{ type: "text"; text: "" }];
 }
 
@@ -197,13 +197,13 @@ export function stringValueToSlateDoc(value: string): NeolaceSlateElement[] {
                 } else if (type === "prop") {
                     parts.push({
                         type: "custom-void-property",
-                        propertyId: id,
+                        propertyKey: id,
                         children: [{ type: "text", text: "" }],
                     });
                 } else if (type === "entryType") {
                     parts.push({
                         type: "custom-void-entry-type",
-                        entryTypeId: id,
+                        entryTypeKey: id,
                         children: [{ type: "text", text: "" }],
                     });
                 } else throw new Error("Bad literal ID type");
@@ -353,9 +353,9 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
         } else if (n.type === "custom-void-entry") {
             result += `entry("${(n as VoidEntryNode).entryId}")`;
         } else if (n.type === "custom-void-property") {
-            result += `prop("${(n as VoidPropNode).propertyId}")`;
+            result += `prop("${(n as VoidPropNode).propertyKey}")`;
         } else if (n.type === "custom-void-entry-type") {
-            result += `entryType("${(n as VoidEntryTypeNode).entryTypeId}")`;
+            result += `entryType("${(n as VoidEntryTypeNode).entryTypeKey}")`;
         } else {
             throw new Error(`sdtv: unexpected node in slate doc: ${n.type}`);
         }

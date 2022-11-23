@@ -58,25 +58,25 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
         // including additions, changes, or deletions made by the draft / unsaved edits.
         for (const entry of Object.values(entries)) {
             const nameLower = entry.name.toLowerCase();
-            if (nameLower.includes(searchTermLower) || entry.friendlyId.includes(searchTermLower)) {
+            if (nameLower.includes(searchTermLower) || entry.key.includes(searchTermLower)) {
                 newItems.push({
                     type: "Entry",
                     id: entry.id,
                     name: entry.name,
-                    exactMatch: (nameLower === searchTermLower || entry.friendlyId.toLowerCase() === searchTermLower),
+                    exactMatch: (nameLower === searchTermLower || entry.key.toLowerCase() === searchTermLower),
                 });
             }
         }
         for (const entryType of Object.values(entryTypes)) {
             const nameLower = entryType.name.toLowerCase();
             if (nameLower.includes(searchTermLower)) {
-                newItems.push({ type: "EntryType", id: entryType.id, name: entryType.name, exactMatch: nameLower === searchTermLower });
+                newItems.push({ type: "EntryType", key: entryType.key, name: entryType.name, exactMatch: nameLower === searchTermLower });
             }
         }
         for (const property of Object.values(properties)) {
             const nameLower = property.name.toLowerCase();
             if (nameLower.includes(searchTermLower)) {
-                newItems.push({ type: "Property", id: property.id, name: property.name, exactMatch: nameLower === searchTermLower });
+                newItems.push({ type: "Property", key: property.key, name: property.name, exactMatch: nameLower === searchTermLower });
             }
         }
 
@@ -108,7 +108,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
                 >
                     <ul>
                         {items.slice(0, 8).map((item) => (
-                            <li key={item.id} className="
+                            <li key={"id" in item ? item.id : item.key} className="
                                 p-1 text-sm hover:bg-blue-50 border-b border-b-slate-200
                                 cursor-default
                                 first:rounded-t last:rounded-b last:border-b-0
@@ -120,8 +120,8 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
                                     <strong>
                                         {
                                             item.type === "Entry" ? (refCache.entries[item.id]?.name ?? item.id)
-                                            : item.type === "EntryType" ? (refCache.entryTypes[item.id]?.name ?? item.id)
-                                            : item.type === "Property" ? (refCache.properties[item.id]?.name ?? item.id)
+                                            : item.type === "EntryType" ? (refCache.entryTypes[item.key]?.name ?? item.key)
+                                            : item.type === "Property" ? (refCache.properties[item.key]?.name ?? item.key)
                                             : null
                                         }
                                     </strong>{" "}
@@ -129,8 +129,8 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
                                         {
                                             item.type === "Entry" ? <>
                                                 (
-                                                    {refCache.entryTypes[refCache.entries[item.id]?.entryType.id]?.name},{" "}
-                                                    <span className="font-mono text-xs ml-1">{refCache.entries[item.id]?.friendlyId}</span>
+                                                    {refCache.entryTypes[refCache.entries[item.id]?.entryType.key]?.name},{" "}
+                                                    <span className="font-mono text-xs ml-1">{refCache.entries[item.id]?.key}</span>
                                                 )
                                             </>
                                             : item.type === "EntryType" ? <>(Entry Type)</>
@@ -143,7 +143,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
                                     {
                                         item.type === "Entry" ? <InlineMDT mdt={refCache.entries[item.id]?.description} context={mdtContext.childContextWith({entryId: item.id})}/> :
                                         item.type === "EntryType" ? <>&nbsp;</> :
-                                        item.type === "Property" ? refCache.properties[item.id]?.description
+                                        item.type === "Property" ? refCache.properties[item.key]?.description
                                         : null
                                     }
                                 </div>

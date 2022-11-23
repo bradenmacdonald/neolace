@@ -20,12 +20,12 @@ group("Connection.ts", () => {
     group("low-level tests for Connection model", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
-        test("The friendlyId of a Connection is a site-specific identifier", async () => {
-            // Create connections on two different sites with the same friendlyId:
-            const friendlyId = "foo-cnxn";
-            const c1 = await getConnection({ friendlyId, create: true, plugin: "test", siteId: defaultData.site.id });
+        test("The key of a Connection is a site-specific identifier", async () => {
+            // Create connections on two different sites with the same key:
+            const key = "foo-cnxn";
+            const c1 = await getConnection({ key, create: true, plugin: "test", siteId: defaultData.site.id });
             const c2 = await getConnection({
-                friendlyId,
+                key,
                 create: true,
                 plugin: "test",
                 siteId: defaultData.otherSite.id,
@@ -37,7 +37,7 @@ group("Connection.ts", () => {
         test("Validation enforces that siteNamespace matches the connection's site", async () => {
             const graph = await getGraph();
             const c1 = await getConnection({
-                friendlyId: "test-cnxn",
+                key: "test-cnxn",
                 create: true,
                 plugin: "test",
                 siteId: defaultData.site.id,
@@ -60,16 +60,16 @@ group("Connection.ts", () => {
             );
         });
 
-        test("Entries cannot be created with the same friendlyId on the same site", async () => {
+        test("Entries cannot be created with the same key on the same site", async () => {
             const graph = await getGraph();
             const c1 = await getConnection({
-                friendlyId: "foo",
+                key: "foo",
                 create: true,
                 plugin: "test",
                 siteId: defaultData.site.id,
             });
             const c2 = await getConnection({
-                friendlyId: "bar",
+                key: "bar",
                 create: true,
                 plugin: "test",
                 siteId: defaultData.site.id,
@@ -81,11 +81,11 @@ group("Connection.ts", () => {
                             cypher: C`
                             MATCH (c1:${Connection} {id: ${c1.id}})
                             MATCH (c2:${Connection} {id: ${c2.id}})
-                            SET c2.friendlyId = c1.friendlyId
+                            SET c2.key = c1.key
                             RETURN null
                         `,
                             modifiedNodes: [c2.id],
-                            description: "Forcibly set the friendlyId to conflict with an existing entry.",
+                            description: "Forcibly set the key to conflict with an existing entry.",
                         }),
                     ),
             );

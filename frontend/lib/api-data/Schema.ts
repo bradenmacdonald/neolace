@@ -14,15 +14,15 @@ export function useSchema(
 ): [data: api.SiteSchemaData | undefined, error: api.ApiError | undefined] {
     const { site, siteError } = useSiteData();
 
-    const key = `siteSchema:${site.friendlyId}`;
+    const key = `siteSchema:${site.key}`;
     const { data: baseSchema, error } = useSWR(key, async () => {
         if (siteError) {
             throw new api.ApiError("Site Error", 500);
         }
-        if (!site.friendlyId) {
-            return undefined; // We need to wait for the siteId before we can load the entry
+        if (!site.key) {
+            return undefined; // We need to wait for the siteKey before we can load the entry
         }
-        return await client.getSiteSchema({ siteId: site.friendlyId });
+        return await client.getSiteSchema({ siteKey: site.key });
     }, {
         // refreshInterval: 10 * 60_000,
     });

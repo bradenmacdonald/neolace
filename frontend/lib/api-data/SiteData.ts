@@ -39,7 +39,7 @@ export function useSiteData(options: { fallback?: SiteData } = {}): { site: Site
             domain,
             url: "",
             footerContent: "━━━━━━━━━━━━━━",
-            friendlyId: "",
+            key: "",
             frontendConfig: {},
             isHomeSite: false,
             homeSiteName: "━━━━━━━━━━━━━━",

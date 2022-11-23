@@ -108,7 +108,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 />;
                 if (value.source) {
                     if (value.source.entryId) {
-                        const entryKey = refCache.entries[value.source.entryId]?.friendlyId ?? props.mdtContext.entryId;
+                        const entryKey = refCache.entries[value.source.entryId]?.key ?? props.mdtContext.entryId;
                         moreLink = <Link key="more" href={`/entry/${entryKey}/lookup?e=${encodeURIComponent(value.source.expr)}`}>{moreLink}</Link>;
                     } else {
                         moreLink = <Link key="more" href={`/lookup?e=${encodeURIComponent(value.source.expr)}`}>{moreLink}</Link>;
@@ -155,8 +155,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             return <EntryValue entryId={value.id} mdtContext={props.mdtContext} />;
         }
         case "EntryType": {
-            const entryTypeName = refCache.entryTypes[value.id]?.name ?? value.id;
-            const entryTypeColor = api.getEntryTypeColor(refCache.entryTypes[value.id]);
+            const entryTypeName = refCache.entryTypes[value.key]?.name ?? value.key;
+            const entryTypeColor = api.getEntryTypeColor(refCache.entryTypes[value.key]);
             return <span className="text-sm font-medium font-sans">
                 <span className={`rounded-l-md py-[3px] px-2 bg-gray-200`} style={{color: entryTypeColor.textColor}}>
                     <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
@@ -178,10 +178,10 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             );
         }
         case "Property": {
-            const prop = refCache.properties[value.id];
+            const prop = refCache.properties[value.key];
             if (prop === undefined) {
-                // return <Link href={`/prop/${value.id}`}><a className="text-red-700 font-bold">{value.id}</a></Link>
-                return <span className="text-red-700 font-bold">{value.id}</span>;
+                // return <Link href={`/prop/${value.id}`}><a className="text-red-700 font-bold">{value.key}</a></Link>
+                return <span className="text-red-700 font-bold">{value.key}</span>;
             }
             return <Tooltip tooltipContent={<>
                 <strong>{prop.name}</strong><br/>

@@ -91,12 +91,12 @@ const DraftEntryEditPage: NextPage = function (_props) {
                 title: newDraftTitle.trim() || defaultDraftTitle,
                 description: "",
                 edits: unsavedEdits,
-            }, { siteId: site.friendlyId }).then(
+            }, { siteKey: site.key }).then(
                 (newDraft) => { // If successful:
                     if (applyImmediately) {
-                        client.acceptDraft(newDraft.idNum, {siteId: site.friendlyId}).then(() => {
+                        client.acceptDraft(newDraft.idNum, {siteKey: site.key}).then(() => {
                             // The draft has been accepted immediately:
-                            router.push(`/entry/${entry?.friendlyId}`);
+                            router.push(`/entry/${entry?.key}`);
                         }, (applyError) => {
                             console.error(applyError);
                             alert(
@@ -126,7 +126,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
         } else {
             try {
                 for (const edit of unsavedEdits) {
-                    await client.addEditToDraft(edit, {idNum: draftIdNum, siteId: site.friendlyId});
+                    await client.addEditToDraft(edit, {idNum: draftIdNum, siteKey: site.key});
                 }
                 setIsSaving(false);
                 router.push(`/draft/${draftIdNum}`);
@@ -141,10 +141,10 @@ const DraftEntryEditPage: NextPage = function (_props) {
                 );
             }
         }
-    }, [draftError, draftIdNum, newDraftTitle, defaultDraftTitle, unsavedEdits, site.friendlyId, router, intl, entry?.friendlyId]);
+    }, [draftError, draftIdNum, newDraftTitle, defaultDraftTitle, unsavedEdits, site.key, router, intl, entry?.key]);
 
     const [schema] = useSchema({draftContext});
-    const entryType = entry ? schema?.entryTypes[entry.entryType.id] : undefined;
+    const entryType = entry ? schema?.entryTypes[entry.entryType.key] : undefined;
 
     if (siteError instanceof api.NotFound) {
         return <FourOhFour />;

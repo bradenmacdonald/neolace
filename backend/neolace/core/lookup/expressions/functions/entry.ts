@@ -12,22 +12,20 @@ import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 
 /**
- * entry(ID, friendlyId): get an entry, either by ID or friendlyId
+ * entry(ID, key): get an entry, either by ID or key
  */
 export class EntryFunction extends LookupFunctionOneArg {
     static functionName = "entry";
 
-    /** An expression that specifies the VNID or friendlyId of the entry we want */
+    /** An expression that specifies the VNID or key of the entry we want */
     public get idExpr(): LookupExpression {
         return this.firstArg;
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
         const idString = (await this.idExpr.getValueAs(StringValue, context)).value;
-        // Allow looking up entries by ID (VNID) or friendlyId:
-        const key = isVNID(idString)
-            ? C`{id: ${idString}}`
-            : C`{siteNamespace: ${context.siteId}, friendlyId: ${idString}}`;
+        // Allow looking up entries by ID (VNID) or key:
+        const key = isVNID(idString) ? C`{id: ${idString}}` : C`{siteNamespace: ${context.siteId}, key: ${idString}}`;
 
         // Check if the user has permission to view this entry:
         const permissionsPredicate = await makeCypherCondition(context.subject, corePerm.viewEntry.name, {}, [

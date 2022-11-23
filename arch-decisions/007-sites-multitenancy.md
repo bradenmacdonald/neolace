@@ -30,11 +30,12 @@ There are (at least) three types of identifiers used in Neolace:
    - these VNIDs are permanent
    - these VNIDs are globally unique
    - generally these VNIDs are internal to Neolace, but some are exposed via its APIs. For example, the VNID of Entries is exposed via the API, but not those of Sites, Drafts, or users.
-* `friendlyId` - a friendly ID is a string ID like `home` that is used as a secondary key for some entities such as Entries.
-   - friendlyIds can sometimes be changed (e.g. the friendlyId of Entries can be changed)
-   - friendlyIds are site-specific (so two different sites on the same realm can have different entries with the same friendlyid)
+* `key` - a "key" is a string ID like `home` that is used to identify Entries, Entry Types, Properties, and other entities.
+   - keys are site-specific (so two different sites on the same realm can have different entries with the same key)
+   - keys can sometimes be changed (e.g. the key of Entries can be changed)
+   - For users, the key is called `username`.
 * `idNum` - a numeric identifier used for some entities like Drafts
    - idNums increment sequentially (1, 2, 3, 4...) and are permanent (cannot be changed)
    - idNums are site-specific
 
-Because of how Neo4j unique constraints work, any node type that uses a site-specific `friendlyId` or `idNum` must have a property called `siteNamespace` which is set to the VNID of the associated Site. (Even though that makes the data less normalized, as the Site can be determined through relationships.) That way, a unique index can be declared on both fields. When looking up such a node, it's necessary to specify both the `siteNamespace` property and the `friendlyId` or `idNum` values, to ensure that the unique index is used.
+Because of how Neo4j unique constraints work, any node type that uses a site-specific `key` or `idNum` must have a property called `siteNamespace` which is set to the VNID of the associated Site. (Even though that makes the data less normalized, as the Site can be determined through relationships.) That way, a unique index can be declared on both fields. When looking up such a node, it's necessary to specify both the `siteNamespace` property and the `key` or `idNum` values, to ensure that the unique index is used.

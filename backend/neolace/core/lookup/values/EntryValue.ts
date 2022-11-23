@@ -51,15 +51,15 @@ export class EntryValue extends ConcreteValue implements IHasLiteralExpression {
             return new StringValue(this.id);
         } else if (attrName === "name") {
             return new StringValue(
-                (await context.tx.pullOne(Entry, (e) => e.name, { key: this.id })).name,
+                (await context.tx.pullOne(Entry, (e) => e.name, { id: this.id })).name,
             );
         } else if (attrName === "description") {
             return new InlineMarkdownStringValue(
-                (await context.tx.pullOne(Entry, (e) => e.description, { key: this.id })).description,
+                (await context.tx.pullOne(Entry, (e) => e.description, { id: this.id })).description,
             );
-        } else if (attrName === "friendlyId") {
+        } else if (attrName === "key") {
             return new StringValue(
-                (await context.tx.pullOne(Entry, (e) => e.friendlyId, { key: this.id })).friendlyId,
+                (await context.tx.pullOne(Entry, (e) => e.key, { id: this.id })).key,
             );
         }
         return undefined;

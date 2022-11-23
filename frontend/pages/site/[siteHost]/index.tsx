@@ -69,7 +69,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     const site = await getSiteData(context.params.siteHost);
     if (site === null) return { notFound: true };
 
-    const homePage = await client.getSiteHomePage({ siteId: site.friendlyId });
+    const homePage = await client.getSiteHomePage({ siteKey: site.key });
 
     return {
         props: {

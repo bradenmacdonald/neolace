@@ -33,7 +33,7 @@ function condenseGraphData(currentData: G6RawGraphData, graph: GraphType) {
     if (focusNode === undefined) {
         return graph; // Error - there are no nodes at all.
     }
-    const condensedGraph = transformCondenseGraph(graph, focusNode.entryType);
+    const condensedGraph = transformCondenseGraph(graph, focusNode.entryTypeKey);
     return condensedGraph;
 }
 

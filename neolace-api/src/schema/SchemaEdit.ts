@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { array, number, Schema, string, Type, vnidString } from "../api-schemas.ts";
+import { array, number, Schema, string, Type } from "../api-schemas.ts";
 import { boolean, SchemaValidatorFunction } from "../deps/computed-types.ts";
 import { Edit, EditChangeType, EditType } from "../edit/Edit.ts";
 import { EntryTypeColor, PropertyMode, PropertyType, SiteSchemaData } from "./SiteSchemaData.ts";
@@ -23,22 +23,23 @@ export const CreateEntryType = SchemaEditType({
     code: "CreateEntryType",
     dataSchema: Schema({
         name: string,
-        id: vnidString,
+        /** The new key of this EntryType */
+        key: string,
     }),
     apply: (currentSchema, data) => {
-        if (data.id in currentSchema.entryTypes) {
-            throw new Error(`ID ${data.id} is already in this schema.`);
+        if (data.key in currentSchema.entryTypes) {
+            throw new Error(`ID ${data.key} is already in this schema.`);
         }
 
         const newSchema: SiteSchemaData = {
             ...currentSchema,
             entryTypes: {
                 ...currentSchema.entryTypes,
-                [data.id]: {
-                    id: data.id,
+                [data.key]: {
+                    key: data.key,
                     name: data.name,
                     description: "",
-                    friendlyIdPrefix: "",
+                    keyPrefix: "",
                     enabledFeatures: {},
                     color: EntryTypeColor.Default,
                     abbreviation: "",
@@ -48,17 +49,17 @@ export const CreateEntryType = SchemaEditType({
 
         return Object.freeze(newSchema);
     },
-    describe: (data) => `Created \`EntryType ${data.id}\``, // TODO: get withId to accept a second "fallback" parameter so we can pass in "Name" and display that even before the object with this ID is saved into the database.
+    describe: (data) => `Created EntryType ${data.key} ("${data.name}")`,
 });
 
 export const UpdateEntryType = SchemaEditType({
     changeType: EditChangeType.Schema,
     code: "UpdateEntryType",
     dataSchema: Schema({
-        id: vnidString,
+        key: string,
         name: string.strictOptional(),
         description: string.strictOptional(),
-        friendlyIdPrefix: string.strictOptional(),
+        keyPrefix: string.strictOptional(),
         color: Schema.enum(EntryTypeColor).strictOptional(),
         colorCustom: string.strictOptional(),
         abbreviation: string.min(0).max(2).strictOptional(),
@@ -68,26 +69,26 @@ export const UpdateEntryType = SchemaEditType({
             ...currentSchema,
             entryTypes: { ...currentSchema.entryTypes },
         };
-        const originalEntryType = newSchema.entryTypes[data.id];
+        const originalEntryType = newSchema.entryTypes[data.key];
         if (originalEntryType === undefined) {
-            throw new Error(`EntryType with ID ${data.id} not found.`);
+            throw new Error(`EntryType with key ${data.key} not found.`);
         }
         const newEntryType = { ...originalEntryType };
 
-        for (const key of ["name", "description", "friendlyIdPrefix", "color", "abbreviation"] as const) {
+        for (const key of ["name", "description", "keyPrefix", "color", "abbreviation"] as const) {
             if (data[key] !== undefined) {
                 newEntryType[key] = (data as any)[key];
             }
         }
 
-        newSchema.entryTypes[data.id] = newEntryType;
+        newSchema.entryTypes[data.key] = newEntryType;
         return Object.freeze(newSchema);
     },
-    describe: (data) => `Updated \`EntryType ${data.id}\``,
+    describe: (data) => `Updated EntryType ${data.key}`,
     consolidate: (thisEdit, earlierEdit) => {
         if (
             earlierEdit.code === "UpdateEntryType" &&
-            thisEdit.data.id === earlierEdit.data.id
+            thisEdit.data.key === earlierEdit.data.key
         ) {
             return {
                 code: "UpdateEntryType",
@@ -95,15 +96,15 @@ export const UpdateEntryType = SchemaEditType({
             };
         } else if (
             earlierEdit.code === CreateEntryType.code &&
-            thisEdit.data.id === earlierEdit.data.id &&
+            thisEdit.data.key === earlierEdit.data.key &&
             thisEdit.data.name !== undefined
         ) {
             // If an entry type was created and then later its name was changed, put the final name into the CreateEntryType edit.
-            const { name, id, ...otherUpdates } = thisEdit.data;
-            const newCreateEdit = { code: CreateEntryType.code, data: { id: earlierEdit.data.id, name } };
+            const { name, key, ...otherUpdates } = thisEdit.data;
+            const newCreateEdit = { code: CreateEntryType.code, data: { key: earlierEdit.data.key, name } };
             if (Object.keys(otherUpdates).length > 0) {
                 // Move the change to "name" into the CreateEntryType edit, and keep the other changes in this edit:
-                return [newCreateEdit, { code: "UpdateEntryType", data: { id, ...otherUpdates } }];
+                return [newCreateEdit, { code: "UpdateEntryType", data: { key, ...otherUpdates } }];
             } else {
                 return newCreateEdit; // We can delete this UpdateEntryType since it only changed the name, which is now reflected in the CreateEntryType
             }
@@ -119,7 +120,7 @@ export const UpdateEntryTypeFeature = SchemaEditType({
     changeType: EditChangeType.Schema,
     code: "UpdateEntryTypeFeature",
     dataSchema: Schema({
-        entryTypeId: vnidString,
+        entryTypeKey: string,
         feature: Schema.either(
             {
                 featureType: Schema.either(
@@ -159,9 +160,9 @@ export const UpdateEntryTypeFeature = SchemaEditType({
             ...currentSchema,
             entryTypes: { ...currentSchema.entryTypes },
         };
-        const originalEntryType = newSchema.entryTypes[data.entryTypeId];
+        const originalEntryType = newSchema.entryTypes[data.entryTypeKey];
         if (originalEntryType === undefined) {
-            throw new Error(`EntryType with ID ${data.entryTypeId} not found.`);
+            throw new Error(`EntryType with ID ${data.entryTypeKey} not found.`);
         }
         const newEntryType = { ...originalEntryType };
         newEntryType.enabledFeatures = { ...newEntryType.enabledFeatures }; // Shallow copy the object so we can modify it
@@ -173,14 +174,14 @@ export const UpdateEntryTypeFeature = SchemaEditType({
             delete newEntryType.enabledFeatures[data.feature.featureType];
         }
 
-        newSchema.entryTypes[data.entryTypeId] = newEntryType;
+        newSchema.entryTypes[data.entryTypeKey] = newEntryType;
         return Object.freeze(newSchema);
     },
-    describe: (data) => `Updated ${data.feature.featureType} feature of \`EntryType ${data.entryTypeId}\``,
+    describe: (data) => `Updated ${data.feature.featureType} feature of \`EntryType ${data.entryTypeKey}\``,
     consolidate: (thisEdit, earlierEdit) => {
         if (
             earlierEdit.code === "UpdateEntryTypeFeature" &&
-            thisEdit.data.entryTypeId === earlierEdit.data.entryTypeId &&
+            thisEdit.data.entryTypeKey === earlierEdit.data.entryTypeKey &&
             thisEdit.data.feature.featureType === earlierEdit.data.feature.featureType
         ) {
             // The new edit for the same feature always overrides the old, as it's always a complete specification
@@ -195,31 +196,31 @@ export const DeleteEntryType = SchemaEditType({
     changeType: EditChangeType.Schema,
     code: "DeleteEntryType",
     dataSchema: Schema({
-        entryTypeId: vnidString,
+        entryTypeKey: string,
     }),
     apply: (currentSchema, data) => {
         const newSchema: SiteSchemaData = {
             ...currentSchema,
             entryTypes: { ...currentSchema.entryTypes },
         };
-        delete newSchema.entryTypes[data.entryTypeId];
+        delete newSchema.entryTypes[data.entryTypeKey];
 
         return Object.freeze(newSchema);
     },
-    describe: (data) => `Deleted \`EntryType ${data.entryTypeId}\``,
+    describe: (data) => `Deleted \`EntryType ${data.entryTypeKey}\``,
 });
 
 export const UpdateProperty = SchemaEditType({
     changeType: EditChangeType.Schema,
     code: "UpdateProperty",
     dataSchema: Schema({
-        id: vnidString,
+        key: string,
         // For these properties, use 'undefined' to mean 'no change':
         name: string.strictOptional(),
         description: string.strictOptional(),
-        appliesTo: array.of(Schema({ entryType: vnidString })).strictOptional(),
+        appliesTo: array.of(Schema({ entryTypeKey: string })).strictOptional(),
         mode: Schema.enum(PropertyMode).strictOptional(),
-        isA: array.of(vnidString).strictOptional(),
+        isA: array.of(string).strictOptional(),
         rank: number.strictOptional(),
         enableSlots: boolean.strictOptional(),
         // For these properties, use 'undefined' to mean 'no change', and an empty string to mean "set to no value"
@@ -231,17 +232,17 @@ export const UpdateProperty = SchemaEditType({
         editNote: string.strictOptional(),
     }),
     apply: (currentSchema, data) => {
-        const currentValues = currentSchema.properties[data.id];
+        const currentValues = currentSchema.properties[data.key];
         if (currentValues === undefined) {
-            throw new Error(`Property with ID ${data.id} not found.`);
+            throw new Error(`Property with ID ${data.key} not found.`);
         }
 
         const newProp = { ...currentValues };
 
         if (data.appliesTo !== undefined) {
-            data.appliesTo.forEach(({ entryType }) => {
-                if (currentSchema.entryTypes[entryType] === undefined) {
-                    throw new Error(`No such entry type with ID ${entryType}`);
+            data.appliesTo.forEach(({ entryTypeKey }) => {
+                if (currentSchema.entryTypes[entryTypeKey] === undefined) {
+                    throw new Error(`No such entry type with key ${entryTypeKey}`);
                 }
             });
             newProp.appliesTo = data.appliesTo;
@@ -274,13 +275,13 @@ export const UpdateProperty = SchemaEditType({
 
         const newSchema: SiteSchemaData = {
             ...currentSchema,
-            properties: { ...currentSchema.properties, [data.id]: newProp },
+            properties: { ...currentSchema.properties, [data.key]: newProp },
         };
         return Object.freeze(newSchema);
     },
-    describe: (data) => `Updated \`Property ${data.id}\``,
+    describe: (data) => `Updated Property ${data.key}`,
     consolidate: (thisEdit, earlierEdit) => {
-        if (earlierEdit.code === thisEdit.code && earlierEdit.data.id === thisEdit.data.id) {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.key === thisEdit.data.key) {
             return {
                 code: thisEdit.code,
                 data: { ...earlierEdit.data, ...thisEdit.data },
@@ -295,13 +296,13 @@ export const CreateProperty = SchemaEditType({
     code: "CreateProperty",
     // Schema.merge() isn't working so this is largely duplicated from UpdateProperty :/
     dataSchema: Schema({
-        id: vnidString,
+        key: string,
         name: string,
         type: Schema.enum(PropertyType).strictOptional(),
         description: string.strictOptional(),
-        appliesTo: array.of(Schema({ entryType: vnidString })).strictOptional(),
+        appliesTo: array.of(Schema({ entryTypeKey: string })).strictOptional(),
         mode: Schema.enum(PropertyMode).strictOptional(),
-        isA: array.of(vnidString).strictOptional(),
+        isA: array.of(string).strictOptional(),
         rank: number.strictOptional(),
         enableSlots: boolean.strictOptional(),
         // For these properties, use 'undefined' to mean 'use default', and an empty string to mean "set to no value"
@@ -317,8 +318,8 @@ export const CreateProperty = SchemaEditType({
             ...currentSchema,
             properties: {
                 ...currentSchema.properties,
-                [data.id]: {
-                    id: data.id,
+                [data.key]: {
+                    key: data.key,
                     appliesTo: [],
                     description: "",
                     name: "New Property",
@@ -333,9 +334,9 @@ export const CreateProperty = SchemaEditType({
         };
         return UpdateProperty.apply(newSchema, data);
     },
-    describe: (data) => `Created \`Property ${data.id}\``,
+    describe: (data) => `Created Property ${data.key}`,
     consolidate: (thisEdit, earlierEdit) => {
-        if (earlierEdit.code === thisEdit.code && earlierEdit.data.id === thisEdit.data.id) {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.key === thisEdit.data.key) {
             return {
                 code: thisEdit.code,
                 data: { ...earlierEdit.data, ...thisEdit.data },
@@ -349,15 +350,15 @@ export const DeleteProperty = SchemaEditType({
     changeType: EditChangeType.Schema,
     code: "DeleteProperty",
     dataSchema: Schema({
-        id: vnidString,
+        key: string,
     }),
     apply: (currentSchema, data) => {
         const newProperties = { ...currentSchema.properties };
-        delete newProperties[data.id];
+        delete newProperties[data.key];
         const newSchema: SiteSchemaData = { ...currentSchema, properties: newProperties };
         return UpdateProperty.apply(newSchema, data);
     },
-    describe: (data) => `Deleted \`Property ${data.id}\``,
+    describe: (data) => `Deleted Property ${data.key}`,
 });
 
 export const _allSchemaEditTypes = {

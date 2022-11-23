@@ -16,12 +16,12 @@ const SiteSearchPage: React.FunctionComponent<PluginPageProps> = function (props
     const [connectionError, setConnectionError] = React.useState<api.ApiError | undefined>();
 
     React.useEffect(() => {
-        if (!site.friendlyId) {
+        if (!site.key) {
             return; // This effect needs to wait until we have the site data.
         }
         // Get the search connection:
         let cancelled = false;
-        client.getSearchConnection({ siteId: site.friendlyId }).then((sc) => {
+        client.getSearchConnection({ siteKey: site.key }).then((sc) => {
             if (!cancelled) {
                 setConnectionData(sc);
             }
@@ -32,7 +32,7 @@ const SiteSearchPage: React.FunctionComponent<PluginPageProps> = function (props
         return function cleanup() {
             cancelled = true;
         };
-    }, [site.friendlyId]);
+    }, [site.key]);
 
     const [adapter, setAdapter] = React.useState<TypesenseInstantSearchAdapter | undefined>();
     React.useEffect(() => {
@@ -54,7 +54,7 @@ const SiteSearchPage: React.FunctionComponent<PluginPageProps> = function (props
                         ],
                     },
                     additionalSearchParameters: {
-                        query_by: "name,description,friendlyId,articleText",
+                        query_by: "name,description,key,articleText",
                     },
                 }),
             );

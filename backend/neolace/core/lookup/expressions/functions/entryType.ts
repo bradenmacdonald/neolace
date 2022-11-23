@@ -1,7 +1,6 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
-import { Site } from "neolace/core/Site.ts";
 
 import { LookupExpression } from "../base.ts";
 import { EntryTypeValue, EntryValue, LookupValue, StringValue } from "../../values.ts";
@@ -12,7 +11,7 @@ import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 
 /**
- * entryType(ID or entry): get an entry type, either by ID or from an entry
+ * entryType(key or entry): get an entry type, either by key or from an entry
  */
 export class EntryTypeFunction extends LookupFunctionOneArg {
     static functionName = "entryType";
@@ -34,8 +33,8 @@ export class EntryTypeFunction extends LookupFunctionOneArg {
             try {
                 const data = await context.tx.queryOne(C`
                     MATCH (entry:${Entry} {id: ${arg.id}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
-                `.RETURN({ "entryType.id": Field.VNID }));
-                return new EntryTypeValue(data["entryType.id"]);
+                `.RETURN({ "entryType.key": Field.String }));
+                return new EntryTypeValue(data["entryType.key"]);
             } catch (err) {
                 if (err instanceof EmptyResultError) {
                     throw new LookupEvaluationError("Entry not found.");
@@ -51,10 +50,10 @@ export class EntryTypeFunction extends LookupFunctionOneArg {
             ]);
             try {
                 const data = await context.tx.queryOne(C`
-                    MATCH (entryType:${EntryType} {id: ${arg.value}})-[:${EntryType.rel.FOR_SITE}]->(site:${Site} {id: ${context.siteId}})
+                    MATCH (entryType:${EntryType} {siteNamespace: ${context.siteId}, key: ${arg.value}})
                     WHERE ${permissionsPredicate}
-                `.RETURN({ "entryType.id": Field.VNID }));
-                return new EntryTypeValue(data["entryType.id"]);
+                `.RETURN({ "entryType.key": Field.String }));
+                return new EntryTypeValue(data["entryType.key"]);
             } catch (err) {
                 if (err instanceof EmptyResultError) {
                     throw new LookupEvaluationError("Entry Type not found.");

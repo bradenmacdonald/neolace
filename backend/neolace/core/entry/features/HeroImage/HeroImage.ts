@@ -31,15 +31,15 @@ export const HeroImageFeature = EntryTypeFeature({
             MATCH (et:${EntryType})-[:FOR_SITE]->(:${Site} {id: ${siteId}}),
                   (et)-[:${EntryType.rel.HAS_FEATURE}]->(config:${HeroImageFeatureEnabled})
             WITH et, config
-            RETURN et.id AS entryTypeId, config.lookupExpression AS lookupExpression
-        `.givesShape({ entryTypeId: Field.VNID, lookupExpression: Field.String }));
+            RETURN et.key AS entryTypeKey, config.lookupExpression AS lookupExpression
+        `.givesShape({ entryTypeKey: Field.String, lookupExpression: Field.String }));
 
         configuredOnThisSite.forEach((config) => {
-            const entryTypeId: VNID = config.entryTypeId;
-            if (!(entryTypeId in mutableSchema.entryTypes)) {
+            const entryTypeKey = config.entryTypeKey;
+            if (!(entryTypeKey in mutableSchema.entryTypes)) {
                 throw new Error("EntryType not in schema");
             }
-            mutableSchema.entryTypes[entryTypeId].enabledFeatures[featureType] = {
+            mutableSchema.entryTypes[entryTypeKey].enabledFeatures[featureType] = {
                 lookupExpression: config.lookupExpression,
             };
         });
@@ -114,7 +114,7 @@ export const HeroImageFeature = EntryTypeFeature({
         }
 
         if (caption === "") {
-            caption = (await tx.pullOne(Entry, (e) => e.name, { key: imageEntryId })).name;
+            caption = (await tx.pullOne(Entry, (e) => e.name, { id: imageEntryId })).name;
         }
 
         const imageData = await getEntryFeatureData(imageEntryId, { featureType: "Image", tx });

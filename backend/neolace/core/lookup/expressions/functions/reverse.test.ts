@@ -25,7 +25,7 @@ group("reverse.ts", () => {
     const context = new TestLookupContext({ siteId });
 
     // Literal expressions referencing some properties in the default PlantDB data set:
-    const partIsAPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties._partIsAPart.id));
+    const partIsAPart = new LiteralExpression(new PropertyValue(defaultData.schema.properties.partIsAPart.key));
 
     test(`Can reverse a simple IS A relationship property value`, async () => {
         const expression = new ReverseProperty(new This(), { prop: partIsAPart });
@@ -61,7 +61,7 @@ group("reverse.ts - permissions", () => {
 
     // Literal expressions referencing some properties in the default PlantDB data set:
     const genusPinus = new LiteralExpression(new EntryValue(defaultData.entries.genusPinus.id));
-    const parentGenus = new LiteralExpression(new PropertyValue(defaultData.schema.properties._parentGenus.id));
+    const parentGenus = new LiteralExpression(new PropertyValue(defaultData.schema.properties.parentGenus.key));
 
     test(`It enforces permissions`, async () => {
         // First make the PlantDB site private:
@@ -97,7 +97,7 @@ group("reverse.ts - permissions", () => {
                         corePerm.viewSchema.name,
                         corePerm.viewEntry.name,
                     ]),
-                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETGENUS.id]), [
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes.ETGENUS.key]), [
                         corePerm.viewEntryProperty.name,
                     ]),
                 );
@@ -113,11 +113,11 @@ group("reverse.ts - permissions", () => {
                         corePerm.viewSite.name,
                         corePerm.viewSchema.name,
                     ]),
-                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETSPECIES.id]), [
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes.ETSPECIES.key]), [
                         corePerm.viewEntry.name,
                         corePerm.viewEntryProperty.name,
                     ]),
-                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes._ETGENUS.id]), [
+                    new PermissionGrant(new EntryTypesCondition([defaultData.schema.entryTypes.ETGENUS.key]), [
                         corePerm.viewEntry.name,
                     ]),
                 );

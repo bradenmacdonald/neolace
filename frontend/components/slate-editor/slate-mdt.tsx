@@ -30,15 +30,15 @@ const useVoidSelectionStatus = () => {
  * property VNID in the actual markdown/lookup code, but display it to the user as a nice friendly property name.
  */
 export const PropertyVoid = (
-    { propertyId, attributes, children }: {
-        propertyId: api.VNID;
+    { propertyKey, attributes, children }: {
+        propertyKey: string;
         attributes: Record<string, unknown>;
         children: React.ReactNode;
     },
 ) => {
     const [selected] = useVoidSelectionStatus();
     const [schema] = useSchema();
-    const propertyName = schema ? (propertyId ? schema.properties[propertyId]?.name : `Unknown property (${propertyId})`) : "Loading...";
+    const propertyName = schema ? (propertyKey ? schema.properties[propertyKey]?.name : `Unknown property (${propertyKey})`) : "Loading...";
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
         <span className={`rounded-l-md py-[3px] px-2 bg-gray-200 text-green-700 ${selected ? '!bg-sky-300 !text-gray-700' : ''}`}>
             <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="diamond-fill"/></span>
@@ -53,16 +53,16 @@ export const PropertyVoid = (
  * non-editable element that represents an entry type, and displays it in a human-readable way.
  */
 export const EntryTypeVoid = (
-    { entryTypeId, attributes, children }: {
-        entryTypeId: api.VNID;
+    { entryTypeKey, attributes, children }: {
+        entryTypeKey: string;
         attributes: Record<string, unknown>;
         children: React.ReactNode;
     },
 ) => {
     const [selected] = useVoidSelectionStatus();
     const [schema] = useSchema();
-    const entryTypeName = schema ? (schema.entryTypes[entryTypeId]?.name ?? `Unknown entry type (${entryTypeId})`) : "Loading...";
-    const entryTypeColor = api.getEntryTypeColor(schema?.entryTypes[entryTypeId]);
+    const entryTypeName = schema ? (schema.entryTypes[entryTypeKey]?.name ?? `Unknown entry type (${entryTypeKey})`) : "Loading...";
+    const entryTypeColor = api.getEntryTypeColor(schema?.entryTypes[entryTypeKey]);
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
         <span className={`rounded-l-md py-[3px] px-2 bg-gray-200 ${selected ? '!bg-sky-300' : ''}`} style={{color: entryTypeColor.textColor}}>
             <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
@@ -87,7 +87,7 @@ export const EntryVoid = (
     const [selected, exclusivelySelected] = useVoidSelectionStatus();
     const [entryData, referenceCache, _error] = useEntrySummary(entryId);
     const entryName = entryData?.name ?? `Entry ${entryId}`;
-    const entryTypeData = referenceCache?.entryTypes[entryData?.entryType.id ?? ""];
+    const entryTypeData = referenceCache?.entryTypes[entryData?.entryType.key ?? ""];
     const color = api.getEntryTypeColor(entryTypeData);
     const abbrev = entryTypeData?.abbreviation ?? "";
     return (
@@ -196,13 +196,13 @@ export function renderElement({ element, children, attributes }: RenderElementPr
             );
         case "custom-void-property":
             return (
-                <PropertyVoid propertyId={(element as VoidPropNode).propertyId} attributes={attributes}>
+                <PropertyVoid propertyKey={(element as VoidPropNode).propertyKey} attributes={attributes}>
                     {children}
                 </PropertyVoid>
             );
         case "custom-void-entry-type":
             return (
-                <EntryTypeVoid entryTypeId={(element as VoidEntryTypeNode).entryTypeId} attributes={attributes}>
+                <EntryTypeVoid entryTypeKey={(element as VoidEntryTypeNode).entryTypeKey} attributes={attributes}>
                     {children}
                 </EntryTypeVoid>
             );

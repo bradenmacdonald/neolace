@@ -24,7 +24,7 @@ export class SiteFindByDomainResource extends NeolaceHttpResource {
         const graph = await getGraph();
         const site = await graph.pullOne(
             Site,
-            (s) => s.name.description.domain.url().footerContent.friendlyId.frontendConfig,
+            (s) => s.name.description.domain.url().footerContent.key.frontendConfig,
             { with: { domain } },
         ).catch((err) => {
             if (err instanceof EmptyResultError) {
@@ -49,7 +49,7 @@ export class SiteFindByDomainResource extends NeolaceHttpResource {
         // Response:
         return {
             ...site,
-            isHomeSite: site.friendlyId === homeSite.friendlyId,
+            isHomeSite: site.key === homeSite.key,
             homeSiteName: homeSite.name,
             homeSiteUrl: homeSite.url,
         };

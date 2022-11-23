@@ -20,15 +20,15 @@ export function usePermissions(context?: {
     const [draft] = useDraft(context);
 
     // Get the user's permissions, in the given context:
-    const key = `user-permissions:${site.friendlyId}:${user.username}:${context?.entryId ?? ""}:${draft?.idNum ?? ""}`;
+    const key = `user-permissions:${site.key}:${user.username}:${context?.entryId ?? ""}:${draft?.idNum ?? ""}`;
     const { data, error } = useSWR(key, async () => {
         if (siteError) {
             throw new api.ApiError("Site Error", 500);
         }
-        if (!site.friendlyId) {
-            return undefined; // We need to wait for the siteId before we can load the entry
+        if (!site.key) {
+            return undefined; // We need to wait for the siteKey before we can load the entry
         }
-        return client.getMyPermissions({ entryId: context?.entryId, draftIdNum: draft?.idNum, siteId: site.friendlyId });
+        return client.getMyPermissions({ entryId: context?.entryId, draftIdNum: draft?.idNum, siteKey: site.key });
     }, {
         // refreshInterval: 10 * 60_000,
     });

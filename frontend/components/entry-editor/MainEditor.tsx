@@ -31,23 +31,23 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
         addUnsavedEdit({ code: api.SetEntryName.code, data: { entryId: entry.id, name } });
     }, [entry, addUnsavedEdit]);
 
-    const updateEntryType = React.useCallback((type: string) => {
+    const updateEntryType = React.useCallback((entryTypeKey: string) => {
         if (!entry) return;
         addUnsavedEdit({
             code: api.CreateEntry.code,
             data: {
                 entryId: entry.id,
-                type: api.VNID(type),
+                entryTypeKey,
                 name: entry.name,
                 description: entry.description ?? "",
-                friendlyId: entry.friendlyId,
+                key: entry.key,
             },
         });
     }, [entry, addUnsavedEdit]);
 
-    const updateEntryFriendlyId = React.useCallback((friendlyId: string) => {
+    const updateEntryKey = React.useCallback((key: string) => {
         if (!entry) return;
-        addUnsavedEdit({ code: api.SetEntryFriendlyId.code, data: { entryId: entry.id, friendlyId } });
+        addUnsavedEdit({ code: api.SetEntryKey.code, data: { entryId: entry.id, key } });
     }, [entry, addUnsavedEdit]);
 
     const updateEntryDescription = React.useCallback((description: string) => {
@@ -56,25 +56,25 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
     }, [entry, addUnsavedEdit]);
 
     // Show a modal (popup) that allows the user to create a new entry type
-    const [showingEditEntryTypeModalWithVNID, editEntryTypeWithVNID] = React.useState(undefined as api.VNID|undefined);
-    const showNewEntryTypeModal = React.useCallback(() => { editEntryTypeWithVNID(api.VNID()); }, []);
-    const showEditEntryTypeModal = React.useCallback(() => { editEntryTypeWithVNID(entry?.entryType.id); }, [entry?.entryType.id]);
-    const cancelEditEntryTypeModal = React.useCallback(() => { editEntryTypeWithVNID(undefined); }, []);
+    const [showingEditEntryTypeModalWithKey, editEntryTypeWithKey] = React.useState(undefined as string|undefined);
+    const showNewEntryTypeModal = React.useCallback(() => { editEntryTypeWithKey(api.VNID().slice(1)); }, []); // TODO: Make this editable
+    const showEditEntryTypeModal = React.useCallback(() => { editEntryTypeWithKey(entry?.entryType.key); }, [entry?.entryType.key]);
+    const cancelEditEntryTypeModal = React.useCallback(() => { editEntryTypeWithKey(undefined); }, []);
 
     const doneEditingEntryType = React.useCallback((edits: api.AnySchemaEdit[]) => {
         // Create the new entry type, by adding the edits to unsavedEdits:
         for (const edit of edits) { addUnsavedEdit(edit); }
-        editEntryTypeWithVNID(
-            (editedEntryTypeId) => {
+        editEntryTypeWithKey(
+            (editedEntryTypeKey) => {
                 // Select the new entry type in the "Edit Entry" form:
-                if (editedEntryTypeId && entry?.entryType.id !== editedEntryTypeId) { updateEntryType(editedEntryTypeId); }
+                if (editedEntryTypeKey && entry?.entryType.key !== editedEntryTypeKey) { updateEntryType(editedEntryTypeKey); }
                 // Close the modal:
                 return undefined;
             }
         );
-    }, [addUnsavedEdit, entry?.entryType.id, updateEntryType]);
+    }, [addUnsavedEdit, entry?.entryType.key, updateEntryType]);
 
-    const entryType = entry ? schema?.entryTypes[entry?.entryType.id] : undefined;
+    const entryType = entry ? schema?.entryTypes[entry?.entryType.key] : undefined;
 
     if (!schema || !entry) {
         return <Spinner />;
@@ -118,7 +118,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
                 )}}
                 isRequired={isNewEntry}
                 afterInput={
-                    entry?.entryType.id ? (
+                    entry?.entryType.key ? (
                         /* A button that allows the user to make edits to this entry type (TODO: disable if they don't have permission) */
                         <ToolbarButton
                             icon="three-dots"
@@ -129,7 +129,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
                 }
             >
                 <SelectEntryType
-                    value={entry?.entryType.id}
+                    value={entry?.entryType.key}
                     onChange={updateEntryType}
                     readOnly={!isNewEntry}
                     extraOption={defineMessage({ id: "f0R45x", defaultMessage: "+ Add a new entry type..." })}
@@ -139,19 +139,19 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
 
             {/* Friendly ID */}
             <AutoControl
-                value={entry?.friendlyId ?? ""}
-                onChangeFinished={updateEntryFriendlyId}
+                value={entry?.key ?? ""}
+                onChangeFinished={updateEntryKey}
                 id="id"
                 label={defineMessage({ defaultMessage: "ID",  id: 'qlcuNQ' })}
                 hint={{custom: (intl.formatMessage({
                     id: '6hE8SS',
                     defaultMessage: "Shown in the URL.",
                 }) + " " +
-                    (entryType?.friendlyIdPrefix
+                    (entryType?.keyPrefix
                         ? intl.formatMessage({
                             id: 'DYGIhv',
                             defaultMessage: 'Must start with "{prefix}".',
-                        }, { prefix: entryType.friendlyIdPrefix })
+                        }, { prefix: entryType.keyPrefix })
                         : "") +
                     " " +
                     intl.formatMessage({
@@ -179,9 +179,9 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
         </Form>
 
         {
-            showingEditEntryTypeModalWithVNID ?
+            showingEditEntryTypeModalWithKey ?
                 <EntryTypeModal
-                    entryTypeId={showingEditEntryTypeModalWithVNID}
+                    entryTypeKey={showingEditEntryTypeModalWithKey}
                     onSaveChanges={doneEditingEntryType}
                     onCancel={cancelEditEntryTypeModal}
                 />

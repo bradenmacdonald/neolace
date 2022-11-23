@@ -50,7 +50,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     let publicEntry: api.EntryData | undefined;
     try {
         publicEntry = await client.getEntry(context.params.entryId, {
-            siteId: site.friendlyId,
+            siteKey: site.key,
             flags: [
                 api.GetEntryFlags.IncludePropertiesSummary,
                 api.GetEntryFlags.IncludeReferenceCache,
@@ -67,11 +67,11 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         }
     }
 
-    if (publicEntry && publicEntry?.friendlyId !== context.params.entryId) {
-        // If the entry was looked up by an old friendlyId or by its VNID, redirect so the [new] friendlyId is in the URL:
+    if (publicEntry && publicEntry?.key !== context.params.entryId) {
+        // If the entry was looked up by an old key or by its VNID, redirect so the [new] key is in the URL:
         return {
             redirect: {
-                destination: `/entry/${publicEntry.friendlyId}`,
+                destination: `/entry/${publicEntry.key}`,
                 permanent: true,
             },
         };

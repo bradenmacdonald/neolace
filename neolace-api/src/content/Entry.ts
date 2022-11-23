@@ -20,13 +20,13 @@ export enum GetEntryFlags {
  * Defines the information needed to display a property value in the frontend
  */
 export const DisplayedPropertySchema = Schema({
-    propertyId: vnidString,
+    propertyKey: string,
     value: LookupValueSchema,
 });
 export type DisplayedPropertyData = Type<typeof DisplayedPropertySchema>;
 
 export const RawPropertySchema = Schema({
-    propertyId: vnidString,
+    propertyKey: string,
     facts: array.of(Schema({
         id: vnidString,
         valueExpression: string,
@@ -87,11 +87,11 @@ export type EntryFeaturesData = Type<typeof EntryFeaturesSchema>;
 
 export const BaseEntrySchema = Schema({
     id: vnidString,
+    key: string,
     name: string,
     description: string,
-    friendlyId: string,
     entryType: Schema({
-        id: vnidString,
+        key: string,
         name: string,
     }),
 });
@@ -114,8 +114,8 @@ export type EditableEntryData = Type<typeof BaseEntrySchema> & {
 
 export const EntrySummarySchema = Schema({
     id: vnidString,
-    type: Schema({ id: vnidString }),
+    key: string,
+    entryType: Schema({ key: string }),
     name: string,
-    friendlyId: string,
 });
 export type EntrySummaryData = Type<typeof EntrySummarySchema>;

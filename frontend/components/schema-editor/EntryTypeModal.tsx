@@ -1,6 +1,5 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
-import { VNID } from "neolace-api";
 
 import { defineMessage, displayText, noTranslationNeeded } from "components/utils/i18n";
 import { api, useSchema } from "lib/api";
@@ -21,7 +20,7 @@ import { Icon } from "components/widgets/Icon";
 
 interface Props {
     /** The ID of the entry type to edit. Pass in a randomly generated new ID to create a new entry type. */
-    entryTypeId: VNID;
+    entryTypeKey: string;
     onSaveChanges: (newEdits: api.AnySchemaEdit[]) => void;
     onCancel: () => void;
 }
@@ -29,7 +28,7 @@ interface Props {
 /**
  * This widget implements the modal that pops up to allow creating/editing an entry type
  */
-export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, onSaveChanges, onCancel }) => {
+export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeKey, onSaveChanges, onCancel }) => {
     /** The current schema, including any schema changes which have already been made within the current draft, if any. */
     const [baseSchema] = useSchema();
     const [unsavedEdits, setUnsavedEdits] = React.useState([] as api.AnySchemaEdit[]);
@@ -39,14 +38,14 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, on
         [baseSchema, unsavedEdits],
     );
 
-    const entryType: api.EntryTypeData = updatedSchema?.entryTypes[entryTypeId] ?? {
-        id: entryTypeId,
+    const entryType: api.EntryTypeData = updatedSchema?.entryTypes[entryTypeKey] ?? {
+        key: entryTypeKey,
         name: "",
         abbreviation: "",
         color: api.EntryTypeColor.Default,
         description: "",
         enabledFeatures: {},
-        friendlyIdPrefix: "",
+        keyPrefix: "",
     };
 
     const confirmClose = React.useCallback(() => {
@@ -63,34 +62,34 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, on
     const pushEdit = React.useCallback((edit: api.AnySchemaEdit) => {
         if (!baseSchema) return;
         let newEdits = [...unsavedEdits];
-        if (baseSchema.entryTypes[entryTypeId] === undefined && unsavedEdits.length === 0) {
+        if (baseSchema.entryTypes[entryTypeKey] === undefined && unsavedEdits.length === 0) {
             // If this is a brand new entry, we need a "CreateEntryType" edit to come first.
             newEdits.push({
                 code: "CreateEntryType",
-                data: { id: entryTypeId, name: "" },
+                data: { key: entryTypeKey, name: "" },
             });
         }
         newEdits.push(edit);
         newEdits = api.consolidateEdits(newEdits);
         setUnsavedEdits(newEdits);
-    }, [entryTypeId, unsavedEdits, baseSchema]);
+    }, [entryTypeKey, unsavedEdits, baseSchema]);
 
     const update = React.useCallback((data: {
         name?: string;
         abbreviation?: string;
-        friendlyIdPrefix?: string;
+        keyPrefix?: string;
         description?: string;
         color?: api.EntryTypeColor;
         colorCustom?: string;
     }) => {
-        pushEdit({ code: "UpdateEntryType", data: { id: entryTypeId, ...data } });
-    }, [entryTypeId, pushEdit]);
+        pushEdit({ code: "UpdateEntryType", data: { key: entryTypeKey, ...data } });
+    }, [entryTypeKey, pushEdit]);
 
     const updateFeature = React.useCallback(
         (feature: api.schemas.Type<typeof api.UpdateEntryTypeFeature.dataSchema>["feature"]) => {
-            pushEdit({ code: "UpdateEntryTypeFeature", data: { entryTypeId, feature } });
+            pushEdit({ code: "UpdateEntryTypeFeature", data: { entryTypeKey, feature } });
         },
-        [entryTypeId, pushEdit],
+        [entryTypeKey, pushEdit],
     );
 
     const updateName = React.useCallback(
@@ -101,8 +100,8 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, on
         (event: React.ChangeEvent<HTMLInputElement>) => update({ abbreviation: event.target.value }),
         [update],
     );
-    const updateFriendlyIdPrefix = React.useCallback(
-        (event: React.ChangeEvent<HTMLInputElement>) => update({ friendlyIdPrefix: event.target.value }),
+    const updateKeyPrefix = React.useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>) => update({ keyPrefix: event.target.value }),
         [update],
     );
     const updateDescription = React.useCallback(
@@ -175,7 +174,7 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, on
 
                     {/* Friendly ID Prefix */}
                     <Control
-                        id="typeFriendlyIdPrefix"
+                        id="typeKeyPrefix"
                         label={defineMessage({ defaultMessage: "Friendly ID Prefix", id: "Nyt0X2" })}
                         hint={defineMessage({
                             defaultMessage:
@@ -184,8 +183,8 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeId, on
                         })}
                     >
                         <TextInput
-                            value={entryType.friendlyIdPrefix}
-                            onChange={updateFriendlyIdPrefix}
+                            value={entryType.keyPrefix}
+                            onChange={updateKeyPrefix}
                         />
                     </Control>
 
