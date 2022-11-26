@@ -15,6 +15,8 @@ interface Props {
     addUnsavedEdit: (newEdit: api.AnyEdit) => void;
 }
 
+const NEW_ENTRY_TYPE = Symbol("newET");
+
 /**
  * This widget implements the "Main" tab of the "Edit Entry" page (set entry name, type, ID, and description)
  */
@@ -56,22 +58,20 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
     }, [entry, addUnsavedEdit]);
 
     // Show a modal (popup) that allows the user to create a new entry type
-    const [showingEditEntryTypeModalWithKey, editEntryTypeWithKey] = React.useState(undefined as string|undefined);
-    const showNewEntryTypeModal = React.useCallback(() => { editEntryTypeWithKey(api.VNID().slice(1)); }, []); // TODO: Make this editable
+    const [showingEditEntryTypeModalWithKey, editEntryTypeWithKey] = React.useState(undefined as string|typeof NEW_ENTRY_TYPE|undefined);
+    const showNewEntryTypeModal = React.useCallback(() => { editEntryTypeWithKey(NEW_ENTRY_TYPE); }, []);
     const showEditEntryTypeModal = React.useCallback(() => { editEntryTypeWithKey(entry?.entryType.key); }, [entry?.entryType.key]);
     const cancelEditEntryTypeModal = React.useCallback(() => { editEntryTypeWithKey(undefined); }, []);
 
-    const doneEditingEntryType = React.useCallback((edits: api.AnySchemaEdit[]) => {
+    const doneEditingEntryType = React.useCallback((editedEntryTypeKey: string, edits: api.AnySchemaEdit[]) => {
         // Create the new entry type, by adding the edits to unsavedEdits:
         for (const edit of edits) { addUnsavedEdit(edit); }
-        editEntryTypeWithKey(
-            (editedEntryTypeKey) => {
-                // Select the new entry type in the "Edit Entry" form:
-                if (editedEntryTypeKey && entry?.entryType.key !== editedEntryTypeKey) { updateEntryType(editedEntryTypeKey); }
-                // Close the modal:
-                return undefined;
-            }
-        );
+        // Select the new entry type in the "Edit Entry" form:
+        if (editedEntryTypeKey && entry?.entryType.key !== editedEntryTypeKey) {
+            updateEntryType(editedEntryTypeKey);
+        }
+        // Close the modal:
+        editEntryTypeWithKey(undefined);
     }, [addUnsavedEdit, entry?.entryType.key, updateEntryType]);
 
     const entryType = entry ? schema?.entryTypes[entry?.entryType.key] : undefined;
@@ -181,7 +181,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
         {
             showingEditEntryTypeModalWithKey ?
                 <EntryTypeModal
-                    entryTypeKey={showingEditEntryTypeModalWithKey}
+                    existingEntryTypeKey={showingEditEntryTypeModalWithKey === NEW_ENTRY_TYPE ? undefined : showingEditEntryTypeModalWithKey}
                     onSaveChanges={doneEditingEntryType}
                     onCancel={cancelEditEntryTypeModal}
                 />

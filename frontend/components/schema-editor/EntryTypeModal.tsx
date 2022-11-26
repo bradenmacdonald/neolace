@@ -17,18 +17,21 @@ import {
 import { Button } from "components/widgets/Button";
 import { Modal } from "components/widgets/Modal";
 import { Icon } from "components/widgets/Icon";
+import { slugify } from "lib/slugify";
 
 interface Props {
-    /** The ID of the entry type to edit. Pass in a randomly generated new ID to create a new entry type. */
-    entryTypeKey: string;
-    onSaveChanges: (newEdits: api.AnySchemaEdit[]) => void;
+    /** The ID of the entry type to edit. Leave undefined to create a new entry type. */
+    existingEntryTypeKey?: string;
+    onSaveChanges: (entryTypeKey: string, newEdits: api.AnySchemaEdit[]) => void;
     onCancel: () => void;
 }
 
 /**
  * This widget implements the modal that pops up to allow creating/editing an entry type
  */
-export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeKey, onSaveChanges, onCancel }) => {
+export const EntryTypeModal: React.FunctionComponent<Props> = ({ existingEntryTypeKey, onSaveChanges, onCancel }) => {
+    /** IF we're creating a new entry type, this is its new key */
+    const [newKey, setNewKey] = React.useState("");
     /** The current schema, including any schema changes which have already been made within the current draft, if any. */
     const [baseSchema] = useSchema();
     const [unsavedEdits, setUnsavedEdits] = React.useState([] as api.AnySchemaEdit[]);
@@ -38,8 +41,10 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeKey, o
         [baseSchema, unsavedEdits],
     );
 
-    const entryType: api.EntryTypeData = updatedSchema?.entryTypes[entryTypeKey] ?? {
-        key: entryTypeKey,
+    const key = existingEntryTypeKey ?? newKey;
+
+    const entryType: api.EntryTypeData = updatedSchema?.entryTypes[key] ?? {
+        key,
         name: "",
         abbreviation: "",
         color: api.EntryTypeColor.Default,
@@ -47,6 +52,8 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeKey, o
         enabledFeatures: {},
         keyPrefix: "",
     };
+    /** For new entries, this is the suggested key made from slugifying the name: */
+    const recommendedKey = slugify(entryType.name).slice(0, 50);
 
     const confirmClose = React.useCallback(() => {
         if (unsavedEdits.length === 0 || confirm("Are you sure you want to discard these entry type edits?")) {
@@ -56,23 +63,23 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeKey, o
 
     /** Tell the parent page that we're done editing/creating this entry type, and save the changes into the draft */
     const saveChanges = React.useCallback(() => {
-        onSaveChanges(unsavedEdits);
-    }, [onSaveChanges, unsavedEdits]);
+        onSaveChanges(key, unsavedEdits);
+    }, [key, onSaveChanges, unsavedEdits]);
 
     const pushEdit = React.useCallback((edit: api.AnySchemaEdit) => {
         if (!baseSchema) return;
         let newEdits = [...unsavedEdits];
-        if (baseSchema.entryTypes[entryTypeKey] === undefined && unsavedEdits.length === 0) {
+        if (baseSchema.entryTypes[key] === undefined && unsavedEdits.length === 0) {
             // If this is a brand new entry, we need a "CreateEntryType" edit to come first.
             newEdits.push({
                 code: "CreateEntryType",
-                data: { key: entryTypeKey, name: "" },
+                data: { key, name: "" },
             });
         }
         newEdits.push(edit);
         newEdits = api.consolidateEdits(newEdits);
         setUnsavedEdits(newEdits);
-    }, [entryTypeKey, unsavedEdits, baseSchema]);
+    }, [key, unsavedEdits, baseSchema]);
 
     const update = React.useCallback((data: {
         name?: string;
@@ -82,19 +89,37 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeKey, o
         color?: api.EntryTypeColor;
         colorCustom?: string;
     }) => {
-        pushEdit({ code: "UpdateEntryType", data: { key: entryTypeKey, ...data } });
-    }, [entryTypeKey, pushEdit]);
+        pushEdit({ code: "UpdateEntryType", data: { key, ...data } });
+    }, [key, pushEdit]);
 
     const updateFeature = React.useCallback(
         (feature: api.schemas.Type<typeof api.UpdateEntryTypeFeature.dataSchema>["feature"]) => {
-            pushEdit({ code: "UpdateEntryTypeFeature", data: { entryTypeKey, feature } });
+            pushEdit({ code: "UpdateEntryTypeFeature", data: { entryTypeKey: key, feature } });
         },
-        [entryTypeKey, pushEdit],
+        [key, pushEdit],
     );
 
     const updateName = React.useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => update({ name: event.target.value }),
         [update],
+    );
+    const updateKey = React.useCallback(
+        (eventOrKey: React.ChangeEvent<HTMLInputElement>|string) => {
+            const updatedKey = typeof eventOrKey === "string" ? eventOrKey : eventOrKey.target.value;
+            if (existingEntryTypeKey) throw new Error("Can't change key of existing entry");
+            setNewKey(updatedKey);
+            // Update any existing edits to change their key:
+            setUnsavedEdits((existingEdits) => {
+                const newEdits = existingEdits.map((ee) => ({code: ee.code, data: {...ee.data}})) as typeof existingEdits;
+                for (const e of newEdits) {
+                    if ("entryTypeKey" in e.data) e.data.entryTypeKey = updatedKey;
+                    else if ("key" in e.data) e.data.key = updatedKey;
+                    else throw new Error(`Can't update the key of edit ${e.code}`);
+                }
+                return newEdits;
+            });
+        },
+        [existingEntryTypeKey],
     );
     const updateAbbreviation = React.useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => update({ abbreviation: event.target.value }),
@@ -157,6 +182,25 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeKey, o
                     </Control>
 
                     <Control
+                        id="typeKey"
+                        label={defineMessage({ defaultMessage: "Key", id: 'EcglP9' })}
+                        hint={defineMessage({
+                            defaultMessage: "The identifier of this entry type. Cannot contain spaces or punctuation or than dashes. Cannot be changed after the entry type is created.",
+                            id: 'mC+Iiu',
+                        })}
+                        isRequired={true}
+                    >
+                        <TextInput
+                            value={key}
+                            onChange={updateKey}
+                            placeholder={recommendedKey}
+                            readOnly={existingEntryTypeKey !== undefined}
+                            disabled={existingEntryTypeKey !== undefined}
+                            onFocus={() => { if (key === "" && recommendedKey) updateKey(recommendedKey); }}
+                        />
+                    </Control>
+
+                    <Control
                         id="typeAbbreviation"
                         label={defineMessage({ defaultMessage: "Abbreviation", id: "jAFB5+" })}
                         hint={defineMessage({
@@ -172,14 +216,14 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ entryTypeKey, o
                         />
                     </Control>
 
-                    {/* Friendly ID Prefix */}
+                    {/* Entry Key Prefix */}
                     <Control
                         id="typeKeyPrefix"
-                        label={defineMessage({ defaultMessage: "Friendly ID Prefix", id: "Nyt0X2" })}
+                        label={defineMessage({ defaultMessage: "Entry Key Prefix", id: 'bID/Pj' })}
                         hint={defineMessage({
                             defaultMessage:
-                                'If you want to require that the Friendly ID (used in the URL) starts with a prefix like "concept-", enter that prefix here.',
-                            id: "mG3FFG",
+                                'If you want to require that the keys (the identifier used in the URL) of entries of this type must start with a prefix like "concept-", enter that prefix here.',
+                            id: '0M5Hhi',
                         })}
                     >
                         <TextInput
