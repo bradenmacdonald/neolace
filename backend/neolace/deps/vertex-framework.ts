@@ -1,3 +1,3 @@
 // For local dev:
 // export * from "../../../../vertex-framework/vertex/index.ts";
-export * from "https://raw.githubusercontent.com/neolace-dev/vertex-framework/6f2eeada56036b58b0a1f3b51adc16cf76b1c45e/vertex/index.ts";
+export * from "https://raw.githubusercontent.com/neolace-dev/vertex-framework/8a4a2f7d803e02bd257f48e2c2a996cb961f74b6/vertex/index.ts";
