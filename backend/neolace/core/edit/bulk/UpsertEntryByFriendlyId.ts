@@ -1,8 +1,7 @@
-import { C, Field } from "neolace/deps/vertex-framework.ts";
+import { C, Field, Neo4jError } from "neolace/deps/vertex-framework.ts";
 import { InvalidEdit, UpsertEntryByFriendlyId, VNID } from "neolace/deps/neolace-api.ts";
 import { BulkAppliedEditData, defineBulkImplementation } from "neolace/core/edit/implementations.ts";
 import { Connection, Entry, EntryType, Site } from "neolace/core/mod.ts";
-import { Neo4jError } from "https://raw.githubusercontent.com/neo4j/neo4j-javascript-driver/5.1.0/packages/neo4j-driver-deno/lib/mod.ts";
 
 /**
  * Upsert (Create or Update) entries as needed, setting their name and description.
