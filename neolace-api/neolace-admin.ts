@@ -260,9 +260,11 @@ async function exportCommand(
                     metadata.files = newFilesMeta;
                 }
 
+                const properties: Record<string, unknown> = {};
+
                 for (const prop of entryData.propertiesRaw!) {
                     if (prop.facts.length === 1 && !prop.facts[0].note && !prop.facts[0].slot) {
-                        metadata[prop.propertyKey] = replaceIdsInMarkdownAndLookupExpressions(
+                        properties[prop.propertyKey] = replaceIdsInMarkdownAndLookupExpressions(
                             keys,
                             prop.facts[0].valueExpression,
                         );
@@ -288,8 +290,12 @@ async function exportCommand(
                             delete simpleFact.id; // We don't include the property fact ID.
                             return simpleFact;
                         });
-                        metadata[prop.propertyKey] = factsSimplified;
+                        properties[prop.propertyKey] = factsSimplified;
                     }
+                }
+
+                if (Object.keys(properties).length > 0) {
+                    metadata.properties = properties;
                 }
 
                 let markdown = `---\n${stringifyYaml(metadata, { lineWidth: 120 })}---\n`;
@@ -433,13 +439,14 @@ async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: stri
         let numProperties = 0;
         for await (const { metadata, key } of iterateEntries()) {
             const entryId = metadata.id ?? idMap[key];
-            // Get the human-readable ID for each property actually used for this entry:
-            const propsUsed = Object.keys(metadata).filter((k) => k in schema.properties);
+            // Get the key (human-readable ID) for each property actually used for this entry:
+            const propertiesMap = metadata.properties ?? metadata;
+            const propsUsed = Object.keys(propertiesMap).filter((k) => k in schema.properties);
             for (const propertyKey of propsUsed) {
                 // Now we need to be able to handle either a list of property facts or a single string value:
-                const facts = typeof metadata[propertyKey] === "string"
-                    ? [{ valueExpression: metadata[propertyKey] }]
-                    : metadata[propertyKey];
+                const facts = typeof propertiesMap[propertyKey] === "string"
+                    ? [{ valueExpression: propertiesMap[propertyKey] }]
+                    : propertiesMap[propertyKey];
                 for (const fact of facts) {
                     if (fact.valueExpression === undefined) {
                         throw new Error(`Invalid property value on entry ${entryId} (${key})`);
