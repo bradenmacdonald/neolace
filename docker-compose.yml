@@ -22,7 +22,7 @@ version: '3'
 x-service-templates:
   neo4j:
     &neo4j-defaults
-    image: neo4j:5.1.0
+    image: neo4j:5.2.0
     environment:
       # Set default password to "neolace"
       NEO4J_AUTH: neo4j/neolace
