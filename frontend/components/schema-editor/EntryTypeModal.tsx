@@ -106,7 +106,7 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ existingEntryTy
     const updateKey = React.useCallback(
         (eventOrKey: React.ChangeEvent<HTMLInputElement>|string) => {
             const updatedKey = typeof eventOrKey === "string" ? eventOrKey : eventOrKey.target.value;
-            if (existingEntryTypeKey) throw new Error("Can't change key of existing entry");
+            if (existingEntryTypeKey) throw new Error("Can't change key of existing entry type.");
             setNewKey(updatedKey);
             // Update any existing edits to change their key:
             setUnsavedEdits((existingEdits) => {

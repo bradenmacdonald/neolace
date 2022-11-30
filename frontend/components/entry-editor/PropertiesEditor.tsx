@@ -77,13 +77,13 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
 
     // Handler for the menu at the bottom, to add a value for one of the "unsetProps" that has no value yet:
     const entryId = entry?.id;
-    const handleAddNewProperty = React.useCallback((propId: string) => {
+    const handleAddNewProperty = React.useCallback((propertyKey: string) => {
         if (!entryId) return;
         addUnsavedEdit({
             code: api.AddPropertyFact.code,
             data: {
                 entryId,
-                propertyKey: propId,
+                propertyKey,
                 propertyFactId: VNID(),
                 valueExpression: "",
             },

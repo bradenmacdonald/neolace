@@ -1,7 +1,7 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
-import { api, useDraft, useSchema } from "lib/api";
+import { api, useSchema } from "lib/api";
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
 import { AutoControl, Checkbox, Control, LookupExpressionInput, MDTEditor, SelectBox, TextInput } from "components/form-input";
 
@@ -16,7 +16,6 @@ interface Props {
 export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyKey, addSchemaEdit}) => {
     /** The current schema, including any schema changes which haven't yet been saved, if any. */
     const [schema] = useSchema();
-    const [_draft, unsavedEdits] = useDraft();
 
     const updateProperty = React.useCallback((data: Omit<api.schemas.Type<typeof api.UpdateProperty.dataSchema>, "key">) => {
         addSchemaEdit({code: "UpdateProperty", data: {...data, key: propertyKey}});
@@ -33,7 +32,6 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyKey,
 
     // We need to wait for the schema to load
     const isLoading = schema === undefined;
-    const isNewProperty = !isLoading && (unsavedEdits.find((edit) => (edit.code === "CreateProperty" && edit.data.key === propertyKey)));
 
     // Available properties for the "parent property" field.
     const possibleParentProps = React.useMemo(() => {
@@ -77,18 +75,20 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyKey,
         </AutoControl>
 
         <Control
+            id="prop-key"
+            label={defineMessage({ defaultMessage: "Key", id: 'EcglP9' })}
+            hint={defineMessage({defaultMessage: "Unique identifier for this property. Cannot be changed.", id: 'HHZCfX'})}
+        >
+            <TextInput value={prop.key} readOnly={true} />
+        </Control>
+
+        <Control
             id="prop-type"
             label={defineMessage({ defaultMessage: "Type", id: "+U6ozc" })}
-            hint={defineMessage({defaultMessage: "Cannot be changed after the property is created", id: 'NsdMnQ'})}
-            isRequired
+            hint={defineMessage({defaultMessage: "Cannot be changed.", id: 'KIAjvA'})}
         >
             <SelectBox
                 value={prop.type}
-                onChange={(type) =>
-                    // The type can only be set when creating the property. Even though there is already a "CreateProperty"
-                    // edit, it will be consolidated with this one.
-                    addSchemaEdit({code: "CreateProperty", data: {key: propertyKey, name: prop.name, type: type as api.PropertyType}})
-                }
                 options={[
                     {
                         id: api.PropertyType.Value,
@@ -103,7 +103,7 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyKey,
                         label: defineMessage({defaultMessage: "Relationship (IS A) - this entry is an instance or subclass of another entry", id: "GaeBc2"}),
                     },
                 ]}
-            readOnly={isLoading || !isNewProperty} />
+            readOnly={true} />
         </Control>
 
         {/* Parent property: NOTE: This currently glosses over the fact that properties can have multiple parent properties. */}
