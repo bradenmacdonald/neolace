@@ -12,18 +12,18 @@ group("Article.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
     // Entry Type IDs:
-    const entryType = VNID();
+    const entryTypeKey = "test-type";
 
     test("Can be added to schema, shows up on schema, can be removed from schema", async () => {
         const graph = await getGraph();
         // Create a site with one entry type:
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", key: "test1" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId,
             edits: [
-                { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
             ],
             editSource: UseSystemSource,
         }));
@@ -31,7 +31,7 @@ group("Article.ts", () => {
         // Now get the schema, without the "Article" feature enabled yet:
         const beforeSchema = await graph.read((tx) => getCurrentSchema(tx, siteId));
         // No features should be enabled:
-        assertEquals(beforeSchema.entryTypes[entryType].enabledFeatures, {});
+        assertEquals(beforeSchema.entryTypes[entryTypeKey].enabledFeatures, {});
 
         // Now enable the "Article" Feature
         await graph.runAsSystem(ApplyEdits({
@@ -40,7 +40,7 @@ group("Article.ts", () => {
                 {
                     code: "UpdateEntryTypeFeature",
                     data: {
-                        entryTypeId: entryType,
+                        entryTypeKey,
                         feature: {
                             featureType: "Article",
                             enabled: true,
@@ -54,7 +54,7 @@ group("Article.ts", () => {
         // Now check the updated schema:
         const afterSchema = await graph.read((tx) => getCurrentSchema(tx, siteId));
         // The "Article" feature should be enabled:
-        assertEquals(afterSchema.entryTypes[entryType].enabledFeatures, {
+        assertEquals(afterSchema.entryTypes[entryTypeKey].enabledFeatures, {
             Article: {},
         });
 
@@ -65,7 +65,7 @@ group("Article.ts", () => {
                 {
                     code: "UpdateEntryTypeFeature",
                     data: {
-                        entryTypeId: entryType,
+                        entryTypeKey,
                         feature: {
                             featureType: "Article",
                             enabled: false,
@@ -87,16 +87,16 @@ group("Article.ts", () => {
         const entryId = VNID();
         // Create a site with an entry type that has the article feature::
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", key: "test1" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId,
             edits: [
-                { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                 {
                     code: "UpdateEntryTypeFeature",
                     data: {
-                        entryTypeId: entryType,
+                        entryTypeKey,
                         feature: {
                             featureType: "Article",
                             enabled: true,
@@ -109,9 +109,9 @@ group("Article.ts", () => {
                     code: "CreateEntry",
                     data: {
                         entryId,
-                        type: entryType,
+                        entryTypeKey,
                         name: "Test Entry",
-                        friendlyId: "other-entry",
+                        key: "other-entry",
                         description: "An Entry for Testing",
                     },
                 },

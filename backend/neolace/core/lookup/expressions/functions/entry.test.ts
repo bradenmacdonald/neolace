@@ -29,9 +29,9 @@ group("entry.ts", () => {
         );
     });
 
-    test("Can look up an entry by friendlyId", async () => {
+    test("Can look up an entry by key", async () => {
         assertEquals(
-            await context.evaluateExpr(`entry("${defaultData.entries.ponderosaPine.friendlyId}")`, undefined),
+            await context.evaluateExpr(`entry("${defaultData.entries.ponderosaPine.key}")`, undefined),
             new EntryValue(defaultData.entries.ponderosaPine.id),
         );
     });
@@ -40,17 +40,17 @@ group("entry.ts", () => {
         const graph = await getGraph();
 
         // Create another site with three entries:
-        const otherSiteId = VNID(), entryType = VNID(), A = VNID();
+        const otherSiteId = VNID(), entryTypeKey = "ET1", A = VNID();
         await graph.runAsSystem(
-            CreateSite({ id: otherSiteId, name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+            CreateSite({ id: otherSiteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId: otherSiteId,
             edits: [
-                { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                 {
                     code: "CreateEntry",
-                    data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                    data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                 },
             ],
             editSource: UseSystemSource,
@@ -95,10 +95,10 @@ group("entry.ts - permissions", () => {
                 ),
             );
             // entry("g-pinus"):
-            const genusByFriendlyId = new EntryFunction(
+            const genusByKey = new EntryFunction(
                 new LiteralExpression(
                     new StringValue(
-                        defaultData.entries.genusPinus.friendlyId,
+                        defaultData.entries.genusPinus.key,
                     ),
                 ),
             );
@@ -111,9 +111,9 @@ group("entry.ts - permissions", () => {
                     `Entry "${defaultData.entries.ponderosaPine.id}" not found.`,
                 );
                 await assertRejects(
-                    () => context.evaluateExprConcrete(genusByFriendlyId),
+                    () => context.evaluateExprConcrete(genusByKey),
                     LookupEvaluationError,
-                    `Entry "${defaultData.entries.genusPinus.friendlyId}" not found.`,
+                    `Entry "${defaultData.entries.genusPinus.key}" not found.`,
                 );
             }
 
@@ -126,7 +126,7 @@ group("entry.ts - permissions", () => {
                     new PermissionGrant(
                         new NotCondition(
                             new EntryTypesCondition([
-                                defaultData.schema.entryTypes._ETSPECIES.id,
+                                defaultData.schema.entryTypes.ETSPECIES.key,
                             ]),
                         ),
                         [corePerm.viewEntry.name],
@@ -139,7 +139,7 @@ group("entry.ts - permissions", () => {
                 );
                 // But they can see the genus entry:
                 assertEquals(
-                    await context.evaluateExprConcrete(genusByFriendlyId, undefined, user.userId),
+                    await context.evaluateExprConcrete(genusByKey, undefined, user.userId),
                     new EntryValue(defaultData.entries.genusPinus.id),
                 );
             }

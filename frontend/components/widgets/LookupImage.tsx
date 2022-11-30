@@ -25,7 +25,7 @@ const OptionalLink = (
     if (props.href) {
         if (props.href.type === "Entry") {
             const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) = refCache.entries[props.href.id];
-            const url = "/entry/" + (entry?.friendlyId || props.href.id);
+            const url = "/entry/" + (entry?.key || props.href.id);
             return (
                 <Link href={url} className={props.className}>
                     {props.children}
@@ -80,7 +80,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
         return <>
             <li className="w-full md:max-w-[30%] border rounded border-gray-400 md:ml-4 mb-2 flex-initial bg-slate-50">
                 <RatioBox ratio={16/9}>
-                    <Link href={`/entry/${refCache.entries[value.entryId]?.friendlyId ?? value.entryId}`} className="relative left-0 top-0 w-full h-full block [&_canvas]:rounded-t">
+                    <Link href={`/entry/${refCache.entries[value.entryId]?.key ?? value.entryId}`} className="relative left-0 top-0 w-full h-full block [&_canvas]:rounded-t">
                         {/* A blurry representation of the image, shown while it is loading. */}
                         <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" />
                         {/* the image: */}

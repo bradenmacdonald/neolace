@@ -8,8 +8,9 @@ import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-da
 import { Entry } from "./Entry.ts";
 import { getEntryProperties } from "./properties.ts";
 import * as V from "neolace/core/lookup/values.ts";
-import { siteFriendlyIdFromId } from "neolace/core/Site.ts";
+import { siteKeyFromId } from "neolace/core/Site.ts";
 import { checkPermissions } from "neolace/core/permissions/check.ts";
+import { ActionObject } from "neolace/core/permissions/action.ts";
 
 /**
  * Generate a version of this entry that can be used to build the search index.
@@ -23,8 +24,8 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
                 .id
                 .name
                 .description
-                .friendlyId
-                .type((et) => et.id.name.site((s) => s.id)), { key: entryId }),
+                .key
+                .type((et) => et.key.name.site((s) => s.id)), { key: entryId }),
         properties: await getEntryProperties(entryId, { tx, limit: 1_000 }),
         // features (e.g. article text):
         features: await getEntryFeaturesData(entryId, { tx }),
@@ -32,7 +33,7 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
 
     const siteId = entryData.type!.site!.id;
     const permSubject = { siteId, userId: undefined };
-    const permObject = { entryId, entryTypeId: entryData.type!.id };
+    const permObject: ActionObject = { entryId, entryTypeKey: entryData.type!.key };
     const maxValuesPerProp = 100;
 
     let description = "";
@@ -70,27 +71,23 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
                     stringValues.push(await lookupValueToPlainText(value, lookupContext));
                 } catch {
                     log.warning(
-                        `Cannot parse property value for search index: site ${await siteFriendlyIdFromId(
+                        `Cannot parse property value for search index: site ${await siteKeyFromId(
                             siteId,
-                        )} entry ${entryData.friendlyId}, property ${propValue.property.name}`,
+                        )} entry ${entryData.key}, property ${propValue.property.name}`,
                     );
                 }
             }
-            // In the search index, properties are identified by ID, not by makeSlug(property.name) even though the
-            // latter is much more readable. The UI can load the whole schema and easily use it to display the full
-            // property names, and this makes search queries stable even if properties are renamed.
-            const propKey = "prop" + propValue.property.id;
             if (stringValues.length) {
-                propertiesAsText[propKey] = stringValues;
+                propertiesAsText[`prop-${propValue.property.key}`] = stringValues;
             }
         }
     });
 
     return {
         id: entryId,
-        friendlyId: entryData.friendlyId,
+        key: entryData.key,
         name: entryData.name,
-        type: entryData.type!.name,
+        entryTypeKey: entryData.type!.key,
         description,
         articleText,
         visibleToGroups: ["public"],

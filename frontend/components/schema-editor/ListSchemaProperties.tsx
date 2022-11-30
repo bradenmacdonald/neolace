@@ -1,6 +1,5 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
-import { VNID } from "neolace-api";
 
 import { api, useSchema } from "lib/api";
 import { Spinner } from "components/widgets/Spinner";
@@ -11,7 +10,7 @@ import { ButtonLink } from "components/widgets/ButtonLink";
 import { Button } from "components/widgets/Button";
 
 interface Props {
-    showPropertyDetails?: (propertyId: VNID) => void;
+    showPropertyDetails?: (propertyKey: string) => void;
     onAddProperty?: () => void;
 }
 
@@ -35,9 +34,9 @@ export const ListSchemaProperties: React.FunctionComponent<Props> = (props) => {
         }
 
         props.forEach((p) => {
-            const parentPropIds = p.isA;
-            if (parentPropIds && parentPropIds.length === 1) {
-                const parentProp = props.find((pp) => pp.id === parentPropIds[0]);
+            const parentPropKeys = p.isA;
+            if (parentPropKeys && parentPropKeys.length === 1) {
+                const parentProp = props.find((pp) => pp.key === parentPropKeys[0]);
                 if (parentProp) {
                     p.name = `${parentProp.name} > ${p.name}`;
                 }
@@ -77,10 +76,10 @@ export const ListSchemaProperties: React.FunctionComponent<Props> = (props) => {
             <ol>
                 {
                     filteredProps.map((prop) => (
-                        <li key={prop.id}>
+                        <li key={prop.key}>
                             {
                                 props.showPropertyDetails ?
-                                    <ButtonLink onClick={() => props.showPropertyDetails?.(prop.id)}>
+                                    <ButtonLink onClick={() => props.showPropertyDetails?.(prop.key)}>
                                         <strong>{prop.name || "[??]"}</strong>
                                     </ButtonLink>
                                 :
@@ -91,16 +90,16 @@ export const ListSchemaProperties: React.FunctionComponent<Props> = (props) => {
                                 <FormattedMessage defaultMessage="Relationship" id="/OEORY"/>
                             </span> : null}
                             {/* Display a little icon for each entry type this property applies to: */}
-                            {prop.appliesTo.map(({entryType}) => (
+                            {prop.appliesTo.map(({entryTypeKey}) => (
                                 <span
-                                    key={entryType}
+                                    key={entryTypeKey}
                                     className="text-xs rounded-lg py-[2px] px-[4px] mx-1 inline-block min-w-[1.5em] text-center cursor-default"
-                                    title={schema.entryTypes[entryType]?.name}
+                                    title={schema.entryTypes[entryTypeKey]?.name}
                                     style={{
-                                        backgroundColor: api.getEntryTypeColor(schema.entryTypes[entryType]).backgroundColor,
-                                        color: api.getEntryTypeColor(schema.entryTypes[entryType]).textColor,
+                                        backgroundColor: api.getEntryTypeColor(schema.entryTypes[entryTypeKey]).backgroundColor,
+                                        color: api.getEntryTypeColor(schema.entryTypes[entryTypeKey]).textColor,
                                     }}
-                                >{schema.entryTypes[entryType]?.abbreviation || "\u2003"}</span>
+                                >{schema.entryTypes[entryTypeKey]?.abbreviation || "\u2003"}</span>
                             ))}
                             <br />
 

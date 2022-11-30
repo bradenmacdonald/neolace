@@ -74,7 +74,7 @@ export async function reindexAllEntries(siteId: VNID) {
         name: newCollectionName,
         fields: [
             { name: "id", type: "string", facet: false },
-            { name: "friendlyId", type: "string", facet: false },
+            { name: "key", type: "string", facet: false },
             { name: "name", type: "string", facet: false },
             { name: "type", type: "string", facet: true },
             { name: "description", type: "string", facet: false },

@@ -7,7 +7,7 @@ import { hasPermission, makeCypherCondition } from "./check.ts";
 import { corePerm, PermissionName } from "./permissions.ts";
 import { type ActionObject } from "./action.ts";
 
-const fakeObject: ActionObject = { entryId: VNID("_123"), entryTypeId: VNID("_1234") };
+const fakeObject: ActionObject = { entryId: VNID("_123"), entryTypeKey: "_1234" };
 
 group("default-grants.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
@@ -19,21 +19,21 @@ group("default-grants.ts", () => {
         const { id: privateSite } = await graph.runAsSystem(CreateSite({
             domain: "private.example.com",
             name: "Private Site",
-            friendlyId: "private",
+            key: "private",
             accessMode: AccessMode.Private,
         }));
 
         const { id: publicSite } = await graph.runAsSystem(CreateSite({
             domain: "public.example.com",
             name: "Public Contributions Site",
-            friendlyId: "public",
+            key: "public",
             accessMode: AccessMode.PublicContributions,
         }));
 
         const { id: readonlySite } = await graph.runAsSystem(CreateSite({
             domain: "readonly.example.com",
             name: "Read Only Site",
-            friendlyId: "readonly",
+            key: "readonly",
             accessMode: AccessMode.PublicReadOnly,
         }));
 

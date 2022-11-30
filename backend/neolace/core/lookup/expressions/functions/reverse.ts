@@ -1,7 +1,6 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
 import { CorePerm, PropertyType } from "neolace/deps/neolace-api.ts";
 
-import { Site } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { directRelTypeForPropertyType, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
@@ -46,11 +45,11 @@ export class ReverseProperty extends LookupFunctionWithArgs {
         let propertyData;
         try {
             propertyData = await context.tx.queryOne(C`
-                MATCH (prop:${Property} {id: ${propValue.id}})-[:${Property.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
+                MATCH (prop:${Property} {siteNamespace: ${context.siteId}, key: ${propValue.key}})
             `.RETURN({ "prop.type": Field.String }));
         } catch (err) {
             if (err instanceof EmptyResultError) {
-                throw new LookupEvaluationError("Property not found / invalid property ID");
+                throw new LookupEvaluationError(`Property "${propValue.key}" not found.`);
             }
             throw err;
         }
@@ -86,7 +85,7 @@ export class ReverseProperty extends LookupFunctionWithArgs {
             WITH entry AS toEntry  // Continue the existing entry query, discard annotations if present
 
             // Get the property that we're looking for
-            MATCH (prop:${Property} {id: ${propValue.id}})
+            MATCH (prop:${Property} {siteNamespace: ${context.siteId}, key: ${propValue.key}})
 
             MATCH (fromEntry)-[directRel:${directRelTypeForPropertyType(propType)}]->(toEntry)
             // From the direct relationship, get the PropertyFact:

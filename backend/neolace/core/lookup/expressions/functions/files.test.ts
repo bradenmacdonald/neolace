@@ -29,7 +29,7 @@ group("files.ts", () => {
     const context = new TestLookupContext({ siteId });
 
     group("tests with files", () => {
-        const entryType = VNID("_filesET");
+        const entryTypeKey = "filesET";
         const entryId = VNID("_filesEntry");
 
         const createEntry = async () => {
@@ -37,11 +37,11 @@ group("files.ts", () => {
             await graph.runAsSystem(ApplyEdits({
                 siteId,
                 edits: [
-                    { code: "CreateEntryType", data: { id: entryType, name: "EntryTypeWithFiles" } },
+                    { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryTypeWithFiles" } },
                     {
                         code: "UpdateEntryTypeFeature",
                         data: {
-                            entryTypeId: entryType,
+                            entryTypeKey,
                             feature: {
                                 featureType: "Files",
                                 enabled: true,
@@ -54,9 +54,9 @@ group("files.ts", () => {
                         code: "CreateEntry",
                         data: {
                             entryId: entryId,
-                            type: entryType,
+                            entryTypeKey,
                             name: "Test With Files",
-                            friendlyId: "files-test",
+                            key: "files-test",
                             description: "An Entry with Files, for Testing",
                         },
                     },

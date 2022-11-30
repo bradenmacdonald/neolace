@@ -29,13 +29,13 @@ export interface EntryValue extends LookupValue {
 
 export interface EntryTypeValue extends LookupValue {
     type: "EntryType";
-    id: VNID;
+    key: string;
 }
 
 /** Represents a property like "Date of Birth", not a specific property value. */
 export interface PropertyValue extends LookupValue {
     type: "Property";
-    id: VNID;
+    key: string;
 }
 
 export enum ImageDisplayFormat {
@@ -62,12 +62,12 @@ export interface GraphValue extends LookupValue {
     entries: {
         entryId: VNID;
         name: string;
-        entryType: VNID;
+        entryTypeKey: string;
         isFocusEntry?: boolean;
     }[];
     rels: {
         relId: VNID;
-        relType: VNID;
+        relTypeKey: string;
         fromEntryId: VNID;
         toEntryId: VNID;
     }[];

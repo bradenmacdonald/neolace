@@ -1,12 +1,11 @@
-import { C } from "neolace/deps/vertex-framework.ts";
+import { C, Field } from "neolace/deps/vertex-framework.ts";
 import { DeleteEntryType, InvalidEdit } from "neolace/deps/neolace-api.ts";
 import { defineImplementation } from "neolace/core/edit/implementations.ts";
-import { Entry, EntryType, Site } from "neolace/core/mod.ts";
+import { Entry, EntryType } from "neolace/core/mod.ts";
 
 export const doDeleteEntryType = defineImplementation(DeleteEntryType, async (tx, data, siteId) => {
     const baseQuery = C`
-        MATCH (site:${Site} {id: ${siteId}})
-        MATCH (et:${EntryType} {id: ${data.entryTypeId}})-[:${EntryType.rel.FOR_SITE}]->(site)
+        MATCH (et:${EntryType} {siteNamespace: ${siteId}, key: ${data.entryTypeKey}})
     `;
     // First make sure no entries exist:
     const checkEntries = await tx.query(C`
@@ -16,17 +15,18 @@ export const doDeleteEntryType = defineImplementation(DeleteEntryType, async (tx
     if (checkEntries.length > 0) {
         throw new InvalidEdit(
             DeleteEntryType.code,
-            { entryTypeId: data.entryTypeId },
+            { entryTypeKey: data.entryTypeKey },
             `Entry types cannot be deleted while there are still entries of that type.`,
         );
     }
 
-    await tx.queryOne(C`
+    const { etId } = await tx.queryOne(C`
         ${baseQuery}
+        WITH et, et.id AS etId
         DETACH DELETE (et)
-    `.RETURN({}));
+    `.RETURN({ etId: Field.VNID }));
 
     return {
-        modifiedNodes: [data.entryTypeId],
+        modifiedNodes: [etId],
     };
 });

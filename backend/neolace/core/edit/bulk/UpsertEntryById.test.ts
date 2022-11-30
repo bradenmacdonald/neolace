@@ -10,7 +10,7 @@ group("UpsertEntryById bulk edit implementation", () => {
         ponderosaPine,
         jackPine,
         // stonePine,
-        getFriendlyId,
+        getKey,
         getName,
         getDescription,
         assertExists,
@@ -20,14 +20,14 @@ group("UpsertEntryById bulk edit implementation", () => {
         populateOtherSite,
     } = testHelpers(defaultData);
 
-    test("UpsertEntryById can upsert entries and conditionally overwrite their names, descriptions, and friendlyId", async () => {
+    test("UpsertEntryById can upsert entries and conditionally overwrite their names, descriptions, and key", async () => {
         /** The "elephant pine" does not exist in the default data set. */
         const elephantPine = { id: VNID() };
         // Preconditions:
         await assertExists(ponderosaPine);
         assertEquals(await getName(ponderosaPine), ponderosaPine.name);
         assertEquals(await getDescription(ponderosaPine), ponderosaPine.description);
-        assertEquals(await getFriendlyId(ponderosaPine), ponderosaPine.friendlyId);
+        assertEquals(await getKey(ponderosaPine), ponderosaPine.key);
         await assertExists(jackPine);
         assertEquals(await getName(jackPine), jackPine.name); // Make sure it starts with the default name
         await assertNotExists(elephantPine);
@@ -37,17 +37,17 @@ group("UpsertEntryById bulk edit implementation", () => {
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: species.id, entryId: ponderosaPine.id },
-                    setOnCreate: { friendlyId: "this-shouldnt-be-used" },
+                    where: { entryTypeKey: species.key, entryId: ponderosaPine.id },
+                    setOnCreate: { key: "this-shouldnt-be-used" },
                     set: { name: "NEW Ponderosa", description: "NEW ponderosa description" },
                 },
             },
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: species.id, entryId: jackPine.id },
+                    where: { entryTypeKey: species.key, entryId: jackPine.id },
                     setOnCreate: {
-                        friendlyId: "this-shouldnt-be-used",
+                        key: "this-shouldnt-be-used",
                         name: "nor this",
                         description: "nor this",
                     },
@@ -56,8 +56,8 @@ group("UpsertEntryById bulk edit implementation", () => {
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: species.id, entryId: elephantPine.id },
-                    setOnCreate: { friendlyId: "s-elephant-pine" },
+                    where: { entryTypeKey: species.key, entryId: elephantPine.id },
+                    setOnCreate: { key: "s-elephant-pine" },
                     set: { name: "NEW Elephant Pine" },
                 },
             },
@@ -66,14 +66,14 @@ group("UpsertEntryById bulk edit implementation", () => {
         // Now check if it worked:
         assertEquals(await getName(ponderosaPine), "NEW Ponderosa");
         assertEquals(await getDescription(ponderosaPine), "NEW ponderosa description");
-        assertEquals(await getFriendlyId(ponderosaPine), ponderosaPine.friendlyId); // Unchanged since we used setOnCreate for friendlyId
+        assertEquals(await getKey(ponderosaPine), ponderosaPine.key); // Unchanged since we used setOnCreate for key
         assertEquals(await getName(jackPine), jackPine.name); // Unchanged since we used setOnCreate for all jackPine fields.
-        assertEquals(await getFriendlyId(jackPine), jackPine.friendlyId); // Unchanged since we used setOnCreate for all jackPine fields.
+        assertEquals(await getKey(jackPine), jackPine.key); // Unchanged since we used setOnCreate for all jackPine fields.
         assertEquals(await getDescription(jackPine), jackPine.description); // Unchanged since we used setOnCreate for all jackPine fields.
         await assertExists(elephantPine);
         assertEquals(await getName(elephantPine), "NEW Elephant Pine");
         assertEquals(await getDescription(elephantPine), "");
-        assertEquals(await getFriendlyId(elephantPine), "s-elephant-pine");
+        assertEquals(await getKey(elephantPine), "s-elephant-pine");
     });
 
     test("UpsertEntryById creates AppliedEdit records as if actual edits were made, including with old values", async () => {
@@ -90,17 +90,17 @@ group("UpsertEntryById bulk edit implementation", () => {
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: species.id, entryId: ponderosaPine.id },
+                    where: { entryTypeKey: species.key, entryId: ponderosaPine.id },
                     setOnCreate: { description: "This won't be used since ponderosa already exists." },
-                    set: { name: "NEW Ponderosa", friendlyId: "s-new-ponderosa" },
+                    set: { name: "NEW Ponderosa", key: "s-new-ponderosa" },
                 },
             },
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: species.id, entryId: jackPine.id },
+                    where: { entryTypeKey: species.key, entryId: jackPine.id },
                     setOnCreate: {
-                        friendlyId: "this-shouldnt-be-used",
+                        key: "this-shouldnt-be-used",
                         name: "nor this",
                         description: "nor this",
                     },
@@ -109,8 +109,8 @@ group("UpsertEntryById bulk edit implementation", () => {
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: species.id, entryId: elephantPine.id },
-                    setOnCreate: { friendlyId: "s-elephant-pine" },
+                    where: { entryTypeKey: species.key, entryId: elephantPine.id },
+                    setOnCreate: { key: "s-elephant-pine" },
                     set: { name: "NEW Elephant Pine" },
                 },
             },
@@ -118,16 +118,16 @@ group("UpsertEntryById bulk edit implementation", () => {
 
         // Now check if it worked:
         assertEquals(await getName(ponderosaPine), "NEW Ponderosa");
-        assertEquals(await getFriendlyId(ponderosaPine), "s-new-ponderosa");
+        assertEquals(await getKey(ponderosaPine), "s-new-ponderosa");
         assertEquals(await getDescription(ponderosaPine), ponderosaPine.description);
 
         assertEquals(await getName(jackPine), jackPine.name); // Unchanged since we used setOnCreate for all jackPine fields.
-        assertEquals(await getFriendlyId(jackPine), jackPine.friendlyId); // Unchanged since we used setOnCreate for all jackPine fields.
+        assertEquals(await getKey(jackPine), jackPine.key); // Unchanged since we used setOnCreate for all jackPine fields.
         assertEquals(await getDescription(jackPine), jackPine.description); // Unchanged since we used setOnCreate for all jackPine fields.
 
         await assertExists(elephantPine);
         assertEquals(await getName(elephantPine), "NEW Elephant Pine");
-        assertEquals(await getFriendlyId(elephantPine), "s-elephant-pine");
+        assertEquals(await getKey(elephantPine), "s-elephant-pine");
         assertEquals(await getDescription(elephantPine), "");
 
         const appliedEdits = await getAppliedEdits(result);
@@ -138,17 +138,17 @@ group("UpsertEntryById bulk edit implementation", () => {
                 oldData: { name: ponderosaPine.name },
             },
             {
-                code: "SetEntryFriendlyId",
-                data: { entryId: ponderosaPine.id, friendlyId: "s-new-ponderosa" },
-                oldData: { friendlyId: ponderosaPine.friendlyId },
+                code: "SetEntryKey",
+                data: { entryId: ponderosaPine.id, key: "s-new-ponderosa" },
+                oldData: { key: ponderosaPine.key },
             },
             {
                 code: "CreateEntry",
                 data: {
                     entryId: elephantPine.id,
-                    type: species.id,
+                    entryTypeKey: species.key,
                     description: "",
-                    friendlyId: "s-elephant-pine",
+                    key: "s-elephant-pine",
                     name: "NEW Elephant Pine",
                 },
                 oldData: {}, // There is no "old data" for a newly created entry
@@ -161,16 +161,16 @@ group("UpsertEntryById bulk edit implementation", () => {
         await assertExists(ponderosaPine);
         assertEquals(await getName(ponderosaPine), ponderosaPine.name);
         assertEquals(await getDescription(ponderosaPine), ponderosaPine.description);
-        assertEquals(await getFriendlyId(ponderosaPine), ponderosaPine.friendlyId);
+        assertEquals(await getKey(ponderosaPine), ponderosaPine.key);
 
         // Make the edit:
         const result = await doBulkEdits([
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: species.id, entryId: ponderosaPine.id },
+                    where: { entryTypeKey: species.key, entryId: ponderosaPine.id },
                     set: {
-                        friendlyId: ponderosaPine.friendlyId,
+                        key: ponderosaPine.key,
                         name: ponderosaPine.name,
                         description: ponderosaPine.description,
                     },
@@ -181,7 +181,7 @@ group("UpsertEntryById bulk edit implementation", () => {
         // Now check that nothing happened:
         assertEquals(await getName(ponderosaPine), ponderosaPine.name);
         assertEquals(await getDescription(ponderosaPine), ponderosaPine.description);
-        assertEquals(await getFriendlyId(ponderosaPine), ponderosaPine.friendlyId);
+        assertEquals(await getKey(ponderosaPine), ponderosaPine.key);
         assertEquals(result.appliedEditIds, []);
     });
 
@@ -192,9 +192,9 @@ group("UpsertEntryById bulk edit implementation", () => {
                     {
                         code: "UpsertEntryById",
                         data: {
-                            where: { entryTypeId: VNID(), entryId: VNID() },
+                            where: { entryTypeKey: "nonexistent-entry-type", entryId: VNID() },
                             set: {
-                                friendlyId: "s-foo",
+                                key: "s-foo",
                                 name: "Foo name",
                                 description: "foo bar",
                             },
@@ -207,7 +207,7 @@ group("UpsertEntryById bulk edit implementation", () => {
         assertInstanceOf(err.cause, InvalidEdit);
         assertEquals(
             err.cause.message,
-            "Unable to bulk upsert entries. Check if entryTypeId or connectionId is invalid.",
+            "Unable to bulk upsert entries. Check if entryTypeKey or connectionId is invalid.",
         );
     });
 
@@ -220,9 +220,9 @@ group("UpsertEntryById bulk edit implementation", () => {
                     {
                         code: "UpsertEntryById",
                         data: {
-                            where: { entryTypeId: species.id, entryId: entryA },
+                            where: { entryTypeKey: species.key, entryId: entryA },
                             set: {
-                                friendlyId: "s-foo",
+                                key: "s-foo",
                                 name: "Foo name",
                                 description: "foo bar",
                             },

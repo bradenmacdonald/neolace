@@ -2,6 +2,7 @@ import { Vertex } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
 import { registerPluginVNodeTypes, registerVNodeTypes } from "./graph-init.ts";
 import { defineStoppableResource } from "../lib/stoppable.ts";
+import { keyMigration } from "./key.ts";
 
 export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(async () => {
     const graph = new Vertex({
@@ -58,13 +59,13 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 },
                 dependsOn: [],
             },
-            // Sites have unique "friendlyId" values:
-            siteFriendlyIdUnique: {
+            // Sites have unique "key" values:
+            siteKeyUnique: {
                 forward: async (dbWrite) => {
-                    await dbWrite("CREATE CONSTRAINT site_friendlyid_uniq FOR (s:Site) REQUIRE s.friendlyId IS UNIQUE");
+                    await dbWrite("CREATE CONSTRAINT site_key_uniq FOR (s:Site) REQUIRE s.key IS UNIQUE");
                 },
                 backward: async (dbWrite) => {
-                    await dbWrite("DROP CONSTRAINT site_friendlyid_uniq IF EXISTS");
+                    await dbWrite("DROP CONSTRAINT site_key_uniq IF EXISTS");
                 },
                 dependsOn: [],
             },
@@ -93,6 +94,7 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 dependsOn: [],
             },
             // The "UniqueId" node type (which is not a VNode) has a unique index on 'name'
+            // We use this to generate incrementing IDs for Drafts, and maybe other types in the future.
             // See https://stackoverflow.com/q/32040409
             uniqueIdGenerator: {
                 forward: async (dbWrite) => {
@@ -100,18 +102,6 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 },
                 backward: async (dbWrite) => {
                     await dbWrite("DROP CONSTRAINT uniqueid_name_uniq IF EXISTS");
-                },
-                dependsOn: [],
-            },
-            // The Entry VNode type has a unique index on 'siteNamespace, friendlyId'
-            entryUniqueFriendlyId: {
-                forward: async (dbWrite) => {
-                    await dbWrite(
-                        "CREATE CONSTRAINT entry_friendlyid_uniq FOR (e:Entry) REQUIRE (e.siteNamespace, e.friendlyId) IS UNIQUE",
-                    );
-                },
-                backward: async (dbWrite) => {
-                    await dbWrite("DROP CONSTRAINT entry_friendlyid_uniq IF EXISTS");
                 },
                 dependsOn: [],
             },
@@ -127,18 +117,14 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 },
                 dependsOn: [],
             },
-            // The Connection VNode type has a unique index on 'siteNamespace, friendlyId'
-            connectionUniqueFriendlyId: {
-                forward: async (dbWrite) => {
-                    await dbWrite(
-                        "CREATE CONSTRAINT connection_friendlyid_uniq FOR (c:Connection) REQUIRE (c.siteNamespace, c.friendlyId) IS UNIQUE",
-                    );
-                },
-                backward: async (dbWrite) => {
-                    await dbWrite("DROP CONSTRAINT connection_friendlyid_uniq IF EXISTS");
-                },
-                dependsOn: [],
-            },
+            // The Connection VNode type has a unique index on 'siteNamespace, key'
+            connectionUniqueKey: keyMigration("Connection"),
+            // The EntryType VNode type has a unique index on 'siteNamespace, key'
+            entryTypeUniqueKey: keyMigration("EntryType"),
+            // The EntryType VNode type has a unique index on 'siteNamespace, key'
+            propertyUniqueKey: keyMigration("Property"),
+            // The Entry VNode type has a unique index on 'siteNamespace, key'
+            entryUniqueKey: keyMigration("Entry"),
         },
     });
 

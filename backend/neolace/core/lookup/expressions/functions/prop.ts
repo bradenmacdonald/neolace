@@ -1,7 +1,6 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
 
 import { Property } from "neolace/core/schema/Property.ts";
-import { Site } from "neolace/core/Site.ts";
 import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 
@@ -19,12 +18,12 @@ export class PropFunction extends LookupFunctionOneArg {
     static functionName = "prop";
 
     /** An expression that specifies the VNID of the property we want */
-    public get propIdExpr(): LookupExpression {
+    public get propKeyExpr(): LookupExpression {
         return this.firstArg;
     }
 
     public async getValue(context: LookupContext): Promise<LookupValue> {
-        const propId = (await this.propIdExpr.getValueAs(StringValue, context)).value;
+        const propKey = (await this.propKeyExpr.getValueAs(StringValue, context)).value;
 
         // This is the VNID of a property.
         // Viewing a single property whose VNID the user already knows does not require 'schema' permission;
@@ -36,10 +35,10 @@ export class PropFunction extends LookupFunctionOneArg {
         ]);
         try {
             const data = await context.tx.queryOne(C`
-                MATCH (property:${Property} {id: ${propId}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${context.siteId}})
+                MATCH (property:${Property} {siteNamespace: ${context.siteId}, key: ${propKey}})
                 WHERE ${permissionsPredicate}
-            `.RETURN({ "property.id": Field.VNID }));
-            return new PropertyValue(data["property.id"]);
+            `.RETURN({ "property.key": Field.String }));
+            return new PropertyValue(data["property.key"]);
         } catch (err) {
             if (err instanceof EmptyResultError) {
                 throw new LookupEvaluationError("Property not found.");

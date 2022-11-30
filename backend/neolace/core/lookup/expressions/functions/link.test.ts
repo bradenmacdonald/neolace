@@ -24,7 +24,7 @@ group("link.ts", () => {
         );
 
         assertInstanceOf(result, V.InlineMarkdownStringValue);
-        assertEquals(result.value, `[Ponderosa Pine](/entry/${defaultData.entries.ponderosaPine.friendlyId})`);
+        assertEquals(result.value, `[Ponderosa Pine](/entry/${defaultData.entries.ponderosaPine.key})`);
     });
 
     test(`It converts an entry into a markdown link, with custom text that's not markdown.`, async () => {
@@ -35,7 +35,7 @@ group("link.ts", () => {
         assertInstanceOf(result, V.InlineMarkdownStringValue);
         assertEquals(
             result.value,
-            `[this is \\[\\*\\*escaped\\*\\*\\](right?)](/entry/${defaultData.entries.ponderosaPine.friendlyId})`,
+            `[this is \\[\\*\\*escaped\\*\\*\\](right?)](/entry/${defaultData.entries.ponderosaPine.key})`,
         );
     });
 
@@ -45,7 +45,7 @@ group("link.ts", () => {
         );
 
         assertInstanceOf(result, V.InlineMarkdownStringValue);
-        assertEquals(result.value, `[very **cool**!](/entry/${defaultData.entries.ponderosaPine.friendlyId})`);
+        assertEquals(result.value, `[very **cool**!](/entry/${defaultData.entries.ponderosaPine.key})`);
     });
 
     // Using with Images:
@@ -54,7 +54,7 @@ group("link.ts", () => {
 
     test(`A Link to an image`, async () => {
         const result = await context.evaluateExprConcrete(
-            `entry("${imgEntry.friendlyId}").image().link()`,
+            `entry("${imgEntry.key}").image().link()`,
         );
 
         assertInstanceOf(result, V.InlineMarkdownStringValue);

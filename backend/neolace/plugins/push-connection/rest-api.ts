@@ -10,7 +10,7 @@ import { thisPlugin } from "./mod.ts";
  * schema edits if there is some use case not covered by the existing built-in APIs.
  */
 export class PushEditResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteFriendlyId/connection/push/:connectionFriendlyId/edit/"];
+    public paths = ["/site/:siteKey/connection/push/:connectionKey/edit/"];
 
     POST = this.method({
         requestBodySchema: api.schemas.Schema({
@@ -33,15 +33,18 @@ export class PushEditResource extends NeolaceHttpResource {
         if (!(await thisPlugin.isEnabledForSite(siteId))) {
             throw new api.NotFound("Push connection is not enabled for that site");
         }
-        const friendlyId = request.pathParam("connectionFriendlyId");
-        if (typeof friendlyId !== "string") {
-            throw new api.InvalidFieldValue([{ fieldPath: "friendlyId", message: "friendly ID missing/invalid." }]);
+        const key = request.pathParam("connectionKey");
+        if (typeof key !== "string") {
+            throw new api.InvalidFieldValue([{
+                fieldPath: "connectionKey",
+                message: "Connection key missing/invalid.",
+            }]);
         }
         let connection;
         try {
             connection = await getConnection({
                 create: request.queryParam("create") !== undefined,
-                friendlyId,
+                key,
                 plugin: "push-connection",
                 siteId,
             });

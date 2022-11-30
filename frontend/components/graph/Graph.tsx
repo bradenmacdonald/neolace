@@ -30,7 +30,7 @@ export interface G6RawGraphData {
     nodes: {
         id: VNID;
         label: string;
-        entryType: VNID;
+        entryTypeKey: string;
         isFocusEntry?: boolean;
         community?: number;
         nodesCondensed?: Set<string>;
@@ -43,7 +43,7 @@ export interface G6RawGraphData {
         id: VNID;
         source: string;
         target: string;
-        relType: VNID;
+        relTypeKey: string;
         label: string;
         [other: string]: unknown; // attributes
     }[];
@@ -58,7 +58,7 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
                 nextColor = (nextColor + 1) % Object.values(api.EntryTypeColor).length;
             }
             node.color = colourMap.get(attrValue);
-            node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryType as VNID]?.name);
+            node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryTypeKey as string]?.name);
         });
         return data;
     }
@@ -66,11 +66,11 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
         data = colorGraphByAttribute("community");
     } else {
         data.nodes.forEach((node) => {
-            node.color = refCache.entryTypes[node.entryType]?.color ?? api.EntryTypeColor.Default;
-            if (refCache.entryTypes[node.entryType]?.colorCustom) {
-                node.colorCustom = refCache.entryTypes[node.entryType].colorCustom;
+            node.color = refCache.entryTypes[node.entryTypeKey]?.color ?? api.EntryTypeColor.Default;
+            if (refCache.entryTypes[node.entryTypeKey]?.colorCustom) {
+                node.colorCustom = refCache.entryTypes[node.entryTypeKey].colorCustom;
             }
-            node.leftLetter = refCache.entryTypes[node.entryType]?.abbreviation ?? "";
+            node.leftLetter = refCache.entryTypes[node.entryTypeKey]?.abbreviation ?? "";
         });
     }
     return data;
@@ -79,15 +79,15 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
 function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData): Readonly<G6RawGraphData> {
     let data: G6RawGraphData = {
         nodes: value.entries.map((n) => (
-            { id: n.entryId, label: n.name, entryType: n.entryType, isFocusEntry: n.isFocusEntry }
+            { id: n.entryId, label: n.name, entryTypeKey: n.entryTypeKey, isFocusEntry: n.isFocusEntry }
         )),
         edges: value.rels.map((e) => (
             {
                 id: e.relId,
                 source: e.fromEntryId,
                 target: e.toEntryId,
-                relType: e.relType,
-                label: refCache.properties[e.relType]?.name ?? e.relType,
+                relTypeKey: e.relTypeKey,
+                label: refCache.properties[e.relTypeKey]?.name ?? e.relTypeKey,
             }
         )),
     };

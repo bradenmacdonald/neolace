@@ -22,7 +22,7 @@ interface Props {
  * This widget implements the "Properties" tab of the "Edit Entry" page.
  */
 export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEdit, ...props }) => {
-    const entryType = entry?.entryType.id;
+    const entryTypeKey = entry?.entryType.key;
     /** The schema, including any schema changes which have been made within the current draft, if any. */
     const [schema] = useSchema();
 
@@ -38,13 +38,13 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
 
     // This list contains all the possible properties that can be applied to entries of this type:
     const applicableProperties = React.useMemo(() => {
-        if (!schema || !entryType) return [];
+        if (!schema || !entryTypeKey) return [];
         const props = Object.values(schema?.properties).filter((p) =>
-            p.appliesTo.find((at) => at.entryType === entryType)
+            p.appliesTo.find((at) => at.entryTypeKey === entryTypeKey)
         );
         props.sort((a, b) => a.rank - b.rank);
         return props;
-    }, [schema, entryType]);
+    }, [schema, entryTypeKey]);
 
     const propertiesRaw = entry?.propertiesRaw ?? emptyPropsRawArray;
     const [activeProps, unsetProps] = React.useMemo(() => {
@@ -53,7 +53,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
 
         for (const p of applicableProperties) {
             // If this property is set, it will have one or more "facts":
-            const facts = propertiesRaw.find((pr) => pr.propertyId === p.id)?.facts ?? [];
+            const facts = propertiesRaw.find((pr) => pr.propertyKey === p.key)?.facts ?? [];
             if (facts.length > 0 || p.mode !== api.PropertyMode.Optional) {
                 activeProps.push({ prop: p, facts: facts });
             } else {
@@ -62,9 +62,9 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
         }
 
         unsetProps.forEach((p) => {
-            const parentPropIds = p.isA;
-            if (parentPropIds && parentPropIds.length === 1) {
-                const parentProp = applicableProperties.find((pp) => pp.id === parentPropIds[0]);
+            const parentPropKeys = p.isA;
+            if (parentPropKeys && parentPropKeys.length === 1) {
+                const parentProp = applicableProperties.find((pp) => pp.key === parentPropKeys[0]);
                 if (parentProp) {
                     p.name = `${parentProp.name} > ${p.name}`;
                 }
@@ -77,13 +77,13 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
 
     // Handler for the menu at the bottom, to add a value for one of the "unsetProps" that has no value yet:
     const entryId = entry?.id;
-    const handleAddNewProperty = React.useCallback((propId: string) => {
+    const handleAddNewProperty = React.useCallback((propertyKey: string) => {
         if (!entryId) return;
         addUnsavedEdit({
             code: api.AddPropertyFact.code,
             data: {
                 entryId,
-                propertyId: VNID(propId),
+                propertyKey,
                 propertyFactId: VNID(),
                 valueExpression: "",
             },
@@ -92,7 +92,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
 
     if (!schema || !entry) {
         return <Spinner />;
-    } else if (!entry.entryType.id) {
+    } else if (!entry.entryType.key) {
         return (
             <p>
                 <FormattedMessage
@@ -112,7 +112,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
                 </colgroup>
                 <tbody>
                     {activeProps.map((p) => (
-                        <tr key={p.prop.id} className="even:bg-gray-50 hover:bg-blue-50">
+                        <tr key={p.prop.key} className="even:bg-gray-50 hover:bg-blue-50">
                             <th className="block md:table-cell text-xs md:text-base -mb-1 md:mb-0 pt-1 md:py-1 pr-2 align-top text-left font-normal text-gray-500 md:text-gray-700 min-w-[120px]">
                                 {p.prop.name}
                             </th>
@@ -142,7 +142,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
                 }
             >
                 <SelectBox
-                    options={unsetProps.map((p) => ({ id: p.id, label: noTranslationNeeded(p.name) }))}
+                    options={unsetProps.map((p) => ({ id: p.key, label: noTranslationNeeded(p.name) }))}
                     onChange={handleAddNewProperty}
                 />
             </Control>

@@ -17,27 +17,27 @@ import { EntryType } from "neolace/core/schema/EntryType.ts";
  */
 export class ReferenceCache {
     private _entryIdsUsed = new Set<VNID>();
-    private _friendlyIdsUsed = new Set<string>();
-    private _propertyIdsUsed = new Set<VNID>();
-    private _entryTypeIdsUsed = new Set<VNID>();
+    private _entryKeysUsed = new Set<string>();
+    private _propertyKeysUsed = new Set<string>();
+    private _entryTypeKeysUsed = new Set<string>();
     private _lookupExpressions: Array<{ entryContext?: VNID; lookupExpression: string }> = [];
     readonly siteId: VNID;
 
     constructor(args: { siteId: VNID }) {
         this._entryIdsUsed = new Set();
-        this._friendlyIdsUsed = new Set();
-        this._propertyIdsUsed = new Set();
+        this._entryKeysUsed = new Set();
+        this._propertyKeysUsed = new Set();
         this.siteId = args.siteId;
     }
 
     public get entryIdsUsed(): ReadonlySet<VNID> {
         return this._entryIdsUsed;
     }
-    public get friendlyIdsUsed(): ReadonlySet<string> {
-        return this._friendlyIdsUsed;
+    public get entryKeysUsed(): ReadonlySet<string> {
+        return this._entryKeysUsed;
     }
-    public get propertyIdsUsed(): ReadonlySet<VNID> {
-        return this._propertyIdsUsed;
+    public get propertyKeysUsed(): ReadonlySet<string> {
+        return this._propertyKeysUsed;
     }
 
     async getData(lookupContext: LookupContext): Promise<ReferenceCacheData> {
@@ -75,13 +75,11 @@ export class ReferenceCache {
         // Entries referenced:
         const entryReferences = await lookupContext.tx.pull(
             Entry,
-            (e) => e.id.name.description.friendlyId.type((et) => et.id.site((s) => s.id)),
+            (e) => e.id.name.description.key.type((et) => et.key.site((s) => s.id)),
             {
                 where: C`@this.id IN ${
-                    Array.from(this.entryIdsUsed)
-                } OR (@this.siteNamespace = ${this.siteId} AND @this.friendlyId IN ${
-                    Array.from(this.friendlyIdsUsed)
-                })`,
+                    Array.from(this._entryIdsUsed)
+                } OR (@this.siteNamespace = ${this.siteId} AND @this.key IN ${Array.from(this._entryKeysUsed)})`,
             },
         );
         for (const reference of entryReferences) {
@@ -95,13 +93,13 @@ export class ReferenceCache {
             data.entries[reference.id] = {
                 id: reference.id,
                 name: reference.name,
-                friendlyId: reference.friendlyId,
+                key: reference.key,
                 description: reference.description,
-                entryType: { id: reference.type.id },
+                entryType: { key: reference.type.key },
             };
             this.extractMarkdownReferences(reference.description, { currentEntryId: reference.id });
 
-            this._entryTypeIdsUsed.add(reference.type.id);
+            this._entryTypeKeysUsed.add(reference.type.key);
         }
         // Now, the descriptions of referenced entries may contain lookup expressions that we need to evaluate:
         // TODO: remove this, and fetch descriptions in real time. This is too much like recursion
@@ -112,40 +110,34 @@ export class ReferenceCache {
         // Entry types referenced:
         const entryTypeReferences = await lookupContext.tx.pull(
             EntryType,
-            (et) => et.id.name.color.colorCustom.abbreviation.site((s) => s.id),
+            (et) => et.key.name.color.colorCustom.abbreviation,
             {
-                where: C`@this.id IN ${Array.from(this._entryTypeIdsUsed)}`,
+                where: C`@this.siteNamespace = ${this.siteId} AND @this.key IN ${Array.from(this._entryTypeKeysUsed)}`,
             },
         );
         for (const reference of entryTypeReferences) {
-            data.entryTypes[reference.id] = {
-                id: reference.id,
+            data.entryTypes[reference.key] = {
+                key: reference.key,
                 name: reference.name,
                 // The ?? below are temporary because older versions of the database schema didn't have color/abbreviation
                 color: reference.color as EntryTypeColor ?? EntryTypeColor.Default,
                 abbreviation: reference.abbreviation ?? "",
             };
             if (reference.color === EntryTypeColor.Custom && reference.colorCustom) {
-                data.entryTypes[reference.id].colorCustom = reference.colorCustom;
+                data.entryTypes[reference.key].colorCustom = reference.colorCustom;
             }
         }
 
         // Properties referenced:
         const propertyReferences = await lookupContext.tx.pull(
             Property,
-            (p) => p.id.name.type.description.standardURL.rank.displayAs.site((s) => s.id),
-            { where: C`@this.id IN ${Array.from(this.propertyIdsUsed)}` },
+            (p) => p.key.name.type.description.standardURL.rank.displayAs,
+            { where: C`@this.siteNamespace = ${this.siteId} AND @this.key IN ${Array.from(this.propertyKeysUsed)}` },
         );
         for (const prop of propertyReferences) {
-            // Let's just do a double-check that we're not leaking information from another site - shouldn't happen in any case:
-            if (prop.site?.id !== this.siteId) {
-                throw new Error(
-                    `Error, found an Property ID from another site altogether (${prop.id}). Security issue?`,
-                );
-            }
             // Now add this reference and its entry type information to the cache
-            data.properties[prop.id] = {
-                id: prop.id,
+            data.properties[prop.key] = {
+                key: prop.key,
                 name: prop.name,
                 type: prop.type as PropertyType,
                 description: prop.description,
@@ -162,8 +154,12 @@ export class ReferenceCache {
         this._entryIdsUsed.add(entryId);
     }
 
-    public addReferenceToPropertyId(propertyId: VNID) {
-        this._propertyIdsUsed.add(propertyId);
+    public addReferenceToEntryKey(entryKey: string) {
+        this._entryKeysUsed.add(entryKey);
+    }
+
+    public addReferenceToPropertyKey(propertyKey: string) {
+        this._propertyKeysUsed.add(propertyKey);
     }
 
     public addLookupExpression(data: { entryContext?: VNID; lookupExpression: string }) {
@@ -201,11 +197,11 @@ export class ReferenceCache {
                 return;
             }
             case "EntryType": {
-                this._entryTypeIdsUsed.add(value.id);
+                this._entryTypeKeysUsed.add(value.key);
                 return;
             }
             case "Property": {
-                this._propertyIdsUsed.add(value.id);
+                this._propertyKeysUsed.add(value.key);
                 return;
             }
             case "Image": {
@@ -225,7 +221,7 @@ export class ReferenceCache {
                     this._entryIdsUsed.add(entry.entryId);
                 }
                 for (const relationship of value.rels) {
-                    this._propertyIdsUsed.add(relationship.relType);
+                    this._propertyKeysUsed.add(relationship.relTypeKey);
                 }
                 return;
             }
@@ -263,11 +259,11 @@ export class ReferenceCache {
         if (node.type === "link") {
             if (node.href.startsWith("/entry/")) {
                 const entryKey = node.href.substring(7);
-                // May be a friendlyId or VNID
+                // May be a key or VNID
                 if (isVNID(entryKey)) {
                     this._entryIdsUsed.add(entryKey);
                 } else {
-                    this._friendlyIdsUsed.add(entryKey);
+                    this._entryKeysUsed.add(entryKey);
                 }
             }
         } else if (node.type === "lookup_inline" || node.type === "lookup_block") {

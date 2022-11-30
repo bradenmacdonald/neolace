@@ -95,8 +95,8 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
         Transforms.select(editor, autocompletion.target);
         const node: NeolaceSlateElement = (
             item.type === "Entry" ? {type: "custom-void-entry", entryId: item.id, children: [{ type: "text", text: '' }]}
-            : item.type === "Property" ? {type: "custom-void-property", propertyId: item.id, children: [{ type: "text", text: '' }]}
-            : item.type === "EntryType" ? {type: "custom-void-entry-type", entryTypeId: item.id, children: [{ type: "text", text: '' }]}
+            : item.type === "Property" ? {type: "custom-void-property", propertyKey: item.key, children: [{ type: "text", text: '' }]}
+            : item.type === "EntryType" ? {type: "custom-void-entry-type", entryTypeKey: item.key, children: [{ type: "text", text: '' }]}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             : {type: "text", text: (item as any).id}
         ); 
@@ -143,13 +143,13 @@ export function renderElement({ element, children, attributes }: RenderElementPr
         return <EntryVoid entryId={(element as VoidEntryNode).entryId} attributes={attributes}>{children}</EntryVoid>;
     } else if (element.type === "custom-void-property") {
         return (
-            <PropertyVoid propertyId={(element as VoidPropNode).propertyId} attributes={attributes}>
+            <PropertyVoid propertyKey={(element as VoidPropNode).propertyKey} attributes={attributes}>
                 {children}
             </PropertyVoid>
         );
     } else if (element.type === "custom-void-entry-type") {
         return (
-            <EntryTypeVoid entryTypeId={(element as VoidEntryTypeNode).entryTypeId} attributes={attributes}>
+            <EntryTypeVoid entryTypeKey={(element as VoidEntryTypeNode).entryTypeKey} attributes={attributes}>
                 {children}
             </EntryTypeVoid>
         );

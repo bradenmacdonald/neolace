@@ -20,13 +20,13 @@ const {id: adminUserId} = await graph.pullOne(User, u => u.id, {with: {username:
 });
 
 // Create the docs site:
-const {id: siteId} = await graph.pullOne(Site, s => s.id, {with: {friendlyId: "docs"}}).catch(err =>{
+const {id: siteId} = await graph.pullOne(Site, s => s.id, {with: {key: "docs"}}).catch(err =>{
     if (!(err instanceof EmptyResultError)) { throw err; }
     return graph.runAsSystem(CreateSite({
         id: VNID("_5KJ0sVd9pQrsLi4fYlBrR6"),
         name: "Neolace documentation",
         domain: "docs.local.neolace.net",
-        friendlyId: `docs`,
+        key: `docs`,
         adminUser: adminUserId,
     }));
 });

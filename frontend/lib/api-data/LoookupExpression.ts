@@ -20,7 +20,7 @@ import { useRefCache } from "./ReferenceCache";
     const valueFromCache = refCache.lookups.find((x) => x.entryContext === options.entryId && x.lookupExpression === expr);
 
     // TODO: include an entry revision number in this ID
-    const key = valueFromCache !== undefined ? "" : `lookup:${site.friendlyId}:${options.entryId ?? "none"}:${options.pageSize ?? "default"}:no-draft:${expr}`;
+    const key = valueFromCache !== undefined ? "" : `lookup:${site.key}:${options.entryId ?? "none"}:${options.pageSize ?? "default"}:no-draft:${expr}`;
     const { data, error } = useSWR(key, async () => {
         if (key === "") {
             // The lookup value was found in the reference cache. Do not query the server.
@@ -33,10 +33,10 @@ import { useRefCache } from "./ReferenceCache";
                 entryContext: options.entryId,
                 referenceCache: { entries: {}, entryTypes: {}, lookups: [], properties: {} },
             };
-        } else if (site.friendlyId) {
+        } else if (site.key) {
             return await client.evaluateLookupExpression(expr, {
                 entryKey: options.entryId,
-                siteId: site.friendlyId,
+                siteKey: site.key,
                 pageSize: options.pageSize,
             });
         } else {

@@ -1,42 +1,42 @@
-import { C } from "neolace/deps/vertex-framework.ts";
+import { C, Field } from "neolace/deps/vertex-framework.ts";
 import { UpdateProperty } from "neolace/deps/neolace-api.ts";
 import { defineImplementation } from "neolace/core/edit/implementations.ts";
-import { EntryType, Property, Site } from "neolace/core/mod.ts";
+import { EntryType, Property } from "neolace/core/mod.ts";
 
 export const doUpdateProperty = defineImplementation(UpdateProperty, async (tx, data, siteId) => {
     // update the "appliesTo" of this property:
     if (data.appliesTo !== undefined) {
-        const newAppliesToIds = data.appliesTo.map((at) => at.entryType);
+        const newAppliesToKeys = data.appliesTo.map((at) => at.entryTypeKey);
         // Create new "applies to" links:
         await tx.query(C`
-            MATCH (p:${Property} {id: ${data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-            UNWIND ${newAppliesToIds} as entryTypeId
-            MATCH (et:${EntryType} {id: entryTypeId})-[:${EntryType.rel.FOR_SITE}]->(site)
+            MATCH (p:${Property} {siteNamespace: ${siteId}, key: ${data.key}})
+            UNWIND ${newAppliesToKeys} as entryTypeKey
+            MATCH (et:${EntryType} {siteNamespace: ${siteId}, key: entryTypeKey})
             MERGE (p)-[:${Property.rel.APPLIES_TO_TYPE}]->(et)
         `.RETURN({}));
         // Delete old "applies to" links:
         await tx.query(C`
-            MATCH (p:${Property} {id: ${data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+            MATCH (p:${Property} {siteNamespace: ${siteId}, key: ${data.key}})
             MATCH (p)-[rel:${Property.rel.APPLIES_TO_TYPE}]->(et:${EntryType})
-            WHERE NOT et.id IN ${newAppliesToIds}
+            WHERE NOT et.key IN ${newAppliesToKeys}
             DELETE rel
         `.RETURN({}));
     }
     // update the "isA" of this property:
     if (data.isA !== undefined) {
-        const newParentIds = data.isA;
+        const newParentKeys = data.isA;
         // Create new "is a" / parent property links:
         await tx.query(C`
-            MATCH (p:${Property} {id: ${data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
-            UNWIND ${newParentIds} as parentId
-            MATCH (pp:${Property} {id: parentId})-[:${EntryType.rel.FOR_SITE}]->(site)
+            MATCH (p:${Property} {siteNamespace: ${siteId}, key: ${data.key}})
+            UNWIND ${newParentKeys} as parentKey
+            MATCH (pp:${Property} {siteNamespace: ${siteId}, key: parentKey})
             MERGE (p)-[:${Property.rel.HAS_PARENT_PROP}]->(pp)
         `.RETURN({}));
         // Delete old "is a" / parent property links:
         await tx.query(C`
-            MATCH (p:${Property} {id: ${data.id}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+            MATCH (p:${Property} {siteNamespace: ${siteId}, key: ${data.key}})
             MATCH (p)-[rel:${Property.rel.HAS_PARENT_PROP}]->(pp)
-            WHERE NOT pp.id IN ${newParentIds}
+            WHERE NOT pp.key IN ${newParentKeys}
             DELETE rel
         `.RETURN({}));
     }
@@ -64,12 +64,12 @@ export const doUpdateProperty = defineImplementation(UpdateProperty, async (tx, 
     }
     // The following will also throw an exception if the property is not part of the current site, so
     // we always run this query even if changes is empty.
-    await tx.queryOne(C`
-        MATCH (p:${Property} {id: ${data.id}})-[:${Property.rel.FOR_SITE}]->(:${Site} {id: ${siteId}})
+    const result = await tx.queryOne(C`
+        MATCH (p:${Property} {siteNamespace: ${siteId}, key: ${data.key}})
         SET p += ${changes}
-    `.RETURN({}));
+    `.RETURN({ "p.id": Field.VNID }));
 
     return {
-        modifiedNodes: [data.id],
+        modifiedNodes: [result["p.id"]],
     };
 });

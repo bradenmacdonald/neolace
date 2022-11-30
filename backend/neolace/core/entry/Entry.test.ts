@@ -20,21 +20,21 @@ group("Entry.ts", () => {
     group("low-level tests for Entry model", () => {
         const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
 
-        const getEntry = async (siteId: VNID, friendlyId: string) => {
+        const getEntry = async (siteId: VNID, key: string) => {
             const graph = await getGraph();
-            return await graph.pullOne(Entry, (e) => e.id.name.friendlyId, {
-                with: { siteNamespace: siteId, friendlyId },
+            return await graph.pullOne(Entry, (e) => e.id.name.key, {
+                with: { siteNamespace: siteId, key },
             });
         };
 
-        test("The friendlyId of an entry is a site-specific identifier", async () => {
+        test("The key of an entry is a site-specific identifier", async () => {
             const graph = await getGraph();
-            const friendlyId = defaultData.entries.ponderosaPine.friendlyId;
+            const key = defaultData.entries.ponderosaPine.key;
 
-            assertEquals((await getEntry(defaultData.site.id, friendlyId)).name, "Ponderosa Pine");
+            assertEquals((await getEntry(defaultData.site.id, key)).name, "Ponderosa Pine");
 
-            // Now, create an entry on another site but with the same friendlyId:
-            const otherEntryTypeId = VNID();
+            // Now, create an entry on another site but with the same key:
+            const otherEntryTypeKey = "other-et";
             await graph.runAsSystem(
                 ApplyEdits({
                     editSource: UseSystemSource,
@@ -42,16 +42,16 @@ group("Entry.ts", () => {
                     edits: [
                         {
                             code: "CreateEntryType",
-                            data: { id: otherEntryTypeId, name: "Other Entry Type" },
+                            data: { key: otherEntryTypeKey, name: "Other Entry Type" },
                         },
                         {
                             code: "CreateEntry",
                             data: {
-                                friendlyId,
+                                key,
                                 entryId: VNID(),
-                                description: "This has the same friendly ID (s-ponderosa-pine) but is on another site.",
+                                description: "This has the same key (s-ponderosa-pine) but is on another site.",
                                 name: "Other Entry",
-                                type: otherEntryTypeId,
+                                entryTypeKey: otherEntryTypeKey,
                             },
                         },
                     ],
@@ -59,12 +59,12 @@ group("Entry.ts", () => {
             );
 
             // Now make sure they are different:
-            const onDefaultSite = await getEntry(defaultData.site.id, friendlyId);
-            const onOtherSite = await getEntry(defaultData.otherSite.id, friendlyId);
+            const onDefaultSite = await getEntry(defaultData.site.id, key);
+            const onOtherSite = await getEntry(defaultData.otherSite.id, key);
             assertEquals(onDefaultSite.name, "Ponderosa Pine");
             assertEquals(onOtherSite.name, "Other Entry");
-            assertEquals(onDefaultSite.friendlyId, friendlyId);
-            assertEquals(onOtherSite.friendlyId, friendlyId);
+            assertEquals(onDefaultSite.key, key);
+            assertEquals(onOtherSite.key, key);
         });
 
         test("Validation enforces that siteNamespace matches the entry's site", async () => {
@@ -87,7 +87,7 @@ group("Entry.ts", () => {
             );
         });
 
-        test("Entries cannot be created with the same friendlyId on the same site", async () => {
+        test("Entries cannot be created with the same key on the same site", async () => {
             const graph = await getGraph();
             const err = await assertRejects(
                 () =>
@@ -96,11 +96,11 @@ group("Entry.ts", () => {
                             cypher: C`
                             MATCH (entry1:${Entry} {id: ${defaultData.entries.ponderosaPine.id}})
                             MATCH (entry2:${Entry} {id: ${defaultData.entries.jackPine.id}})
-                            SET entry2.friendlyId = entry1.friendlyId
+                            SET entry2.key = entry1.key
                             RETURN null
                         `,
                             modifiedNodes: [defaultData.entries.jackPine.id],
-                            description: "Forcibly set the friendlyId to conflict with an existing entry.",
+                            description: "Forcibly set the key to conflict with an existing entry.",
                         }),
                     ),
             );

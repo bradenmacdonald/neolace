@@ -15,23 +15,23 @@ group("SetRelationships bulk edit implementation", () => {
         doBulkEdits,
         getAppliedEdits,
     } = testHelpers(defaultData);
-    const genus = defaultData.schema.entryTypes._ETGENUS;
-    const plantPart = defaultData.schema.entryTypes._ETPLANTPART;
+    const genus = defaultData.schema.entryTypes.ETGENUS;
+    const plantPart = defaultData.schema.entryTypes.ETPLANTPART;
     const genusPinus = defaultData.entries.genusPinus;
-    const parentGenusProp = defaultData.schema.properties._parentGenus;
-    const hasPartProp = defaultData.schema.properties._hasPart;
+    const parentGenusProp = defaultData.schema.properties.parentGenus;
+    const hasPartProp = defaultData.schema.properties.hasPart;
 
     const checkPreconditions = async () => {
         // parent genus of ponderosa pine:
         const ponderosaGenusBefore = await evaluateEntryListLookup(
             ponderosaPine,
-            `this.get(prop=prop("${parentGenusProp.id}"))`,
+            `this.get(prop=prop("${parentGenusProp.key}"))`,
         );
         assertEquals(ponderosaGenusBefore, [genusPinus.id]);
         // parent genus of jacke pine:
         const jackPineGenusBefore = await evaluateEntryListLookup(
             jackPine,
-            `this.get(prop=prop("${parentGenusProp.id}"))`,
+            `this.get(prop=prop("${parentGenusProp.key}"))`,
         );
         assertEquals(jackPineGenusBefore, [genusPinus.id]);
     };
@@ -47,15 +47,15 @@ group("SetRelationships bulk edit implementation", () => {
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: genus.id, entryId: fooGenusId },
-                    set: { friendlyId: "g-foo", description: "A genus for testing", name: "Foo Genus" },
+                    where: { entryTypeKey: genus.key, entryId: fooGenusId },
+                    set: { key: "g-foo", description: "A genus for testing", name: "Foo Genus" },
                 },
             },
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: plantPart.id, entryId: quibblePartId },
-                    set: { friendlyId: "pp-quibble", description: "A fake plant part for testing", name: "Quibble" },
+                    where: { entryTypeKey: plantPart.key, entryId: quibblePartId },
+                    set: { key: "pp-quibble", description: "A fake plant part for testing", name: "Quibble" },
                 },
             },
         ]);
@@ -69,17 +69,17 @@ group("SetRelationships bulk edit implementation", () => {
                     entryWith: { entryId: ponderosaPine.id },
                     set: [
                         {
-                            propertyId: parentGenusProp.id,
+                            propertyKey: parentGenusProp.key,
                             toEntries: [
                                 { entryWith: { entryId: genusPinus.id } }, // This value is unchanged.
                                 {
-                                    entryWith: { friendlyId: "g-foo" },
+                                    entryWith: { entryKey: "g-foo" },
                                     note: "This is a new second value for parent genus",
                                 },
                             ],
                         },
                         {
-                            propertyId: hasPartProp.id,
+                            propertyKey: hasPartProp.key,
                             toEntries: [
                                 { entryWith: { entryId: quibblePartId }, slot: "q" },
                             ],
@@ -91,10 +91,10 @@ group("SetRelationships bulk edit implementation", () => {
                 code: "SetRelationships",
                 data: {
                     // This one we match by fiendly ID:
-                    entryWith: { friendlyId: jackPine.friendlyId },
+                    entryWith: { entryKey: jackPine.key },
                     set: [
                         {
-                            propertyId: parentGenusProp.id,
+                            propertyKey: parentGenusProp.key,
                             toEntries: [
                                 { entryWith: { entryId: fooGenusId } }, // Change the parent genus entirely
                             ],
@@ -107,19 +107,19 @@ group("SetRelationships bulk edit implementation", () => {
         // Now check if it worked:
         const ponderosaGenus = await evaluateEntryListLookup(
             ponderosaPine,
-            `this.get(prop=prop("${parentGenusProp.id}"))`,
+            `this.get(prop=prop("${parentGenusProp.key}"))`,
         );
         assertEquals(ponderosaGenus, [genusPinus.id, fooGenusId]);
-        const jackPineGenus = await evaluateEntryListLookup(jackPine, `this.get(prop=prop("${parentGenusProp.id}"))`);
+        const jackPineGenus = await evaluateEntryListLookup(jackPine, `this.get(prop=prop("${parentGenusProp.key}"))`);
         assertEquals(jackPineGenus, [fooGenusId]);
         // And make sure reverse() is working:
         const reverseTest = await evaluateEntryListLookup(
             { id: fooGenusId },
-            `this.reverse(prop=prop("${parentGenusProp.id}"))`,
+            `this.reverse(prop=prop("${parentGenusProp.key}"))`,
         );
         assertEquals(reverseTest, [jackPine.id, ponderosaPine.id]); // reverse() will order these by entry name
         // Check the 'has part' relation we created:
-        const ponderosaHasPartFacts = await getPropertyFacts(ponderosaPine, hasPartProp.id); // Note this doesn't include the inherited "has part" values
+        const ponderosaHasPartFacts = await getPropertyFacts(ponderosaPine, hasPartProp.key); // Note this doesn't include the inherited "has part" values
         assertEquals(ponderosaHasPartFacts.map((f) => f.valueExpression), [`entry("${quibblePartId}")`]);
         assertEquals(ponderosaHasPartFacts.map((f) => f.slot), ["q"]);
     });
@@ -127,7 +127,7 @@ group("SetRelationships bulk edit implementation", () => {
     test("SetRelationships creates AppliedEdit records as if actual edits were made, including with old values", async () => {
         // Preconditions:
         await checkPreconditions();
-        const jackPineGenusBefore = await getPropertyFacts(jackPine, parentGenusProp.id);
+        const jackPineGenusBefore = await getPropertyFacts(jackPine, parentGenusProp.key);
         assertEquals(jackPineGenusBefore.length, 1);
 
         // Create some entries:
@@ -135,15 +135,15 @@ group("SetRelationships bulk edit implementation", () => {
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: genus.id, entryId: fooGenusId },
-                    set: { friendlyId: "g-foo", description: "A genus for testing", name: "Foo Genus" },
+                    where: { entryTypeKey: genus.key, entryId: fooGenusId },
+                    set: { key: "g-foo", description: "A genus for testing", name: "Foo Genus" },
                 },
             },
             {
                 code: "UpsertEntryById",
                 data: {
-                    where: { entryTypeId: plantPart.id, entryId: quibblePartId },
-                    set: { friendlyId: "pp-quibble", description: "A fake plant part for testing", name: "Quibble" },
+                    where: { entryTypeKey: plantPart.key, entryId: quibblePartId },
+                    set: { key: "pp-quibble", description: "A fake plant part for testing", name: "Quibble" },
                 },
             },
         ]);
@@ -157,17 +157,17 @@ group("SetRelationships bulk edit implementation", () => {
                     entryWith: { entryId: ponderosaPine.id },
                     set: [
                         {
-                            propertyId: parentGenusProp.id,
+                            propertyKey: parentGenusProp.key,
                             toEntries: [
                                 { entryWith: { entryId: genusPinus.id } }, // This value is unchanged.
                                 {
-                                    entryWith: { friendlyId: "g-foo" },
+                                    entryWith: { entryKey: "g-foo" },
                                     note: "This is a new second value for parent genus",
                                 },
                             ],
                         },
                         {
-                            propertyId: hasPartProp.id,
+                            propertyKey: hasPartProp.key,
                             toEntries: [
                                 { entryWith: { entryId: quibblePartId }, slot: "q" },
                             ],
@@ -179,10 +179,10 @@ group("SetRelationships bulk edit implementation", () => {
                 code: "SetRelationships",
                 data: {
                     // This one we match by fiendly ID:
-                    entryWith: { friendlyId: jackPine.friendlyId },
+                    entryWith: { entryKey: jackPine.key },
                     set: [
                         {
-                            propertyId: parentGenusProp.id,
+                            propertyKey: parentGenusProp.key,
                             toEntries: [
                                 { entryWith: { entryId: fooGenusId } }, // Change the parent genus entirely
                             ],
@@ -200,7 +200,7 @@ group("SetRelationships bulk edit implementation", () => {
                 code: "AddPropertyFact",
                 data: {
                     entryId: ponderosaPine.id,
-                    propertyId: parentGenusProp.id,
+                    propertyKey: parentGenusProp.key,
                     propertyFactId: appliedEdits[0]?.data.propertyFactId, // We don't know this ID in advance
                     valueExpression: `entry("${fooGenusId}")`,
                     note: "This is a new second value for parent genus",
@@ -213,7 +213,7 @@ group("SetRelationships bulk edit implementation", () => {
                 code: "AddPropertyFact",
                 data: {
                     entryId: ponderosaPine.id,
-                    propertyId: hasPartProp.id,
+                    propertyKey: hasPartProp.key,
                     propertyFactId: appliedEdits[1]?.data.propertyFactId, // We don't know this ID in advance
                     valueExpression: `entry("${quibblePartId}")`,
                     note: "",
@@ -241,7 +241,7 @@ group("SetRelationships bulk edit implementation", () => {
                 code: "AddPropertyFact",
                 data: {
                     entryId: jackPine.id,
-                    propertyId: parentGenusProp.id,
+                    propertyKey: parentGenusProp.key,
                     propertyFactId: appliedEdits[3]?.data.propertyFactId, // We don't know this ID in advance
                     valueExpression: `entry("${fooGenusId}")`,
                     note: "",
@@ -265,7 +265,7 @@ group("SetRelationships bulk edit implementation", () => {
                     // This one we match by entryId:
                     entryWith: { entryId: ponderosaPine.id },
                     set: [
-                        { propertyId: parentGenusProp.id, toEntries: [{ entryWith: { entryId: genusPinus.id } }] },
+                        { propertyKey: parentGenusProp.key, toEntries: [{ entryWith: { entryId: genusPinus.id } }] },
                     ],
                 },
             },
@@ -273,11 +273,11 @@ group("SetRelationships bulk edit implementation", () => {
                 code: "SetRelationships",
                 data: {
                     // This one we match by fiendly ID:
-                    entryWith: { friendlyId: jackPine.friendlyId },
+                    entryWith: { entryKey: jackPine.key },
                     set: [
                         {
-                            propertyId: parentGenusProp.id,
-                            toEntries: [{ entryWith: { friendlyId: genusPinus.friendlyId } }],
+                            propertyKey: parentGenusProp.key,
+                            toEntries: [{ entryWith: { entryKey: genusPinus.key } }],
                         },
                     ],
                 },
@@ -299,7 +299,7 @@ group("SetRelationships bulk edit implementation", () => {
                             entryWith: { entryId: VNID() },
                             set: [
                                 {
-                                    propertyId: parentGenusProp.id,
+                                    propertyKey: parentGenusProp.key,
                                     toEntries: [{ entryWith: { entryId: genusPinus.id } }],
                                 },
                             ],
@@ -312,7 +312,7 @@ group("SetRelationships bulk edit implementation", () => {
         assertInstanceOf(err.cause, InvalidEdit);
         assertEquals(
             err.cause.message,
-            "Unable to bulk set relationship property facts. Check if entryId, friendlyID, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a value property.",
+            "Unable to bulk set relationship property facts. Check if entryId, key, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a value property.",
         );
     });
 
@@ -328,7 +328,7 @@ group("SetRelationships bulk edit implementation", () => {
                             set: [
                                 {
                                     // "parent division" doesn't apply to species entries like ponderosa pine:
-                                    propertyId: defaultData.schema.properties._parentDivision.id,
+                                    propertyKey: defaultData.schema.properties.parentDivision.key,
                                     toEntries: [{ entryWith: { entryId: genusPinus.id } }],
                                 },
                             ],
@@ -341,7 +341,7 @@ group("SetRelationships bulk edit implementation", () => {
         assertInstanceOf(err.cause, InvalidEdit);
         assertEquals(
             err.cause.message,
-            "Unable to bulk set relationship property facts. Check if entryId, friendlyID, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a value property.",
+            "Unable to bulk set relationship property facts. Check if entryId, key, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a value property.",
         );
     });
 
@@ -355,7 +355,7 @@ group("SetRelationships bulk edit implementation", () => {
                             entryWith: { entryId: ponderosaPine.id },
                             set: [
                                 {
-                                    propertyId: defaultData.schema.properties._propWikidataQID.id,
+                                    propertyKey: defaultData.schema.properties.propWikidataQID.key,
                                     toEntries: [{ entryWith: { entryId: genusPinus.id } }],
                                 },
                             ],
@@ -368,7 +368,7 @@ group("SetRelationships bulk edit implementation", () => {
         assertInstanceOf(err.cause, InvalidEdit);
         assertEquals(
             err.cause.message,
-            "Unable to bulk set relationship property facts. Check if entryId, friendlyID, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a value property.",
+            "Unable to bulk set relationship property facts. Check if entryId, key, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a value property.",
         );
     });
 });

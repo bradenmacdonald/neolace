@@ -16,11 +16,11 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
         const edit = { ...edits[editIndex] };
         if (edit.set === undefined) edit.set = {};
         if (edit.setOnCreate === undefined) edit.setOnCreate = {};
-        if (edit.setOnCreate.friendlyId === undefined && edit.set.friendlyId === undefined) {
+        if (edit.setOnCreate.key === undefined && edit.set.key === undefined) {
             throw new InvalidEdit(
                 UpsertEntryById.code,
                 {},
-                "UpsertEntryById requires a friendlyId in either set or setOnCreate.",
+                "UpsertEntryById requires a key in either set or setOnCreate.",
             );
         }
     }
@@ -33,16 +33,16 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
         UNWIND range(0, size(edits)) AS idx
         WITH site, connection, idx, edits[idx] AS edit
 
-        MATCH (entryType:${EntryType} {id: edit.where.entryTypeId})-[:${EntryType.rel.FOR_SITE}]->(site)
+        MATCH (entryType:${EntryType} {siteNamespace: site.id, key: edit.where.entryTypeKey})
         OPTIONAL MATCH (oldEntry:${Entry} {id: edit.where.entryId})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
-        WITH idx, edit, entryType, site, oldEntry {.name, .description, .friendlyId} as oldValues
+        WITH idx, edit, entryType, site, oldEntry {.name, .description, .key} as oldValues
 
         MERGE (entry:${Entry} {id: edit.where.entryId})-[:${Entry.rel.IS_OF_TYPE}]->(entryType)
             ON CREATE SET
                 entry.name = coalesce(edit.set.name, edit.setOnCreate.name, ""),
                 entry.description = coalesce(edit.set.description, edit.setOnCreate.description, ""),
                 entry.siteNamespace = site.id,
-                entry.friendlyId = coalesce(edit.set.friendlyId, edit.setOnCreate.friendlyId, ""),
+                entry.key = coalesce(edit.set.key, edit.setOnCreate.key, ""),
                 entry.changed = true
             ON MATCH SET
                 entry += CASE WHEN edit.set.name IS NOT NULL AND edit.set.name <> entry.name THEN
@@ -51,8 +51,8 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
                 entry += CASE WHEN edit.set.description IS NOT NULL AND edit.set.description <> entry.description THEN
                     {description: edit.set.description, changed: true}
                 ELSE {} END,
-                entry += CASE WHEN edit.set.friendlyId IS NOT NULL AND edit.set.friendlyId <> entry.friendlyId THEN
-                    {friendlyId: edit.set.friendlyId, changed: true}
+                entry += CASE WHEN edit.set.key IS NOT NULL AND edit.set.key <> entry.key THEN
+                    {key: edit.set.key, changed: true}
                 ELSE {} END
         WITH idx, entry, oldValues, entry.changed AS changed
         REMOVE entry.changed
@@ -82,7 +82,7 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
         throw new InvalidEdit(
             UpsertEntryById.code,
             {},
-            "Unable to bulk upsert entries. Check if entryTypeId or connectionId is invalid.",
+            "Unable to bulk upsert entries. Check if entryTypeKey or connectionId is invalid.",
         );
     }
 
@@ -97,9 +97,9 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
             appliedEdits.push({
                 code: "CreateEntry",
                 data: {
-                    type: edit.where.entryTypeId,
+                    entryTypeKey: edit.where.entryTypeKey,
                     entryId: edit.where.entryId,
-                    friendlyId: edit.set?.friendlyId ?? edit.setOnCreate?.friendlyId ?? "",
+                    key: edit.set?.key ?? edit.setOnCreate?.key ?? "",
                     name: edit.set?.name ?? edit.setOnCreate?.name ?? "",
                     description: edit.set?.description ?? edit.setOnCreate?.description ?? "",
                 },
@@ -124,11 +124,11 @@ export const doUpsertEntryById = defineBulkImplementation(UpsertEntryById, async
                     modifiedNodes: [edit.where.entryId],
                 });
             }
-            if (edit.set?.friendlyId && edit.set.friendlyId !== outcome.oldValues.friendlyId) {
+            if (edit.set?.key && edit.set.key !== outcome.oldValues.key) {
                 appliedEdits.push({
-                    code: "SetEntryFriendlyId",
-                    data: { entryId: edit.where.entryId, friendlyId: edit.set.friendlyId },
-                    oldData: { friendlyId: outcome.oldValues.friendlyId },
+                    code: "SetEntryKey",
+                    data: { entryId: edit.where.entryId, key: edit.set.key },
+                    oldData: { key: outcome.oldValues.key },
                     modifiedNodes: [edit.where.entryId],
                 });
             }

@@ -55,7 +55,7 @@ export class Site extends VNodeType {
         /**
          * The short (slug) string Identifier for this site.
          */
-        friendlyId: Field.Slug,
+        key: Field.Slug,
         /**
          * The canonical domain for this site, e.g. "mysite.neolace.com".
          *
@@ -136,17 +136,15 @@ VNodeTypeRef.resolve(SiteRef, Site);
 // Site helper functions
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/** Cache to look up a siteId (Site VNID) from a site's friendlyId */
-export const siteIdFromFriendlyId = makeCachedLookup(
-    async (friendlyId: string) =>
-        (await getGraph()).pullOne(Site, (s) => s.id, { with: { friendlyId } }).then((s) => s.id),
+/** Cache to look up a siteId (Site VNID) from a site's key */
+export const siteIdFromKey = makeCachedLookup(
+    async (key: string) => (await getGraph()).pullOne(Site, (s) => s.id, { with: { key } }).then((s) => s.id),
     10_000,
 );
 
-/** Cache to look up a site's friendlyId from its VNID */
-export const siteFriendlyIdFromId = makeCachedLookup(
-    async (siteId: VNID) =>
-        (await getGraph()).pullOne(Site, (s) => s.friendlyId, { key: siteId }).then((s) => s.friendlyId),
+/** Cache to look up a site's key from its VNID */
+export const siteKeyFromId = makeCachedLookup(
+    async (siteId: VNID) => (await getGraph()).pullOne(Site, (s) => s.key, { key: siteId }).then((s) => s.key),
     10_000,
 );
 
@@ -163,7 +161,7 @@ export function url(): DerivedProperty<string> {
 
 interface HomeSiteData {
     siteId: VNID;
-    friendlyId: string;
+    key: string;
     name: string;
     domain: string;
     url: string;
@@ -177,11 +175,11 @@ let mainSiteCache: Readonly<HomeSiteData>;
  */
 export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
     if (mainSiteCache === undefined) {
-        const friendlyId = config.realmHomeSiteId;
+        const key = config.realmHomeSiteId;
         const graph = await getGraph();
         let data;
         try {
-            data = await graph.pullOne(Site, (s) => s.id.name.domain.url(), { with: { friendlyId } });
+            data = await graph.pullOne(Site, (s) => s.id.name.domain.url(), { with: { key } });
         } catch (err) {
             throw new Error(
                 "Unable to load the home site. Check the realmHomeSiteId setting. In development, you may need to " +
@@ -191,7 +189,7 @@ export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
         }
         mainSiteCache = Object.freeze({
             siteId: data.id,
-            friendlyId,
+            key,
             name: data.name,
             domain: data.domain,
             url: data.url,
@@ -207,7 +205,7 @@ export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
 // Action to make changes to an existing Site:
 export const UpdateSite = defaultUpdateFor(
     Site,
-    (s) => s.friendlyId.description.homePageContent.footerContent.domain.accessMode.publicGrantStrings,
+    (s) => s.key.description.homePageContent.footerContent.domain.accessMode.publicGrantStrings,
     {
         otherUpdates: async (args: { frontendConfig?: FrontendConfigData }, tx, nodeSnapshot) => {
             if (args.frontendConfig) {
@@ -228,7 +226,7 @@ export const CreateSite = defineAction({
     parameters: {} as {
         id?: VNID;
         name: string;
-        friendlyId: string;
+        key: string;
         domain: string;
         description?: string;
         homePageContent?: string;
@@ -253,7 +251,7 @@ export const CreateSite = defineAction({
             CREATE (s:${Site} {
                 id: ${id},
                 name: ${data.name},
-                friendlyId: ${data.friendlyId},
+                key: ${data.key},
                 description: ${data.description || ""},
                 homePageContent: ${data.homePageContent || ""},
                 footerContent: ${data.footerContent || ""},

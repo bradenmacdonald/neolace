@@ -2,7 +2,7 @@ import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framewor
 import type { RawPropertyData } from "neolace/deps/neolace-api.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Property } from "neolace/core/schema/Property.ts";
-import { Entry } from "neolace/core/entry/Entry.ts";
+import { Entry, siteIdForEntryId } from "neolace/core/entry/Entry.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 
 /**
@@ -14,7 +14,7 @@ import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 export type EntryPropertyValueSet = {
     entryId?: VNID;
     property: {
-        id: VNID;
+        key: string;
         name: string;
         rank: number;
         /** Default value. Only loaded from the database if no explicit value is set. */
@@ -53,7 +53,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
     /** Should the total count of matching properties be included in the results? */
     totalCount?: TC;
     /** Instead of fetching all properties, fetch just one (used by getEntryProperty()) */
-    specificPropertyId?: VNID;
+    specificPropertyKey?: string;
 }): Promise<EntryPropertyValueSet[] & (TC extends true ? { totalCount: number } : unknown)> {
     // Neo4j doesn't allow normal query variables to be used for skip/limit so we have to carefully ensure these values
     // are safe (are just plain numbers) then format them for interpolation in the query string as part of the cypher
@@ -63,7 +63,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
 
     const maxRank = options.maxRank ?? 100; // Importance is in the range 0-99 so <= 100 will always match everything
 
-    if (options.specificPropertyId && options.totalCount) {
+    if (options.specificPropertyKey && options.totalCount) {
         throw new Error(
             `Cannot request totalCount along with specific property ID - no need for wasting extra calculation when count is either 0 or 1.`,
         );
@@ -106,6 +106,8 @@ export async function getEntryProperties<TC extends true | undefined = undefined
         RETURN count(prop) AS totalCount
     `.givesShape({ totalCount: Field.Int })).then((r) => r.totalCount);
 
+    const siteId = await siteIdForEntryId(multipleEntries ? entryId[0] : entryId);
+
     const data = await options.tx.query(C`
         ${entryFilter}
 
@@ -118,7 +120,11 @@ export async function getEntryProperties<TC extends true | undefined = undefined
             // See query below (MATCH in Part 2) to understand this path:
             MATCH path = allShortestPaths((entry)-[:${Entry.rel.IS_A}|${Entry.rel.PROP_FACT}|${PropertyFact.rel.FOR_PROP}*1..50]->(prop {enableSlots: false})),
                 (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
-                ${options.specificPropertyId ? C`WHERE prop.id = ${options.specificPropertyId}` : C``}
+                ${
+        options.specificPropertyKey
+            ? C`WHERE prop.siteNamespace = ${siteId} AND prop.key = ${options.specificPropertyKey}`
+            : C``
+    }
             WITH entry, path, prop
             WHERE
                 // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
@@ -138,7 +144,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
 
             RETURN {
                 entryId: entry.id,
-                property: prop {.id, .name, .rank, default: null, .displayAs},
+                property: prop {.key, .name, .rank, default: null, .displayAs},
                 facts: facts
             } AS propertyData
 
@@ -153,7 +159,11 @@ export async function getEntryProperties<TC extends true | undefined = undefined
             WITH entry, entryType
             MATCH path = (entry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop {enableSlots: true}),
                 (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
-                ${options.specificPropertyId ? C`WHERE prop.id = ${options.specificPropertyId}` : C``}
+                ${
+        options.specificPropertyKey
+            ? C`WHERE prop.siteNamespace = ${siteId} AND prop.key = ${options.specificPropertyKey}`
+            : C``
+    }
             WITH entry, path, ancestor, pf, prop
             WHERE
                 // If this is attached directly to this entry, the path length will be 2; it will be longer if it's from an ancestor
@@ -181,7 +191,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
 
             RETURN {
                 entryId: entry.id,
-                property: prop {.id, .name, .rank, default: null, .displayAs},
+                property: prop {.key, .name, .rank, default: null, .displayAs},
                 facts: facts
             } AS propertyData
             
@@ -194,14 +204,18 @@ export async function getEntryProperties<TC extends true | undefined = undefined
 
             MATCH (prop)-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
                 WHERE
-                    ${options.specificPropertyId ? C`prop.id = ${options.specificPropertyId} AND` : C``}
+                    ${
+        options.specificPropertyKey
+            ? C`prop.siteNamespace = ${siteId} AND prop.key = ${options.specificPropertyKey} AND`
+            : C``
+    }
                     prop.default <> ""
                     AND prop.rank <= ${maxRank}
                     AND NOT exists((entry)-[:${Entry.rel.IS_A}*0..50]->(:${Entry})-[:PROP_FACT]->(:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop))
 
             RETURN {
                 entryId: entry.id,
-                property: prop {.id, .name, .rank, .default, .displayAs},
+                property: prop {.key, .name, .rank, .default, .displayAs},
                 facts: []
             } AS propertyData
         }
@@ -213,7 +227,7 @@ export async function getEntryProperties<TC extends true | undefined = undefined
         propertyData: Field.Record({
             entryId: Field.VNID,
             property: Field.Record({
-                id: Field.VNID,
+                key: Field.String,
                 name: Field.String,
                 rank: Field.Int,
                 default: Field.String,
@@ -271,11 +285,11 @@ export async function getEntryProperties<TC extends true | undefined = undefined
  * Get the value[s] from a single property that are set on an entry (or inherited from an ancestor entry)
  */
 export async function getEntryProperty(
-    { entryId, propertyId, tx }: { entryId: VNID; propertyId: VNID; tx: WrappedTransaction },
+    { entryId, propertyKey, tx }: { entryId: VNID; propertyKey: string; tx: WrappedTransaction },
 ): Promise<EntryPropertyValueSet | undefined> {
     const results = await getEntryProperties(entryId, {
         limit: 1,
-        specificPropertyId: propertyId,
+        specificPropertyKey: propertyKey,
         tx,
     });
     if (results.length === 1) {
@@ -290,9 +304,9 @@ export async function getEntryProperty(
 export async function getEntriesProperty(
     tx: WrappedTransaction,
     entryIds: VNID[],
-    specificPropertyId: VNID,
+    specificPropertyKey: string,
 ): Promise<(EntryPropertyValueSet & { entryId: VNID })[]> {
-    return getEntryProperties(entryIds, { tx, specificPropertyId }) as Promise<
+    return getEntryProperties(entryIds, { tx, specificPropertyKey }) as Promise<
         (EntryPropertyValueSet & { entryId: VNID })[]
     >;
 }
@@ -313,7 +327,7 @@ export async function getRawProperties(
         ORDER BY prop.rank, prop.name, pf.rank
         WITH prop, collect(pf { .id, .valueExpression, .note, .rank, .slot }) AS facts
     `.RETURN({
-        "prop.id": Field.VNID,
+        "prop.key": Field.VNID,
         "facts": Field.List(Field.Record({
             "id": Field.VNID,
             "valueExpression": Field.String,
@@ -323,7 +337,7 @@ export async function getRawProperties(
         })),
     }));
     return allProps.map((row) => ({
-        propertyId: row["prop.id"],
+        propertyKey: row["prop.key"],
         facts: row["facts"],
     }));
 }

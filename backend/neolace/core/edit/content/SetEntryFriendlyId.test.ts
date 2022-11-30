@@ -13,71 +13,69 @@ import { StringValue } from "neolace/core/lookup/values.ts";
 import { InvalidEdit, VNID } from "neolace/deps/neolace-api.ts";
 import { AppliedEdit } from "../AppliedEdit.ts";
 
-group("SetEntryFriendlyId edit implementation", () => {
+group("SetEntryKey edit implementation", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
     const siteId = defaultData.site.id;
     const ponderosaPine = defaultData.entries.ponderosaPine;
     const context = new TestLookupContext({ siteId });
-    const getFriendlyId = () =>
-        context.evaluateExprConcrete(`entry("${ponderosaPine.id}").friendlyId`).then((val) =>
-            (val as StringValue).value
-        );
+    const getKey = () =>
+        context.evaluateExprConcrete(`entry("${ponderosaPine.id}").key`).then((val) => (val as StringValue).value);
 
-    test("SetEntryFriendlyId can change an entry's friendlyId", async () => {
+    test("SetEntryKey can change an entry's key", async () => {
         const graph = await getGraph();
-        assertEquals(await getFriendlyId(), "s-pinus-ponderosa");
+        assertEquals(await getKey(), "s-pinus-ponderosa");
         const result = await graph.runAsSystem(ApplyEdits({
             siteId,
             edits: [
-                { code: "SetEntryFriendlyId", data: { entryId: ponderosaPine.id, friendlyId: "s-new-friendly-id" } },
+                { code: "SetEntryKey", data: { entryId: ponderosaPine.id, key: "s-new-key" } },
             ],
             editSource: UseSystemSource,
         }));
-        assertEquals(await getFriendlyId(), "s-new-friendly-id");
+        assertEquals(await getKey(), "s-new-key");
         assertEquals(
             result.actionDescription,
-            `Changed friendly ID of \`Entry ${ponderosaPine.id}\` to "s-new-friendly-id"`,
+            `Changed key of \`Entry ${ponderosaPine.id}\` to "s-new-key"`,
         );
         assertEquals(result.appliedEditIds.length, 1);
     });
 
-    test("SetEntryFriendlyId records the previous friendly ID.", async () => {
+    test("SetEntryKey records the previous entry key.", async () => {
         const graph = await getGraph();
-        const original = ponderosaPine.friendlyId;
-        assertEquals(await getFriendlyId(), original);
+        const original = ponderosaPine.key;
+        assertEquals(await getKey(), original);
         const result = await graph.runAsSystem(ApplyEdits({
             siteId,
             edits: [
-                { code: "SetEntryFriendlyId", data: { entryId: ponderosaPine.id, friendlyId: "s-new-friendly-id" } },
+                { code: "SetEntryKey", data: { entryId: ponderosaPine.id, key: "s-new-key" } },
             ],
             editSource: UseSystemSource,
         }));
-        assertEquals(await getFriendlyId(), "s-new-friendly-id");
+        assertEquals(await getKey(), "s-new-key");
         assertEquals(result.appliedEditIds.length, 1);
         const appliedEdit = await graph.pullOne(AppliedEdit, (a) => a.oldData, { key: result.appliedEditIds[0] });
-        assertEquals(appliedEdit.oldData, { friendlyId: original });
+        assertEquals(appliedEdit.oldData, { key: original });
     });
 
-    test("SetEntryFriendlyId will not change the graph if the friendlyId is the same.", async () => {
+    test("SetEntryKey will not change the graph if the key is the same.", async () => {
         const graph = await getGraph();
-        assertEquals(await getFriendlyId(), ponderosaPine.friendlyId);
+        assertEquals(await getKey(), ponderosaPine.key);
         const result = await graph.runAsSystem(ApplyEdits({
             siteId,
             edits: [
                 {
-                    code: "SetEntryFriendlyId",
-                    data: { entryId: ponderosaPine.id, friendlyId: ponderosaPine.friendlyId },
+                    code: "SetEntryKey",
+                    data: { entryId: ponderosaPine.id, key: ponderosaPine.key },
                 },
             ],
             editSource: UseSystemSource,
         }));
-        assertEquals(await getFriendlyId(), ponderosaPine.friendlyId);
+        assertEquals(await getKey(), ponderosaPine.key);
         // We confirm now that no changes were actually made:
         assertEquals(result.actionDescription, "(no changes)");
         assertEquals(result.appliedEditIds, []);
     });
 
-    test("SetEntryFriendlyId cannot change the friendlyId of an entry that doesn't exist", async () => {
+    test("SetEntryKey cannot change the key of an entry that doesn't exist", async () => {
         const graph = await getGraph();
         const invalidEntryId = VNID("_foobar843758943");
         const err = await assertRejects(
@@ -86,8 +84,8 @@ group("SetEntryFriendlyId edit implementation", () => {
                     siteId,
                     edits: [
                         {
-                            code: "SetEntryFriendlyId",
-                            data: { entryId: invalidEntryId, friendlyId: "s-new-friendly-id" },
+                            code: "SetEntryKey",
+                            data: { entryId: invalidEntryId, key: "s-new-key" },
                         },
                     ],
                     editSource: UseSystemSource,
@@ -97,10 +95,10 @@ group("SetEntryFriendlyId edit implementation", () => {
         assertInstanceOf(err, Error);
         assertInstanceOf(err.cause, InvalidEdit);
         assertEquals(err.cause.context.entryId, invalidEntryId);
-        assertEquals(err.cause.message, "Cannot set change the entry's friendly ID - entry does not exist.");
+        assertEquals(err.cause.message, "Cannot change the entry's key - entry does not exist.");
     });
 
-    test("SetEntryFriendlyId cannot change the name of an entry from another site", async () => {
+    test("SetEntryKey cannot change the name of an entry from another site", async () => {
         const graph = await getGraph();
         const err = await assertRejects(
             () =>
@@ -108,8 +106,8 @@ group("SetEntryFriendlyId edit implementation", () => {
                     siteId: defaultData.otherSite.id,
                     edits: [
                         {
-                            code: "SetEntryFriendlyId",
-                            data: { entryId: ponderosaPine.id, friendlyId: "s-new-friendly-id" },
+                            code: "SetEntryKey",
+                            data: { entryId: ponderosaPine.id, key: "s-new-key" },
                         },
                     ],
                     editSource: UseSystemSource,
@@ -119,6 +117,6 @@ group("SetEntryFriendlyId edit implementation", () => {
         assertInstanceOf(err, Error);
         assertInstanceOf(err.cause, InvalidEdit);
         assertEquals(err.cause.context.entryId, ponderosaPine.id);
-        assertEquals(err.cause.message, "Cannot set change the entry's friendly ID - entry does not exist.");
+        assertEquals(err.cause.message, "Cannot change the entry's key - entry does not exist.");
     });
 });

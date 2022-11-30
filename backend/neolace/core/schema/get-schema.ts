@@ -25,16 +25,16 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
 
     const entryTypes = await tx.pull(
         EntryType,
-        (et) => et.id.name.description.friendlyIdPrefix.color.colorCustom.abbreviation,
+        (et) => et.key.name.description.keyPrefix.color.colorCustom.abbreviation,
         { where: siteFilter },
     );
 
     entryTypes.forEach((et) => {
-        result.entryTypes[et.id] = {
-            id: et.id,
+        result.entryTypes[et.key] = {
+            key: et.key,
             name: et.name,
             description: et.description,
-            friendlyIdPrefix: et.friendlyIdPrefix,
+            keyPrefix: et.keyPrefix,
             color: et.color as EntryTypeColor ?? EntryTypeColor.Default,
             abbreviation: et.abbreviation ?? "",
             enabledFeatures: {/* set below by contributeToSchema() */},
@@ -54,7 +54,7 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
         Property,
         (p) =>
             p
-                .id
+                .key
                 .name
                 .description
                 .type
@@ -67,22 +67,22 @@ export async function getCurrentSchema(tx: WrappedTransaction, siteId: VNID): Pr
                 .rank
                 .editNote
                 .displayAs
-                .appliesTo((et) => et.id)
-                .parentProperties((pp) => pp.id),
+                .appliesTo((et) => et.key)
+                .parentProperties((pp) => pp.key),
         { where: siteFilter },
     );
     properties.forEach((p) => {
         // Sort the "applies to [entry types]" array to make test comparisons easier/stable.
-        const appliesToSorted = p.appliesTo.slice().sort((a, b) => a.id.localeCompare(b.id));
-        result.properties[p.id] = {
-            id: p.id,
+        const appliesToSorted = p.appliesTo.slice().sort((a, b) => a.key.localeCompare(b.key));
+        result.properties[p.key] = {
+            key: p.key,
             name: p.name,
             description: p.description,
             type: p.type as PropertyType,
             mode: p.mode as PropertyMode,
             rank: p.rank,
-            appliesTo: appliesToSorted.map((at) => ({ entryType: at.id })),
-            ...(p.parentProperties.length > 0 && { isA: p.parentProperties.map((pp) => pp.id).sort() }),
+            appliesTo: appliesToSorted.map((at) => ({ entryTypeKey: at.key })),
+            ...(p.parentProperties.length > 0 && { isA: p.parentProperties.map((pp) => pp.key).sort() }),
             ...(p.default && { default: p.default }),
             ...(p.inheritable && { inheritable: p.inheritable }),
             ...(p.enableSlots && { enableSlots: p.enableSlots }),
@@ -113,73 +113,75 @@ export function diffSchema(
 
     // Do some quick validation of the schema IDs:
     for (
-        const [id, val] of [
+        const [key, val] of [
             ...Object.entries(oldSchema.entryTypes),
             ...Object.entries(oldSchema.properties),
             ...Object.entries(newSchema.entryTypes),
             ...Object.entries(newSchema.properties),
         ]
     ) {
-        if (val.id !== id) {
-            throw new Error(`Invalid schema: the key of an entry type / property doesn't match its ID.`);
+        if (val.key !== key) {
+            throw new Error(
+                `Invalid schema: the key of an entry type / property (${key}) doesn't match its schema key (${key}).`,
+            );
         }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     { // Entry Types:
-        const oldEntryTypeIds = new Set(Object.keys(oldSchema.entryTypes));
-        const newEntryTypeIds = new Set(Object.keys(newSchema.entryTypes));
+        const oldEntryTypeKeys = new Set(Object.keys(oldSchema.entryTypes));
+        const newEntryTypeKeys = new Set(Object.keys(newSchema.entryTypes));
 
         // Delete any removed EntryTypes:
-        const deletedEntryTypeIds = difference(oldEntryTypeIds, newEntryTypeIds);
-        for (const deletedTypeId of deletedEntryTypeIds) {
+        const deletedEntryTypeKeys = difference(oldEntryTypeKeys, newEntryTypeKeys);
+        for (const deletedTypeKey of deletedEntryTypeKeys) {
             result.edits.push({
                 code: "DeleteEntryType",
                 data: {
-                    entryTypeId: VNID(deletedTypeId),
+                    entryTypeKey: deletedTypeKey,
                 },
             });
         }
 
         // Create any newly added EntryTypes:
-        const addedEntryTypeIds = difference(newEntryTypeIds, oldEntryTypeIds);
-        for (const newId of addedEntryTypeIds) {
+        const addedEntryTypeKeys = difference(newEntryTypeKeys, oldEntryTypeKeys);
+        for (const newKey of addedEntryTypeKeys) {
             result.edits.push({
                 code: "CreateEntryType",
                 data: {
-                    id: newSchema.entryTypes[newId].id,
-                    name: newSchema.entryTypes[newId].name,
+                    key: newSchema.entryTypes[newKey].key,
+                    name: newSchema.entryTypes[newKey].name,
                 },
             });
         }
         // Set properties on existing and new EntryTypes
-        for (const entryTypeId of newEntryTypeIds) {
-            const oldET: EntryTypeData | undefined = oldSchema.entryTypes[entryTypeId];
-            const newET = newSchema.entryTypes[entryTypeId];
+        for (const entryTypeKey of newEntryTypeKeys) {
+            const oldET: EntryTypeData | undefined = oldSchema.entryTypes[entryTypeKey];
+            const newET = newSchema.entryTypes[entryTypeKey];
             // deno-lint-ignore no-explicit-any
             const changes: any = {};
             for (
-                const key of [
+                const field of [
                     "name",
                     "description",
-                    "friendlyIdPrefix",
+                    "keyPrefix",
                     "color",
                     "colorCustom",
                     "abbreviation",
                 ] as const
             ) {
-                if (key === "name" && addedEntryTypeIds.has(entryTypeId)) {
+                if (field === "name" && addedEntryTypeKeys.has(entryTypeKey)) {
                     continue; // Name was already set during the Create step, so skip that property
                 }
-                if (newET[key] !== oldET?.[key]) {
-                    changes[key] = newET[key];
+                if (newET[field] !== oldET?.[field]) {
+                    changes[field] = newET[field];
                 }
             }
             if (Object.keys(changes).length > 0) {
                 result.edits.push({
                     code: "UpdateEntryType",
                     data: {
-                        id: entryTypeId,
+                        key: entryTypeKey,
                         ...changes,
                     },
                 });
@@ -192,14 +194,14 @@ export function diffSchema(
                     // This feature has been disabled:
                     result.edits.push({
                         code: "UpdateEntryTypeFeature",
-                        data: { entryTypeId: VNID(entryTypeId), feature: { featureType, enabled: false } },
+                        data: { entryTypeKey, feature: { featureType, enabled: false } },
                     });
                 } else if (newFeature && !equal(oldFeature, newFeature)) {
                     // This feature has been enabled or modified:
                     result.edits.push({
                         code: "UpdateEntryTypeFeature",
                         data: {
-                            entryTypeId: VNID(entryTypeId),
+                            entryTypeKey,
                             // deno-lint-ignore no-explicit-any
                             feature: { featureType, enabled: true, config: newFeature as any },
                         },
@@ -211,41 +213,45 @@ export function diffSchema(
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     { // Properties:
-        const oldPropertyIds = new Set(Object.keys(oldSchema.properties));
-        const newPropertyIds = new Set(Object.keys(newSchema.properties));
+        const oldPropertyKeys = new Set(Object.keys(oldSchema.properties));
+        const newPropertyKeys = new Set(Object.keys(newSchema.properties));
 
         // Delete any removed Properties:
-        const deletedPropertyIds = difference(oldPropertyIds, newPropertyIds);
-        for (const propId of deletedPropertyIds) {
-            result.edits.push({ code: "DeleteProperty", data: { id: propId as VNID } });
+        const deletedPropertyIds = difference(oldPropertyKeys, newPropertyKeys);
+        for (const propKey of deletedPropertyIds) {
+            result.edits.push({ code: "DeleteProperty", data: { key: propKey } });
         }
 
         // Create any newly added Properties:
-        const addedPropIds = difference(newPropertyIds, oldPropertyIds);
-        for (const newId of addedPropIds) {
-            result.edits.push({ code: "CreateProperty", data: newSchema.properties[newId] });
+        const addedPropIds = difference(newPropertyKeys, oldPropertyKeys);
+        for (const newKey of addedPropIds) {
+            result.edits.push({ code: "CreateProperty", data: newSchema.properties[newKey] });
         }
         // Update any already-existing properties that may have changed.
-        for (const propId of oldPropertyIds) {
-            if (!newPropertyIds.has(propId)) {
+        for (const propKey of oldPropertyKeys) {
+            if (!newPropertyKeys.has(propKey)) {
                 continue; // This property was deleted
             }
-            const oldProp: PropertyData = oldSchema.properties[propId];
-            const newProp: PropertyData = newSchema.properties[propId];
+            const oldProp: PropertyData = oldSchema.properties[propKey];
+            const newProp: PropertyData = newSchema.properties[propKey];
             if (newProp.type !== oldProp.type) {
                 // The type has changed - need to delete and re-create this property
-                result.edits.push({ code: "DeleteProperty", data: { id: propId as VNID } });
-                result.edits.push({ code: "CreateProperty", data: newSchema.properties[propId] });
+                result.edits.push({ code: "DeleteProperty", data: { key: propKey } });
+                result.edits.push({ code: "CreateProperty", data: newSchema.properties[propKey] });
                 continue;
             }
 
             const changes: Partial<Type<typeof UpdateProperty["dataSchema"]>> = {};
 
             // Handle appliesTo
-            // deno-lint-ignore no-explicit-any
-            const newAppliesToSorted = newProp.appliesTo.sort((a, b) => (a.entryType as any) - (b.entryType as any));
-            // deno-lint-ignore no-explicit-any
-            const oldAppliesToSorted = oldProp.appliesTo.sort((a, b) => (a.entryType as any) - (b.entryType as any));
+            const newAppliesToSorted = newProp.appliesTo.sort((a, b) =>
+                // deno-lint-ignore no-explicit-any
+                (a.entryTypeKey as any) - (b.entryTypeKey as any)
+            );
+            const oldAppliesToSorted = oldProp.appliesTo.sort((a, b) =>
+                // deno-lint-ignore no-explicit-any
+                (a.entryTypeKey as any) - (b.entryTypeKey as any)
+            );
             if (!equal(newAppliesToSorted, oldAppliesToSorted)) {
                 changes.appliesTo = newProp.appliesTo;
             }
@@ -277,10 +283,7 @@ export function diffSchema(
             if (Object.keys(changes).length > 0) {
                 result.edits.push({
                     code: "UpdateProperty",
-                    data: {
-                        id: VNID(propId),
-                        ...changes,
-                    },
+                    data: { key: propKey, ...changes },
                 });
             }
         }

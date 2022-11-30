@@ -1,4 +1,3 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
 import { EntryTypeColor, PropertyMode, PropertyType, SiteSchemaData } from "neolace/deps/neolace-api.ts";
 
 // Type helper to ensure that the schema is a valid SiteSchemaData without
@@ -10,80 +9,80 @@ function ValidateSiteSchema<X extends SiteSchemaData>(x: X): X {
 // Import the schema:
 export const schema = ValidateSiteSchema({
     entryTypes: {
-        "_ETDIVISION": {
-            id: VNID("_ETDIVISION"),
+        "ETDIVISION": {
+            key: "ETDIVISION",
             name: "Division",
             description:
                 "A division (also called Phylum outside of botany) is the main taxonomic classification within the Plant Kingdom.",
-            friendlyIdPrefix: "d-",
+            keyPrefix: "d-",
             color: EntryTypeColor.Red,
             abbreviation: "D",
             enabledFeatures: {},
         },
-        "_ETCLASS": {
-            id: VNID("_ETCLASS"),
+        "ETCLASS": {
+            key: "ETCLASS",
             name: "Class",
             description: "A class is a level of taxonomic classification between Division/Phylum and Order.",
-            friendlyIdPrefix: "c-",
+            keyPrefix: "c-",
             color: EntryTypeColor.Violet,
             abbreviation: "C",
             enabledFeatures: {},
         },
-        "_ETORDER": {
-            id: VNID("_ETORDER"),
+        "ETORDER": {
+            key: "ETORDER",
             name: "Order",
             description: "An order is a level of taxonomic classification between Class and Family.",
-            friendlyIdPrefix: "o-",
+            keyPrefix: "o-",
             color: EntryTypeColor.Orange,
             abbreviation: "O",
             enabledFeatures: {},
         },
-        "_ETFAMILY": {
-            id: VNID("_ETFAMILY"),
+        "ETFAMILY": {
+            key: "ETFAMILY",
             name: "Family",
             description: "A family is a level of taxonomic classification between Order and Genus.",
-            friendlyIdPrefix: "f-",
+            keyPrefix: "f-",
             color: EntryTypeColor.Cyan,
             abbreviation: "F",
             enabledFeatures: {},
         },
-        "_ETGENUS": {
-            id: VNID("_ETGENUS"),
+        "ETGENUS": {
+            key: "ETGENUS",
             name: "Genus",
             description: "A genus is a level of taxonomic classification between Family and Species.",
-            friendlyIdPrefix: "g-",
+            keyPrefix: "g-",
             color: EntryTypeColor.Emerald,
             abbreviation: "G",
             enabledFeatures: {},
         },
-        "_ETSPECIES": {
-            id: VNID("_ETSPECIES"),
+        "ETSPECIES": {
+            key: "ETSPECIES",
             name: "Species",
             description: "A species is a basic unit of classifying life.",
-            friendlyIdPrefix: "s-",
+            keyPrefix: "s-",
             color: EntryTypeColor.Blue,
             abbreviation: "S",
             enabledFeatures: {
                 Article: {},
                 HeroImage: {
-                    lookupExpression: `this.get(prop=prop("_hasHeroImage"))`,
+                    lookupExpression: `this.get(prop=prop("hasHeroImage"))`,
                 },
             },
         },
-        "_ETPLANTPART": {
-            id: VNID("_ETPLANTPART"),
+        "ETPLANTPART": {
+            key: "ETPLANTPART",
             name: "Plant Part",
             description: "Describes a part of a plant.",
-            friendlyIdPrefix: "pp-",
+            keyPrefix: "pp-",
             color: EntryTypeColor.Yellow,
             abbreviation: "PP",
             enabledFeatures: {},
         },
-        "_ETIMAGE": {
-            id: VNID("_ETIMAGE"),
+        "ETIMAGE": {
+            key: "ETIMAGE",
             name: "Image",
             description: "An image, such as a photo of a plant",
-            friendlyIdPrefix: "img-",
+            keyPrefix: "img-",
             color: EntryTypeColor.Default,
             abbreviation: "IM",
             enabledFeatures: {
@@ -92,8 +91,8 @@ export const schema = ValidateSiteSchema({
         },
     },
     properties: {
-        "_parentTaxon": {
-            id: VNID("_parentTaxon"),
+        "parentTaxon": {
+            key: "parentTaxon",
             name: "Parent taxon",
             type: PropertyType.RelIsA,
             mode: PropertyMode.Optional,
@@ -101,122 +100,122 @@ export const schema = ValidateSiteSchema({
             description: `The parent taxon of this entry.`,
             rank: 0,
         },
-        "_parentDivision": {
-            id: VNID("_parentDivision"),
-            isA: [VNID("_parentTaxon")], // This is a more specific "parent taxon" property
+        "parentDivision": {
+            key: "parentDivision",
+            isA: ["parentTaxon"], // This is a more specific "parent taxon" property
             name: "Division",
             type: PropertyType.RelIsA,
-            appliesTo: [{ entryType: VNID("_ETCLASS") }],
-            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETDIVISION"))`,
+            appliesTo: [{ entryTypeKey: "ETCLASS" }],
+            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("ETDIVISION"))`,
             mode: PropertyMode.Required,
             description: `The parent division of this class.`,
             rank: 0,
         },
-        "_parentClass": {
-            id: VNID("_parentClass"),
-            isA: [VNID("_parentTaxon")], // This is a more specific "parent taxon" property
+        "parentClass": {
+            key: "parentClass",
+            isA: ["parentTaxon"], // This is a more specific "parent taxon" property
             name: "Class",
             type: PropertyType.RelIsA,
-            appliesTo: [{ entryType: VNID("_ETORDER") }],
-            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETCLASS"))`,
+            appliesTo: [{ entryTypeKey: "ETORDER" }],
+            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("ETCLASS"))`,
             mode: PropertyMode.Required,
             description: `The parent class of this order.`,
             rank: 0,
         },
-        "_parentOrder": {
-            id: VNID("_parentOrder"),
-            isA: [VNID("_parentTaxon")], // This is a more specific "parent taxon" property
+        "parentOrder": {
+            key: "parentOrder",
+            isA: ["parentTaxon"], // This is a more specific "parent taxon" property
             name: "Order",
             type: PropertyType.RelIsA,
-            appliesTo: [{ entryType: VNID("_ETFAMILY") }],
-            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETORDER"))`,
+            appliesTo: [{ entryTypeKey: "ETFAMILY" }],
+            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("ETORDER"))`,
             mode: PropertyMode.Required,
             description: `The parent order of this family.`,
             rank: 0,
         },
-        "_parentFamily": {
-            id: VNID("_parentFamily"),
-            isA: [VNID("_parentTaxon")], // This is a more specific "parent taxon" property
+        "parentFamily": {
+            key: "parentFamily",
+            isA: ["parentTaxon"], // This is a more specific "parent taxon" property
             name: "Family",
             type: PropertyType.RelIsA,
-            appliesTo: [{ entryType: VNID("_ETGENUS") }],
-            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETFAMILY"))`,
+            appliesTo: [{ entryTypeKey: "ETGENUS" }],
+            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("ETFAMILY"))`,
             mode: PropertyMode.Required,
             description: `The parent family of this genus.`,
             rank: 0,
         },
-        "_parentGenus": {
-            id: VNID("_parentGenus"),
-            isA: [VNID("_parentTaxon")], // This is a more specific "parent taxon" property
+        "parentGenus": {
+            key: "parentGenus",
+            isA: ["parentTaxon"], // This is a more specific "parent taxon" property
             name: "Genus",
             type: PropertyType.RelIsA,
-            appliesTo: [{ entryType: VNID("_ETSPECIES") }],
-            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETGENUS"))`,
+            appliesTo: [{ entryTypeKey: "ETSPECIES" }],
+            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("ETGENUS"))`,
             mode: PropertyMode.Required,
             description: `The parent genus of this species.`,
             rank: 0,
         },
-        "_divClasses": {
-            id: VNID("_divClasses"),
+        "divClasses": {
+            key: "divClasses",
             name: "Classes",
             type: PropertyType.RelOther,
-            appliesTo: [{ entryType: VNID("_ETDIVISION") }],
+            appliesTo: [{ entryTypeKey: "ETDIVISION" }],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=prop("_parentDivision"))`,
+            default: `this.reverse(prop=prop("parentDivision"))`,
             description: `Classes that are part of this division.`,
             rank: 3,
         },
-        "_classOrders": {
-            id: VNID("_classOrders"),
+        "classOrders": {
+            key: "classOrders",
             name: "Orders",
             type: PropertyType.RelOther,
-            appliesTo: [{ entryType: VNID("_ETCLASS") }],
+            appliesTo: [{ entryTypeKey: "ETCLASS" }],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=prop("_parentClass"))`,
+            default: `this.reverse(prop=prop("parentClass"))`,
             description: `Orders that are part of this class.`,
             rank: 3,
         },
-        "_orderFamilies": {
-            id: VNID("_orderFamilies"),
+        "orderFamilies": {
+            key: "orderFamilies",
             name: "Families",
             type: PropertyType.RelOther,
-            appliesTo: [{ entryType: VNID("_ETORDER") }],
+            appliesTo: [{ entryTypeKey: "ETORDER" }],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=prop("_parentOrder"))`,
+            default: `this.reverse(prop=prop("parentOrder"))`,
             description: `Families that are part of this order.`,
             rank: 3,
         },
-        "_familyGenera": {
-            id: VNID("_familyGenera"),
+        "familyGenera": {
+            key: "familyGenera",
             name: "Genera",
             type: PropertyType.RelOther,
-            appliesTo: [{ entryType: VNID("_ETFAMILY") }],
+            appliesTo: [{ entryTypeKey: "ETFAMILY" }],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=prop("_parentFamily"))`,
+            default: `this.reverse(prop=prop("parentFamily"))`,
             description: `Genera (genuses) that are part of this family.`,
             rank: 3,
         },
-        "_genusSpecies": {
-            id: VNID("_genusSpecies"),
+        "genusSpecies": {
+            key: "genusSpecies",
             name: "Species",
             type: PropertyType.RelOther,
-            appliesTo: [{ entryType: VNID("_ETGENUS") }],
+            appliesTo: [{ entryTypeKey: "ETGENUS" }],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=prop("_parentGenus"))`,
+            default: `this.reverse(prop=prop("parentGenus"))`,
             description: `Species that are part of this genus.`,
             rank: 3,
         },
-        "_taxonomy": {
-            id: VNID("_taxonomy"),
+        "taxonomy": {
+            key: "taxonomy",
             name: "Taxonomy",
             type: PropertyType.RelOther,
             appliesTo: [
-                { entryType: VNID("_ETCLASS") },
-                { entryType: VNID("_ETDIVISION") },
-                { entryType: VNID("_ETFAMILY") },
-                { entryType: VNID("_ETGENUS") },
-                { entryType: VNID("_ETORDER") },
-                { entryType: VNID("_ETSPECIES") },
+                { entryTypeKey: "ETCLASS" },
+                { entryTypeKey: "ETDIVISION" },
+                { entryTypeKey: "ETFAMILY" },
+                { entryTypeKey: "ETGENUS" },
+                { entryTypeKey: "ETORDER" },
+                { entryTypeKey: "ETSPECIES" },
             ],
             mode: PropertyMode.Auto,
             default: `this.ancestors()`,
@@ -224,102 +223,102 @@ export const schema = ValidateSiteSchema({
             rank: 5,
         },
         // An image RELATES TO [an entry]
-        "_imgRelTo": {
-            id: VNID("_imgRelTo"),
+        "imgRelTo": {
+            key: "imgRelTo",
             name: "Relates to",
             type: PropertyType.RelOther,
-            appliesTo: [{ entryType: VNID("_ETIMAGE") }],
+            appliesTo: [{ entryTypeKey: "ETIMAGE" }],
             valueConstraint:
-                `(targetEntry -> targetEntry.type() in [entryType("_ETCLASS"), entryType("_ETDIVISION"), entryType("_ETFAMILY"), entryType("_ETGENUS"), entryType("_ETORDER"), entryType("_ETPLANTPART"), entryType("_ETSPECIES")])`,
+                `(targetEntry -> targetEntry.type() in [entryType("ETCLASS"), entryType("ETDIVISION"), entryType("ETFAMILY"), entryType("ETGENUS"), entryType("ETORDER"), entryType("ETPLANTPART"), entryType("ETSPECIES")])`,
             mode: PropertyMode.Recommended,
             description: `Lists PlantDB entries that this images relates to.`,
             rank: 8,
         },
         // Related images
-        "_relImages": {
-            id: VNID("_relImages"),
+        "relImages": {
+            key: "relImages",
             name: "Related images",
             type: PropertyType.RelOther,
             appliesTo: [
-                { entryType: VNID("_ETCLASS") },
-                { entryType: VNID("_ETDIVISION") },
-                { entryType: VNID("_ETFAMILY") },
-                { entryType: VNID("_ETGENUS") },
-                { entryType: VNID("_ETORDER") },
-                { entryType: VNID("_ETPLANTPART") },
-                { entryType: VNID("_ETSPECIES") },
+                { entryTypeKey: "ETCLASS" },
+                { entryTypeKey: "ETDIVISION" },
+                { entryTypeKey: "ETFAMILY" },
+                { entryTypeKey: "ETGENUS" },
+                { entryTypeKey: "ETORDER" },
+                { entryTypeKey: "ETPLANTPART" },
+                { entryTypeKey: "ETSPECIES" },
             ],
             mode: PropertyMode.Auto,
-            default: `this.andDescendants().reverse(prop=prop("_imgRelTo")).image(format="thumb")`,
+            default: `this.andDescendants().reverse(prop=prop("imgRelTo")).image(format="thumb")`,
             description: `Images related to this entry.`,
             rank: 10,
         },
         // Has hero image
-        "_hasHeroImage": {
-            id: VNID("_hasHeroImage"),
+        "hasHeroImage": {
+            key: "hasHeroImage",
             name: "Has hero image",
             type: PropertyType.RelOther,
             appliesTo: [
-                { entryType: VNID("_ETCLASS") },
-                { entryType: VNID("_ETDIVISION") },
-                { entryType: VNID("_ETFAMILY") },
-                { entryType: VNID("_ETGENUS") },
-                { entryType: VNID("_ETORDER") },
-                { entryType: VNID("_ETPLANTPART") },
-                { entryType: VNID("_ETSPECIES") },
+                { entryTypeKey: "ETCLASS" },
+                { entryTypeKey: "ETDIVISION" },
+                { entryTypeKey: "ETFAMILY" },
+                { entryTypeKey: "ETGENUS" },
+                { entryTypeKey: "ETORDER" },
+                { entryTypeKey: "ETPLANTPART" },
+                { entryTypeKey: "ETSPECIES" },
             ],
             mode: PropertyMode.Recommended,
             description: `Hero image used for this entry`,
             rank: 60,
         },
         // Has part
-        "_hasPart": {
-            id: VNID("_hasPart"),
+        "hasPart": {
+            key: "hasPart",
             name: "Has part",
             type: PropertyType.RelOther,
             appliesTo: [
-                { entryType: VNID("_ETCLASS") },
-                { entryType: VNID("_ETDIVISION") },
-                { entryType: VNID("_ETFAMILY") },
-                { entryType: VNID("_ETGENUS") },
-                { entryType: VNID("_ETORDER") },
-                { entryType: VNID("_ETSPECIES") },
+                { entryTypeKey: "ETCLASS" },
+                { entryTypeKey: "ETDIVISION" },
+                { entryTypeKey: "ETFAMILY" },
+                { entryTypeKey: "ETGENUS" },
+                { entryTypeKey: "ETORDER" },
+                { entryTypeKey: "ETSPECIES" },
             ],
             mode: PropertyMode.Optional,
-            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("_ETPLANTPART"))`,
+            valueConstraint: `(targetEntry -> targetEntry.type() = entryType("ETPLANTPART"))`,
             description: `This [species/genus/etc.] has this part(s).`,
             rank: 10,
             inheritable: true,
             enableSlots: true,
         },
         // Plant part is found in
-        "_partFoundIn": {
-            id: VNID("_partFoundIn"),
+        "partFoundIn": {
+            key: "partFoundIn",
             name: "Found in",
             type: PropertyType.RelOther,
-            appliesTo: [{ entryType: VNID("_ETPLANTPART") }],
+            appliesTo: [{ entryTypeKey: "ETPLANTPART" }],
             mode: PropertyMode.Auto,
-            default: `this.andDescendants().reverse(prop=prop("_hasPart"))`,
+            default: `this.andDescendants().reverse(prop=prop("hasPart"))`,
             description: `This plant part is found in these species/genera/etc.`,
             rank: 10,
         },
         // Plant part is a type of plant part
-        "_partIsAPart": {
-            id: VNID("_partIsAPart"),
+        "partIsAPart": {
+            key: "partIsAPart",
             name: "Is a",
             type: PropertyType.RelIsA,
-            appliesTo: [{ entryType: VNID("_ETPLANTPART") }],
+            appliesTo: [{ entryTypeKey: "ETPLANTPART" }],
             mode: PropertyMode.Recommended,
             description: `The more general class of this plant part.`,
             rank: 0,
         },
-        "_partHasTypes": {
-            id: VNID("_partHasTypes"),
+        "partHasTypes": {
+            key: "partHasTypes",
             name: "Has types",
             type: PropertyType.RelOther,
-            appliesTo: [{ entryType: VNID("_ETPLANTPART") }],
+            appliesTo: [{ entryTypeKey: "ETPLANTPART" }],
             mode: PropertyMode.Auto,
-            default: `this.reverse(prop=prop("_partIsAPart"))`,
+            default: `this.reverse(prop=prop("partIsAPart"))`,
             description: `Sub-types of this plant part`,
             rank: 3,
         },
@@ -327,11 +326,11 @@ export const schema = ValidateSiteSchema({
         ///////// Value properties:
 
         // A plant's scientific name
-        "_propScientificName": {
-            id: VNID("_propScientificName"),
+        "propScientificName": {
+            key: "propScientificName",
             name: "Scientific name",
             type: PropertyType.Value,
-            appliesTo: [{ entryType: VNID("_ETSPECIES") }],
+            appliesTo: [{ entryTypeKey: "ETSPECIES" }],
             mode: PropertyMode.Required,
             description:
                 "The **scientific name**, sometimes called the **binomial name** or **latin name** is an unambiguous species identifier.",
@@ -339,17 +338,17 @@ export const schema = ValidateSiteSchema({
             displayAs: "*{value}*",
         },
         // An entry's Wikidata Entry ID
-        "_propWikidataQID": {
-            id: VNID("_propWikidataQID"),
+        "propWikidataQID": {
+            key: "propWikidataQID",
             name: "Wikidata Item ID",
             type: PropertyType.Value,
             appliesTo: [
-                { entryType: VNID("_ETCLASS") },
-                { entryType: VNID("_ETDIVISION") },
-                { entryType: VNID("_ETFAMILY") },
-                { entryType: VNID("_ETGENUS") },
-                { entryType: VNID("_ETORDER") },
-                { entryType: VNID("_ETSPECIES") },
+                { entryTypeKey: "ETCLASS" },
+                { entryTypeKey: "ETDIVISION" },
+                { entryTypeKey: "ETFAMILY" },
+                { entryTypeKey: "ETGENUS" },
+                { entryTypeKey: "ETORDER" },
+                { entryTypeKey: "ETSPECIES" },
             ],
             mode: PropertyMode.Optional,
             description: "ID of this item on Wikidata, the free knowledge base that anyone can edit.",
@@ -357,11 +356,11 @@ export const schema = ValidateSiteSchema({
             displayAs: "[{value}](https://www.wikidata.org/wiki/{value})",
         },
         // Other names for a plant
-        "_propOtherNames": {
-            id: VNID("_propOtherNames"),
+        "propOtherNames": {
+            key: "propOtherNames",
             name: "Other names",
             type: PropertyType.Value,
-            appliesTo: [{ entryType: VNID("_ETSPECIES") }],
+            appliesTo: [{ entryTypeKey: "ETSPECIES" }],
             mode: PropertyMode.Optional,
             description: "Other common names for this species.",
             rank: 5,

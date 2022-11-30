@@ -1,7 +1,6 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
 import { CorePerm, PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
 
-import { Site } from "neolace/core/Site.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { directRelTypeForPropertyType, PropertyFact } from "neolace/core/entry/PropertyFact.ts";
@@ -111,11 +110,11 @@ export class GetProperty extends LookupFunctionWithArgs {
         let propertyData;
         try {
             propertyData = await context.tx.queryOne(C`
-                MATCH (prop:${Property} {id: ${propValue.id}})-[:${Property.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
+                MATCH (prop:${Property} {siteNamespace: ${context.siteId}, key: ${propValue.key}})
             `.RETURN({ "prop.type": Field.String, "prop.mode": Field.String, "prop.default": Field.String }));
         } catch (err) {
             if (err instanceof EmptyResultError) {
-                throw new LookupEvaluationError("Property not found / invalid property ID");
+                throw new LookupEvaluationError(`Property "${propValue.key}" not found.`);
             }
             throw err;
         }
@@ -135,7 +134,7 @@ export class GetProperty extends LookupFunctionWithArgs {
                 if (
                     !await hasPermission(context.subject, corePerm.viewEntryProperty.name, {
                         entryId: forEntry.id,
-                        entryTypeId: forEntryType.id,
+                        entryTypeKey: forEntryType.key,
                     })
                 ) {
                     throw new LookupEvaluationError("You do not have permission to view that property.");
@@ -178,7 +177,7 @@ export class GetProperty extends LookupFunctionWithArgs {
                 WITH entry AS fromEntry  // Continue the existing entry query, discard annotations if present
 
                 // Get the property that we're looking for, and double-check it applies to this specific entry...
-                MATCH (prop:${Property} {id: ${propValue.id}})-[:${Property.rel.APPLIES_TO_TYPE}]->(:${EntryType})<-[:${Entry.rel.IS_OF_TYPE}]-(fromEntry)
+                MATCH (prop:${Property} {siteNamespace: ${context.siteId}, key: ${propValue.key}})-[:${Property.rel.APPLIES_TO_TYPE}]->(:${EntryType})<-[:${Entry.rel.IS_OF_TYPE}]-(fromEntry)
 
                 // Fetch all propertyfacts associated with this specific property, on this entry or its ancestors
                 MATCH path = (fromEntry)-[:${Entry.rel.IS_A}*0..50]->(ancestor:${Entry})-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(prop)
@@ -226,7 +225,7 @@ export class GetProperty extends LookupFunctionWithArgs {
                 if (
                     !await hasPermission(context.subject, corePerm.viewEntryProperty.name, {
                         entryId: forEntry.id,
-                        entryTypeId: forEntryType.id,
+                        entryTypeKey: forEntryType.key,
                     })
                 ) {
                     throw new LookupEvaluationError("You do not have permission to view that property.");
@@ -235,7 +234,7 @@ export class GetProperty extends LookupFunctionWithArgs {
                 // Get the values that are explicitly set on this entry
                 const propFacts = (await getEntryProperty({
                     entryId: forEntry.id,
-                    propertyId: propValue.id,
+                    propertyKey: propValue.key,
                     tx: context.tx,
                 }))?.facts ?? [];
 
@@ -283,7 +282,7 @@ export class GetProperty extends LookupFunctionWithArgs {
 
                     const entryIds = entryIdsResult.map((r) => r["entry.id"]);
 
-                    const propertyValues = await getEntriesProperty(context.tx, entryIds, propValue.id);
+                    const propertyValues = await getEntriesProperty(context.tx, entryIds, propValue.key);
 
                     const result: Array<Promise<LookupValue>> = [];
 

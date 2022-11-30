@@ -10,7 +10,7 @@ import { PathError } from "neolace/deps/computed-types.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { ActionObject, ActionSubject } from "neolace/core/permissions/action.ts";
 import { hasPermission } from "neolace/core/permissions/check.ts";
-import { getHomeSite, siteIdFromFriendlyId } from "neolace/core/Site.ts";
+import { getHomeSite, siteIdFromKey } from "neolace/core/Site.ts";
 
 interface AuthenticatedUserData {
     isBot: boolean;
@@ -142,29 +142,29 @@ export class NeolaceHttpResource extends Drash.Resource {
     }
 
     /**
-     * Get the siteId from the siteFriendlyId parameter that's in the URL.
+     * Get the siteId from the siteKey parameter that's in the URL.
      *
-     * Most of our REST API methods include a human-readable "friendlyId" for the Site in the URL, like this:
+     * Most of our REST API methods include a human-readable "key" for the Site in the URL, like this:
      * https://api.neolace.com/site/braden/entry/fr-joel
-     *                              ^^^^^^ - friendlyId is "braden"
-     * This helper function looks up the Site based on this friendlyId and returns the siteId (VNID).
+     *                              ^^^^^^ - key is "braden"
+     * This helper function looks up the Site based on this key and returns the siteId (VNID).
      *
-     * This method will throw an exception if the site friendlyId is not in the URL or is not valid.
+     * This method will throw an exception if the site key is not in the URL or is not valid.
      *
      * @param request The current REST API request
      * @returns
      */
     protected async getSiteDetails(request: NeolaceHttpRequest): Promise<{ siteId: VNID }> {
-        const siteFriendlyId = request.pathParam("siteFriendlyId");
-        if (typeof siteFriendlyId !== "string") {
-            throw new Error("Expected the API endpoint URL to contain a siteFriendlyId parameter.");
+        const siteKey = request.pathParam("siteKey");
+        if (typeof siteKey !== "string") {
+            throw new Error("Expected the API endpoint URL to contain a siteKey parameter.");
         }
         try {
-            const siteId = await siteIdFromFriendlyId(siteFriendlyId);
+            const siteId = await siteIdFromKey(siteKey);
             return { siteId };
         } catch (err) {
             if (err instanceof EmptyResultError) {
-                throw new api.NotFound(`Site with short ID ${siteFriendlyId} not found.`);
+                throw new api.NotFound(`Site with short ID ${siteKey} not found.`);
             } else {
                 throw err;
             }
@@ -198,7 +198,7 @@ export class NeolaceHttpResource extends Drash.Resource {
     }
 
     protected async getPermissionSubject(request: NeolaceHttpRequest): Promise<ActionSubject> {
-        const siteId = request.pathParam("siteFriendlyId")
+        const siteId = request.pathParam("siteKey")
             ? (await this.getSiteDetails(request)).siteId
             : (await getHomeSite()).siteId;
         const userId = request.user?.id ?? undefined;

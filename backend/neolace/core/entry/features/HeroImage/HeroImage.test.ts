@@ -14,20 +14,20 @@ group("HeroImage.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
     // Entry Type IDs:
-    const entryType = VNID(), imageType = VNID();
+    const entryTypeKey = "et-test", imageTypeKey = "et-img";
     // Relationship Type IDs:
-    const hasFeatureImage = VNID();
+    const hasFeatureImage = "prop-has-feature-img";
 
     test("Can be added to schema, shows up on schema, can be removed from schema", async () => {
         // Create a site and entry type:
         const graph = await getGraph();
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", key: "test1" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId,
             edits: [
-                { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
             ],
             editSource: UseSystemSource,
         }));
@@ -35,7 +35,7 @@ group("HeroImage.ts", () => {
         // Now get the schema, without the "Image" feature enabled yet:
         const beforeSchema = await graph.read((tx) => getCurrentSchema(tx, siteId));
         // No features should be enabled:
-        assertEquals(beforeSchema.entryTypes[entryType].enabledFeatures, {});
+        assertEquals(beforeSchema.entryTypes[entryTypeKey].enabledFeatures, {});
 
         // Now enable the "HeroImage" Feature
         await graph.runAsSystem(ApplyEdits({
@@ -44,7 +44,7 @@ group("HeroImage.ts", () => {
                 {
                     code: "UpdateEntryTypeFeature",
                     data: {
-                        entryTypeId: entryType,
+                        entryTypeKey,
                         feature: {
                             featureType: "HeroImage",
                             enabled: true,
@@ -60,7 +60,7 @@ group("HeroImage.ts", () => {
         // Now check the updated schema:
         const afterSchema = await graph.read((tx) => getCurrentSchema(tx, siteId));
         // The "HeroImage" feature should be enabled:
-        assertEquals(afterSchema.entryTypes[entryType].enabledFeatures, {
+        assertEquals(afterSchema.entryTypes[entryTypeKey].enabledFeatures, {
             HeroImage: {
                 lookupExpression: "foobar",
             },
@@ -73,7 +73,7 @@ group("HeroImage.ts", () => {
                 {
                     code: "UpdateEntryTypeFeature",
                     data: {
-                        entryTypeId: entryType,
+                        entryTypeKey,
                         feature: {
                             featureType: "HeroImage",
                             enabled: false,
@@ -107,7 +107,7 @@ group("HeroImage.ts", () => {
         const dataFileUrl = (await graph.pullOne(DataFile, (df) => df.publicUrl(), { key: dataFile.id })).publicUrl;
         // Create a site with a regular entry type and an image entry type:
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", key: "test1" }),
         );
         const draft = await graph.runAsSystem(CreateDraft({
             title: "Hero Image Test Draft",
@@ -115,12 +115,12 @@ group("HeroImage.ts", () => {
             siteId,
             authorId: SYSTEM_VNID,
             edits: [
-                { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
-                { code: "CreateEntryType", data: { id: imageType, name: "ImageType" } },
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
+                { code: "CreateEntryType", data: { key: imageTypeKey, name: "ImageType" } },
                 {
                     code: "UpdateEntryTypeFeature",
                     data: {
-                        entryTypeId: entryType,
+                        entryTypeKey,
                         feature: {
                             featureType: "HeroImage",
                             enabled: true,
@@ -131,7 +131,7 @@ group("HeroImage.ts", () => {
                 {
                     code: "UpdateEntryTypeFeature",
                     data: {
-                        entryTypeId: imageType,
+                        entryTypeKey: imageTypeKey,
                         feature: {
                             featureType: "Image",
                             enabled: true,
@@ -143,10 +143,10 @@ group("HeroImage.ts", () => {
                 {
                     code: "CreateProperty",
                     data: {
-                        id: hasFeatureImage,
+                        key: hasFeatureImage,
                         type: PropertyType.RelOther,
                         name: "has feature image",
-                        appliesTo: [{ entryType }],
+                        appliesTo: [{ entryTypeKey }],
                     },
                 },
                 // Create an entry:
@@ -154,9 +154,9 @@ group("HeroImage.ts", () => {
                     code: "CreateEntry",
                     data: {
                         entryId,
-                        type: entryType,
+                        entryTypeKey,
                         name: "Test WithImage",
-                        friendlyId: "test",
+                        key: "test",
                         description: "This is an entry",
                     },
                 },
@@ -165,9 +165,9 @@ group("HeroImage.ts", () => {
                     code: "CreateEntry",
                     data: {
                         entryId: imageId,
-                        type: imageType,
+                        entryTypeKey: imageTypeKey,
                         name: "Test Image",
-                        friendlyId: "img",
+                        key: "img",
                         description: "This is an image",
                     },
                 },
@@ -207,7 +207,7 @@ group("HeroImage.ts", () => {
                     code: "AddPropertyFact",
                     data: {
                         entryId: entryId,
-                        propertyId: hasFeatureImage,
+                        propertyKey: hasFeatureImage,
                         propertyFactId: VNID(),
                         valueExpression: `entry("${imageId}")`,
                         note: caption,

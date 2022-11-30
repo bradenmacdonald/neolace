@@ -35,8 +35,8 @@ export interface Config {
      * to pass a JWT (for human users).
      */
     authToken?: string;
-    /** Default site ID to use for requests involving a specific site. This is the site's friendlyId, e.g. "technotes" */
-    siteId?: string;
+    /** Default site ID to use for requests involving a specific site. This is the site's key, e.g. "technotes" */
+    siteKey?: string;
     getExtraHeadersForRequest?: (
         request: { method: HttpMethod; path: string },
     ) => Promise<{ [headerName: string]: string }>;
@@ -55,14 +55,14 @@ export class NeolaceApiClient {
     readonly basePath: string;
     readonly fetchApi: typeof window["fetch"];
     readonly authToken?: string;
-    readonly siteId?: string;
+    readonly siteKey?: string;
     private readonly getExtraHeadersForRequest?: Config["getExtraHeadersForRequest"];
 
     constructor(config: Config) {
         this.basePath = config.basePath.replace(/\/+$/, "");
         this.fetchApi = config.fetchApi;
         this.authToken = config.authToken;
-        this.siteId = config.siteId;
+        this.siteKey = config.siteKey;
         this.getExtraHeadersForRequest = config.getExtraHeadersForRequest;
     }
 
@@ -142,15 +142,15 @@ export class NeolaceApiClient {
         return await response.json();
     }
 
-    /** Helper method to get a siteId, either as given to the current method or falling back to the default. */
-    private getSiteId(methodOptions?: { siteId?: string }): string {
-        if (methodOptions?.siteId) {
-            return methodOptions.siteId;
+    /** Helper method to get a siteKey, either as given to the current method or falling back to the default. */
+    private getSiteId(methodOptions?: { siteKey?: string }): string {
+        if (methodOptions?.siteKey) {
+            return methodOptions.siteKey;
         }
-        if (!this.siteId) {
-            throw new Error("siteId is required, either in the constructor or the API method.");
+        if (!this.siteKey) {
+            throw new Error("siteKey is required, either in the constructor or the API method.");
         }
-        return this.siteId;
+        return this.siteKey;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,14 +182,14 @@ export class NeolaceApiClient {
      * that updated link will be emailed to the user.
      */
     public async requestEmailVerification(
-        options: { email: string; returnUrl: string; data: Record<string, unknown>; siteId?: string },
+        options: { email: string; returnUrl: string; data: Record<string, unknown>; siteKey?: string },
     ): Promise<void> {
         const data: schemas.Type<typeof VerifyEmailRequest> = {
             email: options.email,
             data: options.data,
             returnUrl: options.returnUrl,
-            // siteFriendlyId is optional for this API call:
-            siteFriendlyId: options.siteId ?? this.siteId ?? undefined,
+            // siteKey is optional for this API call:
+            siteKey: options.siteKey ?? this.siteKey ?? undefined,
         };
         await this.call("/user/verify-email", { method: "POST", data });
     }
@@ -228,20 +228,20 @@ export class NeolaceApiClient {
         return await this.call(`/site/find?domain=${encodeURIComponent(criteria.domain)}`, { method: "GET" });
     }
 
-    public async getSiteHomePage(options?: { siteId?: string }): Promise<SiteHomePageData> {
-        const siteId = this.getSiteId(options);
-        return await this.call(`/site/${siteId}/home`, { method: "GET" });
+    public async getSiteHomePage(options?: { siteKey?: string }): Promise<SiteHomePageData> {
+        const siteKey = this.getSiteId(options);
+        return await this.call(`/site/${siteKey}/home`, { method: "GET" });
     }
 
-    public async getSiteSchema(options?: { siteId?: string }): Promise<SiteSchemaData> {
-        const siteId = this.getSiteId(options);
-        return await this.call(`/site/${siteId}/schema`, { method: "GET" });
+    public async getSiteSchema(options?: { siteKey?: string }): Promise<SiteSchemaData> {
+        const siteKey = this.getSiteId(options);
+        return await this.call(`/site/${siteKey}/schema`, { method: "GET" });
     }
 
     /** Replace a site's schema with the provided schema */
-    public async replaceSiteSchema(schema: SiteSchemaData, options?: { siteId?: string }): Promise<void> {
-        const siteId = this.getSiteId(options);
-        await this.call(`/site/${siteId}/schema`, { method: "PUT", data: schema });
+    public async replaceSiteSchema(schema: SiteSchemaData, options?: { siteKey?: string }): Promise<void> {
+        const siteKey = this.getSiteId(options);
+        await this.call(`/site/${siteKey}/schema`, { method: "PUT", data: schema });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -251,11 +251,11 @@ export class NeolaceApiClient {
         expression: string,
         options: {
             entryKey?: VNID | string;
-            siteId?: string;
+            siteKey?: string;
             pageSize?: number;
         } = {},
     ): Promise<EvaluateLookupData> {
-        const siteId = this.getSiteId(options);
+        const siteKey = this.getSiteId(options);
         const query = new URLSearchParams({ expression });
         if (options.entryKey) {
             query.set("entryKey", options.entryKey);
@@ -263,7 +263,7 @@ export class NeolaceApiClient {
         if (options.pageSize) {
             query.set("pageSize", options.pageSize.toString());
         }
-        return this.call(`/site/${siteId}/lookup?${query.toString()}`);
+        return this.call(`/site/${siteKey}/lookup?${query.toString()}`);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -280,9 +280,9 @@ export class NeolaceApiClient {
     }
 
     public async listDrafts(
-        options?: { siteId?: string; page?: number; status?: DraftStatus },
+        options?: { siteKey?: string; page?: number; status?: DraftStatus },
     ): Promise<schemas.PaginatedResultData<DraftData>> {
-        const siteId = this.getSiteId(options);
+        const siteKey = this.getSiteId(options);
         const args = new URLSearchParams();
         if (options?.page !== undefined) {
             args.set("page", options.page.toString());
@@ -290,19 +290,19 @@ export class NeolaceApiClient {
         if (options?.status !== undefined) {
             args.set("status", options.status.toString());
         }
-        const data = await this.call(`/site/${siteId}/draft/?` + args.toString(), { method: "GET" }) as any;
+        const data = await this.call(`/site/${siteKey}/draft/?` + args.toString(), { method: "GET" }) as any;
         data.values = data.values.map(this._parseDraft);
         return data;
     }
 
     public async getDraft<Flags extends readonly GetDraftFlags[] | undefined = undefined>(
         idNum: number,
-        options?: { flags: Flags; siteId?: string },
+        options?: { flags: Flags; siteKey?: string },
     ): Promise<ApplyFlags<typeof GetDraftFlags, Flags, DraftData>> {
-        const siteId = this.getSiteId(options);
+        const siteKey = this.getSiteId(options);
         return this._parseDraft(
             await this.call(
-                `/site/${siteId}/draft/${idNum}` +
+                `/site/${siteKey}/draft/${idNum}` +
                     (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""),
                 { method: "GET" },
             ),
@@ -311,10 +311,10 @@ export class NeolaceApiClient {
 
     public async createDraft(
         data: schemas.Type<typeof CreateDraftSchema>,
-        options?: { siteId?: string },
+        options?: { siteKey?: string },
     ): Promise<DraftData> {
-        const siteId = this.getSiteId(options);
-        const result = await this.call(`/site/${siteId}/draft`, {
+        const siteKey = this.getSiteId(options);
+        const result = await this.call(`/site/${siteKey}/draft`, {
             method: "POST",
             data: {
                 title: data.title,
@@ -327,31 +327,31 @@ export class NeolaceApiClient {
 
     public async addEditToDraft(
         edit: AnySchemaEdit | AnyContentEdit,
-        options: { idNum: number; siteId?: string },
+        options: { idNum: number; siteKey?: string },
     ): Promise<void> {
-        const siteId = this.getSiteId(options);
-        await this.call(`/site/${siteId}/draft/${options.idNum}/edit`, { method: "POST", data: edit });
+        const siteKey = this.getSiteId(options);
+        await this.call(`/site/${siteKey}/draft/${options.idNum}/edit`, { method: "POST", data: edit });
     }
 
     public async uploadFileToDraft(
         fileData: Blob,
-        options: { idNum: number; siteId?: string },
+        options: { idNum: number; siteKey?: string },
     ): Promise<DraftFileData> {
-        const siteId = this.getSiteId(options);
+        const siteKey = this.getSiteId(options);
         const hash = await crypto.subtle.digest("SHA-256", await fileData.arrayBuffer());
         const hashHex = bin2hex(new Uint8Array(hash));
         const formData = new FormData();
         formData.append("file", fileData);
-        const result = await this.call(`/site/${siteId}/draft/${options.idNum}/file?sha256Hash=${hashHex}`, {
+        const result = await this.call(`/site/${siteKey}/draft/${options.idNum}/file?sha256Hash=${hashHex}`, {
             method: "POST",
             body: formData,
         });
         return result;
     }
 
-    public async acceptDraft(idNum: number, options?: { siteId?: string }): Promise<void> {
-        const siteId = this.getSiteId(options);
-        await this.call(`/site/${siteId}/draft/${idNum}/accept`, { method: "POST" });
+    public async acceptDraft(idNum: number, options?: { siteKey?: string }): Promise<void> {
+        const siteKey = this.getSiteId(options);
+        await this.call(`/site/${siteKey}/draft/${idNum}/accept`, { method: "POST" });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -359,11 +359,11 @@ export class NeolaceApiClient {
 
     public getEntry<Flags extends readonly GetEntryFlags[] | undefined = undefined>(
         key: string,
-        options: { flags?: Flags; siteId?: string } = {},
+        options: { flags?: Flags; siteKey?: string } = {},
     ): Promise<ApplyFlags<typeof GetEntryFlags, Flags, EntryData>> {
-        const siteId = this.getSiteId(options);
+        const siteKey = this.getSiteId(options);
         return this.call(
-            `/site/${siteId}/entry/${encodeURIComponent(key)}` +
+            `/site/${siteKey}/entry/${encodeURIComponent(key)}` +
                 (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""),
         );
     }
@@ -375,11 +375,11 @@ export class NeolaceApiClient {
      * via getSearchConnection for more flexible ways of retrieving the list of entries.
      */
     public async getEntries(
-        options: { ofEntryType?: VNID; siteId?: string } = {},
+        options: { ofEntryType?: string; siteKey?: string } = {},
     ): Promise<{ totalCount: number } & AsyncIterable<EntrySummaryData>> {
-        const siteId = this.getSiteId(options);
+        const siteKey = this.getSiteId(options);
         const firstPage: schemas.StreamedResultData<EntrySummaryData> = await this.call(
-            `/site/${siteId}/entry/` + (options.ofEntryType ? `?entryType=${options.ofEntryType}` : ""),
+            `/site/${siteKey}/entry/` + (options.ofEntryType ? `?entryType=${options.ofEntryType}` : ""),
         );
         let currentPage = firstPage;
         return {
@@ -411,40 +411,40 @@ export class NeolaceApiClient {
 
     /**
      * Get the permissions that the user has, in a specific context.
-     * For example, to determine if the user has 'edit.entry' permission, pass in the entryId and entryTypeId
+     * For example, to determine if the user has 'edit.entry' permission, pass in the entryId and entryTypeKey
      * @param options
      * @returns
      */
     public async getMyPermissions(
         options: {
             entryId?: VNID;
-            entryTypeId?: VNID;
+            entryTypeKey?: VNID;
             draftIdNum?: number;
             [custom: `plugin:${string}`]: string;
-            siteId?: string;
+            siteKey?: string;
         } = {},
     ): Promise<SiteUserMyPermissionsData> {
-        const siteId = this.getSiteId(options);
+        const siteKey = this.getSiteId(options);
 
         const objectFields: Record<string, string> = {};
         for (const [k, v] of Object.entries(options)) {
-            if (v !== undefined && k !== "siteId") {
+            if (v !== undefined && k !== "siteKey") {
                 objectFields[k] = String(v);
             }
         }
         const args = new URLSearchParams(objectFields);
 
-        return await this.call(`/site/${siteId}/my-permissions?${args.toString()}`, { method: "GET" });
+        return await this.call(`/site/${siteKey}/my-permissions?${args.toString()}`, { method: "GET" });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Site administration API methods
 
     public async getSiteUsers(
-        options?: { page?: number; siteId?: string },
+        options?: { page?: number; siteKey?: string },
     ): Promise<schemas.PaginatedResultData<SiteUserSummaryData>> {
-        const siteId = this.getSiteId(options);
-        return await this.call(`/site/${siteId}/user` + (options?.page ? `?page=${options.page}` : ""), {
+        const siteKey = this.getSiteId(options);
+        return await this.call(`/site/${siteKey}/user` + (options?.page ? `?page=${options.page}` : ""), {
             method: "GET",
         });
     }
@@ -452,26 +452,26 @@ export class NeolaceApiClient {
     /**
      * Erase all entries on the site. This is dangerous! Mostly useful for development.
      */
-    public async eraseAllEntriesDangerously(options: { confirm?: "danger"; siteId?: string } = {}): Promise<void> {
-        const siteId = this.getSiteId(options);
-        await this.call(`/site/${siteId}/entry/?confirm=${options.confirm}`, { method: "DELETE" });
+    public async eraseAllEntriesDangerously(options: { confirm?: "danger"; siteKey?: string } = {}): Promise<void> {
+        const siteKey = this.getSiteId(options);
+        await this.call(`/site/${siteKey}/entry/?confirm=${options.confirm}`, { method: "DELETE" });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Built-in plugin methods
 
-    public getSearchConnection(options?: { siteId?: string }): Promise<SiteSearchConnectionData> {
-        const siteId = this.getSiteId(options);
-        return this.call(`/site/${siteId}/search/connection`);
+    public getSearchConnection(options?: { siteKey?: string }): Promise<SiteSearchConnectionData> {
+        const siteKey = this.getSiteId(options);
+        return this.call(`/site/${siteKey}/search/connection`);
     }
 
     public pushBulkEdits(
         edits: AnyBulkEdit[],
-        options: { siteId?: string; connectionId: string; createConnection?: boolean },
+        options: { siteKey?: string; connectionId: string; createConnection?: boolean },
     ): Promise<{ appliedEditIds: string[] }> {
-        const siteId = this.getSiteId(options);
+        const siteKey = this.getSiteId(options);
         return this.call(
-            `/site/${siteId}/connection/push/${options.connectionId}/edit/?${
+            `/site/${siteKey}/connection/push/${options.connectionId}/edit/?${
                 options.createConnection ? "create=true" : ""
             }`,
             {

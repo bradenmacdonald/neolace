@@ -14,16 +14,19 @@ export const doAddPropertyFact = defineImplementation(AddPropertyFact, async (tx
     if (data.rank !== undefined) {
         updatedPropertyFactFields.rank = BigInt(data.rank);
     }
+    const matchEntry = C`
+        MATCH (site:${Site} {id: ${siteId}})
+        MATCH (entry:${Entry} {id: ${data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+    `;
 
     // Validate the entry ID, property ID, and ensure they're part of the current site.
     // Then create the new property fact.
     let baseData;
     try {
         baseData = await tx.queryOne(C`
-            MATCH (site:${Site} {id: ${siteId}})
-            MATCH (entry:${Entry} {id: ${data.entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+            ${matchEntry}
             // Ensure that the property (still) applies to this entry type:
-            MATCH (property:${Property} {id: ${data.propertyId}})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
+            MATCH (property:${Property} {siteNamespace: site.id, key: ${data.propertyKey}})-[:${Property.rel.APPLIES_TO_TYPE}]->(entryType)
             // Set the rank automatically by default:
             OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(existingPf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
             WITH entry, property, max(existingPf.rank) AS maxCurrentRank
@@ -37,23 +40,34 @@ export const doAddPropertyFact = defineImplementation(AddPropertyFact, async (tx
         }));
     } catch (err) {
         if (err instanceof EmptyResultError) {
+            // Was the entry not found?
+            const checkEntry = await tx.query(matchEntry.RETURN({ "entryType.key": Field.String }));
+            if (checkEntry.length === 0) {
+                throw new InvalidEdit(
+                    AddPropertyFact.code,
+                    { entryId: data.entryId },
+                    `Entry with ID ${data.entryId} was not found.`,
+                );
+            }
             // Was the property not found, or does it not apply to that entry type?
             const checkProperties = await tx.query(C`
-                MATCH (property:${Property} {id: ${data.propertyId}})-[:${Property.rel.FOR_SITE}]->(site:${Site} {id: ${siteId}})
+                MATCH (property:${Property} {siteNamespace: ${siteId}, key: ${data.propertyKey}})
             `.RETURN({ "property.name": Field.String }));
             if (checkProperties.length === 0) {
                 throw new InvalidEdit(
                     AddPropertyFact.code,
-                    { propertyId: data.propertyId },
-                    `Property with ID ${data.propertyId} was not found in the site's schema.`,
+                    { propertyKey: data.propertyKey },
+                    `Property with key ${data.propertyKey} was not found in the site's schema.`,
                 );
             } else {
                 // If we get there, the property exists but doesn't apply to that entry type.
                 const propertyName = checkProperties[0]["property.name"];
                 throw new InvalidEdit(
                     AddPropertyFact.code,
-                    { propertyId: data.propertyId, propertyName, entryId: data.entryId },
-                    `The "${propertyName}" property does not apply to entries of that type.`,
+                    { propertyKey: data.propertyKey, propertyName, entryId: data.entryId },
+                    `The "${propertyName}" property does not apply to entries of type ${
+                        checkEntry[0]["entryType.key"]
+                    }.`,
                 );
             }
         } else {
@@ -83,7 +97,7 @@ export const doAddPropertyFact = defineImplementation(AddPropertyFact, async (tx
                 throw new InvalidEdit(
                     AddPropertyFact.code,
                     {
-                        propertyId: data.propertyId,
+                        propertyKey: data.propertyKey,
                         toEntryId: toEntryId,
                         fromEntryId: data.entryId,
                     },

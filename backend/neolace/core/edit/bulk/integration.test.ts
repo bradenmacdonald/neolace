@@ -12,19 +12,19 @@ group("using multiple bulk edits together", () => {
         doBulkEdits,
         evaluateEntryListLookup,
     } = testHelpers(defaultData);
-    const genus = defaultData.schema.entryTypes._ETGENUS;
-    const scientificNameProp = defaultData.schema.properties._propScientificName;
-    const wikidataQidProp = defaultData.schema.properties._propWikidataQID;
-    const parentGenusProp = defaultData.schema.properties._parentGenus;
+    const genus = defaultData.schema.entryTypes.ETGENUS;
+    const scientificNameProp = defaultData.schema.properties.propScientificName;
+    const wikidataQidProp = defaultData.schema.properties.propWikidataQID;
+    const parentGenusProp = defaultData.schema.properties.parentGenus;
 
     const genusAcer = {
-        friendlyId: "g-acer",
+        key: "g-acer",
         name: "Acer",
         description: 'Commonly known as "maples".',
         wikidataQid: "Q42292",
     };
     const redMaple = {
-        friendlyId: "s-red-maple",
+        key: "s-red-maple",
         name: "red maple",
         description: 'the red maple, scientific name "Acer rubrum"',
         scientificName: "Acer rubrum",
@@ -39,16 +39,16 @@ group("using multiple bulk edits together", () => {
         // Make the edit:
         await doBulkEdits([
             {
-                code: "UpsertEntryByFriendlyId",
+                code: "UpsertEntryByKey",
                 data: {
-                    where: { entryTypeId: genus.id, friendlyId: genusAcer.friendlyId },
+                    where: { entryTypeKey: genus.key, entryKey: genusAcer.key },
                     set: { name: genusAcer.name, description: genusAcer.description },
                 },
             },
             {
-                code: "UpsertEntryByFriendlyId",
+                code: "UpsertEntryByKey",
                 data: {
-                    where: { entryTypeId: species.id, friendlyId: redMaple.friendlyId },
+                    where: { entryTypeKey: species.key, entryKey: redMaple.key },
                     set: { name: redMaple.name, description: redMaple.description },
                 },
             },
@@ -56,10 +56,10 @@ group("using multiple bulk edits together", () => {
             {
                 code: "SetPropertyFacts",
                 data: {
-                    entryWith: { friendlyId: genusAcer.friendlyId },
+                    entryWith: { entryKey: genusAcer.key },
                     set: [
                         {
-                            propertyId: wikidataQidProp.id,
+                            propertyKey: wikidataQidProp.key,
                             facts: [{ valueExpression: `"${genusAcer.wikidataQid}"` }],
                         },
                     ],
@@ -68,14 +68,14 @@ group("using multiple bulk edits together", () => {
             {
                 code: "SetPropertyFacts",
                 data: {
-                    entryWith: { friendlyId: redMaple.friendlyId },
+                    entryWith: { entryKey: redMaple.key },
                     set: [
                         {
-                            propertyId: scientificNameProp.id,
+                            propertyKey: scientificNameProp.key,
                             facts: [{ valueExpression: `"${redMaple.scientificName}"` }],
                         },
                         {
-                            propertyId: wikidataQidProp.id,
+                            propertyKey: wikidataQidProp.key,
                             facts: [{ valueExpression: `"${redMaple.wikidataQid}"` }],
                         },
                     ],
@@ -86,11 +86,11 @@ group("using multiple bulk edits together", () => {
                 code: "SetRelationships",
                 data: {
                     // Parent genus of the red maple is "Acer":
-                    entryWith: { friendlyId: redMaple.friendlyId },
+                    entryWith: { entryKey: redMaple.key },
                     set: [
                         {
-                            propertyId: parentGenusProp.id,
-                            toEntries: [{ entryWith: { friendlyId: genusAcer.friendlyId } }],
+                            propertyKey: parentGenusProp.key,
+                            toEntries: [{ entryWith: { entryKey: genusAcer.key } }],
                         },
                     ],
                 },
@@ -100,25 +100,25 @@ group("using multiple bulk edits together", () => {
         // Now check if it worked:
         const { id: genusAcerId } = await assertExists(genusAcer);
         const { id: redMapleId } = await assertExists(redMaple);
-        const redMapleSciName = await getPropertyFacts({ id: redMapleId }, scientificNameProp.id);
+        const redMapleSciName = await getPropertyFacts({ id: redMapleId }, scientificNameProp.key);
         assertEquals(redMapleSciName.map((f) => f.valueExpression), [`"${redMaple.scientificName}"`]);
         assertEquals(redMapleSciName.map((f) => f.note), [""]);
         assertEquals(redMapleSciName.map((f) => f.rank), [1]);
 
-        const redMapleQid = await getPropertyFacts({ id: redMapleId }, wikidataQidProp.id);
+        const redMapleQid = await getPropertyFacts({ id: redMapleId }, wikidataQidProp.key);
         assertEquals(redMapleQid.map((f) => f.valueExpression), [`"${redMaple.wikidataQid}"`]);
-        const genusAcerQid = await getPropertyFacts({ id: genusAcerId }, wikidataQidProp.id);
+        const genusAcerQid = await getPropertyFacts({ id: genusAcerId }, wikidataQidProp.key);
         assertEquals(genusAcerQid.map((f) => f.valueExpression), [`"${genusAcer.wikidataQid}"`]);
 
         // Check the relationship:
         const forwardTest = await evaluateEntryListLookup(
             { id: redMapleId },
-            `this.get(prop=prop("${parentGenusProp.id}"))`,
+            `this.get(prop=prop("${parentGenusProp.key}"))`,
         );
         assertEquals(forwardTest, [genusAcerId]); // The parent genus of the red maple is Acer
         const reverseTest = await evaluateEntryListLookup(
             { id: genusAcerId },
-            `this.reverse(prop=prop("${parentGenusProp.id}"))`,
+            `this.reverse(prop=prop("${parentGenusProp.key}"))`,
         );
         assertEquals(reverseTest, [redMapleId]); // The species with Acer as their parent genus are: red maple
     });

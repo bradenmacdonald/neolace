@@ -13,25 +13,25 @@ group("allEntries.ts", () => {
         const graph = await getGraph();
 
         // Create another site with three entries:
-        const otherSiteId = VNID(), entryType = VNID(), A = VNID(), B = VNID(), C = VNID();
+        const otherSiteId = VNID(), entryTypeKey = "et-test", A = VNID(), B = VNID(), C = VNID();
         await graph.runAsSystem(
-            CreateSite({ id: otherSiteId, name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+            CreateSite({ id: otherSiteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId: otherSiteId,
             edits: [
-                { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                 {
                     code: "CreateEntry",
-                    data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                    data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                 },
                 {
                     code: "CreateEntry",
-                    data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                    data: { entryId: B, name: "Entry B", entryTypeKey, key: "b", description: "" },
                 },
                 {
                     code: "CreateEntry",
-                    data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                    data: { entryId: C, name: "Entry C", entryTypeKey, key: "c", description: "" },
                 },
             ],
             editSource: UseSystemSource,

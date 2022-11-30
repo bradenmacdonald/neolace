@@ -8,7 +8,7 @@ import { subgraph } from "graphology-operators";
 
 interface NodeAttributes {
     label: string;
-    entryType: VNID;
+    entryTypeKey: string;
     isFocusEntry?: boolean;
     community?: number;
     nodesCondensed?: Set<string>;
@@ -17,7 +17,7 @@ interface NodeAttributes {
 interface EdgeAttributes {
     label: string;
     relId: VNID;
-    relType: VNID;
+    relTypeKey: string;
 }
 export type GraphType = Graph<NodeAttributes, EdgeAttributes>;
 
@@ -41,7 +41,7 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
         nodes: graph.mapNodes((nodeKey) => ({
             id: VNID(nodeKey),
             label: graph.getNodeAttribute(nodeKey, "label") as string,
-            entryType: VNID(graph.getNodeAttribute(nodeKey, "entryType")),
+            entryTypeKey: graph.getNodeAttribute(nodeKey, "entryTypeKey"),
             ...(graph.hasNodeAttribute(nodeKey, "isFocusEntry") && { isFocusEntry: true }),
             ...(graph.hasNodeAttribute(nodeKey, "community") &&
                 { community: graph.getNodeAttribute(nodeKey, "community") }),
@@ -55,7 +55,7 @@ export function convertGraphToData(graph: GraphType): G6RawGraphData {
                 id: attributes.relId,
                 source: source,
                 target: target,
-                relType: attributes.relType,
+                relTypeKey: attributes.relTypeKey,
                 label: attributes.label,
             };
         }),
@@ -87,20 +87,20 @@ function condenseLeaves(graph: GraphType): GraphType {
  * @param originalGraph
  * @param currGraph
  * @param parentNodeKey
- * @param entryType
+ * @param entryTypeKey
  * @returns
  */
 function expandLeaf(
     originalGraph: GraphType,
     currGraph: GraphType,
     parentNodeKey: string,
-    entryType: string,
+    entryTypeKey: string,
 ): GraphType {
     let newGraph = currGraph.copy();
     // find the key of the condensed leaf
     const condensedLeafkey = newGraph.filterNeighbors(parentNodeKey, (_n, attrs) => {
         if (attrs.nodesCondensed) {
-            if (attrs.entryType === entryType) {
+            if (attrs.entryTypeKey === entryTypeKey) {
                 return true;
             }
         }
@@ -166,7 +166,7 @@ function expandSimplePattern(
     currGraph: GraphType,
     parentNodeKey1: string,
     parentNodeKey2: string,
-    entryType: string,
+    entryTypeKey: string,
 ) {
     let newGraph = currGraph.copy();
     // find the key of the condensed leaf
@@ -176,7 +176,7 @@ function expandSimplePattern(
     const condensedLeaves = commonNodes.filter((n) => {
         const attrs = newGraph.getNodeAttributes(n);
         if (attrs.nodesCondensed) {
-            if (attrs.entryType === entryType) {
+            if (attrs.entryTypeKey === entryTypeKey) {
                 return true;
             }
         }
@@ -217,10 +217,10 @@ function expandSimplePattern(
  * {Node of type A} - {Node of Type B saying "4 nodes condensed"} - {Node of Type A}
  *
  * @param graph a Graph object representing the graph data
- * @param relativeEType The entry type of the nodes relative to which to perform the condensing operation.
+ * @param relativeEType The key of the entry type of the nodes relative to which to perform the condensing operation.
  * @returns a new condensed graph
  */
-function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType {
+function condenseSimplePattern(graph: GraphType, relativeEType: string): GraphType {
     const newGraph = graph.copy();
     const nodePairs: {
         nodeKey: string;
@@ -230,17 +230,17 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
     }[] = [];
 
     newGraph.forEachNode((nodeKey) => {
-        if (graph.getNodeAttribute(nodeKey, "entryType") !== relativeEType) return;
+        if (graph.getNodeAttribute(nodeKey, "entryTypeKey") !== relativeEType) return;
         //divide neighbours by type = {EntryType: {EndNode, IntermediateNodes}}
-        const nTripletsByType: Record<VNID, Record<string, Set<string>>> = {};
+        const nTripletsByType: Record<string, Record<string, Set<string>>> = {};
         // filter neighbours to have only one other connection to a node of the same type as nodeKey node
         newGraph.forEachNeighbor(nodeKey, (neighborKey) => {
             const nNeighbours = newGraph.neighbors(neighborKey);
             if ((nNeighbours.length !== 2)) return;
-            const neighborEntryType = graph.getNodeAttribute(neighborKey, "entryType");
+            const neighborEntryType = graph.getNodeAttribute(neighborKey, "entryTypeKey");
 
-            const eType1 = graph.getNodeAttribute(nNeighbours[0], "entryType");
-            const eType2 = graph.getNodeAttribute(nNeighbours[1], "entryType");
+            const eType1 = graph.getNodeAttribute(nNeighbours[0], "entryTypeKey");
+            const eType2 = graph.getNodeAttribute(nNeighbours[1], "entryTypeKey");
             if (eType1 !== eType2) return;
 
             const endNodeKey = nNeighbours[0] === nodeKey ? nNeighbours[1] : nNeighbours[0];
@@ -291,7 +291,7 @@ function condenseSimplePattern(graph: GraphType, relativeEType: VNID): GraphType
             const newLeafKey = VNID();
             newGraph.addNode(newLeafKey, {
                 label: `${pair.nodesCondensed.size} entries condensed`,
-                entryType: pair.middleNodeEType,
+                entryTypeKey: pair.middleNodeEType,
                 nodesCondensed: pair.nodesCondensed,
             });
             newGraph.addEdge(pair.nodeKey, newLeafKey);
@@ -312,14 +312,14 @@ function condenseNodeLeaves(graph: GraphType, nodeToCondense: string) {
     const newGraph = graph.copy();
     const leavesPerType: {
         nodeKey: string;
-        entryType: VNID;
+        entryTypeKey: string;
         hiddenNodeNumber: number;
         leavesToDelete: Set<string>;
     }[] = [];
     // for each entry type, if a node has many leaves of that type, add them for condensing
-    const leaves: Record<VNID, string[]> = {};
+    const leaves: Record<string, string[]> = {};
     newGraph.forEachNeighbor(nodeToCondense, (neighborKey) => {
-        const neighborEntryType = graph.getNodeAttribute(neighborKey, "entryType");
+        const neighborEntryType = graph.getNodeAttribute(neighborKey, "entryTypeKey");
         if (newGraph.neighbors(neighborKey).length === 1) {
             if (leaves[neighborEntryType]) {
                 leaves[neighborEntryType].push(neighborKey);
@@ -329,12 +329,12 @@ function condenseNodeLeaves(graph: GraphType, nodeToCondense: string) {
         }
     });
 
-    for (const [entryType, value] of Object.entries(leaves)) {
+    for (const [entryTypeKey, value] of Object.entries(leaves)) {
         if (value.length > 1) {
             leavesPerType.push(
                 {
                     nodeKey: nodeToCondense,
-                    entryType: VNID(entryType),
+                    entryTypeKey,
                     hiddenNodeNumber: value.length,
                     leavesToDelete: new Set<string>(value),
                 },
@@ -351,7 +351,7 @@ function condenseNodeLeaves(graph: GraphType, nodeToCondense: string) {
         const newLeafKey = VNID();
         newGraph.addNode(newLeafKey, {
             label: `${leafyNode.hiddenNodeNumber} entries condensed`,
-            entryType: leafyNode.entryType,
+            entryTypeKey: leafyNode.entryTypeKey,
             nodesCondensed: leafyNode.leavesToDelete,
         });
         newGraph.addEdge(leafyNode.nodeKey, newLeafKey);
@@ -363,14 +363,14 @@ function condenseNodeLeaves(graph: GraphType, nodeToCondense: string) {
  * Hide nodes of given entry type as follows: for each deleted node, take all of its neighbours, and connect all of them
  *  with undirected relationsips.
  * @param graph
- * @param eTypeToRemove
+ * @param eTypeToRemove Key of the entry type to remove
  * @returns
  */
 export function hideNodesOfType(graph: GraphType, eTypeToRemove: VNID): GraphType {
     // filter nodes to only of the removed type
     const newGraph = graph.copy();
     const nodesToRemove = newGraph.filterNodes((n, attr) => {
-        return attr.entryType === eTypeToRemove;
+        return attr.entryTypeKey === eTypeToRemove;
     });
 
     // iterate over the nodes
@@ -519,9 +519,9 @@ function maxCliqueRec(graph: GraphType, currClique: string[]) {
 // ******************************************TRANSFORM FUNCTIONS********************************************************
 // for now just find all the leaf nodes and for every node that has more than one leaf node:
 // remove the leaf nodes, create one leaf node with label saying how many leaf nodes there are.
-export function transformCondenseGraph(graph: GraphType, entryType: VNID) {
+export function transformCondenseGraph(graph: GraphType, entryTypeKey: string) {
     const transformedGraph = condenseLeaves(graph);
-    const condensedGraph = condenseSimplePattern(transformedGraph, entryType);
+    const condensedGraph = condenseSimplePattern(transformedGraph, entryTypeKey);
     return condensedGraph;
 }
 

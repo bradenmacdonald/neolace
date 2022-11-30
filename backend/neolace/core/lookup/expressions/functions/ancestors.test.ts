@@ -227,7 +227,7 @@ group("ancestors.ts", () => {
         setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
         const siteId = VNID();
-        const entryType = VNID(), entryIsA = VNID();
+        const entryTypeKey = "ET1", entryIsA = "prop-is-a";
         const A = VNID(),
             B = VNID(),
             C = VNID(),
@@ -284,51 +284,51 @@ group("ancestors.ts", () => {
 
             const graph = await getGraph();
             await graph.runAsSystem(
-                CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+                CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
             );
             await graph.runAsSystem(ApplyEdits({
                 siteId,
                 edits: [
-                    { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                    { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                     {
                         code: "CreateProperty",
-                        data: { id: entryIsA, type: PropertyType.RelIsA, name: "is a", appliesTo: [{ entryType }] },
+                        data: { key: entryIsA, type: PropertyType.RelIsA, name: "is a", appliesTo: [{ entryTypeKey }] },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                        data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                        data: { entryId: B, name: "Entry B", entryTypeKey, key: "b", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                        data: { entryId: C, name: "Entry C", entryTypeKey, key: "c", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
+                        data: { entryId: D, name: "Entry D", entryTypeKey, key: "d", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: E, name: "Entry E", type: entryType, friendlyId: "e", description: "" },
+                        data: { entryId: E, name: "Entry E", entryTypeKey, key: "e", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: F, name: "Entry F", type: entryType, friendlyId: "f", description: "" },
+                        data: { entryId: F, name: "Entry F", entryTypeKey, key: "f", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: G, name: "Entry G", type: entryType, friendlyId: "g", description: "" },
+                        data: { entryId: G, name: "Entry G", entryTypeKey, key: "g", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: H, name: "Entry H", type: entryType, friendlyId: "h", description: "" },
+                        data: { entryId: H, name: "Entry H", entryTypeKey, key: "h", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: I, name: "Entry I", type: entryType, friendlyId: "i", description: "" },
+                        data: { entryId: I, name: "Entry I", entryTypeKey, key: "i", description: "" },
                     },
                     // C is a A
                     {
@@ -336,7 +336,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: C,
                             valueExpression: `entry("${A}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -346,7 +346,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: D,
                             valueExpression: `entry("${A}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -356,7 +356,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: D,
                             valueExpression: `entry("${B}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -366,7 +366,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: E,
                             valueExpression: `entry("${B}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -376,7 +376,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: F,
                             valueExpression: `entry("${C}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -386,7 +386,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: F,
                             valueExpression: `entry("${D}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -396,7 +396,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: H,
                             valueExpression: `entry("${F}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -406,7 +406,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: H,
                             valueExpression: `entry("${E}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -416,7 +416,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: I,
                             valueExpression: `entry("${E}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -426,7 +426,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: I,
                             valueExpression: `entry("${G}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -472,31 +472,31 @@ group("ancestors.ts", () => {
 
             const graph = await getGraph();
             await graph.runAsSystem(
-                CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", friendlyId: "test" }),
+                CreateSite({ id: siteId, name: "Test Site", domain: "test-site.neolace.net", key: "test" }),
             );
             await graph.runAsSystem(ApplyEdits({
                 siteId,
                 edits: [
-                    { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                    { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
                     {
                         code: "CreateProperty",
-                        data: { id: entryIsA, type: PropertyType.RelIsA, name: "is a", appliesTo: [{ entryType }] },
+                        data: { key: entryIsA, type: PropertyType.RelIsA, name: "is a", appliesTo: [{ entryTypeKey }] },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: A, name: "Entry A", type: entryType, friendlyId: "a", description: "" },
+                        data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: B, name: "Entry B", type: entryType, friendlyId: "b", description: "" },
+                        data: { entryId: B, name: "Entry B", entryTypeKey, key: "b", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: C, name: "Entry C", type: entryType, friendlyId: "c", description: "" },
+                        data: { entryId: C, name: "Entry C", entryTypeKey, key: "c", description: "" },
                     },
                     {
                         code: "CreateEntry",
-                        data: { entryId: D, name: "Entry D", type: entryType, friendlyId: "d", description: "" },
+                        data: { entryId: D, name: "Entry D", entryTypeKey, key: "d", description: "" },
                     },
                     // B is a A
                     {
@@ -504,7 +504,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: B,
                             valueExpression: `entry("${A}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -514,7 +514,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: C,
                             valueExpression: `entry("${A}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -524,7 +524,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: D,
                             valueExpression: `entry("${B}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -534,7 +534,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: D,
                             valueExpression: `entry("${C}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },
@@ -544,7 +544,7 @@ group("ancestors.ts", () => {
                         data: {
                             entryId: A,
                             valueExpression: `entry("${D}")`,
-                            propertyId: entryIsA,
+                            propertyKey: entryIsA,
                             propertyFactId: VNID(),
                         },
                     },

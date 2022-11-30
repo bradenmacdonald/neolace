@@ -16,7 +16,7 @@ import { Spinner } from "./widgets/Spinner";
 import { UISlot } from "./widgets/UISlot";
 
 interface Props {
-    /** The entry key (either its friendlyId or VNID) */
+    /** The entry key (either its key or VNID) */
     entrykey: api.VNID | string;
     /** The entry, as visible to the public (to a user with no permissions) */
     publicEntry?: api.EntryData;
@@ -98,19 +98,19 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                     {id: "entryName", priority: 20, content: <>
                         <strong className="block mt-2">{entry.name}</strong>
                     </>},
-                    // Then we used to display the friendlyId. For now it's hidden but it's kept in the HTML because
-                    // it's useful to have somewhere in the HTML to find the VNID and friendlyId.
+                    // Then we used to display the key. For now it's hidden but it's kept in the HTML because
+                    // it's useful to have somewhere in the HTML to find the VNID and key.
                     {id: "entryId", priority: 21, content: <>
-                        <code id="entry-id" data-entry-id={entry.id} className="font-mono font-light hidden">{entry.friendlyId}</code>
+                        <code id="entry-id" data-entry-id={entry.id} className="font-mono font-light hidden">{entry.key}</code>
                     </>},
                     // These are the links to each heading in the entry's article, if any, as well as to the summary and properties at the top:
                     {id: "tableOfContents", priority: 50, content: <>
                         <ul id="left-toc-headings">
-                            <li><Link href={`/entry/${entry.friendlyId}#summary`}><FormattedMessage id="RrCui3" defaultMessage="Summary"/></Link></li>
-                            <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${entry.friendlyId}#properties`}><FormattedMessage id="aI80kg" defaultMessage="Properties"/></Link></li>
+                            <li><Link href={`/entry/${entry.key}#summary`}><FormattedMessage id="RrCui3" defaultMessage="Summary"/></Link></li>
+                            <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${entry.key}#properties`}><FormattedMessage id="aI80kg" defaultMessage="Properties"/></Link></li>
                             {
                                 entry.features?.Article?.headings.map(heading =>
-                                    <li key={heading.id}><Link href={`/entry/${entry.friendlyId}#h-${heading.id}`}>{heading.title}</Link></li>
+                                    <li key={heading.id}><Link href={`/entry/${entry.key}#h-${heading.id}`}>{heading.title}</Link></li>
                                 )
                             }
                         </ul>
@@ -196,10 +196,10 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                             </colgroup>
                             <tbody>
                                 {entry.propertiesSummary?.map(p => 
-                                    <tr key={p.propertyId} className="even:bg-[#fbfbfe]">
+                                    <tr key={p.propertyKey} className="even:bg-[#fbfbfe]">
                                         {/* The property (e.g. "Population") */}
                                         <th className="block md:table-cell text-xs md:text-base -mb-1 md:mb-0 pt-1 md:py-1 pr-2 align-top text-left font-normal text-gray-500 md:text-gray-700 min-w-[120px]">
-                                            <LookupValue value={{type: "Property", id: p.propertyId}} mdtContext={mdtContext} />
+                                            <LookupValue value={{type: "Property", key: p.propertyKey}} mdtContext={mdtContext} />
                                         </th>
                                         {/* The property value (e.g. "38 million people") */}
                                         <td className="block md:table-cell pr-2 pb-1 md:py-1 text-sm md:text-base">

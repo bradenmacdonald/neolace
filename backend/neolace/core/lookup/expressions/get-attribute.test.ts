@@ -41,11 +41,11 @@ group("get-attribute.ts", () => {
         assertEquals(value, new StringValue(ponderosaPine.name));
     });
 
-    test(`Attributes of an entry can be retrieved: .friendlyId`, async () => {
-        // this.friendlyId
-        const expression = new GetAttribute("friendlyId", new This());
+    test(`Attributes of an entry can be retrieved: .key`, async () => {
+        // this.key
+        const expression = new GetAttribute("key", new This());
         const value = await context.evaluateExprConcrete(expression, ponderosaPine.id);
-        assertEquals(value, new StringValue(ponderosaPine.friendlyId));
+        assertEquals(value, new StringValue(ponderosaPine.key));
     });
 
     test(`Attributes of an entry can be retrieved: .description`, async () => {
@@ -56,35 +56,35 @@ group("get-attribute.ts", () => {
     });
 
     // Entry Type
-    const speciesType = defaultData.schema.entryTypes._ETSPECIES;
+    const speciesType = defaultData.schema.entryTypes.ETSPECIES;
 
-    test(`Attributes of an entry type can be retrieved: .id`, async () => {
-        // entryType(...).id
-        const expression = new GetAttribute("id", new LiteralExpression(new EntryTypeValue(speciesType.id)));
+    test(`Attributes of an entry type can be retrieved: .key`, async () => {
+        // entryType(...).key
+        const expression = new GetAttribute("key", new LiteralExpression(new EntryTypeValue(speciesType.key)));
         const value = await context.evaluateExprConcrete(expression);
-        assertEquals(value, new StringValue(speciesType.id));
+        assertEquals(value, new StringValue(speciesType.key));
     });
 
     test(`Attributes of an entry type can be retrieved: .name`, async () => {
         // entryType(...).name
-        const expression = new GetAttribute("name", new LiteralExpression(new EntryTypeValue(speciesType.id)));
+        const expression = new GetAttribute("name", new LiteralExpression(new EntryTypeValue(speciesType.key)));
         const value = await context.evaluateExprConcrete(expression);
         assertEquals(value, new StringValue(speciesType.name));
     });
 
     // Property
-    const sciNameProp = defaultData.schema.properties._propScientificName;
+    const sciNameProp = defaultData.schema.properties.propScientificName;
 
-    test(`Attributes of a property can be retrieved: .id`, async () => {
-        // entryType(...).id
-        const expression = new GetAttribute("id", new LiteralExpression(new PropertyValue(sciNameProp.id)));
+    test(`Attributes of a property can be retrieved: .key`, async () => {
+        // property(...).key
+        const expression = new GetAttribute("key", new LiteralExpression(new PropertyValue(sciNameProp.key)));
         const value = await context.evaluateExprConcrete(expression);
-        assertEquals(value, new StringValue(sciNameProp.id));
+        assertEquals(value, new StringValue(sciNameProp.key));
     });
 
     test(`Attributes of a property can be retrieved: .name`, async () => {
-        // entryType(...).name
-        const expression = new GetAttribute("name", new LiteralExpression(new PropertyValue(sciNameProp.id)));
+        // property(...).name
+        const expression = new GetAttribute("name", new LiteralExpression(new PropertyValue(sciNameProp.key)));
         const value = await context.evaluateExprConcrete(expression);
         assertEquals(value, new StringValue(sciNameProp.name));
     });

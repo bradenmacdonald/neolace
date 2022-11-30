@@ -28,9 +28,9 @@ export const CreateEntry = ContentEditType({
     code: "CreateEntry",
     dataSchema: Schema({
         entryId: vnidString,
-        friendlyId: string,
+        key: string,
         name: string,
-        type: vnidString,
+        entryTypeKey: string,
         description: string,
     }),
     apply: (baseEntry, data, currentSchema) => {
@@ -38,9 +38,9 @@ export const CreateEntry = ContentEditType({
             return {
                 ...baseEntry,
                 name: data.name,
-                friendlyId: data.friendlyId,
+                key: data.key,
                 description: data.description,
-                entryType: { id: data.type, name: currentSchema.entryTypes[data.type]?.name ?? "Unknown Entry Type" },
+                entryType: { key: data.entryTypeKey, name: currentSchema.entryTypes[data.entryTypeKey]?.name ?? "Unknown Entry Type" },
                 features: {},
                 propertiesRaw: [],
             };
@@ -84,25 +84,25 @@ export const SetEntryName = ContentEditType({
     },
 });
 
-export const SetEntryFriendlyId = ContentEditType({
+export const SetEntryKey = ContentEditType({
     changeType: EditChangeType.Content,
-    code: "SetEntryFriendlyId",
-    dataSchema: Schema({ entryId: vnidString, friendlyId: string }),
+    code: "SetEntryKey",
+    dataSchema: Schema({ entryId: vnidString, key: string }),
     apply: (baseEntry, data) => {
         const updatedEntry = { ...baseEntry };
         if (baseEntry.id === data.entryId) {
-            updatedEntry.friendlyId = data.friendlyId;
+            updatedEntry.key = data.key;
         }
         return updatedEntry;
     },
-    describe: (data) => `Changed friendly ID of \`Entry ${data.entryId}\` to "${data.friendlyId}"`,
+    describe: (data) => `Changed key of \`Entry ${data.entryId}\` to "${data.key}"`,
     consolidate(thisEdit, earlierEdit) {
         if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // This rename overwrites the previous ID change.
             return thisEdit;
         } else if (earlierEdit.code === CreateEntry.code && earlierEdit.data.entryId === thisEdit.data.entryId) {
             // Just update the "CreateEntry" to include this ID
-            return { code: CreateEntry.code, data: { ...earlierEdit.data, friendlyId: thisEdit.data.friendlyId } };
+            return { code: CreateEntry.code, data: { ...earlierEdit.data, key: thisEdit.data.key } };
         }
         return undefined;
     },
@@ -191,7 +191,7 @@ export const AddPropertyFact = ContentEditType({
         /** The Entry where we are adding a new property value */
         entryId: vnidString,
         /** The Property in question. */
-        propertyId: vnidString,
+        propertyKey: string,
         /** The ID of this new property fact */
         propertyFactId: vnidString,
         /** Value expression: a lookup expression giving the value */
@@ -218,10 +218,10 @@ export const AddPropertyFact = ContentEditType({
             slot: data.slot ?? "",
         };
         const updatedEntry: EditableEntryData = { ...baseEntry, propertiesRaw: [...baseEntry.propertiesRaw] };
-        const propertyIndex = baseEntry.propertiesRaw.findIndex((p) => p.propertyId === data.propertyId);
+        const propertyIndex = baseEntry.propertiesRaw.findIndex((p) => p.propertyKey === data.propertyKey);
         if (propertyIndex === -1) {
             // We're adding a value for a property that has no values/facts yet:
-            updatedEntry.propertiesRaw.push({ propertyId: data.propertyId, facts: [newPropertyFact] });
+            updatedEntry.propertiesRaw.push({ propertyKey: data.propertyKey, facts: [newPropertyFact] });
         } else {
             // We're adding an additional value/fact to a property that already has one or more values/facts:
             updatedEntry.propertiesRaw[propertyIndex] = {
@@ -231,7 +231,7 @@ export const AddPropertyFact = ContentEditType({
         }
         return updatedEntry;
     },
-    describe: (data) => `Added value for \`Property ${data.propertyId}\` property on \`Entry ${data.entryId}\``,
+    describe: (data) => `Added value for \`Property ${data.propertyKey}\` property on \`Entry ${data.entryId}\``,
 });
 
 export const UpdatePropertyFact = ContentEditType({
@@ -357,7 +357,7 @@ export const DeleteEntry = ContentEditType({
             return {
                 ...baseEntry,
                 name: "",
-                friendlyId: "",
+                key: "",
                 description: "",
                 entryType: baseEntry.entryType,
                 features: {},
@@ -379,7 +379,7 @@ export const DeleteEntry = ContentEditType({
 export const _allContentEditTypes = {
     CreateEntry,
     SetEntryName,
-    SetEntryFriendlyId,
+    SetEntryKey,
     SetEntryDescription,
     UpdateEntryFeature,
     AddPropertyFact,
@@ -391,7 +391,7 @@ export const _allContentEditTypes = {
 export type AnyContentEdit =
     | Edit<typeof CreateEntry>
     | Edit<typeof SetEntryName>
-    | Edit<typeof SetEntryFriendlyId>
+    | Edit<typeof SetEntryKey>
     | Edit<typeof SetEntryDescription>
     | Edit<typeof UpdateEntryFeature>
     | Edit<typeof AddPropertyFact>

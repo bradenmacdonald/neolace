@@ -1,4 +1,4 @@
-import { array, boolean, number, Record, Schema, string, Type, vnidString } from "../api-schemas.ts";
+import { array, boolean, number, Record, Schema, string, Type } from "../api-schemas.ts";
 
 /** The available color options for each entry */
 export enum EntryTypeColor {
@@ -20,12 +20,13 @@ export enum EntryTypeColor {
 }
 
 export const EntryTypeSchema = Schema({
-    id: vnidString,
+    /** The site-specific ID (key) of this EntryType */
+    key: string,
     /** Name of this entry type, e.g. "Note", "Task", "Contact", "License", etc. Doesn't need to be unique. */
     name: string,
     description: string,
-    /** FriendlyId prefix for entries of this type; if NULL then FriendlyIds are not used. */
-    friendlyIdPrefix: string,
+    /** Key prefix for entries of this type. Can be an empty string. */
+    keyPrefix: string,
     /** Color to represent this entry type */
     color: Schema.enum(EntryTypeColor),
     /** If using a custom color, this is its definition as background color, dark background color, text color in hex */
@@ -107,7 +108,8 @@ export enum PropertyMode {
 // }
 
 export const PropertySchema = Schema({
-    id: vnidString,
+    /** The site-specific ID (key) of this Property */
+    key: string,
     /** Name of this property, displayed as the label when viewing an entry with this property value */
     name: string,
     /** Description of this property (markdown) */
@@ -116,7 +118,7 @@ export const PropertySchema = Schema({
     type: Schema.enum(PropertyType),
     /** What EntryTypes can have this property? */
     appliesTo: array.of(Schema({
-        entryType: vnidString,
+        entryTypeKey: string,
     })),
     /** Is this a property that can be set manually? Or MUST be set? Or is it computed automatically? */
     mode: Schema.enum(PropertyMode).strictOptional(),
@@ -126,7 +128,7 @@ export const PropertySchema = Schema({
      */
     valueConstraint: string.strictOptional(),
     /** This property is a sub-type of some other property (e.g. "average voltage" is a type of "voltage") */
-    isA: array.of(vnidString).strictOptional(),
+    isA: array.of(string).strictOptional(),
     /**
      * The default value for this property. If a default is set, all entries of the given type will show this property
      * with the default value, unless it is overridden.
@@ -171,8 +173,8 @@ export const SiteSchemaSchema = Schema({
  * A complete specification of the schema of a neolace site.
  */
 export interface SiteSchemaData {
-    entryTypes: { [id: string]: EntryTypeData };
-    properties: { [id: string]: PropertyData };
+    entryTypes: { [key: string]: EntryTypeData };
+    properties: { [key: string]: PropertyData };
 }
 // This also works but is a bit verbose because it doesn't use our named interfaces:
 //export type SiteSchemaData = Type<typeof SiteSchemaSchema>;

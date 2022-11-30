@@ -46,7 +46,7 @@ const data = {
     site: {
         name: "PlantDB",
         domain: "plantdb.local.neolace.net",
-        friendlyId: "plantdb",
+        key: "plantdb",
         // The site will default to "PublicContributions" access mode. To test different access modes, update the site's access mode in your test case.
         initialAccessMode: AccessMode.PublicContributions as const,
         id: undefined as any as VNID, // will be set once created.
@@ -57,7 +57,7 @@ const data = {
         // A site with no content, but can be used for checking that edits are restricted to one site
         // (e.g. try submitting an edit using the ID of a plantDB entry, while the client is scoped to otherSite)
         id: undefined as any as VNID, // will be set below once created.
-        friendlyId: "home",
+        key: "home",
     },
     schema,
     entries: entryData,
@@ -125,7 +125,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     await graph.runAsSystem(CreateSite({
         name: "Neolace Development",
         domain: "home.local.neolace.net",
-        friendlyId: `home`,
+        key: `home`,
         adminUser: data.users.admin.id,
         accessMode: AccessMode.PublicReadOnly,
         homePageContent: dedent`
@@ -169,7 +169,7 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
     await graph.runAsSystem(CreateSite({
         name: data.site.name,
         domain: data.site.domain,
-        friendlyId: data.site.friendlyId,
+        key: data.site.key,
         adminUser: data.users.admin.id,
         accessMode: data.site.initialAccessMode,
         homePageContent: dedent`

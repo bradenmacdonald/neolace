@@ -83,163 +83,37 @@ async function getApiClient(): Promise<api.NeolaceApiClient> {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Export
 
-/**
- * Schema IDs are generally not human-readable, so this function builds a map of human readable IDs that we can use in
- * the exported schema.
- * @param schema
- */
-function buildIdMap(schema: api.SiteSchemaData): Record<string, string> {
-    const map: Record<string, string> = {};
-
-    const notSlugRegex = /[^_\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Join_Control}]/ug;
-    function makeSlug(string: string): string {
-        string = string.toUpperCase().trim();
-        string = string.replace(notSlugRegex, " ");
-        string = string.replace(/[_\s]+/g, "_"); // convert spaces to underscores, eliminate consecutive spaces/underscores
-        string = string.replace(/_+$/g, ""); // trim any trailing underscores
-        return string;
-    }
-
-    for (const entry of Object.values(schema.entryTypes)) {
-        // Generate a unique new key
-        let friendlyId = `_ET_${makeSlug(entry.name)}`;
-        let suffix = 2;
-        while (friendlyId in map) {
-            friendlyId = `_ET_${makeSlug(entry.name)}${suffix++}`;
-        }
-        map[friendlyId] = entry.id;
-    }
-    for (const entry of Object.values(schema.properties)) {
-        // Generate a unique new key
-        let friendlyId = `_PROP_${makeSlug(entry.name)}`;
-        let suffix = 2;
-        while (friendlyId in map) {
-            friendlyId = `_PROP_${makeSlug(entry.name)}${suffix++}`;
-        }
-        map[friendlyId] = entry.id;
-    }
-    return map;
-}
-
-/** Given a map of {k: v}, return a map of {v: k} */
-function invertMap(map: Record<string, string>) {
-    const newMap: Record<string, string> = {};
-    for (const [k, v] of Object.entries(map)) {
-        newMap[v] = k;
-    }
-    return newMap;
-}
-
-function applyIdMap(
-    map: Record<string, string>,
-    schema: api.SiteSchemaData,
-    { generateNewIds = false } = {},
-): { newSchema: api.SiteSchemaData; newMap: Record<string, string> } {
-    const newMap = { ...map };
-    const newSchema: api.SiteSchemaData = { entryTypes: {}, properties: {} };
-
-    const getMappedId = (id: string): VNID => {
-        const newId: string | undefined = id in newMap ? newMap[id] : (generateNewIds ? VNID() : undefined);
-        if (newId === undefined) {
-            throw new Error(`Unable to find an ID for "${id}" in the ID map.`);
-        }
-        return newId as VNID;
-    };
-
-    // Do replacements in order of longest to shortest so that 'IS_A' will be replaced *AFTER* 'IS_A2';
-    // otherwise 'IS_A2' becomes 'foo2' (b/c 'IS_A' goes to 'foo') which is invalid never gets replaced by the real
-    // value of 'IS_A2'
-    const idMapEntriesSorted = Object.entries(newMap);
-    idMapEntriesSorted.sort((a, b) => b[0].length - a[0].length);
-
-    const replaceAllIds = (someString: string): string => {
-        for (const [oldVCId, newVCId] of idMapEntriesSorted) {
-            someString = someString.replaceAll(oldVCId, newVCId);
-        }
-        return someString;
-    };
-
-    for (const entry of Object.values(schema.entryTypes)) {
-        const newId = getMappedId(entry.id);
-        const newEntryType = { ...entry, id: newId as VNID };
-        if (newEntryType.enabledFeatures) {
-            newEntryType.enabledFeatures = { ...newEntryType.enabledFeatures }; // Copy so we don't modify the original
-            if (newEntryType.enabledFeatures.HeroImage?.lookupExpression) {
-                newEntryType.enabledFeatures.HeroImage = {
-                    ...newEntryType.enabledFeatures.HeroImage,
-                    lookupExpression: replaceAllIds(newEntryType.enabledFeatures.HeroImage.lookupExpression),
-                };
-            }
-        }
-        newSchema.entryTypes[newId] = newEntryType;
-    }
-    for (const entry of Object.values(schema.properties)) {
-        const newId = getMappedId(entry.id);
-        const newProperty = { ...entry, id: newId as VNID };
-        newProperty.appliesTo = newProperty.appliesTo.map(
-            (old) => ({ ...old, entryType: getMappedId(old.entryType) }),
-        );
-        if (newProperty.isA) {
-            newProperty.isA = newProperty.isA.map((oldId) => getMappedId(oldId));
-        }
-        if (newProperty.default) {
-            newProperty.default = replaceAllIds(newProperty.default);
-        }
-        if (newProperty.valueConstraint) {
-            newProperty.valueConstraint = replaceAllIds(newProperty.valueConstraint);
-        }
-        newSchema.properties[newId] = newProperty;
-    }
-
-    return { newSchema, newMap };
-}
-
-interface FriendlySchema {
+interface StreamlinedSchema {
+    // These are arrays, not maps, to avoid duplicating the keys:
     entryTypes: api.EntryTypeData[];
     properties: api.PropertyData[];
-    idMap: { comment: string; map: Record<string, string> };
 }
 
 /**
  * Convert a site's schema to a human-readable YAML string.
- * The "normal" schema format is already pretty human-readable, except for the VNIDs which are not. The main purpose of
- * this function is to convert the VNIDs to a human-readable format.
+ * This function used to have to generate human-readable keys but now it's basically a pass-through to stringify()
  */
 function schemaToYaml(schema: api.SiteSchemaData): string {
-    const idMap = buildIdMap(schema);
-    const readableSchema = applyIdMap(invertMap(idMap), schema).newSchema; // Convert IDs to be human readable
-    const schemaReformatted: FriendlySchema = {
-        // Remove duplication of IDs (normally the ID is in both each key and each "id" property)
-        entryTypes: Object.values(readableSchema.entryTypes),
-        properties: Object.values(readableSchema.properties),
-        idMap: {
-            comment:
-                "if you edit one of the IDs above, you should edit it below here too. You do not need to add IDs here for new entries.",
-            map: idMap,
-        },
+    const schemaOut: StreamlinedSchema = {
+        entryTypes: Object.values(schema.entryTypes),
+        properties: Object.values(schema.properties),
     };
     // deno-lint-ignore no-explicit-any
-    return stringifyYaml(schemaReformatted as any);
+    return stringifyYaml(schemaOut as any);
 }
 
 /**
  * Convert a schema from a human-readable YAML string back to the "normal" schema format.
  * This is the opposite of schemaToYaml()
  */
-function yamlToSchema(yamlString: string): { idMap: Record<string, string>; schema: api.SiteSchemaData } {
-    const friendlySchema = parseYaml(yamlString) as FriendlySchema;
-    // Convert from format where entryTypes/properties are arrays to one where they're values in an object:
-    const tempSchema: api.SiteSchemaData = { entryTypes: {}, properties: {} };
-    for (const et of friendlySchema.entryTypes) {
-        tempSchema.entryTypes[et.id] = et;
-    }
-    for (const prop of friendlySchema.properties) {
-        tempSchema.properties[prop.id] = prop;
-    }
-    // Convert the friendly IDs back to VNIDs
-    const { newSchema, newMap } = applyIdMap(friendlySchema.idMap.map, tempSchema, { generateNewIds: true });
+function yamlToSchema(yamlString: string): api.SiteSchemaData {
+    const schemaStreamlined = parseYaml(yamlString) as StreamlinedSchema;
+    const schema: api.SiteSchemaData = {
+        entryTypes: Object.fromEntries(schemaStreamlined.entryTypes.map((et) => [et.key, et])),
+        properties: Object.fromEntries(schemaStreamlined.properties.map((p) => [p.key, p])),
+    };
     // Set some defaults
-    for (const entryType of Object.values(newSchema.entryTypes)) {
+    for (const entryType of Object.values(schema.entryTypes)) {
         if (entryType.color === undefined) {
             entryType.color = api.EntryTypeColor.Default;
         }
@@ -247,16 +121,16 @@ function yamlToSchema(yamlString: string): { idMap: Record<string, string>; sche
             entryType.abbreviation = "";
         }
     }
-    return { schema: newSchema, idMap: newMap };
+    return schema;
 }
 
-async function exportSchema(siteId: string): Promise<string> {
+async function exportSchema(siteKey: string): Promise<string> {
     const client = await getApiClient();
-    const schema = await client.getSiteSchema({ siteId });
+    const schema = await client.getSiteSchema({ siteKey });
     const yamlSchema = schemaToYaml(schema);
     // Do a quick validation:
     try {
-        assertEquals(yamlToSchema(yamlSchema).schema, schema);
+        assertEquals(yamlToSchema(yamlSchema), schema);
     } catch (err) {
         console.error(`Warning: detected that importing the exported schema would have some differences.`, err);
     }
@@ -268,13 +142,13 @@ async function exportSchema(siteId: string): Promise<string> {
  * caution.
  */
 async function syncSchema(
-    siteId: string,
+    siteKey: string,
     schemaString: string,
-): Promise<{ idMap: Record<string, string>; schema: api.SiteSchemaData }> {
+): Promise<api.SiteSchemaData> {
     const client = await getApiClient();
-    const { schema, idMap } = yamlToSchema(schemaString);
-    await client.replaceSiteSchema(schema, { siteId });
-    return { schema, idMap };
+    const schema = yamlToSchema(schemaString);
+    await client.replaceSiteSchema(schema, { siteKey });
+    return schema;
 }
 
 const contentTypes: Record<string, string> = {
@@ -303,8 +177,8 @@ const contentTypeFromExtension = (ext: string) => {
  *     neolace-admin.ts export site_id [folder_name]
  */
 async function exportCommand(
-    { siteId, outFolder, ...options }: {
-        siteId: string;
+    { siteKey, outFolder, ...options }: {
+        siteKey: string;
         exportSchema: boolean;
         exportContent: boolean;
         outFolder?: string;
@@ -321,7 +195,7 @@ async function exportCommand(
     }
     // Export the schema:
     if (options.exportSchema) {
-        const schemaYaml = await exportSchema(siteId);
+        const schemaYaml = await exportSchema(siteKey);
         if (outFolder) {
             log.info("Exporting schema");
             await Deno.writeTextFile(`${outFolder}/schema.yaml`, schemaYaml);
@@ -333,38 +207,38 @@ async function exportCommand(
     // Export the content:
     if (options.exportContent) {
         const client = await getApiClient();
-        const schema = await client.getSiteSchema({ siteId });
+        const schema = await client.getSiteSchema({ siteKey });
         // Map from VNID to a friendlier entry/property ID used for export purposes only:
-        const friendlyIds = invertMap(buildIdMap(schema));
+        const keys: Record<VNID, string> = {};
 
         // Add friendly IDs of all the entries too:
-        for await (const record of await client.getEntries({ siteId })) {
-            friendlyIds[record.id] = record.friendlyId;
+        for await (const record of await client.getEntries({ siteKey })) {
+            keys[record.id] = record.key;
         }
 
         for (const entryType of Object.values(schema.entryTypes)) {
-            const thisEntryTypeDir = outFolder + "/" + friendlyIds[entryType.id].substring(4).toLowerCase();
+            const thisEntryTypeDir = outFolder + "/" + entryType.key.toLowerCase();
             await Deno.mkdir(thisEntryTypeDir);
-            for await (const record of await client.getEntries({ siteId, ofEntryType: entryType.id })) {
-                log.info(`Exporting ${entryType.name} ${record.friendlyId}`);
+            for await (const record of await client.getEntries({ siteKey, ofEntryType: entryType.key })) {
+                log.info(`Exporting ${entryType.name} ${record.key}`);
                 const metadata: Record<string, unknown> = {
                     name: record.name,
                     id: record.id,
                 };
 
                 const entryData = await client.getEntry(record.id, {
-                    siteId,
+                    siteKey,
                     flags: [api.GetEntryFlags.IncludeFeatures, api.GetEntryFlags.IncludeRawProperties] as const,
                 });
 
                 if (entryData.description) {
-                    metadata.description = replaceIdsInMarkdownAndLookupExpressions(friendlyIds, entryData.description);
+                    metadata.description = replaceIdsInMarkdownAndLookupExpressions(keys, entryData.description);
                 }
                 if (entryType.enabledFeatures.Image && entryData.features?.Image) {
                     const imgMeta = entryData.features.Image;
                     const data = await (await fetch(imgMeta.imageUrl)).arrayBuffer();
                     const ext = extensionFromContentType(imgMeta.contentType);
-                    const imgFilename = record.friendlyId + ".img." + ext; // The ".img" makes the filenames sort consistently with markdown first, then image file next. Otherwise JPG comes before MD but WEBP comes after.
+                    const imgFilename = record.key + ".img." + ext; // The ".img" makes the filenames sort consistently with markdown first, then image file next. Otherwise JPG comes before MD but WEBP comes after.
                     await Deno.writeFile(thisEntryTypeDir + "/" + imgFilename, new Uint8Array(data));
                     metadata.image = imgFilename;
                     metadata.imageSizing = imgMeta.sizing;
@@ -378,7 +252,7 @@ async function exportCommand(
                         if (ext !== file.filename.split(".").pop()) {
                             throw new Error("Mismatch in content-type vs. extension");
                         }
-                        const filename = record.friendlyId + `.${fileIndex}.` + ext;
+                        const filename = record.key + `.${fileIndex}.` + ext;
                         await Deno.writeFile(thisEntryTypeDir + "/" + filename, new Uint8Array(data));
                         newFilesMeta[file.filename] = fileIndex;
                         fileIndex++;
@@ -386,24 +260,26 @@ async function exportCommand(
                     metadata.files = newFilesMeta;
                 }
 
+                const properties: Record<string, unknown> = {};
+
                 for (const prop of entryData.propertiesRaw!) {
                     if (prop.facts.length === 1 && !prop.facts[0].note && !prop.facts[0].slot) {
-                        metadata[friendlyIds[prop.propertyId]] = replaceIdsInMarkdownAndLookupExpressions(
-                            friendlyIds,
+                        properties[prop.propertyKey] = replaceIdsInMarkdownAndLookupExpressions(
+                            keys,
                             prop.facts[0].valueExpression,
                         );
                     } else {
                         const factsSimplified = prop.facts.map((origFact) => {
                             const simpleFact: Record<string, unknown> = { ...origFact };
                             simpleFact.valueExpression = replaceIdsInMarkdownAndLookupExpressions(
-                                friendlyIds,
+                                keys,
                                 simpleFact.valueExpression as string,
                             );
                             if (!simpleFact.note) {
                                 delete simpleFact.note;
                             } else {
                                 simpleFact.note = replaceIdsInMarkdownAndLookupExpressions(
-                                    friendlyIds,
+                                    keys,
                                     simpleFact.note as string,
                                 );
                             }
@@ -414,19 +290,23 @@ async function exportCommand(
                             delete simpleFact.id; // We don't include the property fact ID.
                             return simpleFact;
                         });
-                        metadata[friendlyIds[prop.propertyId]] = factsSimplified;
+                        properties[prop.propertyKey] = factsSimplified;
                     }
+                }
+
+                if (Object.keys(properties).length > 0) {
+                    metadata.properties = properties;
                 }
 
                 let markdown = `---\n${stringifyYaml(metadata, { lineWidth: 120 })}---\n`;
                 if (entryType.enabledFeatures.Article !== undefined) {
                     const articleMd = replaceIdsInMarkdownAndLookupExpressions(
-                        friendlyIds,
+                        keys,
                         entryData.features?.Article?.articleContent!,
                     );
                     markdown += articleMd + "\n";
                 }
-                await Deno.writeTextFile(thisEntryTypeDir + "/" + record.friendlyId + ".md", markdown);
+                await Deno.writeTextFile(thisEntryTypeDir + "/" + record.key + ".md", markdown);
             }
         }
     }
@@ -435,22 +315,20 @@ async function exportCommand(
 /**
  * Import schema and content from a folder
  */
-async function importSchemaAndContent({ siteId, sourceFolder }: { siteId: string; sourceFolder: string }) {
+async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: string; sourceFolder: string }) {
     const client = await getApiClient();
     // First, sync the schema
     const schemaYaml = await Deno.readTextFile(sourceFolder + "/schema.yaml").catch(() => {
         log.error(`Required file "${sourceFolder}/schema.yaml" not found. Did you specify the wrong directory name?`);
         Deno.exit(1);
     });
-    const { schema, idMap } = await syncSchema(siteId, schemaYaml);
-    // The inverse map goes from VNID to human readable ID:
-    const inverseMap = invertMap(idMap);
+    const schema = await syncSchema(siteKey, schemaYaml);
 
     // There should be one subfolder for each entry type, though some folders may not exist if there were no entries of
     // that type.
     const entryTypes = Object.values(schema.entryTypes)
         .map((et) => ({
-            folder: `${sourceFolder}/` + inverseMap[et.id].substring(4).toLowerCase(), // Convert the friendly name from "_ET_SOMETHING" to "something"
+            folder: `${sourceFolder}/` + et.key.toLowerCase(),
             entryType: et,
         })).filter(
             (et) => {
@@ -481,7 +359,7 @@ async function importSchemaAndContent({ siteId, sourceFolder }: { siteId: string
                         metadata,
                         articleContent,
                         entryType,
-                        friendlyId: file.name.substring(0, file.name.length - 3),
+                        key: file.name.substring(0, file.name.length - 3),
                         folder,
                     };
                 } catch (err) {
@@ -492,14 +370,17 @@ async function importSchemaAndContent({ siteId, sourceFolder }: { siteId: string
         }
     }
 
+    /** Map converting entry keys to VNIDs */
+    const idMap: Record<string, VNID> = {};
+
     // First, loop over all entries and add their IDs to the ID map, assigning new VNIDs where needed
-    for await (const { metadata, friendlyId } of iterateEntries()) {
+    for await (const { metadata, key } of iterateEntries()) {
         const id = metadata.id ?? VNID();
-        if (friendlyId in idMap) {
-            log.error(`Duplicate friendlyId found: ${friendlyId}`);
+        if (key in idMap) {
+            log.error(`Duplicate key found: ${key}`);
             Deno.exit(1);
         }
-        idMap[friendlyId] = id;
+        idMap[key] = id;
     }
 
     // Then, validate that all VNIDs are unique:
@@ -518,9 +399,9 @@ async function importSchemaAndContent({ siteId, sourceFolder }: { siteId: string
     const _pushEdits = async (edits: api.AnyContentEdit[], force = false) => {
         if (edits.length > 20 || (force && edits.length > 0)) {
             const { idNum } = await client.createDraft({ title: `Import Part ${part++}`, description: "", edits }, {
-                siteId,
+                siteKey,
             });
-            await client.acceptDraft(idNum, { siteId });
+            await client.acceptDraft(idNum, { siteKey });
             edits.length = 0;
         }
     };
@@ -532,16 +413,16 @@ async function importSchemaAndContent({ siteId, sourceFolder }: { siteId: string
         log.info("Creating blank entries...");
         const edits: api.AnyContentEdit[] = [];
         let numEntries = 0;
-        for await (const { metadata, friendlyId, entryType } of iterateEntries()) {
-            const entryId = metadata.id ?? idMap[friendlyId];
+        for await (const { metadata, key, entryType } of iterateEntries()) {
+            const entryId = metadata.id ?? idMap[key];
             edits.push({
                 code: api.CreateEntry.code,
                 data: {
                     entryId,
-                    type: entryType.id,
+                    key,
+                    entryTypeKey: entryType.key,
                     name: metadata.name,
                     description: replaceIdsInMarkdownAndLookupExpressions(idMap, metadata.description ?? "", false),
-                    friendlyId: friendlyId,
                 },
             });
             numEntries++;
@@ -556,24 +437,25 @@ async function importSchemaAndContent({ siteId, sourceFolder }: { siteId: string
         const edits: api.AnyContentEdit[] = [];
         let numEntries = 0;
         let numProperties = 0;
-        for await (const { metadata, friendlyId } of iterateEntries()) {
-            const entryId = metadata.id ?? idMap[friendlyId];
-            // Get the human-readable ID for each property actually used for this entry:
-            const propsUsed = Object.keys(metadata).filter((k) => k.startsWith("_PROP_"));
-            for (const humanKey of propsUsed) {
+        for await (const { metadata, key } of iterateEntries()) {
+            const entryId = metadata.id ?? idMap[key];
+            // Get the key (human-readable ID) for each property actually used for this entry:
+            const propertiesMap = metadata.properties ?? metadata;
+            const propsUsed = Object.keys(propertiesMap).filter((k) => k in schema.properties);
+            for (const propertyKey of propsUsed) {
                 // Now we need to be able to handle either a list of property facts or a single string value:
-                const facts = typeof metadata[humanKey] === "string"
-                    ? [{ valueExpression: metadata[humanKey] }]
-                    : metadata[humanKey];
+                const facts = typeof propertiesMap[propertyKey] === "string"
+                    ? [{ valueExpression: propertiesMap[propertyKey] }]
+                    : propertiesMap[propertyKey];
                 for (const fact of facts) {
                     if (fact.valueExpression === undefined) {
-                        throw new Error(`Invalid property value on entry ${entryId} (${friendlyId})`);
+                        throw new Error(`Invalid property value on entry ${entryId} (${key})`);
                     }
                     edits.push({
                         code: api.AddPropertyFact.code,
                         data: {
                             entryId,
-                            propertyId: idMap[humanKey] as VNID,
+                            propertyKey,
                             propertyFactId: VNID(),
                             valueExpression: replaceIdsInMarkdownAndLookupExpressions(idMap, fact.valueExpression),
                             note: fact.note ?? "",
@@ -605,11 +487,11 @@ async function importSchemaAndContent({ siteId, sourceFolder }: { siteId: string
         log.info("Setting article text...");
         const edits: api.AnyContentEdit[] = [];
         let numArticles = 0;
-        for await (const { metadata, friendlyId, articleContent } of iterateEntries()) {
+        for await (const { metadata, key, articleContent } of iterateEntries()) {
             if (!articleContent) {
                 continue;
             }
-            const entryId = metadata.id ?? idMap[friendlyId];
+            const entryId = metadata.id ?? idMap[key];
             edits.push({
                 code: api.UpdateEntryFeature.code,
                 data: {
@@ -635,17 +517,17 @@ async function importSchemaAndContent({ siteId, sourceFolder }: { siteId: string
         const getDraftId = async (): Promise<number> =>
             draftIdNum ?? await client.createDraft(
                 { title: `Import Part ${part++}`, description: "", edits: [] },
-                { siteId },
+                { siteKey },
             ).then((d) => draftIdNum = d.idNum);
 
         let numFiles = 0;
-        for await (const { metadata, friendlyId, folder } of iterateEntries()) {
-            const entryId = metadata.id ?? idMap[friendlyId];
+        for await (const { metadata, key, folder } of iterateEntries()) {
+            const entryId = metadata.id ?? idMap[key];
             if (metadata.image) {
                 const fileContents = await Deno.readFile(folder + "/" + metadata.image);
                 const extension = metadata.image.split(".").pop();
                 const fileBlob = new Blob([fileContents], { type: contentTypeFromExtension(extension) });
-                const draftFile = await client.uploadFileToDraft(fileBlob, { idNum: await getDraftId(), siteId });
+                const draftFile = await client.uploadFileToDraft(fileBlob, { idNum: await getDraftId(), siteKey });
                 await client.addEditToDraft({
                     code: api.UpdateEntryFeature.code,
                     data: {
@@ -656,18 +538,18 @@ async function importSchemaAndContent({ siteId, sourceFolder }: { siteId: string
                             ...(metadata.imageSizing ? { setSizing: metadata.imageSizing } : {}),
                         },
                     },
-                }, { idNum: await getDraftId(), siteId });
+                }, { idNum: await getDraftId(), siteKey });
                 numFiles++;
             }
             if (metadata.files) {
                 for (const [filename, fileIndex] of Object.entries(metadata.files)) {
                     const extension = filename.split(".").pop() as string;
-                    const fullFilePath = folder + "/" + friendlyId + `.${fileIndex}.${extension}`;
+                    const fullFilePath = folder + "/" + key + `.${fileIndex}.${extension}`;
                     const fileContents = await Deno.readFile(fullFilePath).catch((err) => {
                         throw new Error(`Failed to open file ${fullFilePath}`, { cause: err });
                     });
                     const fileBlob = new Blob([fileContents], { type: contentTypeFromExtension(extension) });
-                    const draftFile = await client.uploadFileToDraft(fileBlob, { idNum: await getDraftId(), siteId });
+                    const draftFile = await client.uploadFileToDraft(fileBlob, { idNum: await getDraftId(), siteKey });
                     await client.addEditToDraft({
                         code: api.UpdateEntryFeature.code,
                         data: {
@@ -679,13 +561,13 @@ async function importSchemaAndContent({ siteId, sourceFolder }: { siteId: string
                                 draftFileId: draftFile.draftFileId,
                             },
                         },
-                    }, { idNum: await getDraftId(), siteId });
+                    }, { idNum: await getDraftId(), siteKey });
                     numFiles++;
                 }
             }
         }
         if (draftIdNum !== undefined) {
-            await client.acceptDraft(draftIdNum, { siteId });
+            await client.acceptDraft(draftIdNum, { siteKey });
             log.info(`${numFiles} files updated`);
         } else {
             log.info(`No files to update.`);
@@ -704,19 +586,13 @@ function replaceIdsInMarkdownAndLookupExpressions(
     isExport = true,
 ) {
     // Literal expressions in lookups:
-    if (isExport) { // On import, we want to preserve the friendly IDs in this case
+    if (isExport) { // On import, we want to preserve the keys in this case
         markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)entry\("([0-9\p{Alphabetic}_\-]+)"\)/mgu, (_m, id) => {
             return `entry("${idMap[id] ?? id}")`;
         });
     }
-    markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)prop\("([0-9\p{Alphabetic}_\-]+)"\)/mgu, (_m, id) => {
-        return `prop("${idMap[id] ?? id}")`;
-    });
-    markdownOrLookup = markdownOrLookup.replaceAll(/(?<!\w)entryType\("([0-9\p{Alphabetic}_\-]+)"\)/mgu, (_m, id) => {
-        return `entryType("${idMap[id] ?? id}")`;
-    });
     // Link in markdown:
-    if (isExport) { // On import, we want to preserve the friendly IDs in this case
+    if (isExport) { // On import, we want to preserve the keys in this case
         markdownOrLookup = markdownOrLookup.replaceAll(/\]\(\/entry\/([0-9\p{Alphabetic}_\-]+)\)/mgu, (_m, id) => {
             return `](/entry/${idMap[id] ?? id})`;
         });
@@ -730,44 +606,44 @@ function replaceIdsInMarkdownAndLookupExpressions(
 if (import.meta.main) {
     switch (Deno.args[0]) {
         case "export-schema": {
-            const siteId = Deno.args[1];
-            if (!siteId) {
+            const siteKey = Deno.args[1];
+            if (!siteKey) {
                 dieUsage();
             }
-            await exportCommand({ siteId, exportSchema: true, exportContent: false });
+            await exportCommand({ siteKey, exportSchema: true, exportContent: false });
             break;
         }
         case "export": {
-            const siteId = Deno.args[1];
-            if (!siteId) {
+            const siteKey = Deno.args[1];
+            if (!siteKey) {
                 dieUsage();
             }
-            const outFolder = Deno.args[2] ?? siteId;
-            await exportCommand({ siteId, exportSchema: true, exportContent: true, outFolder });
+            const outFolder = Deno.args[2] ?? siteKey;
+            await exportCommand({ siteKey, exportSchema: true, exportContent: true, outFolder });
             break;
         }
         case "sync-schema": {
-            const siteId = Deno.args[1];
-            if (!siteId) {
+            const siteKey = Deno.args[1];
+            if (!siteKey) {
                 dieUsage();
             }
             const stdinContent = await readAll(Deno.stdin);
             const schemaYaml = new TextDecoder().decode(stdinContent);
-            await syncSchema(siteId, schemaYaml);
+            await syncSchema(siteKey, schemaYaml);
             break;
         }
         case "import": {
-            const siteId = Deno.args[1];
-            if (!siteId) {
+            const siteKey = Deno.args[1];
+            if (!siteKey) {
                 dieUsage();
             }
-            const sourceFolder = Deno.args[2] ?? siteId;
-            await importSchemaAndContent({ siteId, sourceFolder });
+            const sourceFolder = Deno.args[2] ?? siteKey;
+            await importSchemaAndContent({ siteKey, sourceFolder });
             break;
         }
         case "erase-content": {
-            const siteId = Deno.args[1];
-            if (!siteId) {
+            const siteKey = Deno.args[1];
+            if (!siteKey) {
                 dieUsage();
             }
             if (Deno.args[2]) {
@@ -782,7 +658,7 @@ if (import.meta.main) {
             }
             const client = await getApiClient();
             log.warning("Deleting all entries");
-            await client.eraseAllEntriesDangerously({ siteId, confirm: "danger" });
+            await client.eraseAllEntriesDangerously({ siteKey, confirm: "danger" });
             log.info("All entries deleted.");
             break;
         }

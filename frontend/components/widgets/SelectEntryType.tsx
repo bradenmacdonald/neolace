@@ -8,7 +8,8 @@ import { ErrorMessage } from "./ErrorMessage";
 import { SelectBox, SelectOption } from "../form-input";
 
 interface Props {
-    value?: VNID;
+    /** The entry type key */
+    value?: string;
     readOnly?: boolean;
     onChange?: (newEntryType: VNID) => void;
     /** Add an additonal option to the menu that is not an entry type, like "Add New Entry" or "No Entry Type" */
@@ -30,7 +31,7 @@ export const SelectEntryType: React.FunctionComponent<Props> = ({ extraOption, o
         }
         const sortedTypes = Object.values(schema.entryTypes).sort((a, b) => a.name.localeCompare(b.name));
         const opts: SelectOption[] = sortedTypes.map((et) => ({
-            id: et.id,
+            id: et.key,
             label: noTranslationNeeded(et.name),
         }));
         if (extraOption) {

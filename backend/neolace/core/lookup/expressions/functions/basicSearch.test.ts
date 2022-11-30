@@ -47,7 +47,7 @@ group("basicSearch.ts", () => {
         );
     });
 
-    test(`It can match on entry friendly IDs (case insensitive)`, async () => {
+    test(`It can match on entry keys (case insensitive)`, async () => {
         // basicSearch("Pinus-P")
         const expr = new BasicSearch(new LiteralExpression(new StringValue("Pinus-P")));
 
@@ -55,10 +55,10 @@ group("basicSearch.ts", () => {
         assertEquals(
             result,
             new PageValue([
-                // These are currently the only three entries with "pinus-p" in their friendly ID:
-                new EntryValue(defaultData.entries.japaneseWhitePine.id), // friendlyId: "s-pinus-parviflora"
-                new EntryValue(defaultData.entries.ponderosaPine.id), // friendlyId: "s-pinus-ponderosa"
-                new EntryValue(defaultData.entries.stonePine.id), // friendlyId: "s-pinus-pinea"
+                // These are currently the only three entries with "pinus-p" in their key:
+                new EntryValue(defaultData.entries.japaneseWhitePine.id), // key: "s-pinus-parviflora"
+                new EntryValue(defaultData.entries.ponderosaPine.id), // key: "s-pinus-ponderosa"
+                new EntryValue(defaultData.entries.stonePine.id), // key: "s-pinus-pinea"
             ], {
                 pageSize: 5n,
                 startedAt: 0n,
@@ -78,8 +78,8 @@ group("basicSearch.ts", () => {
             result,
             new PageValue([
                 // These are currently the only two properties with "name" in their property name:
-                new PropertyValue(defaultData.schema.properties._propOtherNames.id),
-                new PropertyValue(defaultData.schema.properties._propScientificName.id),
+                new PropertyValue(defaultData.schema.properties.propOtherNames.key),
+                new PropertyValue(defaultData.schema.properties.propScientificName.key),
             ], {
                 pageSize: 5n,
                 startedAt: 0n,
@@ -99,8 +99,8 @@ group("basicSearch.ts", () => {
             result,
             new PageValue([
                 // In this case, we match both an entry type and a property:
-                new EntryTypeValue(defaultData.schema.entryTypes._ETSPECIES.id),
-                new PropertyValue(defaultData.schema.properties._genusSpecies.id),
+                new EntryTypeValue(defaultData.schema.entryTypes.ETSPECIES.key),
+                new PropertyValue(defaultData.schema.properties.genusSpecies.key),
             ], {
                 pageSize: 5n,
                 startedAt: 0n,
@@ -162,8 +162,8 @@ group("basicSearch.ts - permissions", () => {
                     result,
                     new PageValue([
                         // In this case, we match both an entry type and a property:
-                        new EntryTypeValue(defaultData.schema.entryTypes._ETSPECIES.id),
-                        new PropertyValue(defaultData.schema.properties._genusSpecies.id),
+                        new EntryTypeValue(defaultData.schema.entryTypes.ETSPECIES.key),
+                        new PropertyValue(defaultData.schema.properties.genusSpecies.key),
                     ], {
                         pageSize: 5n,
                         startedAt: 0n,
@@ -192,8 +192,8 @@ group("basicSearch.ts - permissions", () => {
                 const user = await createUserWithPermissions(
                     new PermissionGrant(
                         new EntryTypesCondition([
-                            defaultData.schema.entryTypes._ETGENUS.id,
-                            defaultData.schema.entryTypes._ETORDER.id,
+                            defaultData.schema.entryTypes.ETGENUS.key,
+                            defaultData.schema.entryTypes.ETORDER.key,
                         ]),
                         [corePerm.viewSite.name, corePerm.viewEntry.name],
                     ),

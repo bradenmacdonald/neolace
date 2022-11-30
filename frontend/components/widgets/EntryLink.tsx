@@ -7,7 +7,7 @@ import { MDTContext } from "components/markdown-mdt/mdt";
 import { EntryTooltipContent } from "./EntryTooltipContent";
 
 interface Props {
-    /** VNID or friendlyId */
+    /** VNID or key */
     entryKey: string;
     mdtContext: MDTContext;
     children: React.ReactNode;
@@ -23,10 +23,10 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
 
     const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) =
         api.isVNID(props.entryKey) ? refCache.entries[props.entryKey]
-        : Object.values(refCache.entries).find(e => e.friendlyId === props.entryKey);
+        : Object.values(refCache.entries).find(e => e.key === props.entryKey);
     if (entry === undefined) {
         // This entry is not in the reference cache! It should have been though...
-        // So we don't know its name and may not know its friendlyId either.
+        // So we don't know its name and may not know its key either.
         // In development, we want to highlight links that should be in the reference cache, but are not.
         const textColorClass = DEVELOPMENT_MODE ? "text-red-600 font-bold" : "";
         return (
@@ -52,7 +52,7 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
                 }
             >
                 {(attribs) => (
-                    <Link href={`/entry/${entry.friendlyId}`} {...attribs}>
+                    <Link href={`/entry/${entry.key}`} {...attribs}>
                         {props.children}
                     </Link>
                 )}
@@ -60,7 +60,7 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
         );
     } else {
         return (
-            <Link href={`/entry/${entry.friendlyId}`}>
+            <Link href={`/entry/${entry.key}`}>
                 {props.children}
             </Link>
         );

@@ -1,4 +1,3 @@
-import { VNID } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { ConcreteValue, IHasLiteralExpression, LookupValue } from "./base.ts";
 import { LookupContext } from "../context.ts";
@@ -8,11 +7,11 @@ import { StringValue } from "./StringValue.ts";
  * Represents an EntryType
  */
 export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpression {
-    readonly id: VNID;
+    readonly key: string;
 
-    constructor(id: VNID) {
+    constructor(key: string) {
         super();
-        this.id = id;
+        this.key = key;
     }
 
     /**
@@ -20,20 +19,22 @@ export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpressi
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        return `entryType("${this.id}")`;
+        return `entryType("${this.key}")`;
     }
 
     protected serialize() {
-        return { type: "EntryType" as const, id: this.id };
+        return { type: "EntryType" as const, key: this.key };
     }
 
     /** Get an attribute of this value, if any, e.g. value.name or value.length */
     public override async getAttribute(attrName: string, context: LookupContext): Promise<LookupValue | undefined> {
-        if (attrName === "id") {
-            return new StringValue(this.id);
+        if (attrName === "key") {
+            return new StringValue(this.key);
         } else if (attrName === "name") {
             return new StringValue(
-                (await context.tx.pullOne(EntryType, (et) => et.name, { key: this.id })).name,
+                (await context.tx.pullOne(EntryType, (et) => et.name, {
+                    with: { siteNamespace: context.siteId, key: this.key },
+                })).name,
             );
         }
         return undefined;

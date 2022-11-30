@@ -14,6 +14,7 @@ import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.t
 import { makeCachedLookup } from "neolace/lib/lru-cache.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { PropertyFact } from "./PropertyFact.ts";
+import { keyProps } from "../key.ts";
 
 /**
  * An "Entry" is the main "thing" that a Neolace knowledge base contains. Every article is an entry, every image is an
@@ -26,14 +27,8 @@ export class Entry extends VNodeType {
     static label = "Entry";
     static properties = {
         ...VNodeType.properties,
-        /**
-         * The VNID of the site with which this Entry is associated. This just exists so that Neo4j can create a unique
-         * constraint on [site, idNum]. This should always be the same as the ID of the associated site node:
-         * (thisEntry)-IS_OF_TYPE->(entryType)-FOR_SITE->(:Site)
-         */
-        siteNamespace: Field.VNID,
-        /** The friendly ID of this entry, used in the URL. Site-specific. Can be changed. */
-        friendlyId: Field.Slug,
+        /** The key of this entry, used in the URL. Site-specific. Can be changed. */
+        ...keyProps,
         // The name of this entry
         // This does not need to be unique or include disambiguation - so just put "Drive", not "Drive (computer science)"
         name: Field.String,
@@ -84,10 +79,10 @@ export class Entry extends VNodeType {
     }));
 
     static override async validateExt(vnodeIds: VNID[], tx: WrappedTransaction): Promise<void> {
-        // Check that the siteNamespace matches the site, and the friendlyId has the correct prefix, if applicable
+        // Check that the siteNamespace matches the site, and the key has the correct prefix, if applicable
         const rows = await tx.pull(
             Entry,
-            (e) => e.siteNamespace.friendlyId.type((t) => t.friendlyIdPrefix.site((s) => s.id)),
+            (e) => e.siteNamespace.key.type((t) => t.keyPrefix.site((s) => s.id)),
             {
                 where: C`@this.id IN ${vnodeIds}`,
             },
@@ -101,10 +96,10 @@ export class Entry extends VNodeType {
                 throw new ValidationError("Entry has incorrect siteNamespace.");
             }
 
-            // Check the friendlyIdPrefix:
-            const friendlyIdPrefix = entryData.type?.friendlyIdPrefix;
-            if (friendlyIdPrefix && !entryData.friendlyId.startsWith(friendlyIdPrefix)) {
-                throw new ValidationError(`Invalid friendlyId; expected it to start with ${friendlyIdPrefix}`);
+            // Check the keyPrefix:
+            const keyPrefix = entryData.type?.keyPrefix;
+            if (keyPrefix && !entryData.key.startsWith(keyPrefix)) {
+                throw new ValidationError(`Invalid key; expected it to start with ${keyPrefix}`);
             }
         }
 

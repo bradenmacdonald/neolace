@@ -50,7 +50,7 @@ export const SiteSettingsAdminTool: React.FunctionComponent<AdminComponentProps>
                     {/* ID */}
                     <AutoControl
                         id="id"
-                        value={site.friendlyId}
+                        value={site.key}
                         label={defineMessage({defaultMessage: "ID", id: "qlcuNQ"})}
                         hint={defineMessage({defaultMessage: "Cannot be changed.", id: "KIAjvA"})}
                     >

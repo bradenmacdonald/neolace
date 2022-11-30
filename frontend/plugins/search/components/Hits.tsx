@@ -68,7 +68,7 @@ export const InfiniteHits: React.FunctionComponent<UseInfiniteHitsProps<Hit>> = 
                     <li key={hit.objectID} className="my-3 pl-3 border-l-4 border-l-gray-300">
                         <div className="text-lg">
                             <Link
-                                href={`/entry/${hit.friendlyId}`}
+                                href={`/entry/${hit.key}`}
                                 className="font-bold text-theme-link-color underline"
                             >
                                 <Highlight hit={hit} attribute="name" classNames={highlightClasses} />

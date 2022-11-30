@@ -4,7 +4,7 @@ import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getRedis } from "neolace/core/redis.ts";
 import { createRandomToken } from "neolace/lib/secure-token.ts";
 import { mailer, makeSystemEmail } from "neolace/core/mailer/mailer.ts";
-import { siteIdFromFriendlyId } from "neolace/core/Site.ts";
+import { siteIdFromKey } from "neolace/core/Site.ts";
 import { dedent } from "neolace/lib/dedent.ts";
 import { HumanUser } from "neolace/core/User.ts";
 
@@ -80,9 +80,9 @@ export class VerifyUserEmailResource extends NeolaceHttpResource {
 
         const token = await saveValidationToken({ email, data: bodyData.data as Record<string, unknown> });
 
-        // The API always accepts the site "friendlyId" but we need the site VNID if we're sending
+        // The API always accepts the site "key" but we need the site VNID if we're sending
         // the validation email as coming from a specific site and not the overall realm.
-        const siteId = bodyData.siteFriendlyId ? await siteIdFromFriendlyId(bodyData.siteFriendlyId) : undefined;
+        const siteId = bodyData.siteKey ? await siteIdFromKey(bodyData.siteKey) : undefined;
 
         // Send the user an email with the link:
         const msg = await makeSystemEmail({

@@ -8,11 +8,14 @@ import { ListSchemaProperties } from "./ListSchemaProperties";
 import { defineMessage } from "components/utils/i18n";
 import { ButtonLink } from "components/widgets/ButtonLink";
 import { EditSchemaProperty } from "./EditSchemaProperty";
+import { AddSchemaProperty } from "./AddSchemaProperty";
 
 interface Props {
     onSaveChanges: (newEdits: api.AnySchemaEdit[]) => void;
     onCancel: () => void;
 }
+
+const NEW_PROPERTY = Symbol("new-prop");
 
 /**
  * This widget implements the modal that pops up to allow editing all of the properties in the schema
@@ -34,18 +37,16 @@ export const EditSchemaPropertiesModal: React.FunctionComponent<Props> = ({ onSa
     }, []);
 
     // If this has a property ID, we're viewing details of a single property; otherwise we're listing all properties.
-    const [showingPropertyDetails, showPropertyDetails] = React.useState<api.VNID|undefined>();
+    const [showingPropertyDetails, showPropertyDetails] = React.useState<string|typeof NEW_PROPERTY|undefined>();
 
     const scrollingDiv = React.useRef<HTMLDivElement>(null);
     /** Add a new property to the schema when the user clicks the add new property button. */
     const addNewProperty = React.useCallback(() => {
-        const id = api.VNID();
-        addSchemaEdit({code: "CreateProperty", data: {id, name: ""}});
-        showPropertyDetails(id);
+        showPropertyDetails(NEW_PROPERTY);
         // If the list of properties is long, when we change to show the new property we need to scroll the modal back
         // to the top, or else we'll only see the bottom part of the "edit property" form.
         scrollingDiv.current?.scrollTo({top: 0});
-    }, [addSchemaEdit]);
+    }, []);
 
     // Within this modal, we combine the pending edits from the modal with any unsaved edits from the draft
     const newDraftContext: DraftContextData = {
@@ -78,13 +79,26 @@ export const EditSchemaPropertiesModal: React.FunctionComponent<Props> = ({ onSa
                     {/* We use CSS to hide the property list when we're showing details so that it'll preserve its state, like the current search query */}
                     <ListSchemaProperties showPropertyDetails={showPropertyDetails} onAddProperty={addNewProperty} />
                 </div>
-                {showingPropertyDetails ?
+                {showingPropertyDetails === NEW_PROPERTY ?
+                    <>
+                        <ButtonLink onClick={() => showPropertyDetails(undefined)}>
+                            &lt;{" "}<FormattedMessage defaultMessage="Cancel and go back to all properties" id="KbGXvM" />
+                        </ButtonLink><br /><br />
+
+                        <AddSchemaProperty
+                            onAddProperty={(edit) => {addSchemaEdit(edit); showPropertyDetails(edit.data.key); }}
+                        />
+                    </>
+                : showingPropertyDetails ?
                     <>
                         <ButtonLink onClick={() => showPropertyDetails(undefined)}>
                             &lt;{" "}<FormattedMessage defaultMessage="Back to all properties" id="C0B87U" />
                         </ButtonLink><br /><br />
 
-                        <EditSchemaProperty propertyId={showingPropertyDetails} addSchemaEdit={addSchemaEdit} />
+                        <EditSchemaProperty
+                            propertyKey={showingPropertyDetails}
+                            addSchemaEdit={addSchemaEdit}
+                        />
 
                         <ButtonLink onClick={() => showPropertyDetails(undefined)}>
                             &lt;{" "}<FormattedMessage defaultMessage="Back to all properties" id="C0B87U" />

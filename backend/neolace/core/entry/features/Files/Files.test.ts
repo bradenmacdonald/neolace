@@ -13,18 +13,18 @@ group("Files.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 
     // Entry Type ID:
-    const entryType = VNID();
+    const entryTypeKey = "test-type";
 
     test("Can be added to schema, shows up on schema, can be removed from schema", async () => {
         const graph = await getGraph();
         // Create a site and entry type:
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", key: "test1" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId,
             edits: [
-                { code: "CreateEntryType", data: { id: entryType, name: "EntryType" } },
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
             ],
             editSource: UseSystemSource,
         }));
@@ -32,7 +32,7 @@ group("Files.ts", () => {
         // Now get the schema, without the "Files" feature enabled yet:
         const beforeSchema = await graph.read((tx) => getCurrentSchema(tx, siteId));
         // No features should be enabled:
-        assertEquals(beforeSchema.entryTypes[entryType].enabledFeatures, {});
+        assertEquals(beforeSchema.entryTypes[entryTypeKey].enabledFeatures, {});
 
         // Now enable the "Files" Feature
         await graph.runAsSystem(ApplyEdits({
@@ -41,7 +41,7 @@ group("Files.ts", () => {
                 {
                     code: "UpdateEntryTypeFeature",
                     data: {
-                        entryTypeId: entryType,
+                        entryTypeKey,
                         feature: {
                             featureType: "Files",
                             enabled: true,
@@ -55,7 +55,7 @@ group("Files.ts", () => {
         // Now check the updated schema:
         const afterSchema = await graph.read((tx) => getCurrentSchema(tx, siteId));
         // The "Files" feature should be enabled:
-        assertEquals(afterSchema.entryTypes[entryType].enabledFeatures, {
+        assertEquals(afterSchema.entryTypes[entryTypeKey].enabledFeatures, {
             Files: {},
         });
 
@@ -66,7 +66,7 @@ group("Files.ts", () => {
                 {
                     code: "UpdateEntryTypeFeature",
                     data: {
-                        entryTypeId: entryType,
+                        entryTypeKey,
                         feature: {
                             featureType: "Files",
                             enabled: false,
@@ -88,16 +88,16 @@ group("Files.ts", () => {
         const entryId = VNID();
         // Create a site with an image entry type:
         const { id: siteId } = await graph.runAsSystem(
-            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", friendlyId: "test1" }),
+            CreateSite({ name: "Site 1", domain: "test-site1.neolace.net", key: "test1" }),
         );
         await graph.runAsSystem(ApplyEdits({
             siteId,
             edits: [
-                { code: "CreateEntryType", data: { id: entryType, name: "EntryTypeWithFiles" } },
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryTypeWithFiles" } },
                 {
                     code: "UpdateEntryTypeFeature",
                     data: {
-                        entryTypeId: entryType,
+                        entryTypeKey,
                         feature: {
                             featureType: "Files",
                             enabled: true,
@@ -110,9 +110,9 @@ group("Files.ts", () => {
                     code: "CreateEntry",
                     data: {
                         entryId,
-                        type: entryType,
+                        entryTypeKey,
                         name: "Test With Files",
-                        friendlyId: "files-test",
+                        key: "files-test",
                         description: "An Entry with Files, for Testing",
                     },
                 },
