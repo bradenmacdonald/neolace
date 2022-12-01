@@ -272,7 +272,7 @@ group("SetRelationships bulk edit implementation", () => {
             {
                 code: "SetRelationships",
                 data: {
-                    // This one we match by fiendly ID:
+                    // This one we match by key:
                     entryWith: { entryKey: jackPine.key },
                     set: [
                         {
@@ -287,6 +287,103 @@ group("SetRelationships bulk edit implementation", () => {
         // Now check that nothing happened:
         await checkPreconditions();
         assertEquals(result.appliedEditIds, []);
+    });
+
+    test("SetRelationships has no effect at all if setting two non-existing relationships to be empty", async () => {
+        // Preconditions:
+        await checkPreconditions();
+
+        // Make the edit:
+        const result = await doBulkEdits([
+            {
+                code: "SetRelationships",
+                data: {
+                    entryWith: { entryId: jackPine.id },
+                    set: [
+                        // This previously triggered a bug, because the 'changes' were identical and got collect()ed
+                        // together in the Neo4j query.
+                        { propertyKey: hasPartProp.key, toEntries: [] },
+                        { propertyKey: defaultData.schema.properties.hasHeroImage.key, toEntries: [] },
+                    ],
+                },
+            },
+        ]);
+
+        // Now check that nothing happened:
+        await checkPreconditions();
+        assertEquals(result.appliedEditIds, []);
+    });
+
+    test("SetRelationships works if the same relationship is specified twice, with the second one being what is applied.", async () => {
+        // this is based on an actual error seen when importing the OpenAlex data, because all of the 'set
+        // relationships' get combined into batched requests, and sometimes there is 'newer' data and 'older' data for
+        // the same entry-relationship in the same batch. Rather than throwing an internal error, the newer one should
+        // overwrite the older one.
+
+        // Preconditions:
+        await checkPreconditions();
+
+        // Make the edit:
+        const result = await doBulkEdits([
+            // The first edit sets the parent genus to thuja:
+            {
+                code: "SetRelationships",
+                data: {
+                    entryWith: { entryKey: jackPine.key },
+                    set: [{
+                        propertyKey: parentGenusProp.key,
+                        toEntries: [{ entryWith: { entryKey: defaultData.entries.genusThuja.key } }],
+                    }],
+                },
+            },
+            // But then this one changes it to cypressus
+            {
+                code: "SetRelationships",
+                data: {
+                    entryWith: { entryKey: jackPine.key },
+                    set: [{
+                        propertyKey: parentGenusProp.key,
+                        toEntries: [{ entryWith: { entryKey: defaultData.entries.genusCupressus.key } }],
+                    }],
+                },
+            },
+        ]);
+
+        // The 'jack pine' genus should now be cypressus:
+        const jackPineGenus = await evaluateEntryListLookup(jackPine, `this.get(prop=prop("${parentGenusProp.key}"))`);
+        assertEquals(jackPineGenus, [defaultData.entries.genusCupressus.id]);
+        // Now check that only one 'add property fact' resulted:
+        const appliedEdits = await getAppliedEdits(result);
+        assertEquals(appliedEdits, [
+            // Delete the old "parent genus" value for jack pine:
+            {
+                code: "DeletePropertyFact",
+                data: {
+                    entryId: jackPine.id,
+                    propertyFactId: appliedEdits[0]?.data.propertyFactId, // We don't know this ID in advance
+                },
+                oldData: {
+                    valueExpression: `entry("${genusPinus.id}")`,
+                    note: "",
+                    slot: "",
+                    rank: 1,
+                },
+            },
+            // Add the new "parent genus" value to jack pine:
+            {
+                code: "AddPropertyFact",
+                data: {
+                    entryId: jackPine.id,
+                    propertyKey: parentGenusProp.key,
+                    propertyFactId: appliedEdits[1]?.data.propertyFactId, // We don't know this ID in advance
+                    valueExpression: `entry("${defaultData.entries.genusCupressus.id}")`,
+                    note: "",
+                    slot: "",
+                    rank: 1,
+                },
+                oldData: {},
+            },
+        ]);
     });
 
     test("SetRelationships gives an error if the entry doesn't exist", async () => {
@@ -369,6 +466,39 @@ group("SetRelationships bulk edit implementation", () => {
         assertEquals(
             err.cause.message,
             "Unable to bulk set relationship property facts. Check if entryId, key, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a value property.",
+        );
+    });
+
+    test("SetRelationships gives an error if conflicting values are specified for the same relationship.", async () => {
+        // this is based on an actual error seen when writing import code - it's easy to use the same property key twice.
+        const err = await assertRejects(() =>
+            doBulkEdits([
+                {
+                    code: "SetRelationships",
+                    data: {
+                        entryWith: { entryKey: jackPine.key },
+                        set: [
+                            // The first 'set' value sets the parent genus to thuja:
+                            {
+                                propertyKey: parentGenusProp.key,
+                                toEntries: [{ entryWith: { entryKey: defaultData.entries.genusThuja.key } }],
+                            },
+                            // But then this one changes it to cypressus
+                            {
+                                propertyKey: parentGenusProp.key,
+                                toEntries: [{ entryWith: { entryKey: defaultData.entries.genusCupressus.key } }],
+                            },
+                        ],
+                    },
+                },
+            ])
+        );
+
+        assertInstanceOf(err, Error);
+        assertInstanceOf(err.cause, InvalidEdit);
+        assertEquals(
+            err.cause.message,
+            `Unable to bulk set relationship property facts. The entry with entryKey "${jackPine.key}" had conflicting values for the "${parentGenusProp.key}" relationship property.`,
         );
     });
 });

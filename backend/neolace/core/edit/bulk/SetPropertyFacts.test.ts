@@ -406,4 +406,31 @@ group("SetPropertyFacts bulk edit implementation", () => {
             "Unable to bulk set property facts. Check if entryId, entryKey, or connectionId is invalid, the property doesn't apply to that entry type, or the property is a relationship property.",
         );
     });
+
+    test("SetPropertyFacts gives an error if conflicting values are specified for the same property.", async () => {
+        // this is based on an actual error seen when writing import code - it's easy to use the same property key twice.
+        const err = await assertRejects(() =>
+            doBulkEdits([
+                {
+                    code: "SetPropertyFacts",
+                    data: {
+                        entryWith: { entryKey: jackPine.key },
+                        set: [
+                            // The first 'set' value sets the scientific name to "A":
+                            { propertyKey: scientificNameProp.key, facts: [{ valueExpression: `"A"` }] },
+                            // But then this one changes it to "B"
+                            { propertyKey: scientificNameProp.key, facts: [{ valueExpression: `"B"` }] },
+                        ],
+                    },
+                },
+            ])
+        );
+
+        assertInstanceOf(err, Error);
+        assertInstanceOf(err.cause, InvalidEdit);
+        assertEquals(
+            err.cause.message,
+            `Unable to bulk set property facts. The entry with entryKey "${jackPine.key}" had conflicting values for the "${scientificNameProp.key}" property.`,
+        );
+    });
 });
