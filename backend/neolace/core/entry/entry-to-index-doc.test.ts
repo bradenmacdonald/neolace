@@ -1,14 +1,14 @@
 import { assert, assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { entryToIndexDocument } from "./entry-to-index-doc.ts";
+import { entryToIndexDocument, preloadDataForIndexingEntries } from "./entry-to-index-doc.ts";
 import * as api from "neolace/deps/neolace-api.ts";
 
 group("entryToIndexDocument", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
 
-    test("pre - test", () => {});
-
     test("It gives the expected result for ponderosa pine", async () => {
-        const data = await entryToIndexDocument(defaultData.entries.ponderosaPine.id);
+        const entryId = defaultData.entries.ponderosaPine.id;
+        const preloadedData = await preloadDataForIndexingEntries([entryId]);
+        const data = await entryToIndexDocument(entryId, preloadedData[entryId]);
         const propsExpected = {
             [`prop-${defaultData.schema.properties.parentGenus.key}`]: ["Pinus"],
             [`prop-${defaultData.schema.properties.hasHeroImage.key}`]: [defaultData.entries.imgPonderosaTrunk.name],
@@ -24,6 +24,13 @@ group("entryToIndexDocument", () => {
             description: data.description,
             articleText: data.articleText,
             visibleToGroups: ["public"],
+            allProps: [
+                "Genus: Pinus",
+                "Scientific name: Pinus ponderosa",
+                "Has part: Pollen cone, Seed cone",
+                "Wikidata Item ID: Q460523",
+                "Has hero image: Ponderosa Pine Trunk in Lassen Volcanic National Park",
+            ],
             ...propsExpected,
         };
 
@@ -32,6 +39,4 @@ group("entryToIndexDocument", () => {
         // Ensure that the bold formatting ("***Pinus ponderosa***") has been stripped out:
         assert(data.description.startsWith("Pinus ponderosa (ponderosa pine) "));
     });
-
-    test("post - test", () => {});
 });

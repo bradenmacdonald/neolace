@@ -54,7 +54,7 @@ const SiteSearchPage: React.FunctionComponent<PluginPageProps> = function (props
                         ],
                     },
                     additionalSearchParameters: {
-                        query_by: "name,description,key,articleText",
+                        query_by: "key,name,description,allProps,articleText",
                     },
                 }),
             );

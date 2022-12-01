@@ -14,6 +14,7 @@ import {
 
 import { getTypeSenseClient } from "./typesense-client.ts";
 import { getSiteCollectionAlias } from "./site-collection.ts";
+import { preloadDataForIndexingEntries } from "../../core/entry/entry-to-index-doc.ts";
 
 // TODO: store this in Redis, with an expiring key
 const _sitesBeingReindexed = new Map<VNID, string>(); // Map of site VNID to collection name
@@ -76,13 +77,14 @@ export async function reindexAllEntries(siteId: VNID) {
             { name: "id", type: "string", facet: false },
             { name: "key", type: "string", facet: false },
             { name: "name", type: "string", facet: false },
-            { name: "type", type: "string", facet: true },
+            { name: "entryTypeKey", type: "string", facet: true },
             { name: "description", type: "string", facet: false },
             { name: "articleText", type: "string", facet: false },
             { name: "visibleToGroups", type: "string[]", facet: false },
             // For properties, we store all values as strings or string arrays
             // https://typesense.org/docs/0.22.1/api/documents.html#indexing-all-values-as-string
-            { "name": "prop_.*", "type": "string[]" },
+            { name: "prop_.*", type: "string[]" },
+            { name: "allProps", type: "string[]" },
         ],
     });
     await setCurrentReIndexJobForSite(siteId, newCollectionName);
@@ -104,48 +106,64 @@ export async function reindexAllEntries(siteId: VNID) {
     const startTime = performance.now();
 
     try {
+        // Iterate over entries in chunks of 25
         // For each entry, reindex the entry
-        await graph.read(async (tx) => {
-            // Iterate over entries in chunks of 25
-            const pageSize = 25;
-            let offset = 0;
-            while (true) {
-                const entriesChunk = await tx.query(C`
-                    MATCH (site:${Site} {id: ${siteId}})
-                    MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-                    WHERE ${permissionsCondition}
+        const pageSize = 100;
+        let offset = 0;
+        while (true) {
+            const entriesChunk = await graph.read(async (tx) =>
+                tx.query(C`
+                MATCH (site:${Site} {id: ${siteId}})
+                MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+                WHERE ${permissionsCondition}
 
-                    RETURN entry.id SKIP ${C(offset.toFixed(0))} LIMIT ${C(pageSize.toFixed(0))}
-                `.givesShape({ "entry.id": Field.VNID }));
+                RETURN entry.id ORDER BY entry.id SKIP ${C(offset.toFixed(0))} LIMIT ${C(pageSize.toFixed(0))}
+            `.givesShape({ "entry.id": Field.VNID }))
+            );
 
-                const documents = await Promise.all(
-                    entriesChunk.map((row) => entryToIndexDocument(row["entry.id"])),
+            const entryIds = entriesChunk.map((row) => row["entry.id"]);
+
+            const data = await preloadDataForIndexingEntries(entryIds);
+
+            const documents: api.EntryIndexDocument[] = [];
+            const parallelEntries = 5;
+            for (let i = 0; i < Object.keys(data).length; i += parallelEntries) {
+                documents.push(
+                    ...await Promise.all(
+                        Object.keys(data).slice(i, i + parallelEntries).map(
+                            (entryId) => entryToIndexDocument(entryId as VNID, data[entryId as VNID]),
+                        ),
+                    ),
                 );
+            }
 
-                if (documents.length > 0) { // <-- .import() will give an error if we pass in an empty list
-                    try {
-                        await client.collections(newCollectionName).documents().import(documents, { action: "upsert" });
-                    } catch (err) {
-                        if (err instanceof TypeSense.Errors.ImportError) {
-                            log.error(err.importResults);
-                        }
-                        throw err;
+            if (documents.length > 0) { // <-- .import() will give an error if we pass in an empty list
+                try {
+                    await client.collections(newCollectionName).documents().import(documents, { action: "upsert" });
+                } catch (err) {
+                    if (err instanceof TypeSense.Errors.ImportError) {
+                        log.error(err.importResults);
                     }
-                }
-
-                const totalTime = performance.now();
-                log.info(
-                    `Re-indexed ${offset + entriesChunk.length} of ~${totalCount["count(entry)"]} entries (${
-                        ((totalTime - startTime) / 1000).toFixed(1)
-                    }s elapsed)...`,
-                );
-                if (entriesChunk.length < pageSize) {
-                    break;
-                } else {
-                    offset += pageSize;
+                    throw err;
                 }
             }
-        });
+
+            const elapsedTimeMs = performance.now() - startTime;
+            const indexedCount = offset + entriesChunk.length;
+            const remainingCount = totalCount["count(entry)"] - indexedCount;
+            const estimatedTimeRemaining = indexedCount === 0 ? 0 : remainingCount * (elapsedTimeMs / indexedCount);
+            log.info(
+                `Re-indexed ${indexedCount} of ~${totalCount["count(entry)"]} entries ` +
+                    `(${(elapsedTimeMs / 1000).toFixed(1)}s elapsed, ${
+                        (estimatedTimeRemaining / 60_000).toFixed(0)
+                    }m left)...`,
+            );
+            if (entriesChunk.length < pageSize) {
+                break;
+            } else {
+                offset += pageSize;
+            }
+        }
     } catch (err) {
         log.error(`Reindex failed.`);
         try {

@@ -97,6 +97,7 @@ export interface EntryIndexDocument {
     description: string;
     articleText: string;
     visibleToGroups: string[];
+    allProps: string[];
     [k: `prop${string}`]: string[];
 }
 
