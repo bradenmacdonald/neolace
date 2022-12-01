@@ -122,8 +122,11 @@ export class Entry extends VNodeType {
 
 /** Cached helper function to look up an entry's siteId (Site VNID) */
 export const siteIdForEntryId = makeCachedLookup(async (entryId: VNID) => {
+    if (entryId === undefined) {
+        throw new Error("Unexpectedly got undefined for entryId - will cause an error with site lookup.");
+    }
     const graph = await getGraph();
-    const result = (await graph.pullOne(Entry, (e) => e.type((et) => et.site((s) => s.id)), { key: entryId })).type
+    const result = (await graph.pullOne(Entry, (e) => e.type((et) => et.site((s) => s.id)), { id: entryId })).type
         ?.site?.id;
     if (!result) {
         throw new Error("Invalid Entry ID");

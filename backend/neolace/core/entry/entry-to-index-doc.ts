@@ -1,39 +1,72 @@
 import * as log from "std/log/mod.ts";
-import { VNID } from "neolace/deps/vertex-framework.ts";
+import { C, VNID } from "neolace/deps/vertex-framework.ts";
 import * as api from "neolace/deps/neolace-api.ts";
 
 import { getGraph } from "neolace/core/graph.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-data.ts";
 import { Entry } from "./Entry.ts";
-import { getEntryProperties } from "./properties.ts";
+import { EntryPropertyValueSet, getEntryProperties } from "./properties.ts";
 import * as V from "neolace/core/lookup/values.ts";
 import { siteKeyFromId } from "neolace/core/Site.ts";
 import { checkPermissions } from "neolace/core/permissions/check.ts";
 import { ActionObject } from "neolace/core/permissions/action.ts";
 
+interface EntryRequiredData {
+    name: string;
+    description: string;
+    key: string;
+    entryTypeKey: string;
+    entryTypeName: string;
+    siteId: VNID;
+    properties: EntryPropertyValueSet[];
+}
+
+export async function preloadDataForIndexingEntries(entryIds: VNID[]): Promise<Record<VNID, EntryRequiredData>> {
+    if (entryIds.length === 0) {
+        return {};
+    }
+    const graph = await getGraph();
+    return graph.read(async (tx) => {
+        const entryDatas = await tx.pull(
+            Entry,
+            (e) => e.id.name.description.key.siteNamespace.type((et) => et.key.name),
+            { where: C`@this.id IN ${entryIds}` },
+        );
+
+        const props = await getEntryProperties(entryIds, { tx, limit: 2_000 });
+
+        const result: Record<VNID, EntryRequiredData> = {};
+
+        for (const entry of entryDatas) {
+            result[entry.id] = {
+                name: entry.name,
+                description: entry.description,
+                key: entry.key,
+                entryTypeKey: entry.type!.key,
+                entryTypeName: entry.type!.name,
+                siteId: entry.siteNamespace,
+                properties: props.filter((ps) => ps.entryId === entry.id),
+            };
+        }
+
+        return result;
+    });
+}
+
 /**
  * Generate a version of this entry that can be used to build the search index.
  */
-export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryIndexDocument> {
+export async function entryToIndexDocument(
+    entryId: VNID,
+    preloadedData: EntryRequiredData,
+): Promise<api.EntryIndexDocument> {
     // log.info(`Reindexing ${entryId} to ${collection}`);
     const graph = await getGraph();
-    const { entryData, properties, features } = await graph.read(async (tx) => ({
-        entryData: await tx.pullOne(Entry, (e) =>
-            e
-                .id
-                .name
-                .description
-                .key
-                .type((et) => et.key.name.site((s) => s.id)), { key: entryId }),
-        properties: await getEntryProperties(entryId, { tx, limit: 1_000 }),
-        // features (e.g. article text):
-        features: await getEntryFeaturesData(entryId, { tx }),
-    }));
 
-    const siteId = entryData.type!.site!.id;
+    const siteId = preloadedData.siteId;
     const permSubject = { siteId, userId: undefined };
-    const permObject: ActionObject = { entryId, entryTypeKey: entryData.type!.key };
+    const permObject: ActionObject = { entryId, entryTypeKey: preloadedData.entryTypeKey };
     const maxValuesPerProp = 100;
 
     let description = "";
@@ -49,21 +82,24 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
             api.CorePerm.viewEntryFeatures,
         ], permObject);
 
-        if (canViewDescription && entryData.description) {
-            description = await markdownToPlainText(api.MDT.tokenizeMDT(entryData.description), lookupContext);
+        if (canViewDescription && preloadedData.description) {
+            description = await markdownToPlainText(api.MDT.tokenizeMDT(preloadedData.description), lookupContext);
         }
-        if (canViewFeatures && features?.Article?.articleContent) {
-            articleText = await markdownToPlainText(
-                api.MDT.tokenizeMDT(features.Article.articleContent ?? ""),
-                lookupContext,
-            );
+        if (canViewFeatures) {
+            const features = await getEntryFeaturesData(entryId, { tx, filterType: "Article" });
+            if (features.Article?.articleContent) {
+                articleText = await markdownToPlainText(
+                    api.MDT.tokenizeMDT(features.Article.articleContent ?? ""),
+                    lookupContext,
+                );
+            }
         }
 
         if (!canViewProperties) {
             return; // Skip indexing the properties below
         }
 
-        for (const propValue of properties) {
+        for (const propValue of preloadedData.properties) {
             const stringValues = [];
             for (const fact of propValue.facts) {
                 try {
@@ -73,7 +109,7 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
                     log.warning(
                         `Cannot parse property value for search index: site ${await siteKeyFromId(
                             siteId,
-                        )} entry ${entryData.key}, property ${propValue.property.name}`,
+                        )} entry ${preloadedData.key}, property ${propValue.property.name}`,
                     );
                 }
             }
@@ -85,9 +121,9 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
 
     return {
         id: entryId,
-        key: entryData.key,
-        name: entryData.name,
-        entryTypeKey: entryData.type!.key,
+        key: preloadedData.key,
+        name: preloadedData.name,
+        entryTypeKey: preloadedData.entryTypeKey,
         description,
         articleText,
         visibleToGroups: ["public"],

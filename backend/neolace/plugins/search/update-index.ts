@@ -14,6 +14,7 @@ import {
 
 import { getTypeSenseClient } from "./typesense-client.ts";
 import { getSiteCollectionAlias } from "./site-collection.ts";
+import { preloadDataForIndexingEntries } from "../../core/entry/entry-to-index-doc.ts";
 
 // TODO: store this in Redis, with an expiring key
 const _sitesBeingReindexed = new Map<VNID, string>(); // Map of site VNID to collection name
@@ -106,20 +107,34 @@ export async function reindexAllEntries(siteId: VNID) {
     try {
         // Iterate over entries in chunks of 25
         // For each entry, reindex the entry
-        const pageSize = 25;
+        const pageSize = 100;
         let offset = 0;
         while (true) {
-            const entriesChunk = await graph.read(async (tx) => tx.query(C`
+            const entriesChunk = await graph.read(async (tx) =>
+                tx.query(C`
                 MATCH (site:${Site} {id: ${siteId}})
                 MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
                 WHERE ${permissionsCondition}
 
                 RETURN entry.id ORDER BY entry.id SKIP ${C(offset.toFixed(0))} LIMIT ${C(pageSize.toFixed(0))}
-            `.givesShape({ "entry.id": Field.VNID })));
-
-            const documents = await Promise.all(
-                entriesChunk.map((row) => entryToIndexDocument(row["entry.id"])),
+            `.givesShape({ "entry.id": Field.VNID }))
             );
+
+            const entryIds = entriesChunk.map((row) => row["entry.id"]);
+
+            const data = await preloadDataForIndexingEntries(entryIds);
+
+            const documents: api.EntryIndexDocument[] = [];
+            const parallelEntries = 5;
+            for (let i = 0; i < Object.keys(data).length; i += parallelEntries) {
+                documents.push(
+                    ...await Promise.all(
+                        Object.keys(data).slice(i, i + parallelEntries).map(
+                            (entryId) => entryToIndexDocument(entryId as VNID, data[entryId as VNID]),
+                        ),
+                    ),
+                );
+            }
 
             if (documents.length > 0) { // <-- .import() will give an error if we pass in an empty list
                 try {
@@ -132,11 +147,15 @@ export async function reindexAllEntries(siteId: VNID) {
                 }
             }
 
-            const totalTime = performance.now();
+            const elapsedTimeMs = performance.now() - startTime;
+            const indexedCount = offset + entriesChunk.length;
+            const remainingCount = totalCount["count(entry)"] - indexedCount;
+            const estimatedTimeRemaining = indexedCount === 0 ? 0 : remainingCount * (elapsedTimeMs / indexedCount);
             log.info(
-                `Re-indexed ${offset + entriesChunk.length} of ~${totalCount["count(entry)"]} entries (${
-                    ((totalTime - startTime) / 1000).toFixed(1)
-                }s elapsed)...`,
+                `Re-indexed ${indexedCount} of ~${totalCount["count(entry)"]} entries ` +
+                    `(${(elapsedTimeMs / 1000).toFixed(1)}s elapsed, ${
+                        (estimatedTimeRemaining / 60_000).toFixed(0)
+                    }m left)...`,
             );
             if (entriesChunk.length < pageSize) {
                 break;
