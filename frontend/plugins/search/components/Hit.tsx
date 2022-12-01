@@ -4,7 +4,7 @@
 export interface Hit extends Record<string, unknown> {
     id: string;
     name: string;
-    type: string;
+    entryTypeKey: string;
     objectId: string;
     key: string;
     description: string;

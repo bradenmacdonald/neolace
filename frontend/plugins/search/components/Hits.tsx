@@ -5,6 +5,7 @@ import { FormattedMessage } from "react-intl";
 import { Highlight, useInfiniteHits, UseInfiniteHitsProps, useSearchBox } from "react-instantsearch-hooks-web";
 import { Button } from "components/widgets/Button";
 import { Hit } from "./Hit";
+import { useSchema } from "lib/api";
 
 const highlightClasses = {
     // Override the color used to highlight matching terms in the result:
@@ -24,6 +25,8 @@ export const InfiniteHits: React.FunctionComponent<UseInfiniteHitsProps<Hit>> = 
         // sendEvent,
     } = useInfiniteHits(props);
     const { query } = useSearchBox();
+
+    const [schema] = useSchema();
 
     if (query === "") {
         return (
@@ -73,7 +76,7 @@ export const InfiniteHits: React.FunctionComponent<UseInfiniteHitsProps<Hit>> = 
                             >
                                 <Highlight hit={hit} attribute="name" classNames={highlightClasses} />
                             </Link>{" "}
-                            ({hit.type})
+                            ({schema?.entryTypes[hit.entryTypeKey]?.name ?? hit.entryTypeKey})
                         </div>
                         <p className="text-sm">
                             <Highlight hit={hit} attribute="description" classNames={highlightClasses} />

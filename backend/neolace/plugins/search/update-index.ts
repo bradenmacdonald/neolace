@@ -83,7 +83,8 @@ export async function reindexAllEntries(siteId: VNID) {
             { name: "visibleToGroups", type: "string[]", facet: false },
             // For properties, we store all values as strings or string arrays
             // https://typesense.org/docs/0.22.1/api/documents.html#indexing-all-values-as-string
-            { "name": "prop_.*", "type": "string[]" },
+            { name: "prop_.*", type: "string[]" },
+            { name: "allProps", type: "string[]" },
         ],
     });
     await setCurrentReIndexJobForSite(siteId, newCollectionName);

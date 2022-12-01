@@ -7,7 +7,7 @@ group("entryToIndexDocument", () => {
 
     test("It gives the expected result for ponderosa pine", async () => {
         const entryId = defaultData.entries.ponderosaPine.id;
-        const preloadedData = await preloadDataForIndexingEntries([entryId])
+        const preloadedData = await preloadDataForIndexingEntries([entryId]);
         const data = await entryToIndexDocument(entryId, preloadedData[entryId]);
         const propsExpected = {
             [`prop-${defaultData.schema.properties.parentGenus.key}`]: ["Pinus"],
@@ -24,6 +24,13 @@ group("entryToIndexDocument", () => {
             description: data.description,
             articleText: data.articleText,
             visibleToGroups: ["public"],
+            allProps: [
+                "Genus: Pinus",
+                "Scientific name: Pinus ponderosa",
+                "Has part: Pollen cone, Seed cone",
+                "Wikidata Item ID: Q460523",
+                "Has hero image: Ponderosa Pine Trunk in Lassen Volcanic National Park",
+            ],
             ...propsExpected,
         };
 

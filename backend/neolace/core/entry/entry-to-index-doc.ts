@@ -72,6 +72,7 @@ export async function entryToIndexDocument(
     let description = "";
     let articleText = "";
     const propertiesAsText: Record<string, string | string[]> = {};
+    const allProps: string[] = [];
 
     // Convert markdown fields into plain text, convert properties into values
     await graph.read(async (tx) => {
@@ -115,6 +116,7 @@ export async function entryToIndexDocument(
             }
             if (stringValues.length) {
                 propertiesAsText[`prop-${propValue.property.key}`] = stringValues;
+                allProps.push(`${propValue.property.name}: ${stringValues.join(", ")}`);
             }
         }
     });
@@ -127,6 +129,7 @@ export async function entryToIndexDocument(
         description,
         articleText,
         visibleToGroups: ["public"],
+        allProps,
         ...propertiesAsText,
     };
 }
