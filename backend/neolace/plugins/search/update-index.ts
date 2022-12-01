@@ -76,7 +76,7 @@ export async function reindexAllEntries(siteId: VNID) {
             { name: "id", type: "string", facet: false },
             { name: "key", type: "string", facet: false },
             { name: "name", type: "string", facet: false },
-            { name: "type", type: "string", facet: true },
+            { name: "entryTypeKey", type: "string", facet: true },
             { name: "description", type: "string", facet: false },
             { name: "articleText", type: "string", facet: false },
             { name: "visibleToGroups", type: "string[]", facet: false },

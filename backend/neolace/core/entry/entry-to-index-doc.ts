@@ -49,12 +49,12 @@ export async function entryToIndexDocument(entryId: VNID): Promise<api.EntryInde
             api.CorePerm.viewEntryFeatures,
         ], permObject);
 
-        if (canViewDescription) {
+        if (canViewDescription && entryData.description) {
             description = await markdownToPlainText(api.MDT.tokenizeMDT(entryData.description), lookupContext);
         }
-        if (canViewFeatures) {
+        if (canViewFeatures && features?.Article?.articleContent) {
             articleText = await markdownToPlainText(
-                api.MDT.tokenizeMDT(features?.Article?.articleContent ?? ""),
+                api.MDT.tokenizeMDT(features.Article.articleContent ?? ""),
                 lookupContext,
             );
         }
@@ -130,9 +130,7 @@ async function lookupValueToPlainText(value: V.LookupValue, context: LookupConte
     } else if (value instanceof V.IntegerValue) {
         return String(value.value); // TODO: internationalize
     } else if (value instanceof V.EntryValue) {
-        // TODO: this should be more performant, and re-use the cache where possible, but we have to implement ".name"
-        //return lookupValueToPlainText(await context.evaluateExpr(value.asLiteral() + ".name"), context);
-        return (await context.tx.pullOne(Entry, (e) => e.name, { key: value.id })).name;
+        return lookupValueToPlainText(await context.evaluateExpr(value.asLiteral() + ".name"), context);
     } else if (value instanceof V.NullValue) {
         return "";
     } else if (value instanceof V.AnnotatedValue) {
