@@ -148,16 +148,16 @@ export const doSetRelationships = defineBulkImplementation(
 
             WITH idx, site, entry, property, oldFacts
             OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})-[:${PropertyFact.rel.FOR_PROP}]->(property)
-            WITH idx, site, entry.id AS entryId, oldFacts, collect(pf) AS propFacts
+            WITH idx, site, entry.id AS entryId, property.key AS propKey, oldFacts, collect(pf) AS propFacts
 
-            WITH idx, site, entryId, oldFacts, propFacts,
+            WITH idx, site, entryId, propKey, oldFacts, propFacts,
                 [x in propFacts WHERE x.keep IS NULL AND x.added IS NULL | x.id] AS deleteFactIds,
                 [x in propFacts WHERE x.added | x { .id, .valueExpression, .note, .rank, .slot }] AS addedFacts
 
             FOREACH (pf IN [x in propFacts WHERE x.keep] | REMOVE pf.keep)
             FOREACH (pf IN [x in propFacts WHERE x.added] | REMOVE pf.added)
 
-            WITH idx, entryId, oldFacts, propFacts, deleteFactIds, addedFacts
+            WITH idx, entryId, propKey, oldFacts, propFacts, deleteFactIds, addedFacts
             CALL {
                 WITH propFacts, deleteFactIds
                 UNWIND propFacts as pf
@@ -169,7 +169,7 @@ export const doSetRelationships = defineBulkImplementation(
                 DETACH DELETE pf
             }
 
-            WITH idx, entryId, collect({deletedFactIds: deleteFactIds, addedFacts: addedFacts, oldFacts: oldFacts}) AS data
+            WITH idx, entryId, collect({uniqueKey: propKey, deletedFactIds: deleteFactIds, addedFacts: addedFacts, oldFacts: oldFacts}) AS data
 
             RETURN collect({idx: idx, entryId: entryId, data: data}) AS changes
         `.givesShape({
@@ -178,6 +178,8 @@ export const doSetRelationships = defineBulkImplementation(
                     idx: Field.Int,
                     entryId: Field.VNID,
                     data: Field.List(Field.Record({
+                        // propKey is in this record but we don't need it; it's just to stop collect() from combining
+                        // records in the case where all the following arrays are empty.
                         deletedFactIds: Field.List(Field.VNID),
                         addedFacts: Field.List(Field.Record({
                             id: Field.VNID,

@@ -272,13 +272,38 @@ group("SetRelationships bulk edit implementation", () => {
             {
                 code: "SetRelationships",
                 data: {
-                    // This one we match by fiendly ID:
+                    // This one we match by key:
                     entryWith: { entryKey: jackPine.key },
                     set: [
                         {
                             propertyKey: parentGenusProp.key,
                             toEntries: [{ entryWith: { entryKey: genusPinus.key } }],
                         },
+                    ],
+                },
+            },
+        ]);
+
+        // Now check that nothing happened:
+        await checkPreconditions();
+        assertEquals(result.appliedEditIds, []);
+    });
+
+    test("SetRelationships has no effect at all if setting two non-existing relationships to be empty", async () => {
+        // Preconditions:
+        await checkPreconditions();
+
+        // Make the edit:
+        const result = await doBulkEdits([
+            {
+                code: "SetRelationships",
+                data: {
+                    entryWith: { entryId: jackPine.id },
+                    set: [
+                        // This previously triggered a bug, because the 'changes' were identical and got collect()ed
+                        // together in the Neo4j query.
+                        { propertyKey: hasPartProp.key, toEntries: [] },
+                        { propertyKey: defaultData.schema.properties.hasHeroImage.key, toEntries: [] },
                     ],
                 },
             },
