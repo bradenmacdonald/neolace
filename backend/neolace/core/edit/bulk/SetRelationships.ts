@@ -2,6 +2,7 @@ import { C, Field } from "neolace/deps/vertex-framework.ts";
 import { InvalidEdit, PropertyType, SetRelationships, VNID } from "neolace/deps/neolace-api.ts";
 import { BulkAppliedEditData, defineBulkImplementation } from "neolace/core/edit/implementations.ts";
 import { Connection, Entry, EntryType, Property, PropertyFact, Site } from "neolace/core/mod.ts";
+import { isSameEntrySpec } from "./SetPropertyFacts.ts";
 
 /**
  * Overite the relationship property values (property facts) for specific properties of a specific entry
@@ -25,6 +26,48 @@ export const doSetRelationships = defineBulkImplementation(
                 })),
             })),
         }));
+        // Further validation and optimization before we do our actual query:
+        for (let i = 0; i < edits.length; i++) {
+            const edit = edits[i];
+            // Check if a single edit has multiple 'set' entries for the same property (not allowed)
+            const propKeysSet = new Set<string>();
+            for (const propSpec of edit.set) {
+                if (propKeysSet.has(propSpec.propertyKey)) {
+                    throw new InvalidEdit(
+                        SetRelationships.code,
+                        {
+                            propertyKey: propSpec.propertyKey,
+                            ...edit.entryWith,
+                        },
+                        `Unable to bulk set relationship property facts. The entry with ` +
+                            `${Object.keys(edit.entryWith)[0]} "${Object.values(edit.entryWith)[0]}" had conflicting ` +
+                            `values for the "${propSpec.propertyKey}" relationship property.`,
+                    );
+                }
+                propKeysSet.add(propSpec.propertyKey);
+            }
+
+            // Check if any other edits affect the same entry
+            for (let j = i + 1; j < edits.length; j++) {
+                const laterEdit = edits[j];
+                if (isSameEntrySpec(edit.entryWith, laterEdit.entryWith)) {
+                    // Two separate edits are changing the same entry. For efficiency, combine these into a single edit.
+                    // If there are separate changes to the same property of the same entry, we only need the later
+                    // change as it will overwrite the earlier one, and trying to do them both in one transaction causes
+                    // issues with how our query creates/deletes PropertyFacts.
+                    for (const laterPropSpec of laterEdit.set) {
+                        const indexInEdit = edit.set.findIndex((p) => p.propertyKey === laterPropSpec.propertyKey);
+                        if (indexInEdit === -1) {
+                            edit.set.push(laterPropSpec);
+                        } else {
+                            edit.set[indexInEdit] = laterPropSpec;
+                        }
+                    }
+                    edits.splice(j, 1); // delete edits[j]
+                    j--; // Hold the value of j constant since we just deleted the entry at this index.
+                }
+            }
+        }
 
         // Every bulk update should execute in a single statement, using UNWIND:
         const result = await tx.queryOne(C`

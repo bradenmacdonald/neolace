@@ -3,6 +3,18 @@ import { InvalidEdit, PropertyType, SetPropertyFacts, VNID } from "neolace/deps/
 import { BulkAppliedEditData, defineBulkImplementation } from "neolace/core/edit/implementations.ts";
 import { Connection, Entry, EntryType, Property, PropertyFact, Site } from "neolace/core/mod.ts";
 
+export function isSameEntrySpec(
+    entryWith1: { entryId: VNID } | { entryKey: string },
+    entryWith2: { entryId: VNID } | { entryKey: string },
+) {
+    if ("entryId" in entryWith1 && "entryId" in entryWith2) {
+        return entryWith1.entryId === entryWith2.entryId;
+    } else if ("entryKey" in entryWith1 && "entryKey" in entryWith2) {
+        return entryWith1.entryKey === entryWith2.entryKey;
+    }
+    return false;
+}
+
 /**
  * Overite the property values (property facts) for specific properties of a specific entry
  */
@@ -25,6 +37,48 @@ export const doSetPropertyFacts = defineBulkImplementation(
                 })),
             })),
         }));
+        // Further validation and optimization before we do our actual query:
+        for (let i = 0; i < edits.length; i++) {
+            const edit = edits[i];
+            // Check if a single edit has multiple 'set' specifications for the same property (not allowed)
+            const propKeysSet = new Set<string>();
+            for (const propSpec of edit.set) {
+                if (propKeysSet.has(propSpec.propertyKey)) {
+                    throw new InvalidEdit(
+                        SetPropertyFacts.code,
+                        {
+                            propertyKey: propSpec.propertyKey,
+                            ...edit.entryWith,
+                        },
+                        `Unable to bulk set property facts. The entry with ` +
+                            `${Object.keys(edit.entryWith)[0]} "${Object.values(edit.entryWith)[0]}" had conflicting ` +
+                            `values for the "${propSpec.propertyKey}" property.`,
+                    );
+                }
+                propKeysSet.add(propSpec.propertyKey);
+            }
+
+            // Check if any other edits affect the same entry
+            for (let j = i + 1; j < edits.length; j++) {
+                const laterEdit = edits[j];
+                if (isSameEntrySpec(edit.entryWith, laterEdit.entryWith)) {
+                    // Two separate edits are changing the same entry. For efficiency, combine these into a single edit.
+                    // If there are separate changes to the same property of the same entry, we only need the later
+                    // change as it will overwrite the earlier one, and trying to do them both in one transaction causes
+                    // issues with how our query creates/deletes PropertyFacts.
+                    for (const laterPropSpec of laterEdit.set) {
+                        const indexInEdit = edit.set.findIndex((p) => p.propertyKey === laterPropSpec.propertyKey);
+                        if (indexInEdit === -1) {
+                            edit.set.push(laterPropSpec);
+                        } else {
+                            edit.set[indexInEdit] = laterPropSpec;
+                        }
+                    }
+                    edits.splice(j, 1); // delete edits[j]
+                    j--; // Hold the value of j constant since we just deleted the entry at this index.
+                }
+            }
+        }
 
         // Every bulk update should execute in a single statement, using UNWIND:
         const result = await tx.queryOne(C`
@@ -87,7 +141,7 @@ export const doSetPropertyFacts = defineBulkImplementation(
             WITH idx, site, entry, property, oldFacts
             OPTIONAL MATCH (entry)-[:${Entry.rel.PROP_FACT}]->(pf:${PropertyFact})
                 WHERE exists( (pf)-[:${PropertyFact.rel.FOR_PROP}]->(property) )
-            WITH idx, site, entry.id AS entryId, property.id AS propertyKey, oldFacts, collect(pf) AS propFacts
+            WITH idx, site, entry.id AS entryId, property.key AS propertyKey, oldFacts, collect(pf) AS propFacts
 
             WITH idx, site, entryId, propertyKey, oldFacts, propFacts,
                 [x in propFacts WHERE x.keep IS NULL | x.id] AS deleteFactIds
