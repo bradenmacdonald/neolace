@@ -158,7 +158,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             const entryTypeName = refCache.entryTypes[value.key]?.name ?? value.key;
             const entryTypeColor = api.getEntryTypeColor(refCache.entryTypes[value.key]);
             return <span className="text-sm font-medium font-sans">
-                <span className={`rounded-l-md py-[3px] px-2 bg-gray-200`} style={{color: entryTypeColor.textColor}}>
+                <span className={`rounded-l-md py-[3px] px-2 bg-gray-200`} style={{color: entryTypeColor.textColor, backgroundColor: entryTypeColor.backgroundColor}}>
                     <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
                 </span>
                 <span className={`rounded-r-md py-[3px] px-2 bg-gray-100 text-gray-700`}>{entryTypeName}</span>
