@@ -198,7 +198,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 : <FormattedMessage id="rxqs5U" defaultMessage="False"/>
             }</>
         case "Integer":
-            return <>{value.value}</>
+            return <>{BigInt(value.value).toLocaleString()}</>
         case "Quantity":
             return <LookupQuantityValue value={value} />
         case "Range":
