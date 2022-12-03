@@ -4,6 +4,7 @@ import {
     assertArrayIncludes,
     assertEquals,
     assertInstanceOf,
+    createManyEntries,
     group,
     setTestIsolation,
     test,
@@ -16,6 +17,7 @@ import { This } from "../this.ts";
 import { Graph } from "./graph.ts";
 import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { Descendants } from "./descendants.ts";
+import { AllEntries } from "../../expressions.ts";
 
 group("graph()", () => {
     // These tests are read-only so don't need isolation, but do use the default plantDB example data:
@@ -268,5 +270,24 @@ group("graph()", () => {
 
     test("toString()", () => {
         assertEquals(new Graph(new This()).toString(), "this.graph()");
+    });
+});
+
+group("graph() limit tests", () => {
+    // These tests need isolation:
+    const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
+    const context = new TestLookupContext({ siteId: defaultData.site.id });
+
+    test("Limits the total number of nodes that can be returned.", async () => {
+        // Create 6,000 entries:
+        const numEntries = 6_000;
+        const entryTypeKey = defaultData.schema.entryTypes.ETSPECIES.key;
+        await createManyEntries(defaultData.site.id, entryTypeKey, numEntries);
+
+        const expression = new Graph(new AllEntries());
+        const value = await context.evaluateExprConcrete(expression);
+
+        assertInstanceOf(value, GraphValue);
+        assertEquals(value.entries.length, 5_000);
     });
 });

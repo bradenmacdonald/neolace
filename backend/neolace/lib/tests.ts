@@ -17,6 +17,9 @@ import { LookupContext } from "neolace/core/lookup/context.ts";
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, it, ItDefinition } from "std/testing/bdd.ts";
 import { PermissionGrant } from "../core/permissions/grant.ts";
+import { getConnection } from "neolace/core/edit/connections.ts";
+import { ApplyBulkEdits } from "neolace/core/edit/ApplyBulkEdits.ts";
+import { api } from "neolace/api/mod.ts";
 
 // Exports:
 export * from "std/testing/asserts.ts";
@@ -272,5 +275,30 @@ export class TestLookupContext {
             throw result.error;
         }
         return result;
+    }
+}
+
+// Helper functions:
+
+/** Create many (empty) entries for use in tests that require a lot of entries. */
+export async function createManyEntries(siteId: VNID, entryTypeKey: string, numEntries: number) {
+    const graph = await getGraph();
+    /** For now, BulkUpdateEntries only works as part of a Connection, not via Drafts or anything else. */
+    const connection = await getConnection({ key: "test-bulk-helper", siteId, create: true, plugin: "none" });
+    const stepSize = 500;
+    for (let i = 0; i < numEntries; i += stepSize) {
+        const edits: api.AnyBulkEdit[] = [];
+        for (let j = 0; j < stepSize; j++) {
+            const entryId = VNID();
+            const entryKey = "s-" + entryId.slice(1);
+            const name = `Entry ${entryId.slice(1)}`;
+            edits.push({
+                code: "UpsertEntryByKey",
+                data: { where: { entryKey, entryTypeKey }, setOnCreate: { name } },
+            });
+        }
+        await graph.runAsSystem(
+            ApplyBulkEdits({ siteId, edits, connectionId: connection.id }),
+        );
     }
 }

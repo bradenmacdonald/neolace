@@ -263,7 +263,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 stroke: "#f00",
             },
         },
-        minZoom: 0.05,
+        minZoom: 0.005,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }), []); // We don't need to include 'expandedRef' because it never changes, and we don't want this 'config' to change in general, as we don't want to constantly re-initialize G6.
 
