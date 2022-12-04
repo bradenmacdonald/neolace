@@ -3,8 +3,7 @@ import { C, defaultUpdateFor, defineAction, Field, VNID } from "neolace/deps/ver
 import { Site } from "neolace/core/Site.ts";
 import { User } from "neolace/core/User.ts";
 import { ApplyEdits } from "neolace/core/edit/ApplyEdits.ts";
-import { DataFile } from "neolace/core/objstore/DataFile.ts";
-import { Draft, DraftEdit, DraftFile } from "./Draft.ts";
+import { Draft, DraftEdit } from "./Draft.ts";
 import { EditSource } from "./EditSource.ts";
 
 export const UpdateDraft = defaultUpdateFor(Draft, (d) => d.title.description, {
@@ -42,43 +41,6 @@ export const UpdateDraft = defaultUpdateFor(Draft, (d) => d.title.description, {
         }
 
         return { additionalModifiedNodes };
-    },
-});
-
-/**
- * Add a file to a draft
- */
-export const AddFileToDraft = defineAction({
-    type: "AddFileToDraft",
-    parameters: {} as {
-        draftId: VNID;
-        dataFileId: VNID;
-    },
-    resultData: {} as { id: VNID },
-    apply: async (tx, data) => {
-        const id = VNID();
-
-        await tx.queryOne(C`
-            MATCH (draft:${Draft} {id: ${data.draftId}})
-        `.RETURN({}));
-
-        await tx.queryOne(C`
-            MATCH (draft:${Draft} {id: ${data.draftId}})
-            MATCH (dataFile:${DataFile} {id: ${data.dataFileId}})
-        `.RETURN({}));
-
-        const result = await tx.queryOne(C`
-            MATCH (draft:${Draft} {id: ${data.draftId}})
-            MATCH (dataFile:${DataFile} {id: ${data.dataFileId}})
-            MERGE (draft)-[:${Draft.rel.HAS_FILE}]->(draftFile:${DraftFile})-[:${DraftFile.rel.HAS_DATA}]->(dataFile)
-                ON CREATE SET draftFile.timestamp = datetime.realtime(), draftFile.id = ${id}
-        `.RETURN({ "draftFile.id": Field.VNID }));
-
-        return {
-            resultData: { id: result["draftFile.id"] },
-            modifiedNodes: [data.draftId, result["draftFile.id"]],
-            description: `Added file to ${Draft.withId(id)}`,
-        };
     },
 });
 

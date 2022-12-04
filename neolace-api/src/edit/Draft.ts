@@ -49,8 +49,8 @@ export const DraftSchema = Schema({
 });
 export type DraftData = Type<typeof DraftSchema>;
 
-/** Data returned when uploading a file to a draft. */
-export const DraftFileSchema = Schema({
-    draftFileId: vnidString,
+/** Data returned when uploading a temporary file. */
+export const TempFileSchema = Schema({
+    tempFileId: vnidString,
 });
-export type DraftFileData = Type<typeof DraftFileSchema>;
+export type TempFileData = Type<typeof TempFileSchema>;

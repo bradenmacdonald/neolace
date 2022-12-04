@@ -8,7 +8,8 @@ import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { getEntryFeatureData } from "../get-feature-data.ts";
-import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
+import { AcceptDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
+import { RecordTempFile } from "neolace/core/edit/TempFile-actions.ts";
 
 group("HeroImage.ts", () => {
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
@@ -173,8 +174,8 @@ group("HeroImage.ts", () => {
                 },
             ],
         }));
-        const { id: draftFileId } = await graph.runAsSystem(
-            AddFileToDraft({ draftId: draft.id, dataFileId: dataFile.id }),
+        const { tempFileId } = await graph.runAsSystem(
+            RecordTempFile({ userId: SYSTEM_VNID, dataFileId: dataFile.id }),
         );
         await graph.runAsSystem(UpdateDraft({
             id: draft.id,
@@ -185,7 +186,7 @@ group("HeroImage.ts", () => {
                         entryId: imageId,
                         feature: {
                             featureType: "Image",
-                            draftFileId,
+                            tempFileId,
                         },
                     },
                 },

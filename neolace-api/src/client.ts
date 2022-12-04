@@ -13,9 +13,9 @@ import {
     AnyContentEdit,
     CreateDraftSchema,
     DraftData,
-    DraftFileData,
     DraftStatus,
     GetDraftFlags,
+TempFileData,
 } from "./edit/index.ts";
 import { EntryData, EntrySummaryData, EvaluateLookupData, GetEntryFlags } from "./content/index.ts";
 import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData, SiteUserMyPermissionsData } from "./site/Site.ts";
@@ -333,16 +333,17 @@ export class NeolaceApiClient {
         await this.call(`/site/${siteKey}/draft/${options.draftNum}/edit`, { method: "POST", data: edit });
     }
 
-    public async uploadFileToDraft(
+    /** Upload a new file; this returns a tempFileId which can then be used for an edit like UpdateEntryFeature */
+    public async uploadFile(
         fileData: Blob,
-        options: { draftNum: number; siteKey?: string },
-    ): Promise<DraftFileData> {
+        options: { siteKey?: string },
+    ): Promise<TempFileData> {
         const siteKey = this.getSiteId(options);
         const hash = await crypto.subtle.digest("SHA-256", await fileData.arrayBuffer());
         const hashHex = bin2hex(new Uint8Array(hash));
         const formData = new FormData();
         formData.append("file", fileData);
-        const result = await this.call(`/site/${siteKey}/draft/${options.draftNum}/file?sha256Hash=${hashHex}`, {
+        const result = await this.call(`/site/${siteKey}/file?sha256Hash=${hashHex}`, {
             method: "POST",
             body: formData,
         });

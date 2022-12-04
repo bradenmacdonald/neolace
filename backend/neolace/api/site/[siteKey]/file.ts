@@ -2,30 +2,26 @@ import { readableStreamFromIterable } from "std/streams/conversion.ts";
 import { crypto } from "std/crypto/mod.ts";
 import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
-import { getDraft, getDraftIdFromRequest } from "neolace/api/site/[siteKey]/draft/_helpers.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
-import { AddFileToDraft } from "neolace/core/edit/Draft-actions.ts";
+import { RecordTempFile } from "neolace/core/edit/TempFile-actions.ts";
 import { uploadFileToObjStore } from "neolace/core/objstore/objstore.ts";
 import { bin2hex } from "neolace/lib/bin2hex.ts";
 
 /**
- * Upload a file to a draft, so that it can be used with an entry edit.
+ * Upload a temporary file, so that it can be used with an entry edit.
  */
-export class DraftFileResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteKey/draft/:draftNum/file"];
+export class TempFileResource extends NeolaceHttpResource {
+    public paths = ["/site/:siteKey/file"];
 
     POST = this.method({
-        responseSchema: api.DraftFileSchema,
-        description: "Upload a file to the current draft. Pass ?sha256Hash=hex to potentially speed up the upload.",
+        responseSchema: api.TempFileSchema,
+        description:
+            "Upload a temporary file which can then be used an edit. Pass ?sha256Hash=hex to potentially speed up the upload.",
     }, async ({ request }) => {
         // Permissions and parameters:
         const user = this.requireUser(request);
-        const { siteId } = await this.getSiteDetails(request);
-        const draftId = await getDraftIdFromRequest(request, siteId);
-        await this.requirePermission(request, api.CorePerm.editDraft, { draftId });
+        await this.requirePermission(request, api.CorePerm.uploadTempFiles, {});
         const graph = await getGraph();
-        // Validate that the draft exists in the site:
-        const _draft = await graph.read((tx) => getDraft(draftId, tx));
 
         // At this point, we know the draft is valid and the user has permission to upload files into it.
 
@@ -101,11 +97,11 @@ export class DraftFileResource extends NeolaceHttpResource {
             dataFileId = uploadData.id;
         }
 
-        const result = await graph.runAs(user.id, AddFileToDraft({ draftId, dataFileId }));
+        const result = await graph.runAs(user.id, RecordTempFile({ userId: user.id, dataFileId }));
 
         // Response:
         return {
-            draftFileId: result.id,
+            tempFileId: result.tempFileId,
         };
     });
 }

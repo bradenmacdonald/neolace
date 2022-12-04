@@ -527,14 +527,14 @@ async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: stri
                 const fileContents = await Deno.readFile(folder + "/" + metadata.image);
                 const extension = metadata.image.split(".").pop();
                 const fileBlob = new Blob([fileContents], { type: contentTypeFromExtension(extension) });
-                const draftFile = await client.uploadFileToDraft(fileBlob, { draftNum: await getDraftNum(), siteKey });
+                const tempFile = await client.uploadFile(fileBlob, { siteKey });
                 await client.addEditToDraft({
                     code: api.UpdateEntryFeature.code,
                     data: {
                         entryId,
                         feature: {
                             featureType: "Image",
-                            draftFileId: draftFile.draftFileId,
+                            tempFileId: tempFile.tempFileId,
                             ...(metadata.imageSizing ? { setSizing: metadata.imageSizing } : {}),
                         },
                     },
@@ -549,7 +549,7 @@ async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: stri
                         throw new Error(`Failed to open file ${fullFilePath}`, { cause: err });
                     });
                     const fileBlob = new Blob([fileContents], { type: contentTypeFromExtension(extension) });
-                    const draftFile = await client.uploadFileToDraft(fileBlob, { draftNum: await getDraftNum(), siteKey });
+                    const tempFile = await client.uploadFile(fileBlob, { siteKey });
                     await client.addEditToDraft({
                         code: api.UpdateEntryFeature.code,
                         data: {
@@ -558,7 +558,7 @@ async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: stri
                                 featureType: "Files",
                                 changeType: "addFile",
                                 filename,
-                                draftFileId: draftFile.draftFileId,
+                                tempFileId: tempFile.tempFileId,
                             },
                         },
                     }, { draftNum: await getDraftNum(), siteKey });

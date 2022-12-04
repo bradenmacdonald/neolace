@@ -141,16 +141,16 @@ export const UpdateEntryFilesSchema = Schema({
     changeType: Schema.either("addFile" as const, "removeFile" as const),
     /**
      * filename, e.g. "instructions.pdf".
-     * When adding, this specified the filename. When removing, will remove any attached file(s) with this name
+     * When adding, this specifies the filename. When removing, will remove any attached file(s) with this name
      */
     filename: string,
     /** When adding a new file, specify its upload ID here. */
-    draftFileId: vnidString.strictOptional(),
+    tempFileId: vnidString.strictOptional(),
 });
 
 export const UpdateEntryImageSchema = Schema({
     /** Change which actual image file this entry "holds" */
-    draftFileId: vnidString.strictOptional(),
+    tempFileId: vnidString.strictOptional(),
     /** Set the sizing mode */
     setSizing: Schema.enum(ImageSizingMode).strictOptional(),
 });

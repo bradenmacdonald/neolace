@@ -15,7 +15,6 @@ import {
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { Site } from "neolace/core/Site.ts";
 import { User } from "neolace/core/User.ts";
-import { DataFile } from "neolace/core/objstore/DataFile.ts";
 import { EditSource } from "./EditSource.ts";
 
 /**
@@ -48,35 +47,6 @@ export class DraftEdit extends VNodeType {
         // Validate that the edit data matches the schema for that edit type:
         editType.dataSchema(dbObject.data);
     }
-}
-
-/**
- * A DraftFile is a file attached to a draft, which can then be assigned to an entry (e.g. an image entry). The
- * reference to this file is only valid while the draft is open, and cannot be used after the draft is accepted/closed.
- */
-export class DraftFile extends VNodeType {
-    static readonly label = "DraftFile";
-
-    static readonly properties = {
-        ...VNodeType.properties,
-        timestamp: Field.DateTime,
-    };
-
-    static readonly rel = this.hasRelationshipsFromThisTo({
-        HAS_DATA: {
-            to: [DataFile],
-            properties: {},
-            cardinality: VNodeType.Rel.ToOneRequired,
-        },
-    });
-
-    static virtualProperties = this.hasVirtualProperties({
-        dataFile: {
-            type: VirtualPropType.OneRelationship,
-            query: C`(@this)-[:${this.rel.HAS_DATA}]->(@target:${DataFile})`,
-            target: DataFile,
-        },
-    });
 }
 
 /**
@@ -119,11 +89,6 @@ export class Draft extends EditSource {
             properties: {},
             cardinality: VNodeType.Rel.ToManyUnique,
         },
-        HAS_FILE: {
-            to: [DraftFile],
-            properties: {},
-            cardinality: VNodeType.Rel.ToManyUnique,
-        },
         MODIFIES: {
             to: [Entry],
             properties: {},
@@ -141,12 +106,6 @@ export class Draft extends EditSource {
             type: VirtualPropType.ManyRelationship,
             target: DraftEdit,
             query: C`(@this)-[:${this.rel.HAS_EDIT}]->(@target:${DraftEdit})`,
-            defaultOrderBy: `@this.timestamp`,
-        },
-        files: {
-            type: VirtualPropType.ManyRelationship,
-            target: DraftFile,
-            query: C`(@this)-[:${this.rel.HAS_FILE}]->(@target:${DraftFile})`,
             defaultOrderBy: `@this.timestamp`,
         },
         modifiesEntries: {
