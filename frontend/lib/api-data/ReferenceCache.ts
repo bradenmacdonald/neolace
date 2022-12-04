@@ -38,5 +38,7 @@ export function useRefCache(options: Record<string, unknown> = {}): api.Referenc
             return newRefCache;
         }
         return base;
-    }, [context?.refCache, draft?.edits, unsavedEdits]);
+        // We compare context.refCache by value using JSON.stringify since we don't want to re-compute if an identical value is reurned by the API.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [JSON.stringify(context?.refCache), draft?.edits, unsavedEdits]);
 }

@@ -1,7 +1,7 @@
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { ConcreteValue, IHasLiteralExpression, LookupValue } from "./base.ts";
 import { LookupContext } from "../context.ts";
-import { StringValue } from "./StringValue.ts";
+import { InlineMarkdownStringValue, StringValue } from "../values.ts";
 
 /**
  * Represents an EntryType
@@ -35,6 +35,12 @@ export class EntryTypeValue extends ConcreteValue implements IHasLiteralExpressi
                 (await context.tx.pullOne(EntryType, (et) => et.name, {
                     with: { siteNamespace: context.siteId, key: this.key },
                 })).name,
+            );
+        } else if (attrName === "description") {
+            return new InlineMarkdownStringValue(
+                (await context.tx.pullOne(EntryType, (et) => et.description, {
+                    with: { siteNamespace: context.siteId, key: this.key },
+                })).description,
             );
         }
         return undefined;

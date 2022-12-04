@@ -117,24 +117,45 @@ const emptyTransforms: Transform[] = [];
  * Display a graph visualization.
  */
 export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
-    const intl = useIntl();
     const [activeTool, setActiveTool, activeToolRef] = useStateRef(Tool.Select);
     /** Is the graph currently expanded (displayed in a large modal?) */
     const [expanded, setExpanded, expandedRef] = useStateRef(false);
     const refCache = useRefCache();
 
-    // The data (nodes and relationships) that we want to display as a graph.
-    const originalData = React.useMemo(() => {
-        return convertValueToData(props.value, refCache);
-    }, [props.value, refCache]);
     const [transformList, setTransforms] = React.useState<Transform[]>(emptyTransforms);
 
-    const currentData = React.useMemo(() => {
+    const computeData = (): G6RawGraphData => {
         debugLog(`Computing currentData from originalData + ${transformList.length} transform(s).`);
-        let transformedData = applyTransforms(originalData, transformList);
-        transformedData = colorGraph(transformedData, transformList, refCache);
-        return transformedData;
-    }, [originalData, transformList, refCache]);
+        let data: G6RawGraphData = convertValueToData(props.value, refCache);
+        data = applyTransforms(data, transformList);
+        data = colorGraph(data, transformList, refCache);
+        return data;
+    };
+
+    // The data (nodes and relationships) that we want to display as a graph.
+    const [currentData, setCurrentData] = React.useState<G6RawGraphData>(computeData);
+    // Smart data change detection. Keep this inside a new scope since no code below should access these details.
+    {
+        // Store the previous values of things so we can see when they change:
+        const [prevValueJSON, setPrevValueJSON] = React.useState(JSON.stringify(props.value));
+        const [prevTransformList, setPrevTransformList] = React.useState(transformList);
+        const [prevRefCache, setPrevRefCache] = React.useState(refCache);
+        // Check if anything changed:
+        const propsValueChanged = JSON.stringify(props.value) !== prevValueJSON;
+        const transformListChanged = transformList !== prevTransformList;
+        const refCacheChanged = refCache !== prevRefCache;
+        if (propsValueChanged || transformListChanged || refCacheChanged) {
+            const changes = [];
+            if (propsValueChanged) changes.push("props.value");
+            if (transformListChanged) changes.push("transformList");
+            if (refCacheChanged) changes.push("refCache");
+            debugLog(`Graph data changed - triggered by ` + changes.join(", "));
+            setPrevValueJSON(JSON.stringify(props.value));
+            setPrevTransformList(transformList);
+            setPrevRefCache(refCache);
+            setCurrentData(computeData());
+        }
+    }
 
     // In order to preserve our G6 graph when we move it to a modal (when expanding the view), the <div> that contains
     // it must not be destroyed and re-created. React will normally try to destroy and re-create it, not realizing that
@@ -153,6 +174,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         _graphContainer.style.overflow = "none";
         return _graphContainer;
     });
+
     // This gets called by React when the outer <div> that holds the above graphContainer has changed.
     const updateGraphHolder = React.useCallback((newGraphHolderDiv: HTMLDivElement | null) => {
         // Move graphContainer into the new parent div, or detach it from the DOM and keep it in memory only (if the new
@@ -241,8 +263,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                 stroke: "#f00",
             },
         },
-        minZoom: 0.05,
-    }), [expandedRef]);
+        minZoom: 0.005,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), []); // We don't need to include 'expandedRef' because it never changes, and we don't want this 'config' to change in general, as we don't want to constantly re-initialize G6.
 
     // Initialize the G6 graph, once we're ready
     React.useEffect(() => {
@@ -262,8 +285,8 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             }
             return newGraph;
         });
-        // By default, we zoom the graph so that four nodes would fit horizontally.
-        newGraph.zoomTo(newGraph.getWidth() / (220 * 4), undefined, false);
+        // By default, we zoom the graph so that seven nodes would fit horizontally.
+        newGraph.zoomTo(newGraph.getWidth() / (220 * 7), undefined, false);
         // We'll control the cursor using CSS:
         newGraph.get("canvas").setCursor("inherit");
     }, [graphConfig, graphContainer]);
@@ -279,13 +302,15 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             // After the initial layout, zoom to the "focus node":
             graph.on("afterlayout", () => {
                 if (!graph || graph.destroyed) return;
+                debugLog("layout done.");
                 // Zoom to focus on the "focus node" after the layout, if there is one:
                 const focusNode = graph.getNodes().find((node) => node.getModel().isFocusEntry);
-                debugLog("layout done. Zooming to focus node.");
                 if (focusNode) {
+                    debugLog("Zooming to focus node.");
                     graph.setItemState(focusNode, "selected", true);
-                    graph.focusItem(focusNode, true);
+                    graph.focusItem(focusNode, false);
                 }
+                graph.fitView(undefined, undefined, false);
             }, true);
         } else {
             debugLog("graph data has changed.");
@@ -527,6 +552,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         if (!graph || graph.destroyed || !graphContainer) return;
         const width = graphContainer.clientWidth, height = graphContainer.clientHeight;
         if (graph.getWidth() !== width || graph.getHeight() !== height) {
+            debugLog(`Graph container has changed size - fitting the graph to view.`);
             graph.changeSize(width, height);
             graph.fitView();
         }

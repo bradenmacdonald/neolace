@@ -27,6 +27,7 @@ export class Graph extends LookupFunctionOneArg {
         try {
             graphData = await context.tx.queryOne(C`
                 ${entrySetQuery.cypherQuery}
+                WITH entry LIMIT 5000 // We limit graphs to 5,000 nodes.
                 WITH collect(entry) AS entries
                 OPTIONAL MATCH (e1:${Entry})-[rel:${Entry.rel.RELATES_TO}|${Entry.rel.IS_A}]->(e2:${Entry}) WHERE e1 IN entries AND e2 IN entries
                 // Now we have the relationships between the entries, but key data about each relationship is stored
