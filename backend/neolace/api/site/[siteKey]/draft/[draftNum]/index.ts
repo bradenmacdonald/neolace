@@ -2,7 +2,7 @@ import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
 import { getDraft, getDraftIdFromRequest } from "neolace/api/site/[siteKey]/draft/_helpers.ts";
 
 export class DraftResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteKey/draft/:draftIdNum"];
+    public paths = ["/site/:siteKey/draft/:draftNum"];
 
     GET = this.method({
         responseSchema: api.DraftSchema,

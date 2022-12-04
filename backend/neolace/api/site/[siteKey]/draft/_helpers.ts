@@ -5,23 +5,25 @@ import { ActionObject, ActionSubject } from "neolace/core/permissions/action.ts"
 import { checkPermissionsForAll } from "neolace/core/permissions/check.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
-/** Get a draft's unique VNID from the idNum path parameter in the current request */
+/** Get a draft's unique VNID from the draftNum path parameter in the current request */
 export async function getDraftIdFromRequest(request: NeolaceHttpRequest, siteId: VNID) {
-    const draftIdNumStr = request.pathParam("draftIdNum") ?? "";
-    const idNum = parseInt(draftIdNumStr);
-    if (idNum <= 0 || isNaN(idNum)) {
+    const draftNumStr = request.pathParam("draftNum") ?? "";
+    const draftNum = parseInt(draftNumStr);
+    if (draftNum <= 0 || isNaN(draftNum)) {
         throw new api.InvalidFieldValue([{
-            fieldPath: "draftIdNum",
-            message: `Expected an integer draft idNum (got: ${draftIdNumStr})`,
+            fieldPath: "draftNum",
+            message: `Expected an integer draft draftNum (got: ${draftNumStr})`,
         }]);
     }
-    return await getDraftId(idNum, siteId);
+    return await getDraftId(draftNum, siteId);
 }
 
-/** Get a draft's unique VNID from its site-specific idNum */
-export async function getDraftId(idNum: number, siteId: VNID): Promise<VNID> {
+/** Get a draft's unique VNID from its site-specific draftNum */
+export async function getDraftId(draftNum: number, siteId: VNID): Promise<VNID> {
     const graph = await getGraph();
-    const data = await graph.read((tx) => tx.pullOne(Draft, (d) => d.id, { with: { siteNamespace: siteId, idNum } }));
+    const data = await graph.read((tx) =>
+        tx.pullOne(Draft, (d) => d.id, { with: { siteNamespace: siteId, num: draftNum } })
+    );
     return data.id;
 }
 
@@ -35,7 +37,7 @@ export async function getDraft(
 ): Promise<api.DraftData> {
     const draftData = await tx.pullOne(Draft, (d) =>
         d
-            .idNum
+            .num
             .title
             .description
             .author((a) => a.username.fullName)
@@ -53,7 +55,7 @@ export async function getDraft(
 
     // TODO: fix this so we can just "return draftData"; currently it doesn't work because the "author" virtual prop is sometimes nullable
     return {
-        idNum: draftData.idNum,
+        num: draftData.num,
         author,
         created: draftData.created,
         title: draftData.title,

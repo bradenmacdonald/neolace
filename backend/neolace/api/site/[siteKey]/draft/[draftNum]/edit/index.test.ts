@@ -10,7 +10,7 @@ group("index.ts", () => {
 
             const entryId = VNID();
 
-            const { idNum } = await client.createDraft({
+            const { num: draftNum } = await client.createDraft({
                 title: "New Draft",
                 description: "Testing file uploads",
                 edits: [
@@ -27,7 +27,7 @@ group("index.ts", () => {
                 ],
             });
 
-            const draft = await client.getDraft(idNum, { flags: [api.GetDraftFlags.IncludeEdits] });
+            const draft = await client.getDraft(draftNum, { flags: [api.GetDraftFlags.IncludeEdits] });
             assertEquals(draft.edits?.length, 1);
 
             // Test an edit that modifies an existing entry:
@@ -37,9 +37,9 @@ group("index.ts", () => {
                     entryId: defaultData.entries.ponderosaPine.id,
                     name: "New Name 1",
                 },
-            }, { idNum });
+            }, { draftNum });
 
-            const newDraft1 = await client.getDraft(idNum, { flags: [api.GetDraftFlags.IncludeEdits] });
+            const newDraft1 = await client.getDraft(draftNum, { flags: [api.GetDraftFlags.IncludeEdits] });
             assertEquals(newDraft1.edits?.length, 2);
             assertEquals(newDraft1.edits![1].code, "SetEntryName");
 
@@ -50,9 +50,9 @@ group("index.ts", () => {
                     entryId,
                     name: "New Name 2",
                 },
-            }, { idNum });
+            }, { draftNum });
 
-            const newDraft2 = await client.getDraft(idNum, { flags: [api.GetDraftFlags.IncludeEdits] });
+            const newDraft2 = await client.getDraft(draftNum, { flags: [api.GetDraftFlags.IncludeEdits] });
             assertEquals(newDraft2.edits?.length, 3);
             assertEquals(newDraft2.edits![2].code, "SetEntryName");
         });

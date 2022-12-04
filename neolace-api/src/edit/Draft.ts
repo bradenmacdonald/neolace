@@ -39,7 +39,7 @@ export const DraftEditSchema = Schema({
 export type DraftEditData = Type<typeof DraftEditSchema>;
 
 export const DraftSchema = Schema({
-    idNum: number,
+    num: number,
     author: Schema({ username: string, fullName: string }),
     title: string,
     description: string,

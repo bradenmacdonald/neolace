@@ -100,7 +100,7 @@ group("index.ts", () => {
             test("an admin can create schema edits", async () => {
                 const client = await getClient(defaultData.users.admin, defaultData.site.key);
                 const result = await client.createDraft(createDraftWithSchemaEdits);
-                assert(typeof result.idNum === "number" && result.idNum > 0);
+                assert(typeof result.num === "number" && result.num > 0);
             });
 
             test("test permissions - user with no permission grants", async () => {
@@ -121,7 +121,7 @@ group("index.ts", () => {
                     UpdateSite({ accessMode: AccessMode.PublicContributions, id: defaultData.site.id }),
                 );
                 const result = await noPermsClient.createDraft(createDraftWithSchemaEdits);
-                assert(typeof result.idNum === "number" && result.idNum > 0);
+                assert(typeof result.num === "number" && result.num > 0);
             });
 
             test("test permissions - user with explicit permissions", async () => {
@@ -139,7 +139,7 @@ group("index.ts", () => {
                     );
                     const client = await getClient(userData, defaultData.site.key);
                     const result = await client.createDraft(createDraftWithSchemaEdits);
-                    assert(typeof result.idNum === "number" && result.idNum > 0);
+                    assert(typeof result.num === "number" && result.num > 0);
                 }
                 // But "propose schema edits" doesn't work without "view schema"
                 {
@@ -190,7 +190,7 @@ group("index.ts", () => {
             test("an admin can create content edits", async () => {
                 const client = await getClient(defaultData.users.admin, defaultData.site.key);
                 const result = await client.createDraft(createDraftWithContentEdits);
-                assert(typeof result.idNum === "number" && result.idNum > 0);
+                assert(typeof result.num === "number" && result.num > 0);
             });
 
             test("test permissions - user with no permission grants", async () => {
@@ -211,7 +211,7 @@ group("index.ts", () => {
                     UpdateSite({ accessMode: AccessMode.PublicContributions, id: defaultData.site.id }),
                 );
                 const result = await noPermsClient.createDraft(createDraftWithContentEdits);
-                assert(typeof result.idNum === "number" && result.idNum > 0);
+                assert(typeof result.num === "number" && result.num > 0);
             });
 
             test("test permissions - user with explicit permissions", async () => {
@@ -244,7 +244,7 @@ group("index.ts", () => {
                     );
                     const client = await getClient(userData, defaultData.site.key);
                     const result = await client.createDraft(createDraftWithContentEdits);
-                    assert(typeof result.idNum === "number" && result.idNum > 0);
+                    assert(typeof result.num === "number" && result.num > 0);
                 }
             });
         });
@@ -260,7 +260,7 @@ group("index.ts", () => {
             // The script that creates the PlantDB sample content currently only creates one draft:
             assertEquals(drafts, {
                 values: [{
-                    idNum: drafts.values[0].idNum,
+                    num: drafts.values[0].num,
                     title: "Hero Image Upload Draft",
                     created: drafts.values[0].created,
                     author: { username: "system", fullName: "System" },

@@ -95,7 +95,7 @@ export const CreateDraft = defineAction({
         title: string;
         description?: string;
     },
-    resultData: {} as { id: VNID; idNum: number },
+    resultData: {} as { id: VNID; num: number },
     apply: async (tx, data) => {
         const id = data.id ?? VNID();
 
@@ -104,23 +104,23 @@ export const CreateDraft = defineAction({
             MATCH (site:${Site} {id: ${data.siteId}})
             MATCH (author:${User} {id: ${data.authorId}})
 
-            // Generate a site-specific idNum for this draft:
+            // Generate a site-specific number for this draft:
             MERGE (uid:UniqueId {name: "draft-" + site.id})
             ON CREATE SET uid.lastId = 1
             ON MATCH SET uid.lastId = uid.lastId + 1
-            WITH site, author, uid.lastId AS idNum
+            WITH site, author, uid.lastId AS num
 
             // Create the draft:
             CREATE (draft:${Draft}:${C(EditSource.label)} {id: ${id}})
             SET draft.siteNamespace = site.id
-            SET draft.idNum = idNum
+            SET draft.num = num
             SET draft.title = ${data.title}
             SET draft.description = ${data.description ?? ""}
             SET draft.status = ${DraftStatus.Open}
             SET draft.created = datetime()
             CREATE (draft)-[:${Draft.rel.FOR_SITE}]->(site)
             CREATE (draft)-[:${Draft.rel.AUTHORED_BY}]->(author)
-        `.RETURN({ idNum: Field.Int }));
+        `.RETURN({ num: Field.Int }));
 
         const otherModifiedNodes: VNID[] = [];
         if (data.edits.length > 0) {
@@ -129,7 +129,7 @@ export const CreateDraft = defineAction({
         }
 
         return {
-            resultData: { id, idNum: result.idNum },
+            resultData: { id, num: result.num },
             modifiedNodes: [id, ...otherModifiedNodes],
             description: `Created ${Draft.withId(id)}`,
         };

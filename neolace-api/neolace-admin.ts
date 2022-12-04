@@ -398,10 +398,10 @@ async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: stri
     let part = 1;
     const _pushEdits = async (edits: api.AnyContentEdit[], force = false) => {
         if (edits.length > 20 || (force && edits.length > 0)) {
-            const { idNum } = await client.createDraft({ title: `Import Part ${part++}`, description: "", edits }, {
+            const { num: draftNum } = await client.createDraft({ title: `Import Part ${part++}`, description: "", edits }, {
                 siteKey,
             });
-            await client.acceptDraft(idNum, { siteKey });
+            await client.acceptDraft(draftNum, { siteKey });
             edits.length = 0;
         }
     };
@@ -513,12 +513,12 @@ async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: stri
     {
         log.info("Setting entry files...");
 
-        let draftIdNum: number | undefined;
-        const getDraftId = async (): Promise<number> =>
-            draftIdNum ?? await client.createDraft(
+        let draftNum: number | undefined;
+        const getDraftNum = async (): Promise<number> =>
+            draftNum ?? await client.createDraft(
                 { title: `Import Part ${part++}`, description: "", edits: [] },
                 { siteKey },
-            ).then((d) => draftIdNum = d.idNum);
+            ).then((d) => draftNum = d.num);
 
         let numFiles = 0;
         for await (const { metadata, key, folder } of iterateEntries()) {
@@ -527,7 +527,7 @@ async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: stri
                 const fileContents = await Deno.readFile(folder + "/" + metadata.image);
                 const extension = metadata.image.split(".").pop();
                 const fileBlob = new Blob([fileContents], { type: contentTypeFromExtension(extension) });
-                const draftFile = await client.uploadFileToDraft(fileBlob, { idNum: await getDraftId(), siteKey });
+                const draftFile = await client.uploadFileToDraft(fileBlob, { draftNum: await getDraftNum(), siteKey });
                 await client.addEditToDraft({
                     code: api.UpdateEntryFeature.code,
                     data: {
@@ -538,7 +538,7 @@ async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: stri
                             ...(metadata.imageSizing ? { setSizing: metadata.imageSizing } : {}),
                         },
                     },
-                }, { idNum: await getDraftId(), siteKey });
+                }, { draftNum: await getDraftNum(), siteKey });
                 numFiles++;
             }
             if (metadata.files) {
@@ -549,7 +549,7 @@ async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: stri
                         throw new Error(`Failed to open file ${fullFilePath}`, { cause: err });
                     });
                     const fileBlob = new Blob([fileContents], { type: contentTypeFromExtension(extension) });
-                    const draftFile = await client.uploadFileToDraft(fileBlob, { idNum: await getDraftId(), siteKey });
+                    const draftFile = await client.uploadFileToDraft(fileBlob, { draftNum: await getDraftNum(), siteKey });
                     await client.addEditToDraft({
                         code: api.UpdateEntryFeature.code,
                         data: {
@@ -561,13 +561,13 @@ async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: stri
                                 draftFileId: draftFile.draftFileId,
                             },
                         },
-                    }, { idNum: await getDraftId(), siteKey });
+                    }, { draftNum: await getDraftNum(), siteKey });
                     numFiles++;
                 }
             }
         }
-        if (draftIdNum !== undefined) {
-            await client.acceptDraft(draftIdNum, { siteKey });
+        if (draftNum !== undefined) {
+            await client.acceptDraft(draftNum, { siteKey });
             log.info(`${numFiles} files updated`);
         } else {
             log.info(`No files to update.`);

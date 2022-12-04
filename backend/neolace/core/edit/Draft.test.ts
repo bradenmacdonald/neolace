@@ -59,10 +59,10 @@ group("Draft.ts", () => {
             const draftB2 = await graph.runAsSystem(
                 CreateDraft({ title: "Beta Draft 2", siteId: betaSiteId, authorId: user.id, edits: [] }),
             );
-            assertEquals(draftA1.idNum, 1);
-            assertEquals(draftA2.idNum, 2);
-            assertEquals(draftB1.idNum, 1);
-            assertEquals(draftB2.idNum, 2);
+            assertEquals(draftA1.num, 1);
+            assertEquals(draftA2.num, 2);
+            assertEquals(draftB1.num, 1);
+            assertEquals(draftB2.num, 2);
         });
 
         test("Validation enforces that siteNamespace matches the draft's site", async () => {
@@ -89,7 +89,7 @@ group("Draft.ts", () => {
             );
         });
 
-        test("Drafts cannot be created with the same idNum on the same site", async () => {
+        test("Drafts cannot be created with the same num on the same site", async () => {
             const graph = await getGraph();
             const { user, alphaSiteId } = await setup();
             const draft1 = await graph.runAsSystem(
@@ -105,11 +105,11 @@ group("Draft.ts", () => {
                             cypher: C`
                             MATCH (draft1:${Draft} {id: ${draft1.id}})
                             MATCH (draft2:${Draft} {id: ${draft2.id}})
-                            SET draft2.idNum = draft1.idNum
+                            SET draft2.num = draft1.num
                             RETURN null
                         `,
                             modifiedNodes: [draft2.id],
-                            description: "Forcibly set the idNum to conflict with an existing draft.",
+                            description: "Forcibly set the num to conflict with an existing draft.",
                         }),
                     ),
             );

@@ -72,7 +72,7 @@ export function useEntrySummary(
 
     const useExistingRefCache = refCache.entries[entryKey] !== undefined;
 
-    const key = useExistingRefCache ? "" : `entry:${site.key}:${entryKey}:${userKey}:${draft?.idNum ?? "no-draft"}`;
+    const key = useExistingRefCache ? "" : `entry:${site.key}:${entryKey}:${userKey}:${draft?.num ?? "no-draft"}`;
     const { data, error } = useSWR(key, async () => {
         if (key === "") {
             return undefined; // This data is in the reference cache; no need to load anything from the server.
