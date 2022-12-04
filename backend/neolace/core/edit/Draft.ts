@@ -92,11 +92,11 @@ export class Draft extends EditSource {
         ...VNodeType.properties,
         /**
          * The VNID of the site with which this draft is associated. This just exists so that Neo4j can create a unique
-         * constraint on [site, idNum]. This should always be the same as the ID of the FOR_SITE->(:Site) node.
+         * constraint on [site, num]. This should always be the same as the ID of the FOR_SITE->(:Site) node.
          */
         siteNamespace: Field.VNID,
-        /** The site-specific unqiue permanent identifier for this Draft. */
-        idNum: Field.Int,
+        /** The site-specific incrementing unqiue permanent number for this Draft. */
+        num: Field.Int,
         title: Field.String.Check(check.string.min(1).max(1_000)),
         description: Field.String,
         created: Field.DateTime,

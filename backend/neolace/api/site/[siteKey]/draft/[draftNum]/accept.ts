@@ -5,7 +5,7 @@ import { AcceptDraft } from "neolace/core/edit/Draft-actions.ts";
 import { checkPermissionsRequiredForEdits, getDraftIdFromRequest } from "../_helpers.ts";
 
 export class AcceptDraftResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteKey/draft/:draftIdNum/accept"];
+    public paths = ["/site/:siteKey/draft/:draftNum/accept"];
 
     POST = this.method({
         responseSchema: api.schemas.Schema({}),

@@ -104,13 +104,13 @@ export class DraftIndexResource extends NeolaceHttpResource {
                     MATCH (draft:${Draft})-[:${Draft.rel.AUTHORED_BY}]->(author:${User})
 
                     RETURN
-                        draft {.idNum, .title, .description, .created, .status},
+                        draft {.num, .title, .description, .created, .status},
                         {fullName: author.fullName, username: author.username} AS author
                     ORDER BY draft.created DESC
                     SKIP ${skip} LIMIT ${pageSize}
                 `.givesShape({
                     draft: Field.Record({
-                        idNum: Field.Int,
+                        num: Field.Int,
                         title: Field.String,
                         description: Field.String,
                         created: Field.DateTime,

@@ -10,7 +10,7 @@ import { UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
  * Add an additional edit to a draft
  */
 export class DraftEditsResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteKey/draft/:draftIdNum/edit"];
+    public paths = ["/site/:siteKey/draft/:draftNum/edit"];
 
     POST = this.method({
         requestBodySchema: api.CreateEditSchema,

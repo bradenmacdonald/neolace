@@ -296,13 +296,13 @@ export class NeolaceApiClient {
     }
 
     public async getDraft<Flags extends readonly GetDraftFlags[] | undefined = undefined>(
-        idNum: number,
+        draftNum: number,
         options?: { flags: Flags; siteKey?: string },
     ): Promise<ApplyFlags<typeof GetDraftFlags, Flags, DraftData>> {
         const siteKey = this.getSiteId(options);
         return this._parseDraft(
             await this.call(
-                `/site/${siteKey}/draft/${idNum}` +
+                `/site/${siteKey}/draft/${draftNum}` +
                     (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""),
                 { method: "GET" },
             ),
@@ -327,31 +327,31 @@ export class NeolaceApiClient {
 
     public async addEditToDraft(
         edit: AnySchemaEdit | AnyContentEdit,
-        options: { idNum: number; siteKey?: string },
+        options: { draftNum: number; siteKey?: string },
     ): Promise<void> {
         const siteKey = this.getSiteId(options);
-        await this.call(`/site/${siteKey}/draft/${options.idNum}/edit`, { method: "POST", data: edit });
+        await this.call(`/site/${siteKey}/draft/${options.draftNum}/edit`, { method: "POST", data: edit });
     }
 
     public async uploadFileToDraft(
         fileData: Blob,
-        options: { idNum: number; siteKey?: string },
+        options: { draftNum: number; siteKey?: string },
     ): Promise<DraftFileData> {
         const siteKey = this.getSiteId(options);
         const hash = await crypto.subtle.digest("SHA-256", await fileData.arrayBuffer());
         const hashHex = bin2hex(new Uint8Array(hash));
         const formData = new FormData();
         formData.append("file", fileData);
-        const result = await this.call(`/site/${siteKey}/draft/${options.idNum}/file?sha256Hash=${hashHex}`, {
+        const result = await this.call(`/site/${siteKey}/draft/${options.draftNum}/file?sha256Hash=${hashHex}`, {
             method: "POST",
             body: formData,
         });
         return result;
     }
 
-    public async acceptDraft(idNum: number, options?: { siteKey?: string }): Promise<void> {
+    public async acceptDraft(draftNum: number, options?: { siteKey?: string }): Promise<void> {
         const siteKey = this.getSiteId(options);
-        await this.call(`/site/${siteKey}/draft/${idNum}/accept`, { method: "POST" });
+        await this.call(`/site/${siteKey}/draft/${draftNum}/accept`, { method: "POST" });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -419,7 +419,7 @@ export class NeolaceApiClient {
         options: {
             entryId?: VNID;
             entryTypeKey?: VNID;
-            draftIdNum?: number;
+            draftNum?: number;
             [custom: `plugin:${string}`]: string;
             siteKey?: string;
         } = {},

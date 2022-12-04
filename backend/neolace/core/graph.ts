@@ -105,11 +105,11 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
                 },
                 dependsOn: [],
             },
-            // The Draft VNode type has a unique index on 'siteNamespace, idNum'
-            draftUniqueIdNumber: {
+            // The Draft VNode type has a unique index on 'siteNamespace, num'
+            draftUniqueNumber: {
                 forward: async (dbWrite) => {
                     await dbWrite(
-                        "CREATE CONSTRAINT draft_idnumber_uniq FOR (d:Draft) REQUIRE (d.siteNamespace, d.idNum) IS UNIQUE",
+                        "CREATE CONSTRAINT draft_idnumber_uniq FOR (d:Draft) REQUIRE (d.siteNamespace, d.num) IS UNIQUE",
                     );
                 },
                 backward: async (dbWrite) => {

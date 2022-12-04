@@ -42,7 +42,7 @@ group("file.ts", () => {
             });
 
             await assertRejects(
-                () => anonClient.uploadFileToDraft(fileToUpload, { idNum: draft.idNum }),
+                () => anonClient.uploadFileToDraft(fileToUpload, { draftNum: draft.num }),
                 api.NotAuthenticated,
             );
         });
@@ -56,7 +56,7 @@ group("file.ts", () => {
             });
 
             // Upload the file:
-            const { draftFileId } = await client.uploadFileToDraft(fileToUpload, { idNum: draft.idNum });
+            const { draftFileId } = await client.uploadFileToDraft(fileToUpload, { draftNum: draft.num });
 
             // Validate the file upload using internal APIs:
             const uploadDetails = await dataFileForDraftFileId(draftFileId);
@@ -77,8 +77,8 @@ group("file.ts", () => {
             });
 
             // Upload the file twice:
-            const { draftFileId: draftFileId1 } = await client.uploadFileToDraft(fileToUpload, { idNum: draft.idNum });
-            const { draftFileId: draftFileId2 } = await client.uploadFileToDraft(fileToUpload, { idNum: draft.idNum });
+            const { draftFileId: draftFileId1 } = await client.uploadFileToDraft(fileToUpload, { draftNum: draft.num });
+            const { draftFileId: draftFileId2 } = await client.uploadFileToDraft(fileToUpload, { draftNum: draft.num });
 
             // Validate the file upload using internal APIs:
             const uploadDetails1 = await dataFileForDraftFileId(draftFileId1);
@@ -87,7 +87,7 @@ group("file.ts", () => {
 
             // But uploading a different file should have a different URL:
             const otherFile = new File(["different contents"], "foo.txt", { type: "text/plain" });
-            const { draftFileId: draftFileId3 } = await client.uploadFileToDraft(otherFile, { idNum: draft.idNum });
+            const { draftFileId: draftFileId3 } = await client.uploadFileToDraft(otherFile, { draftNum: draft.num });
             const uploadDetails3 = await dataFileForDraftFileId(draftFileId3);
             assertNotEquals(uploadDetails1.publicUrl, uploadDetails3.publicUrl);
         });

@@ -34,8 +34,8 @@ There are (at least) three types of identifiers used in Neolace:
    - keys are site-specific (so two different sites on the same realm can have different entries with the same key)
    - keys can sometimes be changed (e.g. the key of Entries can be changed)
    - For users, the key is called `username`.
-* `idNum` - a numeric identifier used for some entities like Drafts
-   - idNums increment sequentially (1, 2, 3, 4...) and are permanent (cannot be changed)
-   - idNums are site-specific
+* `num` - a numeric identifier used for some entities like Drafts
+   - these numbers increment sequentially (1, 2, 3, 4...) and are permanent (cannot be changed)
+   - these numbers are site-specific
 
-Because of how Neo4j unique constraints work, any node type that uses a site-specific `key` or `idNum` must have a property called `siteNamespace` which is set to the VNID of the associated Site. (Even though that makes the data less normalized, as the Site can be determined through relationships.) That way, a unique index can be declared on both fields. When looking up such a node, it's necessary to specify both the `siteNamespace` property and the `key` or `idNum` values, to ensure that the unique index is used.
+Because of how Neo4j unique constraints work, any node type that uses a site-specific `key` or `num` must have a property called `siteNamespace` which is set to the VNID of the associated Site. (Even though that makes the data less normalized, as the Site can be determined through relationships.) That way, a unique index can be declared on both fields. When looking up such a node, it's necessary to specify both the `siteNamespace` property and the `key` or `num` values, to ensure that the unique index is used.

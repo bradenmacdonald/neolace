@@ -12,7 +12,7 @@ import { bin2hex } from "neolace/lib/bin2hex.ts";
  * Upload a file to a draft, so that it can be used with an entry edit.
  */
 export class DraftFileResource extends NeolaceHttpResource {
-    public paths = ["/site/:siteKey/draft/:draftIdNum/file"];
+    public paths = ["/site/:siteKey/draft/:draftNum/file"];
 
     POST = this.method({
         responseSchema: api.DraftFileSchema,

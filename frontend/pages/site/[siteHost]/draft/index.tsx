@@ -67,8 +67,8 @@ const ListOfDrafts: React.FunctionComponent<{ status: api.DraftStatus }> = ({ st
     return (
         <ol>
             {(data?.values || []).map((draft) => (
-                <li key={draft.idNum}>
-                    <Link href={`/draft/${draft.idNum}`}>
+                <li key={draft.num}>
+                    <Link href={`/draft/${draft.num}`}>
                         <span className="font-semibold">{draft.title}</span>
                     </Link>{" "}
                     | {draft.author.fullName} |{" "}

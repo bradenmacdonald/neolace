@@ -7,7 +7,7 @@ import { useSiteData } from "./SiteData";
 type DraftDataWithEdits = Required<api.DraftData>;
 
 export interface DraftContextData {
-    draftIdNum: number | "_" | undefined;
+    draftNum: number | "_" | undefined;
     unsavedEdits: ReadonlyArray<api.AnyEdit>;
 }
 
@@ -16,7 +16,7 @@ export interface DraftContextData {
  */
 export const DraftContext = React.createContext<DraftContextData>({
     // Default values for this context:
-    draftIdNum: undefined,
+    draftNum: undefined,
     /**
      * Edits that have been made in the UI in the browser but not yet saved into the draft (they'll be lost if the
      * browser window is closed).
@@ -43,20 +43,20 @@ export function useDraft(
     const { site, siteError } = useSiteData();
     const _autoDraftContext = React.useContext(DraftContext);
     const draftContext = context.draftContext || _autoDraftContext;
-    const draftIdNum = draftContext.draftIdNum;
+    const draftNum = draftContext.draftNum;
 
-    const key = `draft:${site.key}:${draftIdNum}`;
+    const key = `draft:${site.key}:${draftNum}`;
     const { data, error, mutate } = useSWR(key, async (): Promise<DraftDataWithEdits | undefined> => {
         if (siteError) {
             throw new api.ApiError("Site Error", 500);
         }
-        if (draftIdNum === "_" || draftIdNum === undefined) {
+        if (draftNum === "_" || draftNum === undefined) {
             return undefined;
         }
         if (!site.key) {
             return undefined; // We need to wait for the siteKey before we can load the draft
         }
-        return await client.getDraft(draftIdNum, {
+        return await client.getDraft(draftNum, {
             flags: [
                 api.GetDraftFlags.IncludeEdits,
             ] as const,

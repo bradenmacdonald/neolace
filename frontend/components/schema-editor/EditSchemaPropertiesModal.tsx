@@ -50,7 +50,7 @@ export const EditSchemaPropertiesModal: React.FunctionComponent<Props> = ({ onSa
 
     // Within this modal, we combine the pending edits from the modal with any unsaved edits from the draft
     const newDraftContext: DraftContextData = {
-        draftIdNum: draft?.idNum,
+        draftNum: draft?.num,
         unsavedEdits: [...unsavedEditsInDraft, ...unsavedEditsInModal],
     }
     return (
