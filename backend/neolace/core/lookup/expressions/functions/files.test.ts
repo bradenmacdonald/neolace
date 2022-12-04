@@ -11,11 +11,12 @@ import {
 } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
-import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
+import { AcceptDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
 import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
 import { Always, PermissionGrant } from "neolace/core/permissions/grant.ts";
+import { RecordTempFile } from "neolace/core/edit/TempFile-actions.ts";
 
 import { EntryValue, FileValue, IntegerValue, PageValue, StringValue } from "../../values.ts";
 import { Files } from "./files.ts";
@@ -87,8 +88,8 @@ group("files.ts", () => {
                 authorId: SYSTEM_VNID,
                 edits: [],
             }));
-            const { id: draftFileId } = await graph.runAsSystem(
-                AddFileToDraft({ draftId: draft.id, dataFileId: dataFile.id }),
+            const { tempFileId } = await graph.runAsSystem(
+                RecordTempFile({ userId: SYSTEM_VNID, dataFileId: dataFile.id }),
             );
             await graph.runAsSystem(UpdateDraft({
                 id: draft.id,
@@ -101,7 +102,7 @@ group("files.ts", () => {
                                 featureType: "Files",
                                 changeType: "addFile",
                                 filename: args.filename,
-                                draftFileId,
+                                tempFileId,
                             },
                         },
                     },

@@ -5,9 +5,10 @@ import { Site } from "neolace/core/Site.ts";
 import { BotUser, HumanUser, User } from "neolace/core/User.ts";
 // core/edit
 import { Connection } from "./edit/Connection.ts";
-import { Draft, DraftEdit, DraftFile } from "neolace/core/edit/Draft.ts";
+import { Draft, DraftEdit } from "neolace/core/edit/Draft.ts";
 import { AppliedEdit } from "neolace/core/edit/AppliedEdit.ts";
 import { EditSource, SystemSource } from "./edit/EditSource.ts";
+import { TempFile } from "./edit/TempFile.ts";
 // core/entry
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
@@ -34,10 +35,10 @@ export function registerVNodeTypes(graph: Vertex) {
         AppliedEdit,
         Connection,
         DraftEdit,
-        DraftFile,
         Draft,
         EditSource,
         SystemSource,
+        TempFile,
         // core/entry
         Entry,
         PropertyFact,

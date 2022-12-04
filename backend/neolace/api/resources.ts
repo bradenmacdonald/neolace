@@ -10,7 +10,7 @@ import { SchemaIndexResource } from "./site/[siteKey]/schema/index.ts";
 import { DraftIndexResource } from "./site/[siteKey]/draft/index.ts";
 import { DraftResource } from "./site/[siteKey]/draft/[draftNum]/index.ts";
 import { DraftEditsResource } from "./site/[siteKey]/draft/[draftNum]/edit/index.ts";
-import { DraftFileResource } from "./site/[siteKey]/draft/[draftNum]/file.ts";
+import { TempFileResource } from "./site/[siteKey]/file.ts";
 import { AcceptDraftResource } from "./site/[siteKey]/draft/[draftNum]/accept.ts";
 import { EntryListResource } from "./site/[siteKey]/entry/index.ts";
 import { EntryResource } from "./site/[siteKey]/entry/[entryId]/index.ts";
@@ -34,7 +34,7 @@ export const builtInRestApiResources: (typeof Drash.Resource)[] = [
     DraftIndexResource,
     DraftResource,
     DraftEditsResource,
-    DraftFileResource,
+    TempFileResource,
     AcceptDraftResource,
     EntryListResource,
     EntryResource,

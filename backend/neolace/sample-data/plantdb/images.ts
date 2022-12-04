@@ -2,10 +2,11 @@ import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { schema } from "./schema.ts";
 import { files } from "./datafiles.ts";
 
-import { AcceptDraft, AddFileToDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
+import { AcceptDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { entryData } from "./content.ts";
 import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
+import { RecordTempFile } from "neolace/core/edit/TempFile-actions.ts";
 
 export async function createImages(siteId: VNID) {
     const graph = await getGraph();
@@ -16,8 +17,8 @@ export async function createImages(siteId: VNID) {
         authorId: SYSTEM_VNID,
         edits: [],
     }));
-    const { id: draftFileId } = await graph.runAsSystem(
-        AddFileToDraft({ draftId: draft.id, dataFileId: files.ponderosaPineImg.id }),
+    const { tempFileId } = await graph.runAsSystem(
+        RecordTempFile({ userId: SYSTEM_VNID, dataFileId: files.ponderosaPineImg.id }),
     );
     await graph.runAsSystem(UpdateDraft({
         id: draft.id,
@@ -39,7 +40,7 @@ export async function createImages(siteId: VNID) {
                 code: "UpdateEntryFeature",
                 data: {
                     entryId: entryData.imgPonderosaTrunk.id,
-                    feature: { featureType: "Image", draftFileId, setSizing: ImageSizingMode.Cover },
+                    feature: { featureType: "Image", tempFileId, setSizing: ImageSizingMode.Cover },
                 },
             },
             // This image relates to the ponderosa pine:

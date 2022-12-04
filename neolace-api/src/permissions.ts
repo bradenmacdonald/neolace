@@ -16,6 +16,8 @@ export enum CorePerm {
     proposeEditToEntry = "proposeEdits.entry",
     /** Create new entries (by creating a draft) */
     proposeNewEntry = "proposeEdits.entry.new",
+    /** Upload files; this is required to add new images or files to entries with those features.  */
+    uploadTempFiles = "proposeEdits.entry.upload",
     /** Can the user propose edits to the site's schema (by creating a draft) */
     proposeEditToSchema = "proposeEdits.schema",
     /** Can the user approve/accept/apply edits to entries */
