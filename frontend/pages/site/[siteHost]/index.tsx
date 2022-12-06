@@ -77,5 +77,6 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
             homepageContent: homePage.homePageContent,
             refCache: homePage.referenceCache,
         },
+        revalidate: 60, // Re-create the cached page after 60 seconds, but still show the cached one while doing so.
     };
 };
