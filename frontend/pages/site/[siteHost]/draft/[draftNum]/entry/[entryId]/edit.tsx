@@ -30,6 +30,7 @@ import { PropertiesEditor } from "components/entry-editor/PropertiesEditor";
 import { MainEditor } from "components/entry-editor/MainEditor";
 import { HoverClickNote } from "components/widgets/HoverClickNote";
 import { EditDescription } from "components/widgets/EditDescription";
+import { FilesEditor } from "components/entry-editor/FilesEditor";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -244,13 +245,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         name={defineMessage({ defaultMessage: "Files", id: "m4vqJl" })}
                         hidden={entryType === undefined || entryType.enabledFeatures.Files === undefined}
                     >
-                        {
-                            entry?.features.Files ? 
-                                <>
-                                    {entry.features.Files.files.length} files.
-                                </>
-                            : "No files attached yet."
-                        }
+                        <FilesEditor entry={entry} addUnsavedEdit={addUnsavedEdit} />
                     </Tab>
                     <Tab
                         id="save"

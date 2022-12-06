@@ -339,11 +339,19 @@ export class NeolaceApiClient {
         options: { siteKey?: string },
     ): Promise<TempFileData> {
         const siteKey = this.getSiteId(options);
-        const hash = await crypto.subtle.digest("SHA-256", await fileData.arrayBuffer());
-        const hashHex = bin2hex(new Uint8Array(hash));
         const formData = new FormData();
         formData.append("file", fileData);
-        const result = await this.call(`/site/${siteKey}/file?sha256Hash=${hashHex}`, {
+        let hashParam = "";
+        try {
+            const hash = await crypto.subtle.digest("SHA-256", await fileData.arrayBuffer());
+            const hashHex = bin2hex(new Uint8Array(hash));
+            hashParam = `sha256Hash=${hashHex}`;
+        } catch {
+            console.error("Unable to compute SHA-256 hash for upload. Usually this is because you are not on an HTTPS connection.");
+            // Note that computing the hash is not actually required, just helps to speed uploads up in the case where
+            // the content already exists in object storage.
+        }
+        const result = await this.call(`/site/${siteKey}/file?${hashParam}`, {
             method: "POST",
             body: formData,
         });

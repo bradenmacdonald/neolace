@@ -59,18 +59,18 @@ export const FilesFeature = EntryTypeFeature({
                 filesData.id = ${VNID()}
         `.RETURN({ "filesData.id": Field.VNID }));
         const filesDataId = result["filesData.id"];
-        // Associate the ImageData with the DataFile that holds the actual image contents
+        // Associate the FilesData node with the DataFile that holds the actual file contents
         if (editData.changeType === "addFile") {
             await tx.query(C`
-                MATCH (imageData:${FilesData} {id: ${filesDataId}})
+                MATCH (filesData:${FilesData} {id: ${filesDataId}})
                 MATCH (tempFile:${TempFile} {id: ${editData.tempFileId}})-[:${TempFile.rel.HAS_DATA}]->(dataFile:${DataFile})
-                MERGE (imageData)-[rel:${FilesData.rel.HAS_DATA}]->(dataFile)
+                MERGE (filesData)-[rel:${FilesData.rel.HAS_DATA}]->(dataFile)
                     SET rel.displayFilename = ${editData.filename}
                 DETACH DELETE tempFile
-                WITH imageData, dataFile
-                MATCH (imageData)-[rel:${FilesData.rel.HAS_DATA}]->(oldFile)
-                    WHERE rel.displayFilename = ${editData.filename} AND NOT oldFile = dataFile
-                DELETE rel
+                WITH filesData, dataFile, rel
+                MATCH (filesData)-[oldRel:${FilesData.rel.HAS_DATA}]->(oldFile)
+                    WHERE oldRel.displayFilename = ${editData.filename} AND oldRel <> rel
+                DELETE oldRel
             `);
         } else if (editData.changeType === "removeFile") {
             await tx.query(C`
