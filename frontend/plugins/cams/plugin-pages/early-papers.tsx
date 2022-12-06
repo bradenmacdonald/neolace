@@ -6,7 +6,7 @@ import { LookupEvaluatorWithPagination } from "components/widgets/LookupEvaluato
 import { MDTContext } from "components/markdown-mdt/mdt";
 
 const expr = `
-    allEntries().filter(entryType=entryType("_42oypp3JCf4wpJRru0El17")).withDetail(prop=prop("_37i9jG21DNV0na1TAak57r")).sort(by=(e -> e.detail), reverse=true)
+    allEntries().filter(entryType=entryType("early-paper")).withDetail(prop=prop("date-published")).sort(by=(e -> e.detail), reverse=true)
 `;
 
 const PostersPresentations: React.FunctionComponent<PluginPageProps> = function (props) {
