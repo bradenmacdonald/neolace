@@ -37,7 +37,7 @@ const MembersOnlyPage: React.FunctionComponent<PluginPageProps> = function (prop
 
             <p>Here are the members only handouts, reports, and other content that you have access to:</p>
             <LookupEvaluatorWithPagination
-                expr={`allEntries().filter(entryType=entryType("_3hRDtDlD9RDneg2nBN2Rep"))`}
+                expr={`allEntries().filter(entryType=entryType("members-handout"))`}
                 mdtContext={mdtContext}
                 pageSize={50}
             />
