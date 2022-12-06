@@ -1,14 +1,10 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
-import { VNID } from "neolace-api";
 
-import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
-import { api, client, usePermission, useSchema, useSiteData } from "lib/api";
+import { defineMessage } from "components/utils/i18n";
+import { api, client, useSiteData } from "lib/api";
 import { Spinner } from "components/widgets/Spinner";
-import { Control, SelectBox } from "components/form-input";
-import { SinglePropertyEditor } from "./SinglePropertyEditor";
 import { ToolbarButton } from "components/widgets/Button";
-import { EditSchemaPropertiesModal } from "components/schema-editor/EditSchemaPropertiesModal";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { FormattedFileSize } from "components/widgets/FormattedFileSize";
 import { Table, TableRow } from "components/widgets/Table";
@@ -28,7 +24,7 @@ interface Props {
 export const FilesEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEdit, ...props }) => {
     const {site} = useSiteData();
     const entryId = entry?.id;
-    const files = entry?.features?.Files?.files;
+    const files = entry?.features?.Files?.files ?? [];
 
     const [numUploadsInProgress, setNumUploadsInProgress] = React.useState(0);
 
@@ -92,8 +88,6 @@ export const FilesEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedE
                     )}
                 </Table>
             }
-
-            
 
             <h2><FormattedMessage defaultMessage="Attach a new file" id="CK9nPY" /></h2>
             <FileDropzone onDrop={handleAddFiles} />

@@ -6,7 +6,7 @@ import { LookupEvaluatorWithPagination } from "components/widgets/LookupEvaluato
 import { MDTContext } from "components/markdown-mdt/mdt";
 
 const expr = `
-    allEntries().filter(entryType=entryType("_SLsGzPL03LDUmPOI8Y00n"))
+    allEntries().filter(entryType=entryType("research-brief"))
 `;
 
 const ResearchBriefsPage: React.FunctionComponent<PluginPageProps> = function (props) {
