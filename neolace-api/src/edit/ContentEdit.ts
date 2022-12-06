@@ -178,7 +178,28 @@ export const UpdateEntryFeature = ContentEditType({
             // the hero image is calculated for each entry, usually based on a relationship or property
         ),
     }),
-    apply: () => {
+    apply: (baseEntry, data) => {
+        if (baseEntry.id !== data.entryId) {
+            return baseEntry;
+        }
+        const updatedEntry = { ...baseEntry, features: {...baseEntry.features} };
+        const edit = data.feature;
+        if (edit.featureType === "Files") {
+            let files = baseEntry.features.Files?.files ? [...baseEntry.features.Files?.files] : [];
+            if (edit.changeType === "removeFile") {
+                files = files.filter((f) => f.filename !== edit.filename);
+            } else {
+                files = files.filter((f) => f.filename !== edit.filename);
+                files.push({
+                    filename: edit.filename,
+                    contentType: "unknown/temp",
+                    size: 0,
+                    url: "",
+                });
+            }
+            updatedEntry.features.Files = {files};
+            return updatedEntry;
+        }
         throw new Error("This edit type is not implemented yet.");
     },
     describe: (data) => `Updated ${data.feature.featureType} feature of \`Entry ${data.entryId}\``,
