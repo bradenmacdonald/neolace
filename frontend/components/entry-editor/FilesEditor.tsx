@@ -57,7 +57,7 @@ export const FilesEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedE
 
     return (<>
             {
-            files.length === 0 ?
+            files.length === 0 && numUploadsInProgress === 0 ?
                 <p><FormattedMessage defaultMessage="There are no files attached to this entry yet." id="NidLZa" /></p>
             :
                 <Table headings={[

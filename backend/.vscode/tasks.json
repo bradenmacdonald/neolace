@@ -118,6 +118,7 @@
                 "run",
                 "--allow-net",
                 "--allow-env",
+                "--allow-read",
                 "neolace/scripts/migrate.ts"
             ],
             "problemMatcher": []
