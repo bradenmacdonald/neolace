@@ -8,8 +8,9 @@ import React from "react";
 
 export enum IncreaseZIndex {
     NoChange = 0,
-    ForTooltip = 5,
     ForDropdown = 1,
+    ForTooltip = 5,
+    ForPanel = 5,
     ForModal = 10,
     ForMobileMenu = 50,
 }

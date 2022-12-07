@@ -9,11 +9,14 @@ import { SitePage } from "components/SitePage";
 import { InlineMDT, MDTContext, RenderMDT } from "components/markdown-mdt/mdt";
 import { LookupValue } from "components/widgets/LookupValue";
 import { EntryLink } from "components/widgets/EntryLink";
-import { DEVELOPMENT_MODE, imgThumbnailLoader } from "lib/config";
+import { imgThumbnailLoader } from "lib/config";
 import { ErrorMessage } from "./widgets/ErrorMessage";
 import { defineMessage } from "./utils/i18n";
 import { Spinner } from "./widgets/Spinner";
-import { UISlot } from "./widgets/UISlot";
+import { UISlot, UISlotWidget } from "./widgets/UISlot";
+import { IncreaseZIndex, useZIndex, ZIndexContext } from "lib/hooks/useZIndex";
+import Head from "next/head";
+import { LeftPanelLinkSet } from "./widgets/LeftPanelLinkSet";
 
 interface Props {
     /** The entry key (either its key or VNID) */
@@ -43,6 +46,8 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
     const canProposeEdits = usePermission(api.CorePerm.proposeEditToEntry, { entryId: entry?.id });
 
     const mdtContext = React.useMemo(() => new MDTContext({ entryId: entry?.id }), [entry?.id]);
+
+    const zIndexHeader = useZIndex({increaseBy: IncreaseZIndex.ForPanel});
 
     if (entryError) {
         if (entryError instanceof api.NotAuthorized) {
@@ -82,51 +87,65 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
         );
     }
 
-    const hasProps = entry.propertiesSummary?.length ?? 0 > 0;
+    //const hasProps = entry.propertiesSummary?.length ?? 0 > 0;
 
     return (
         <RefCacheContext.Provider value={{refCache: entry.referenceCache}}>
             <SitePage
-
                 // The name of this entry is the <title> of the page
                 title={entry.name}
 
-                // First define what widgets we have in the left-hand column on each entry page.
-                // These are the defaults, but plugins can always change/add/remove them.
                 leftNavTopSlot={[
-                    // First display the name of the entry:
-                    {id: "entryName", priority: 20, content: <>
-                        <strong className="block mt-2">{entry.name}</strong>
-                    </>},
-                    // Then we used to display the key. For now it's hidden but it's kept in the HTML because
-                    // it's useful to have somewhere in the HTML to find the VNID and key.
-                    {id: "entryId", priority: 21, content: <>
-                        <code id="entry-id" data-entry-id={entry.id} className="font-mono font-light hidden">{entry.key}</code>
-                    </>},
                     // These are the links to each heading in the entry's article, if any, as well as to the summary and properties at the top:
-                    {id: "tableOfContents", priority: 50, content: <>
-                        <ul id="left-toc-headings">
-                            <li><Link href={`/entry/${entry.key}#summary`}><FormattedMessage id="RrCui3" defaultMessage="Summary"/></Link></li>
-                            <li className={`${hasProps || "hidden"}`}><Link href={`/entry/${entry.key}#properties`}><FormattedMessage id="aI80kg" defaultMessage="Properties"/></Link></li>
-                            {
-                                entry.features?.Article?.headings.map(heading =>
-                                    <li key={heading.id}><Link href={`/entry/${entry.key}#h-${heading.id}`}>{heading.title}</Link></li>
+                    {
+                        id: "tableOfContents",
+                        priority: 50,
+                        content: <LeftPanelLinkSet
+                            label={defineMessage({defaultMessage: "On this page", id: "TM7OHi"})}
+                            links={[
+                                {
+                                    id: "summary",
+                                    priority: 10,
+                                    content: {
+                                        label: <FormattedMessage defaultMessage="Summary" id="RrCui3" />,
+                                        url: `/entry/${entry.key}#summary`,
+                                    },
+                                },
+                                ...(
+                                    entry.features?.Article?.headings.map((heading, idx) => ({
+                                        id: `h-link-${heading.id}`,
+                                        priority: 50 + idx,
+                                        content: {
+                                            label: <>{heading.title}</>,
+                                            url: `/entry/${entry.key}#h-${heading.id}`,
+                                        },
+                                    })) ?? []
                                 )
-                            }
-                        </ul>
-                    </>},
+                            ]}
+                            slotId="table-of-contents"
+                            hasIcons={false}
+                            showLabel
+                        />,
+                        hidden: (entry.features?.Article?.headings?.length ?? 0) < 1
+                    },
                     // Action links, e.g. to edit this entry, view change history, etc.
-                    {id: "entryActions", priority: 60, content: <>
-                        <ul id="entry-actions" className="mt-4">
-                            {canProposeEdits ? <li><Link href={`/draft/_/entry/${entry.id}/edit`}><FormattedMessage id="wEQDC6" defaultMessage="Edit"/></Link></li> : null }
-                        </ul>
-                    </>},
+                    // {id: "entryActions", priority: 60, content: <>
+                    //     <ul id="entry-actions" className="mt-4">
+                    //         {canProposeEdits ? <li><Link href={`/draft/_/entry/${entry.id}/edit`}><FormattedMessage id="wEQDC6" defaultMessage="Edit"/></Link></li> : null }
+                    //     </ul>
+                    // </>},
                 ]}
             >
+                <Head>
+                    <style>{`
+                        :root { --header-scroll-offset: 85px; }
+                        html { scroll-padding-top: var(--header-scroll-offset); }
+                    `}</style>
+                </Head>
                 {/* Hero image, if any */}
                 {
                     entry.features?.HeroImage ?
-                        <div className="-m-6 mb-7 relative h-[30vh] md:h-[50vh]" style={(
+                        <div className="-m-6 mb-6 relative h-[30vh] md:h-[50vh]" style={(
                             /*
                                 If the image is landscape (significantly wider than it is tall), make it as wide as the page and adjust the height to match.
                                 Otherwise (if square-ish or vertical), use a fixed aspect ratio container and either display the image centered or stretch the
@@ -181,28 +200,77 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                     : null
                 }
 
-                {/* Summary: The entry name and description */}
-                <h1 id="summary">{entry.name}</h1>
-                <p id="description"><InlineMDT mdt={entry.description ?? ""} context={mdtContext} /></p>
+                {/* Header: The entry title, and action links. This "sticks" to the top of the page. */}
+                <div data-entry-id={entry.id} className="-m-6 mb-6 px-6 pt-6 pb-6 sticky top-0 bg-white bg-opacity-90 backdrop-blur-md border-b border-gray-50" style={{zIndex: zIndexHeader}}>
+                    <ZIndexContext.Provider value={zIndexHeader}>
+                        {/* This heading is "inline" with padding at the end to ensure it never overlaps with the actions like "Edit" */}
+                        <h1 className="inline pr-10">{entry.name}</h1>
+                        <div className="absolute right-2 bottom-0 flex border-slate-200 space-x-2">
+                            <UISlot<{label: React.ReactElement, url: string}>
+                                slotId="entryActions"
+                                defaultContents={[
+                                    ...(
+                                        canProposeEdits ? [
+                                            {
+                                                id: "edit-entry",
+                                                priority: 10,
+                                                content: {
+                                                    label: <FormattedMessage defaultMessage="Edit" id="wEQDC6" />,
+                                                    url: `/draft/_/entry/${entry.id}/edit`,
+                                                },
+                                            },
+                                        ]: []
+                                    ),
+                                    // {
+                                    //     id: "entry-history",
+                                    //     priority: 20,
+                                    //     content: {
+                                    //         label: <FormattedMessage defaultMessage="History" id="djJp6c" />,
+                                    //         url: `/entry/${entry.id}/history`,
+                                    //     },
+                                    // },
+                                ]}
+                                renderWidget={
+                                    (link: UISlotWidget<{label: React.ReactElement, url: string}>) => (
+                                        <Link href={link.content.url} key={link.id} className="rounded-md block px-2 py-2 hover:bg-slate-200 !text-slate-500 hover:text-black !no-underline">
+                                            {link.content.label}
+                                        </Link>
+                                    )
+                                }
+                            />
+                        </div>
+                    </ZIndexContext.Provider>
+                </div>
 
-                {/* Properties */}
-                <div className={`flex flex-wrap xl:flex-nowrap ${hasProps || "hidden"}`}>
+                {/* Summary - Description and Properties */}
+                <div id="summary" className="flex">
                     <div id="properties" className="flex-auto">
-                        <h2><FormattedMessage id="aI80kg" defaultMessage="Properties"/></h2>
                         <table className="w-full table-fixed">
                             <colgroup>
-                                <col className="w-full md:w-1/4" />
+                                <col className="w-full md:w-1/4 lg:w-1/6" />
                                 <col/>
                             </colgroup>
                             <tbody>
-                                {entry.propertiesSummary?.map(p => 
-                                    <tr key={p.propertyKey} className="even:bg-[#fbfbfe]">
+                                {entry.description ?
+                                    <tr className="even:bg-[#fbfbfe] group">
                                         {/* The property (e.g. "Population") */}
-                                        <th className="block md:table-cell text-xs md:text-base -mb-1 md:mb-0 pt-1 md:py-1 pr-2 align-top text-left font-normal text-gray-500 md:text-gray-700 min-w-[120px]">
+                                        <th className="block md:table-cell text-xs md:text-sm pt-1 md:py-1 pr-2 align-top text-left font-normal text-gray-500 group-hover:text-gray-800 min-w-[120px]">
+                                            <FormattedMessage defaultMessage="Description" id="Q8Qw5B"/>
+                                        </th>
+                                        {/* The property value (e.g. "38 million people") */}
+                                        <td className="block md:table-cell pr-2 pb-1">
+                                            <InlineMDT mdt={entry.description} context={mdtContext} />
+                                        </td>
+                                    </tr>
+                                : null}
+                                {entry.propertiesSummary?.map(p => 
+                                    <tr className="even:bg-[#fbfbfe] group" key={p.propertyKey}>
+                                        {/* The property (e.g. "Population") */}
+                                        <th className="block md:table-cell text-xs md:text-sm pt-1 md:py-1 pr-2 align-top text-left font-normal text-gray-500 group-hover:text-gray-800 min-w-[120px]">
                                             <LookupValue value={{type: "Property", key: p.propertyKey}} mdtContext={mdtContext} />
                                         </th>
                                         {/* The property value (e.g. "38 million people") */}
-                                        <td className="block md:table-cell pr-2 pb-1 md:py-1 text-sm md:text-base">
+                                        <td className="block md:table-cell pr-2 py-1">
                                             <LookupValue value={p.value} mdtContext={mdtContext} defaultListMode="compact" />
                                         </td>
                                     </tr>

@@ -3,16 +3,22 @@ import { useSearchBox, type UseSearchBoxProps } from "react-instantsearch-hooks-
 import { FormattedMessage, useIntl } from "react-intl";
 
 import { TextInput } from "components/form-input";
+import { useRouter } from "next/router";
 
 export const SearchBox: React.FunctionComponent<UseSearchBoxProps> = (props) => {
     const intl = useIntl();
-    const { query, refine, clear, isSearchStalled } = useSearchBox(props);
+    const { query, refine, clear } = useSearchBox(props);
     const [value, setValue] = React.useState(query);
     const inputEl = React.useRef<HTMLInputElement>(null);
+    const {replace} = useRouter();
 
     const handleChange = React.useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setValue(event.currentTarget.value);
-    }, []);
+        replace(`/search?${new URLSearchParams({q: event.currentTarget.value}).toString()}`, undefined, {
+            shallow: true,
+            scroll: false,
+        });
+    }, [replace]);
 
     // Track when the value coming from the React state changes to synchronize it with InstantSearch.
     React.useEffect(() => {
@@ -33,9 +39,18 @@ export const SearchBox: React.FunctionComponent<UseSearchBoxProps> = (props) => 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query]);
 
-    // Focus on the search box when this component is mounted.
+    // When the search page is first loaded:
     React.useEffect(
         () => {
+            // Set the current search term based the query string
+            if (location.search) {
+                const params = new URLSearchParams(location.search);
+                const initialQuery = params.get("q");
+                if (initialQuery) {
+                    setValue(initialQuery);
+                }
+            }
+            // Focus on the search box:
             inputEl.current && inputEl.current.focus();
         },
         [],
@@ -56,14 +71,6 @@ export const SearchBox: React.FunctionComponent<UseSearchBoxProps> = (props) => 
                 inputRef={inputEl}
             />
             {/*<button onClick={() => refine('')}>Reset query</button>*/}
-            {isSearchStalled && query && (
-                <div>
-                    <FormattedMessage
-                        id="LBcdAi"
-                        defaultMessage="Search has stalled or an error occurred."
-                    />
-                </div>
-            )}
         </form>
     );
 };

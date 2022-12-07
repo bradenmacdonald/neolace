@@ -10,15 +10,16 @@ import { Icon, IconId } from "./widgets/Icon";
 import { FormattedMessage, useIntl } from "react-intl";
 import { UiPluginsContext } from "./utils/ui-plugins";
 import { DEVELOPMENT_MODE } from "lib/config";
-import { displayString, TranslatableString } from "./utils/i18n";
+import { defineMessage, displayString, TranslatableString } from "./utils/i18n";
 import { SiteDataProvider } from "./SiteDataProvider";
 import { useZIndex, IncreaseZIndex, ZIndexContext } from "lib/hooks/useZIndex";
+import { LeftPanelLinkSet } from "./widgets/LeftPanelLinkSet";
 export { SiteDataProvider }  // for convenience, allow SitePage and SiteDataProvider to both be imported together
 
 
 export const DefaultSiteTitle = Symbol("DefaultSiteTitle");
 
-export interface SystemLink {
+export interface LinkWithIcon {
     /** The label of the link. Should be a FormattedMessage. */
     label: React.ReactElement;
     icon?: IconId;
@@ -75,10 +76,20 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         return color.join(" ");
     };
 
-    const defaultSystemLinks: UISlotWidget<SystemLink>[] = [];
-    //{id: "create", priority: 30, content: {url: "/draft/new/entry/new", label: <FormattedMessage id="systemLink.new" defaultMessage="Create new" />, icon: "plus-lg"}},
+    const defaultMainLinks: UISlotWidget<LinkWithIcon>[] = [];
+    const defaultSystemLinks: UISlotWidget<LinkWithIcon>[] = [];
 
-    defaultSystemLinks.push(
+    defaultMainLinks.push(
+        // Home page
+        {
+            id: "home",
+            priority: 5,
+            content: {
+                url: "/",
+                label: <FormattedMessage id="ejEGdx" defaultMessage="Home" />,
+                icon: "house-fill",
+            },
+        },
         // Run a "lookup" query and see the result:
         {
             id: "lookup",
@@ -111,10 +122,14 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 icon: "file-earmark-diff",
             },
         },
+    );
+
+
+    defaultSystemLinks.push(
         // Site administration:
         {
             id: "admin",
-            priority: 50,
+            priority: 30,
             content: {
                 url: `/admin/`,
                 label: <FormattedMessage id="iOBTBR" defaultMessage="Site Administration" />,
@@ -124,12 +139,11 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             hidden: !permissions?.[api.CorePerm.siteAdmin]?.hasPerm,
         }
     );
-
     if (user.status === UserStatus.LoggedIn) {
         // My Profile link
         defaultSystemLinks.push({
             id: "profile",
-            priority: 55,
+            priority: 40,
             content: {
                 url: site.isHomeSite ? "/account/" : `${site.homeSiteUrl}/account/`,
                 label: <FormattedMessage id="/GfBD6" defaultMessage="Profile ({name})" values={{name: user.fullName}} />,
@@ -159,25 +173,6 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         });
     }
 
-    // The system links, which are in the bottom left corner
-    const systemLinks = (
-        <ul>
-            <UISlot<SystemLink>
-                slotId="systemLinks"
-                defaultContents={defaultSystemLinks}
-                renderWidget={
-                    (link: UISlotWidget<SystemLink>) => (
-                        <li key={link.id}>
-                            <Link href={link.content.url}>
-                                <Icon icon={link.content.icon}/> {link.content.label}
-                            </Link>
-                        </li>
-                    )
-                }
-            />
-        </ul>
-    );
-
     const title = (
         props.title === DefaultSiteTitle ? site.name :
         typeof props.title === "string" ? `${props.title} - ${site.name}` :
@@ -206,7 +201,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         <DefaultUISlot slotId="globalHeader"/>
 
         {/* Container that wraps the left nav column (on desktop) and the article text/content */}
-        <div className="flex flex-row justify-center mx-auto shadow-lg w-screen md:max-w-[1280px]">
+        <div className="flex flex-row justify-center mx-auto w-screen md:max-w-[1280px] shadow-lg bg-white">
 
             {/* Left column, which shows various links and the current page's table of contents. On mobile it's hidden until the user clicks "Menu". */}
             <div
@@ -217,9 +212,10 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     fixed md:sticky
                     flex
                     top-0 left-0 bottom-8 md:bottom-0 w-[80vw] md:w-1/4 md:max-w-[280px]
+                    bg-white border-r border-slate-200
                     flex-initial p-4 overflow-y-auto flex-col self-stretch
                     md:h-[100vh]
-                    bg-slate-100
+                    space-y-2
                 `}
                 style={{zIndex: leftMenuZIndex}}
                 onClick={handleLeftPanelClick}
@@ -239,33 +235,55 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                         </Link>
                     </DefaultUISlot>
 
-                    <UISlot slotId="leftNavTop" defaultContents={[...(props.leftNavTopSlot ?? []), {
-                        id: "siteLinks",
-                        priority: 15,
-                        content: <>
-                            <ul>
-                                {site.frontendConfig.headerLinks?.map(link => 
-                                    <li key={link.href}><Link href={link.href}>{link.text}</Link></li>
-                                )}
-                            </ul>
-                        </>,
-                    }]} renderWidget={defaultRender} />
+                    <UISlot slotId="leftNavTop" defaultContents={[
+                        ...(props.leftNavTopSlot ?? []),
+                        {
+                            id: "mainLinks",
+                            priority: 10,
+                            content: <LeftPanelLinkSet
+                                label={defineMessage({defaultMessage: "Main links", id: "mjbNQV"})}
+                                slotId="mainLinks"
+                                links={defaultMainLinks}
+                                hasIcons
+                            />,
+                        },
+                        // {
+                        //     id: "siteLinks",
+                        //     priority: 25,
+                        //     content: <>
+                        //         <ul>
+                        //             {site.frontendConfig.headerLinks?.map(link => 
+                        //                 <li key={link.href}><Link href={link.href}>{link.text}</Link></li>
+                        //             )}
+                        //         </ul>
+                        //     </>,
+                        // },
+                    ]} renderWidget={defaultRender} />
                     <div className="flex-auto">{/* This is a spacer that pushes the "bottom" content to the end */}</div>
-                    <UISlot slotId="leftNavBottom" defaultContents={[...(props.leftNavBottomSlot ?? []), {
-                        id: "systemLinks",
-                        priority: 80,
-                        content: systemLinks,
-                    }]} renderWidget={defaultRender} />
+                    <UISlot slotId="leftNavBottom" defaultContents={[
+                        ...(props.leftNavBottomSlot ?? []),
+                        {
+                            id: "systemLinks",
+                            priority: 40,
+                            content: <LeftPanelLinkSet
+                                label={defineMessage({defaultMessage: "System links", id: "ziRyNh"})}
+                                slotId="systemLinks"
+                                links={defaultSystemLinks}
+                                hasIcons
+                            />,
+                        },
+                    ]} renderWidget={defaultRender} />
                 </ZIndexContext.Provider>
             </div>
 
-            {/* The main content of this entry */}
-            <main role="main" id="content" className="w-full left-0 top-0 md:w-1/2 bg-white flex-auto p-6 z-0 max-w-[1000px] neo-typography" onClick={handleArticleClick}>{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
-                <div className="md:min-h-[calc(100vh-11.5rem)]"> {/* Push the footer down to the bottom if the page content is very short */}
+            <div className="flex-auto flex flex-col w-full left-0 top-0 md:w-1/2 z-0 max-w-[1000px] neo-typography">
+                {/* The main content of this entry */}
+                <main role="main" id="content" className="bg-white p-6" onClick={handleArticleClick}>{/* We have z-0 here because without it, the scrollbars appear behind the image+caption elements. */}
                     <DefaultUISlot slotId="preContent"/>
                     {props.children}
-                </div>
-                <footer className="mt-8 pt-1 text-gray-600 text-xs border-t border-t-gray-300 clear-both">
+                </main>
+                <div className="flex-auto clear-both">{/* This is a spacer that pushes the footer to the end if the <main> above doesn't at least fill the screen */}</div>
+                <footer className="mt-8 p-6 text-gray-600 text-xs">
                     <UISlot slotId="footer" defaultContents={[...(props.footerSlot ?? []), {
                         id: "siteFooter",
                         priority: 80,
@@ -273,7 +291,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     }]} renderWidget={defaultRender} />
                 </footer>
                 <div className='h-8 md:h-0'>{/* Padding on mobile that goes behind the bottom footer */}</div>
-            </main>
+            </div>
         </div>
         {/* The "floating" footer on mobile that can be used to bring up the menu */}
         <div className="fixed md:hidden bg-header-color text-white bottom-0 h-8 left-0 right-0">

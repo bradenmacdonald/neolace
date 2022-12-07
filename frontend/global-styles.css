@@ -19,7 +19,10 @@
         @apply overscroll-none;
     }
     html {
-        @apply bg-gray-200;
+        /* applying "antialiased" here makes all the fonts appear thinner. */
+        @apply bg-slate-100;
+        /* Tweak Inter Var font, e.g. use modern lowercase 'a' */
+        font-feature-settings: 'cv03','cv04','cv11';
         /*
         background-image: url(/graph-bg.svg);
         background-position: 50%;
@@ -93,13 +96,5 @@
     /* Animation that animates an element's 'transform' and also its visibility property, hiding/showing it before/after the transform */
     .transition-visibility-transform {
         transition: visibility cubic-bezier(0.4, 0, 0.2, 1) 150ms, transform cubic-bezier(0.4, 0, 0.2, 1) 150ms;
-    }
-
-    /* Styles for the left panel */
-    #left-panel ul li {
-        @apply -mx-4 px-4 py-1 truncate;
-    }
-    #left-panel ul li a {
-        @apply inline-block py-1 pt-[6px] -my-2 -mx-4 px-4 w-full box-content hover:bg-slate-200 truncate;
     }
 }
