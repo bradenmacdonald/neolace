@@ -74,6 +74,8 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
                 destination: `/entry/${publicEntry.key}`,
                 permanent: true,
             },
+            // If it's been more than 5 minutes, check if there's a newer version but still serve from the cache while we do that.
+            revalidate: 5 * 60,
         };
     }
 
@@ -82,6 +84,8 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
             publicEntry,
             entryKey: context.params.entryId,
             sitePreloaded: site,
+            // If it's been more than 5 minutes, check if there's a newer version but still serve from the cache while we do that.
+            revalidate: 5 * 60,
         },
     };
 };

@@ -67,7 +67,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
 
     // Look up the Neolace site by domain:
     const site = await getSiteData(context.params.siteHost);
-    if (site === null) return { notFound: true };
+    if (site === null) return { notFound: true, revalidate: 60 };
 
     const homePage = await client.getSiteHomePage({ siteKey: site.key });
 
