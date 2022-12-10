@@ -43,6 +43,7 @@ export const config = (() => {
 
         // URL of the Neo4j server
         neo4jUrl: defaultTo("bolt://localhost:7687", { test: "bolt://localhost:4687" }),
+        neo4jDatabase: "neo4j",
         neo4jUser: "neo4j",
         neo4jPassword: defaultTo("neolace", { production: "\u0000 setme!!" }),
         // Configuration of the TypeSense (search) server:

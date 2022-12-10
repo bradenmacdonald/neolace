@@ -7,6 +7,7 @@ import { keyMigration } from "./key.ts";
 export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(async () => {
     const graph = new Vertex({
         neo4jUrl: config.neo4jUrl,
+        neo4jDatabase: config.neo4jDatabase,
         neo4jUser: config.neo4jUser,
         neo4jPassword: config.neo4jPassword,
         debugLogging: false,
