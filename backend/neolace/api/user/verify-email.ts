@@ -41,7 +41,7 @@ export async function checkValidationToken(token: string): Promise<{ email: stri
     const redis = await getRedis();
     const key = redisKeyPrefix + token;
     const result = await redis.get(key);
-    if (result === undefined) {
+    if (result === null) {
         throw new api.InvalidRequest(api.InvalidRequestReason.ValidationTokenInvalid, "Token invalid or expired.");
     }
     const data = JSON.parse(result);
