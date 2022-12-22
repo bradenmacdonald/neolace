@@ -23,8 +23,6 @@ module.exports = (phase) => {
             defaultLocale: "en",
         },
         experimental: {
-            // Don't transform ES6 to ES5 for older browsers:
-            browsersListForSwc: true,
             // We don't use Node APIs in browser-side code, but apparently this option isn't working yet.
             // fallbackNodePolyfills: false,
             legacyBrowsers: false,

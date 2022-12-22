@@ -14,5 +14,7 @@ export const LookupGraph = dynamic<GraphProps>(
         loading: () => <Spinner />,
         // If we wanted to skip generating the graph HTML on the server, we could use this:
         // ssr: false,
+        // As of Next.js 13, we're getting a Suspense/hydration error unless we use this:
+        ssr: false,
     },
 );
