@@ -1,7 +1,7 @@
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import Link from "next/link";
-import Image from "next/future/image";
+import Image from "next/image";
 import { Blurhash } from "react-blurhash";
 import { api, RefCacheContext, useEntry, usePermission } from "lib/api";
 

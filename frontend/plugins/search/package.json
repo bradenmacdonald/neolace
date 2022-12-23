@@ -4,8 +4,9 @@
     "private": true,
     "scripts": {},
     "dependencies": {
-        "react-instantsearch-hooks-web": "6.31.1",
-        "typesense-instantsearch-adapter": "2.4.1"
+        "react-instantsearch-hooks-web": "6.38.1",
+        "typesense-instantsearch-adapter": "2.4.2",
+        "@babel/runtime": ">=7.17.2 <8.0.0"
     },
     "devDependencies": {
     },

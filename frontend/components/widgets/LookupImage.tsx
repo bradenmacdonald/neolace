@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Blurhash } from "react-blurhash";
-import Image from "next/future/image";
+import Image from "next/image";
 import Link from "next/link";
 import { ImageDisplayFormat } from "neolace-api";
 

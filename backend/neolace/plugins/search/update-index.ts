@@ -68,6 +68,28 @@ export async function reindexAllEntries(siteId: VNID) {
     if (await currentReIndexJobForSite(siteId)) {
         throw new Error("A re-index job is already in progress");
     }
+
+    // This will filter to only index entries that the current user can see:
+    const permissionsCondition = await makeCypherCondition({ siteId, userId: undefined }, api.CorePerm.viewEntry, {}, [
+        "entry",
+        "entryType",
+    ]);
+
+    const totalCount = await graph.read(async (tx) =>
+        tx.queryOne(C`
+        MATCH (site:${Site} {id: ${siteId}})
+        MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
+        WHERE ${permissionsCondition}
+    `.RETURN({ "count(entry)": Field.Int }))
+    );
+
+    if (totalCount["count(entry)"] > 10_000) {
+        log.error("For now, cannot reindex sites with more than 10k entries.");
+        return;
+    }
+
+    const startTime = performance.now();
+
     // Create a new collection:
     const siteAliasCollection = await getSiteCollectionAlias(siteId);
     const newCollectionName = `${siteAliasCollection}_${Date.now()}`;
@@ -88,22 +110,6 @@ export async function reindexAllEntries(siteId: VNID) {
         ],
     });
     await setCurrentReIndexJobForSite(siteId, newCollectionName);
-
-    // This will filter to only index entries that the current user can see:
-    const permissionsCondition = await makeCypherCondition({ siteId, userId: undefined }, api.CorePerm.viewEntry, {}, [
-        "entry",
-        "entryType",
-    ]);
-
-    const totalCount = await graph.read(async (tx) =>
-        tx.queryOne(C`
-        MATCH (site:${Site} {id: ${siteId}})
-        MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site)
-        WHERE ${permissionsCondition}
-    `.RETURN({ "count(entry)": Field.Int }))
-    );
-
-    const startTime = performance.now();
 
     try {
         // Iterate over entries in chunks of 25

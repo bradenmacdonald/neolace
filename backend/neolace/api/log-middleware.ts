@@ -26,7 +26,7 @@ export class NeolaceErrorLogger extends Drash.ErrorHandler {
         // Then log the error message:
         const parsedUrl = new URL(request.url);
         const msg = `${request.method} ${parsedUrl.pathname} -> ${response.status}: ${error.name}: ${error.message}`;
-        log.error(msg);
+        log.error(msg + "\n" + error.stack);
 
         // Most of our CORS handling is in the NeolaceHttpResource base class, but here we have to handle a special case
         // to fix the CORS headers after an exception is thrown (e.g. by the auth middleware), so that our frontend can

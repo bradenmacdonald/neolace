@@ -1,5 +1,5 @@
 #!/usr/bin/env -S deno run --allow-read --allow-run --allow-write --allow-env --allow-net
-import { build, emptyDir } from "https://deno.land/x/dnt@0.30.0/mod.ts";
+import { build, emptyDir } from "https://deno.land/x/dnt@0.32.1/mod.ts";
 
 const outDir = "./dist";
 

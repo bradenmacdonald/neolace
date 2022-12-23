@@ -36,7 +36,7 @@ export async function useRedisCache<T extends SerializableValue>(
     key = `useRedisCache:` + key;
     const redis = await getRedis();
     const cachedValue = await redis.get(key);
-    if (cachedValue !== undefined) {
+    if (cachedValue !== null) {
         // We loaded the value from the cache
         return JSON.parse(cachedValue);
     }
