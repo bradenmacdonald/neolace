@@ -69,18 +69,22 @@ export class BasicSearch extends LookupFunctionOneArg {
 
         return new LazyCypherIterableValue<EntryValue | EntryTypeValue | PropertyValue>(
             context,
-            cypherQuery,
             async (offset, numItems) => {
                 const records = await context.tx.query(C`
-                ${cypherQuery}
-                RETURN type, idOrKey, name
-                ORDER BY isExactMatch DESC, name, type, idOrKey
-                SKIP ${C(String(BigInt(offset)))} LIMIT ${C(String(BigInt(numItems)))}
-            `.givesShape({
+                    ${cypherQuery}
+                    RETURN type, idOrKey, name
+                    ORDER BY isExactMatch DESC, name, type, idOrKey
+                    SKIP ${C(String(BigInt(offset)))} LIMIT ${C(String(BigInt(numItems)))}
+                `.givesShape({
                     "type": Field.String,
                     "idOrKey": Field.Any,
                     "name": Field.String,
                 }));
+
+                let totalCount: bigint;
+                if (records.length < numItems) totalCount = BigInt(records.length);
+                else {totalCount =
+                        (await context.tx.queryOne(cypherQuery.RETURN({ "count(*)": Field.BigInt })))["count(*)"];}
 
                 const result: Array<EntryValue | EntryTypeValue | PropertyValue> = [];
                 for (const r of records) {
@@ -92,7 +96,7 @@ export class BasicSearch extends LookupFunctionOneArg {
                         result.push(new PropertyValue(r.idOrKey));
                     } else throw new Error("Internal Error, unexpected type found in query result.");
                 }
-                return result;
+                return { values: result, totalCount };
             },
             {
                 sourceExpression: this,

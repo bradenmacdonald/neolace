@@ -51,12 +51,12 @@ export class AndRelated extends LookupFunctionWithArgs {
                 C(String(depth.value))
             }]-(relative:${Entry})
             WITH relative, min(length(path)) AS distance
-            ORDER BY distance, relative.name
 
             WITH relative AS entry, {distance: distance} AS annotations
         `,
             {
                 annotations: { distance: dbDistanceToValue },
+                orderByClause: C`ORDER BY annotations.distance, entry.name, id(entry)`,
                 sourceExpression: this,
                 sourceExpressionEntryId: context.entryId,
             },

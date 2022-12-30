@@ -29,10 +29,9 @@ export class AllEntries extends LookupFunction {
                 WHERE ${entryPermissionPredicate}
 
                 WITH entry, {} AS annotations
-                ORDER BY entry.name
-                WITH entry, annotations
             `,
             {
+                orderByClause: C`ORDER BY entry.name, id(entry)`,
                 sourceExpression: this,
                 sourceExpressionEntryId: context.entryId,
             },
