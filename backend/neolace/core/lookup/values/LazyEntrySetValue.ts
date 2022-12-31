@@ -12,7 +12,7 @@ import { Entry, EntryType } from "neolace/core/mod.ts";
  *
  * It is only used with LazyEntrySetValue
  */
-type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue | undefined;
+export type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue | undefined;
 
 /**
  * A cypher query that evaluates to a set of entries, with optional annotations (extra data associated with each entry)
@@ -23,6 +23,10 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
 
     constructor(
         context: LookupContext,
+        /**
+         * A cypher query, which MUST contain two variables, 'entry' and 'annotations', where entry refers to each entry
+         * that will be in the results, and annotations is the map of additional (optional) data associated with each.
+         */
         public readonly cypherQuery: CypherQuery,
         options: {
             annotations?: Record<string, AnnotationReviver>;
@@ -40,21 +44,30 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
         offset: bigint,
         numItems: bigint,
     ): Promise<{ values: Array<EntryValue | AnnotatedValue>; totalCount: bigint }> {
-
         if (numItems === 0n) {
-            const countQuery = await this.context.tx.queryOne(this.cypherQuery.RETURN({"count(*)": Field.BigInt}));
-            return {values: [], totalCount: countQuery["count(*)"]};
+            const countQuery = await this.context.tx.queryOne(this.cypherQuery.RETURN({ "count(*)": Field.BigInt }));
+            return { values: [], totalCount: countQuery["count(*)"] };
         }
 
         const query = C`
             ${this.cypherQuery}
-            WITH collect({entry: entry, annotations: annotations}) AS rows, count(entry) AS totalCount
-            UNWIND rows AS row
-            WITH totalCount, row.entry AS entry, row.annotations AS annotations
-            RETURN entry.id, annotations, totalCount
+            WITH entry, annotations
             ${this.orderByClause}
-            ${this.getSkipLimitClause(offset, numItems)}
-        `.givesShape({ "entry.id": Field.VNID, annotations: Field.Any, totalCount: Field.BigInt });
+            WITH collect({entry: entry, annotations: annotations}) AS rows
+            WITH rows[${C(String(offset))}..${C(String(offset + numItems))}] AS selectedRows, size(rows) AS totalCount
+            UNWIND selectedRows AS row
+            RETURN row.entry.id AS entryId, row.annotations AS annotations, totalCount
+        `.givesShape({ "entryId": Field.VNID, annotations: Field.Any, totalCount: Field.BigInt });
+        // The following alternative query uses the exact same number of "dbHits" but WAY more memory, so don't use it:
+        // const query = C`
+        //     ${this.cypherQuery}
+        //     WITH collect({entry: entry, annotations: annotations}) AS rows, count(entry) AS totalCount
+        //     UNWIND rows AS row
+        //     WITH totalCount, row.entry AS entry, row.annotations AS annotations
+        //     RETURN entry.id, annotations, totalCount
+        //     ${this.orderByClause}
+        //     ${this.getSkipLimitClause(offset, numItems)}
+        // `.givesShape({ "entry.id": Field.VNID, annotations: Field.Any, totalCount: Field.BigInt });
         const result = await this.context.tx.query(query);
 
         const values = result.map((r) => {
@@ -66,12 +79,17 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
                         annotatedValues[key] = value;
                     }
                 }
-                return new AnnotatedValue(new EntryValue(r["entry.id"]), annotatedValues);
+                return new AnnotatedValue(new EntryValue(r["entryId"]), annotatedValues);
             } else {
-                return new EntryValue(r["entry.id"]);
+                return new EntryValue(r["entryId"]);
             }
         });
         return { values, totalCount: result.length > 0 ? result[0].totalCount : 0n };
+    }
+
+    public async getSlice(offset: bigint, numItems: bigint): Promise<(EntryValue|AnnotatedValue)[]> {
+        // We only override this function to indicate more specific return type than LookupValue[].
+        return super.getSlice(offset, numItems) as Promise<(EntryValue|AnnotatedValue)[]>;
     }
 
     /**

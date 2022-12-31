@@ -5,6 +5,7 @@ import {
     IntegerValue,
     isCountableValue,
     isIterableValue,
+    LazyEntrySetValue,
     PageValue,
 } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
@@ -71,6 +72,26 @@ export class Slice extends LookupFunctionWithArgs {
             throw new LookupEvaluationError(
                 `The total size of the expression "${this.iterableExpr.toDebugString()}" is unknown, so it cannot be sliced. This limitation may be removed in the future.`,
             );
+        }
+
+        if (iterableValue instanceof LazyEntrySetValue) {
+            // Check if we can do an optimized slice() that doesn't require computing the totalCount first.
+            const startIndexValue = await this.startIndexExpr?.getValueAs(IntegerValue, context) ??
+                new IntegerValue(0n);
+            const sizeValue = await this.sizeExpr?.getValueAs(IntegerValue, context) ??
+                new IntegerValue(context.defaultPageSize);
+            if (startIndexValue.value >= 0 && sizeValue.value > 0 && this.endIndexExpr === undefined) {
+                // Yes, under these conditions we can use a more optimized computation:
+                const start = startIndexValue.value, size = sizeValue.value;
+                const { values, totalCount } = await iterableValue.runQuery(start, size);
+                return new PageValue(values, {
+                    startedAt: start,
+                    totalCount,
+                    pageSize: size,
+                    sourceExpression: iterableExpr,
+                    sourceExpressionEntryId: context.entryId,
+                });
+            }
         }
 
         const totalCount = await iterableValue.getCount();

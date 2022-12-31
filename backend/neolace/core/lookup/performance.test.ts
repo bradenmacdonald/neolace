@@ -151,7 +151,7 @@ group("performance.test.ts", () => {
         assertEquals(directResult["count(entry)"], expectedCount);
 
         // Now, use a lookup function to compute the result:
-        graph.startProfile("full");
+        graph.startProfile();
         const lookupResult = await context.evaluateExprConcrete(
             `allEntries().filter(entryType=entryType("${entryTypeB}")).count()`,
         );
@@ -159,10 +159,10 @@ group("performance.test.ts", () => {
         assertInstanceOf(lookupResult, IntegerValue);
         assertEquals(lookupResult.value, BigInt(expectedCount));
 
-        // The lookup function should be no more complex than the manual query, other than ~5 extra dbHits for
+        // The lookup function should be no more complex than the manual query, other than ~13 extra dbHits for
         // permissions checks, entry type validation, and other overhead.
         assertEquals(directProfile.dbHits, 30_023);
-        assertEquals(lookupProfile.dbHits, directProfile.dbHits + 5);
+        assertEquals(lookupProfile.dbHits, directProfile.dbHits + 13);
     });
 
     async function entryPageTest(pageNum: number, pageSize: number) {
@@ -185,7 +185,7 @@ group("performance.test.ts", () => {
         assertEquals(directResult[0].totalCount, numEntriesEachType);
 
         // Now, use a lookup function to compute the result:
-        graph.startProfile("full");
+        graph.startProfile();
         const lookupResult = await context.evaluateExprConcrete(
             `allEntries().filter(entryType=entryType("${entryTypeB}")).slice(start=${(pageNum *
                 pageSize)}, size=${pageSize})`,
@@ -206,12 +206,12 @@ group("performance.test.ts", () => {
     test("Perf - get the first page of all entries of a particular type, ordered by name.", async () => {
         const { directProfile, lookupProfile } = await entryPageTest(0, 20);
         assertEquals(directProfile.dbHits, 40_043);
-        assertEquals(lookupProfile.dbHits, directProfile.dbHits + 5);
+        assertEquals(lookupProfile.dbHits, directProfile.dbHits + 13);
     });
 
     test("Perf - get the two hundredth page of all entries of a particular type, ordered by name.", async () => {
         const { directProfile, lookupProfile } = await entryPageTest(199, 20);
         assertEquals(directProfile.dbHits, 40_043);
-        assertEquals(lookupProfile.dbHits, directProfile.dbHits + 5);
+        assertEquals(lookupProfile.dbHits, directProfile.dbHits + 13);
     });
 });
