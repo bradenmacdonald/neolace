@@ -10,7 +10,7 @@ import { Entry, EntryType } from "neolace/core/mod.ts";
  * An annotation reviver is a function that converts a single raw value loaded from the Neo4j database into a
  * concrete lookup value, e.g. bigint -> IntegerValue
  *
- * It is only used with LazyEntrySetValue
+ * It is only used with LazyEntrySetValue and subclasses.
  */
 export type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue | undefined;
 
@@ -29,7 +29,24 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
          */
         public readonly cypherQuery: CypherQuery,
         options: {
+            /**
+             * Annotations are extra data associated with each entry in the context of this particular query. For
+             * example, if retrieving a bunch of entries via a relationship property, there may be a 'note' associated
+             * with one of the entries, which would be an annotation on that entry. There would also be a 'rank'
+             * associated with each entry, indicating the order that the entries are listed for that relationship
+             * property value. Such annotations are always context-specific, so the same entry may have totally
+             * different annotations or no annotations at all, depending on where it is used / how it is queried.
+             *
+             * The annotation data must be present in each row of the query as a map called 'annotations', and this
+             * optional argument is used to provide a list of the annotation values and a function for converting each
+             * one from its Neo4j data type to a LookupValue. That function is called an AnnotationReviver.
+             */
             annotations?: Record<string, AnnotationReviver>;
+            /**
+             * A cypher clause that starts with ORDER BY. This will be used to sort the entries, unless we are just
+             * retrieving the total count in which case ordering is skipped as an optimization. If no ordering is
+             * specified, the entries will be ordered by name.
+             */
             orderByClause?: CypherQuery;
             sourceExpression?: LookupExpression | undefined;
             sourceExpressionEntryId?: VNID | undefined;
@@ -37,6 +54,9 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
     ) {
         super(context, options.sourceExpression, options.sourceExpressionEntryId);
         this.annotations = options.annotations;
+        // By default we sort entries by name, with a secondary sort on the internal ID to ensure consistent ordering of
+        // entries that have the same name. We used `id(entry)` instead of `entry.id` because it's slightly faster and
+        // it doesn't matter which ID is used, as long as it's stable.
         this.orderByClause = options.orderByClause ?? C`ORDER BY entry.name, id(entry)`;
     }
 
@@ -58,6 +78,7 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
             UNWIND selectedRows AS row
             RETURN row.entry.id AS entryId, row.annotations AS annotations, totalCount
         `.givesShape({ "entryId": Field.VNID, annotations: Field.Any, totalCount: Field.BigInt });
+
         // The following alternative query uses the exact same number of "dbHits" but WAY more memory, so don't use it:
         // const query = C`
         //     ${this.cypherQuery}
