@@ -1,5 +1,5 @@
 import { api } from "neolace/api/mod.ts";
-import { C, isVNID, VNID } from "neolace/deps/vertex-framework.ts";
+import { C, Field, isVNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { EntryTypeColor, PropertyType, ReferenceCacheData } from "neolace/deps/neolace-api.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { Property } from "neolace/core/schema/Property.ts";
@@ -41,6 +41,8 @@ export class ReferenceCache {
     }
 
     async getData(lookupContext: LookupContext): Promise<ReferenceCacheData> {
+        if (lookupContext.siteId !== this.siteId) throw new Error("Inconsistent site ID");
+
         const data: ReferenceCacheData = {
             entryTypes: {},
             entries: {},
@@ -72,37 +74,62 @@ export class ReferenceCache {
             await evaluateLookupExpressions(lookup);
         }
 
-        // Entries referenced:
-        const entryReferences = await lookupContext.tx.pull(
-            Entry,
-            (e) => e.id.name.description.key.type((et) => et.key.site((s) => s.id)),
-            {
-                where: C`@this.id IN ${
-                    Array.from(this._entryIdsUsed)
-                } OR (@this.siteNamespace = ${this.siteId} AND @this.key IN ${Array.from(this._entryKeysUsed)})`,
-            },
-        );
-        for (const reference of entryReferences) {
-            // Let's just do a double-check that we're not leaking information from another site - shouldn't happen in any case:
-            if (reference.type?.site?.id !== this.siteId) {
-                throw new Error(
-                    `Error, found an Entry ID from another site altogether (${reference.id}). Security issue?`,
-                );
+        // Load basic data (name, description, type) for all entries referenced.
+
+        // For some reason, in some cases, this query is horribly unoptimized and does slow label scans instead of uses
+        // the indexes. So we use the version below which forces a smarter query plan.
+        // const entryReferences = await lookupContext.tx.query(C`
+        //     MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
+        //     WHERE
+        //         entry.siteNamespace = ${lookupContext.siteId}
+        //         AND (
+        //             entry.id IN ${Array.from(this._entryIdsUsed)}
+        //             OR entry.key IN ${Array.from(this._entryKeysUsed)}
+        //         )
+        //     RETURN entry.id AS id, entry.key AS key, entry.name AS name, entry.description AS description, entryType.key AS entryTypeKey
+        // `.givesShape({id: Field.VNID, key: Field.String, name: Field.String, description: Field.String, entryTypeKey: Field.String}));
+
+        const entryReferences = await lookupContext.tx.query(C`
+            CALL {
+                MATCH (entry:${Entry})
+                USING INDEX entry:VNode(id)
+                WHERE
+                    entry.siteNamespace = ${lookupContext.siteId} AND
+                    entry.id IN ${Array.from(this._entryIdsUsed)}
+                RETURN entry
+
+                UNION
+
+                MATCH (entry:${Entry})
+                WHERE
+                    entry.siteNamespace = ${lookupContext.siteId} AND
+                    entry.key IN ${Array.from(this._entryKeysUsed)}
+                RETURN entry
             }
+            WITH entry
+            MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
+            RETURN entry.id AS id, entry.key AS key, entry.name AS name, entry.description AS description, entryType.key AS entryTypeKey
+        `.givesShape({
+            id: Field.VNID,
+            key: Field.String,
+            name: Field.String,
+            description: Field.String,
+            entryTypeKey: Field.String,
+        }));
+        for (const reference of entryReferences) {
             // Now add this reference and its entry type information to the cache
             data.entries[reference.id] = {
                 id: reference.id,
                 name: reference.name,
                 key: reference.key,
                 description: reference.description,
-                entryType: { key: reference.type.key },
+                entryType: { key: reference.entryTypeKey },
             };
             this.extractMarkdownReferences(reference.description, { currentEntryId: reference.id });
-
-            this._entryTypeKeysUsed.add(reference.type.key);
+            this._entryTypeKeysUsed.add(reference.entryTypeKey);
         }
         // Now, the descriptions of referenced entries may contain lookup expressions that we need to evaluate:
-        // TODO: remove this, and fetch descriptions in real time. This is too much like recursion
+        // TODO: maybe remove this, and fetch descriptions in real time? This is too much like recursion.
         for (const lookup of this._lookupExpressions) {
             await evaluateLookupExpressions(lookup);
         }

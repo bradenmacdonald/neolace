@@ -1,4 +1,4 @@
-import { C, CypherQuery, Field, VNID } from "neolace/deps/vertex-framework.ts";
+import { C, VNID } from "neolace/deps/vertex-framework.ts";
 import type * as api from "neolace/deps/neolace-api.ts";
 
 import type { LookupContext } from "../context.ts";
@@ -214,21 +214,15 @@ export abstract class AbstractLazyCypherQueryValue extends LazyValue
     implements ICountableValue, IIterableValue, IHasSourceExpression {
     public readonly hasCount = true;
     public readonly isIterable = true;
-    private defaultPageSize: bigint;
 
     constructor(
         context: LookupContext,
-        /**
-         * The first part of the Cypher query, without a RETURN statement or SKIP, LIMIT, etc.
-         */
-        public readonly cypherQuery: CypherQuery,
         /** The lookup expression that evaluates to this query */
         public readonly sourceExpression: LookupExpression | undefined,
         /** The entry used for any "this" expressions in the sourceExpression. This could be removed if we could erase "this" expressions. */
         public readonly sourceExpressionEntryId: VNID | undefined,
     ) {
         super(context);
-        this.defaultPageSize = context.defaultPageSize;
     }
 
     public abstract cloneWithSourceExpression(
@@ -244,17 +238,17 @@ export abstract class AbstractLazyCypherQueryValue extends LazyValue
     }
 
     public async getCount(): Promise<bigint> {
-        const countQuery = this.cypherQuery.RETURN({ "count(*)": Field.BigInt });
-        const result = await this.context.tx.query(countQuery);
-        return result[0]["count(*)"];
+        const { totalCount } = await this.runQuery(0n, 0n);
+        return totalCount;
     }
 
     public override async toDefaultConcreteValue(): Promise<PageValue<ConcreteValue>> {
-        const pageSize = this.defaultPageSize;
-        const firstPageValues = await this.getSlice(0n, pageSize);
-        const totalCount = firstPageValues.length < pageSize ? BigInt(firstPageValues.length) : await this.getCount();
+        const pageSize = this.context.defaultPageSize;
+        // Get the first page of values as well as the total count:
+        const { values, totalCount } = await this.runQuery(0n, pageSize);
+        // const totalCount = firstPageValues.length < pageSize ? BigInt(firstPageValues.length) : await this.getCount();
 
-        const concreteValues = await Promise.all(firstPageValues.map((v) => v.makeConcrete()));
+        const concreteValues = await Promise.all(values.map((v) => v.makeConcrete()));
 
         return new PageValue<ConcreteValue>(concreteValues, {
             startedAt: 0n,
@@ -265,7 +259,19 @@ export abstract class AbstractLazyCypherQueryValue extends LazyValue
         });
     }
 
-    public abstract getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]>;
+    /**
+     * Run the cypher query to load the result, and return up to 'numItems' of results, starting at 'offset'. Must also
+     * return the total count of items. This query must support numItems = 0, which means we only want the totalCount.
+     */
+    protected abstract runQuery(
+        offset: bigint,
+        numItems: bigint,
+    ): Promise<{ values: LookupValue[]; totalCount: bigint }>;
+
+    public async getSlice(offset: bigint, numItems: bigint): Promise<LookupValue[]> {
+        const { values } = await this.runQuery(offset, numItems);
+        return values;
+    }
 }
 
 /**

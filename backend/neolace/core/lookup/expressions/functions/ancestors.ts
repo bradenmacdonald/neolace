@@ -48,13 +48,13 @@ export class Ancestors extends LookupFunctionOneArg {
             WHERE ancestor <> entry  // Never return the starting node as its own ancestor, if the graph is cyclic
             // We want to only return DISTINCT ancestors, and return only the minimum distance to each one.
             WITH ancestor, min(length(path)) AS distance
-            ORDER BY distance, ancestor.name
 
             WITH ancestor AS entry, {distance: distance} AS annotations
             WHERE ${entryPermissionPredicate}
         `,
             {
                 annotations: { distance: dbDistanceToValue },
+                orderByClause: C`ORDER BY annotations.distance, entry.name, id(entry)`,
                 sourceExpression: this,
                 sourceExpressionEntryId: context.entryId,
             },
@@ -86,13 +86,13 @@ export class AndAncestors extends LookupFunctionOneArg {
             ${startingEntry.cypherQuery}
             MATCH path = (entry)-[:${Entry.rel.IS_A}*0..${C(String(MAX_DEPTH))}]->(ancestor:${Entry})
             WITH ancestor, min(length(path)) AS distance
-            ORDER BY distance, ancestor.name
 
             WITH ancestor AS entry, {distance: distance} AS annotations
             WHERE ${entryPermissionPredicate}
         `,
             {
                 annotations: { distance: dbDistanceToValue },
+                orderByClause: C`ORDER BY annotations.distance, entry.name, id(entry)`,
                 sourceExpression: this,
                 sourceExpressionEntryId: context.entryId,
             },

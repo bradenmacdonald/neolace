@@ -204,10 +204,10 @@ export class GetProperty extends LookupFunctionWithArgs {
                 WITH entry, annotations
                 WHERE ${canViewEntry}
                 WITH entry, annotations
-                ORDER BY annotations.rank, entry.name, entry.id
             `,
                 {
                     annotations: { rank: dbRankToValue, note: dbNoteToValue, slot: dbSlotToValue },
+                    orderByClause: C`ORDER BY annotations.rank, entry.name, entry.id`,
                     sourceExpression: this,
                     sourceExpressionEntryId: context.entryId,
                 },
@@ -272,12 +272,11 @@ export class GetProperty extends LookupFunctionWithArgs {
 
                 const entryIdsQuery = C`${startingEntrySet.cypherQuery} WITH entry WHERE ${canViewProperties}`;
 
-                return new LazyCypherIterableValue(context, entryIdsQuery, async (offset, numItems) => {
+                return new LazyCypherIterableValue(context, async (offset, numItems) => {
                     const entryIdsResult = await context.tx.query(C`
                         ${entryIdsQuery}
                         RETURN entry.id
                         ORDER BY entry.id
-                        SKIP ${C(String(BigInt(offset)))} LIMIT ${C(String(BigInt(numItems)))}
                     `.givesShape({ "entry.id": Field.VNID }));
 
                     const entryIds = entryIdsResult.map((r) => r["entry.id"]);
@@ -310,7 +309,12 @@ export class GetProperty extends LookupFunctionWithArgs {
                         }
                     }
 
-                    return await Promise.all(result);
+                    const evaluatedResult = await Promise.all(result);
+
+                    return {
+                        values: evaluatedResult.slice(Number(offset), Number(offset + numItems)),
+                        totalCount: BigInt(evaluatedResult.length),
+                    };
                 }, {
                     sourceExpression: this,
                     sourceExpressionEntryId: context.entryId,

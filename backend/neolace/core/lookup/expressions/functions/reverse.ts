@@ -99,10 +99,9 @@ export class ReverseProperty extends LookupFunctionWithArgs {
             WHERE ${canViewEntry}
 
             WITH DISTINCT entry, {} AS annotations
-            ORDER BY entry.name, entry.id
         `,
             {
-                // annotations: {  },
+                orderByClause: C`ORDER BY entry.name, entry.id`,
                 sourceExpression: this,
                 sourceExpressionEntryId: context.entryId,
             },

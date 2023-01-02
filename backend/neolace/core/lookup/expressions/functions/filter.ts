@@ -1,11 +1,9 @@
-import { C, VNID } from "neolace/deps/vertex-framework.ts";
+import { C, CypherQuery, VNID } from "neolace/deps/vertex-framework.ts";
 import { LookupExpression } from "../base.ts";
 import { EntryTypeValue, EntryValue, LazyEntrySetValue, LazyIterableValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
-import { Entry } from "neolace/core/entry/Entry.ts";
-import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { iterateOver } from "../../values/base.ts";
 
 /**
@@ -38,29 +36,18 @@ export class Filter extends LookupFunctionWithArgs {
     }
 
     public async getValue(context: LookupContext): Promise<LazyEntrySetValue> {
-        const iterable = await this.iterableExpr.getValueAs(LazyEntrySetValue, context);
-        let cypherQuery = iterable.cypherQuery;
+        const entrySet = await this.iterableExpr.getValueAs(LazyEntrySetValue, context);
+
+        const whereClauses: CypherQuery[] = [];
 
         if (this.entryTypeExpr) {
             const entryTypes = await getEntryTypesKeys(this.entryTypeExpr, context);
-
-            cypherQuery = C`
-                ${cypherQuery}
-                MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
-                WHERE entryType.key IN ${Array.from(entryTypes)}
-                WITH entry, annotations
-            `;
+            whereClauses.push(C`entryType.key IN ${Array.from(entryTypes)}`);
         }
 
         if (this.excludeEntryTypeExpr) {
             const notEntryTypes = await getEntryTypesKeys(this.excludeEntryTypeExpr, context);
-
-            cypherQuery = C`
-                ${cypherQuery}
-                MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})
-                WHERE NOT entryType.key IN ${Array.from(notEntryTypes)}
-                WITH entry, annotations
-            `;
+            whereClauses.push(C`NOT entryType.key IN ${Array.from(notEntryTypes)}`);
         }
 
         if (this.excludeExpr) {
@@ -72,20 +59,10 @@ export class Filter extends LookupFunctionWithArgs {
                 }
                 notEntries.add(asEntry.id);
             }
-
-            cypherQuery = C`
-                ${cypherQuery}
-                WITH entry, annotations
-                WHERE NOT entry.id IN ${Array.from(notEntries)}
-                WITH entry, annotations
-            `;
+            whereClauses.push(C`NOT entry.id IN ${Array.from(notEntries)}`);
         }
 
-        return new LazyEntrySetValue(context, cypherQuery, {
-            annotations: iterable.annotations,
-            sourceExpression: this,
-            sourceExpressionEntryId: context.entryId,
-        });
+        return entrySet.cloneWithFilters(whereClauses).cloneWithSourceExpression(this, context.entryId);
     }
 }
 

@@ -46,7 +46,7 @@ export class Files extends LookupFunctionOneArg {
 
             WITH rel.displayFilename AS displayFilename, file.filename AS objstoreFilename, file.size AS size, file.contentType AS contentType
         `;
-        return new LazyCypherIterableValue<FileValue>(context, query, async (offset, numItems) => {
+        return new LazyCypherIterableValue<FileValue>(context, async (offset, numItems) => {
             const records = await context.tx.query(C`
                 ${query}
                 RETURN displayFilename, objstoreFilename, size, contentType
@@ -59,6 +59,10 @@ export class Files extends LookupFunctionOneArg {
                 "contentType": Field.String,
             }));
 
+            let totalCount: bigint;
+            if (records.length < numItems) totalCount = BigInt(records.length);
+            else totalCount = (await context.tx.queryOne(query.RETURN({ "count(*)": Field.BigInt })))["count(*)"];
+
             const result: FileValue[] = [];
             for (const r of records) {
                 result.push(
@@ -70,7 +74,7 @@ export class Files extends LookupFunctionOneArg {
                     ),
                 );
             }
-            return result;
+            return { values: result, totalCount };
         }, {
             sourceExpression: this,
             sourceExpressionEntryId: context.entryId,
