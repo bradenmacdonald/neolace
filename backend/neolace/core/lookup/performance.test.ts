@@ -1,5 +1,6 @@
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import {
+    assert,
     assertEquals,
     assertInstanceOf,
     beforeAll,
@@ -15,6 +16,8 @@ import { getConnection } from "../edit/connections.ts";
 import { ApplyBulkEdits } from "../edit/ApplyBulkEdits.ts";
 import { api } from "../../api/mod.ts";
 import { EntryValue, IntegerValue, PageValue } from "./values.ts";
+import { ReferenceCache } from "../entry/reference-cache.ts";
+import { LookupContext } from "./context.ts";
 
 /**
  * These tests ensure that our lookup queries as as optimized as possible, using a moderately large data set.
@@ -213,5 +216,32 @@ group("performance.test.ts", () => {
         const { directProfile, lookupProfile } = await entryPageTest(199, 20);
         assertEquals(directProfile.dbHits, 40_043);
         assertEquals(lookupProfile.dbHits, directProfile.dbHits + 13);
+    });
+
+    test("Perf - get the ReferenceCache data about some entries", async () => {
+        const graph = await getGraph();
+        const lookupResult = await context.evaluateExprConcrete(
+            `allEntries().filter(entryType=entryType("${entryTypeB}"))`,
+        );
+        assertInstanceOf(lookupResult, PageValue);
+        assertInstanceOf(lookupResult.values[0], EntryValue);
+        assertEquals(lookupResult.values.length, 10);
+
+        const refCache = new ReferenceCache({ siteId });
+        refCache.extractLookupReferences(lookupResult.toJSON(), {});
+
+        graph.startProfile("full");
+        const result = await graph.read(async (tx) => {
+            const lookupContext = new LookupContext({ tx, siteId });
+            return refCache.getData(lookupContext);
+        });
+        const lookupProfile = graph.finishProfile();
+
+        assertEquals(Object.keys(result.entries).length, lookupResult.values.length);
+        assertEquals(result.entries[lookupResult.values[0].id].name, "Entry 0");
+        assert(
+            lookupProfile.dbHits < 200,
+            `Expected refCache getData() to take < 200 dbHits, but it took ${lookupProfile.dbHits}`,
+        );
     });
 });

@@ -87,9 +87,9 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
         return { values, totalCount: result.length > 0 ? result[0].totalCount : 0n };
     }
 
-    public async getSlice(offset: bigint, numItems: bigint): Promise<(EntryValue|AnnotatedValue)[]> {
+    public async getSlice(offset: bigint, numItems: bigint): Promise<(EntryValue | AnnotatedValue)[]> {
         // We only override this function to indicate more specific return type than LookupValue[].
-        return super.getSlice(offset, numItems) as Promise<(EntryValue|AnnotatedValue)[]>;
+        return super.getSlice(offset, numItems) as Promise<(EntryValue | AnnotatedValue)[]>;
     }
 
     /**
