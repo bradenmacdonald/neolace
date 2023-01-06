@@ -52,6 +52,18 @@ group("sort.ts", () => {
         );
     });
 
+    test("Sorting integers with a slice", async () => {
+        await checkSort(
+            `[20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort().slice(size=20)`,
+            `[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29].slice(size=20)`,
+        );
+        await checkSort(
+            `[20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort().slice(start=5, size=10)`,
+            `[0, 0, 0, 0, 0, 5, 6, 7, 8, 9, 20, 21, 22, 23, 24, 0, 0, 0, 0, 0].slice(start=5, size=10)`,
+            // Note only the numbers in [5..15] are used in the comparison, so we set the rest to zero here.
+        );
+    });
+
     test("NULL values always sort last", async () => {
         await checkSort(
             `[18, -10, 5, null, null, null, 64, 0, -3, -18].sort()`,

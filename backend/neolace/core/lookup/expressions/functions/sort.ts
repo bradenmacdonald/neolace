@@ -3,7 +3,7 @@ import { BooleanValue, isIterableValue, LambdaValue, LazyIterableValue, LookupVa
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
-import { iterateOver } from "../../values/base.ts";
+import { isCountableValue, iterateOver } from "../../values/base.ts";
 
 /**
  * sort([iterable expression], by=[lambda])
@@ -48,34 +48,65 @@ export class Sort extends LookupFunctionWithArgs {
             );
         }
 
-        const values: [value: LookupValue, sortKey: LookupValue][] = [];
-        if (sortBy) {
-            for await (const value of iterateOver(iterableValue)) {
-                const itemContext = context.childContextWithVariables({
-                    [sortBy.variableName]: value,
-                });
-                const sortKey = await itemContext.evaluateExpr(sortBy.innerExpression);
-                values.push([value, sortKey]);
-            }
-        } else {
-            for await (const value of iterateOver(iterableValue)) {
-                values.push([value, value]);
-            }
-        }
-
         // We always sort NULL values to the end, regardless of the 'reverse' direction or not.
-        const doSort = (a: LookupValue, b: LookupValue, reverse?: boolean) => (
-            a instanceof NullValue ? 1 : b instanceof NullValue ? -1 : reverse ? b.compareTo(a) : a.compareTo(b)
-        );
-        values.sort((a, b) => doSort(a[1], b[1], reverse));
+        const compareDirect = (a: LookupValue, b: LookupValue) =>
+            a instanceof NullValue ? 1 : b instanceof NullValue ? -1 : reverse ? b.compareTo(a) : a.compareTo(b);
+        const compare = (a: { sortValue: LookupValue }, b: { sortValue: LookupValue }) =>
+            compareDirect(a.sortValue, b.sortValue);
+        let cachedTotalCount: bigint | undefined;
 
         return new LazyIterableValue({
             context,
             sourceExpression: this,
             sourceExpressionEntryId: context.entryId,
-            getCount: async () => BigInt(values.length),
+            getCount: async () => {
+                // Get the total count in the most efficient way we are able to:
+                if (cachedTotalCount) return cachedTotalCount;
+                if (isCountableValue(iterableValue)) return iterableValue.getCount();
+                let count = 0n;
+                for await (const _value of iterateOver(iterableValue)) count++;
+                return count;
+            },
             getSlice: async (offset: bigint, numItems: bigint) => {
-                return values.map(([value, _sortKey]) => value).slice(Number(offset), Number(offset + numItems));
+                const slicedValues: { value: LookupValue; sortValue: LookupValue }[] = [];
+                const lengthNeeded = Number(offset) + Number(numItems);
+                let totalSeen = 0;
+
+                // We don't actually do the sorting until now, so that e.g. if we want the first 100 of 10 billion
+                // items, we only ever keep 100 items in memory - not 10 billion. However, if we want to skip 100,000
+                // items and then return 500, we'll need to hold 100,500 items in memory to produce the result.
+
+                for await (const value of iterateOver(iterableValue)) {
+                    totalSeen++;
+                    let sortValue = value;
+                    if (sortBy) {
+                        const itemContext = context.childContextWithVariables({
+                            [sortBy.variableName]: value,
+                        });
+                        sortValue = await itemContext.evaluateExpr(sortBy.innerExpression);
+                    }
+
+                    if (slicedValues.length < lengthNeeded) {
+                        slicedValues.push({ value, sortValue });
+                        slicedValues.sort(compare);
+                    } else if (compare({ sortValue }, slicedValues[0]) < 0) {
+                        // This comes before the current first value in slicedValues.
+                        slicedValues.unshift({ value, sortValue });
+                        slicedValues.pop();
+                    } else if (compare({ sortValue }, slicedValues[slicedValues.length - 1]) > 1) {
+                        // This comes after the current last value in slicedValues
+                        // We can ignore this value - it definitely won't be included in the result set.
+                    } else {
+                        // This value needs to be inserted into 'slicedValues' at the right place:
+                        let idx = 0;
+                        while (compare({ sortValue }, slicedValues[idx]) >= 0 && idx < slicedValues.length - 1) idx++;
+                        slicedValues.splice(idx, 0, { value, sortValue });
+                        slicedValues.pop(); // Keep the same length.
+                    }
+                }
+                cachedTotalCount = BigInt(totalSeen);
+
+                return slicedValues.slice(Number(offset), Number(offset + numItems)).map((sv) => sv.value);
             },
         });
     }
