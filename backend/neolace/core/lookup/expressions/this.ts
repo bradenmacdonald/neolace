@@ -17,4 +17,12 @@ export class This extends LookupExpression {
     public toString(): string {
         return "this";
     }
+
+    public override traverseTreeAndReplace(replacer: (e: LookupExpression) => LookupExpression): LookupExpression {
+        return replacer(this);
+    }
+
+    public override traverseTree(fn: (expr: LookupExpression) => void): void {
+        fn(this);
+    }
 }

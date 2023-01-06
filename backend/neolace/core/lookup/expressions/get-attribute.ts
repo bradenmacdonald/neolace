@@ -41,4 +41,13 @@ export class GetAttribute extends LookupExpression {
     public toString(): string {
         return `${this.expression.toString()}.${this.attributeName}`;
     }
+
+    public override traverseTreeAndReplace(replacer: (e: LookupExpression) => LookupExpression): LookupExpression {
+        return replacer(new GetAttribute(this.attributeName, this.expression.traverseTreeAndReplace(replacer)));
+    }
+
+    public override traverseTree(fn: (expr: LookupExpression) => void): void {
+        this.expression.traverseTree(fn);
+        fn(this);
+    }
 }

@@ -27,4 +27,12 @@ export class LiteralExpression extends LookupExpression {
     public toString(): string {
         return (this.value as IHasLiteralExpression).asLiteral();
     }
+
+    public override traverseTreeAndReplace(replacer: (e: LookupExpression) => LookupExpression): LookupExpression {
+        return replacer(this);
+    }
+
+    public override traverseTree(fn: (expr: LookupExpression) => void): void {
+        fn(this);
+    }
 }

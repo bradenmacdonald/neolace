@@ -33,6 +33,18 @@ export abstract class LookupFunction extends LookupExpression {
         }
         return new this();
     }
+
+    public override traverseTreeAndReplace(replacer: (e: LookupExpression) => LookupExpression): LookupExpression {
+        // subclasses like LookupFunctionOneArg/LookupFunctionWithArgs override this to handle traversing
+        // arguments, where needed. With no arguments, we only need to traverse 'this'.
+        return replacer(this);
+    }
+
+    public override traverseTree(fn: (expr: LookupExpression) => void): void {
+        // subclasses like LookupFunctionOneArg/LookupFunctionWithArgs override this to handle traversing
+        // arguments, where needed. With no arguments, we only need to traverse 'this'.
+        fn(this);
+    }
 }
 
 /**
@@ -107,6 +119,16 @@ export abstract class LookupFunctionOneArg extends LookupFunction {
             );
         }
         return new this(firstArg);
+    }
+
+    public override traverseTreeAndReplace(replacer: (e: LookupExpression) => LookupExpression): LookupExpression {
+        const newFirstArg = this.firstArg.traverseTreeAndReplace(replacer);
+        return replacer((this.constructor as LookupFunctionClass).constructWithArgs(newFirstArg));
+    }
+
+    public override traverseTree(fn: (expr: LookupExpression) => void): void {
+        this.firstArg.traverseTree(fn);
+        fn(this);
     }
 }
 
@@ -188,5 +210,22 @@ export abstract class LookupFunctionWithArgs extends LookupFunctionOneArg {
             );
         }
         return new this(firstArg, otherArgs ?? {});
+    }
+
+    public override traverseTreeAndReplace(replacer: (e: LookupExpression) => LookupExpression): LookupExpression {
+        const newFirstArg = this.firstArg.traverseTreeAndReplace(replacer);
+        const newOtherArgs: Record<string, LookupExpression> = {};
+        for (const [key, expr] of Object.entries(this.otherArgs)) {
+            newOtherArgs[key] = expr.traverseTreeAndReplace(replacer);
+        }
+        return replacer((this.constructor as LookupFunctionClass).constructWithArgs(newFirstArg, newOtherArgs));
+    }
+
+    public override traverseTree(fn: (expr: LookupExpression) => void): void {
+        for (const expr of Object.values(this.otherArgs)) {
+            expr.traverseTree(fn);
+        }
+        this.firstArg.traverseTree(fn);
+        fn(this);
     }
 }

@@ -38,4 +38,13 @@ export class List extends LookupExpression {
         const itemsAsStrings = this.items.map((expr) => expr.toString());
         return "[" + itemsAsStrings.join(", ") + "]";
     }
+
+    public override traverseTreeAndReplace(replacer: (e: LookupExpression) => LookupExpression): LookupExpression {
+        return replacer(new List(this.items.map((item) => item.traverseTreeAndReplace(replacer))));
+    }
+
+    public override traverseTree(fn: (expr: LookupExpression) => void): void {
+        this.items.forEach((item) => item.traverseTree(fn));
+        fn(this);
+    }
 }

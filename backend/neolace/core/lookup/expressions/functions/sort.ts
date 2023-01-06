@@ -6,9 +6,9 @@ import { LookupFunctionWithArgs } from "./base.ts";
 import { iterateOver } from "../../values/base.ts";
 
 /**
- * slice([iterable expression], by=[lambda])
+ * sort([iterable expression], by=[lambda])
  *
- * Given any iterable sort it by the given expression.
+ * Given any iterable, sort it by the given expression.
  * e.g. allEntries().sort(by=(e->e.name)) to sort all entries by name.
  */
 export class Sort extends LookupFunctionWithArgs {
