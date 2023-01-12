@@ -1,7 +1,7 @@
 import { C, CypherQuery, VNID } from "neolace/deps/vertex-framework.ts";
 import { LookupContext } from "../context.ts";
 import type { LookupExpression } from "../expressions/base.ts";
-import { AnnotationReviver, LazyEntrySetValue } from "./LazyEntrySetValue.ts";
+import { AnnotationDataConverter, LazyEntrySetValue } from "./LazyEntrySetValue.ts";
 import { makeCypherCondition } from "../../permissions/check.ts";
 import { corePerm } from "../../permissions/permissions.ts";
 import { Entry, EntryType, Site } from "../../mod.ts";
@@ -22,7 +22,7 @@ export class AllEntriesFilterableValue extends LazyEntrySetValue {
          */
         private readonly whereClauses: CypherQuery[],
         options: {
-            annotations?: Record<string, AnnotationReviver>;
+            annotations?: Record<string, AnnotationDataConverter>;
             sourceExpression?: LookupExpression | undefined;
             sourceExpressionEntryId?: VNID | undefined;
         },
@@ -42,7 +42,7 @@ export class AllEntriesFilterableValue extends LazyEntrySetValue {
     }
 
     public static async create(context: LookupContext, options: {
-        annotations?: Record<string, AnnotationReviver>;
+        annotations?: Record<string, AnnotationDataConverter>;
         sourceExpression?: LookupExpression | undefined;
         sourceExpressionEntryId?: VNID | undefined;
     }) {
