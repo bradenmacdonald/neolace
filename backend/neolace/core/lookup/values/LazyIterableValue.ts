@@ -120,8 +120,9 @@ export class LazyIterableValue extends LazyValue implements IIterableValue, IHas
             ]);
             let query = C`
                 CALL {
-                    MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
-                    WHERE entry.id IN ${entryIds} AND ${userCanView}
+                    UNWIND ${entryIds} AS entryId
+                    MATCH (entry:${Entry} {id: entryId})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(:${Site} {id: ${context.siteId}})
+                    WHERE ${userCanView}
                     RETURN entry
             `;
             // Also add on queries for any entry sets that were in this iterable. They should already be filtered for permissions.
@@ -141,6 +142,7 @@ export class LazyIterableValue extends LazyValue implements IIterableValue, IHas
             return new LazyEntrySetValue(context, query, {
                 sourceExpression: this.sourceExpression,
                 sourceExpressionEntryId: this.sourceExpressionEntryId,
+                orderByClause: C``,
             });
         }
         return undefined;

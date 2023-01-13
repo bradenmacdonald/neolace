@@ -230,6 +230,27 @@ export class TestLookupContext {
      * evaluateExprConcrete() in that case to get concete values only.
      */
     public async evaluateExpr(expr: LookupExpression | string, entryId?: VNID, userId?: VNID): Promise<LookupValue> {
+        const result = await this.withContext(
+            async (tempContext) => {
+                return await tempContext.evaluateExpr(expr);
+            },
+            entryId,
+            userId,
+        );
+        if (result instanceof ErrorValue) {
+            throw result.error;
+        }
+        return result;
+    }
+
+    /**
+     * Evaluate any code that needs to use a LookupContext
+     */
+    public async withContext<T = void>(
+        fn: (context: LookupContext) => Promise<T>,
+        entryId?: VNID,
+        userId?: VNID,
+    ): Promise<T> {
         const graph = await getGraph();
         const result = await graph.read(async (tx) => {
             const tempContext = new LookupContext({
@@ -239,11 +260,8 @@ export class TestLookupContext {
                 entryId: entryId ?? this.entryId,
                 defaultPageSize: this.defaultPageSize,
             });
-            return await tempContext.evaluateExpr(expr);
+            return await fn(tempContext);
         });
-        if (result instanceof ErrorValue) {
-            throw result.error;
-        }
         return result;
     }
 
