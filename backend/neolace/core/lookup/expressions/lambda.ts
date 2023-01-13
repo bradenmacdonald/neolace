@@ -32,4 +32,13 @@ export class Lambda extends LookupExpression {
     public toString(): string {
         return `(${this.variableName} -> ${this.innerExpression.toString()})`;
     }
+
+    public override traverseTreeAndReplace(replacer: (e: LookupExpression) => LookupExpression): LookupExpression {
+        return replacer(new Lambda(this.variableName, this.innerExpression.traverseTreeAndReplace(replacer)));
+    }
+
+    public override traverseTree(fn: (expr: LookupExpression) => void): void {
+        this.innerExpression.traverseTree(fn);
+        fn(this);
+    }
 }

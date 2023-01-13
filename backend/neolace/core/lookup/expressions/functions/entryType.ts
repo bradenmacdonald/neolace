@@ -42,8 +42,8 @@ export class EntryTypeFunction extends LookupFunctionOneArg {
                 throw err;
             }
         } else {
-            // This is the VNID of an entry type.
-            // Viewing a single entry type whose VNID the user already knows does not require 'schema' permission;
+            // This is the key of an entry type.
+            // Viewing a single entry type whose key the user already knows does not require 'schema' permission;
             // the schema permission is only required to *list* all properties / entry types of a site.
             const permissionsPredicate = await makeCypherCondition(context.subject, corePerm.viewSite.name, {}, [
                 "entryType",

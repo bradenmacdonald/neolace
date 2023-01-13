@@ -1,6 +1,6 @@
 import { assertEquals, assertInstanceOf, group, setTestIsolation, test, TestLookupContext } from "neolace/lib/tests.ts";
 import { List, LiteralExpression } from "../expressions.ts";
-import { IntegerValue, LazyIterableValue, LookupValue } from "../values.ts";
+import { EntryValue, IntegerValue, LazyEntrySetValue, LazyIterableValue, LookupValue, PageValue } from "../values.ts";
 import { iterateOver } from "./base.ts";
 
 group("LazyIterableValue.ts", () => {
@@ -47,5 +47,29 @@ group("LazyIterableValue.ts", () => {
             }
             assertEquals(values, numbers);
         }
+    });
+
+    test("It preserves order when converted to a LazyEntrySetValue", async () => {
+        const entries = [
+            // Four entries in a specific arbitrary order:
+            defaultData.entries.stonePine.id,
+            defaultData.entries.ponderosaPine.id,
+            defaultData.entries.japaneseWhitePine.id,
+            defaultData.entries.jackPine.id,
+        ];
+        const page = await context.withContext(async (ctx) => {
+            // Convert the list to a LazyIterableValue
+            const lazyIterable = await ctx.evaluateExpr(
+                new List(entries.map((n) => new LiteralExpression(new EntryValue(n)))),
+            );
+            assertInstanceOf(lazyIterable, LazyIterableValue);
+            // Convert the LazyIterableValue to a LazyEntrySet
+            const asEntrySet = await lazyIterable.castTo(LazyEntrySetValue, ctx);
+            assertInstanceOf(asEntrySet, LazyEntrySetValue);
+            return await asEntrySet.toDefaultConcreteValue();
+        });
+
+        assertInstanceOf(page, PageValue);
+        assertEquals(page.values.map((p) => (p as EntryValue).id), entries);
     });
 });

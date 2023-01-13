@@ -7,18 +7,18 @@ import { EntryValue } from "./EntryValue.ts";
 import { Entry, EntryType } from "neolace/core/mod.ts";
 
 /**
- * An annotation reviver is a function that converts a single raw value loaded from the Neo4j database into a
+ * An annotation data converter is a function that converts a single raw value loaded from the Neo4j database into a
  * concrete lookup value, e.g. bigint -> IntegerValue
  *
  * It is only used with LazyEntrySetValue and subclasses.
  */
-export type AnnotationReviver = (annotatedValue: unknown) => ConcreteValue | undefined;
+export type AnnotationDataConverter = (annotatedValue: unknown) => ConcreteValue | undefined;
 
 /**
  * A cypher query that evaluates to a set of entries, with optional annotations (extra data associated with each entry)
  */
 export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
-    readonly annotations: Readonly<Record<string, AnnotationReviver>> | undefined;
+    readonly annotations: Readonly<Record<string, AnnotationDataConverter>> | undefined;
     public readonly orderByClause: CypherQuery;
 
     constructor(
@@ -39,9 +39,9 @@ export class LazyEntrySetValue extends AbstractLazyCypherQueryValue {
              *
              * The annotation data must be present in each row of the query as a map called 'annotations', and this
              * optional argument is used to provide a list of the annotation values and a function for converting each
-             * one from its Neo4j data type to a LookupValue. That function is called an AnnotationReviver.
+             * one from its Neo4j data type to a LookupValue. That function is called an AnnotationDataConverter.
              */
-            annotations?: Record<string, AnnotationReviver>;
+            annotations?: Record<string, AnnotationDataConverter>;
             /**
              * A cypher clause that starts with ORDER BY. This will be used to sort the entries, unless we are just
              * retrieving the total count in which case ordering is skipped as an optimization. If no ordering is

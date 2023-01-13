@@ -89,4 +89,15 @@ export abstract class LookupExpression {
             return value.slice(0, 45) + "…" + value.slice(-4);
         }
     }
+
+    /**
+     * Recursively call the provided 'replacer' function for each child expression of this expression. Where it returns
+     * a new LookupExpression object, swap that in.
+     * This can be used to modify expressions, e.g. to replace all occurrences of 'this' with a specific 'entry("...")'
+     * call.
+     */
+    public abstract traverseTreeAndReplace(replacer: (e: LookupExpression) => LookupExpression): LookupExpression;
+
+    /** Recursively call fn() for every child expression of this expression, then for this expression itself. */
+    public abstract traverseTree(fn: (expr: LookupExpression) => void): void;
 }
