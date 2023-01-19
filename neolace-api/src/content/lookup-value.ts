@@ -71,6 +71,26 @@ export interface GraphValue extends LookupValue {
         fromEntryId: VNID;
         toEntryId: VNID;
     }[];
+    /**
+     * Information about entries which are NOT in the current set of graphed entries but which are linked to them.
+     * These are relationships that the user may wish to "expand" to load more nodes into the graph.
+     */
+    borderingRelationships: {
+        /**
+         * For this entry in the graph, there are some connected entries that are NOT in the graph (the "bordering"
+         * entries, which the user may wish to add to the graph.)
+         */
+        entryId: VNID,
+        /**
+         * If this is an "outbound" relationship, it's a normal relationship FROM entryId to other entries.
+         * If this is false, it's a reverse relationship - from various other entries TO entryId.
+         */
+        isOutbound: boolean,
+        /** ID of the property that defines this relationship type. */
+        relTypeKey: string,
+        /** How many entries are related to entryId via this relationship. */
+        entryCount: number,
+    }[];
 }
 
 export interface ImageValue extends LookupValue {

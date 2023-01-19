@@ -24,6 +24,7 @@ group("graph()", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
     const siteId = defaultData.site.id;
     const ponderosaPine = defaultData.entries.ponderosaPine;
+    const westernRedcedar = defaultData.entries.westernRedcedar;
     const context = new TestLookupContext({ siteId, entryId: ponderosaPine.id });
 
     const entryTypeKey = "test-entry-type", entryIsA = "prop-is-a";
@@ -103,6 +104,91 @@ group("graph()", () => {
             return rest;
         });
         assertArrayIncludes(actualRelsWithoutRelId, expectedRels);
+    });
+
+    test("It can show the relationships that connect to the selected nodes", async () => {
+        const value = await context.evaluateExprConcrete(`[this, entry("${westernRedcedar.id}")].graph()`);
+
+        assertInstanceOf(value, GraphValue);
+        assertEquals(value.entries, [
+            {
+                entryId: ponderosaPine.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETSPECIES.key,
+                name: "Ponderosa Pine",
+                isFocusEntry: true,
+            },
+            {
+                entryId: westernRedcedar.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETSPECIES.key,
+                name: "Western Redcedar",
+            },
+        ]);
+        // There are no relationships between these two species entries.
+        assertEquals(value.rels.length, 0);
+        // But there are adjacent relationships:
+        assertEquals(value.borderingRelationships.length, 4);
+        assertArrayIncludes(value.borderingRelationships, [
+            // Both species have "parent genus" relationships:
+            {
+                entryId: ponderosaPine.id,
+                relTypeKey: defaultData.schema.properties.parentGenus.key,
+                entryCount: 1, // Just the parent genus entry
+                isOutbound: true,
+            },
+            {
+                entryId: westernRedcedar.id,
+                relTypeKey: defaultData.schema.properties.parentGenus.key,
+                entryCount: 1, // Just the parent genus entry
+                isOutbound: true,
+            },
+            // Ponderosa pine has a hero image:
+            {
+                entryId: ponderosaPine.id,
+                relTypeKey: defaultData.schema.properties.hasHeroImage.key,
+                entryCount: 1,
+                isOutbound: true,
+            },
+            // And there is an image that "relates to" ponderosa pine.
+            {
+                entryId: ponderosaPine.id,
+                relTypeKey: defaultData.schema.properties.imgRelTo.key,
+                entryCount: 1,
+                isOutbound: false,
+            },
+        ]);
+    });
+
+    test("It can show the relationships that connect to the selected nodes and the entry count", async () => {
+        const value = await context.evaluateExprConcrete(`entry("${defaultData.entries.genusPinus.id}").graph()`);
+
+        assertInstanceOf(value, GraphValue);
+        assertEquals(value.entries, [
+            {
+                entryId: defaultData.entries.genusPinus.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETGENUS.key,
+                name: "Pinus",
+            },
+        ]);
+        // There are no relationships among the selected entries (only one entry was graphed/selected)
+        assertEquals(value.rels.length, 0);
+        // But there are adjacent relationships:
+        assertEquals(value.borderingRelationships.length, 2);
+        assertArrayIncludes(value.borderingRelationships, [
+            // The genus has a "parent family" relationship:
+            {
+                entryId: defaultData.entries.genusPinus.id,
+                relTypeKey: defaultData.schema.properties.parentFamily.key,
+                entryCount: 1, // Just the one parent family entry
+                isOutbound: true,
+            },
+            // And many species have a "parent genus" relationship to this:
+            {
+                entryId: defaultData.entries.genusPinus.id,
+                relTypeKey: defaultData.schema.properties.parentGenus.key,
+                entryCount: 8,
+                isOutbound: false, // Note this is a reverse relationship
+            },
+        ]);
     });
 
     test("Works despite cyclic relationships", async () => {
@@ -265,7 +351,7 @@ group("graph()", () => {
         const expression = new Graph(new Descendants(new This()));
         const value = await context.evaluateExprConcrete(expression);
 
-        assertEquals(value, new GraphValue([], []));
+        assertEquals(value, new GraphValue([], [], []));
     });
 
     test("toString()", () => {
