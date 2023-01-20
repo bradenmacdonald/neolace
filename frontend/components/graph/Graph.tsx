@@ -6,7 +6,7 @@ import { api, useRefCache } from "lib/api";
 import { MDTContext } from "../markdown-mdt/mdt";
 import G6, { Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "lib/hooks/useResizeObserver";
-import { entryNode, pickEntryTypeLetter } from "./graph-g6-node";
+import { entryNode } from "./graph-g6-node";
 import { VNID } from "neolace-api";
 import { ToolbarButton, ToolbarSeparator } from "../widgets/Button";
 import { useIntl } from "react-intl";
@@ -58,7 +58,7 @@ function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: 
                 nextColor = (nextColor + 1) % Object.values(api.EntryTypeColor).length;
             }
             node.color = colourMap.get(attrValue);
-            node.leftLetter = pickEntryTypeLetter(refCache.entryTypes[node.entryTypeKey as string]?.name);
+            node.leftLetter = refCache.entryTypes[node.entryTypeKey as string]?.abbreviation ?? "";
         });
         return data;
     }

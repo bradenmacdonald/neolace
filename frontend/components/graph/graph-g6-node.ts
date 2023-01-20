@@ -244,20 +244,3 @@ function truncateString(str: string, maxWidth: number, fontSize: number): string
     });
     return res;
 }
-
-/**
- * Given an entry type name like "TechConcept", return its abbreviation like "TC"
- */
-export function pickEntryTypeLetter(entryTypeName: string): string {
-    let capitals = "";
-    for (const char of entryTypeName) {
-        if (char.toLocaleUpperCase() === char) {
-            capitals += char;
-        }
-    }
-    if (capitals.length > 0) {
-        return capitals.substring(0, 2);
-    }
-    // Otherwise if there are no capitals, just use the first letter.
-    return entryTypeName.substring(0, 1);
-}
