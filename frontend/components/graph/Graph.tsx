@@ -190,11 +190,11 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // See https://g6.antv.vision/en/docs/api/Graph
     const [graph, setGraph] = React.useState<Graph | null>(null);
 
-    // Create a reference (an object that holds mdtContext) that we can pass to the tooltip,
-    // so that the tooltip can always access the mdtContext and we don't have to re-create the
-    // tooltip plugin whenever the mdtContext changes.
-    // const mdtContextRef = React.useRef<MDTContext>(props.mdtContext);
-    // React.useEffect(() => { mdtContextRef.current = props.mdtContext; }, [props.mdtContext]);
+    // Our custom tooltip controller that can display tooltips for each node:
+    const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(
+        graph,
+        graphContainer,
+    );
 
     // Our G6 Graph configuration
     const graphConfig: Partial<GraphOptions> = React.useMemo(() => ({
@@ -277,19 +277,131 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         const container = graphContainer;
         const width = container.clientWidth;
         const height = container.clientHeight;
-        const newGraph = new G6.Graph({ container, width, height, ...graphConfig });
+        // NOTE: this local 'graph' variable shadows the 'graph' in the React state, but that makes this function cleaner
+        const graph = new G6.Graph({ container, width, height, ...graphConfig });
         setGraph((oldGraph) => {
             if (oldGraph) {
                 // If there already was a graph, destroy it because we're about to re-create it.
                 oldGraph.destroy();
             }
-            return newGraph;
+            return graph;
         });
         // By default, we zoom the graph so that seven nodes would fit horizontally.
-        newGraph.zoomTo(newGraph.getWidth() / (220 * 7), undefined, false);
+        graph.zoomTo(graph.getWidth() / (220 * 7), undefined, false);
         // We'll control the cursor using CSS:
-        newGraph.get("canvas").setCursor("inherit");
-    }, [graphConfig, graphContainer]);
+        graph.get("canvas").setCursor("inherit");
+
+        // Set up event handlers:
+
+        //  when a node is selected, show the neighbouring nodes and connecting edges as selected.
+        // NOTE the built in node and edge states are: active, inactive, selected, highlight, disable
+        // styles for the states can be configured.
+        graph.on("node:dblclick", function (e) {
+            const item = e.item as INode;
+            // if it is this node or connected node, then highlight
+            graph.getNodes().forEach((node) => {
+                if (node === item) {
+                    graph.setItemState(node, "disabled", false);
+                    graph.setItemState(node, "selected", true);
+                } else if (item.getNeighbors().includes(node)) {
+                    graph.setItemState(node, "disabled", false);
+                    graph.setItemState(node, "selected", true);
+                } else {
+                    graph.setItemState(node, "disabled", true);
+                }
+            });
+
+            // if it is a connected edge, then highlight:
+            graph.getEdges().forEach((edge) => {
+                if (
+                    ((edge.getSource().getID() === item.getID()) ||
+                        (edge.getTarget().getID() === item.getID()))
+                ) {
+                    graph.setItemState(edge, "selected", true);
+                    graph.setItemState(edge, "disabled", false);
+                } else {
+                    graph.setItemState(edge, "disabled", true);
+                    graph.setItemState(edge, "selected", false);
+                }
+            });
+        });
+
+        graph.on("node:click", function (e) {
+            const item = e.item as INode;
+            if (activeToolRef.current === Tool.HideNodes) {
+                setTransforms((t) => {
+                    return t.concat({
+                        id: Transforms.HIDETYPE,
+                        params: { "nodeType": item.getModel().entryType as string },
+                    });
+                });
+                setActiveTool(Tool.Select);
+            } else if (activeToolRef.current === Tool.CondenseExpandNode && item.getModel().nodesCondensed) {
+                // need to pass parent key as the condensed node id changes with every load
+                if (item.getNeighbors().length === 1) {
+                    // expand leaf
+                    setTransforms((prevTransforms) => [...prevTransforms, {
+                        id: Transforms.EXPANDLEAF,
+                        // instead of this node id, get type and parent
+                        // should have only one neighbour
+                        params: {
+                            parentKey: [item.getNeighbors()[0].getModel().id],
+                            entryType: item.getModel().entryType,
+                        },
+                    }]);
+                } else if (item.getNeighbors().length === 2) {
+                    // expand simple pattern
+                    setTransforms((prevTransforms) => [...prevTransforms, {
+                        id: Transforms.EXPANDLEAF,
+                        params: {
+                            parentKey: [item.getNeighbors()[0].getModel().id, item.getNeighbors()[1].getModel().id],
+                            entryType: item.getModel().entryType,
+                        },
+                    }]);
+                }
+            } else if (activeToolRef.current === Tool.CondenseExpandNode && !item.getModel().nodesCondensed) {
+                setTransforms((prevTransforms) => [...prevTransforms, {
+                    id: Transforms.CONDENSENODE,
+                    // instead of this node id, get type and parent
+                    // should have only one neighbour
+                    params: { nodeToCondense: item.getModel().id },
+                }]);
+            }
+        });
+
+        graph.on("nodeselectchange", (e) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const selectedNodes = (e.selectedItems as any).nodes as INode[];
+            if (selectedNodes.length === 1 && activeToolRef.current === Tool.Select) {
+                // Show a tooltip for this node, since there's exactly one node selected:
+                setShowTooltipForNode(selectedNodes[0].getModel().id);
+            } else {
+                // Clear the tooltip if 0 or 2+ nodes are selected:
+                setShowTooltipForNode(undefined);
+            }
+        });
+
+        graph.on("edge:click", (e) => { e.item?.setState("selected", true); });
+
+        // Hover effect:
+        graph.on("node:mouseenter", (e) => { e.item?.setState("hover", true); });
+        graph.on("node:mouseleave", (e) => { e.item?.setState("hover", false); });
+        graph.on("edge:mouseenter", (e) => { e.item?.setState("active", true); });
+        graph.on("edge:mouseleave", (e) => { e.item?.setState("active", false); });
+
+        // Selecting items:
+        graph.on("canvas:click", (e) => {
+            // Clear all selections when clicking on the canvas (the background):
+            graph.getEdges().forEach((edge) => { graph.clearItemStates(edge); });
+            graph.getNodes().forEach((node) => { graph.clearItemStates(node); });
+        });
+    }, [
+        graphConfig,
+        graphContainer,
+        activeToolRef, // <- will never change, but eslint doesn't know that.
+        setActiveTool, // <- will never change, but eslint doesn't know that.
+        setShowTooltipForNode, // <- will never change, but eslint doesn't know that.
+    ]);
 
     // Update the graph data whenever the current data changes
     React.useEffect(() => {
@@ -390,147 +502,6 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             });
         }
     }, [graph, currentData]);
-
-    const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(
-        graph,
-        graphContainer,
-    );
-
-    // Set up G6 event handlers whenever the graph has been initialized for the first time or re-initialized
-    React.useEffect(() => {
-        if (!graph || graph.destroyed) return;
-
-        //  when a node is selected, show the neighbouring nodes and connecting edges as selected.
-        // NOTE the built in node and edge states are: active, inactive, selected, highlight, disable
-        // styles for the states can be configured.
-        graph.on("node:dblclick", function (e) {
-            const item = e.item as INode;
-            // if it is this node or connected node, then highlight
-            graph.getNodes().forEach((node) => {
-                if (node === item) {
-                    graph.setItemState(node, "disabled", false);
-                    graph.setItemState(node, "selected", true);
-                } else if (item.getNeighbors().includes(node)) {
-                    graph.setItemState(node, "disabled", false);
-                    graph.setItemState(node, "selected", true);
-                } else {
-                    graph.setItemState(node, "disabled", true);
-                }
-            });
-
-            // if it is a connected edge, then highlight:
-            graph.getEdges().forEach((edge) => {
-                if (
-                    ((edge.getSource().getID() === item.getID()) ||
-                        (edge.getTarget().getID() === item.getID()))
-                ) {
-                    graph.setItemState(edge, "selected", true);
-                    graph.setItemState(edge, "disabled", false);
-                } else {
-                    graph.setItemState(edge, "disabled", true);
-                    graph.setItemState(edge, "selected", false);
-                }
-            });
-        });
-
-        graph.on("node:click", function (e) {
-            const item = e.item as INode;
-            if (activeToolRef.current === Tool.HideNodes) {
-                setTransforms((t) => {
-                    return t.concat({
-                        id: Transforms.HIDETYPE,
-                        params: { "nodeType": item.getModel().entryType as string },
-                    });
-                });
-                setActiveTool(Tool.Select);
-            } else if (activeToolRef.current === Tool.CondenseExpandNode && item.getModel().nodesCondensed) {
-                // need to pass parent key as the condensed node id changes with every load
-                if (item.getNeighbors().length === 1) {
-                    // expand leaf
-                    setTransforms((prevTransforms) => [...prevTransforms, {
-                        id: Transforms.EXPANDLEAF,
-                        // instead of this node id, get type and parent
-                        // should have only one neighbour
-                        params: {
-                            parentKey: [item.getNeighbors()[0].getModel().id],
-                            entryType: item.getModel().entryType,
-                        },
-                    }]);
-                } else if (item.getNeighbors().length === 2) {
-                    // expand simple pattern
-                    setTransforms((prevTransforms) => [...prevTransforms, {
-                        id: Transforms.EXPANDLEAF,
-                        params: {
-                            parentKey: [item.getNeighbors()[0].getModel().id, item.getNeighbors()[1].getModel().id],
-                            entryType: item.getModel().entryType,
-                        },
-                    }]);
-                }
-            } else if (activeToolRef.current === Tool.CondenseExpandNode && !item.getModel().nodesCondensed) {
-                setTransforms((prevTransforms) => [...prevTransforms, {
-                    id: Transforms.CONDENSENODE,
-                    // instead of this node id, get type and parent
-                    // should have only one neighbour
-                    params: { nodeToCondense: item.getModel().id },
-                }]);
-            }
-        });
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        graph.on("nodeselectchange" as any, (e) => { // the type says it's not allowed but it works
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const selectedNodes = (e.selectedItems as any).nodes as INode[];
-            if (selectedNodes.length === 1 && activeToolRef.current === Tool.Select) {
-                // Show a tooltip for this node, since there's exactly one node selected:
-                setShowTooltipForNode(selectedNodes[0].getModel().id);
-            } else {
-                // Clear the tooltip if 0 or 2+ nodes are selected:
-                setShowTooltipForNode(undefined);
-            }
-            // The current manipulated item
-            // console.log(e.target);
-            // The set of selected items after this operation
-            // console.log(e.selectedItems);
-            // A boolean tag to distinguish if the current operation is select(`true`) or deselect (`false`)
-            // console.log(e.select);
-        });
-
-        // allow selection of edges
-        graph.on("edge:mouseenter", (e) => {
-            if (!e.item) return;
-            const { item } = e;
-            graph.setItemState(item, "active", true);
-        });
-
-        graph.on("edge:mouseleave", (e) => {
-            if (!e.item) return;
-            const { item } = e;
-            graph.setItemState(item, "active", false);
-        });
-
-        graph.on("edge:click", (e) => {
-            if (!e.item) return;
-            const { item } = e;
-            graph.setItemState(item, "selected", true);
-        });
-        graph.on("canvas:click", (e) => {
-            graph.getEdges().forEach((edge) => {
-                graph.clearItemStates(edge);
-            });
-            graph.getNodes().forEach((node) => {
-                graph.clearItemStates(node);
-            });
-        });
-
-        // Hover effect:
-        graph.on("node:mouseenter", function (e) {
-            e.item?.setState("hover", true);
-        });
-        graph.on("node:mouseleave", function (e) {
-            e.item?.setState("hover", false);
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [graph]);
 
     // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
     React.useEffect(() => {
