@@ -1,6 +1,6 @@
 import Graph from "graphology";
 import { VNID } from "neolace-api";
-import type { G6RawGraphData } from "./Graph";
+import type { G6RawGraphData } from "./GraphViewer";
 import toSimple from "graphology-operators/to-simple";
 import toUndirected from "graphology-operators/to-undirected";
 import louvain from "graphology-communities-louvain";

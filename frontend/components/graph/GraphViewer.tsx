@@ -4,22 +4,28 @@
 import React from "react";
 import { api, useRefCache } from "lib/api";
 import { MDTContext } from "../markdown-mdt/mdt";
-import G6, { Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
+import G6, { EdgeConfig, Graph as G6Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "lib/hooks/useResizeObserver";
-import { entryNode } from "./graph-g6-node";
+import "./graph-g6-node";
+import "./graph-g6-placeholder";
 import { VNID } from "neolace-api";
 import { ToolbarButton, ToolbarSeparator } from "../widgets/Button";
-import { useIntl } from "react-intl";
+import { IntlShape, useIntl } from "react-intl";
 import { useStateRef } from "lib/hooks/useStateRef";
 import { applyTransforms, Transform, Transforms } from "./graph-transforms";
 import { Modal } from "components/widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 import { defineMessage } from "components/utils/i18n";
 import { debugLog } from "lib/config";
+import { EdgeAttributes, GraphData, NodeAttributes, NodeType } from "./graph-data";
 
-export interface GraphProps {
-    value: api.GraphValue;
-    mdtContext: MDTContext;
+interface Props {
+    data: GraphData;
+    /**
+     * Users can expand the graph by clicking on "placeholder" nodes, which will trigger this callback to load more
+     * entries into the graph.
+     */
+    expandPlaceholder: (placeholderId: string) => void;
     children?: never;
 }
 
@@ -96,12 +102,12 @@ function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheD
     return data;
 }
 
-function getEdgeIfExists(graph: Graph, comboNode: string, nodeId: string) {
-    return graph.find('edge', (edge) => {
-        return ((edge.getModel().source === comboNode && edge.getModel().target === nodeId)
-            || (edge.getModel().target === comboNode && edge.getModel().source === nodeId))
-    })
-}
+// function getEdgeIfExists(graph: Graph, comboNode: string, nodeId: string) {
+//     return graph.find('edge', (edge) => {
+//         return ((edge.getModel().source === comboNode && edge.getModel().target === nodeId)
+//             || (edge.getModel().target === comboNode && edge.getModel().source === nodeId))
+//     })
+// }
 
 /** The different "tools" that can be active for manipulating the graph */
 enum Tool {
@@ -116,46 +122,15 @@ const emptyTransforms: Transform[] = [];
 /**
  * Display a graph visualization.
  */
-export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
+export const GraphViewer: React.FunctionComponent<Props> = (props) => {
+    const intl = useIntl();
+    const mdtContext = React.useMemo(() => new MDTContext({}), []);
+    const {expandPlaceholder} = props;
     const [activeTool, setActiveTool, activeToolRef] = useStateRef(Tool.Select);
     /** Is the graph currently expanded (displayed in a large modal?) */
     const [expanded, setExpanded, expandedRef] = useStateRef(false);
-    const refCache = useRefCache();
 
     const [transformList, setTransforms] = React.useState<Transform[]>(emptyTransforms);
-
-    const computeData = (): G6RawGraphData => {
-        debugLog(`Computing currentData from originalData + ${transformList.length} transform(s).`);
-        let data: G6RawGraphData = convertValueToData(props.value, refCache);
-        data = applyTransforms(data, transformList);
-        data = colorGraph(data, transformList, refCache);
-        return data;
-    };
-
-    // The data (nodes and relationships) that we want to display as a graph.
-    const [currentData, setCurrentData] = React.useState<G6RawGraphData>(computeData);
-    // Smart data change detection. Keep this inside a new scope since no code below should access these details.
-    {
-        // Store the previous values of things so we can see when they change:
-        const [prevValueJSON, setPrevValueJSON] = React.useState(JSON.stringify(props.value));
-        const [prevTransformList, setPrevTransformList] = React.useState(transformList);
-        const [prevRefCache, setPrevRefCache] = React.useState(refCache);
-        // Check if anything changed:
-        const propsValueChanged = JSON.stringify(props.value) !== prevValueJSON;
-        const transformListChanged = transformList !== prevTransformList;
-        const refCacheChanged = refCache !== prevRefCache;
-        if (propsValueChanged || transformListChanged || refCacheChanged) {
-            const changes = [];
-            if (propsValueChanged) changes.push("props.value");
-            if (transformListChanged) changes.push("transformList");
-            if (refCacheChanged) changes.push("refCache");
-            debugLog(`Graph data changed - triggered by ` + changes.join(", "));
-            setPrevValueJSON(JSON.stringify(props.value));
-            setPrevTransformList(transformList);
-            setPrevRefCache(refCache);
-            setCurrentData(computeData());
-        }
-    }
 
     // In order to preserve our G6 graph when we move it to a modal (when expanding the view), the <div> that contains
     // it must not be destroyed and re-created. React will normally try to destroy and re-create it, not realizing that
@@ -188,7 +163,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
     // "graph" is the actual G6 graph instance which owns a <canvas> element, and renders the graph.
     // See https://g6.antv.vision/en/docs/api/Graph
-    const [graph, setGraph] = React.useState<Graph | null>(null);
+    const [graph, setGraph] = React.useState<G6Graph | null>(null);
 
     // Our custom tooltip controller that can display tooltips for each node:
     const [showTooltipForNode, setShowTooltipForNode, tooltipVirtualElement] = useNodeTooltipHelper(
@@ -199,16 +174,24 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
     // Our G6 Graph configuration
     const graphConfig: Partial<GraphOptions> = React.useMemo(() => ({
         plugins: [],
+        animate: true,
         layout: {
-            type: "force",
+            // We use a "force directed" layout which runs a physics simulation to determine the position of the nodes.
+            type: "gForce",
+            linkDistance: (edge: {isPlaceholder: boolean}) => edge.isPlaceholder ? 200 : 300,
+            // edgeStrength: (edge: {isPlaceholder: boolean}) => edge.isPlaceholder ? 1000 : 200,
             preventOverlap: true,
-            nodeSize: [200, 50],
-            nodeSpacing: 60,
-            alphaMin: 0.1,
+            nodeSize: 250,
+            nodeSpacing: 600,
+            coulombDisScale: 0.003, // A smaller value keeps the nodes farther apart from each other. Default 0.005
+            // For very large graphs, using the GPU is much faster if not required for the layout to converge:
+            // gpuEnabled: true,
+            // When adding new nodes to the graph, move the new ones around but leave the old in place:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onLayoutEnd: ((nodes: NodeConfig[]) => { nodes.forEach((n) => n.wasPreviouslyLayedOut = true); }) as any,
+            getMass: (node: NodeConfig) => node.wasPreviouslyLayedOut ? 10 : 1,
         },
-        defaultNode: {
-            type: entryNode,
-        },
+        defaultNode: {},
         defaultEdge: {
             type: "line",
             /* configure the bending radius and min distance to the end nodes */
@@ -220,9 +203,20 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                     d: 0,
                     fill: "#ddd",
                 },
-                lineWidth: 2,
+                lineWidth: 3,
                 stroke: "#ddd",
             },
+            labelCfg: {
+                style: {
+                    stroke: "#000",
+                    fontSize: 12,
+                    background: {
+                      fill: '#ffffff',
+                      padding: [5, 5, 5, 5],
+                      radius: 5,
+                    },
+                },
+            }
         },
         defaultCombo: {
             type: "circle",
@@ -328,6 +322,12 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
 
         graph.on("node:click", function (e) {
             const item = e.item as INode;
+
+            if (item.getModel().type === NodeType.Placeholder) {
+                expandPlaceholder(item.getID());
+                return;
+            }
+
             if (activeToolRef.current === Tool.HideNodes) {
                 setTransforms((t) => {
                     return t.concat({
@@ -373,8 +373,9 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const selectedNodes = (e.selectedItems as any).nodes as INode[];
             if (selectedNodes.length === 1 && activeToolRef.current === Tool.Select) {
+                const nodeData = selectedNodes[0].getModel();
                 // Show a tooltip for this node, since there's exactly one node selected:
-                setShowTooltipForNode(selectedNodes[0].getModel().id);
+                setShowTooltipForNode(nodeData.type === NodeType.Entry ? selectedNodes[0].getModel().id : undefined);
             } else {
                 // Clear the tooltip if 0 or 2+ nodes are selected:
                 setShowTooltipForNode(undefined);
@@ -401,116 +402,21 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         activeToolRef, // <- will never change, but eslint doesn't know that.
         setActiveTool, // <- will never change, but eslint doesn't know that.
         setShowTooltipForNode, // <- will never change, but eslint doesn't know that.
+        expandPlaceholder, // <- will never change, but eslint doesn't know that.
     ]);
 
     // Update the graph data whenever the current data changes
     React.useEffect(() => {
         if (!graph || graph.destroyed) return;
-        const currentDataCopy = JSON.parse(JSON.stringify(currentData));
-        const hadData = graph.getNodes().length > 0;
-        graph.changeData(currentDataCopy);
-        if (!hadData) {
-            debugLog("Graph data set for the first time. Will zoom to focus node after layout.");
-            // After the initial layout, zoom to the "focus node":
-            graph.on("afterlayout", () => {
-                if (!graph || graph.destroyed) return;
-                debugLog("layout done.");
-                // Zoom to focus on the "focus node" after the layout, if there is one:
-                const focusNode = graph.getNodes().find((node) => node.getModel().isFocusEntry);
-                if (focusNode) {
-                    debugLog("Zooming to focus node.");
-                    graph.setItemState(focusNode, "selected", true);
-                    graph.focusItem(focusNode, false);
-                }
-                graph.fitView(undefined, undefined, false);
-            }, true);
-        } else {
-            debugLog("graph data has changed.");
-        }
-
-        // ADD COMBOS WHEN NEEDED
-        //TODO make this to be a part of combo operation under communities
-        // creates lists of ids for combos
-        const comboDict: Record<number, string[]> = {};
-        currentData.nodes.forEach((n) => {
-            if (n.clique === undefined) return;
-            if (!comboDict[n.clique]) comboDict[n.clique] = [];
-            comboDict[n.clique].push(n.id);
-        });
-        // delete relationships within combos
-        for (const combo in comboDict) {
-            const nodeList = comboDict[combo];
-            // remove edges within combo
-            for (const comboNode of nodeList) {
-                graph.getNeighbors(comboNode).forEach((n) => {
-                    if (nodeList.includes(n.getModel().id as string)) {
-                        const edge = getEdgeIfExists(graph, comboNode, n.getModel().id as string);
-                        if (edge) {
-                            graph.removeItem(edge);
-                        }
-                    }
-                });
-            }
-        }
-        // creates cobmos (cliques)
-        for (const combo in comboDict) {
-            graph.createCombo({
-                id: combo,
-                label: `Largest clique of community ${combo}`,
-            }, comboDict[combo]);
-        }
-
-        // optimize edges to combos
-        // TODO think about merging this code with clique detection code
-        if (Object.keys(comboDict).length > 0) {
-            graph.getNodes().forEach((n) => {
-                const nodeId = n.getModel().id as string;
-                for (const combo in comboDict) {
-                    let addEdge = false;
-                    const nodeList = comboDict[combo];
-                    const edgeColor = nodeList.includes(nodeId) ? "red" : "blue";
-                    let doesCover = true;
-                    nodeList.forEach((i) => {
-                        doesCover = graph.getNeighbors(i).map((nb) => nb.getModel().id).includes(nodeId);
-                    });
-                    // if the node covers an entire combo, exchange all the edges by a single edge to the combo
-                    if (doesCover) {
-                        // remove all the edges
-                        nodeList.forEach((comboNode) => {
-                            // get edge
-                            const edge = getEdgeIfExists(graph, comboNode, nodeId);
-                            if (edge) {
-                                graph.removeItem(edge);
-                            }
-                        });
-                        addEdge = true;
-                    }
-                    if (nodeList.includes(nodeId)) addEdge = true;
-
-                    if (addEdge) {
-                        // add edge
-                        graph.addItem("edge", {
-                            id: VNID(),
-                            source: combo,
-                            target: nodeId,
-                            style: {
-                                stroke: edgeColor,
-                            },
-                        });
-                    }
-                }
-            });
-        }
-    }, [graph, currentData]);
+        updateGraphData(graph, props.data, transformList, intl);
+    }, [graph, props.data, transformList, intl]);
 
     // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
     React.useEffect(() => {
         // When not in fullscreen, we don't use the mousewheel to zoom because it's annoying when it zooms as you try
         // to scroll down while reading the page.
         if (expanded) {
-            const firefoxScrollBlocker = (e: Event) => {
-                e.preventDefault();
-            };
+            const firefoxScrollBlocker = (e: Event) => { e.preventDefault(); };
             graphContainer?.addEventListener("MozMousePixelScroll", firefoxScrollBlocker, { passive: false });
             return () => {
                 graphContainer?.removeEventListener("MozMousePixelScroll", firefoxScrollBlocker);
@@ -645,7 +551,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "r/Qe/+",
                     })}
                     icon="chevron-contract"
-                    enabled={isCondensed}
+                    toggled={isCondensed}
                 />
                 <ToolbarSeparator />
                 <ToolbarButton
@@ -656,7 +562,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "5T8hcS",
                     })}
                     icon="cursor-left-fill"
-                    enabled={activeTool === Tool.Select}
+                    toggled={activeTool === Tool.Select}
                 />
                 <ToolbarButton
                     onClick={handleHideArticlesButton}
@@ -665,7 +571,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "UNBVo0",
                     })}
                     icon="eraser"
-                    enabled={activeTool === Tool.HideNodes}
+                    toggled={activeTool === Tool.HideNodes}
                 />
                 <ToolbarButton
                     onClick={handleExpandLeafButton}
@@ -674,7 +580,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "ZT3+GQ",
                     })}
                     icon="chevron-expand"
-                    enabled={activeTool === Tool.CondenseExpandNode}
+                    toggled={activeTool === Tool.CondenseExpandNode}
                 />
                 <ToolbarButton
                     onClick={handleCommunityButton}
@@ -683,7 +589,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "MswTjB",
                     })}
                     icon="bounding-box"
-                    enabled={isCommunized}
+                    toggled={isCommunized}
                 />
                 <ToolbarButton
                     onClick={handleCliquesButton}
@@ -692,7 +598,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
                         id: "xgjVKC",
                     })}
                     icon="braces-asterisk"
-                    enabled={areCliquesDetected}
+                    toggled={areCliquesDetected}
                     disabled={!isCommunized}
                 />
             </div>
@@ -711,7 +617,7 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
             {/* A tooltip that displays information about the currently selected entry node. */}
             <NodeTooltip
                 showTooltipForNode={showTooltipForNode}
-                mdtContext={props.mdtContext}
+                mdtContext={mdtContext}
                 tooltipVirtualElement={tooltipVirtualElement}
             />
         </>
@@ -746,3 +652,151 @@ export const LookupGraph: React.FunctionComponent<GraphProps> = (props) => {
         );
     }
 };
+
+function updateGraphData(graph: G6Graph, graphData: GraphData, transformList: Transform[], intl: IntlShape) {
+    const hadData = graph.getNodes().length > 0;
+    const existingNodeIds = new Set<string>();
+    const existingRelationshipIds = new Set<string>();
+    graph.getNodes().forEach((n) => existingNodeIds.add(n.getID()))
+    graph.getEdges().forEach((e) => existingRelationshipIds.add(e.getID()));
+
+    if (transformList.length > 0) {
+        // make a copy of the originalData ?
+        for (const transform of transformList) {
+            // TODO: apply transforms to graphData
+        }
+    }
+
+    const entryTypes = graphData.getAttribute("entryTypes");
+    const relationshipTypes = graphData.getAttribute("relationshipTypes");
+    const placeholderEdgeCfg = {
+        style: {opacity: 0.2, lineWidth: 2,},
+        labelCfg: {
+            style: {
+                opacity: 0.2,
+                background: {
+                    fill: '#ffffff',
+                    padding: [5, 5, 5, 5],
+                    radius: 5,
+                },
+            }
+        }
+    };
+
+    const convertNodeForG6 = (nodeData: NodeAttributes) => {
+        if (nodeData.type === NodeType.Entry) {
+            const {name: label, ...rest} = nodeData;
+            return {
+                label,
+                ...rest,
+                color: entryTypes[nodeData.entryTypeKey]?.color,
+                colorCustom: entryTypes[nodeData.entryTypeKey]?.colorCustom,
+                leftLetter: entryTypes[nodeData.entryTypeKey]?.abbreviation,
+            };
+        } else if (nodeData.type === NodeType.Placeholder) {
+            const label = intl.formatMessage({defaultMessage: `{entryCount, plural, one {# entry} other {# entries}}`, id: "ImLk+z"}, {entryCount: nodeData.entryCount});
+            return {label, type: nodeData.type, entryCount: nodeData.entryCount, entryId: nodeData.entryId};
+        } else {
+            throw new Error(`Unknown Node Type ${(nodeData as {type: unknown}).type}`);
+        }
+    };
+    const convertEdgeForG6 = (edgeData: EdgeAttributes) => {
+        return {
+            label: relationshipTypes[edgeData.relTypeKey].name,
+            ...edgeData,
+            ...(edgeData.isPlaceholder ? placeholderEdgeCfg : undefined),
+        };
+    };
+
+    let nodesAdded = false;
+
+    graphData.forEachNode((nodeId, attrs) => {
+        const nodeModel: Partial<NodeConfig> = convertNodeForG6(attrs);
+        const alreadyOnGraph = existingNodeIds.delete(nodeId);
+        if (alreadyOnGraph) {
+            graph.updateItem(nodeId, nodeModel);
+        } else {
+            nodesAdded = true;
+            // We need to give the node an initial position or else there are issues with the layout animation.
+            const initialPos = {x: 1, y: 1};
+            if (typeof nodeModel.fromPlaceholder === "string") {
+                // If we're currently replacing a placeholder with this new node(s), put them in the same position that
+                // the placeholder had:
+                const placeholderNode = graph.findById(nodeModel.fromPlaceholder as string)?.getModel();
+                if (placeholderNode?.x && placeholderNode?.y) {
+                    initialPos.x = placeholderNode.x;
+                    initialPos.y = placeholderNode.y;
+                }
+            } else if (nodeModel.type === NodeType.Placeholder) {
+                // If this is a new placeholder node, position it near the node it's connected to
+                const entryNode = graph.findById(nodeModel.entryId as string)?.getModel();
+                if (entryNode?.x && entryNode?.y) {
+                    initialPos.x = entryNode.x;
+                    initialPos.y = entryNode.y;
+                }
+            }
+            graph.addItem('node', { id: nodeId, ...initialPos, ...nodeModel });
+        }
+    });
+
+    graphData.forEachEdge((edgeId, attrs, source, target) => {
+        const edgeModel: Partial<EdgeConfig> = convertEdgeForG6(attrs);
+        const alreadyOnGraph = existingRelationshipIds.delete(edgeId);
+        if (alreadyOnGraph) {
+            graph.updateItem(edgeId, edgeModel);
+        } else {
+            graph.addItem('edge', { id: edgeId, source, target, ...edgeModel });
+        }
+    });
+
+    // Remove any items from the graph which are no longer in the data:
+    for (const removedRelId of existingRelationshipIds) {
+        graph.remove(removedRelId);
+    }
+    for (const removedNodeId of existingNodeIds) {
+        graph.remove(removedNodeId);
+    }
+
+    // Placeholder nodes should always be at the back:
+    graph.getNodes().forEach((node) => {
+        if (node.getModel().type === NodeType.Placeholder) node.toBack();
+    });
+
+    if (!hadData) {
+        debugLog("Graph data set for the first time. Will zoom to focus node after layout.");
+        // After the initial layout, zoom to the "focus node":
+        graph.on("afteranimate", () => {
+            if (!graph || graph.destroyed) return;
+            debugLog("layout done.");
+            // Animation isn't needed when the graph first loads and it will interfere with our focus/zoom code below:
+            // graph.stopAnimate();
+            // Zoom to focus on the "focus node" after the layout, if there is one:
+            const focusNode = graph.getNodes().find((node) => node.getModel().isFocusEntry);
+            if (focusNode) {
+                debugLog("Zooming to focus node.");
+                graph.setItemState(focusNode, "selected", true);
+                graph.focusItem(focusNode, false);
+            }
+            graph.fitView(50, undefined, true);
+        }, true);
+        // Before the layout starts, the nodes will be clustered at [0,0] which is now at the top left corner of the
+        // canvas. Center on them so it looks less weird while we compute the layout.
+        graph.zoomTo(0.5);
+        graph.moveTo(graph.getWidth()/2, graph.getHeight()/2, false);
+        graph.layout();
+    } else if (nodesAdded) {
+        debugLog("running graph layout");
+        for (const node of graph.getNodes()) {
+            if (node.getModel().x === undefined) {
+                node.update({x: 1, y: 1});
+            }
+            // console.log(node.getModel().x, node.getModel().y, node.getModel().label, node.getModel().wasPreviouslyLayedOut);
+        }
+        graph.updateLayout();
+        graph.on("afteranimate", () => {
+            if (!graph || graph.destroyed) return;
+            // If the newly added nodes are outside of the viewport, zoom out:
+            graph.fitView(50, {onlyOutOfViewPort: true}, true);
+        }, true);
+    }
+}

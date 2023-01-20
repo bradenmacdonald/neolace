@@ -1,4 +1,4 @@
-import { G6RawGraphData } from "components/graph/Graph";
+import { G6RawGraphData } from "components/graph/GraphViewer";
 import { VNID } from "neolace-api";
 import {
     convertGraphToData,

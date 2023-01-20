@@ -250,6 +250,9 @@ export class ReferenceCache {
                 for (const relationship of value.rels) {
                     this._propertyKeysUsed.add(relationship.relTypeKey);
                 }
+                for (const relationship of value.borderingRelationships) {
+                    this._propertyKeysUsed.add(relationship.relTypeKey);
+                }
                 return;
             }
             case "Boolean":

@@ -1,14 +1,18 @@
 import G6, { IShape } from "@antv/g6";
 import { api } from "lib/api";
+import { NodeType } from "./graph-data";
 
-/**
- * Always use this node type by importing this string, don't hard-code "entryNode" elsewhere,
- * or else you may forget to import this file and the node won't be registered.
- */
-export const entryNode = "entryNode";
+export const width = 220;
+export const height = 30;
+export const radius = 5; // radius by which the rectangle corners are rounded.
+// Width of the darker, inset rectangle on the left
+export const leftRectWidth = 30;
+export const textPadding = 7; // How much padding is around the text
+export const fontSize = 16;
+export const maxTextWidth = width - leftRectWidth - (textPadding * 2) - 5; // The 5 is because the text truncation algorithm doesn't work perfectly with our preferred font; with this little fix it always seems good.
 
 G6.registerNode(
-    entryNode,
+    NodeType.Entry,
     {
         // shapeType: entryNode, // Not sure if this is important or not?
         // Options - specify default options for each node:
@@ -30,14 +34,6 @@ G6.registerNode(
         draw(cfg, group) {
             if (!cfg) throw new Error("no cfg in customized Node.draw()");
             if (!group) throw new Error("no group in customized Node.draw()");
-            const width = 220;
-            const height = 30;
-            const radius = 5; // radius by which the rectangle corners are rounded.
-            // Width of the darker, inset rectangle on the left
-            const leftRectWidth = 30;
-            const textPadding = 7; // How much padding is around the text
-            const fontSize = 16;
-            const maxTextWidth = width - leftRectWidth - (textPadding * 2) - 5; // The 5 is because the text truncation algorithm doesn't work perfectly with our preferred font; with this little fix it always seems good.
 
             const colors = api.getEntryTypeColor({color: cfg.color as api.EntryTypeColor, colorCustom: cfg.colorCustom as string|undefined});
 
@@ -223,7 +219,7 @@ G6.registerNode(
  * Shorten a string and add an ellipsis as needed so that the string fits the maximum width specified.
  * Unfortunately this doesn't take the font into account so it's only perfectly accurate for G6's default font.
  */
-function truncateString(str: string, maxWidth: number, fontSize: number): string {
+export function truncateString(str: string, maxWidth: number, fontSize: number): string {
     const ellipsis = "…";
     const ellipsisLength = G6.Util.getTextSize(ellipsis, fontSize)[0];
     let currentWidth = 0;
