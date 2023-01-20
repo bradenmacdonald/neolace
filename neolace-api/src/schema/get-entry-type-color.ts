@@ -39,7 +39,7 @@ export function getEntryTypeColor(
         };
     }
 
-    const data = (color && entryTypeColors[color]) ?? entryTypeColors[EntryTypeColor.Default];
+    const data = (color !== undefined && color in entryTypeColors) ? entryTypeColors[color] : entryTypeColors[EntryTypeColor.Default];
     return {
         backgroundColor: data[0],
         darkerBackgroundColor: data[1],
