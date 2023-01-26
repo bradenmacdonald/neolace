@@ -2,17 +2,16 @@
  * A graph that is displayed as the result of the .graph() lookup function.
  */
 import React from "react";
-import { api, useRefCache } from "lib/api";
+import { api } from "lib/api";
 import { MDTContext } from "../markdown-mdt/mdt";
 import G6, { EdgeConfig, Graph as G6Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "lib/hooks/useResizeObserver";
 import "./graph-g6-node";
 import "./graph-g6-placeholder";
-import { VNID } from "neolace-api";
 import { ToolbarButton, ToolbarSeparator } from "../widgets/Button";
 import { IntlShape, useIntl } from "react-intl";
 import { useStateRef } from "lib/hooks/useStateRef";
-import { applyTransforms, LayoutPipelineTransformer, RemovePlaceholdersTransformer, Transform, Transforms } from "./graph-transforms";
+import { DetectCommunitiesTransformer, LayoutPipelineTransformer, RemovePlaceholdersTransformer } from "./graph-transforms";
 import { Modal } from "components/widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 import { defineMessage } from "components/utils/i18n";
@@ -28,86 +27,6 @@ interface Props {
     expandPlaceholder: (placeholderId: string) => void;
     children?: never;
 }
-
-let nextColor = 0;
-const colourMap = new Map<VNID | number, api.EntryTypeColor>();
-
-export interface G6RawGraphData {
-    nodes: {
-        id: VNID;
-        label: string;
-        entryTypeKey: string;
-        isFocusEntry?: boolean;
-        community?: number;
-        nodesCondensed?: Set<string>;
-        clique?: number;
-        color?: api.EntryTypeColor;
-        colorCustom?: string;
-        leftLetter?: string;
-    }[];
-    edges: {
-        id: VNID;
-        source: string;
-        target: string;
-        relTypeKey: string;
-        label: string;
-        [other: string]: unknown; // attributes
-    }[];
-}
-
-function colorGraph(data: G6RawGraphData, transformList: Transform[], refCache: api.ReferenceCacheData) {
-    function colorGraphByAttribute(attr: string) {
-        data.nodes.forEach((node: NodeConfig) => {
-            const attrValue: VNID | number = node[attr] as VNID | number;
-            if (!colourMap.has(attrValue)) {
-                colourMap.set(attrValue, Object.values(api.EntryTypeColor)[nextColor]);
-                nextColor = (nextColor + 1) % Object.values(api.EntryTypeColor).length;
-            }
-            node.color = colourMap.get(attrValue);
-            node.leftLetter = refCache.entryTypes[node.entryTypeKey as string]?.abbreviation ?? "";
-        });
-        return data;
-    }
-    if (transformList.find((t) => t.id === Transforms.COMMUNITY) !== undefined) {
-        data = colorGraphByAttribute("community");
-    } else {
-        data.nodes.forEach((node) => {
-            node.color = refCache.entryTypes[node.entryTypeKey]?.color ?? api.EntryTypeColor.Default;
-            if (refCache.entryTypes[node.entryTypeKey]?.colorCustom) {
-                node.colorCustom = refCache.entryTypes[node.entryTypeKey].colorCustom;
-            }
-            node.leftLetter = refCache.entryTypes[node.entryTypeKey]?.abbreviation ?? "";
-        });
-    }
-    return data;
-}
-
-function convertValueToData(value: api.GraphValue, refCache: api.ReferenceCacheData): Readonly<G6RawGraphData> {
-    let data: G6RawGraphData = {
-        nodes: value.entries.map((n) => (
-            { id: n.entryId, label: n.name, entryTypeKey: n.entryTypeKey, isFocusEntry: n.isFocusEntry }
-        )),
-        edges: value.rels.map((e) => (
-            {
-                id: e.relId,
-                source: e.fromEntryId,
-                target: e.toEntryId,
-                relTypeKey: e.relTypeKey,
-                label: refCache.properties[e.relTypeKey]?.name ?? e.relTypeKey,
-            }
-        )),
-    };
-
-    data = colorGraph(data, [], refCache);
-    return data;
-}
-
-// function getEdgeIfExists(graph: Graph, comboNode: string, nodeId: string) {
-//     return graph.find('edge', (edge) => {
-//         return ((edge.getModel().source === comboNode && edge.getModel().target === nodeId)
-//             || (edge.getModel().target === comboNode && edge.getModel().source === nodeId))
-//     })
-// }
 
 /** The different "tools" that can be active for manipulating the graph */
 enum Tool {
@@ -196,7 +115,6 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                     edgesFilter: (edge: EdgeAttributes) => edge._isIsARelationship,
                     ranksep: 30,
                     nodesep: 95,
-                    // TODO: increase the spacing between nodes based on the order of the node (# of edges) using nodeSepFunc
                 },
                 {
                     // Next, lay out all the other nodes that aren't placeholders:
@@ -217,7 +135,6 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                     nodeStrength: (node: NodeAttributes) => 10_000,
                     // attractive strength of the edges:
                     edgeStrength: (edge: EdgeAttributes) => 200,
-                    // linkDistance: (edge: EdgeAttributes) => 300,
                     // Short range repulsive force: A smaller value keeps the nodes farther apart from each other. Default 0.005
                     coulombDisScale: 0.004,
 
@@ -280,6 +197,8 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                     // "accidentally" as you try to scroll down while reading the page, not meaning to zoom the graph.
                     // However, if this event is a "touchstart" event (pinch to zoom on mobile), we always zoom.
                     shouldBegin: (evt?: IG6GraphEvent) => expandedRef.current || evt?.type === "touchstart",
+                    // Adjust the sensitivity a bit (range 0-10, default 5 is a bit too sensitive)
+                    sensitivity: 2,
                 },
                 "drag-node",
                 "drag-combo",
@@ -366,45 +285,7 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                 return;
             }
 
-            if (activeToolRef.current === Tool.HideNodes) {
-                // setTransforms((t) => {
-                //     return t.concat({
-                //         id: Transforms.HIDETYPE,
-                //         params: { "nodeType": item.getModel().entryType as string },
-                //     });
-                // });
-                setActiveTool(Tool.Select);
-            } else if (activeToolRef.current === Tool.CondenseExpandNode && item.getModel().nodesCondensed) {
-                // need to pass parent key as the condensed node id changes with every load
-                if (item.getNeighbors().length === 1) {
-                    // expand leaf
-                    // setTransforms((prevTransforms) => [...prevTransforms, {
-                    //     id: Transforms.EXPANDLEAF,
-                    //     // instead of this node id, get type and parent
-                    //     // should have only one neighbour
-                    //     params: {
-                    //         parentKey: [item.getNeighbors()[0].getModel().id],
-                    //         entryType: item.getModel().entryType,
-                    //     },
-                    // }]);
-                } else if (item.getNeighbors().length === 2) {
-                    // expand simple pattern
-                    // setTransforms((prevTransforms) => [...prevTransforms, {
-                    //     id: Transforms.EXPANDLEAF,
-                    //     params: {
-                    //         parentKey: [item.getNeighbors()[0].getModel().id, item.getNeighbors()[1].getModel().id],
-                    //         entryType: item.getModel().entryType,
-                    //     },
-                    // }]);
-                }
-            } else if (activeToolRef.current === Tool.CondenseExpandNode && !item.getModel().nodesCondensed) {
-                // setTransforms((prevTransforms) => [...prevTransforms, {
-                //     id: Transforms.CONDENSENODE,
-                //     // instead of this node id, get type and parent
-                //     // should have only one neighbour
-                //     params: { nodeToCondense: item.getModel().id },
-                // }]);
-            }
+            // Can implement tools here. (when X tool is active, clicking a node has Y effect.)
         });
 
         graph.on("nodeselectchange", (e) => {
@@ -487,29 +368,9 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
         graph?.zoom(1 / zoomRatio, { x: graph.getWidth() / 2, y: graph.getHeight() / 2 }, true, { duration: 100 });
     }, [graph]);
     // Code for "fit view" button
-    const handleFitViewButton = React.useCallback(() => {
-        graph?.fitView(10, { direction: "both" });
-    }, [graph]);
+    const handleFitViewButton = React.useCallback(() => { graph?.fitView(10, { direction: "both" }); }, [graph]);
     // Code for "download as image" toolbar button
-    const handleDownloadImageButton = React.useCallback(() => {
-        graph?.downloadFullImage();
-    }, [graph]);
-    // Code for "Condense leaves" toolbar button
-    const isCondensed = activeTransforms.condenseLeaves;
-    const handleCondenseNodesButton = React.useCallback(() => {
-        // if (isCondensed) {
-        //     setTransforms(
-        //         (prevTransforms) =>
-        //             prevTransforms.filter((t) =>
-        //                 (
-        //                     t.id !== Transforms.CONDENSE
-        //                 ) && t.id !== Transforms.EXPANDLEAF && t.id !== Transforms.CONDENSENODE
-        //             ),
-        //     );
-        // } else {
-        //     setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.CONDENSE, params: {} }]);
-        // }
-    }, [isCondensed]);
+    const handleDownloadImageButton = React.useCallback(() => { graph?.downloadFullImage(); }, [graph]);
 
     // Code for detecting communities toolbar button
     const isCommunized = activeTransforms.detectCommunities;
@@ -519,24 +380,9 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
             detectCommunities: !prevTransforms.detectCommunities,
         }));
     }, []);
-    // Code for detecting cliques toolbar button
-    const areCliquesDetected = activeTransforms.detectCliques;
-    const handleCliquesButton = React.useCallback(() => {
-        setActiveTransforms((prevTransforms) => ({
-            ...prevTransforms,
-            // This transform can only be active if detect communities is already active:
-            detectCliques: prevTransforms.detectCommunities && !prevTransforms.detectCliques,
-        }));
-    }, []);
     // Tools:
     const handleSelectToolButton = React.useCallback(() => {
         setActiveTool(Tool.Select);
-    }, [setActiveTool]);
-    const handleExpandLeafButton = React.useCallback(() => {
-        setActiveTool(Tool.CondenseExpandNode);
-    }, [setActiveTool]);
-    const handleHideArticlesButton = React.useCallback(() => {
-        setActiveTool(Tool.HideNodes);
     }, [setActiveTool]);
     // Code for "show placeholders" toolbar button
     const showPlaceholders = !activeTransforms.removePlaceholders;
@@ -556,6 +402,16 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                     icon={expanded ? "arrows-angle-contract" : "arrows-angle-expand"}
                 />
                 <ToolbarButton
+                    onClick={handleTogglePlaceholdersButton}
+                    tooltip={defineMessage({
+                        defaultMessage: "Show placeholders where additional entries can be loaded into the graph",
+                        id: "ABp3x6",
+                    })}
+                    icon="plus-square-dotted"
+                    toggled={showPlaceholders}
+                />
+                <ToolbarSeparator />
+                <ToolbarButton
                     onClick={handleZoomInButton}
                     tooltip={defineMessage({ defaultMessage: "Zoom in", id: "xbi38c" })}
                     icon="zoom-in"
@@ -565,6 +421,18 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                     tooltip={defineMessage({ defaultMessage: "Zoom out", id: "/UnJ3S" })}
                     icon="zoom-out"
                 />
+                <ToolbarSeparator />
+                <ToolbarButton
+                    onClick={handleSelectToolButton}
+                    tooltip={defineMessage({
+                        defaultMessage:
+                            "Select tool: click on an entry/node to select it. Double-click to see its neighbors.",
+                        id: "5T8hcS",
+                    })}
+                    icon="cursor-left-fill"
+                    toggled={activeTool === Tool.Select}
+                />
+                <ToolbarSeparator />
                 <ToolbarButton
                     onClick={handleFitViewButton}
                     tooltip={defineMessage({ defaultMessage: "Fit graph to view", id: "KW0LBg" })}
@@ -579,44 +447,6 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                     icon="image"
                 />
                 <ToolbarButton
-                    onClick={handleCondenseNodesButton}
-                    tooltip={defineMessage({
-                        defaultMessage: "Condense leaves and intermediate nodes",
-                        id: "r/Qe/+",
-                    })}
-                    icon="chevron-contract"
-                    toggled={isCondensed}
-                />
-                <ToolbarSeparator />
-                <ToolbarButton
-                    onClick={handleSelectToolButton}
-                    tooltip={defineMessage({
-                        defaultMessage:
-                            "Select tool: click on an entry/node to select it. Double-click to see its neighbors.",
-                        id: "5T8hcS",
-                    })}
-                    icon="cursor-left-fill"
-                    toggled={activeTool === Tool.Select}
-                />
-                <ToolbarButton
-                    onClick={handleHideArticlesButton}
-                    tooltip={defineMessage({
-                        defaultMessage: "Hide entries tool: click on an entry to hide all entries of that type.",
-                        id: "UNBVo0",
-                    })}
-                    icon="eraser"
-                    toggled={activeTool === Tool.HideNodes}
-                />
-                <ToolbarButton
-                    onClick={handleExpandLeafButton}
-                    tooltip={defineMessage({
-                        defaultMessage: "Expand leaf tool: Click on previously collapsed nodes to expand them again.",
-                        id: "ZT3+GQ",
-                    })}
-                    icon="chevron-expand"
-                    toggled={activeTool === Tool.CondenseExpandNode}
-                />
-                <ToolbarButton
                     onClick={handleCommunityButton}
                     tooltip={defineMessage({
                         defaultMessage: "Detect communities",
@@ -624,26 +454,6 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                     })}
                     icon="bounding-box"
                     toggled={isCommunized}
-                />
-                <ToolbarButton
-                    onClick={handleCliquesButton}
-                    tooltip={defineMessage({
-                        defaultMessage: "Detect cliques and combine them into combos",
-                        id: "xgjVKC",
-                    })}
-                    icon="braces-asterisk"
-                    toggled={areCliquesDetected}
-                    disabled={!isCommunized}
-                />
-                <ToolbarSeparator />
-                <ToolbarButton
-                    onClick={handleTogglePlaceholdersButton}
-                    tooltip={defineMessage({
-                        defaultMessage: "Show placeholders where additional entries can be loaded into the graph",
-                        id: "ABp3x6",
-                    })}
-                    icon="plus-square-dotted"
-                    toggled={showPlaceholders}
                 />
             </div>
             <div
@@ -697,6 +507,35 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
     }
 };
 
+// The visual appearance for the relationships from nodes in the graph to the "placeholder" nodes that can be clicked
+// on to load additional data into the graph.
+const placeholderEdgeCfg = {
+    style: {opacity: 0.2, lineWidth: 2,},
+    labelCfg: {
+        style: {
+            opacity: 0.2,
+            background: {
+                fill: '#ffffff',
+                padding: [5, 5, 5, 5],
+                radius: 5,
+            },
+        }
+    }
+};
+
+const allColors = Object.values(api.EntryTypeColor);
+
+/**
+ * Generate a color to use based on an integer so that "communities" 0, 1, 2, 3 etc. will each have a different color.
+ */
+function integerToColor(num: number) {
+    return allColors[num % allColors.length];
+}
+
+/**
+ * Either the data (set of nodes and relationships) or the requested transforms (manipulations of the graph) has been
+ * updated. Update the actualy G6 Graph accordingly.
+ */
 function updateGraphData(graph: G6Graph, originalGraphData: GraphData, activeTransforms: ActiveTransforms, intl: IntlShape) {
     const hadData = graph.getNodes().length > 0;
     const existingNodeIds = new Set<string>();
@@ -708,24 +547,12 @@ function updateGraphData(graph: G6Graph, originalGraphData: GraphData, activeTra
     const graphData = originalGraphData.copy();
     // Apply Optional transformers, in order:
     if (activeTransforms.removePlaceholders) RemovePlaceholdersTransformer(graphData);
+    if (activeTransforms.detectCommunities) DetectCommunitiesTransformer(graphData);
     // Required transformers:
     LayoutPipelineTransformer(graphData);
 
     const entryTypes = graphData.getAttribute("entryTypes");
     const relationshipTypes = graphData.getAttribute("relationshipTypes");
-    const placeholderEdgeCfg = {
-        style: {opacity: 0.2, lineWidth: 2,},
-        labelCfg: {
-            style: {
-                opacity: 0.2,
-                background: {
-                    fill: '#ffffff',
-                    padding: [5, 5, 5, 5],
-                    radius: 5,
-                },
-            }
-        }
-    };
 
     const convertNodeForG6 = (nodeData: NodeAttributes) => {
         if (nodeData.type === NodeType.Entry) {
@@ -733,7 +560,12 @@ function updateGraphData(graph: G6Graph, originalGraphData: GraphData, activeTra
             return {
                 label,
                 ...rest,
-                color: entryTypes[nodeData.entryTypeKey]?.color,
+                color: (
+                    // If community detection was used, the color of the node is determined by what community it's part of:
+                    rest.community !== undefined ? integerToColor(rest.community)
+                    // Otherwise the color is determined by the entry type:
+                    : entryTypes[nodeData.entryTypeKey]?.color
+                ),
                 colorCustom: entryTypes[nodeData.entryTypeKey]?.colorCustom,
                 leftLetter: entryTypes[nodeData.entryTypeKey]?.abbreviation,
             };
@@ -752,6 +584,11 @@ function updateGraphData(graph: G6Graph, originalGraphData: GraphData, activeTra
         };
     };
 
+    // When nodes are added, we'll need to run the layout to re-organize them as needed (prevent overlaps, put them in
+    // a logical position). Likewise, if IS A nodes in the DAGRE layout are removed, we need to redo the layout to
+    // consolidate the tree (avoid awkward gaps if nodes are removed from near the middle). If nodes were only removed
+    // (not added) and we only have the force layout, it wouldn't really be necessary to redo the layout, but figuring
+    // that out is perhaps more trouble than its worth so we just redo the layout on any addition/removal.
     let nodesWereAddedOrRemoved = false;
 
     graphData.forEachNode((nodeId, attrs) => {
@@ -831,13 +668,9 @@ function updateGraphData(graph: G6Graph, originalGraphData: GraphData, activeTra
         graph.layout();
     } else if (nodesWereAddedOrRemoved) {
         debugLog("running graph layout");
-        for (const node of graph.getNodes()) {
-            if (node.getModel().x === undefined) {
-                node.update({x: 1, y: 1});
-            }
-            // console.log(node.getModel().x, node.getModel().y, node.getModel().label, node.getModel().wasPreviouslyLayedOut);
-        }
         graph.updateLayout();
+        // After the layout is done, an animation will play to move the nodes to their final positions. Then, we need
+        // to adjust the viewport:
         graph.on("afteranimate", () => {
             if (!graph || graph.destroyed) return;
             // If the newly added nodes are outside of the viewport, zoom out:
