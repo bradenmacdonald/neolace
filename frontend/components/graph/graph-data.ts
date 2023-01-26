@@ -22,14 +22,37 @@ interface EntryNodeAttributes {
     community?: number;
     nodesCondensed?: Set<string>;
     clique?: number;
+    /**
+     * (Added by LayoutPipelineTransformer:) Does this node have an outbound or inbound IS A relationship of any kind?
+     * Used to lay out such nodes using DAGRE layout before other nodes get layed out.
+     */
+    _hasIsARelationship?: boolean;
+    /**
+     * (Added by LayoutPipelineTransformer:) Does this node have any placeholders attached to it?
+     */
+    _hasPlaceholder?: boolean;
+    /**
+     * (Added by LayoutPipelineTransformer:) How many neighbors does this node have?
+     */
+    _numNeighbors?: number;
 }
 interface PlaceholderNodeAttributes {
     type: NodeType.Placeholder,
     entryCount: number,
     entryId: VNID;
+    /**
+     * (Added by LayoutPipelineTransformer:) Does this node have an outbound or inbound IS A relationship of any kind?
+     * Used to lay out such nodes using DAGRE layout before other nodes get layed out.
+     */
+    _hasIsARelationship?: boolean;
+    /**
+     * (Added by LayoutPipelineTransformer:) How many neighbors does this node have?
+     */
+    _numNeighbors?: number;
 }
 
 export type NodeAttributes = EntryNodeAttributes|PlaceholderNodeAttributes;
+export type CombinedNodeAttributes = {type: NodeType} & Partial<Omit<EntryNodeAttributes, "type">> & Partial<Omit<PlaceholderNodeAttributes, "type">>;
 
 export interface EdgeAttributes {
     relTypeKey: string;
@@ -39,6 +62,11 @@ export interface EdgeAttributes {
      * them.
      */
     isPlaceholder?: true;
+
+    /**
+     * (Added by LayoutPipelineTransformer:) Is this an IS A relationship of any kind? (as opposed to RELATES_TO)
+     */
+    _isIsARelationship?: boolean;
 }
 
 export interface GraphAttributes {
@@ -48,3 +76,5 @@ export interface GraphAttributes {
 
 export type GraphData = GraphologyGraph<NodeAttributes, EdgeAttributes, GraphAttributes>;
 export const GraphData = GraphologyGraph as typeof GraphologyGraph<EntryNodeAttributes|PlaceholderNodeAttributes, EdgeAttributes, GraphAttributes>;
+// With the GraphData type, setting individual node attributes doesn't work correctly because TypeScript doesn't 
+export type MutableGraphData = GraphologyGraph<CombinedNodeAttributes, EdgeAttributes, GraphAttributes>;

@@ -12,7 +12,7 @@ import { VNID } from "neolace-api";
 import { ToolbarButton, ToolbarSeparator } from "../widgets/Button";
 import { IntlShape, useIntl } from "react-intl";
 import { useStateRef } from "lib/hooks/useStateRef";
-import { applyTransforms, Transform, Transforms } from "./graph-transforms";
+import { applyTransforms, LayoutPipelineTransformer, Transform, Transforms } from "./graph-transforms";
 import { Modal } from "components/widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 import { defineMessage } from "components/utils/i18n";
@@ -176,20 +176,50 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
         plugins: [],
         animate: true,
         layout: {
-            // We use a "force directed" layout which runs a physics simulation to determine the position of the nodes.
-            type: "gForce",
-            linkDistance: (edge: {isPlaceholder: boolean}) => edge.isPlaceholder ? 200 : 300,
-            // edgeStrength: (edge: {isPlaceholder: boolean}) => edge.isPlaceholder ? 1000 : 200,
-            preventOverlap: true,
-            nodeSize: 250,
-            nodeSpacing: 600,
-            coulombDisScale: 0.003, // A smaller value keeps the nodes farther apart from each other. Default 0.005
-            // For very large graphs, using the GPU is much faster if not required for the layout to converge:
-            // gpuEnabled: true,
-            // When adding new nodes to the graph, move the new ones around but leave the old in place:
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onLayoutEnd: ((nodes: NodeConfig[]) => { nodes.forEach((n) => n.wasPreviouslyLayedOut = true); }) as any,
-            getMass: (node: NodeConfig) => node.wasPreviouslyLayedOut ? 10 : 1,
+            // Use a DAGRE layout for any nodes that have a logical hierarchy, then force layout for the rest.
+            pipes: [
+                {
+                    // First, apply a dagre layout to any nodes/edges that have "IS A" relationships to each other.
+                    // This includes entry nodes and placeholders.
+                    type: "dagre",
+                    rankdir: "BT",
+                    // indicate if the node belongs to the subgraph
+                    nodesFilter: (node: NodeAttributes) => node._hasIsARelationship,
+                    edgesFilter: (edge: EdgeAttributes) => edge._isIsARelationship,
+                    ranksep: 30,
+                    nodesep: 95,
+                    // TODO: increase the spacing between nodes based on the order of the node (# of edges) using nodeSepFunc
+                },
+                {
+                    // Next, lay out all the other nodes that aren't placeholders:
+                    type: "gForce",
+                    nodesFilter: (node: NodeConfig) => {
+                        // This is a hack: if the nodes have been layed out by DAGRE, fix their position.
+                        // Now the force layout will react to them but won't move them. We only want it to move the
+                        // remaining nodes (and placeholders)
+                        if (node._hasIsARelationship) {
+                            node.fx = node.x;
+                            node.fy = node.y;
+                        }
+                        return true;
+                    },
+                    // Disable gravity - we don't want to pull all the nodes toward the centre. They start there anyways.
+                    gravity: 0,
+                    // Repulsive force between the nodes:
+                    nodeStrength: (node: NodeAttributes) => 10_000,
+                    // attractive strength of the edges:
+                    edgeStrength: (edge: EdgeAttributes) => 200,
+                    // linkDistance: (edge: EdgeAttributes) => 300,
+                    // Short range repulsive force: A smaller value keeps the nodes farther apart from each other. Default 0.005
+                    coulombDisScale: 0.004,
+
+                    // These seem to have no effect:
+                    // gpuEnabled: true,
+                    // preventOverlap: true,
+                    // nodeSize: 200,
+                    // nodeSpacing: 600,
+                },
+            ],
         },
         defaultNode: {},
         defaultEdge: {
@@ -666,6 +696,8 @@ function updateGraphData(graph: G6Graph, graphData: GraphData, transformList: Tr
             // TODO: apply transforms to graphData
         }
     }
+    // Required transformers:
+    LayoutPipelineTransformer(graphData);
 
     const entryTypes = graphData.getAttribute("entryTypes");
     const relationshipTypes = graphData.getAttribute("relationshipTypes");
@@ -695,7 +727,7 @@ function updateGraphData(graph: G6Graph, graphData: GraphData, transformList: Tr
             };
         } else if (nodeData.type === NodeType.Placeholder) {
             const label = intl.formatMessage({defaultMessage: `{entryCount, plural, one {# entry} other {# entries}}`, id: "ImLk+z"}, {entryCount: nodeData.entryCount});
-            return {label, type: nodeData.type, entryCount: nodeData.entryCount, entryId: nodeData.entryId};
+            return {label, ...nodeData};
         } else {
             throw new Error(`Unknown Node Type ${(nodeData as {type: unknown}).type}`);
         }
@@ -718,7 +750,7 @@ function updateGraphData(graph: G6Graph, graphData: GraphData, transformList: Tr
         } else {
             nodesAdded = true;
             // We need to give the node an initial position or else there are issues with the layout animation.
-            const initialPos = {x: 1, y: 1};
+            const initialPos = {x: Math.random() * 1_000 - 500, y: Math.random() * 1_000 - 500};
             if (typeof nodeModel.fromPlaceholder === "string") {
                 // If we're currently replacing a placeholder with this new node(s), put them in the same position that
                 // the placeholder had:

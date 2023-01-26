@@ -1,5 +1,6 @@
 import { G6RawGraphData } from "components/graph/GraphViewer";
-import { VNID } from "neolace-api";
+import { PropertyType, VNID } from "neolace-api";
+import { GraphData, NodeType } from "./graph-data";
 import {
     convertGraphToData,
     createGraphObject,
@@ -76,3 +77,33 @@ export function applyTransforms(data: G6RawGraphData, transformList: Transform[]
     const finalData = convertGraphToData(transformedGraph);
     return finalData;
 }
+
+export interface GraphTransformer {
+    (graphData: GraphData): void;
+}
+
+export const LayoutPipelineTransformer: GraphTransformer = (graphData) => {
+
+    const relationshipTypes = graphData.getAttribute("relationshipTypes");
+
+    graphData.forEachEdge((edgeId, attrs, source, target) => {
+        if (attrs.isPlaceholder) {
+            if (graphData.getNodeAttribute(source, "type") === NodeType.Placeholder) {
+                graphData.mergeNodeAttributes(target, {_hasPlaceholder: true});
+            } else {
+                graphData.mergeNodeAttributes(source, {_hasPlaceholder: true});
+            }
+        }
+        const relDetails = relationshipTypes[attrs.relTypeKey];
+        if (relDetails?.type === PropertyType.RelIsA) {
+            // This is an IS A relationship. Mark it and the nodes so that our layout algorithm knows this.
+            graphData.mergeNodeAttributes(source, {_hasIsARelationship: true});
+            graphData.mergeNodeAttributes(target, {_hasIsARelationship: true});
+            graphData.mergeEdgeAttributes(edgeId, {_isIsARelationship: true});
+        }
+    });
+
+    graphData.forEachNode((nodeId) => {
+        graphData.mergeNodeAttributes(nodeId, {_numNeighbors: graphData.neighbors(nodeId).length});
+    });
+};
