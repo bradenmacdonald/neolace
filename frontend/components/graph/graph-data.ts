@@ -45,10 +45,6 @@ interface PlaceholderNodeAttributes {
      * Used to lay out such nodes using DAGRE layout before other nodes get layed out.
      */
     _hasIsARelationship?: boolean;
-    /**
-     * (Added by LayoutPipelineTransformer:) How many neighbors does this node have?
-     */
-    _numNeighbors?: number;
 }
 
 export type NodeAttributes = EntryNodeAttributes|PlaceholderNodeAttributes;

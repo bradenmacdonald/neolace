@@ -82,6 +82,27 @@ export interface GraphTransformer {
     (graphData: GraphData): void;
 }
 
+
+
+/**
+ * When this transformer is active, it removes "placeholder" nodes from the graph. Those are the faded out nodes that
+ * you can click on to load additional data into the graph.
+ */
+export const RemovePlaceholdersTransformer: GraphTransformer = (graphData) => {
+
+    graphData.forEachNode((nodeId, attrs) => {
+        if (attrs.type === NodeType.Placeholder) {
+            graphData.dropNode(nodeId);
+        }
+    });
+};
+
+
+/**
+ * Add extra data to each node and edge that is required for our "layout pipeline" to determine which layouts apply to
+ * which nodes/edges. (We use DAGRE for the nodes/edges that have hierarchical relationships, then force for the rest.)
+ * @param graphData 
+ */
 export const LayoutPipelineTransformer: GraphTransformer = (graphData) => {
 
     const relationshipTypes = graphData.getAttribute("relationshipTypes");
@@ -101,9 +122,5 @@ export const LayoutPipelineTransformer: GraphTransformer = (graphData) => {
             graphData.mergeNodeAttributes(target, {_hasIsARelationship: true});
             graphData.mergeEdgeAttributes(edgeId, {_isIsARelationship: true});
         }
-    });
-
-    graphData.forEachNode((nodeId) => {
-        graphData.mergeNodeAttributes(nodeId, {_numNeighbors: graphData.neighbors(nodeId).length});
     });
 };

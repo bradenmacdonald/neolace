@@ -12,7 +12,7 @@ import { VNID } from "neolace-api";
 import { ToolbarButton, ToolbarSeparator } from "../widgets/Button";
 import { IntlShape, useIntl } from "react-intl";
 import { useStateRef } from "lib/hooks/useStateRef";
-import { applyTransforms, LayoutPipelineTransformer, Transform, Transforms } from "./graph-transforms";
+import { applyTransforms, LayoutPipelineTransformer, RemovePlaceholdersTransformer, Transform, Transforms } from "./graph-transforms";
 import { Modal } from "components/widgets/Modal";
 import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 import { defineMessage } from "components/utils/i18n";
@@ -117,7 +117,15 @@ enum Tool {
     CondenseExpandNode,
 }
 
-const emptyTransforms: Transform[] = [];
+/** A map of which transforms are active, and optionally detailed settings for the active ones that accept options. */
+interface ActiveTransforms {
+    removePlaceholders?: boolean;
+    detectCommunities?: boolean;
+    detectCliques?: boolean;
+    condenseLeaves?: boolean;
+}
+
+const noTransforms: ActiveTransforms = Object.freeze({});
 
 /**
  * Display a graph visualization.
@@ -130,7 +138,7 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
     /** Is the graph currently expanded (displayed in a large modal?) */
     const [expanded, setExpanded, expandedRef] = useStateRef(false);
 
-    const [transformList, setTransforms] = React.useState<Transform[]>(emptyTransforms);
+    const [activeTransforms, setActiveTransforms] = React.useState<ActiveTransforms>(noTransforms);
 
     // In order to preserve our G6 graph when we move it to a modal (when expanding the view), the <div> that contains
     // it must not be destroyed and re-created. React will normally try to destroy and re-create it, not realizing that
@@ -359,43 +367,43 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
             }
 
             if (activeToolRef.current === Tool.HideNodes) {
-                setTransforms((t) => {
-                    return t.concat({
-                        id: Transforms.HIDETYPE,
-                        params: { "nodeType": item.getModel().entryType as string },
-                    });
-                });
+                // setTransforms((t) => {
+                //     return t.concat({
+                //         id: Transforms.HIDETYPE,
+                //         params: { "nodeType": item.getModel().entryType as string },
+                //     });
+                // });
                 setActiveTool(Tool.Select);
             } else if (activeToolRef.current === Tool.CondenseExpandNode && item.getModel().nodesCondensed) {
                 // need to pass parent key as the condensed node id changes with every load
                 if (item.getNeighbors().length === 1) {
                     // expand leaf
-                    setTransforms((prevTransforms) => [...prevTransforms, {
-                        id: Transforms.EXPANDLEAF,
-                        // instead of this node id, get type and parent
-                        // should have only one neighbour
-                        params: {
-                            parentKey: [item.getNeighbors()[0].getModel().id],
-                            entryType: item.getModel().entryType,
-                        },
-                    }]);
+                    // setTransforms((prevTransforms) => [...prevTransforms, {
+                    //     id: Transforms.EXPANDLEAF,
+                    //     // instead of this node id, get type and parent
+                    //     // should have only one neighbour
+                    //     params: {
+                    //         parentKey: [item.getNeighbors()[0].getModel().id],
+                    //         entryType: item.getModel().entryType,
+                    //     },
+                    // }]);
                 } else if (item.getNeighbors().length === 2) {
                     // expand simple pattern
-                    setTransforms((prevTransforms) => [...prevTransforms, {
-                        id: Transforms.EXPANDLEAF,
-                        params: {
-                            parentKey: [item.getNeighbors()[0].getModel().id, item.getNeighbors()[1].getModel().id],
-                            entryType: item.getModel().entryType,
-                        },
-                    }]);
+                    // setTransforms((prevTransforms) => [...prevTransforms, {
+                    //     id: Transforms.EXPANDLEAF,
+                    //     params: {
+                    //         parentKey: [item.getNeighbors()[0].getModel().id, item.getNeighbors()[1].getModel().id],
+                    //         entryType: item.getModel().entryType,
+                    //     },
+                    // }]);
                 }
             } else if (activeToolRef.current === Tool.CondenseExpandNode && !item.getModel().nodesCondensed) {
-                setTransforms((prevTransforms) => [...prevTransforms, {
-                    id: Transforms.CONDENSENODE,
-                    // instead of this node id, get type and parent
-                    // should have only one neighbour
-                    params: { nodeToCondense: item.getModel().id },
-                }]);
+                // setTransforms((prevTransforms) => [...prevTransforms, {
+                //     id: Transforms.CONDENSENODE,
+                //     // instead of this node id, get type and parent
+                //     // should have only one neighbour
+                //     params: { nodeToCondense: item.getModel().id },
+                // }]);
             }
         });
 
@@ -438,8 +446,8 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
     // Update the graph data whenever the current data changes
     React.useEffect(() => {
         if (!graph || graph.destroyed) return;
-        updateGraphData(graph, props.data, transformList, intl);
-    }, [graph, props.data, transformList, intl]);
+        updateGraphData(graph, props.data, activeTransforms, intl);
+    }, [graph, props.data, activeTransforms, intl]);
 
     // Fix bug that occurs in Firefox only: scrolling the mouse wheel on the graph also scrolls the page.
     React.useEffect(() => {
@@ -487,51 +495,39 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
         graph?.downloadFullImage();
     }, [graph]);
     // Code for "Condense leaves" toolbar button
-    const isCondensed = transformList.find((t) => t.id === Transforms.CONDENSE) !== undefined;
+    const isCondensed = activeTransforms.condenseLeaves;
     const handleCondenseNodesButton = React.useCallback(() => {
-        if (isCondensed) {
-            setTransforms(
-                (prevTransforms) =>
-                    prevTransforms.filter((t) =>
-                        (
-                            t.id !== Transforms.CONDENSE
-                        ) && t.id !== Transforms.EXPANDLEAF && t.id !== Transforms.CONDENSENODE
-                    ),
-            );
-        } else {
-            setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.CONDENSE, params: {} }]);
-        }
-    }, [isCondensed, setTransforms]);
+        // if (isCondensed) {
+        //     setTransforms(
+        //         (prevTransforms) =>
+        //             prevTransforms.filter((t) =>
+        //                 (
+        //                     t.id !== Transforms.CONDENSE
+        //                 ) && t.id !== Transforms.EXPANDLEAF && t.id !== Transforms.CONDENSENODE
+        //             ),
+        //     );
+        // } else {
+        //     setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.CONDENSE, params: {} }]);
+        // }
+    }, [isCondensed]);
 
     // Code for detecting communities toolbar button
-    const isCommunized = transformList.find((t) => t.id === Transforms.COMMUNITY) !== undefined;
+    const isCommunized = activeTransforms.detectCommunities;
     const handleCommunityButton = React.useCallback(() => {
-        if (isCommunized) {
-            setTransforms(
-                (prevTransforms) =>
-                    prevTransforms.filter((t) => (
-                        t.id !== Transforms.COMMUNITY && t.id !== Transforms.ADDCLIQUES
-                    )),
-            );
-        } else {
-            setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.COMMUNITY, params: {} }]);
-        }
-    }, [isCommunized, setTransforms]);
+        setActiveTransforms((prevTransforms) => ({
+            ...prevTransforms,
+            detectCommunities: !prevTransforms.detectCommunities,
+        }));
+    }, []);
     // Code for detecting cliques toolbar button
-    const areCliquesDetected = transformList.find((t) => t.id === Transforms.ADDCLIQUES) !== undefined;
+    const areCliquesDetected = activeTransforms.detectCliques;
     const handleCliquesButton = React.useCallback(() => {
-        if (!isCommunized) return;
-        if (areCliquesDetected) {
-            setTransforms(
-                (prevTransforms) =>
-                    prevTransforms.filter((t) => (
-                        t.id !== Transforms.ADDCLIQUES
-                    )),
-            );
-        } else {
-            setTransforms((prevTransforms) => [...prevTransforms, { id: Transforms.ADDCLIQUES, params: {} }]);
-        }
-    }, [areCliquesDetected, isCommunized, setTransforms]);
+        setActiveTransforms((prevTransforms) => ({
+            ...prevTransforms,
+            // This transform can only be active if detect communities is already active:
+            detectCliques: prevTransforms.detectCommunities && !prevTransforms.detectCliques,
+        }));
+    }, []);
     // Tools:
     const handleSelectToolButton = React.useCallback(() => {
         setActiveTool(Tool.Select);
@@ -542,6 +538,14 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
     const handleHideArticlesButton = React.useCallback(() => {
         setActiveTool(Tool.HideNodes);
     }, [setActiveTool]);
+    // Code for "show placeholders" toolbar button
+    const showPlaceholders = !activeTransforms.removePlaceholders;
+    const handleTogglePlaceholdersButton = React.useCallback(() => {
+        setActiveTransforms((prevTransforms) => ({
+            ...prevTransforms,
+            removePlaceholders: !prevTransforms.removePlaceholders,
+        }));
+    }, []);
 
     const contents = (
         <>
@@ -631,6 +635,16 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                     toggled={areCliquesDetected}
                     disabled={!isCommunized}
                 />
+                <ToolbarSeparator />
+                <ToolbarButton
+                    onClick={handleTogglePlaceholdersButton}
+                    tooltip={defineMessage({
+                        defaultMessage: "Show placeholders where additional entries can be loaded into the graph",
+                        id: "ABp3x6",
+                    })}
+                    icon="plus-square-dotted"
+                    toggled={showPlaceholders}
+                />
             </div>
             <div
                 ref={updateGraphHolder}
@@ -683,19 +697,17 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
     }
 };
 
-function updateGraphData(graph: G6Graph, graphData: GraphData, transformList: Transform[], intl: IntlShape) {
+function updateGraphData(graph: G6Graph, originalGraphData: GraphData, activeTransforms: ActiveTransforms, intl: IntlShape) {
     const hadData = graph.getNodes().length > 0;
     const existingNodeIds = new Set<string>();
     const existingRelationshipIds = new Set<string>();
     graph.getNodes().forEach((n) => existingNodeIds.add(n.getID()))
     graph.getEdges().forEach((e) => existingRelationshipIds.add(e.getID()));
 
-    if (transformList.length > 0) {
-        // make a copy of the originalData ?
-        for (const transform of transformList) {
-            // TODO: apply transforms to graphData
-        }
-    }
+    // Create a mutable copy of the graph data:
+    const graphData = originalGraphData.copy();
+    // Apply Optional transformers, in order:
+    if (activeTransforms.removePlaceholders) RemovePlaceholdersTransformer(graphData);
     // Required transformers:
     LayoutPipelineTransformer(graphData);
 
@@ -740,7 +752,7 @@ function updateGraphData(graph: G6Graph, graphData: GraphData, transformList: Tr
         };
     };
 
-    let nodesAdded = false;
+    let nodesWereAddedOrRemoved = false;
 
     graphData.forEachNode((nodeId, attrs) => {
         const nodeModel: Partial<NodeConfig> = convertNodeForG6(attrs);
@@ -748,7 +760,7 @@ function updateGraphData(graph: G6Graph, graphData: GraphData, transformList: Tr
         if (alreadyOnGraph) {
             graph.updateItem(nodeId, nodeModel);
         } else {
-            nodesAdded = true;
+            nodesWereAddedOrRemoved = true;
             // We need to give the node an initial position or else there are issues with the layout animation.
             const initialPos = {x: Math.random() * 1_000 - 500, y: Math.random() * 1_000 - 500};
             if (typeof nodeModel.fromPlaceholder === "string") {
@@ -786,6 +798,7 @@ function updateGraphData(graph: G6Graph, graphData: GraphData, transformList: Tr
         graph.remove(removedRelId);
     }
     for (const removedNodeId of existingNodeIds) {
+        nodesWereAddedOrRemoved = true;
         graph.remove(removedNodeId);
     }
 
@@ -814,9 +827,9 @@ function updateGraphData(graph: G6Graph, graphData: GraphData, transformList: Tr
         // Before the layout starts, the nodes will be clustered at [0,0] which is now at the top left corner of the
         // canvas. Center on them so it looks less weird while we compute the layout.
         graph.zoomTo(0.5);
-        graph.moveTo(graph.getWidth()/2, graph.getHeight()/2, false);
+        graph.moveTo(0, 0, false);
         graph.layout();
-    } else if (nodesAdded) {
+    } else if (nodesWereAddedOrRemoved) {
         debugLog("running graph layout");
         for (const node of graph.getNodes()) {
             if (node.getModel().x === undefined) {
