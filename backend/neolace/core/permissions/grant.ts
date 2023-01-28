@@ -380,11 +380,11 @@ export class OneOfCondition extends BooleanCondition {
     }
 
     public override asCypherPredicate(context: CypherPredicateContext): CypherQuery {
-        let p = C`(${this.innerConditions[0].asCypherPredicate(context)})`;
+        let p = C`(${this.innerConditions[0].asCypherPredicate(context)}`;
         for (let i = 1; i < this.innerConditions.length; i++) {
-            p = C`${p} OR (${this.innerConditions[i].asCypherPredicate(context)})`;
+            p = C`${p} OR ${this.innerConditions[i].asCypherPredicate(context)}`;
         }
-        return p;
+        return C`${p})`;
     }
 
     public override simplify(): GrantCondition {
@@ -459,11 +459,11 @@ export class AllOfCondition extends BooleanCondition {
     }
 
     public override asCypherPredicate(context: CypherPredicateContext): CypherQuery {
-        let p = C`(${this.innerConditions[0].asCypherPredicate(context)})`;
+        let p = C`(${this.innerConditions[0].asCypherPredicate(context)}`;
         for (let i = 1; i < this.innerConditions.length; i++) {
-            p = C`${p} AND (${this.innerConditions[i].asCypherPredicate(context)})`;
+            p = C`${p} AND ${this.innerConditions[i].asCypherPredicate(context)}`;
         }
-        return p;
+        return C`${p})`;
     }
 
     /**

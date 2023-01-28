@@ -19,6 +19,7 @@ export class SiteHomeResource extends NeolaceHttpResource {
         const refCache = new ReferenceCache({ siteId });
         refCache.extractMarkdownReferences(siteData.homePageContent ?? "", { currentEntryId: undefined });
 
+        // TODO: Retrieve the user-specific version of this content? Currently it's always anonymous
         return {
             homePageContent: siteData.homePageContent ?? "",
             referenceCache: await graph.read((tx) => refCache.getData(new LookupContext({ tx, siteId }))),

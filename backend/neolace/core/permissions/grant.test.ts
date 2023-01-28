@@ -166,7 +166,7 @@ group("Grant conditions", () => {
         for (const [key, value] of Object.entries(predicate.params)) {
             queryString = queryString.replaceAll(`$${key}`, value as string);
         }
-        assertEquals(queryString, "(conditionA) OR (conditionB)");
+        assertEquals(queryString, "(conditionA OR conditionB)");
     });
 
     test("OneOfCondition - equals()", () => {
@@ -261,7 +261,7 @@ group("Grant conditions", () => {
         for (const [key, value] of Object.entries(predicate.params)) {
             queryString = queryString.replaceAll(`$${key}`, value as string);
         }
-        assertEquals(queryString, "(conditionA) AND (conditionB)");
+        assertEquals(queryString, "(conditionA AND conditionB)");
     });
 
     test("AllOfCondition - equals()", () => {
