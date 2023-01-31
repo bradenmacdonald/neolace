@@ -8,9 +8,11 @@ import { useDraft } from "./DraftData";
  * referenced. For example, in the context of an Entry A that links to Entry B, the reference cache will include some
  * details about Entry B such as its Name and friendly ID, so that the link to it can be properly displayed within Entry
  * A.
+ *
+ * For advanced or complex use cases, <MergeRefCache> can be used to combine multiple reference caches together.
  */
 export const RefCacheContext = React.createContext<
-    { refCache?: api.ReferenceCacheData /*, parentRefCache?: api.ReferenceCacheData*/ }
+    { refCache?: api.ReferenceCacheData }
 >({
     // Default values for this context:
     refCache: undefined,

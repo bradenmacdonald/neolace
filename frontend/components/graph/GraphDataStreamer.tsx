@@ -9,6 +9,7 @@ import { debugLog } from "lib/config";
 import { GraphData, NodeType } from "./graph-data";
 import { GraphViewer } from "./GraphViewer";
 import { useStateRef } from "lib/hooks/useStateRef";
+import { MergeRefCache } from "components/utils/MergeRefCache";
 
 export interface Props {
     /**
@@ -181,5 +182,10 @@ export const GraphDataStreamer: React.FunctionComponent<Props> = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [baseData, additionalDataLoaded])
 
-    return <GraphViewer data={data} expandPlaceholder={expandPlaceholder} />;
+    // We use <MergeRefCache> to add any additionally loaded refCaches into the base refCache that's already present.
+    // Without this, if you clicked and loaded additional nodes into the graph, they wouldn't have any
+    // description/details if you click on them to show their tooltip.
+    return <MergeRefCache mergeCaches={additionalDataLoaded.map(ad => ad.refCache)}>
+        <GraphViewer data={data} expandPlaceholder={expandPlaceholder} />
+    </MergeRefCache>
 };
