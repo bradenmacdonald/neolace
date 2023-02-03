@@ -34,6 +34,7 @@ export class Image extends LookupFunctionWithArgs {
     }
     /**
      * The format mode:
+     * - "normal" to display the image at its natural size OR the width of the page, whichever is smaller.
      * - "right" to float a thumbnail of the image to the right.
      * - "logo" to display the image at actual size, with no border
      * - "thumb" to display a thumbnail of the image(s) where a paragraph of text would go
@@ -41,7 +42,7 @@ export class Image extends LookupFunctionWithArgs {
     public get formatExpr(): LookupExpression {
         return this.otherArgs["format"] ?? Image.defaultFormat;
     }
-    public static readonly defaultFormat = new LiteralExpression(new StringValue("normal"));
+    public static readonly defaultFormat = new LiteralExpression(new StringValue(ImageDisplayFormat.Normal));
 
     /** Optional paramater - URL to link to. Only valid for "logo" format. */
     public get linkExpr(): LookupExpression | undefined {
