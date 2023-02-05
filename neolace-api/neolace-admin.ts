@@ -151,6 +151,7 @@ async function syncSchema(
 }
 
 const contentTypes: Record<string, string> = {
+    "image/gif": "gif",
     "image/jpeg": "jpg",
     "image/webp": "webp",
     "image/png": "png",
