@@ -138,21 +138,23 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
             </div>
         </>
     } else if (value.format === ImageDisplayFormat.Normal) {
-        // Thumbnail:
-        return <OptionalLink href={value.link} className="block max-w-full relative">
-            {/* A blurry representation of the image, shown while it is loading. */}
-            <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" className="opacity-30" />
-            {/* the image: */}
-            <Image
-                src={value.imageUrl}
-                loader={imgThumbnailLoader}
-                alt={value.altText}
-                width={value.width}
-                height={value.height}
-                className={`${value.sizing === api.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
-                sizes={"1000px" /* We're displaying these small thumbnails at only < 100px wide, so use a small image */}
-            />
-        </OptionalLink>;
+        // Normal - no border, centered on page, fit to width if wider than page:
+        return <div className="p-2 flex items-center">
+            <OptionalLink href={value.link} className="block mx-auto relative">
+                {/* A blurry representation of the image, shown while it is loading. */}
+                <Blurhash hash={value.blurHash ?? ""} width="100%" height="100%" className="opacity-30" />
+                {/* the image: */}
+                <Image
+                    src={value.imageUrl}
+                    loader={imgThumbnailLoader}
+                    alt={value.altText}
+                    width={value.width}
+                    height={value.height}
+                    className={`${value.sizing === api.ImageSizingMode.Contain ? "object-contain" : "object-cover"} mx-auto max-w-full`}
+                    sizes={"1000px" /* Displaying at full width of the page, which is about 1000px */}
+                />
+            </OptionalLink>
+        </div>;
     } else {
         // Thumbnail:
         return <OptionalLink href={value.link} className="inline-block h-20 w-20 border border-gray-500 rounded-md relative overflow-clip">

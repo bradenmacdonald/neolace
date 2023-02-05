@@ -5,6 +5,7 @@ import {
     assertEquals,
     assertInstanceOf,
     createManyEntries,
+    createUserWithPermissions,
     group,
     setTestIsolation,
     test,
@@ -17,13 +18,16 @@ import { This } from "../this.ts";
 import { Graph } from "./graph.ts";
 import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { Descendants } from "./descendants.ts";
-import { AllEntries } from "../../expressions.ts";
+import { AllEntries } from "neolace/core/lookup/expressions.ts";
+import { AccessMode, UpdateSite } from "../../../Site.ts";
+import { Always, EntryTypesCondition, PermissionGrant } from "neolace/core/permissions/grant.ts";
+import { corePerm } from "neolace/core/permissions/permissions.ts";
 
 group("graph()", () => {
-    // These tests are read-only so don't need isolation, but do use the default plantDB example data:
-    const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
+    const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
     const siteId = defaultData.site.id;
     const ponderosaPine = defaultData.entries.ponderosaPine;
+    const westernRedcedar = defaultData.entries.westernRedcedar;
     const context = new TestLookupContext({ siteId, entryId: ponderosaPine.id });
 
     const entryTypeKey = "test-entry-type", entryIsA = "prop-is-a";
@@ -31,6 +35,11 @@ group("graph()", () => {
         B = VNID(),
         C = VNID(),
         D = VNID();
+
+    test("It can show an empty graph.", async () => {
+        const value = await context.evaluateExprConcrete(`[].graph()`);
+        assertEquals(value, new GraphValue([], [], []));
+    });
 
     test("It can graph all the ancestors of the ponderosa pine", async () => {
         const value = await context.evaluateExprConcrete("this.andAncestors().graph()");
@@ -103,6 +112,161 @@ group("graph()", () => {
             return rest;
         });
         assertArrayIncludes(actualRelsWithoutRelId, expectedRels);
+    });
+
+    test("It can show the relationships that connect to the selected nodes", async () => {
+        const value = await context.evaluateExprConcrete(`[this, entry("${westernRedcedar.id}")].graph()`);
+
+        assertInstanceOf(value, GraphValue);
+        assertEquals(value.entries, [
+            {
+                entryId: ponderosaPine.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETSPECIES.key,
+                name: "Ponderosa Pine",
+                isFocusEntry: true,
+            },
+            {
+                entryId: westernRedcedar.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETSPECIES.key,
+                name: "Western Redcedar",
+            },
+        ]);
+        // There are no relationships between these two species entries.
+        assertEquals(value.rels.length, 0);
+        // But there are adjacent relationships:
+        assertEquals(value.borderingRelationships.length, 4);
+        assertArrayIncludes(value.borderingRelationships, [
+            // Both species have "parent genus" relationships:
+            {
+                entryId: ponderosaPine.id,
+                relTypeKey: defaultData.schema.properties.parentGenus.key,
+                entryCount: 1, // Just the parent genus entry
+                isOutbound: true,
+            },
+            {
+                entryId: westernRedcedar.id,
+                relTypeKey: defaultData.schema.properties.parentGenus.key,
+                entryCount: 1, // Just the parent genus entry
+                isOutbound: true,
+            },
+            // Ponderosa pine has a hero image:
+            {
+                entryId: ponderosaPine.id,
+                relTypeKey: defaultData.schema.properties.hasHeroImage.key,
+                entryCount: 1,
+                isOutbound: true,
+            },
+            // And there is an image that "relates to" ponderosa pine.
+            {
+                entryId: ponderosaPine.id,
+                relTypeKey: defaultData.schema.properties.imgRelTo.key,
+                entryCount: 1,
+                isOutbound: false,
+            },
+        ]);
+    });
+
+    test("It can show two isolated nodes.", async () => {
+        // This tests makes sure that there are no bugs when returning nodes that don't have any relationships.
+        // It's hard to get the "borderingRelationships" query right without this test.
+        const graph = await getGraph();
+        await graph.runAsSystem(ApplyEdits({
+            siteId,
+            edits: [
+                { code: "CreateEntryType", data: { key: entryTypeKey, name: "EntryType" } },
+                {
+                    code: "CreateEntry",
+                    data: { entryId: A, name: "Entry A", entryTypeKey, key: "a", description: "" },
+                },
+                {
+                    code: "CreateEntry",
+                    data: { entryId: B, name: "Entry B", entryTypeKey, key: "b", description: "" },
+                },
+            ],
+            editSource: UseSystemSource,
+        }));
+        const value = await context.evaluateExprConcrete(`[entry("${A}"), entry("${B}")].graph()`);
+        assertEquals(
+            value,
+            new GraphValue(
+                [
+                    { entryId: A, entryTypeKey, name: "Entry A" },
+                    { entryId: B, entryTypeKey, name: "Entry B" },
+                ],
+                [],
+                [],
+            ),
+        );
+    });
+
+    test("It checks permissions on bordering entries.", async () => {
+        // First make the PlantDB site private:
+        const graph = await getGraph();
+        await graph.runAsSystem(UpdateSite({
+            id: defaultData.site.id,
+            accessMode: AccessMode.Private,
+        }));
+        // Create a user who can view SPECIES entries but nothing else:
+        const limitedUser = await createUserWithPermissions(
+            // This user can view the site:
+            new PermissionGrant(Always, [corePerm.viewSite.name]),
+            // This user can view only "species" entries:
+            new PermissionGrant(
+                new EntryTypesCondition([defaultData.schema.entryTypes.ETSPECIES.key]),
+                [corePerm.viewEntry.name],
+            ),
+        );
+
+        const expr = `entry("${ponderosaPine.id}").graph()`;
+        const limitedResult = await context.evaluateExprConcrete(expr, undefined, limitedUser.userId);
+        assertInstanceOf(limitedResult, GraphValue);
+        const adminResult = await context.evaluateExprConcrete(expr, undefined, defaultData.users.admin.id);
+        assertInstanceOf(adminResult, GraphValue);
+        // Both the limited user and the admin can see the species entry requested:
+        assertEquals(limitedResult.entries, [{
+            entryId: ponderosaPine.id,
+            entryTypeKey: defaultData.schema.entryTypes.ETSPECIES.key,
+            name: ponderosaPine.name,
+            isFocusEntry: true,
+        }]);
+        assertEquals(adminResult.entries, limitedResult.entries);
+        // But the limited user shouldn't see that there is a bordering genus entry, since they have no permission to view that entry:
+        assertEquals(limitedResult.borderingRelationships, []);
+        // The admin user can of course see all the relationships:
+        assertEquals(adminResult.borderingRelationships.length, 3);
+    });
+
+    test("It can show the relationships that connect to the selected nodes and the entry count", async () => {
+        const value = await context.evaluateExprConcrete(`entry("${defaultData.entries.genusPinus.id}").graph()`);
+
+        assertInstanceOf(value, GraphValue);
+        assertEquals(value.entries, [
+            {
+                entryId: defaultData.entries.genusPinus.id,
+                entryTypeKey: defaultData.schema.entryTypes.ETGENUS.key,
+                name: "Pinus",
+            },
+        ]);
+        // There are no relationships among the selected entries (only one entry was graphed/selected)
+        assertEquals(value.rels.length, 0);
+        // But there are adjacent relationships:
+        assertEquals(value.borderingRelationships.length, 2);
+        assertArrayIncludes(value.borderingRelationships, [
+            // The genus has a "parent family" relationship:
+            {
+                entryId: defaultData.entries.genusPinus.id,
+                relTypeKey: defaultData.schema.properties.parentFamily.key,
+                entryCount: 1, // Just the one parent family entry
+                isOutbound: true,
+            },
+            // And many species have a "parent genus" relationship to this:
+            {
+                entryId: defaultData.entries.genusPinus.id,
+                relTypeKey: defaultData.schema.properties.parentGenus.key,
+                entryCount: 8,
+                isOutbound: false, // Note this is a reverse relationship
+            },
+        ]);
     });
 
     test("Works despite cyclic relationships", async () => {
@@ -265,18 +429,12 @@ group("graph()", () => {
         const expression = new Graph(new Descendants(new This()));
         const value = await context.evaluateExprConcrete(expression);
 
-        assertEquals(value, new GraphValue([], []));
+        assertEquals(value, new GraphValue([], [], []));
     });
 
     test("toString()", () => {
         assertEquals(new Graph(new This()).toString(), "this.graph()");
     });
-});
-
-group("graph() limit tests", () => {
-    // These tests need isolation:
-    const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);
-    const context = new TestLookupContext({ siteId: defaultData.site.id });
 
     test("Limits the total number of nodes that can be returned.", async () => {
         // Create 6,000 entries:

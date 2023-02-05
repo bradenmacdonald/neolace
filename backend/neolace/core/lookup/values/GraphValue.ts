@@ -19,6 +19,20 @@ export class GraphValue extends ConcreteValue {
             fromEntryId: VNID;
             toEntryId: VNID;
         }[],
+        /**
+         * Information about entries which are NOT in the current set of graphed entries but which are linked to them.
+         * These are relationships that the user may wish to "expand" to load more nodes into the graph.
+         */
+        public readonly borderingRelationships: {
+            entryId: VNID;
+            /**
+             * If this is an "outbound" relationship, it's a normal relationship FROM entryId to other entries.
+             * If this is false, it's a reverse relationship - from various other entries TO entryId.
+             */
+            isOutbound: boolean;
+            relTypeKey: string;
+            entryCount: number;
+        }[],
     ) {
         super();
     }
@@ -32,6 +46,7 @@ export class GraphValue extends ConcreteValue {
             type: "Graph",
             entries: this.entries,
             rels: this.rels,
+            borderingRelationships: this.borderingRelationships,
         };
     }
 }
