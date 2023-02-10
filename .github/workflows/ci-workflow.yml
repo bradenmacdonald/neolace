@@ -126,7 +126,7 @@ jobs:
           deno-version: ${{ env.deno-version }}
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
       - name: Run tests (neolace-api)
         run: deno test
         working-directory: ./neolace-api
