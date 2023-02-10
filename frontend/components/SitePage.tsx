@@ -216,8 +216,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                     transition-visibility-transform md:visible md:translate-x-0
                     fixed md:sticky
                     flex
-                    top-0 left-0 bottom-8 md:bottom-0 w-[80vw] md:w-1/4 md:max-w-[280px] 
-                    bg-transparent
+                    top-0 left-0 bottom-8 md:bottom-0 w-[80vw] md:w-1/4 md:max-w-[280px]
                     flex-initial p-4 overflow-y-auto flex-col self-stretch
                     md:h-[100vh]
                     bg-slate-100
