@@ -70,11 +70,9 @@ export async function getEntryProperties<TC extends true | undefined = undefined
     }
 
     const multipleEntries = Array.isArray(entryId);
-    const entryFilter = (
-        multipleEntries
-            ? C`MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType}) WHERE entry.id IN ${entryId}`
-            : C`MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})`
-    );
+    const entryFilter = multipleEntries
+        ? C`MATCH (entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType}) WHERE entry.id IN ${entryId}`
+        : C`MATCH (entry:${Entry} {id: ${entryId}})-[:${Entry.rel.IS_OF_TYPE}]->(entryType:${EntryType})`;
 
     if (multipleEntries && options.totalCount) {
         throw new Error(`
