@@ -1,4 +1,4 @@
-import { readableStreamFromIterable } from "std/streams/conversion.ts";
+import { readableStreamFromIterable } from "std/streams/readable_stream_from_iterable.ts";
 import { crypto } from "std/crypto/mod.ts";
 import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { api, getGraph, NeolaceHttpResource } from "neolace/api/mod.ts";
