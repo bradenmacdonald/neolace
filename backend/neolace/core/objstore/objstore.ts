@@ -1,7 +1,7 @@
 import { S3Client } from "neolace/deps/s3.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import { Buffer } from "std/io/buffer.ts";
-import { readableStreamFromReader } from "std/streams/conversion.ts";
+import { readableStreamFromReader } from "std/streams/readable_stream_from_reader.ts";
 import { crypto } from "std/crypto/mod.ts";
 
 import { config } from "neolace/app/config.ts";

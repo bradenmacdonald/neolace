@@ -490,7 +490,7 @@ export class AllOfCondition extends BooleanCondition {
             const first = (conds[0] as OneOfCondition).innerConditions[0];
             const newAnds = [(conds[0] as OneOfCondition).innerConditions[1]];
             for (let x = 1; x < conds.length; x++) {
-                const cond = (conds[x] as OneOfCondition);
+                const cond = conds[x] as OneOfCondition;
                 if (cond.innerConditions[0].equals(first)) {
                     newAnds.push(cond.innerConditions[1]);
                 } else if (cond.innerConditions[1].equals(first)) {
