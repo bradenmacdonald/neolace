@@ -123,6 +123,15 @@ export const EditDescription: React.FunctionComponent<Props> = ({edit, ...props}
                     value: <FriendlyValueDisplay lookupValue={edit.data.valueExpression} />,
                 }} />
             }
+            case "UpdateEntryFeature": {
+                if (edit.data.feature.featureType === "Article") {
+                    return <FormattedMessage defaultMessage="Updated article text of {entry}" id="uAI35y" values={{
+                        entry: <><strong>{entryLink({entryId: edit.data.entryId})}</strong></>,
+                    }} />
+                } else {
+                    return api.getEditType(edit.code).describe(edit.data);
+                }
+            }
             default: {
                 return api.getEditType(edit.code).describe(edit.data);
             }

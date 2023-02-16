@@ -51,7 +51,9 @@ interface Props {
 export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus, onChange, onBlur, inlineOnly, ...props }) => {
     const renderLeaf = React.useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
     const editor = useNeolaceSlateEditor();
-    const [sourceMode, setSourceMode, sourceModeRef] = useStateRef(false);
+    // We default to the visual editor for inlines (like "description"), but force source mode on for article text,
+    // since the visual editor for article text isn't built out yet.
+    const [sourceMode, setSourceMode, sourceModeRef] = useStateRef(!inlineOnly);
     const toggleSourceMode = React.useCallback(() => setSourceMode((prevMode) => !prevMode), [setSourceMode]);
     const [lastSourceMode, updateLastSourceMode, lastSourceModeRef] = useStateRef(sourceMode);
 
@@ -216,6 +218,7 @@ export const MDTEditor: React.FunctionComponent<Props> = ({ value = "", onFocus,
                         onClick={toggleSourceMode}
                         tooltip={defineMessage({ id: "qdw5n+", defaultMessage: "Edit as markdown" })}
                         icon="markdown"
+                        disabled={!inlineOnly}
                     />
                 </div>
                 {/* The Slate.js Editor textarea */}

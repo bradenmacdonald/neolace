@@ -154,6 +154,40 @@ export const InlineLookupEditableElement = (
     );
 };
 
+/**
+ * In "visual mode" for editing an MDT (Markdown) document, this is how an inline lookup expression is rendered.
+ * The lookup expression can be edited.
+ */
+export const BLockLookupEditableElement = (
+    { element, attributes, children }: {
+        element: MDT.LookupBlockNode;
+        attributes: RenderElementProps["attributes"];
+        children: React.ReactNode;
+    },
+) => {
+    const editor = useSlate();
+
+    const handleChange = React.useCallback((newValue: string) => {
+        // We need to replace the text child node of the inline_lookup node, to reflect the new value.
+        const path = ReactEditor.findPath(editor, element); // Path to the "lookup_inline" node
+        // "if you specify a Path location, it will expand to a range that covers the entire node at that path.
+        //  Then, using the range-based behavior it will delete all of the content of the node, and replace it with
+        //  your text. So to replace the text of an entire node with a new string you can do:"
+        Transforms.insertText(editor, newValue, { at: [...path, 0], voids: true });
+    }, [editor, element]);
+
+    return (
+        <div className="select-none" contentEditable={false}>
+            <LookupExpressionInput
+                value={element.children[0].text}
+                onChange={handleChange}
+                className="inline-block w-auto !min-w-[200px] md:!min-w-[200px] border-none outline-blue-700 text-blue-800 before:content-['{'] after:content-['}'] before:opacity-50 after:opacity-50"
+            />
+            {children}
+        </div>
+    );
+};
+
 export function renderElement({ element, children, attributes }: RenderElementProps): JSX.Element {
     switch (element.type) {
         case "link":
@@ -208,6 +242,14 @@ export function renderElement({ element, children, attributes }: RenderElementPr
             );
 
         // Block elements:
+        case "heading":
+            return React.createElement(`h${element.level}`, attributes, children);
+        case "lookup_block":
+            return (
+                <BLockLookupEditableElement element={element} attributes={attributes}>
+                    {children}
+                </BLockLookupEditableElement>
+            );
         case "paragraph":
             return <p {...attributes}>{children}</p>;
         case "bullet_list":
