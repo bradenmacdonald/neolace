@@ -305,5 +305,11 @@ export class ReferenceCache {
                 this.extractMarkdownReferences(child, args);
             }
         }
+
+        if (markdown.type === "mdt-document" && markdown.footnotes) {
+            for (const footnote of markdown.footnotes) {
+                this.extractMarkdownReferences(footnote, args);
+            }
+        }
     }
 }
