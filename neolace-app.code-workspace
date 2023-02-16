@@ -4,16 +4,13 @@
 			"path": "backend"
 		},
 		{
-			"path": "neolace-api"
-		},
-		{
 			"path": "frontend"
 		},
 		{
-			"path": "arch-decisions"
+			"path": "neolace-api"
 		},
 		{
-			"path": "docs"
+			"path": "arch-decisions"
 		}
 	],
 	"settings": {
