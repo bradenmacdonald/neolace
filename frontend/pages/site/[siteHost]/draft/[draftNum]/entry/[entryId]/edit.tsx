@@ -28,9 +28,9 @@ import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
 import { PropertiesEditor } from "components/entry-editor/PropertiesEditor";
 import { MainEditor } from "components/entry-editor/MainEditor";
-import { HoverClickNote } from "components/widgets/HoverClickNote";
 import { EditDescription } from "components/widgets/EditDescription";
 import { FilesEditor } from "components/entry-editor/FilesEditor";
+import { ArticleEditor } from "components/entry-editor/ArticleEditor";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -223,7 +223,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
                         name={defineMessage({ defaultMessage: "Article", id: "jx7Hn3" })}
                         hidden={entryType === undefined || entryType.enabledFeatures.Article === undefined}
                     >
-                        <code><pre>{entry?.features.Article?.articleContent}</pre></code>
+                        <ArticleEditor entry={entry} addUnsavedEdit={addUnsavedEdit} />
                     </Tab>
                     <Tab
                         id="image"

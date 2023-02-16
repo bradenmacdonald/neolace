@@ -247,4 +247,18 @@ Deno.test("Consolidate edits", async (t) => {
             ],
         );
     });
+
+    await t.step("Changing entry article text", () => {
+        assertEquals(
+            consolidateEdits([
+                { code: "UpdateEntryFeature", data: { entryId: entryA, feature: { featureType: "Article", articleContent: "first" } } },
+                { code: "UpdateEntryFeature", data: { entryId: entryB, feature: { featureType: "Article", articleContent: "other" } } },
+                { code: "UpdateEntryFeature", data: { entryId: entryA, feature: { featureType: "Article", articleContent: "second" } } },
+            ]),
+            [
+                { code: "UpdateEntryFeature", data: { entryId: entryA, feature: { featureType: "Article", articleContent: "second" } } },
+                { code: "UpdateEntryFeature", data: { entryId: entryB, feature: { featureType: "Article", articleContent: "other" } } },
+            ],
+        );
+    });
 });

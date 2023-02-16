@@ -133,7 +133,7 @@ interface CodeBlockNode extends BlockNode {
     /** Always contains a single child node, of type TextNode */
     children: [TextNode];
 }
-interface LookupBlockNode extends BlockNode {
+export interface LookupBlockNode extends BlockNode {
     type: "lookup_block";
     /** The lookup expression, within a single child node, of type TextNode */
     children: [TextNode];

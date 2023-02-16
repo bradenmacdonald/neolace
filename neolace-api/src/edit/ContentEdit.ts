@@ -4,6 +4,7 @@ import { EditableEntryData, ImageSizingMode } from "../content/Entry.ts";
 import { number, Schema, SchemaValidatorFunction, string, Type } from "../deps/computed-types.ts";
 import { type SiteSchemaData } from "../schema/SiteSchemaData.ts";
 import { Edit, EditChangeType, EditType } from "./Edit.ts";
+import * as MDT from "../markdown-mdt.ts";
 
 export interface ContentEditType<
     Code extends string = string,
@@ -184,7 +185,27 @@ export const UpdateEntryFeature = ContentEditType({
         }
         const updatedEntry = { ...baseEntry, features: {...baseEntry.features} };
         const edit = data.feature;
-        if (edit.featureType === "Files") {
+        if (edit.featureType === "Article") {
+            const articleContent = edit.articleContent ?? "";
+            const headings: { id: string; title: string }[] = [];
+            // Parse the Markdown to extract the headings:
+            try {
+                const  parsed = MDT.tokenizeMDT(articleContent);
+                // Extract the top-level headings from the document, so all API clients can display a consistent table of contents
+                for (const node of parsed.children) {
+                    if (node.type === "heading" && node.level === 1) {
+                        headings.push({
+                            title: node.children.map((c) => MDT.renderInlineToPlainText(c)).join(""),
+                            id: node.slugId,
+                        });
+                    }
+                }
+            } catch {
+                // Ignore problems with parsing the headings.
+            }
+            updatedEntry.features.Article = { articleContent, headings };
+            return updatedEntry;
+        } else if (edit.featureType === "Files") {
             let files = baseEntry.features.Files?.files ? [...baseEntry.features.Files?.files] : [];
             if (edit.changeType === "removeFile") {
                 files = files.filter((f) => f.filename !== edit.filename);
@@ -200,9 +221,19 @@ export const UpdateEntryFeature = ContentEditType({
             updatedEntry.features.Files = {files};
             return updatedEntry;
         }
-        throw new Error("This edit type is not implemented yet.");
+        throw new Error(`Editing this feature type (${edit.featureType}) is not implemented yet.`);
     },
     describe: (data) => `Updated ${data.feature.featureType} feature of \`Entry ${data.entryId}\``,
+    consolidate(thisEdit, earlierEdit) {
+        if (earlierEdit.code === thisEdit.code && earlierEdit.data.entryId === thisEdit.data.entryId && earlierEdit.data.feature.featureType === thisEdit.data.feature.featureType) {
+            if (thisEdit.data.feature.featureType === "Article") {
+                // This "update article content" overwrites the previous change.
+                // In the future, we'll support diffs but for now this just overwrites it.
+                return thisEdit;
+            }
+        }
+        return undefined;
+    },
 });
 
 export const AddPropertyFact = ContentEditType({
