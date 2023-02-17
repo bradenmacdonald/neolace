@@ -17,6 +17,7 @@ import { NodeTooltip, useNodeTooltipHelper } from "./NodeTooltip";
 import { defineMessage } from "components/utils/i18n";
 import { debugLog } from "lib/config";
 import { EdgeAttributes, GraphData, NodeAttributes, NodeType } from "./graph-data";
+import { Frame, FrameBody, FrameHeader } from "components/widgets/Frame";
 
 interface Props {
     data: GraphData;
@@ -395,7 +396,7 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
 
     const contents = (
         <>
-            <div className="block rounded-t w-full border-b-[1px] border-gray-500 bg-gray-100 p-1">
+            <FrameHeader>
                 <ToolbarButton
                     onClick={handleExpandCanvasButton}
                     tooltip={defineMessage({ defaultMessage: "Toggle expanded view", id: "k4UVvX" })}
@@ -455,10 +456,10 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                     icon="bounding-box"
                     toggled={isCommunized}
                 />
-            </div>
-            <div
+            </FrameHeader>
+            <FrameBody
                 ref={updateGraphHolder}
-                className="relative rounded-b bg-white overflow-hidden w-screen max-w-full h-screen max-h-full"
+                className="relative rounded-b bg-white overflow-hidden w-screen max-w-full h-screen max-h-full !p-0"
                 style={activeTool === Tool.HideNodes
                     ? {
                         cursor:
@@ -467,7 +468,7 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
                     : {}}
             >
                 {/* in here is 'graphContainer', and which holds a <canvas> element. */}
-            </div>
+            </FrameBody>
             {/* A tooltip that displays information about the currently selected entry node. */}
             <NodeTooltip
                 showTooltipForNode={showTooltipForNode}
@@ -495,14 +496,9 @@ export const GraphViewer: React.FunctionComponent<Props> = (props) => {
         // Display the graph in our parent element, making it as wide as possible, and setting the height based
         // on an aspect ratio (square on mobile, 16:9 on desktop)
         return (
-            <div
-                className={`
-                flex flex-col rounded border border-gray-300 w-auto h-auto
-                aspect-square md:aspect-video max-w-full
-            `}
-            >
+            <Frame className="h-auto aspect-square md:aspect-video">
                 {contents}
-            </div>
+            </Frame>
         );
     }
 };

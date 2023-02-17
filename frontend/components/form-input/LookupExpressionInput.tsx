@@ -32,6 +32,7 @@ interface Props {
     id?: string;
     /** Override the display of this element */
     className?: string;
+    readOnly?: boolean;
 }
 
 /**
@@ -118,6 +119,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
                 renderLeaf={renderLeaf}
                 renderElement={renderElement}
                 placeholder={props.placeholder ? displayString(intl, props.placeholder) : undefined}
+                readOnly={props.readOnly}
             />
             {/* Autocompletion dropdown */}
             {

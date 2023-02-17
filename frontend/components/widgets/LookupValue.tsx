@@ -14,6 +14,8 @@ import { EntryValue } from "./EntryValue";
 import { UiPluginsContext } from "../utils/ui-plugins";
 import { Icon } from "./Icon";
 import { LookupQuantityValue } from "./LookupQuantityValue";
+import { LookupExpressionInput } from "components/form-input";
+import { LookupDemo } from "./LookupDemo";
 
 interface LookupValueProps {
     value: api.AnyLookupValue;
@@ -53,6 +55,13 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
 
     if (typeof value !== "object" || value === null || !("type" in value)) {
         return <p>[ERROR INVALID VALUE, NO TYPE INFORMATION]</p>; // Doesn't need i18n, internal error message shouldn't be seen
+    }
+
+    if (value.annotations?.displayAsEditableDemoFromExpression && value.annotations.displayAsEditableDemoFromExpression.type === "String") {
+        const {displayAsEditableDemoFromExpression: expr, ...otherAnnotations} = value.annotations;
+        const innerValue = {...value, annotations: otherAnnotations};
+        // Display this value as an editable expression:
+        return <LookupDemo value={innerValue} expr={expr.value} mdtContext={props.mdtContext} />
     }
 
     if (value.annotations?.note || value.annotations?.detail) {

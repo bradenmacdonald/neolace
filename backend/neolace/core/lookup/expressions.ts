@@ -20,6 +20,7 @@ export { Graph } from "./expressions/functions/graph.ts";
 export { If } from "./expressions/functions/if.ts";
 export { Image } from "./expressions/functions/image.ts";
 export { Link } from "./expressions/functions/link.ts";
+export { LookupDemo } from "./expressions/functions/lookupDemo.ts";
 export { Map } from "./expressions/functions/map.ts";
 export { Markdown } from "./expressions/functions/markdown.ts";
 export { PropFunction } from "./expressions/functions/prop.ts";
