@@ -4,7 +4,7 @@ import { NextPage } from "next";
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
 import { _allIcons, Icon, IconId } from "components/widgets/Icon";
-import { Button } from "components/widgets/Button";
+import { Button, ToolbarButton, ToolbarSeparator } from "components/widgets/Button";
 import { Spinner } from "components/widgets/Spinner";
 import { Tooltip } from "components/widgets/Tooltip";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
@@ -25,6 +25,7 @@ import { LookupValue } from "components/widgets/LookupValue";
 import { api, RefCacheContext } from "lib/api";
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { DEVELOPMENT_MODE } from "lib/config";
+import { Frame, FrameBody, FrameHeader } from "components/widgets/Frame";
 
 const UIDemo = (props: { label: string; children: React.ReactNode }) => {
     return (
@@ -193,6 +194,62 @@ const UiDemoPage: NextPage = function (props) {
                                 This is the changes tab, with a "badge" that says "3".
                             </Tab>
                         </TabBarRouter>
+                    </UIDemo>
+                    <UIDemo label="Frame">
+                        <Frame><FrameBody>This is a &lt;Frame&gt;.</FrameBody></Frame>
+                    </UIDemo>
+                    <UIDemo label="Frame with toolbar">
+                        <Frame>
+                            <FrameHeader>
+                                <ToolbarButton
+                                    icon="zoom-in" onClick={() => undefined}
+                                    tooltip={defineMessage({defaultMessage: "just a demo toolbar button", id: 'KzohjF'})}
+                                />
+                                <ToolbarButton
+                                    icon="zoom-out" onClick={() => undefined}
+                                    tooltip={defineMessage({defaultMessage: "just a demo toolbar button", id: 'KzohjF'})}
+                                />
+                                <ToolbarSeparator/>
+                                <ToolbarButton
+                                    icon="info-circle" onClick={() => undefined}
+                                    tooltip={defineMessage({defaultMessage: "just a demo toolbar button", id: 'KzohjF'})}
+                                />
+                                <ToolbarButton
+                                    icon="people-fill" onClick={() => undefined}
+                                    tooltip={defineMessage({defaultMessage: "just a demo toolbar button", id: 'KzohjF'})}
+                                />
+                            </FrameHeader>
+                            <FrameBody>This is a &lt;Frame&gt; with a toolbar/header.</FrameBody>
+                        </Frame>
+                    </UIDemo>
+                    <UIDemo label="Frame inside a frame">
+                        <Frame>
+                            <FrameHeader>Outer &lt;Frame&gt; header - could be a title or a toolbar</FrameHeader>
+                            <FrameBody>
+                                <Frame>
+                                    <FrameHeader>
+                                        <ToolbarButton
+                                            icon="zoom-in" onClick={() => undefined}
+                                            tooltip={defineMessage({defaultMessage: "just a demo toolbar button", id: 'KzohjF'})}
+                                        />
+                                        <ToolbarButton
+                                            icon="zoom-out" onClick={() => undefined}
+                                            tooltip={defineMessage({defaultMessage: "just a demo toolbar button", id: 'KzohjF'})}
+                                        />
+                                        <ToolbarSeparator/>
+                                        <ToolbarButton
+                                            icon="info-circle" onClick={() => undefined}
+                                            tooltip={defineMessage({defaultMessage: "just a demo toolbar button", id: 'KzohjF'})}
+                                        />
+                                        <ToolbarButton
+                                            icon="people-fill" onClick={() => undefined}
+                                            tooltip={defineMessage({defaultMessage: "just a demo toolbar button", id: 'KzohjF'})}
+                                        />
+                                    </FrameHeader>
+                                    <FrameBody>When the &lt;Frame&gt; is inside another &lt;Frame&gt;, it responsively removes its rounded corners, merges its toolbar with the above one, and hides the padding.</FrameBody>
+                                </Frame>
+                            </FrameBody>
+                        </Frame>
                     </UIDemo>
                     <UIDemo label="Spinner">
                         <Spinner />
