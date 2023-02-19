@@ -38,7 +38,7 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
 
     const widget = (
         <span
-            className="text-sm font-medium font-sans"
+            className="text-sm font-medium font-sans inline-block"
             style={{
                 "--entry-type-color-0": color.backgroundColor,
                 "--entry-type-color-1": color.darkerBackgroundColor,
