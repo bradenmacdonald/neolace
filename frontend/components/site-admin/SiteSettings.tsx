@@ -81,15 +81,6 @@ export const SiteSettingsAdminTool: React.FunctionComponent<AdminComponentProps>
                 <p>Home page editor will be added in the near future.</p>
             </Tab>
 
-            <Tab id="links" name={defineMessage({defaultMessage: "Links", id: 'qCcwo3', })}>
-                <p>Main site links (on the left-hand side):</p>
-                <ol>
-                    {site.frontendConfig.headerLinks?.map((l, lIdx) => 
-                        <li key={lIdx}><strong>{l.text}</strong> : {l.href}</li>
-                    )}
-                </ol>
-            </Tab>
-
             <Tab id="theme" name={defineMessage({defaultMessage: "Theme", id: 'Pe0ogR', })}>
                 <p>Link color: <input type="color" value={rgbTripleToHex(site.frontendConfig.theme?.linkColor ?? [0, 0, 0])} readOnly={true} /></p>
                 <p>Heading color: <input type="color" value={rgbTripleToHex(site.frontendConfig.theme?.headingColor ?? [0, 0, 0])} readOnly={true} /></p>

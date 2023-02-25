@@ -56,6 +56,14 @@ export const plugin: PluginDefinition = {
     },
     getUiSlotChanges() {
         return {
+            "leftNavTop": [
+                // Hide the normal main links:
+                {
+                    op: UiChangeOperation.Wrap,
+                    widgetId: "mainLinks",
+                    wrapper: HideExceptForAdmin,
+                },
+            ],
             "leftNavBottom": [
                 // Hide the normal system links, because we don't want users clicking "login" and going to the realm home site:
                 {

@@ -247,17 +247,6 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                                 hasIcons
                             />,
                         },
-                        // {
-                        //     id: "siteLinks",
-                        //     priority: 25,
-                        //     content: <>
-                        //         <ul>
-                        //             {site.frontendConfig.headerLinks?.map(link => 
-                        //                 <li key={link.href}><Link href={link.href}>{link.text}</Link></li>
-                        //             )}
-                        //         </ul>
-                        //     </>,
-                        // },
                     ]} renderWidget={defaultRender} />
                     <div className="flex-auto">{/* This is a spacer that pushes the "bottom" content to the end */}</div>
                     <UISlot slotId="leftNavBottom" defaultContents={[

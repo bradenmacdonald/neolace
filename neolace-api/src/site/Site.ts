@@ -6,7 +6,9 @@ import { VNID } from "../types.ts";
 const rgbTuple = array.min(3).max(3).of(number).transform((x) => x as [number, number, number]);
 
 export const FrontendConfigSchema = Schema({
+    /** @deprecated */
     headerLinks: array.of(Schema({ text: string, href: string })).strictOptional(),
+    /** @deprecated */
     integrations: Schema({
         plausibleAnalytics: Schema({ enabled: boolean }).strictOptional(),
     }).strictOptional(),
