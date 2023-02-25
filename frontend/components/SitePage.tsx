@@ -13,18 +13,11 @@ import { DEVELOPMENT_MODE } from "lib/config";
 import { defineMessage, displayString, TranslatableString } from "./utils/i18n";
 import { SiteDataProvider } from "./SiteDataProvider";
 import { useZIndex, IncreaseZIndex, ZIndexContext } from "lib/hooks/useZIndex";
-import { LeftPanelLinkSet } from "./widgets/LeftPanelLinkSet";
+import { LeftPanelLinkSet, Link as NavLink } from "./widgets/LeftPanelLinkSet";
 export { SiteDataProvider }  // for convenience, allow SitePage and SiteDataProvider to both be imported together
 
 
 export const DefaultSiteTitle = Symbol("DefaultSiteTitle");
-
-export interface LinkWithIcon {
-    /** The label of the link. Should be a FormattedMessage. */
-    label: React.ReactElement;
-    icon?: IconId;
-    url: string;
-}
 
 interface Props {
     title: TranslatableString | string | typeof DefaultSiteTitle;
@@ -76,8 +69,8 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
         return color.join(" ");
     };
 
-    const defaultMainLinks: UISlotWidget<LinkWithIcon>[] = [];
-    const defaultSystemLinks: UISlotWidget<LinkWithIcon>[] = [];
+    const defaultMainLinks: UISlotWidget<NavLink>[] = [];
+    const defaultSystemLinks: UISlotWidget<NavLink>[] = [];
 
     defaultMainLinks.push(
         // Home page
@@ -108,6 +101,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 url: "/draft/_/entry/_/edit",
                 label: <FormattedMessage id="oTIZFX" defaultMessage="Create Entry" />,
                 icon: "plus-lg",
+                matchUrl: "-never-",
             },
             // Only show if the user has permission to propose a new entry:
             hidden: !permissions?.[api.CorePerm.proposeNewEntry]?.hasPerm,
@@ -117,7 +111,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             id: "drafts",
             priority: 30,
             content: {
-                url: "/draft/",
+                url: "/draft",
                 label: <FormattedMessage id="2atspc" defaultMessage="Drafts" />,
                 icon: "file-earmark-diff",
             },
@@ -131,7 +125,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             id: "admin",
             priority: 30,
             content: {
-                url: `/admin/`,
+                url: `/admin`,
                 label: <FormattedMessage id="iOBTBR" defaultMessage="Site Administration" />,
                 icon: "gear-fill",
             },
@@ -145,7 +139,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
             id: "profile",
             priority: 40,
             content: {
-                url: site.isHomeSite ? "/account/" : `${site.homeSiteUrl}/account/`,
+                url: site.isHomeSite ? "/account" : `${site.homeSiteUrl}/account`,
                 label: <FormattedMessage id="/GfBD6" defaultMessage="Profile ({name})" values={{name: user.fullName}} />,
                 icon: "person-fill",
             },
