@@ -42,15 +42,6 @@ module.exports = (phase) => {
                         destination: '/site/:siteHost/:path*',
                     },
                 ],
-                fallback: [
-                    {
-                        source: '/:path*{/}?',
-                        has: [
-                            {type: 'host', value: '(?<siteHost>.*)'},
-                        ],
-                        destination: '/site/:siteHost/fallback/:path*',
-                    },
-                ],
             };
         },
         webpack: (config, options) => {
