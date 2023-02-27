@@ -19,7 +19,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, it, ItDefinition 
 import { PermissionGrant } from "../core/permissions/grant.ts";
 import { getConnection } from "neolace/core/edit/connections.ts";
 import { ApplyBulkEdits } from "neolace/core/edit/ApplyBulkEdits.ts";
-import { api } from "neolace/api/mod.ts";
+import { api } from "neolace/rest-api/mod.ts";
 
 // Exports:
 export * from "std/testing/asserts.ts";

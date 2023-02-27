@@ -1,4 +1,4 @@
-import { api } from "neolace/api/mod.ts";
+import { api } from "neolace/rest-api/mod.ts";
 import { C, Field, isVNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { EntryTypeColor, PropertyType, ReferenceCacheData } from "neolace/deps/neolace-api.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";

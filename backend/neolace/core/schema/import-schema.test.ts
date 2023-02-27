@@ -9,7 +9,7 @@ import { UseSystemSource } from "../edit/ApplyEdits.ts";
 
 group("import-schema.ts", () => {
     // Note: importSchema() is used for the test fixtures so is also tested by all the tests in
-    // neolace/api/site/[siteKey]/schema/index.test.ts
+    // neolace/rest-api/site/[siteKey]/schema/index.test.ts
 
     setTestIsolation(setTestIsolation.levels.BLANK_ISOLATED);
 

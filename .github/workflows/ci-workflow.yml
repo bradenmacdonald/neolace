@@ -64,7 +64,7 @@ jobs:
       - name: Type check backend
         # Note: we don't want to use --no-lock, but esm.sh is serving some flaky lodash modules (for Chevrotain) with
         # different hashes, so we have to disable it for now :/
-        run: deno check neolace/api/server.ts --no-lock
+        run: deno check neolace/rest-api/server.ts --no-lock
         working-directory: ./backend
 
       # Type checking the test suite is a bit slow so we do it asynchronously now too, while the actual tests themselves run in a separate job

@@ -40,7 +40,7 @@
             "problemMatcher": []
         },
         {
-            "label": "🚀 Run backend (watch mode)",
+            "label": "🚀 Run backend",
             "type": "shell",
             "command": "deno",
             "args": [
@@ -49,12 +49,12 @@
                 "--allow-env",
                 "--allow-read",
                 "--watch",
-                "neolace/api/server.ts"
+                "neolace/rest-api/server.ts"
             ],
             "problemMatcher": []
         },
         {
-            "label": "Run backend (with type checks)",
+            "label": "Run backend (without watch mode)",
             "type": "shell",
             "command": "deno",
             "args": [
@@ -62,7 +62,7 @@
                 "--allow-net",
                 "--allow-env",
                 "--allow-read",
-                "neolace/api/server.ts"
+                "neolace/rest-api/server.ts"
             ],
             "problemMatcher": []
         },

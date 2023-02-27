@@ -19,7 +19,7 @@
                 "--allow-net",
                 "--allow-env",
                 "--allow-read",
-                "neolace/api/server.ts"
+                "neolace/rest-api/server.ts"
             ],
             "attachSimplePort": 9229,
             "console": "integratedTerminal"

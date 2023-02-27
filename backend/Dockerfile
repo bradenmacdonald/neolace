@@ -12,11 +12,11 @@ COPY neolace-api /neolace/neolace-api
 # Cache dependencies and check types
 # Unfortunately the esm.sh server seems to serve files with some minor changes, so it's breaking the lock file checking, even with a pinned esm.sh version
 RUN rm deno.lock
-RUN deno cache neolace/api/server.ts
+RUN deno cache neolace/rest-api/server.ts
 RUN deno cache neolace/plugins/*/mod.ts
 
 # The backend runs on port 5554
 EXPOSE 5554
 
 # Start the server
-CMD ["deno", "run", "--allow-net", "--allow-env", "--allow-read", "neolace/api/server.ts"]
+CMD ["deno", "run", "--allow-net", "--allow-env", "--allow-read", "neolace/rest-api/server.ts"]
