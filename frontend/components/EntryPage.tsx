@@ -11,12 +11,12 @@ import { LookupValue } from "components/widgets/LookupValue";
 import { EntryLink } from "components/widgets/EntryLink";
 import { imgThumbnailLoader } from "lib/config";
 import { ErrorMessage } from "./widgets/ErrorMessage";
-import { defineMessage } from "./utils/i18n";
+import { defineMessage, noTranslationNeeded } from "./utils/i18n";
 import { Spinner } from "./widgets/Spinner";
 import { UISlot, UISlotWidget } from "./widgets/UISlot";
-import { IncreaseZIndex, useZIndex, ZIndexContext } from "lib/hooks/useZIndex";
 import Head from "next/head";
 import { LeftPanelLinkSet } from "./widgets/LeftPanelLinkSet";
+import { StickyHeader } from "./widgets/StickyHeader";
 
 interface Props {
     /** The entry key (either its key or VNID) */
@@ -46,8 +46,6 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
     const canProposeEdits = usePermission(api.CorePerm.proposeEditToEntry, { entryId: entry?.id });
 
     const mdtContext = React.useMemo(() => new MDTContext({ entryId: entry?.id }), [entry?.id]);
-
-    const zIndexHeader = useZIndex({increaseBy: IncreaseZIndex.ForPanel});
 
     if (entryError) {
         if (entryError instanceof api.NotAuthorized) {
@@ -136,12 +134,6 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                     // </>},
                 ]}
             >
-                <Head>
-                    <style>{`
-                        :root { --header-scroll-offset: 85px; }
-                        html { scroll-padding-top: var(--header-scroll-offset); }
-                    `}</style>
-                </Head>
                 {/* Hero image, if any */}
                 {
                     entry.features?.HeroImage ?
@@ -201,49 +193,46 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                 }
 
                 {/* Header: The entry title, and action links. This "sticks" to the top of the page. */}
-                <div data-entry-id={entry.id} className="-m-6 mb-6 px-6 pt-6 pb-6 sticky top-0 bg-white bg-opacity-90 backdrop-blur-md border-b border-gray-50" style={{zIndex: zIndexHeader}}>
-                    <ZIndexContext.Provider value={zIndexHeader}>
-                        {/* This heading is "inline" with padding at the end to ensure it never overlaps with the actions like "Edit" */}
-                        <h1 className="inline pr-10">{entry.name}</h1>
-                        <div className="absolute right-2 bottom-0 flex border-slate-200 space-x-2">
-                            <UISlot<{label: React.ReactElement, url: string}>
-                                slotId="entryActions"
-                                defaultContents={[
-                                    ...(
-                                        canProposeEdits ? [
-                                            {
-                                                id: "edit-entry",
-                                                priority: 10,
-                                                content: {
-                                                    label: <FormattedMessage defaultMessage="Edit" id="wEQDC6" />,
-                                                    url: `/draft/_/entry/${entry.id}/edit`,
-                                                },
+                <StickyHeader
+                    title={noTranslationNeeded(entry.name)}
+                    rightActions={
+                        <UISlot<{label: React.ReactElement, url: string}>
+                            slotId="entryActions"
+                            defaultContents={[
+                                ...(
+                                    canProposeEdits ? [
+                                        {
+                                            id: "edit-entry",
+                                            priority: 10,
+                                            content: {
+                                                label: <FormattedMessage defaultMessage="Edit" id="wEQDC6" />,
+                                                url: `/draft/_/entry/${entry.id}/edit`,
                                             },
-                                        ]: []
-                                    ),
-                                    // {
-                                    //     id: "entry-history",
-                                    //     priority: 20,
-                                    //     content: {
-                                    //         label: <FormattedMessage defaultMessage="History" id="djJp6c" />,
-                                    //         url: `/entry/${entry.id}/history`,
-                                    //     },
-                                    // },
-                                ]}
-                                renderWidget={
-                                    (link: UISlotWidget<{label: React.ReactElement, url: string}>) => (
-                                        <Link href={link.content.url} key={link.id} className="rounded-md block px-2 py-2 hover:bg-slate-200 !text-slate-500 hover:text-black !no-underline">
-                                            {link.content.label}
-                                        </Link>
-                                    )
-                                }
-                            />
-                        </div>
-                    </ZIndexContext.Provider>
-                </div>
+                                        },
+                                    ]: []
+                                ),
+                                // {
+                                //     id: "entry-history",
+                                //     priority: 20,
+                                //     content: {
+                                //         label: <FormattedMessage defaultMessage="History" id="djJp6c" />,
+                                //         url: `/entry/${entry.id}/history`,
+                                //     },
+                                // },
+                            ]}
+                            renderWidget={
+                                (link: UISlotWidget<{label: React.ReactElement, url: string}>) => (
+                                    <Link href={link.content.url} key={link.id} className="rounded-md block px-2 py-2 hover:bg-slate-200 !text-slate-500 hover:text-black !no-underline">
+                                        {link.content.label}
+                                    </Link>
+                                )
+                            }
+                        />
+                    }
+                />
 
                 {/* Summary - Description and Properties */}
-                <div id="summary" className="flex">
+                <div id="summary" className="flex" data-entry-id={entry.id}>
                     <div id="properties" className="flex-auto">
                         <table className="w-full table-fixed">
                             <colgroup>

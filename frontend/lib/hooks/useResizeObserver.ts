@@ -3,10 +3,10 @@ import React from "react";
 /**
  * This React hook can be used to watch a particular HTML element, and call a callback function if the element's size
  * has changed.
- * @param ref A React 'ref' object for the HTML element that we want to observe for size changes.
+ * @param ref An HTML element that we want to observe for size changes.
  * @param callback The function to call when the element's size has changed.
  */
-export const useResizeObserver = (element: Element | undefined, callback: () => void) => {
+export const useResizeObserver = (element: Element | undefined | null, callback: () => void) => {
     // Use a ref to wrap the callback so that our ref never changes:
     const callbackRef = React.useRef<() => void>(callback);
     if (callbackRef.current !== callback) {
