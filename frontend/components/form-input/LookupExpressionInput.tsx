@@ -17,7 +17,7 @@ import {
 } from "components/slate-editor/slate";
 import { EntryTypeVoid, EntryVoid, PropertyVoid } from "components/slate-editor/slate-mdt";
 import { displayString, TranslatableString } from "components/utils/i18n";
-import { AutocompletionMenu } from "components/form-input";
+import { AutocompletionMenu } from "components/form-input/AutocompletionMenu";
 import { api } from "lib/api";
 
 interface Props {

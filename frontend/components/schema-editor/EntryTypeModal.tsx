@@ -4,20 +4,16 @@ import { FormattedMessage } from "react-intl";
 import { defineMessage, displayText, noTranslationNeeded } from "components/utils/i18n";
 import { api, useSchema } from "lib/api";
 import { Spinner } from "components/widgets/Spinner";
-import {
-    AutoControl,
-    Checkbox,
-    Control,
-    Form,
-    LookupExpressionInput,
-    MDTEditor,
-    SelectBox,
-    TextInput,
-} from "components/form-input";
 import { Button } from "components/widgets/Button";
 import { Modal } from "components/widgets/Modal";
 import { Icon } from "components/widgets/Icon";
 import { slugify } from "lib/slugify";
+import { AutoControl, Control, Form } from "components/form-input/Form";
+import { TextInput } from "components/form-input/TextInput";
+import { SelectBox } from "components/form-input/SelectBox";
+import { MDTEditor } from "components/form-input/MDTEditor";
+import { Checkbox } from "components/form-input/Checkbox";
+import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
 
 interface Props {
     /** The ID of the entry type to edit. Leave undefined to create a new entry type. */

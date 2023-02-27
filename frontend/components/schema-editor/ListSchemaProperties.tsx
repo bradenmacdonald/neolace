@@ -5,7 +5,8 @@ import { api, useSchema } from "lib/api";
 import { Spinner } from "components/widgets/Spinner";
 import { InlineMDT, MDTContext } from "components/markdown-mdt/mdt";
 import { defineMessage } from "components/utils/i18n";
-import { Control, TextInput } from "components/form-input";
+import { Control } from "components/form-input/Control";
+import { TextInput } from "components/form-input/TextInput";
 import { ButtonLink } from "components/widgets/ButtonLink";
 import { Button } from "components/widgets/Button";
 

@@ -1,24 +1,23 @@
-import { FormattedMessage } from "react-intl";
 import type { PluginDefinition } from "components/utils/ui-plugins";
 import { UiChangeOperation } from "components/widgets/UISlot";
+import { QuickSearchBox } from "./components/QuickSearchBox";
 
 export const plugin: PluginDefinition = {
     id: "search",
     getUiSlotChanges(config) {
         return {
-            "systemLinks": [
+            // Add the search quick box below the site logo:
+            "leftNavTop": [
                 {
                     op: UiChangeOperation.Insert,
                     widget: {
-                        id: "search",
-                        priority: 20,
-                        content: {
-                            url: "/search",
-                            label: <FormattedMessage id="JrRTUH" defaultMessage="Quick Search" />,
-                            icon: "search",
-                        },
-                    },
-                },
+                        id: "search-box",
+                        priority: 2,
+                        content: <>
+                            <QuickSearchBox/>
+                        </>,
+                    }
+                }
             ],
         };
     },

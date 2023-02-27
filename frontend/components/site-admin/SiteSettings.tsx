@@ -5,7 +5,9 @@ import type { AdminComponentProps } from "./site-admin";
 import { useSiteData } from "lib/api";
 import { Tab, TabBar } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
-import { AutoControl, Form, MDTEditor, TextInput } from "components/form-input";
+import { AutoControl, Form } from "components/form-input/Form";
+import { TextInput } from "components/form-input/TextInput";
+import { MDTEditor } from "components/form-input/MDTEditor";
 
 function rgbTripleToHex(value: [r: number, g: number, b: number]): string {
     return '#' + value.map(component => component.toString(16).padStart(2, "0")).join("");
@@ -79,15 +81,6 @@ export const SiteSettingsAdminTool: React.FunctionComponent<AdminComponentProps>
 
             <Tab id="homepage" name={defineMessage({defaultMessage: "Home Page", id: "xHJnaY", })}>
                 <p>Home page editor will be added in the near future.</p>
-            </Tab>
-
-            <Tab id="links" name={defineMessage({defaultMessage: "Links", id: 'qCcwo3', })}>
-                <p>Main site links (on the left-hand side):</p>
-                <ol>
-                    {site.frontendConfig.headerLinks?.map((l, lIdx) => 
-                        <li key={lIdx}><strong>{l.text}</strong> : {l.href}</li>
-                    )}
-                </ol>
             </Tab>
 
             <Tab id="theme" name={defineMessage({defaultMessage: "Theme", id: 'Pe0ogR', })}>

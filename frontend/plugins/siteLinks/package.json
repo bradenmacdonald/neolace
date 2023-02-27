@@ -1,0 +1,9 @@
+{
+    "name": "neolace-site-links-plugin",
+    "version": "0.0.1",
+    "private": true,
+    "scripts": {},
+    "dependencies": {},
+    "devDependencies": {},
+    "peerDependencies": {}
+}

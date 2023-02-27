@@ -4,6 +4,8 @@ import { useRouter } from "next/router";
 import React from "react";
 import { IntlProvider } from "react-intl";
 
+import { AvailablePluginsProvider } from "components/utils/ui-plugins-loader";
+
 // Import global CSS (Tailwind-based)
 import "../global-styles.css";
 
@@ -34,10 +36,6 @@ const DynamicIntlProviders = {
         )
     ),
 };
-
-export const AvailablePluginsProvider = dynamic<{ children: React.ReactNode }>(
-    import("components/utils/ui-plugins-loader").then((mod) => mod.AvailablePluginsProvider),
-);
 
 export default function NeolaceApp({ Component, pageProps }: AppProps) {
     const { locale, events: routerEvents } = useRouter();

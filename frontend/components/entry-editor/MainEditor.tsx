@@ -3,7 +3,9 @@ import { FormattedMessage, useIntl } from "react-intl";
 
 import { api, useSchema } from "lib/api";
 import { Spinner } from "components/widgets/Spinner";
-import { AutoControl, Control, Form, MDTEditor, TextInput } from "components/form-input";
+import { AutoControl, Control, Form } from "components/form-input/Form";
+import { MDTEditor } from "components/form-input/MDTEditor";
+import { TextInput } from "components/form-input/TextInput";
 import { SelectEntryType } from "components/widgets/SelectEntryType";
 import { defineMessage } from "components/utils/i18n";
 import { EntryTypeModal } from "components/schema-editor/EntryTypeModal";

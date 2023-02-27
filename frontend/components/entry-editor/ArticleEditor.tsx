@@ -3,7 +3,9 @@ import { FormattedMessage } from "react-intl";
 
 import { api } from "lib/api";
 import { Spinner } from "components/widgets/Spinner";
-import { AutoControl, Form, MDTEditor } from "components/form-input";
+import { AutoControl } from "components/form-input/AutoControl";
+import { Form } from "components/form-input/Form";
+import { MDTEditor } from "components/form-input/MDTEditor";
 import { defineMessage } from "components/utils/i18n";
 
 interface Props {

@@ -23,26 +23,24 @@ interface PageUrlQuery extends ParsedUrlQuery {
  * fallback. It checks if the URL is configured as a site-specific redirect; if so, the user is redirected. If not, we
  * check if a plugin wants to serve this page; if so, we use the plugin. Otherwise we throw a 404.
  */
-const FallbackPage: NextPage<PageProps> = function ({ pluginId, pluginPage, ...props }) {
+const PluginPage: NextPage<PageProps> = function ({ pluginId, pluginPage, ...props }) {
     // If we get here, then a plugin is being used:
 
-    const PluginComponent = dynamic<PluginPageProps>(
+    const PluginComponent = React.useMemo(() => dynamic<PluginPageProps>(
         // Note: it is very important that the pattern below does not match any files in each plugin's node_modules
         // folder, even when the variables like ${pluginId} are substituted with full paths like "..". Otherwise, you
         // will see webpack accounting for many different possible imports that we'll never use, and .next/server/ will
         // be filled with unwanted webpack build files like "plugins_search_node_modules_react_index_js", which slows
         // down the frontend build.
-        () => import(`../../../../plugins/${pluginId}/plugin-pages/${pluginPage}`),
+        () => import(`../../../plugins/${pluginId}/plugin-pages/${pluginPage}`),
         {
             loading: () => (
-                <SiteDataProvider sitePreloaded={props.site}>
-                    <SitePage title={"Loading..."}>
-                        <Spinner />
-                    </SitePage>
-                </SiteDataProvider>
+                <SitePage title={"Loading..."}>
+                    <Spinner />
+                </SitePage>
             ),
         },
-    );
+    ), [pluginId, pluginPage]);
 
     return (
         <SiteDataProvider sitePreloaded={props.site}>
@@ -51,7 +49,7 @@ const FallbackPage: NextPage<PageProps> = function ({ pluginId, pluginPage, ...p
     );
 };
 
-export default FallbackPage;
+export default PluginPage;
 
 export const getStaticPaths: GetStaticPaths<PageUrlQuery> = async () => {
     return await {
@@ -71,7 +69,8 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         return { notFound: true };
     }
 
-    const origPath = "/" + (context.params.origPath as string[]).slice(2).join("/");
+    // Check if any redirect is configured for this particular URL:
+    const origPath = "/" + (context.params.otherPath as string);
     const newPath = site.frontendConfig.redirects?.[origPath];
     if (newPath) {
         return {
@@ -82,7 +81,8 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
         };
     }
 
-    const allPlugins = await import("components/utils/ui-plugins-loader").then((mod) => mod.allPlugins);
+    // Check if this page is served by a plugin:
+    const allPlugins = await import("components/utils/ui-plugins-loader").then((mod) => mod.installedPlugins);
     const enabledPluginIds = Object.keys(site.frontendConfig.plugins ?? {});
     for (const plugin of allPlugins) {
         if (enabledPluginIds.includes(plugin.id)) {

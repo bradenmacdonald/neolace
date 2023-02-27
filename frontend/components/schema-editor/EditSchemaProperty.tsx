@@ -3,7 +3,12 @@ import { FormattedMessage } from "react-intl";
 
 import { api, useSchema } from "lib/api";
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
-import { AutoControl, Checkbox, Control, LookupExpressionInput, MDTEditor, SelectBox, TextInput } from "components/form-input";
+import { AutoControl, Control } from "components/form-input/Form";
+import { Checkbox } from "components/form-input/Checkbox";
+import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
+import { MDTEditor } from "components/form-input/MDTEditor";
+import { SelectBox } from "components/form-input/SelectBox";
+import { TextInput } from "components/form-input/TextInput";
 
 interface Props {
     propertyKey: string;

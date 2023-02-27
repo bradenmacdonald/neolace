@@ -87,8 +87,12 @@ export const UISlot = function <ContentType = React.ReactElement>(props: Props<C
         <>
             {contents.map((c) =>
                 c.hidden ? null :
-                c.wrappers ? c.wrappers.reduce((widget, wrapper) => React.createElement(wrapper, {widget}), props.renderWidget(c)) :
-                props.renderWidget(c)
+                c.wrappers ? (
+                    c.wrappers.reduce((widget, wrapper) =>
+                        React.createElement(wrapper, {widget, key: c.id}), props.renderWidget(c)
+                    )
+                )
+                : props.renderWidget(c)
             )}
         </>
     );

@@ -4,6 +4,7 @@ import type { UiSlotChange } from "components/widgets/UISlot";
 
 export type UiSlotId =
     | "systemLinks"
+    | "leftNavTop"
     | "leftNavBottom"
     | "globalHeader"
     | "siteLogo"

@@ -56,6 +56,14 @@ export const plugin: PluginDefinition = {
     },
     getUiSlotChanges() {
         return {
+            "leftNavTop": [
+                // Hide the normal main links:
+                {
+                    op: UiChangeOperation.Wrap,
+                    widgetId: "mainLinks",
+                    wrapper: HideExceptForAdmin,
+                },
+            ],
             "leftNavBottom": [
                 // Hide the normal system links, because we don't want users clicking "login" and going to the realm home site:
                 {
@@ -75,7 +83,7 @@ export const plugin: PluginDefinition = {
                                 {/* Adjust the scroll padding so that #anchor links scroll far enough that the header doesn't block the content */}
                                 <Head>
                                     <style>
-                                        {`html, body { scroll-padding-top: 80px; }`}
+                                        {`:root { --global-header-offset: 72px; }`}
                                     </style>
                                 </Head>
                                 <div className="fixed w-full z-[2] bg-black h-[72px]">
@@ -99,13 +107,13 @@ export const plugin: PluginDefinition = {
             "siteLogo": [
                 {
                     op: UiChangeOperation.Insert,
-                    widget: { id: "cams-header-spacer", priority: 1, content: <div className="h-[72px]"></div> },
+                    widget: { id: "cams-header-spacer", priority: 1, content: <div className="hidden md:block h-[var(--global-header-offset)] flex-none"></div> },
                 },
             ],
             "preContent": [
                 {
                     op: UiChangeOperation.Insert,
-                    widget: { id: "cams-header-spacer", priority: 1, content: <div className="h-[72px]"></div> },
+                    widget: { id: "cams-header-spacer", priority: 1, content: <div className="h-[var(--global-header-offset)]"></div> },
                 },
             ],
             "entryPreFeature": [

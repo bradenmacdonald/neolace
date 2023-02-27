@@ -2,7 +2,7 @@ import React from "react";
 
 import { PluginPageProps } from "components/utils/ui-plugins";
 import { SitePage } from "components/SitePage";
-import { Control, Form, TextInput } from "components/form-input";
+import { Control, Form } from "components/form-input/Form";
 import { Redirect } from "components/utils/Redirect";
 import { defineMessage } from "components/utils/i18n";
 import { Button } from "components/widgets/Button";
@@ -10,6 +10,7 @@ import { ActionStatus, ActionStatusDisplay, useActionStatus } from "components/w
 import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { FormattedMessage } from "react-intl";
 import { UserStatus, useUser } from "lib/api";
+import { TextInput } from "components/form-input/TextInput";
 
 const MembersLoginPage: React.FunctionComponent<PluginPageProps> = function (props) {
     const user = useUser();
