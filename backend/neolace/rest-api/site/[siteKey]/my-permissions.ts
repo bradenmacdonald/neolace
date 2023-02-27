@@ -78,9 +78,10 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
         }
         const subject = await this.getPermissionSubject(request);
         // Now check which of those permissions the user has:
-        console.time(`checkPermissions`);
+        const startTime = performance.now();
         const permResults = await checkPermissions(subject, permsToCheck, object);
-        console.timeEnd(`checkPermissions`);
+        const checkTook = performance.now() - startTime;
+        log.info(`Took ${checkTook}ms to check permissions`);
 
         for (let i = 0; i < permsToCheck.length; i++) {
             const permName = permsToCheck[i];
