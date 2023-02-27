@@ -82,7 +82,7 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     }
 
     // Check if this page is served by a plugin:
-    const allPlugins = await import("components/utils/ui-plugins-loader").then((mod) => mod.allPlugins);
+    const allPlugins = await import("components/utils/ui-plugins-loader").then((mod) => mod.installedPlugins);
     const enabledPluginIds = Object.keys(site.frontendConfig.plugins ?? {});
     for (const plugin of allPlugins) {
         if (enabledPluginIds.includes(plugin.id)) {
