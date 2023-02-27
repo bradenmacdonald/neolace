@@ -1,10 +1,10 @@
 import {
-    api,
     assertEquals,
     assertObjectMatch,
     assertRejects,
     getClient,
     group,
+    SDK,
     setTestIsolation,
     test,
 } from "neolace/rest-api/tests.ts";
@@ -21,7 +21,7 @@ group("entry/index.test.ts", () => {
 
             await assertRejects(
                 () => client.getEntry("non-existent-entry", {}),
-                api.NotFound,
+                SDK.NotFound,
                 `Entry with key "non-existent-entry" not found.`,
             );
         });
@@ -49,7 +49,7 @@ group("entry/index.test.ts", () => {
             const client = await getClient(defaultData.users.admin, defaultData.site.key);
 
             const result = await client.getEntry(ponderosaPine.key, {
-                flags: [api.GetEntryFlags.IncludePropertiesSummary] as const,
+                flags: [SDK.GetEntryFlags.IncludePropertiesSummary] as const,
             });
 
             const defaultAnnotations = {
@@ -185,7 +185,7 @@ group("entry/index.test.ts", () => {
                                     contentType: "image/webp",
                                     imageUrl: ((result.propertiesSummary?.find((x) =>
                                         x.propertyKey === defaultData.schema.properties.relImages.key
-                                    )?.value as api.PageValue).values[0] as api.ImageValue).imageUrl,
+                                    )?.value as SDK.PageValue).values[0] as SDK.ImageValue).imageUrl,
                                     link: {
                                         type: "Entry",
                                         id: defaultData.entries.imgPonderosaTrunk.id,
@@ -226,7 +226,7 @@ group("entry/index.test.ts", () => {
             const client = await getClient(defaultData.users.admin, defaultData.site.key);
 
             const result = await client.getEntry(ponderosaPine.key, {
-                flags: [api.GetEntryFlags.IncludePropertiesSummary, api.GetEntryFlags.IncludeReferenceCache] as const,
+                flags: [SDK.GetEntryFlags.IncludePropertiesSummary, SDK.GetEntryFlags.IncludeReferenceCache] as const,
             });
 
             assertEquals(result.referenceCache, {
@@ -383,7 +383,7 @@ group("entry/index.test.ts", () => {
             const client = await getClient(defaultData.users.admin, defaultData.site.key);
 
             const result = await client.getEntry(ponderosaPine.key, {
-                flags: [api.GetEntryFlags.IncludeFeatures, api.GetEntryFlags.IncludeReferenceCache] as const,
+                flags: [SDK.GetEntryFlags.IncludeFeatures, SDK.GetEntryFlags.IncludeReferenceCache] as const,
             });
 
             assertEquals(result.referenceCache, {
@@ -520,7 +520,7 @@ group("entry/index.test.ts", () => {
             const client = await getClient(defaultData.users.admin, defaultData.site.key);
 
             const result = await client.getEntry(ponderosaPine.id, {
-                flags: [api.GetEntryFlags.IncludeRawProperties] as const,
+                flags: [SDK.GetEntryFlags.IncludeRawProperties] as const,
             });
 
             const propFactDefaults = { rank: 1, slot: "", note: "" };

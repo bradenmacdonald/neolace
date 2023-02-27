@@ -1,5 +1,5 @@
 import { EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { api, getGraph, log, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, log, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { authClient } from "neolace/core/authn-client.ts";
 import { HumanUser } from "neolace/core/User.ts";
 
@@ -7,8 +7,8 @@ export class RequestLoginResource extends NeolaceHttpResource {
     public paths = ["/auth/request-login"];
 
     POST = this.method({
-        requestBodySchema: api.schemas.Schema({ email: Field.validators.email }),
-        responseSchema: api.schemas.Schema({ requested: api.schemas.boolean }),
+        requestBodySchema: SDK.schemas.Schema({ email: Field.validators.email }),
+        responseSchema: SDK.schemas.Schema({ requested: SDK.schemas.boolean }),
         description: "Request passwordless login",
     }, async ({ bodyData }) => {
         const graph = await getGraph();
@@ -16,7 +16,7 @@ export class RequestLoginResource extends NeolaceHttpResource {
         try {
             const user = await graph.pullOne(HumanUser, (u) => u.id.authnId, { with: { email } });
             if (user.authnId < 0) {
-                throw new api.InvalidFieldValue([{
+                throw new SDK.InvalidFieldValue([{
                     fieldPath: "email",
                     message: (
                         `Built-in/system users cannot use passwordless login ` +

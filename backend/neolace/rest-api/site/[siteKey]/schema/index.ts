@@ -1,4 +1,4 @@
-import { api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { ImportSchema } from "neolace/core/schema/import-schema.ts";
 import { UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
@@ -7,11 +7,11 @@ export class SchemaIndexResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/schema"];
 
     GET = this.method({
-        responseSchema: api.SiteSchemaSchema,
+        responseSchema: SDK.SiteSchemaSchema,
         description: "Get the site's schema",
     }, async ({ request }) => {
         // Permissions and parameters:
-        await this.requirePermission(request, api.CorePerm.viewSchema);
+        await this.requirePermission(request, SDK.CorePerm.viewSchema);
         const { siteId } = await this.getSiteDetails(request);
         const graph = await getGraph();
 
@@ -20,13 +20,13 @@ export class SchemaIndexResource extends NeolaceHttpResource {
     });
 
     PUT = this.method({
-        responseSchema: api.schemas.Schema({}),
-        requestBodySchema: api.SiteSchemaSchema,
+        responseSchema: SDK.schemas.Schema({}),
+        requestBodySchema: SDK.SiteSchemaSchema,
         description: "Update the site's schema to match the provided schema",
     }, async ({ request, bodyData }) => {
         // Permissions and parameters:
         const user = this.requireUser(request);
-        await this.requirePermission(request, api.CorePerm.applyEditsToSchema);
+        await this.requirePermission(request, SDK.CorePerm.applyEditsToSchema);
         const { siteId } = await this.getSiteDetails(request);
         const graph = await getGraph();
 

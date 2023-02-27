@@ -19,7 +19,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, it, ItDefinition 
 import { PermissionGrant } from "../core/permissions/grant.ts";
 import { getConnection } from "neolace/core/edit/connections.ts";
 import { ApplyBulkEdits } from "neolace/core/edit/ApplyBulkEdits.ts";
-import { api } from "neolace/rest-api/mod.ts";
+import * as SDK from "neolace/deps/neolace-sdk.ts";
 
 // Exports:
 export * from "std/testing/asserts.ts";
@@ -305,7 +305,7 @@ export async function createManyEntries(siteId: VNID, entryTypeKey: string, numE
     const connection = await getConnection({ key: "test-bulk-helper", siteId, create: true, plugin: "none" });
     const stepSize = 500;
     for (let i = 0; i < numEntries; i += stepSize) {
-        const edits: api.AnyBulkEdit[] = [];
+        const edits: SDK.AnyBulkEdit[] = [];
         for (let j = 0; j < stepSize; j++) {
             const entryId = VNID();
             const entryKey = "s-" + entryId.slice(1);

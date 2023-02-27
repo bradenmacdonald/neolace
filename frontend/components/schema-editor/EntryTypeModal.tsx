@@ -2,7 +2,7 @@ import React from "react";
 import { FormattedMessage } from "react-intl";
 
 import { defineMessage, displayText, noTranslationNeeded } from "components/utils/i18n";
-import { api, useSchema } from "lib/api";
+import { SDK, useSchema } from "lib/sdk";
 import { Spinner } from "components/widgets/Spinner";
 import { Button } from "components/widgets/Button";
 import { Modal } from "components/widgets/Modal";
@@ -18,7 +18,7 @@ import { LookupExpressionInput } from "components/form-input/LookupExpressionInp
 interface Props {
     /** The ID of the entry type to edit. Leave undefined to create a new entry type. */
     existingEntryTypeKey?: string;
-    onSaveChanges: (entryTypeKey: string, newEdits: api.AnySchemaEdit[]) => void;
+    onSaveChanges: (entryTypeKey: string, newEdits: SDK.AnySchemaEdit[]) => void;
     onCancel: () => void;
 }
 
@@ -30,20 +30,20 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ existingEntryTy
     const [newKey, setNewKey] = React.useState("");
     /** The current schema, including any schema changes which have already been made within the current draft, if any. */
     const [baseSchema] = useSchema();
-    const [unsavedEdits, setUnsavedEdits] = React.useState([] as api.AnySchemaEdit[]);
+    const [unsavedEdits, setUnsavedEdits] = React.useState([] as SDK.AnySchemaEdit[]);
     /** The schema PLUS any changes that the user has made within this modal, but not yet saved to the draft */
     const updatedSchema = React.useMemo(
-        () => baseSchema ? api.applyEditsToSchema(baseSchema, unsavedEdits) : undefined,
+        () => baseSchema ? SDK.applyEditsToSchema(baseSchema, unsavedEdits) : undefined,
         [baseSchema, unsavedEdits],
     );
 
     const key = existingEntryTypeKey ?? newKey;
 
-    const entryType: api.EntryTypeData = updatedSchema?.entryTypes[key] ?? {
+    const entryType: SDK.EntryTypeData = updatedSchema?.entryTypes[key] ?? {
         key,
         name: "",
         abbreviation: "",
-        color: api.EntryTypeColor.Default,
+        color: SDK.EntryTypeColor.Default,
         description: "",
         enabledFeatures: {},
         keyPrefix: "",
@@ -62,7 +62,7 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ existingEntryTy
         onSaveChanges(key, unsavedEdits);
     }, [key, onSaveChanges, unsavedEdits]);
 
-    const pushEdit = React.useCallback((edit: api.AnySchemaEdit) => {
+    const pushEdit = React.useCallback((edit: SDK.AnySchemaEdit) => {
         if (!baseSchema) return;
         let newEdits = [...unsavedEdits];
         if (baseSchema.entryTypes[key] === undefined && unsavedEdits.length === 0) {
@@ -73,7 +73,7 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ existingEntryTy
             });
         }
         newEdits.push(edit);
-        newEdits = api.consolidateEdits(newEdits);
+        newEdits = SDK.consolidateEdits(newEdits);
         setUnsavedEdits(newEdits);
     }, [key, unsavedEdits, baseSchema]);
 
@@ -82,14 +82,14 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ existingEntryTy
         abbreviation?: string;
         keyPrefix?: string;
         description?: string;
-        color?: api.EntryTypeColor;
+        color?: SDK.EntryTypeColor;
         colorCustom?: string;
     }) => {
         pushEdit({ code: "UpdateEntryType", data: { key, ...data } });
     }, [key, pushEdit]);
 
     const updateFeature = React.useCallback(
-        (feature: api.schemas.Type<typeof api.UpdateEntryTypeFeature.dataSchema>["feature"]) => {
+        (feature: SDK.schemas.Type<typeof SDK.UpdateEntryTypeFeature.dataSchema>["feature"]) => {
             pushEdit({ code: "UpdateEntryTypeFeature", data: { entryTypeKey: key, feature } });
         },
         [key, pushEdit],
@@ -130,7 +130,7 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ existingEntryTy
         [update],
     );
     const updateColor = React.useCallback(
-        (newColor: string) => update({ color: newColor as api.EntryTypeColor }),
+        (newColor: string) => update({ color: newColor as SDK.EntryTypeColor }),
         [update],
     );
 
@@ -236,7 +236,7 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ existingEntryTy
                         <SelectBox
                             value={entryType.color}
                             onChange={updateColor}
-                            options={Object.entries(api.EntryTypeColor).map(([label, id]) => ({
+                            options={Object.entries(SDK.EntryTypeColor).map(([label, id]) => ({
                                 id,
                                 label: noTranslationNeeded(label),
                             }))}
@@ -246,7 +246,7 @@ export const EntryTypeModal: React.FunctionComponent<Props> = ({ existingEntryTy
                                 node: (
                                     <>
                                         <span
-                                            style={{ color: api.getEntryTypeColor({color: option.id as api.EntryTypeColor, colorCustom: entryType.colorCustom}).darkerBackgroundColor }}
+                                            style={{ color: SDK.getEntryTypeColor({color: option.id as SDK.EntryTypeColor, colorCustom: entryType.colorCustom}).darkerBackgroundColor }}
                                         >
                                             <Icon icon="square-fill" />
                                         </span>{" "}

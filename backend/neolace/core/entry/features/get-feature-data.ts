@@ -1,4 +1,4 @@
-import { EntryFeaturesData } from "neolace/deps/neolace-api.ts";
+import { EntryFeaturesData } from "neolace/deps/neolace-sdk.ts";
 import { C, convertNeo4jFieldValue, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";

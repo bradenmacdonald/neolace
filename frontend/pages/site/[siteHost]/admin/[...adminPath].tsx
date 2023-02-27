@@ -6,7 +6,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { Redirect } from "components/utils/Redirect";
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { getSiteData, SiteData, UserStatus, useUser } from "lib/api";
+import { getSiteData, SiteData, UserStatus, useUser } from "lib/sdk";
 import { AdminComponentProps, AdminLinks, builtInAdminTools } from "components/site-admin/site-admin";
 import { useRouter } from "next/router";
 import FourOhFour from "pages/404";

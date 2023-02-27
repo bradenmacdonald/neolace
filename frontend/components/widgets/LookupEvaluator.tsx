@@ -1,5 +1,5 @@
 import React from "react";
-import { api, RefCacheContext, useLookupExpression } from "lib/api";
+import { SDK, RefCacheContext, useLookupExpression } from "lib/sdk";
 import { FormattedMessage } from "react-intl";
 
 import { MDTContext } from "components/markdown-mdt/mdt";
@@ -31,7 +31,7 @@ export const LookupEvaluator: React.FunctionComponent<Props> = (props) => {
     const {resultValue, newReferenceCache, foundInCache, error} = useLookupExpression(props.expr, {entryId: props.mdtContext.entryId, pageSize: props.pageSize});
 
     if (error) {
-        if (error instanceof api.InvalidRequest && error.reason === api.InvalidRequestReason.LookupExpressionParseError) {
+        if (error instanceof SDK.InvalidRequest && error.reason === SDK.InvalidRequestReason.LookupExpressionParseError) {
             return <ErrorMessage>
                 <FormattedMessage
                     id="Y7XZ3q"

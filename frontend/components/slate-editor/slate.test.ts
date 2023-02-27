@@ -1,4 +1,4 @@
-import { ParagraphNode } from "neolace-api/types/markdown-mdt-ast";
+import { ParagraphNode } from "neolace-sdk/types/markdown-mdt-ast";
 import 'next'; // Required for fetch() to work so test suite loads. https://github.com/vercel/next.js/discussions/13678#discussioncomment-22383
 
 import { EscapeMode, ExtendedTextNode, parseMdtStringToSlateDoc, slateDocToStringValue } from "./slate";

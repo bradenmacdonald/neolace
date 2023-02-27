@@ -15,7 +15,7 @@ import { ToolbarButton } from "../widgets/Button";
 import { renderElement } from "components/slate-editor/slate-mdt";
 import { defineMessage, TranslatableString } from "components/utils/i18n";
 import { IconId } from "../widgets/Icon";
-import { ParagraphNode } from "neolace-api/types/markdown-mdt-ast";
+import { ParagraphNode } from "neolace-sdk/types/markdown-mdt-ast";
 import { useStateRef } from "lib/hooks/useStateRef";
 import { useSmartFocusAwareness } from "lib/hooks/useSmartFocusAwareness";
 

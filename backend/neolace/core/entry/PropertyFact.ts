@@ -9,7 +9,7 @@ import {
     VNodeType,
     WrappedTransaction,
 } from "neolace/deps/vertex-framework.ts";
-import { PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
+import { PropertyMode, PropertyType } from "neolace/deps/neolace-sdk.ts";
 import { Site } from "neolace/core/Site.ts";
 import { EntryType } from "../schema/EntryType.ts";
 import { Property } from "../schema/Property.ts";

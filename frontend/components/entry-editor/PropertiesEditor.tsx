@@ -1,9 +1,9 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
-import { VNID } from "neolace-api";
+import { VNID } from "neolace-sdk";
 
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
-import { api, usePermission, useSchema } from "lib/api";
+import { SDK, usePermission, useSchema } from "lib/sdk";
 import { Spinner } from "components/widgets/Spinner";
 import { Control } from "components/form-input/Control";
 import { SelectBox } from "components/form-input/SelectBox";
@@ -12,11 +12,11 @@ import { ToolbarButton } from "components/widgets/Button";
 import { EditSchemaPropertiesModal } from "components/schema-editor/EditSchemaPropertiesModal";
 
 // We have to declare this empty object outside of the function below so it doesn't change on every call.
-const emptyPropsRawArray: api.EditableEntryData["propertiesRaw"] = [];
+const emptyPropsRawArray: SDK.EditableEntryData["propertiesRaw"] = [];
 
 interface Props {
-    entry: api.EditableEntryData | undefined;
-    addUnsavedEdit: (newEdit: api.AnyEdit) => void;
+    entry: SDK.EditableEntryData | undefined;
+    addUnsavedEdit: (newEdit: SDK.AnyEdit) => void;
 }
 
 /**
@@ -27,11 +27,11 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
     /** The schema, including any schema changes which have been made within the current draft, if any. */
     const [schema] = useSchema();
 
-    const canEditSchema = usePermission(api.CorePerm.proposeEditToSchema);
+    const canEditSchema = usePermission(SDK.CorePerm.proposeEditToSchema);
     const [showingPropertiesSchemaEditor, setShowingPropertiesSchemaEditor] = React.useState(false);
     const showPropertiesSchemaEditor = React.useCallback(() => setShowingPropertiesSchemaEditor(true), []);
     const cancelPropertiesSchemaEditor = React.useCallback(() => setShowingPropertiesSchemaEditor(false), []);
-    const doneEditingSchemaProperties = React.useCallback((edits: api.AnySchemaEdit[]) => {
+    const doneEditingSchemaProperties = React.useCallback((edits: SDK.AnySchemaEdit[]) => {
         // Create the new entry type, by adding the edits to unsavedEdits:
         for (const edit of edits) { addUnsavedEdit(edit); }
         setShowingPropertiesSchemaEditor(false);
@@ -49,13 +49,13 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
 
     const propertiesRaw = entry?.propertiesRaw ?? emptyPropsRawArray;
     const [activeProps, unsetProps] = React.useMemo(() => {
-        const activeProps: { prop: api.PropertyData; facts: api.RawPropertyData["facts"] }[] = [];
-        const unsetProps: api.PropertyData[] = [];
+        const activeProps: { prop: SDK.PropertyData; facts: SDK.RawPropertyData["facts"] }[] = [];
+        const unsetProps: SDK.PropertyData[] = [];
 
         for (const p of applicableProperties) {
             // If this property is set, it will have one or more "facts":
             const facts = propertiesRaw.find((pr) => pr.propertyKey === p.key)?.facts ?? [];
-            if (facts.length > 0 || p.mode !== api.PropertyMode.Optional) {
+            if (facts.length > 0 || p.mode !== SDK.PropertyMode.Optional) {
                 activeProps.push({ prop: p, facts: facts });
             } else {
                 unsetProps.push({ ...p });
@@ -81,7 +81,7 @@ export const PropertiesEditor: React.FunctionComponent<Props> = ({ entry, addUns
     const handleAddNewProperty = React.useCallback((propertyKey: string) => {
         if (!entryId) return;
         addUnsavedEdit({
-            code: api.AddPropertyFact.code,
+            code: SDK.AddPropertyFact.code,
             data: {
                 entryId,
                 propertyKey,

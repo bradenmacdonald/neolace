@@ -7,7 +7,7 @@ import {
     SetRelationships,
     UpsertEntryById,
     UpsertEntryByKey,
-} from "neolace/deps/neolace-api.ts";
+} from "neolace/deps/neolace-sdk.ts";
 import { C, defineAction, VNID } from "neolace/deps/vertex-framework.ts";
 import { Connection, Entry, EntryType, Site } from "neolace/core/mod.ts";
 import { BulkAppliedEditData } from "./implementations.ts";

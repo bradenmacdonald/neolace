@@ -2,7 +2,7 @@ import React from "react";
 import { useRouter } from "next/router";
 
 import type { AdminComponentProps } from "./site-admin";
-import { useSiteData } from "lib/api";
+import { useSiteData } from "lib/sdk";
 import { Tab, TabBar } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
 import { AutoControl, Form } from "components/form-input/Form";

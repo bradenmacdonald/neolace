@@ -2,7 +2,7 @@ import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.t
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
-import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { SiteSchemaData } from "neolace/deps/neolace-sdk.ts";
 import { schema as plantDbSchema } from "neolace/sample-data/plantdb/schema.ts";
 import { ImportSchema } from "./import-schema.ts";
 import { UseSystemSource } from "../edit/ApplyEdits.ts";

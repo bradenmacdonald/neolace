@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import * as log from "std/log/mod.ts";
 import { C, Field, VertexTestDataSnapshot, VNID } from "neolace/deps/vertex-framework.ts";
-import { PropertyType } from "neolace/deps/neolace-api.ts";
+import { PropertyType } from "neolace/deps/neolace-sdk.ts";
 
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateBot, CreateUser } from "../core/User.ts";

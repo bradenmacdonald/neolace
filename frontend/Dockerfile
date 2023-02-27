@@ -3,8 +3,8 @@
 ################################################################
 ARG DENO_IMAGE_VERSION=alpine
 FROM denoland/deno:${DENO_IMAGE_VERSION} AS transpile
-WORKDIR /build/neolace-api/
-COPY ./neolace-api/ /build/neolace-api/
+WORKDIR /build/neolace-sdk/
+COPY ./neolace-sdk/ /build/neolace-sdk/
 RUN apk add --update nodejs npm
 RUN deno run --allow-read --allow-run --allow-write --allow-env --allow-net _compile.ts
 ################################################################
@@ -16,7 +16,7 @@ ENV NODE_ENV production
 ENV PATH /neolace/frontend/node_modules/.bin:$PATH
 
 COPY ./frontend /neolace/frontend
-COPY --from=transpile /build/neolace-api/ /neolace/neolace-api/
+COPY --from=transpile /build/neolace-sdk/ /neolace/neolace-sdk/
 
 # Dependencies
 RUN apk add --no-cache git

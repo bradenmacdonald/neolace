@@ -1,15 +1,15 @@
 import React from "react";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
-import { api, client, getSiteData } from "lib/api";
+import { SDK, client, getSiteData } from "lib/sdk";
 
 import { SiteDataProvider } from "components/SitePage";
 import { EntryPage } from "components/EntryPage";
 
 interface PageProps {
-    entryKey: api.VNID | string;
-    publicEntry?: api.EntryData;
-    sitePreloaded: api.SiteDetailsData;
+    entryKey: SDK.VNID | string;
+    publicEntry?: SDK.EntryData;
+    sitePreloaded: SDK.SiteDetailsData;
 }
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -47,20 +47,20 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     // The results of this get cached and served to everyone, so it cannot contain anything that's user specific, nor
     // that requires special permissions. Anything that _does_ require special permissions will be loaded later, in the
     // browser, within the <EntryPage> component using the useEntry() hook.
-    let publicEntry: api.EntryData | undefined;
+    let publicEntry: SDK.EntryData | undefined;
     try {
         publicEntry = await client.getEntry(context.params.entryId, {
             siteKey: site.key,
             flags: [
-                api.GetEntryFlags.IncludePropertiesSummary,
-                api.GetEntryFlags.IncludeReferenceCache,
-                api.GetEntryFlags.IncludeFeatures,
+                SDK.GetEntryFlags.IncludePropertiesSummary,
+                SDK.GetEntryFlags.IncludeReferenceCache,
+                SDK.GetEntryFlags.IncludeFeatures,
             ],
         });
     } catch (err) {
-        if (err instanceof api.NotFound) {
+        if (err instanceof SDK.NotFound) {
             return { notFound: true };
-        } else if (err instanceof api.NotAuthorized || err instanceof api.NotAuthenticated) {
+        } else if (err instanceof SDK.NotAuthorized || err instanceof SDK.NotAuthenticated) {
             publicEntry = undefined;
         } else {
             throw err;

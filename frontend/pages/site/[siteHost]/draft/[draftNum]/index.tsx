@@ -2,7 +2,7 @@ import React from "react";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { FormattedMessage, FormattedRelativeTime, useIntl } from "react-intl";
-import { api, client, DraftContextData, NEW, useDraft, useSiteData, UserStatus, useUser, DraftContext, usePermission } from "lib/api";
+import { SDK, client, DraftContextData, NEW, useDraft, useSiteData, UserStatus, useUser, DraftContext, usePermission } from "lib/sdk";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -12,7 +12,7 @@ import { ParsedUrlQuery } from "querystring";
 import { Spinner } from "components/widgets/Spinner";
 import { Button } from "components/widgets/Button";
 import { EditDescription } from "components/widgets/EditDescription";
-import { CorePerm } from "neolace-api";
+import { CorePerm } from "neolace-sdk";
 
 // Define a consistent empty array so that React doesn't think a value changes if we use a different '[]' on each render
 const noEdits = [] as const;
@@ -37,15 +37,15 @@ const DraftDetailsPage: NextPage = function (_props) {
 
     const [isUpdatingDraft, setUpdatingDraft] = React.useState(false);
     const acceptDraft = React.useCallback(async () => {
-        if (!draft || !site || draft.status !== api.DraftStatus.Open) return;
+        if (!draft || !site || draft.status !== SDK.DraftStatus.Open) return;
         setUpdatingDraft(true);
         await client.acceptDraft(draft.num, { siteKey: site.key });
         // Optimistically mark this as accepted:
-        await mutateDraft({ ...draft, status: api.DraftStatus.Accepted });
+        await mutateDraft({ ...draft, status: SDK.DraftStatus.Accepted });
         setUpdatingDraft(false);
     }, [draft, site, mutateDraft]);
 
-    if (siteError instanceof api.NotFound) {
+    if (siteError instanceof SDK.NotFound) {
         return <FourOhFour />;
     } else if (siteError) {
         return <ErrorMessage>{String(siteError)}</ErrorMessage>;
@@ -74,11 +74,11 @@ const DraftDetailsPage: NextPage = function (_props) {
                 <p>Description: {draft.description}</p>
 
                 <p>
-                    Status: {draft.status === api.DraftStatus.Open
+                    Status: {draft.status === SDK.DraftStatus.Open
                         ? "Open"
-                        : draft.status === api.DraftStatus.Cancelled
+                        : draft.status === SDK.DraftStatus.Cancelled
                         ? "Cancelled"
-                        : draft.status === api.DraftStatus.Accepted
+                        : draft.status === SDK.DraftStatus.Accepted
                         ? "Accepted"
                         : "Unknown"}
                 </p>
@@ -109,7 +109,7 @@ const DraftDetailsPage: NextPage = function (_props) {
                     user.status === UserStatus.LoggedIn ? <>
                         <Button
                             icon="check-circle-fill"
-                            disabled={isUpdatingDraft || draft.edits.length === 0 || draft.status !== api.DraftStatus.Open}
+                            disabled={isUpdatingDraft || draft.edits.length === 0 || draft.status !== SDK.DraftStatus.Open}
                             onClick={acceptDraft}
                         >
                             <FormattedMessage id="T3NjTq" defaultMessage="Accept Draft (apply changes)" />
@@ -121,7 +121,7 @@ const DraftDetailsPage: NextPage = function (_props) {
                     user.status === UserStatus.LoggedIn ? <>
                         <Button
                             icon="plus-lg"
-                            disabled={draft.status !== api.DraftStatus.Open || !canEditDraft || !canProposeNewEntry}
+                            disabled={draft.status !== SDK.DraftStatus.Open || !canEditDraft || !canProposeNewEntry}
                             onClick={() => router.push(`/draft/${draftNum}/entry/_/edit`)}
                         >
                             <FormattedMessage id="lE5OgU" defaultMessage="Create a new entry (in this draft)" />

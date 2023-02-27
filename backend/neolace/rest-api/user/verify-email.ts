@@ -1,6 +1,6 @@
 import { Field } from "neolace/deps/vertex-framework.ts";
 
-import { api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { getRedis } from "neolace/core/redis.ts";
 import { createRandomToken } from "neolace/lib/secure-token.ts";
 import { mailer, makeSystemEmail } from "neolace/core/mailer/mailer.ts";
@@ -42,7 +42,7 @@ export async function checkValidationToken(token: string): Promise<{ email: stri
     const key = redisKeyPrefix + token;
     const result = await redis.get(key);
     if (result === null) {
-        throw new api.InvalidRequest(api.InvalidRequestReason.ValidationTokenInvalid, "Token invalid or expired.");
+        throw new SDK.InvalidRequest(SDK.InvalidRequestReason.ValidationTokenInvalid, "Token invalid or expired.");
     }
     const data = JSON.parse(result);
     return { email: data.email, data: data.data };
@@ -52,12 +52,12 @@ export class VerifyUserEmailResource extends NeolaceHttpResource {
     public paths = ["/user/verify-email"];
 
     POST = this.method({
-        responseSchema: api.schemas.Schema({}), // Empty response
-        requestBodySchema: api.VerifyEmailRequest,
+        responseSchema: SDK.schemas.Schema({}), // Empty response
+        requestBodySchema: SDK.VerifyEmailRequest,
         description: "Request verification for an email address",
     }, async ({ request, bodyData }) => {
         if (request.user) {
-            throw new api.NotAuthorized("You cannot use this API if you are already logged in.");
+            throw new SDK.NotAuthorized("You cannot use this API if you are already logged in.");
         }
 
         // Validate the email address before we try doing anything else:
@@ -65,15 +65,15 @@ export class VerifyUserEmailResource extends NeolaceHttpResource {
         try {
             validateEmail(email);
         } catch (err) {
-            throw new api.InvalidFieldValue([{ fieldPath: "email", message: err.message }]);
+            throw new SDK.InvalidFieldValue([{ fieldPath: "email", message: err.message }]);
         }
 
         // And make sure the email address isn't already used:
         const graph = await getGraph();
         const checkEmail = await graph.pull(HumanUser, (u) => u.id, { with: { email } });
         if (checkEmail.length !== 0) {
-            throw new api.InvalidRequest(
-                api.InvalidRequestReason.EmailAlreadyRegistered,
+            throw new SDK.InvalidRequest(
+                SDK.InvalidRequestReason.EmailAlreadyRegistered,
                 "A user account is already registered with that email address.",
             );
         }
@@ -119,15 +119,15 @@ export class VerifyUserEmailResource extends NeolaceHttpResource {
     });
 
     GET = this.method({
-        responseSchema: api.EmailTokenResponse,
+        responseSchema: SDK.EmailTokenResponse,
         description: "Check if a verification token is [still] valid and get the associated data.",
     }, async ({ request }) => {
         if (request.user) {
-            throw new api.NotAuthorized("You cannot use this API if you are already logged in.");
+            throw new SDK.NotAuthorized("You cannot use this API if you are already logged in.");
         }
         const token = request.queryParam("token");
         if (!token) {
-            throw new api.InvalidFieldValue([{ fieldPath: "token", message: "No token was provided." }]);
+            throw new SDK.InvalidFieldValue([{ fieldPath: "token", message: "No token was provided." }]);
         }
 
         return await checkValidationToken(token);

@@ -1,4 +1,4 @@
-import { api } from "neolace/rest-api/mod.ts";
+import { SDK } from "neolace/rest-api/mod.ts";
 import { C, EmptyResultError, isVNID, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
@@ -44,8 +44,8 @@ export async function getEntry(
     /** This function will enforce permissions, only displaying as much as this user can see. */
     userId: VNID | undefined,
     tx: WrappedTransaction,
-    flags: Set<api.GetEntryFlags> = new Set(),
-): Promise<api.EntryData> {
+    flags: Set<SDK.GetEntryFlags> = new Set(),
+): Promise<SDK.EntryData> {
     // If 'vnidOrKey' is a VNID, use it as-is; otherwise if it's a key we need to prepend the site prefix
     const where = isVNID(vnidOrKey)
         ? C`@this.id = ${vnidOrKey}`
@@ -59,7 +59,7 @@ export async function getEntry(
             .key
             .type((et) => et.key.name.site((s) => s.id)), { where }).catch((err) => {
             if (err instanceof EmptyResultError) {
-                throw new api.NotFound(`Entry with key "${vnidOrKey}" not found.`);
+                throw new SDK.NotFound(`Entry with key "${vnidOrKey}" not found.`);
             } else {
                 throw err;
             }
@@ -74,17 +74,17 @@ export async function getEntry(
         canViewFeatures,
         canViewProperties,
     ] = await checkPermissions(permSubject, [
-        api.CorePerm.viewEntry,
-        api.CorePerm.viewEntryDescription,
-        api.CorePerm.viewEntryFeatures,
-        api.CorePerm.viewEntryProperty,
+        SDK.CorePerm.viewEntry,
+        SDK.CorePerm.viewEntryDescription,
+        SDK.CorePerm.viewEntryFeatures,
+        SDK.CorePerm.viewEntryProperty,
     ], permObject);
     if (!canViewEntry) {
-        throw new api.NotAuthorized("You do not have permission to view that entry.");
+        throw new SDK.NotAuthorized("You do not have permission to view that entry.");
     }
 
     // Remove the "site" field from the result
-    const result: api.EntryData = {
+    const result: SDK.EntryData = {
         ...entryData,
         description: canViewDescription ? entryData.description : "",
         entryType: { key: entryData.type!.key, name: entryData.type!.name },
@@ -97,7 +97,7 @@ export async function getEntry(
         throw new Error("The entry ID specified is from a different site.");
     }
 
-    const refCache = flags.has(api.GetEntryFlags.IncludeReferenceCache) ? new ReferenceCache({ siteId }) : undefined;
+    const refCache = flags.has(SDK.GetEntryFlags.IncludeReferenceCache) ? new ReferenceCache({ siteId }) : undefined;
     // We always include the current entry in the reference cache in case it references itself, to make it easy for API
     // consumers to show the right data (e.g. link tooltips) in that case.
     refCache?.addReferenceToEntryId(entryData.id);
@@ -112,7 +112,7 @@ export async function getEntry(
         defaultPageSize: BigInt(maxValuesPerProp),
     });
 
-    if (flags.has(api.GetEntryFlags.IncludePropertiesSummary) && canViewProperties) {
+    if (flags.has(SDK.GetEntryFlags.IncludePropertiesSummary) && canViewProperties) {
         // Include a summary of property values for this entry (up to 15 important properties - whose rank is <= 50)
         const properties = await getEntryProperties(entryData.id, { tx, limit: 15, maxRank: 50 });
 
@@ -222,18 +222,18 @@ export async function getEntry(
         }
     }
 
-    if (flags.has(api.GetEntryFlags.IncludeRawProperties) && canViewProperties) {
+    if (flags.has(SDK.GetEntryFlags.IncludeRawProperties) && canViewProperties) {
         // Include a complete list of all property values directly set on this entry
         result.propertiesRaw = await getRawProperties({ tx, entryId: entryData.id });
     }
 
-    if (flags.has(api.GetEntryFlags.IncludeFeatures) && canViewFeatures) {
+    if (flags.has(SDK.GetEntryFlags.IncludeFeatures) && canViewFeatures) {
         // Include "features" specific to this entry type. A common one is the "article" feature, which has prose text
         // (markdown). Another common one is the "Image" feature which means this entry is an image.
         result.features = await getEntryFeaturesData(entryData.id, { tx, refCache });
     }
 
-    if (flags.has(api.GetEntryFlags.IncludeReferenceCache)) {
+    if (flags.has(SDK.GetEntryFlags.IncludeReferenceCache)) {
         // Extract references from the description of this entry
         if (canViewDescription) {
             refCache?.extractMarkdownReferences(entryData.description, { currentEntryId: entryData.id, inline: true });

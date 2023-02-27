@@ -1,4 +1,5 @@
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
+import * as SDK from "neolace/deps/neolace-sdk.ts";
 import {
     assert,
     assertEquals,
@@ -14,7 +15,6 @@ import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { getConnection } from "../edit/connections.ts";
 import { ApplyBulkEdits } from "../edit/ApplyBulkEdits.ts";
-import { api } from "../../api/mod.ts";
 import { EntryValue, IntegerValue, PageValue } from "./values.ts";
 import { ReferenceCache } from "../entry/reference-cache.ts";
 import { LookupContext } from "./context.ts";
@@ -61,7 +61,7 @@ group("performance.test.ts", () => {
         for (const entryTypeKey of [entryTypeA, entryTypeB, entryTypeC]) {
             const stepSize = 200;
             for (let i = 0; i < numEntriesEachType; i += stepSize) {
-                const edits: api.AnyBulkEdit[] = [];
+                const edits: SDK.AnyBulkEdit[] = [];
                 for (let j = 0; j < stepSize; j++) {
                     const entryNum = i * stepSize + j;
                     edits.push({
@@ -92,7 +92,7 @@ group("performance.test.ts", () => {
         const otherConnection = await getConnection({ key: "perf", siteId: otherSiteId, create: true, plugin: "none" });
         const stepSize = 200;
         for (let i = 0; i < 5_000; i += stepSize) {
-            const edits: api.AnyBulkEdit[] = [];
+            const edits: SDK.AnyBulkEdit[] = [];
             for (let j = 0; j < stepSize; j++) {
                 const entryNum = i * stepSize + j;
                 edits.push({

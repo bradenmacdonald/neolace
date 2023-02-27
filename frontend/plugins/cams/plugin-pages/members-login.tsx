@@ -9,7 +9,7 @@ import { Button } from "components/widgets/Button";
 import { ActionStatus, ActionStatusDisplay, useActionStatus } from "components/widgets/ActionStatusDisplay";
 import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { FormattedMessage } from "react-intl";
-import { UserStatus, useUser } from "lib/api";
+import { UserStatus, useUser } from "lib/sdk";
 import { TextInput } from "components/form-input/TextInput";
 
 const MembersLoginPage: React.FunctionComponent<PluginPageProps> = function (props) {

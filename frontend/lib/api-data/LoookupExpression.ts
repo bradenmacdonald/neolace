@@ -1,4 +1,4 @@
-import * as api from "neolace-api";
+import * as SDK from "neolace-sdk";
 import useSWR from "swr";
 
 import { client } from "lib/api-client";
@@ -11,8 +11,8 @@ import { useRefCache } from "./ReferenceCache";
  */
  export function useLookupExpression(
     expr: string,
-    options: { entryId?: api.VNID; pageSize?: number } = {},
-): { resultValue: api.AnyLookupValue | undefined; newReferenceCache: api.ReferenceCacheData; foundInCache: boolean; error?: api.ApiError } {
+    options: { entryId?: SDK.VNID; pageSize?: number } = {},
+): { resultValue: SDK.AnyLookupValue | undefined; newReferenceCache: SDK.ReferenceCacheData; foundInCache: boolean; error?: SDK.ApiError } {
     const { site } = useSiteData();
 
     const refCache = useRefCache();

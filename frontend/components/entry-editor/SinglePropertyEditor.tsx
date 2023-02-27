@@ -2,16 +2,16 @@ import React from "react";
 import { FormattedMessage } from "react-intl";
 
 import { defineMessage } from "components/utils/i18n";
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
 import { ToolbarButton } from "components/widgets/Button";
 import { InlineMDT, MDTContext } from "components/markdown-mdt/mdt";
 
 interface Props {
-    prop: api.PropertyData;
-    facts: api.RawPropertyData["facts"];
-    entryId: api.VNID;
-    addUnsavedEdit: (newEdit: api.AnyContentEdit) => void;
+    prop: SDK.PropertyData;
+    facts: SDK.RawPropertyData["facts"];
+    entryId: SDK.VNID;
+    addUnsavedEdit: (newEdit: SDK.AnyContentEdit) => void;
 }
 
 /**
@@ -22,7 +22,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
     { prop, facts, addUnsavedEdit, entryId },
 ) => {
 
-    if (prop.mode === api.PropertyMode.Auto) {
+    if (prop.mode === SDK.PropertyMode.Auto) {
         return (
             <em className="text-gray-600 text-sm">
                 <FormattedMessage defaultMessage="(Automatically computed)" id="3Wb62d" />
@@ -44,11 +44,11 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                 }}
                 onClick={() => {
                     addUnsavedEdit({
-                        code: api.AddPropertyFact.code,
+                        code: SDK.AddPropertyFact.code,
                         data: {
                             entryId,
                             propertyKey: prop.key,
-                            propertyFactId: api.VNID(),
+                            propertyFactId: SDK.VNID(),
                             valueExpression: "",
                         },
                     });
@@ -73,7 +73,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                                 value={fact.valueExpression}
                                 onChange={(newValue) => {
                                     addUnsavedEdit({
-                                        code: api.UpdatePropertyFact.code,
+                                        code: SDK.UpdatePropertyFact.code,
                                         data: { entryId, propertyFactId: fact.id, valueExpression: newValue },
                                     });
                                 }}
@@ -87,7 +87,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                                 })}
                                 onClick={() => {
                                     addUnsavedEdit({
-                                        code: api.DeletePropertyFact.code,
+                                        code: SDK.DeletePropertyFact.code,
                                         data: { entryId, propertyFactId: fact.id },
                                     });
                                 }}
@@ -100,8 +100,8 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                                 })}
                                 onClick={() => {
                                     addUnsavedEdit({
-                                        code: api.AddPropertyFact.code,
-                                        data: { entryId, propertyKey: prop.key, propertyFactId: api.VNID(), valueExpression: "" },
+                                        code: SDK.AddPropertyFact.code,
+                                        data: { entryId, propertyKey: prop.key, propertyFactId: SDK.VNID(), valueExpression: "" },
                                     });
                                 }}
                             />

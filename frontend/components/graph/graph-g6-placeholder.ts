@@ -1,5 +1,5 @@
 import G6, { IShape } from "@antv/g6";
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 import { NodeType } from "./graph-data";
 import { fontSize, height, leftRectWidth, maxTextWidth, radius, textPadding, truncateString, width } from "./graph-g6-node";
 
@@ -16,7 +16,7 @@ G6.registerNode(
         // Options - specify default options for each node:
         options: {
             style: {
-                color: api.EntryTypeColor.Default,
+                color: SDK.EntryTypeColor.Default,
                 opacity: 0.4,
             },
             stateStyles: {
@@ -40,7 +40,7 @@ G6.registerNode(
             // For this node, we draw several entryNode rectangles, each offset by this amount in the x and y direction.
             const offset = height/3;
             const numNodes = Math.min(entryCount, 10);
-            const colors = api.getEntryTypeColor({color: cfg.color as api.EntryTypeColor, colorCustom: cfg.colorCustom as string|undefined});
+            const colors = SDK.getEntryTypeColor({color: cfg.color as SDK.EntryTypeColor, colorCustom: cfg.colorCustom as string|undefined});
 
             const totalWidth = width + offset*(numNodes - 1);
             const totalHeight = height + offset*(numNodes - 1);

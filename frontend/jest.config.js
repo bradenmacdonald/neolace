@@ -13,7 +13,7 @@ const customJestConfig = {
   moduleDirectories: ['node_modules', '<rootDir>/'],
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
-    'neolace-api': '<rootDir>/../neolace-api/dist/esm/index.js',
+    'neolace-sdk': '<rootDir>/../neolace-sdk/dist/esm/index.js',
   }
 }
 

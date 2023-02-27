@@ -1,11 +1,11 @@
 import { C, Field } from "neolace/deps/vertex-framework.ts";
-import { api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 
 export class HealthCheckResource extends NeolaceHttpResource {
     public paths = ["/health"];
 
     GET = this.method({
-        responseSchema: api.schemas.HealthCheckResponse,
+        responseSchema: SDK.schemas.HealthCheckResponse,
         description: "Check the health of the Neolace API",
     }, async () => {
         let databaseWorking = false;

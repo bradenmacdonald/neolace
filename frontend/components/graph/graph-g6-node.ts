@@ -1,5 +1,5 @@
 import G6, { IShape } from "@antv/g6";
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 import { NodeType } from "./graph-data";
 
 export const width = 220;
@@ -18,7 +18,7 @@ G6.registerNode(
         // Options - specify default options for each node:
         options: {
             style: {
-                color: api.EntryTypeColor.Default,
+                color: SDK.EntryTypeColor.Default,
             },
             stateStyles: {
                 hover: {},
@@ -35,7 +35,7 @@ G6.registerNode(
             if (!cfg) throw new Error("no cfg in customized Node.draw()");
             if (!group) throw new Error("no group in customized Node.draw()");
 
-            const colors = api.getEntryTypeColor({color: cfg.color as api.EntryTypeColor, colorCustom: cfg.colorCustom as string|undefined});
+            const colors = SDK.getEntryTypeColor({color: cfg.color as SDK.EntryTypeColor, colorCustom: cfg.colorCustom as string|undefined});
 
             // Draw the selection rectangle, which forms an outer border when this node is selected.
             // Most of the time (when not selected), it is invisible.

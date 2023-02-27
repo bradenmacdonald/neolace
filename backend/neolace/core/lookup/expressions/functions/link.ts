@@ -2,7 +2,7 @@ import { EntryValue, FileValue, ImageValue, InlineMarkdownStringValue, StringVal
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
 import { LookupExpression } from "../base.ts";
-import { MDT } from "neolace/deps/neolace-api.ts";
+import { MDT } from "neolace/deps/neolace-sdk.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 
 /**

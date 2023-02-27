@@ -1,11 +1,11 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 import {
-    api,
     assertEquals,
     assertNotEquals,
     assertRejects,
     getClient,
     group,
+    SDK,
     setTestIsolation,
     test,
 } from "neolace/rest-api/tests.ts";
@@ -24,7 +24,7 @@ group("file.ts", () => {
 
             await assertRejects(
                 () => anonClient.uploadFile(fileToUpload, {}),
-                api.NotAuthenticated,
+                SDK.NotAuthenticated,
             );
         });
 

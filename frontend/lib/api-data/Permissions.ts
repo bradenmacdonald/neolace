@@ -1,4 +1,4 @@
-import * as api from "neolace-api";
+import * as SDK from "neolace-sdk";
 import useSWR from "swr";
 import { client } from "lib/api-client";
 import { useUser } from "./User";
@@ -10,9 +10,9 @@ import { DraftContextData, useDraft } from "./DraftData";
  */
 export function usePermissions(context?: {
     /** The ID of the entry, if we want to know entry-specific information */
-    entryId?: api.VNID;
+    entryId?: SDK.VNID;
     draftContext?: DraftContextData;
-}): api.SiteUserMyPermissionsData | undefined {
+}): SDK.SiteUserMyPermissionsData | undefined {
     const user = useUser();
     const { site, siteError } = useSiteData();
 
@@ -23,7 +23,7 @@ export function usePermissions(context?: {
     const key = `user-permissions:${site.key}:${user.username}:${context?.entryId ?? ""}:${draft?.num ?? ""}`;
     const { data, error } = useSWR(key, async () => {
         if (siteError) {
-            throw new api.ApiError("Site Error", 500);
+            throw new SDK.ApiError("Site Error", 500);
         }
         if (!site.key) {
             return undefined; // We need to wait for the siteKey before we can load the entry
@@ -41,9 +41,9 @@ export function usePermissions(context?: {
 /**
  * React hook to get the user's permissions in a certain context.
  */
- export function usePermission(perm: api.CorePerm, context?: {
+ export function usePermission(perm: SDK.CorePerm, context?: {
     /** The ID of the entry, if we want to know entry-specific information */
-    entryId?: api.VNID;
+    entryId?: SDK.VNID;
     draftContext?: DraftContextData;
 }): boolean {
     const permissions = usePermissions(context);

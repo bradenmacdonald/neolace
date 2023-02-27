@@ -1,7 +1,7 @@
 export * from "neolace/lib/tests.ts";
 import { afterAll, beforeAll, group as realGroup } from "neolace/lib/tests.ts";
-import * as api from "neolace/deps/neolace-api.ts";
-export { api };
+import * as SDK from "neolace/deps/neolace-sdk.ts";
+export { SDK };
 import { startServer, stopServer } from "neolace/rest-api/server.ts";
 import { config } from "neolace/app/config.ts";
 
@@ -30,8 +30,8 @@ export function group(name: string, tests: () => unknown) {
 export async function getClient(
     user?: { bot: { authToken: string } },
     siteKey?: string,
-): Promise<api.NeolaceApiClient> {
-    return new api.NeolaceApiClient({
+): Promise<SDK.NeolaceApiClient> {
+    return new SDK.NeolaceApiClient({
         basePath: config.apiUrl,
         fetchApi: fetch,
         authToken: user?.bot.authToken,
@@ -42,8 +42,8 @@ export async function getClient(
 /**
  * Return an API client that is authenticated as the system user, so it can run realm adminsitration tasks.
  */
-export async function getSystemClient(): Promise<api.NeolaceApiClient> {
-    return new api.NeolaceApiClient({
+export async function getSystemClient(): Promise<SDK.NeolaceApiClient> {
+    return new SDK.NeolaceApiClient({
         basePath: config.apiUrl,
         fetchApi: fetch,
         authToken: "SYS_KEY_INSECURE_DEV_KEY",

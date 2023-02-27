@@ -1,4 +1,4 @@
-import { VNID } from "neolace/deps/neolace-api.ts";
+import { VNID } from "neolace/deps/neolace-sdk.ts";
 import { config } from "neolace/app/config.ts";
 import { type Email, Mailer, responsiveHtmlEmailTemplate } from "neolace/deps/deno-mailer.ts";
 import { getGraph } from "neolace/core/graph.ts";

@@ -1,5 +1,5 @@
 import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
-import { ImageSizingMode, PropertyType } from "neolace/deps/neolace-api.ts";
+import { ImageSizingMode, PropertyType } from "neolace/deps/neolace-sdk.ts";
 
 import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";

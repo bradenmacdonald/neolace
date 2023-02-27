@@ -1,7 +1,7 @@
 import * as log from "std/log/mod.ts";
 import { C, EmptyResultError, Field, VNID } from "neolace/deps/vertex-framework.ts";
 
-import { api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { ActionObject } from "neolace/core/permissions/action.ts";
 import { getAllPerms, PermissionName } from "neolace/core/permissions/permissions.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
@@ -12,7 +12,7 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/my-permissions"];
 
     GET = this.method({
-        responseSchema: api.SiteUserMyPermissionsSchema,
+        responseSchema: SDK.SiteUserMyPermissionsSchema,
         description: "List my permissions",
         notes: "This lists all the permissions that the current user has on the current site, in a given context.",
     }, async ({ request }) => {
@@ -27,7 +27,7 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
                 try {
                     object[key as keyof ActionObject] = VNID(value);
                 } catch {
-                    throw new api.InvalidFieldValue([{ fieldPath: key, message: "Not a valid VNID" }]);
+                    throw new SDK.InvalidFieldValue([{ fieldPath: key, message: "Not a valid VNID" }]);
                 }
             } else if (key.startsWith("plugin:")) {
                 object[key as `plugin:${string}`] = value;

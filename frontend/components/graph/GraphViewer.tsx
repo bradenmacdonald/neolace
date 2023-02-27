@@ -2,7 +2,7 @@
  * A graph that is displayed as the result of the .graph() lookup function.
  */
 import React from "react";
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 import { MDTContext } from "../markdown-mdt/mdt";
 import G6, { EdgeConfig, Graph as G6Graph, GraphOptions, IG6GraphEvent, INode, NodeConfig } from "@antv/g6";
 import { useResizeObserver } from "lib/hooks/useResizeObserver";
@@ -519,7 +519,7 @@ const placeholderEdgeCfg = {
     }
 };
 
-const allColors = Object.values(api.EntryTypeColor);
+const allColors = Object.values(SDK.EntryTypeColor);
 
 /**
  * Generate a color to use based on an integer so that "communities" 0, 1, 2, 3 etc. will each have a different color.

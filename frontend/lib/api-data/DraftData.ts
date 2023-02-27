@@ -1,14 +1,14 @@
 import React from "react";
-import * as api from "neolace-api";
+import * as SDK from "neolace-sdk";
 import useSWR, { KeyedMutator } from "swr";
 import { client } from "lib/api-client";
 import { useSiteData } from "./SiteData";
 
-type DraftDataWithEdits = Required<api.DraftData>;
+type DraftDataWithEdits = Required<SDK.DraftData>;
 
 export interface DraftContextData {
     draftNum: number | "_" | undefined;
-    unsavedEdits: ReadonlyArray<api.AnyEdit>;
+    unsavedEdits: ReadonlyArray<SDK.AnyEdit>;
 }
 
 /**
@@ -36,8 +36,8 @@ export function useDraft(
     context: { draftContext?: DraftContextData } = {},
 ): [
     data: DraftDataWithEdits | undefined,
-    unsavedEdits: ReadonlyArray<api.AnyEdit>,
-    error: api.ApiError | undefined,
+    unsavedEdits: ReadonlyArray<SDK.AnyEdit>,
+    error: SDK.ApiError | undefined,
     mutate: KeyedMutator<DraftDataWithEdits | undefined>,
 ] {
     const { site, siteError } = useSiteData();
@@ -48,7 +48,7 @@ export function useDraft(
     const key = `draft:${site.key}:${draftNum}`;
     const { data, error, mutate } = useSWR(key, async (): Promise<DraftDataWithEdits | undefined> => {
         if (siteError) {
-            throw new api.ApiError("Site Error", 500);
+            throw new SDK.ApiError("Site Error", 500);
         }
         if (draftNum === "_" || draftNum === undefined) {
             return undefined;
@@ -58,7 +58,7 @@ export function useDraft(
         }
         return await client.getDraft(draftNum, {
             flags: [
-                api.GetDraftFlags.IncludeEdits,
+                SDK.GetDraftFlags.IncludeEdits,
             ] as const,
             siteKey: site.key,
         });
@@ -81,11 +81,11 @@ export function useDraft(
      * the draft in via this parameter.
      */
     context: { draftContext?: DraftContextData } = {},
-): api.AnyEdit[] {
+): SDK.AnyEdit[] {
     const [draft, unsavedEdits] = useDraft();
 
-    const result: api.AnyEdit[] = React.useMemo(() => {
-        if (draft && draft.status === api.DraftStatus.Open) {
+    const result: SDK.AnyEdit[] = React.useMemo(() => {
+        if (draft && draft.status === SDK.DraftStatus.Open) {
             return [...draft.edits, ...unsavedEdits];
         } else {
             return [...unsavedEdits];

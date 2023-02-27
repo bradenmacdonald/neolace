@@ -1,5 +1,5 @@
 import { C, EmptyResultError, Field, VNID } from "neolace/deps/vertex-framework.ts";
-import { InvalidEdit, UpdateEntryTypeFeature } from "neolace/deps/neolace-api.ts";
+import { InvalidEdit, UpdateEntryTypeFeature } from "neolace/deps/neolace-sdk.ts";
 import { defineImplementation } from "neolace/core/edit/implementations.ts";
 import { EntryType } from "neolace/core/mod.ts";
 import { features } from "neolace/core/entry/features/all-features.ts";

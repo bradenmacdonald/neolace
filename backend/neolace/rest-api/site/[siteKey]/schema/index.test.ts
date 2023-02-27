@@ -1,6 +1,6 @@
 import { getGraph } from "neolace/core/graph.ts";
 import { AccessMode, UpdateSite } from "neolace/core/Site.ts";
-import { api, assertEquals, assertRejects, getClient, group, setTestIsolation, test } from "neolace/rest-api/tests.ts";
+import { assertEquals, assertRejects, getClient, group, SDK, setTestIsolation, test } from "neolace/rest-api/tests.ts";
 
 group("schema/index.ts", () => {
     group("Site Schema API", () => {
@@ -34,7 +34,7 @@ group("schema/index.ts", () => {
             assertEquals(await adminClient.getSiteSchema(), defaultData.schema);
             await assertRejects(
                 () => anonClient.getSiteSchema(),
-                api.NotAuthenticated,
+                SDK.NotAuthenticated,
             );
         });
 
@@ -64,7 +64,7 @@ group("schema/index.ts", () => {
                         keyPrefix: "",
                         name: "Software",
                         enabledFeatures: {},
-                        color: api.EntryTypeColor.Default,
+                        color: SDK.EntryTypeColor.Default,
                         abbreviation: "",
                     },
                 },

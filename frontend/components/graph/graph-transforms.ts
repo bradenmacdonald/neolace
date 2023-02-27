@@ -1,4 +1,4 @@
-import { PropertyType } from "neolace-api";
+import { PropertyType } from "neolace-sdk";
 import { GraphData, NodeType } from "./graph-data";
 import louvain from 'graphology-communities-louvain';
 

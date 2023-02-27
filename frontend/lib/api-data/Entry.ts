@@ -1,4 +1,4 @@
-import * as api from "neolace-api";
+import * as SDK from "neolace-sdk";
 import React from "react";
 import useSWR from "swr";
 
@@ -12,9 +12,9 @@ import { useDraft } from "./DraftData";
  * React hook to get the data required to display an entry
  */
 export function useEntry(
-    entryKey: api.VNID | string,
-    fallback?: api.EntryData,
-): [data: api.EntryData | undefined, error: api.ApiError | undefined] {
+    entryKey: SDK.VNID | string,
+    fallback?: SDK.EntryData,
+): [data: SDK.EntryData | undefined, error: SDK.ApiError | undefined] {
     const { site, siteError } = useSiteData();
     const user = useUser();
     const userKey = user.username ?? "";
@@ -22,16 +22,16 @@ export function useEntry(
     const key = `entry:${site.key}:${entryKey}:${userKey}:no-draft`;
     const { data, error } = useSWR(key, async () => {
         if (siteError) {
-            throw new api.ApiError("Site Error", 500);
+            throw new SDK.ApiError("Site Error", 500);
         }
         if (!site.key) {
             return undefined; // We need to wait for the siteKey before we can load the entry
         }
-        const data: api.EntryData = await client.getEntry(entryKey, {
+        const data: SDK.EntryData = await client.getEntry(entryKey, {
             flags: [
-                api.GetEntryFlags.IncludeFeatures,
-                api.GetEntryFlags.IncludePropertiesSummary,
-                api.GetEntryFlags.IncludeReferenceCache,
+                SDK.GetEntryFlags.IncludeFeatures,
+                SDK.GetEntryFlags.IncludePropertiesSummary,
+                SDK.GetEntryFlags.IncludeReferenceCache,
             ] as const,
             siteKey: site.key,
         });
@@ -57,8 +57,8 @@ export function useEntry(
  * React hook to get very basic data about an entry; e.g. its name and type.
  */
 export function useEntrySummary(
-    entryKey: api.VNID | string,
-): [data: api.RefCacheEntryData | undefined, refCache: api.ReferenceCacheData, error: api.ApiError | undefined] {
+    entryKey: SDK.VNID | string,
+): [data: SDK.RefCacheEntryData | undefined, refCache: SDK.ReferenceCacheData, error: SDK.ApiError | undefined] {
     const { site } = useSiteData();
     const refCache = useRefCache();
     const [draft, unsavedEdits] = useDraft();
@@ -92,7 +92,7 @@ export function useEntrySummary(
             const baseRefCache = data?.referenceCache ?? {entries: {}, entryTypes: {}, lookups: [], properties: {}};
             let newRefCache = baseRefCache;
             if (draft?.edits || unsavedEdits.length > 0) {
-                newRefCache = api.applyEditsToReferenceCache(baseRefCache, [...(draft?.edits ?? []), ...unsavedEdits]);
+                newRefCache = SDK.applyEditsToReferenceCache(baseRefCache, [...(draft?.edits ?? []), ...unsavedEdits]);
             }
             return newRefCache;
         }

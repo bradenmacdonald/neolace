@@ -1,6 +1,6 @@
 import * as log from "std/log/mod.ts";
 import { C, Field } from "neolace/deps/vertex-framework.ts";
-import { api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { Site, siteKeyFromId } from "neolace/core/Site.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
@@ -11,7 +11,7 @@ export class EntryListResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/entry/"];
 
     GET = this.method({
-        responseSchema: api.schemas.StreamedResult(api.EntrySummarySchema),
+        responseSchema: SDK.schemas.StreamedResult(SDK.EntrySummarySchema),
         description: `Get a list of all entries that the current user can view, optionally filtered by type.
         This API always returns up to date information, but is fairly limited. Use the search API for more
         complex use cases, such as results sorted by name.`,
@@ -22,7 +22,7 @@ export class EntryListResource extends NeolaceHttpResource {
         const onlyEntryType = request.queryParam("entryType") as string | undefined;
         const entryTypeFilter = onlyEntryType ? C`{siteNamespace: ${siteId}, key: ${onlyEntryType}}` : C``;
         const subject = await this.getPermissionSubject(request);
-        const permissionsFilter = await makeCypherCondition(subject, api.CorePerm.viewEntry, {
+        const permissionsFilter = await makeCypherCondition(subject, SDK.CorePerm.viewEntry, {
             entryTypeKey: onlyEntryType,
         }, ["entry", "entryType"]);
 
@@ -80,20 +80,20 @@ export class EntryListResource extends NeolaceHttpResource {
     });
 
     DELETE = this.method({
-        responseSchema: api.schemas.Schema({}),
+        responseSchema: SDK.schemas.Schema({}),
         description: `
             Erase all of this site's entries/content. This is dangerous and destructive. Only system administrators
             may use this API method. You must pass ?confirm=danger for this method to succeed.`,
     }, async ({ request }) => {
         // Permissions and parameters:
-        await this.requirePermission(request, "DANGER!!" as api.PermissionName); // Only a user with the "*" global permission grant will match this
+        await this.requirePermission(request, "DANGER!!" as SDK.PermissionName); // Only a user with the "*" global permission grant will match this
         const { siteId } = await this.getSiteDetails(request);
         const siteKey = await siteKeyFromId(siteId);
         const graph = await getGraph();
 
         if (request.queryParam("confirm") !== "danger") {
-            throw new api.InvalidRequest(
-                api.InvalidRequestReason.OtherReason,
+            throw new SDK.InvalidRequest(
+                SDK.InvalidRequestReason.OtherReason,
                 "You must specify ?confirm=danger to erase all entries.",
             );
         }

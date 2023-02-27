@@ -1,4 +1,4 @@
-import { api, Drash, getGraph, log } from "neolace/rest-api/mod.ts";
+import { Drash, getGraph, log, SDK } from "neolace/rest-api/mod.ts";
 import { BotUser, HumanUser } from "neolace/core/User.ts";
 import { C, isVNID, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 
@@ -9,7 +9,7 @@ import { C, isVNID, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
  */
 export async function getPublicUserData(
     usernameOrVNID: string | VNID,
-): Promise<api.schemas.Type<typeof api.UserDataResponse>> {
+): Promise<SDK.schemas.Type<typeof SDK.UserDataResponse>> {
     if (usernameOrVNID === "system" || usernameOrVNID === SYSTEM_VNID) {
         // Special case: the "system" user is neither a human nor a bot.
         return {

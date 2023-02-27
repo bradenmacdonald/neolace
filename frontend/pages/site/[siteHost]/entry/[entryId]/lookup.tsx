@@ -3,7 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import Link from "next/link";
 import { ParsedUrlQuery } from "querystring";
-import { api, client, getSiteData, RefCacheContext } from "lib/api";
+import { SDK, client, getSiteData, RefCacheContext } from "lib/sdk";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
@@ -13,8 +13,8 @@ import { MDTContext } from "components/markdown-mdt/mdt";
 import { defineMessage } from "components/utils/i18n";
 
 interface PageProps {
-    entry: api.EntryData;
-    sitePreloaded: api.SiteDetailsData;
+    entry: SDK.EntryData;
+    sitePreloaded: SDK.SiteDetailsData;
 }
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;
@@ -115,15 +115,15 @@ export const getStaticProps: GetStaticProps<PageProps, PageUrlQuery> = async (co
     // Look up the Neolace site by domain:
     const site = await getSiteData(context.params.siteHost);
     if (site === null) { return {notFound: true}; }
-    let entry: api.EntryData;
+    let entry: SDK.EntryData;
     try {
         entry = await client.getEntry(context.params.entryId, {siteKey: site.key, flags: [
-            api.GetEntryFlags.IncludeFeatures,  // We need the article headings
-            api.GetEntryFlags.IncludePropertiesSummary,  // To know if we show the "Properties" nav link or not
-            api.GetEntryFlags.IncludeReferenceCache,
+            SDK.GetEntryFlags.IncludeFeatures,  // We need the article headings
+            SDK.GetEntryFlags.IncludePropertiesSummary,  // To know if we show the "Properties" nav link or not
+            SDK.GetEntryFlags.IncludeReferenceCache,
         ]});
     } catch (err) {
-        if (err instanceof api.NotFound) {
+        if (err instanceof SDK.NotFound) {
             return {notFound: true};
         }
         throw err;

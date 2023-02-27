@@ -2,7 +2,7 @@ import React from "react";
 import { FormattedMessage } from "react-intl";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
-import { api, client, getSiteData, RefCacheContext, SiteData } from "lib/api";
+import { SDK, client, getSiteData, RefCacheContext, SiteData } from "lib/sdk";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { MDTContext, RenderMDT } from "components/markdown-mdt/mdt";
@@ -11,7 +11,7 @@ interface PageProps {
     site: SiteData;
     /** Markdown content for the homepage */
     homepageContent: string;
-    refCache: api.ReferenceCacheData;
+    refCache: SDK.ReferenceCacheData;
 }
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;

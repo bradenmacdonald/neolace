@@ -1,11 +1,11 @@
 import {
-    api,
     assertArrayIncludes,
     assertEquals,
     assertInstanceOf,
     assertRejects,
     getClient,
     group,
+    SDK,
     setTestIsolation,
     test,
 } from "neolace/rest-api/tests.ts";
@@ -47,9 +47,9 @@ group("api/user/index.ts", () => {
             const emailToken = await saveValidationToken({ email: "jamie456@example.com", data: {} });
             await client.registerHumanUser({ emailToken });
             const err = await assertRejects(() => client.registerHumanUser({ emailToken }));
-            assertInstanceOf(err, api.InvalidRequest);
+            assertInstanceOf(err, SDK.InvalidRequest);
             assertEquals(err.message, "A user account is already registered with that email address.");
-            assertEquals(err.reason, api.InvalidRequestReason.EmailAlreadyRegistered);
+            assertEquals(err.reason, SDK.InvalidRequestReason.EmailAlreadyRegistered);
         });
 
         test("cannot create two accounts with the same email address that differs only by case", async () => {
@@ -58,9 +58,9 @@ group("api/user/index.ts", () => {
             const emailToken = await saveValidationToken({ email: "jamie456@example.com", data: {} });
             await client.registerHumanUser({ emailToken });
             const err = await assertRejects(() => client.registerHumanUser({ emailToken }));
-            assertInstanceOf(err, api.InvalidRequest);
+            assertInstanceOf(err, SDK.InvalidRequest);
             assertEquals(err.message, "A user account is already registered with that email address.");
-            assertEquals(err.reason, api.InvalidRequestReason.EmailAlreadyRegistered);
+            assertEquals(err.reason, SDK.InvalidRequestReason.EmailAlreadyRegistered);
         });
 
         test("cannot create two accounts with the same username", async () => {
@@ -72,9 +72,9 @@ group("api/user/index.ts", () => {
             const err = await assertRejects(
                 () => client.registerHumanUser({ emailToken: emailToken2, username: "jamie" }),
             );
-            assertInstanceOf(err, api.InvalidRequest);
+            assertInstanceOf(err, SDK.InvalidRequest);
             assertEquals(err.message, `The username "jamie" is already taken.`);
-            assertEquals(err.reason, api.InvalidRequestReason.UsernameAlreadyRegistered);
+            assertEquals(err.reason, SDK.InvalidRequestReason.UsernameAlreadyRegistered);
         });
 
         test("returns an appropriate error with invalid input (invalid data type)", async () => {
@@ -84,7 +84,7 @@ group("api/user/index.ts", () => {
                 // deno-lint-ignore no-explicit-any
                 () => client.registerHumanUser({ emailToken: 1234 as any }),
             );
-            assertInstanceOf(err, api.InvalidFieldValue);
+            assertInstanceOf(err, SDK.InvalidFieldValue);
             assertEquals(err.fieldErrors, [{
                 fieldPath: "emailToken",
                 message: `Expect value to be "string"`,
@@ -100,7 +100,7 @@ group("api/user/index.ts", () => {
                 //() => client.registerHumanUser({ email: "foobar" }),
                 () => client.requestEmailVerification({ email: "foobar", data: {}, returnUrl: "http://example.com" }),
             );
-            assertInstanceOf(err, api.InvalidFieldValue);
+            assertInstanceOf(err, SDK.InvalidFieldValue);
             assertEquals(err.fieldErrors, [{
                 fieldPath: "email",
                 message: `"foobar" is not a valid email address.`,
@@ -118,7 +118,7 @@ group("api/user/index.ts", () => {
                     username: " @LEX ",
                 })
             );
-            assertInstanceOf(err, api.InvalidFieldValue);
+            assertInstanceOf(err, SDK.InvalidFieldValue);
             assertArrayIncludes(err.fieldErrors, [
                 /*
                 {

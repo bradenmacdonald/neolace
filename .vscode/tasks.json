@@ -6,7 +6,7 @@
         {
             "label": "Lint",
             "type": "shell",
-            "command": "deno lint backend neolace-api/src lint frontend/pages frontend/components frontend/lib",
+            "command": "deno lint backend neolace-sdk/src lint frontend/pages frontend/components frontend/lib",
             "problemMatcher": []
         }
     ]

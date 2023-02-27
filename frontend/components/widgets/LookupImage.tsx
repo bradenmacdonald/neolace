@@ -5,9 +5,9 @@ import React from "react";
 import { Blurhash } from "react-blurhash";
 import Image from "next/image";
 import Link from "next/link";
-import { ImageDisplayFormat } from "neolace-api";
+import { ImageDisplayFormat } from "neolace-sdk";
 
-import { api, useRefCache } from "lib/api";
+import { SDK, useRefCache } from "lib/sdk";
 import { imgThumbnailLoader } from "lib/config";
 import { InlineMDT, MDTContext } from "../markdown-mdt/mdt";
 import { RatioBox } from "./ratio-box";
@@ -17,14 +17,14 @@ import { LookupValue } from "./LookupValue";
 const OptionalLink = (
     props: {
         children: React.ReactNode;
-        href?: api.EntryValue | api.StringValue;
+        href?: SDK.EntryValue | SDK.StringValue;
         className: string;
     },
 ) => {
     const refCache = useRefCache();
     if (props.href) {
         if (props.href.type === "Entry") {
-            const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) = refCache.entries[props.href.id];
+            const entry: undefined|(NonNullable<SDK.EntryData["referenceCache"]>["entries"]["entryId"]) = refCache.entries[props.href.id];
             const url = "/entry/" + (entry?.key || props.href.id);
             return (
                 <Link href={url} className={props.className}>
@@ -43,7 +43,7 @@ const OptionalLink = (
 };
 
 interface ImageProps {
-    value: api.ImageValue;
+    value: SDK.ImageValue;
     /**
      * Set this to override the format=... part of value to force a "list item" format, which is more appropriate when
      * displaying a large number of images that fill up the whole page.
@@ -90,7 +90,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                             alt={value.altText}
                             sizes={"768px" /* We're displaying these images never wider than ~760px, so use a smaller image source */}
                             fill
-                            className={`rounded-t ${value.sizing === api.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
+                            className={`rounded-t ${value.sizing === SDK.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
                         />
                     </Link>
                 </RatioBox>
@@ -99,7 +99,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                 </div>
             </li>
         </>
-    } else if (value.format === api.ImageDisplayFormat.PlainLogo) {
+    } else if (value.format === SDK.ImageDisplayFormat.PlainLogo) {
         return <div className="w-full mt-2 mb-1" style={{maxWidth: `${value.maxWidth ?? 400}px`}}>
             <OptionalLink href={value.link} className="">
                 <Image
@@ -111,7 +111,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                 />
             </OptionalLink>
         </div>
-    } else if (value.format === api.ImageDisplayFormat.RightAligned) {
+    } else if (value.format === SDK.ImageDisplayFormat.RightAligned) {
         return <>
             <div className="md:clear-right"></div> {/* TODO: make this way of clearing text+images optional?, just have md:clear-right applied to the div below */}
             <div className="w-full md:w-1/3 lg:w-1/4 md:float-right border rounded border-gray-400 md:ml-4 mb-2">
@@ -150,7 +150,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                     alt={value.altText}
                     width={value.width}
                     height={value.height}
-                    className={`${value.sizing === api.ImageSizingMode.Contain ? "object-contain" : "object-cover"} mx-auto max-w-full`}
+                    className={`${value.sizing === SDK.ImageSizingMode.Contain ? "object-contain" : "object-cover"} mx-auto max-w-full`}
                     sizes={"1000px" /* Displaying at full width of the page, which is about 1000px */}
                 />
             </OptionalLink>
@@ -166,7 +166,7 @@ export const LookupImage: React.FunctionComponent<ImageProps> = (props) => {
                 loader={imgThumbnailLoader}
                 alt={value.altText}
                 fill
-                className={`${value.sizing === api.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
+                className={`${value.sizing === SDK.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
                 sizes={"100px" /* We're displaying these small thumbnails at only < 100px wide, so use a small image */}
             />
         </OptionalLink>;

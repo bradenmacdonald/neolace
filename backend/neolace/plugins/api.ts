@@ -1,7 +1,7 @@
 /** Public API that plugins can use */
 
 export * as log from "std/log/mod.ts";
-export * as api from "neolace/deps/neolace-api.ts";
+export * as api from "neolace/deps/neolace-sdk.ts";
 
 export { config as realmConfig } from "neolace/app/config.ts";
 export { getGraph } from "neolace/core/graph.ts";
@@ -13,7 +13,7 @@ export { Site, siteIdFromKey, siteKeyFromId } from "neolace/core/Site.ts";
 export { Entry } from "neolace/core/entry/Entry.ts";
 export { EntryType } from "neolace/core/schema/EntryType.ts";
 export { getEntry } from "neolace/rest-api/site/[siteKey]/entry/[entryId]/_helpers.ts";
-export { GetEntryFlags } from "neolace/deps/neolace-api.ts";
+export { GetEntryFlags } from "neolace/deps/neolace-sdk.ts";
 export { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 export { entryToIndexDocument } from "neolace/core/entry/entry-to-index-doc.ts";
 

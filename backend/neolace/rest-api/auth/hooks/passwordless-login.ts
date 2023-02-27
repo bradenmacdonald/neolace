@@ -1,5 +1,5 @@
 import { EmptyResultError } from "neolace/deps/vertex-framework.ts";
-import { api, getGraph, log, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, log, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { mailer, makeSystemEmail } from "neolace/core/mailer/mailer.ts";
 import { HumanUser } from "neolace/core/User.ts";
 import { dedent } from "neolace/lib/dedent.ts";
@@ -9,8 +9,8 @@ export class PasswordlessLoginWebhookResource extends NeolaceHttpResource {
     public paths = ["/auth/passwordless-login"];
 
     POST = this.method({
-        requestBodySchema: api.schemas.Schema({ account_id: api.schemas.string, token: api.schemas.string }),
-        responseSchema: api.schemas.Schema({}),
+        requestBodySchema: SDK.schemas.Schema({ account_id: SDK.schemas.string, token: SDK.schemas.string }),
+        responseSchema: SDK.schemas.Schema({}),
         description: "Passwordless login webhook",
         notes: "Passwordless login webhook (called by the Keratin AuthN microservice)",
     }, async ({ bodyData }) => {
@@ -26,7 +26,7 @@ export class PasswordlessLoginWebhookResource extends NeolaceHttpResource {
             userData = await graph.pullOne(HumanUser, (u) => u.email, { with: { authnId: accountId } });
         } catch (err) {
             if (err instanceof EmptyResultError) {
-                throw new api.NotFound("User with that authn account ID was not found.");
+                throw new SDK.NotFound("User with that authn account ID was not found.");
             } else {
                 throw err;
             }

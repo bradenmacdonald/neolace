@@ -1,8 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { type VNID } from "neolace-api";
+import { type VNID } from "neolace-sdk";
 
-import { useRefCache } from "lib/api";
+import { useRefCache } from "lib/sdk";
 import { InlineMDT, type MDTContext } from "../markdown-mdt/mdt";
 
 interface Props {

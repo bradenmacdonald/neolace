@@ -2,7 +2,7 @@ import * as log from "std/log/mod.ts";
 import { C, Field } from "neolace/deps/vertex-framework.ts";
 
 import { Site } from "neolace/core/Site.ts";
-import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { adaptErrors, getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { Draft } from "neolace/core/edit/Draft.ts";
 import { CreateDraft } from "neolace/core/edit/Draft-actions.ts";
 import { checkPermissionsRequiredForEdits, getDraft } from "./_helpers.ts";
@@ -13,8 +13,8 @@ export class DraftIndexResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/draft"];
 
     POST = this.method({
-        requestBodySchema: api.CreateDraftSchema,
-        responseSchema: api.DraftSchema,
+        requestBodySchema: SDK.CreateDraftSchema,
+        responseSchema: SDK.DraftSchema,
         description: "Create a new draft",
     }, async ({ request, bodyData }) => {
         const graph = await getGraph();
@@ -22,19 +22,19 @@ export class DraftIndexResource extends NeolaceHttpResource {
         const userId = this.requireUser(request).id;
 
         // Response:
-        const edits = bodyData.edits as api.EditList;
+        const edits = bodyData.edits as SDK.EditList;
         // We don't allow creating an empty draft as it's noisy for other users and we can't really check permissions
         // until we know what type of edits will be in the draft.
         if (edits.length === 0) {
             // By default, we allow creating an empty draft IFF the user has "create new entry" permission
-            this.requirePermission(request, api.CorePerm.proposeNewEntry);
+            this.requirePermission(request, SDK.CorePerm.proposeNewEntry);
         }
 
         for (const idx in edits) {
             const e = edits[idx]; // The payload validator will have checked that "e" has .code and .data, but not check their value
-            const editType = api.getEditType.OrNone(e.code);
+            const editType = SDK.getEditType.OrNone(e.code);
             if (editType === undefined) {
-                throw new api.InvalidFieldValue([{
+                throw new SDK.InvalidFieldValue([{
                     fieldPath: `edits.${idx}.code`,
                     message: `Invalid edit code: "${e.code}"`,
                 }]);
@@ -45,7 +45,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
             } catch (err) {
                 log.warning(`Found invalid edit - data was:`);
                 log.warning(e.data);
-                throw new api.InvalidFieldValue([{
+                throw new SDK.InvalidFieldValue([{
                     fieldPath: `edits.${idx}.data`,
                     message: `Invalid edit data for ${e.code} edit: "${err.message}"`,
                 }]);
@@ -70,7 +70,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
     });
 
     GET = this.method({
-        responseSchema: api.schemas.PaginatedResult(api.DraftSchema),
+        responseSchema: SDK.schemas.PaginatedResult(SDK.DraftSchema),
         description: "List all drafts",
     }, async ({ request }) => {
         const graph = await getGraph();
@@ -78,7 +78,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
         const subject = await this.getPermissionSubject(request);
 
         // Cypher clause/predicate that we can use to filter out drafts that the user is not allowed to see.
-        const permissionsPredicate = await makeCypherCondition(subject, api.CorePerm.viewDraft, {}, ["draft"]);
+        const permissionsPredicate = await makeCypherCondition(subject, SDK.CorePerm.viewDraft, {}, ["draft"]);
 
         // Are we filtering by status?
         let statusFilter = C``;
@@ -89,7 +89,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
 
         const pageNum = BigInt(request.queryParam("page") ?? 1n) - 1n;
         if (pageNum < 0) {
-            throw new api.InvalidFieldValue([{ fieldPath: "page", message: "Invalid page number" }]);
+            throw new SDK.InvalidFieldValue([{ fieldPath: "page", message: "Invalid page number" }]);
         }
         const pageSize = 20n;
         const skip = BigInt(pageNum * pageSize);
@@ -131,7 +131,7 @@ export class DraftIndexResource extends NeolaceHttpResource {
             }),
         ]);
 
-        const result: api.schemas.PaginatedResultData<api.DraftData> = {
+        const result: SDK.schemas.PaginatedResultData<SDK.DraftData> = {
             values: data.map((row) => ({
                 ...row.draft,
                 author: row.author,

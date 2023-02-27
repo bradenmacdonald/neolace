@@ -1,7 +1,7 @@
 import { readableStreamFromIterable } from "std/streams/readable_stream_from_iterable.ts";
 import { crypto } from "std/crypto/mod.ts";
 import { SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
-import { api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { CreateDataFile, DataFile } from "neolace/core/objstore/DataFile.ts";
 import { RecordTempFile } from "neolace/core/edit/TempFile-actions.ts";
 import { uploadFileToObjStore } from "neolace/core/objstore/objstore.ts";
@@ -14,13 +14,13 @@ export class TempFileResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/file"];
 
     POST = this.method({
-        responseSchema: api.TempFileSchema,
+        responseSchema: SDK.TempFileSchema,
         description:
             "Upload a temporary file which can then be used an edit. Pass ?sha256Hash=hex to potentially speed up the upload.",
     }, async ({ request }) => {
         // Permissions and parameters:
         const user = this.requireUser(request);
-        await this.requirePermission(request, api.CorePerm.uploadTempFiles, {});
+        await this.requirePermission(request, SDK.CorePerm.uploadTempFiles, {});
         const graph = await getGraph();
 
         // At this point, we know the draft is valid and the user has permission to upload files into it.
@@ -31,8 +31,8 @@ export class TempFileResource extends NeolaceHttpResource {
         // So do this instead:
         const formFile = request.bodyParam<{ content: Uint8Array; type: string; size: number }>("file");
         if (!formFile) {
-            throw new api.InvalidRequest(
-                api.InvalidRequestReason.OtherReason,
+            throw new SDK.InvalidRequest(
+                SDK.InvalidRequestReason.OtherReason,
                 "Expected a form-encoded uploaded file called 'file'.",
             );
         }
@@ -40,8 +40,8 @@ export class TempFileResource extends NeolaceHttpResource {
         const bodyStream = readableStreamFromIterable([formFile.content]);
 
         if (contentType === null || bodyStream === null) {
-            throw new api.InvalidRequest(
-                api.InvalidRequestReason.OtherReason,
+            throw new SDK.InvalidRequest(
+                SDK.InvalidRequestReason.OtherReason,
                 "Missing body data or content-type header.",
             );
         }
@@ -71,8 +71,8 @@ export class TempFileResource extends NeolaceHttpResource {
                     const actualHashBin = await crypto.subtle.digest("SHA-256", bodyStream);
                     const sha256Hash = bin2hex(new Uint8Array(actualHashBin));
                     if (hashProvided !== sha256Hash) {
-                        throw new api.InvalidRequest(
-                            api.InvalidRequestReason.OtherReason,
+                        throw new SDK.InvalidRequest(
+                            SDK.InvalidRequestReason.OtherReason,
                             `The sha256Hash provided did not match the data. Calculated hash was "${sha256Hash}"`,
                         );
                     }
@@ -82,8 +82,8 @@ export class TempFileResource extends NeolaceHttpResource {
                 // There is no existing file with this sha256hash
                 const uploadData = await uploadFileToObjStore(bodyStream, { contentType });
                 if (hashProvided !== uploadData.sha256Hash) {
-                    throw new api.InvalidRequest(
-                        api.InvalidRequestReason.OtherReason,
+                    throw new SDK.InvalidRequest(
+                        SDK.InvalidRequestReason.OtherReason,
                         `The sha256Hash provided did not match the data. Calculated hash was "${uploadData.sha256Hash}"`,
                     );
                 }

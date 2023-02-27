@@ -1,7 +1,7 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 import { Spinner } from "components/widgets/Spinner";
 import { AutoControl } from "components/form-input/AutoControl";
 import { Form } from "components/form-input/Form";
@@ -9,8 +9,8 @@ import { MDTEditor } from "components/form-input/MDTEditor";
 import { defineMessage } from "components/utils/i18n";
 
 interface Props {
-    entry?: api.EditableEntryData;
-    addUnsavedEdit: (newEdit: api.AnyEdit) => void;
+    entry?: SDK.EditableEntryData;
+    addUnsavedEdit: (newEdit: SDK.AnyEdit) => void;
 }
 
 /**
@@ -20,7 +20,7 @@ export const ArticleEditor: React.FunctionComponent<Props> = ({ entry, addUnsave
 
     const updateEntryArticle = React.useCallback((articleContent: string) => {
         if (!entry) return;
-        addUnsavedEdit({ code: api.UpdateEntryFeature.code, data: { entryId: entry.id, feature: {
+        addUnsavedEdit({ code: SDK.UpdateEntryFeature.code, data: { entryId: entry.id, feature: {
             featureType: "Article",
             articleContent,
         } } });

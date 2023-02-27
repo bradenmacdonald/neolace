@@ -1,4 +1,4 @@
-import { api, getGraph, NeolaceHttpRequest } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpRequest, SDK } from "neolace/rest-api/mod.ts";
 import { VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { Draft } from "neolace/core/edit/Draft.ts";
 import { ActionObject, ActionSubject } from "neolace/core/permissions/action.ts";
@@ -10,7 +10,7 @@ export async function getDraftIdFromRequest(request: NeolaceHttpRequest, siteId:
     const draftNumStr = request.pathParam("draftNum") ?? "";
     const draftNum = parseInt(draftNumStr);
     if (draftNum <= 0 || isNaN(draftNum)) {
-        throw new api.InvalidFieldValue([{
+        throw new SDK.InvalidFieldValue([{
             fieldPath: "draftNum",
             message: `Expected an integer draft draftNum (got: ${draftNumStr})`,
         }]);
@@ -33,8 +33,8 @@ export async function getDraftId(draftNum: number, siteId: VNID): Promise<VNID> 
 export async function getDraft(
     draftId: VNID,
     tx: WrappedTransaction,
-    flags: Set<api.GetDraftFlags> = new Set(),
-): Promise<api.DraftData> {
+    flags: Set<SDK.GetDraftFlags> = new Set(),
+): Promise<SDK.DraftData> {
     const draftData = await tx.pullOne(Draft, (d) =>
         d
             .num
@@ -62,23 +62,23 @@ export async function getDraft(
         description: draftData.description,
         status: draftData.status,
         edits: draftData.edits as
-            | (api.AnyEdit & { id: VNID; changeType: api.EditChangeType; timestamp: Date })[]
+            | (SDK.AnyEdit & { id: VNID; changeType: SDK.EditChangeType; timestamp: Date })[]
             | undefined,
     };
 }
 
 export async function checkPermissionsRequiredForEdits(
-    edits: api.EditList,
+    edits: SDK.EditList,
     subject: ActionSubject,
     mode: "propose" | "apply",
     /**
      * Edits that are already in the draft; we don't check their permissions but we may need them to determine entry
      * types on subsequent edits that we are checking.
      */
-    previousEdits?: api.EditList,
+    previousEdits?: SDK.EditList,
 ) {
     if (subject.userId === undefined) {
-        throw new api.NotAuthenticated();
+        throw new SDK.NotAuthenticated();
     }
 
     let hasSchemaChanges = false;
@@ -95,11 +95,11 @@ export async function checkPermissionsRequiredForEdits(
     }
 
     for (const e of edits) {
-        const editType = api.getEditType(e.code);
-        if (editType.changeType === api.EditChangeType.Schema) {
+        const editType = SDK.getEditType(e.code);
+        if (editType.changeType === SDK.EditChangeType.Schema) {
             hasSchemaChanges = true;
-        } else if (editType.changeType === api.EditChangeType.Content) {
-            const entryEdit = e as api.AnyContentEdit; // Tell TypeScript that this is definitely a content edit now
+        } else if (editType.changeType === SDK.EditChangeType.Content) {
+            const entryEdit = e as SDK.AnyContentEdit; // Tell TypeScript that this is definitely a content edit now
             if (entryEdit.code === "CreateEntry") {
                 hasNewEntriesOfTypes.set(entryEdit.data.entryId, entryEdit.data.entryTypeKey); // add an entry to the map, associating the entry ID with the entryTypeId
             } else {
@@ -108,11 +108,11 @@ export async function checkPermissionsRequiredForEdits(
         }
     }
 
-    const requirePermission = async (perm: api.PermissionName, objects: ActionObject[]) => {
+    const requirePermission = async (perm: SDK.PermissionName, objects: ActionObject[]) => {
         const results = await checkPermissionsForAll(subject, perm, objects);
         if (results.length !== objects.length) throw new Error(`Internal error in permissions check`);
         if (!results.every((r) => r === true)) {
-            throw new api.NotAuthorized("You do not have sufficient permissions.");
+            throw new SDK.NotAuthorized("You do not have sufficient permissions.");
         }
     };
 
@@ -122,7 +122,7 @@ export async function checkPermissionsRequiredForEdits(
             entryId,
             entryTypeKey,
         }));
-        const permNeeded = mode === "propose" ? api.CorePerm.proposeNewEntry : api.CorePerm.applyEditsToEntries;
+        const permNeeded = mode === "propose" ? SDK.CorePerm.proposeNewEntry : SDK.CorePerm.applyEditsToEntries;
         await requirePermission(permNeeded, objects);
     }
     // If there are any modified entries, make sure the user has permission to edit those entries:
@@ -137,12 +137,12 @@ export async function checkPermissionsRequiredForEdits(
                 (await graph.pullOne(Entry, (e) => e.id.type((t) => t.key), { id: entryId })).type!.key;
             objects.push({ entryId, entryTypeKey });
         }
-        const permNeeded = mode === "propose" ? api.CorePerm.proposeEditToEntry : api.CorePerm.applyEditsToEntries;
+        const permNeeded = mode === "propose" ? SDK.CorePerm.proposeEditToEntry : SDK.CorePerm.applyEditsToEntries;
         await requirePermission(permNeeded, objects);
     }
     // If there are any schema changes, make sure the uesr has permission to modify the schema:
     if (hasSchemaChanges) {
-        const permNeeded = mode === "propose" ? api.CorePerm.proposeEditToSchema : api.CorePerm.applyEditsToSchema;
+        const permNeeded = mode === "propose" ? SDK.CorePerm.proposeEditToSchema : SDK.CorePerm.applyEditsToSchema;
         await requirePermission(permNeeded, [{}]);
     }
 }

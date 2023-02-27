@@ -1,10 +1,10 @@
 import {
-    api,
     assertEquals,
     assertInstanceOf,
     assertRejects,
     getClient,
     group,
+    SDK,
     setTestIsolation,
     test,
 } from "neolace/rest-api/tests.ts";
@@ -40,7 +40,7 @@ group("lookup.ts", () => {
             values: [
                 {
                     type: "Image",
-                    format: api.ImageDisplayFormat.Thumbnail,
+                    format: SDK.ImageDisplayFormat.Thumbnail,
                     entryId: defaultData.entries.imgPonderosaTrunk.id,
                     altText: defaultData.entries.imgPonderosaTrunk.name,
                     blurHash: "LCDu}B~VNu9Z0LxGNH9u$zjYWCt7",
@@ -49,7 +49,7 @@ group("lookup.ts", () => {
                     // deno-lint-ignore no-explicit-any
                     imageUrl: (result.resultValue as any).values[0].imageUrl,
                     size: 1581898,
-                    sizing: api.ImageSizingMode.Cover,
+                    sizing: SDK.ImageSizingMode.Cover,
                     width: 3504,
                     height: 2336,
                 },
@@ -66,8 +66,8 @@ group("lookup.ts", () => {
         const client = await getClient(defaultData.users.admin, defaultData.site.key);
 
         const err = await assertRejects(() => client.evaluateLookupExpression("this won't parse."));
-        assertInstanceOf(err, api.InvalidRequest);
-        assertEquals(err.reason, api.InvalidRequestReason.LookupExpressionParseError);
+        assertInstanceOf(err, SDK.InvalidRequest);
+        assertEquals(err.reason, SDK.InvalidRequestReason.LookupExpressionParseError);
     });
 
     test("It gives an evaluation error when the expression can be parsed but is invalid", async () => {

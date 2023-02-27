@@ -5,8 +5,8 @@ import { PluginDefinition } from "components/utils/ui-plugins";
 import { UiChangeOperation } from "components/widgets/UISlot";
 import type { HouseOfSecurityProps } from "./plugin-components/HouseOfSecurity";
 import { Spinner } from "components/widgets/Spinner";
-import { usePermission } from "lib/api";
-import { CorePerm } from "neolace-api";
+import { usePermission } from "lib/sdk";
+import { CorePerm } from "neolace-sdk";
 
 // These are loaded dynamically to keep the plugin definition script as small as possible, since all plugin definitions
 // are loaded and sent to the browser.

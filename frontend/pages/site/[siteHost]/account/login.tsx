@@ -3,7 +3,7 @@ import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { client, getSiteData, SiteData, UserStatus, useUser } from "lib/api";
+import { client, getSiteData, SiteData, UserStatus, useUser } from "lib/sdk";
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { Control, Form } from "components/form-input/Form";
 import { Button } from "components/widgets/Button";

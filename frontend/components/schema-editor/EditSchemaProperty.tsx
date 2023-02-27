@@ -1,7 +1,7 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
-import { api, useSchema } from "lib/api";
+import { SDK, useSchema } from "lib/sdk";
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
 import { AutoControl, Control } from "components/form-input/Form";
 import { Checkbox } from "components/form-input/Checkbox";
@@ -12,7 +12,7 @@ import { TextInput } from "components/form-input/TextInput";
 
 interface Props {
     propertyKey: string;
-    addSchemaEdit: (edit: api.AnySchemaEdit) => void;
+    addSchemaEdit: (edit: SDK.AnySchemaEdit) => void;
 }
 
 /**
@@ -22,15 +22,15 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyKey,
     /** The current schema, including any schema changes which haven't yet been saved, if any. */
     const [schema] = useSchema();
 
-    const updateProperty = React.useCallback((data: Omit<api.schemas.Type<typeof api.UpdateProperty.dataSchema>, "key">) => {
+    const updateProperty = React.useCallback((data: Omit<SDK.schemas.Type<typeof SDK.UpdateProperty.dataSchema>, "key">) => {
         addSchemaEdit({code: "UpdateProperty", data: {...data, key: propertyKey}});
     }, [addSchemaEdit, propertyKey]);
 
-    const prop: api.PropertyData = schema?.properties[propertyKey] ?? {
+    const prop: SDK.PropertyData = schema?.properties[propertyKey] ?? {
         key: propertyKey,
         name: "",
         description: "",
-        type: api.PropertyType.Value,
+        type: SDK.PropertyType.Value,
         appliesTo: [],
         rank: 10,
     };
@@ -40,7 +40,7 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyKey,
 
     // Available properties for the "parent property" field.
     const possibleParentProps = React.useMemo(() => {
-        const props: api.PropertyData[] = [];
+        const props: SDK.PropertyData[] = [];
         if (!schema) return props;
 
         for (const p of Object.values(schema.properties)) {
@@ -96,15 +96,15 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyKey,
                 value={prop.type}
                 options={[
                     {
-                        id: api.PropertyType.Value,
+                        id: SDK.PropertyType.Value,
                         label: defineMessage({defaultMessage: "Value - a regular property", id: "cWdCN7"}),
                     },
                     {
-                        id: api.PropertyType.RelOther,
+                        id: SDK.PropertyType.RelOther,
                         label: defineMessage({defaultMessage: "Relationship - a relationship to another entry", id: "12Hf3L"}),
                     },
                     {
-                        id: api.PropertyType.RelIsA,
+                        id: SDK.PropertyType.RelIsA,
                         label: defineMessage({defaultMessage: "Relationship (IS A) - this entry is an instance or subclass of another entry", id: "GaeBc2"}),
                     },
                 ]}
@@ -122,7 +122,7 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyKey,
                 onChange={(newParent) =>
                     // The type can only be set when creating the property. Even though there is already a "CreateProperty"
                     // edit, it will be consolidated with this one.
-                    updateProperty({isA: newParent ? [newParent as api.VNID] : []})
+                    updateProperty({isA: newParent ? [newParent as SDK.VNID] : []})
                 }
                 options={[
                     {
@@ -141,22 +141,22 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyKey,
         >
             <SelectBox
                 value={prop.mode}
-                onChange={(mode) => updateProperty({mode: mode as api.PropertyMode})}
+                onChange={(mode) => updateProperty({mode: mode as SDK.PropertyMode})}
                 options={[
                     {
-                        id: api.PropertyMode.Optional,
+                        id: SDK.PropertyMode.Optional,
                         label: defineMessage({defaultMessage: "Optional", id: "InWqys"}),
                     },
                     {
-                        id: api.PropertyMode.Recommended,
+                        id: SDK.PropertyMode.Recommended,
                         label: defineMessage({defaultMessage: "Recommended", id: 'VKfWR3'}),
                     },
                     {
-                        id: api.PropertyMode.Required,
+                        id: SDK.PropertyMode.Required,
                         label: defineMessage({defaultMessage: "Required", id: 'Seanpx'}),
                     },
                     {
-                        id: api.PropertyMode.Auto,
+                        id: SDK.PropertyMode.Auto,
                         label: defineMessage({defaultMessage: "Auto - computed automatically", id: 'el/GZK'}),
                     },
                 ]}
@@ -215,7 +215,7 @@ export const EditSchemaProperty: React.FunctionComponent<Props> = ({propertyKey,
         </AutoControl>
 
         {
-            prop.mode === api.PropertyMode.Auto ?
+            prop.mode === SDK.PropertyMode.Auto ?
                 <Control
                     id="prop-default"
                     label={defineMessage({ defaultMessage: "Default (Automatic Value)", id: "cmtPlm" })}

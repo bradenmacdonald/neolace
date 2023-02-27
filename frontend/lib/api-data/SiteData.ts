@@ -1,17 +1,17 @@
 import useSWR from "swr";
 import { useRouter } from "next/router";
-import * as api from "neolace-api";
+import * as SDK from "neolace-sdk";
 
 import { client } from "lib/api-client";
 import { AsyncCache } from "lib/async-cache";
 
-export type SiteData = api.SiteDetailsData;
+export type SiteData = SDK.SiteDetailsData;
 
 /**
  * React hook to get basic data about the current site.
  * @returns
  */
-export function useSiteData(options: { fallback?: SiteData } = {}): { site: SiteData; siteError: api.ApiError } {
+export function useSiteData(options: { fallback?: SiteData } = {}): { site: SiteData; siteError: SDK.ApiError } {
     const router = useRouter();
     // router.query.siteHost gives the site's domain name because of how we have the Next.js URL rewriting configured.
     const domain = router.query.siteHost as string;
@@ -63,7 +63,7 @@ export async function getSiteData(domain: string): Promise<SiteData | null> {
         // (Occasionally it will be refreshed in the background, but we still get an immediate result here.)
         return await siteDataCache.get(domain);
     } catch (err) {
-        if (err instanceof api.NotFound) {
+        if (err instanceof SDK.NotFound) {
             return null;
         }
         throw err;

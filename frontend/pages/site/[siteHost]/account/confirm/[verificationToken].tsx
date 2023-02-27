@@ -5,7 +5,7 @@ import { ParsedUrlQuery } from "querystring";
 import { FormattedMessage, useIntl } from "react-intl";
 import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
 
-import { client, getSiteData, SiteData, UserStatus, useUser } from "lib/api";
+import { client, getSiteData, SiteData, UserStatus, useUser } from "lib/sdk";
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { Button } from "components/widgets/Button";
 import { Redirect } from "components/utils/Redirect";

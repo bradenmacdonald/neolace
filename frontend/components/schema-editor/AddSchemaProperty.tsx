@@ -1,7 +1,7 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
-import { api, useSchema } from "lib/api";
+import { SDK, useSchema } from "lib/sdk";
 import { defineMessage } from "components/utils/i18n";
 import { Control } from "components/form-input/Control";
 import { SelectBox } from "components/form-input/SelectBox";
@@ -10,7 +10,7 @@ import { slugify } from "lib/slugify";
 import { Button } from "components/widgets/Button";
 
 interface Props {
-    onAddProperty: (edit: api.AnySchemaEdit & {code: "CreateProperty"}) => void;
+    onAddProperty: (edit: SDK.AnySchemaEdit & {code: "CreateProperty"}) => void;
 }
 
 /**
@@ -19,7 +19,7 @@ interface Props {
 export const AddSchemaProperty: React.FunctionComponent<Props> = ({onAddProperty}) => {
     const [newName, setNewName] = React.useState("");
     const [newKey, setNewKey] = React.useState("");
-    const [newPropType, setNewPropType] = React.useState(undefined as api.PropertyType|undefined);
+    const [newPropType, setNewPropType] = React.useState(undefined as SDK.PropertyType|undefined);
     /** The current schema, including any schema changes which haven't yet been saved, if any. */
     const [schema] = useSchema();
     const recommendedKey = slugify(newName).slice(0, 50);
@@ -69,18 +69,18 @@ export const AddSchemaProperty: React.FunctionComponent<Props> = ({onAddProperty
         >
             <SelectBox
                 value={newPropType}
-                onChange={(type) => setNewPropType(type as api.PropertyType)}
+                onChange={(type) => setNewPropType(type as SDK.PropertyType)}
                 options={[
                     {
-                        id: api.PropertyType.Value,
+                        id: SDK.PropertyType.Value,
                         label: defineMessage({defaultMessage: "Value - a regular property", id: "cWdCN7"}),
                     },
                     {
-                        id: api.PropertyType.RelOther,
+                        id: SDK.PropertyType.RelOther,
                         label: defineMessage({defaultMessage: "Relationship - a relationship to another entry", id: "12Hf3L"}),
                     },
                     {
-                        id: api.PropertyType.RelIsA,
+                        id: SDK.PropertyType.RelIsA,
                         label: defineMessage({defaultMessage: "Relationship (IS A) - this entry is an instance or subclass of another entry", id: "GaeBc2"}),
                     },
                 ]}

@@ -1,4 +1,4 @@
-import { api, assert, assertEquals, getClient, group, setTestIsolation, test } from "neolace/rest-api/tests.ts";
+import { assert, assertEquals, getClient, group, SDK, setTestIsolation, test } from "neolace/rest-api/tests.ts";
 import { CreateBot } from "neolace/core/User.ts";
 import { getGraph } from "neolace/rest-api/mod.ts";
 
@@ -11,11 +11,11 @@ group("my-permissions.ts", () => {
 
         const result = await client.getMyPermissions();
 
-        assertEquals(result[api.CorePerm.viewSite], { hasPerm: true });
-        assertEquals(result[api.CorePerm.proposeNewEntry], { hasPerm: false });
-        assertEquals(result[api.CorePerm.siteAdmin], { hasPerm: false });
+        assertEquals(result[SDK.CorePerm.viewSite], { hasPerm: true });
+        assertEquals(result[SDK.CorePerm.proposeNewEntry], { hasPerm: false });
+        assertEquals(result[SDK.CorePerm.siteAdmin], { hasPerm: false });
         // We don't expect data about "can view entry" because it requires that a specific entry ID is specified:
-        assertEquals(result[api.CorePerm.viewEntry], undefined);
+        assertEquals(result[SDK.CorePerm.viewEntry], undefined);
     });
 
     test("It can get the permissions of a regular user", async () => {
@@ -30,11 +30,11 @@ group("my-permissions.ts", () => {
 
         const result = await client.getMyPermissions();
 
-        assertEquals(result[api.CorePerm.viewSite], { hasPerm: true });
-        assertEquals(result[api.CorePerm.proposeNewEntry], { hasPerm: true });
-        assertEquals(result[api.CorePerm.siteAdmin], { hasPerm: false });
+        assertEquals(result[SDK.CorePerm.viewSite], { hasPerm: true });
+        assertEquals(result[SDK.CorePerm.proposeNewEntry], { hasPerm: true });
+        assertEquals(result[SDK.CorePerm.siteAdmin], { hasPerm: false });
         // We don't expect data about "can view entry" because it requires that a specific entry ID is specified:
-        assertEquals(result[api.CorePerm.viewEntry], undefined);
+        assertEquals(result[SDK.CorePerm.viewEntry], undefined);
     });
 
     test("It can get the permissions of an admin user", async () => {
@@ -42,11 +42,11 @@ group("my-permissions.ts", () => {
 
         const result = await client.getMyPermissions();
 
-        assertEquals(result[api.CorePerm.viewSite], { hasPerm: true });
-        assertEquals(result[api.CorePerm.proposeNewEntry], { hasPerm: true });
-        assertEquals(result[api.CorePerm.siteAdmin], { hasPerm: true });
+        assertEquals(result[SDK.CorePerm.viewSite], { hasPerm: true });
+        assertEquals(result[SDK.CorePerm.proposeNewEntry], { hasPerm: true });
+        assertEquals(result[SDK.CorePerm.siteAdmin], { hasPerm: true });
         // We don't expect data about "can view entry" because it requires that a specific entry ID is specified:
-        assertEquals(result[api.CorePerm.viewEntry], undefined);
+        assertEquals(result[SDK.CorePerm.viewEntry], undefined);
     });
 
     const max = 40;
@@ -64,8 +64,8 @@ group("my-permissions.ts", () => {
 
         assert(took < max, `Expected getMyPermissions() to take < ${max}ms, but it took ${took}ms`);
 
-        assertEquals(result[api.CorePerm.viewSite], { hasPerm: true });
-        assertEquals(result[api.CorePerm.proposeNewEntry], { hasPerm: true });
-        assertEquals(result[api.CorePerm.siteAdmin], { hasPerm: true });
+        assertEquals(result[SDK.CorePerm.viewSite], { hasPerm: true });
+        assertEquals(result[SDK.CorePerm.proposeNewEntry], { hasPerm: true });
+        assertEquals(result[SDK.CorePerm.siteAdmin], { hasPerm: true });
     });
 });

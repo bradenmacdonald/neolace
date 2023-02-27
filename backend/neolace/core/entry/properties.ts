@@ -1,5 +1,5 @@
 import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
-import type { RawPropertyData } from "neolace/deps/neolace-api.ts";
+import type { RawPropertyData } from "neolace/deps/neolace-sdk.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import { Entry, siteIdForEntryId } from "neolace/core/entry/Entry.ts";

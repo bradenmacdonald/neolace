@@ -1,7 +1,7 @@
 import * as KeratinAuthN from "lib/keratin-authn/keratin-authn.min";
 import React from "react";
 import useSWR from "swr";
-import * as api from "neolace-api";
+import * as SDK from "neolace-sdk";
 
 import { client } from "lib/api-client";
 import { IN_BROWSER } from "lib/config";
@@ -40,7 +40,7 @@ export function useUser(): UserData {
         try {
             return await client.whoAmI();
         } catch (err) {
-            if (err instanceof api.NotAuthenticated) {
+            if (err instanceof SDK.NotAuthenticated) {
                 return null;
             }
             throw err;

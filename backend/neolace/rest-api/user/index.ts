@@ -1,6 +1,6 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
 
-import { adaptErrors, api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { adaptErrors, getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { CreateUser, HumanUser } from "neolace/core/User.ts";
 import { authClient } from "neolace/core/authn-client.ts";
 import { getPublicUserData } from "./_helpers.ts";
@@ -11,14 +11,14 @@ export class UserIndexResource extends NeolaceHttpResource {
     public paths = ["/user"];
 
     POST = this.method({
-        responseSchema: api.CreateHumanUserResponse,
-        requestBodySchema: api.CreateHumanUser,
+        responseSchema: SDK.CreateHumanUserResponse,
+        requestBodySchema: SDK.CreateHumanUser,
         description: "Create a user account",
         notes:
             "This is only for human users; bots should use the bot API. Every human should have one account; creating multiple accounts is discouraged.",
     }, async ({ request, bodyData }) => {
         if (request.user) {
-            throw new api.NotAuthorized("You cannot create an account if you are already logged in.");
+            throw new SDK.NotAuthorized("You cannot create an account if you are already logged in.");
         }
 
         // Get the email address from the token - this ensures that the email address has been verified already.
@@ -28,8 +28,8 @@ export class UserIndexResource extends NeolaceHttpResource {
         const graph = await getGraph();
         const checkEmail = await graph.pull(HumanUser, (u) => u.id, { with: { email } });
         if (checkEmail.length !== 0) {
-            throw new api.InvalidRequest(
-                api.InvalidRequestReason.EmailAlreadyRegistered,
+            throw new SDK.InvalidRequest(
+                SDK.InvalidRequestReason.EmailAlreadyRegistered,
                 "A user account is already registered with that email address.",
             );
         }

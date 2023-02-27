@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { api, assertEquals, getClient, group, setTestIsolation, test } from "neolace/rest-api/tests.ts";
+import { assertEquals, getClient, group, SDK, setTestIsolation, test } from "neolace/rest-api/tests.ts";
 
 group("index.ts", () => {
     group("DraftEditsResource.POST - Add an edit to a draft", () => {
@@ -27,7 +27,7 @@ group("index.ts", () => {
                 ],
             });
 
-            const draft = await client.getDraft(draftNum, { flags: [api.GetDraftFlags.IncludeEdits] });
+            const draft = await client.getDraft(draftNum, { flags: [SDK.GetDraftFlags.IncludeEdits] });
             assertEquals(draft.edits?.length, 1);
 
             // Test an edit that modifies an existing entry:
@@ -39,7 +39,7 @@ group("index.ts", () => {
                 },
             }, { draftNum });
 
-            const newDraft1 = await client.getDraft(draftNum, { flags: [api.GetDraftFlags.IncludeEdits] });
+            const newDraft1 = await client.getDraft(draftNum, { flags: [SDK.GetDraftFlags.IncludeEdits] });
             assertEquals(newDraft1.edits?.length, 2);
             assertEquals(newDraft1.edits![1].code, "SetEntryName");
 
@@ -52,7 +52,7 @@ group("index.ts", () => {
                 },
             }, { draftNum });
 
-            const newDraft2 = await client.getDraft(draftNum, { flags: [api.GetDraftFlags.IncludeEdits] });
+            const newDraft2 = await client.getDraft(draftNum, { flags: [SDK.GetDraftFlags.IncludeEdits] });
             assertEquals(newDraft2.edits?.length, 3);
             assertEquals(newDraft2.edits![2].code, "SetEntryName");
         });

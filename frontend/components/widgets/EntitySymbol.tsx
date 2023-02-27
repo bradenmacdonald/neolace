@@ -1,7 +1,7 @@
-import { api, useRefCache } from "lib/api";
+import { SDK, useRefCache } from "lib/sdk";
 import { Icon } from "./Icon";
 
-type EntityValue = api.EntryValue | api.PropertyValue | api.EntryTypeValue;
+type EntityValue = SDK.EntryValue | SDK.PropertyValue | SDK.EntryTypeValue;
 
 /**
  * A symbol representing an Entry, an Entry Type, or a Property
@@ -24,7 +24,7 @@ export const EntitySymbol: React.FunctionComponent<{
             </span>
         );
     } else if (value.type === "EntryType") {
-        const entryTypeColor = api.getEntryTypeColor(refCache.entryTypes[value.key]);
+        const entryTypeColor = SDK.getEntryTypeColor(refCache.entryTypes[value.key]);
         return (
             <span className={`${rounded} py-[3px] px-2 ${defaultBg} ${selected ? '!bg-sky-300' : ''} ${className}`} style={{color: entryTypeColor.textColor}}>
                 <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
@@ -32,7 +32,7 @@ export const EntitySymbol: React.FunctionComponent<{
         );
     } else if (value.type === "Entry") {
         const entryTypeData = refCache.entryTypes[refCache.entries[value.id]?.entryType.key];
-        const entryTypeColor = api.getEntryTypeColor(entryTypeData);
+        const entryTypeColor = SDK.getEntryTypeColor(entryTypeData);
         return (
             <span
                 style={{

@@ -1,4 +1,4 @@
-import { api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import {
     checkPermissionsRequiredForEdits,
     getDraft,
@@ -13,18 +13,18 @@ export class DraftEditsResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/draft/:draftNum/edit"];
 
     POST = this.method({
-        requestBodySchema: api.CreateEditSchema,
-        responseSchema: api.schemas.Schema({}),
+        requestBodySchema: SDK.CreateEditSchema,
+        responseSchema: SDK.schemas.Schema({}),
         description: "Add a new edit to the draft.",
     }, async ({ request, bodyData }) => {
         // Permissions and parameters:
         const user = this.requireUser(request);
         const { siteId } = await this.getSiteDetails(request);
         const draftId = await getDraftIdFromRequest(request, siteId);
-        await this.requirePermission(request, api.CorePerm.editDraft, { draftId });
+        await this.requirePermission(request, SDK.CorePerm.editDraft, { draftId });
         const graph = await getGraph();
         // Validate that the draft exists in the site:
-        const draft = await graph.read((tx) => getDraft(draftId, tx, new Set([api.GetDraftFlags.IncludeEdits])));
+        const draft = await graph.read((tx) => getDraft(draftId, tx, new Set([SDK.GetDraftFlags.IncludeEdits])));
 
         // At this point, we know the draft is valid and the user has permission to add edits to it.
         // But we still have to check if they have permission for the specific type of edits:

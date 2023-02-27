@@ -1,5 +1,5 @@
 import { C, VNID } from "neolace/deps/vertex-framework.ts";
-import type * as api from "neolace/deps/neolace-api.ts";
+import type * as api from "neolace/deps/neolace-sdk.ts";
 
 import type { LookupContext } from "../context.ts";
 import type { LookupExpression } from "../expressions/base.ts";

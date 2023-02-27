@@ -1,5 +1,5 @@
 import GraphologyGraph from "graphology";
-import { ReferenceCacheData, VNID } from "neolace-api";
+import { ReferenceCacheData, VNID } from "neolace-sdk";
 
 export const enum NodeType {
     Entry = "entry",

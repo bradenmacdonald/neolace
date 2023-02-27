@@ -1,6 +1,6 @@
 import * as log from "std/log/mod.ts";
 import { C, VNID } from "neolace/deps/vertex-framework.ts";
-import * as api from "neolace/deps/neolace-api.ts";
+import * as api from "neolace/deps/neolace-sdk.ts";
 
 import { getGraph } from "neolace/core/graph.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";

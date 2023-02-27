@@ -43,7 +43,7 @@ jobs:
 
       - name: Run linter (API)
         run: deno lint src
-        working-directory: ./neolace-api
+        working-directory: ./neolace-sdk
 
       # - name: Run linter (frontend)
       #   run: npm run lint
@@ -127,12 +127,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Run tests (neolace-api)
+      - name: Run tests (neolace-sdk)
         run: deno test
-        working-directory: ./neolace-api
-      - name: Compile neolace-api
+        working-directory: ./neolace-sdk
+      - name: Compile neolace-sdk
         run: ./_compile.ts
-        working-directory: ./neolace-api
+        working-directory: ./neolace-sdk
       - run: npm ci
         working-directory: ./frontend
       - name: Run tests (frontend)

@@ -2,7 +2,7 @@ import React from "react";
 import Head from "next/head";
 import Link from "next/link";
 
-import { api, usePermissions, useSiteData, UserStatus, useUser } from "lib/api";
+import { SDK, usePermissions, useSiteData, UserStatus, useUser } from "lib/sdk";
 import { defaultRender, DefaultUISlot, UISlot, UISlotWidget } from "./widgets/UISlot";
 import FourOhFour from "pages/404";
 import { MDTContext, RenderMDT } from "./markdown-mdt/mdt";
@@ -57,7 +57,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
     // If we're in a mobile view and the left menu is active, it needs to be in front of absolutely everything.
     const leftMenuZIndex = useZIndex({increaseBy: mobileMenuVisible ? IncreaseZIndex.ForMobileMenu : IncreaseZIndex.NoChange});
 
-    if (siteError instanceof api.NotFound) {
+    if (siteError instanceof SDK.NotFound) {
         return <FourOhFour />;
     }
 
@@ -104,7 +104,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 matchUrl: "-never-",
             },
             // Only show if the user has permission to propose a new entry:
-            hidden: !permissions?.[api.CorePerm.proposeNewEntry]?.hasPerm,
+            hidden: !permissions?.[SDK.CorePerm.proposeNewEntry]?.hasPerm,
         },
         // See drafts:
         {
@@ -130,7 +130,7 @@ export const SitePage: React.FunctionComponent<Props> = (props) => {
                 icon: "gear-fill",
             },
             // Only show if the user has permission to administer the site:
-            hidden: !permissions?.[api.CorePerm.siteAdmin]?.hasPerm,
+            hidden: !permissions?.[SDK.CorePerm.siteAdmin]?.hasPerm,
         }
     );
     if (user.status === UserStatus.LoggedIn) {

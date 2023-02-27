@@ -1,5 +1,5 @@
 import { C, Field, Neo4jError } from "neolace/deps/vertex-framework.ts";
-import { InvalidEdit, UpsertEntryByKey, VNID } from "neolace/deps/neolace-api.ts";
+import { InvalidEdit, UpsertEntryByKey, VNID } from "neolace/deps/neolace-sdk.ts";
 import { BulkAppliedEditData, defineBulkImplementation } from "neolace/core/edit/implementations.ts";
 import { Connection, Entry, EntryType, Site } from "neolace/core/mod.ts";
 

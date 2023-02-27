@@ -3,7 +3,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import Link from "next/link";
 import Image from "next/image";
 import { Blurhash } from "react-blurhash";
-import { api, RefCacheContext, useEntry, usePermission } from "lib/api";
+import { SDK, RefCacheContext, useEntry, usePermission } from "lib/sdk";
 
 import { SitePage } from "components/SitePage";
 import { InlineMDT, MDTContext, RenderMDT } from "components/markdown-mdt/mdt";
@@ -20,9 +20,9 @@ import { StickyHeader } from "./widgets/StickyHeader";
 
 interface Props {
     /** The entry key (either its key or VNID) */
-    entrykey: api.VNID | string;
+    entrykey: SDK.VNID | string;
     /** The entry, as visible to the public (to a user with no permissions) */
-    publicEntry?: api.EntryData;
+    publicEntry?: SDK.EntryData;
 }
 
 /**
@@ -43,12 +43,12 @@ interface Props {
 export const EntryPage: React.FunctionComponent<Props> = function (props) {
     const [entry, entryError] = useEntry(props.entrykey, props.publicEntry);
     const intl = useIntl();
-    const canProposeEdits = usePermission(api.CorePerm.proposeEditToEntry, { entryId: entry?.id });
+    const canProposeEdits = usePermission(SDK.CorePerm.proposeEditToEntry, { entryId: entry?.id });
 
     const mdtContext = React.useMemo(() => new MDTContext({ entryId: entry?.id }), [entry?.id]);
 
     if (entryError) {
-        if (entryError instanceof api.NotAuthorized) {
+        if (entryError instanceof SDK.NotAuthorized) {
             return (
                 <SitePage title={defineMessage({ defaultMessage: "Not Authorized", id: "ZY2CvS" })}>
                     <ErrorMessage>
@@ -56,7 +56,7 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                     </ErrorMessage>
                 </SitePage>
             );
-        } else if (entryError instanceof api.NotAuthenticated) {
+        } else if (entryError instanceof SDK.NotAuthenticated) {
             return (
                 <SitePage title={defineMessage({ defaultMessage: "Login required", id: "5ZX5lS" })}>
                     <ErrorMessage>
@@ -174,7 +174,7 @@ export const EntryPage: React.FunctionComponent<Props> = function (props) {
                                 loader={imgThumbnailLoader}
                                 alt=""
                                 fill
-                                className={`${entry.features.HeroImage.sizing === api.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
+                                className={`${entry.features.HeroImage.sizing === SDK.ImageSizingMode.Contain ? "object-contain" : "object-cover"}`}
                                 sizes="1000px"
                                 priority
                             />

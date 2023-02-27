@@ -1,5 +1,5 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { CorePerm, PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
+import { CorePerm, PropertyMode, PropertyType } from "neolace/deps/neolace-sdk.ts";
 
 import { Property } from "neolace/core/schema/Property.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";

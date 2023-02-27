@@ -1,9 +1,9 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
-import { VNID } from "neolace-api";
+import { VNID } from "neolace-sdk";
 
 import { noTranslationNeeded, TranslatableString } from "components/utils/i18n";
-import { useSchema } from "lib/api";
+import { useSchema } from "lib/sdk";
 import { ErrorMessage } from "./ErrorMessage";
 import { SelectBox, SelectOption } from "../form-input/SelectBox";
 

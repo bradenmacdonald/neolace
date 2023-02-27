@@ -1,4 +1,4 @@
-import { EntryTypeColor, PropertyMode, PropertyType, SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { EntryTypeColor, PropertyMode, PropertyType, SiteSchemaData } from "neolace/deps/neolace-sdk.ts";
 
 // Type helper to ensure that the schema is a valid SiteSchemaData without
 // collapsing the type down to just "SiteSchemaData"

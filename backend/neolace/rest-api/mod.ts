@@ -4,7 +4,7 @@
 import * as log from "std/log/mod.ts";
 import { Drash } from "neolace/deps/drash.ts";
 import { EmptyResultError, FieldValidationError, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
-import * as api from "neolace/deps/neolace-api.ts";
+import * as SDK from "neolace/deps/neolace-sdk.ts";
 import { PathError } from "neolace/deps/computed-types.ts";
 
 import { getGraph } from "neolace/core/graph.ts";
@@ -35,8 +35,8 @@ type JsonCompatibleValue = string | boolean | Record<string, unknown> | null | u
 export class NeolaceHttpResource extends Drash.Resource {
     method<Response extends JsonCompatibleValue, RequestBody extends JsonCompatibleValue = undefined>(
         metadata: {
-            responseSchema: api.schemas.Validator<Response>;
-            requestBodySchema?: api.schemas.Validator<RequestBody>;
+            responseSchema: SDK.schemas.Validator<Response>;
+            requestBodySchema?: SDK.schemas.Validator<RequestBody>;
             description?: string;
             notes?: string;
         },
@@ -44,9 +44,9 @@ export class NeolaceHttpResource extends Drash.Resource {
             args: {
                 request: NeolaceHttpRequest;
                 response: Drash.Response;
-                bodyData: api.schemas.Type<api.schemas.Validator<RequestBody>>;
+                bodyData: SDK.schemas.Type<SDK.schemas.Validator<RequestBody>>;
             },
-        ) => Promise<api.schemas.Type<api.schemas.Validator<Response>>>,
+        ) => Promise<SDK.schemas.Type<SDK.schemas.Validator<Response>>>,
     ) {
         return async (request: Drash.Request, response: Drash.Response): Promise<void> => {
             this.setCorsHeaders(request, response);
@@ -66,19 +66,19 @@ export class NeolaceHttpResource extends Drash.Resource {
                 response.json(responseBodyValidated);
             } catch (err: unknown) {
                 // Log errors as structured JSON objects
-                if (err instanceof api.ApiError) {
+                if (err instanceof SDK.ApiError) {
                     response.status = err.statusCode;
                     const errorData: Record<string, unknown> = { message: err.message };
                     let logMessage = err.message;
-                    if (err instanceof api.InvalidRequest) {
+                    if (err instanceof SDK.InvalidRequest) {
                         errorData.reason = err.reason;
                         logMessage = `${err.reason} ` + logMessage;
                     }
-                    if (err instanceof api.InvalidEdit) {
+                    if (err instanceof SDK.InvalidEdit) {
                         errorData.context = err.context;
                         logMessage += ` (context: ${JSON.stringify(err.context)})`;
                     }
-                    if (err instanceof api.InvalidFieldValue) {
+                    if (err instanceof SDK.InvalidFieldValue) {
                         errorData.fieldErrors = err.fieldErrors;
                         logMessage += ` (fieldErrors: ${JSON.stringify(err.fieldErrors)})`;
                     }
@@ -114,8 +114,8 @@ export class NeolaceHttpResource extends Drash.Resource {
 
     private validateRequestBody<DataShape>(
         request: NeolaceHttpRequest,
-        schema?: api.schemas.Validator<DataShape>,
-    ): api.schemas.Type<api.schemas.Validator<DataShape>> {
+        schema?: SDK.schemas.Validator<DataShape>,
+    ): SDK.schemas.Type<SDK.schemas.Validator<DataShape>> {
         if (schema === undefined) {
             // deno-lint-ignore no-explicit-any
             return undefined as any;
@@ -129,7 +129,7 @@ export class NeolaceHttpResource extends Drash.Resource {
             if (validationError instanceof Error && Array.isArray((validationError as any).errors)) {
                 // deno-lint-ignore no-explicit-any
                 const errors: PathError[] = (validationError as any).errors;
-                throw new api.InvalidFieldValue(errors.map((pe) => ({
+                throw new SDK.InvalidFieldValue(errors.map((pe) => ({
                     fieldPath: pe.path.join("."),
                     message: pe.error.message,
                 })));
@@ -164,7 +164,7 @@ export class NeolaceHttpResource extends Drash.Resource {
             return { siteId };
         } catch (err) {
             if (err instanceof EmptyResultError) {
-                throw new api.NotFound(`Site with short ID ${siteKey} not found.`);
+                throw new SDK.NotFound(`Site with short ID ${siteKey} not found.`);
             } else {
                 throw err;
             }
@@ -174,14 +174,14 @@ export class NeolaceHttpResource extends Drash.Resource {
     protected requireUser(request: NeolaceHttpRequest): AuthenticatedUserData {
         const user = request.user;
         if (user === undefined) {
-            throw new api.NotAuthenticated();
+            throw new SDK.NotAuthenticated();
         }
         return user;
     }
 
     protected async requirePermission(
         request: NeolaceHttpRequest,
-        verb: api.PermissionName | api.PermissionName[],
+        verb: SDK.PermissionName | SDK.PermissionName[],
         object?: ActionObject,
     ): Promise<void> {
         const checksPassed = await this.hasPermission(request, verb, object);
@@ -189,10 +189,10 @@ export class NeolaceHttpResource extends Drash.Resource {
         if (!checksPassed) {
             if (request.user?.id === undefined) {
                 // We don't know who this user is, so we don't know if they have permission or not.
-                throw new api.NotAuthenticated();
+                throw new SDK.NotAuthenticated();
             } else {
                 // We know who this user is, and they're not allowed to do that.
-                throw new api.NotAuthorized("You do not have sufficient permissions.");
+                throw new SDK.NotAuthorized("You do not have sufficient permissions.");
             }
         }
     }
@@ -207,7 +207,7 @@ export class NeolaceHttpResource extends Drash.Resource {
 
     protected async hasPermission(
         request: NeolaceHttpRequest,
-        verb: api.PermissionName | api.PermissionName[],
+        verb: SDK.PermissionName | SDK.PermissionName[],
         object?: ActionObject,
     ): Promise<boolean> {
         if (request.user?.id === SYSTEM_VNID) {
@@ -328,7 +328,7 @@ export function adaptErrors(...mapping: (string | ConvertErrorPathToField)[]) {
                     throw err;
                 }
             });
-            throw new api.InvalidFieldValue(fieldErrors);
+            throw new SDK.InvalidFieldValue(fieldErrors);
         }
 
         // We don't know what this error is - it will result in an "Internal Server Error"
@@ -352,14 +352,14 @@ adaptErrors.remap = (errorPath: string, requestPath: string) => (field: string) 
 function convertStandardErrors(err: Error): void {
     if (err.name === "Neo4jError") {
         if (err.message.match(/Node(.*) already exists with label `Human` and property `email`/)) {
-            throw new api.InvalidRequest(
-                api.InvalidRequestReason.EmailAlreadyRegistered,
+            throw new SDK.InvalidRequest(
+                SDK.InvalidRequestReason.EmailAlreadyRegistered,
                 "A user account is already registered with that email address.",
             );
         }
     } else if (err.message.match(/The username ".*" is already taken./)) {
-        throw new api.InvalidRequest(api.InvalidRequestReason.UsernameAlreadyRegistered, err.message);
+        throw new SDK.InvalidRequest(SDK.InvalidRequestReason.UsernameAlreadyRegistered, err.message);
     }
 }
 
-export { api, Drash, getGraph, log };
+export { Drash, getGraph, log, SDK };

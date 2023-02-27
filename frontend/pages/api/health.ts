@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { client } from "lib/api";
+import { client } from "lib/sdk";
 
 /**
  * This page can be used to confirm that the frontend is working.

@@ -1,5 +1,5 @@
 import "lib/keratin-authn/keratin-authn.min";
-import * as api from "neolace-api";
+import * as SDK from "neolace-sdk";
 
 import { API_SERVER_URL, IN_BROWSER } from "lib/config";
 import { getSessionToken } from "./authentication";
@@ -19,7 +19,7 @@ async function getExtraHeadersForRequest(): Promise<Record<string, string>> {
     return {};
 }
 
-export const client = new api.NeolaceApiClient({
+export const client = new SDK.NeolaceApiClient({
     basePath: API_SERVER_URL,
     fetchApi: globalThis.fetch.bind(globalThis),
     getExtraHeadersForRequest,

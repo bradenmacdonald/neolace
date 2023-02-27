@@ -1,4 +1,4 @@
-import * as api from "neolace/deps/neolace-api.ts";
+import * as api from "neolace/deps/neolace-sdk.ts";
 import { VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 
 type EditCode = api.AnyEdit["code"];

@@ -1,8 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 import { EntryLink } from "components/widgets/EntryLink";
-import { MDT, VNID } from "neolace-api";
+import { MDT, VNID } from "neolace-sdk";
 import { LookupValue } from "components/widgets/LookupValue";
 import { FormattedMessage } from "react-intl";
 import { HoverClickNote } from "components/widgets/HoverClickNote";

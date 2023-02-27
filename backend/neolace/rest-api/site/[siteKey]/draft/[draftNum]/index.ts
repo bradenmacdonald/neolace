@@ -1,18 +1,18 @@
-import { api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { getDraft, getDraftIdFromRequest } from "neolace/rest-api/site/[siteKey]/draft/_helpers.ts";
 
 export class DraftResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/draft/:draftNum"];
 
     GET = this.method({
-        responseSchema: api.DraftSchema,
+        responseSchema: SDK.DraftSchema,
         description: "Get a draft",
     }, async ({ request }) => {
         // Permissions and parameters:
         const { siteId } = await this.getSiteDetails(request);
         const draftId = await getDraftIdFromRequest(request, siteId);
-        await this.requirePermission(request, api.CorePerm.viewDraft, { draftId });
-        const flags = this.getRequestFlags(request, api.GetDraftFlags);
+        await this.requirePermission(request, SDK.CorePerm.viewDraft, { draftId });
+        const flags = this.getRequestFlags(request, SDK.GetDraftFlags);
 
         // Response:
         const graph = await getGraph();

@@ -1,5 +1,5 @@
 import { C } from "neolace/deps/vertex-framework.ts";
-import { CreateProperty, PropertyMode, PropertyType, VNID } from "neolace/deps/neolace-api.ts";
+import { CreateProperty, PropertyMode, PropertyType, VNID } from "neolace/deps/neolace-sdk.ts";
 import { defineImplementation } from "neolace/core/edit/implementations.ts";
 import { Property, Site } from "neolace/core/mod.ts";
 import { doUpdateProperty } from "./UpdateProperty.ts";

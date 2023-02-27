@@ -1,4 +1,4 @@
-import { api, assertEquals, assertRejects, getClient, group, setTestIsolation, test } from "neolace/rest-api/tests.ts";
+import { assertEquals, assertRejects, getClient, group, SDK, setTestIsolation, test } from "neolace/rest-api/tests.ts";
 
 group("find.ts", () => {
     group("Site Lookup API", () => {
@@ -41,7 +41,7 @@ group("find.ts", () => {
             const client = await getClient(/* no authentication */);
             await assertRejects(
                 () => client.getSite({ domain: "adjfdasjfioashtiasdhfkjasdhf.asdfasdf.no" }),
-                api.NotFound,
+                SDK.NotFound,
                 `Site with domain \"adjfdasjfioashtiasdhfkjasdhf.asdfasdf.no\" not found.`,
             );
         });

@@ -1,4 +1,4 @@
-import { api, assertEquals, assertRejects, getClient, group, setTestIsolation, test } from "neolace/rest-api/tests.ts";
+import { assertEquals, assertRejects, getClient, group, SDK, setTestIsolation, test } from "neolace/rest-api/tests.ts";
 import { getGraph } from "neolace/rest-api/mod.ts";
 import { CreateBot } from "neolace/core/User.ts";
 import { UpdateGroup } from "neolace/core/permissions/Group.ts";
@@ -127,7 +127,7 @@ group("index.ts", () => {
 
         await assertRejects(
             () => client.getSiteUsers(),
-            api.NotAuthorized,
+            SDK.NotAuthorized,
         );
     });
 });

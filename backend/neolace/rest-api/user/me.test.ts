@@ -1,4 +1,4 @@
-import { api, assertEquals, assertRejects, getClient, group, setTestIsolation, test } from "neolace/rest-api/tests.ts";
+import { assertEquals, assertRejects, getClient, group, SDK, setTestIsolation, test } from "neolace/rest-api/tests.ts";
 
 group("me.ts", () => {
     group("Get information about my own account", () => {
@@ -22,7 +22,7 @@ group("me.ts", () => {
 
             await assertRejects(
                 () => client.whoAmI(),
-                api.NotAuthenticated,
+                SDK.NotAuthenticated,
             );
         });
     });

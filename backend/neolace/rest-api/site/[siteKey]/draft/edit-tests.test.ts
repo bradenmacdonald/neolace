@@ -1,5 +1,4 @@
 import {
-    api,
     assert,
     assertEquals,
     assertFalse,
@@ -7,13 +6,14 @@ import {
     assertRejects,
     getClient,
     group,
+    SDK,
     setTestIsolation,
     test,
 } from "neolace/rest-api/tests.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 
 /** Helper function to apply edits for this test case, using an API client. */
-async function doEdit(client: api.NeolaceApiClient, ...edits: api.AnyEdit[]): Promise<void> {
+async function doEdit(client: SDK.NeolaceApiClient, ...edits: SDK.AnyEdit[]): Promise<void> {
     const draftDefaults = { title: "A Test Draft" };
     return client.createDraft({
         ...draftDefaults,
@@ -32,8 +32,8 @@ group("edit tests", () => {
             const before = await client.getEntry(ponderosaEntryId);
             await doEdit(
                 client,
-                { code: api.SetEntryName.code, data: { entryId: ponderosaEntryId, name: "New Name 👍" } },
-                { code: api.SetEntryDescription.code, data: { entryId: ponderosaEntryId, description: "👍👍👍" } },
+                { code: SDK.SetEntryName.code, data: { entryId: ponderosaEntryId, name: "New Name 👍" } },
+                { code: SDK.SetEntryDescription.code, data: { entryId: ponderosaEntryId, description: "👍👍👍" } },
             );
             const after = await client.getEntry(ponderosaEntryId);
             assertEquals(before.name, defaultData.entries.ponderosaPine.name);
@@ -47,11 +47,11 @@ group("edit tests", () => {
             const client = await getClient(defaultData.users.admin, defaultData.otherSite.key);
             const err = await assertRejects(() =>
                 doEdit(client, {
-                    code: api.SetEntryName.code,
+                    code: SDK.SetEntryName.code,
                     data: { entryId: ponderosaEntryId, name: "New Name 👍" },
                 })
             );
-            assertInstanceOf(err, api.InvalidEdit);
+            assertInstanceOf(err, SDK.InvalidEdit);
             assertEquals(err.context.entryId, ponderosaEntryId);
             assertEquals(err.message, `Cannot set change the entry's name - entry does not exist.`);
         });
@@ -61,11 +61,11 @@ group("edit tests", () => {
             const client = await getClient(defaultData.users.admin, defaultData.otherSite.key);
             const err = await assertRejects(() =>
                 doEdit(client, {
-                    code: api.SetEntryDescription.code,
+                    code: SDK.SetEntryDescription.code,
                     data: { entryId: ponderosaEntryId, description: "Desc 👍" },
                 })
             );
-            assertInstanceOf(err, api.InvalidEdit);
+            assertInstanceOf(err, SDK.InvalidEdit);
             assertEquals(err.context.entryId, ponderosaEntryId);
             assertEquals(err.message, `Cannot set change the entry's description - entry does not exist.`);
         });
@@ -81,7 +81,7 @@ group("edit tests", () => {
             const client = await getClient(defaultData.users.admin, defaultData.site.key);
 
             const getEntry = () =>
-                client.getEntry(entryId, { flags: [api.GetEntryFlags.IncludePropertiesSummary] as const });
+                client.getEntry(entryId, { flags: [SDK.GetEntryFlags.IncludePropertiesSummary] as const });
             const before = await getEntry();
             const getValue = (entry: typeof before) =>
                 entry.propertiesSummary.find((p) => p.propertyKey === propertyKey)?.value;
@@ -91,7 +91,7 @@ group("edit tests", () => {
 
             // Now we give it a value:
             await doEdit(client, {
-                code: api.AddPropertyFact.code,
+                code: SDK.AddPropertyFact.code,
                 data: {
                     entryId,
                     propertyKey,
@@ -108,7 +108,7 @@ group("edit tests", () => {
             // Now we give it a second value:
 
             await doEdit(client, {
-                code: api.AddPropertyFact.code,
+                code: SDK.AddPropertyFact.code,
                 data: {
                     entryId,
                     propertyKey,
@@ -142,7 +142,7 @@ group("edit tests", () => {
             // delete a property fact that does not exist:
             const err = await assertRejects(() =>
                 doEdit(client, {
-                    code: api.AddPropertyFact.code,
+                    code: SDK.AddPropertyFact.code,
                     data: {
                         entryId: ponderosaEntryId,
                         propertyKey,
@@ -152,7 +152,7 @@ group("edit tests", () => {
                     },
                 })
             );
-            assertInstanceOf(err, api.InvalidEdit);
+            assertInstanceOf(err, SDK.InvalidEdit);
             assertEquals(err.context.propertyKey, propertyKey);
             assertEquals(err.context.toEntryId, VNID("_FOOBAR"));
             assertEquals(err.context.fromEntryId, ponderosaEntryId);
@@ -172,7 +172,7 @@ group("edit tests", () => {
             const client = await getClient(defaultData.users.admin, defaultData.site.key);
 
             const getEntry = () =>
-                client.getEntry(entryId, { flags: [api.GetEntryFlags.IncludePropertiesSummary] as const });
+                client.getEntry(entryId, { flags: [SDK.GetEntryFlags.IncludePropertiesSummary] as const });
             const before = await getEntry();
             const getValue = (entry: typeof before) =>
                 entry.propertiesSummary.find((p) => p.propertyKey === propertyKey)?.value;
@@ -187,7 +187,7 @@ group("edit tests", () => {
 
             // Now we change the property value:
             await doEdit(client, {
-                code: api.UpdatePropertyFact.code,
+                code: SDK.UpdatePropertyFact.code,
                 data: {
                     entryId,
                     propertyFactId,
@@ -208,7 +208,7 @@ group("edit tests", () => {
             const client = await getClient(defaultData.users.admin, defaultData.site.key);
 
             const getEntry = () =>
-                client.getEntry(entryId, { flags: [api.GetEntryFlags.IncludePropertiesSummary] as const });
+                client.getEntry(entryId, { flags: [SDK.GetEntryFlags.IncludePropertiesSummary] as const });
             const before = await getEntry();
             const getValue = (entry: typeof before) =>
                 entry.propertiesSummary.find((p) => p.propertyKey === propertyKey)?.value;
@@ -224,7 +224,7 @@ group("edit tests", () => {
             // Now we change the property value:
             const newGenusId = defaultData.entries.genusThuja.id;
             await doEdit(client, {
-                code: api.UpdatePropertyFact.code,
+                code: SDK.UpdatePropertyFact.code,
                 data: {
                     entryId,
                     propertyFactId,
@@ -249,7 +249,7 @@ group("edit tests", () => {
             const client = await getClient(defaultData.users.admin, defaultData.site.key);
             const originalEntry = await client.getEntry(
                 defaultData.entries.genusCupressus.id,
-                { flags: [api.GetEntryFlags.IncludePropertiesSummary] as const },
+                { flags: [SDK.GetEntryFlags.IncludePropertiesSummary] as const },
             );
             const propertyFact = originalEntry.propertiesSummary?.find(
                 (e) => e.propertyKey === defaultData.schema.properties.parentFamily.key,
@@ -261,17 +261,17 @@ group("edit tests", () => {
 
             // now delete the property value
             await doEdit(client, {
-                code: api.DeletePropertyFact.code,
+                code: SDK.DeletePropertyFact.code,
                 data: {
                     entryId: originalEntry.id,
-                    propertyFactId: VNID((propertyFact.value.annotations?.propertyFactId as api.StringValue).value),
+                    propertyFactId: VNID((propertyFact.value.annotations?.propertyFactId as SDK.StringValue).value),
                 },
             });
 
             // check that the property got deleted.
             const modifiedEntry = await client.getEntry(
                 defaultData.entries.genusCupressus.id,
-                { flags: [api.GetEntryFlags.IncludePropertiesSummary] as const },
+                { flags: [SDK.GetEntryFlags.IncludePropertiesSummary] as const },
             );
             const newPropertyFact = modifiedEntry.propertiesSummary?.find(
                 (e) => e.propertyKey === defaultData.schema.properties.parentFamily.key,
@@ -296,15 +296,15 @@ group("edit tests", () => {
             const entryId = defaultData.entries.jeffreyPine.id;
 
             // Try to delete an entry. It should fail:
-            const doDelete = () => doEdit(client, { code: api.DeleteEntry.code, data: { entryId } });
+            const doDelete = () => doEdit(client, { code: SDK.DeleteEntry.code, data: { entryId } });
             await assertRejects(
                 doDelete,
-                api.InvalidEdit,
+                SDK.InvalidEdit,
                 "For now, entries with relationships cannot be deleted. Remove the relationships, then delete the entry.",
             );
 
             // Now delete the relationship:
-            const entryData = await client.getEntry(entryId, { flags: [api.GetEntryFlags.IncludeRawProperties] });
+            const entryData = await client.getEntry(entryId, { flags: [SDK.GetEntryFlags.IncludeRawProperties] });
             const propertyValue = entryData.propertiesRaw?.find((p) =>
                 p.propertyKey === defaultData.schema.properties.parentGenus.key
             );
@@ -313,14 +313,14 @@ group("edit tests", () => {
                 throw new Error("Test error - couldn't determine relationship property fact ID.");
             }
             await doEdit(client, {
-                code: api.DeletePropertyFact.code,
+                code: SDK.DeletePropertyFact.code,
                 data: { entryId, propertyFactId: relationshipId },
             });
 
             // Now the delete should succeed:
             await doDelete();
 
-            await assertRejects(() => client.getEntry(entryId), api.NotFound);
+            await assertRejects(() => client.getEntry(entryId), SDK.NotFound);
         });
     });
 
@@ -332,7 +332,7 @@ group("edit tests", () => {
             // first, create the entry type (in the schema)
             const entryTypeKey = "ET1";
             await doEdit(client, {
-                code: api.CreateEntryType.code,
+                code: SDK.CreateEntryType.code,
                 data: {
                     key: entryTypeKey,
                     name: "Temp Entry Type",
@@ -342,7 +342,7 @@ group("edit tests", () => {
             // Create an entry of that type
             const entryId = VNID();
             await doEdit(client, {
-                code: api.CreateEntry.code,
+                code: SDK.CreateEntry.code,
                 data: {
                     entryId: entryId,
                     description: "Test entry",
@@ -353,15 +353,15 @@ group("edit tests", () => {
             });
 
             // Now try to delete the property from the schema. It should fail:
-            const doDelete = () => doEdit(client, { code: api.DeleteEntryType.code, data: { entryTypeKey } });
+            const doDelete = () => doEdit(client, { code: SDK.DeleteEntryType.code, data: { entryTypeKey } });
             await assertRejects(
                 doDelete,
-                api.InvalidEdit,
+                SDK.InvalidEdit,
                 "Entry types cannot be deleted while there are still entries of that type.",
             );
 
             // Now delete the entry:
-            await doEdit(client, { code: api.DeleteEntry.code, data: { entryId } });
+            await doEdit(client, { code: SDK.DeleteEntry.code, data: { entryId } });
 
             // Now the delete should succeed:
             await doDelete();
@@ -380,12 +380,12 @@ group("edit tests", () => {
             // first, create the property (in the schema)
             const propertyKey = "P1";
             await doEdit(client, {
-                code: api.CreateProperty.code,
+                code: SDK.CreateProperty.code,
                 data: {
                     key: propertyKey,
                     name: "Temp Property",
                     appliesTo: [{ entryTypeKey: defaultData.schema.entryTypes.ETSPECIES.key }],
-                    type: api.PropertyType.Value,
+                    type: SDK.PropertyType.Value,
                 },
             });
 
@@ -393,7 +393,7 @@ group("edit tests", () => {
             const entryId = defaultData.entries.jackPine.id;
             const propertyFactId = VNID();
             await doEdit(client, {
-                code: api.AddPropertyFact.code,
+                code: SDK.AddPropertyFact.code,
                 data: {
                     entryId,
                     propertyKey,
@@ -403,15 +403,15 @@ group("edit tests", () => {
             });
 
             // Now try to delete the property from the schema. It should fail:
-            const doDelete = () => doEdit(client, { code: api.DeleteProperty.code, data: { key: propertyKey } });
+            const doDelete = () => doEdit(client, { code: SDK.DeleteProperty.code, data: { key: propertyKey } });
             await assertRejects(
                 doDelete,
-                api.InvalidEdit,
+                SDK.InvalidEdit,
                 "Properties cannot be deleted while there are still entries with values set for that property.",
             );
 
             // Now delete the property fact from the entry:
-            await doEdit(client, { code: api.DeletePropertyFact.code, data: { entryId, propertyFactId } });
+            await doEdit(client, { code: SDK.DeletePropertyFact.code, data: { entryId, propertyFactId } });
 
             // Now the delete should succeed:
             await doDelete();

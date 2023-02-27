@@ -1,5 +1,5 @@
 import React from "react";
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 import { BaseEditor, createEditor, Element, Node, Transforms, Range, Editor, BaseSelection } from "slate";
 import { ReactEditor, withReact } from "slate-react";
 import { HistoryEditor, withHistory } from "slate-history";
@@ -11,9 +11,9 @@ export type NeolaceSlateEditor = BaseEditor & ReactEditor & HistoryEditor;
  * 'entry("_VNID")' entry identifier, so that we aren't displaying the (unhelpful) VNID to the user, and we can
  * instead display a nice friendly entry widget.
  */
-export interface VoidEntryNode extends api.MDT.CustomInlineNode {
+export interface VoidEntryNode extends SDK.MDT.CustomInlineNode {
     type: "custom-void-entry";
-    entryId: api.VNID;
+    entryId: SDK.VNID;
     children: [{ type: "text"; text: "" }];
 }
 
@@ -22,7 +22,7 @@ export interface VoidEntryNode extends api.MDT.CustomInlineNode {
  * 'prop("_VNID")' property identifier, so that we aren't displaying the (unhelpful) VNID to the user, and we can
  * instead display a nice friendly property name.
  */
-export interface VoidPropNode extends api.MDT.CustomInlineNode {
+export interface VoidPropNode extends SDK.MDT.CustomInlineNode {
     type: "custom-void-property";
     propertyKey: string;
     children: [{ type: "text"; text: "" }];
@@ -32,7 +32,7 @@ export interface VoidPropNode extends api.MDT.CustomInlineNode {
  * This node is not part of MDT or lookup expressions but is used in our editor as a placeholder for a
  * 'entryType("_VNID")' entry type identifier.
  */
-export interface VoidEntryTypeNode extends api.MDT.CustomInlineNode {
+export interface VoidEntryTypeNode extends SDK.MDT.CustomInlineNode {
     type: "custom-void-entry-type";
     entryTypeKey: string;
     children: [{ type: "text"; text: "" }];
@@ -44,7 +44,7 @@ export interface VoidEntryTypeNode extends api.MDT.CustomInlineNode {
  *
  * See Slate.js docs for details on "Marks".
  */
-export interface ExtendedTextNode extends api.MDT.TextNode {
+export interface ExtendedTextNode extends SDK.MDT.TextNode {
     strong?: boolean,
     emphasis?: boolean,
     sub?: boolean,
@@ -57,7 +57,7 @@ export interface ExtendedTextNode extends api.MDT.TextNode {
     wasSelected?: boolean,
 }
 
-export type NeolaceSlateElement = api.MDT.Node | VoidEntryNode | VoidPropNode | VoidEntryTypeNode | ExtendedTextNode;
+export type NeolaceSlateElement = SDK.MDT.Node | VoidEntryNode | VoidPropNode | VoidEntryTypeNode | ExtendedTextNode;
 
 /** A generic empty Slate document using our Node types. */
 export const emptyDocument: NeolaceSlateElement[] = [{
@@ -174,7 +174,7 @@ export function useForceUpdate() {
  */
 export function stringValueToSlateDoc(value: string): NeolaceSlateElement[] {
     return value.split("\n").map((line) => {
-        const parts: (api.MDT.TextNode | VoidEntryNode | VoidPropNode | VoidEntryTypeNode)[] = [];
+        const parts: (SDK.MDT.TextNode | VoidEntryNode | VoidPropNode | VoidEntryTypeNode)[] = [];
         // Search the string and replace all `prop("_VNID")`, `entry("_VNID")`, and
         // `entryType("_VNID")` occurrences with a custom void element that looks nicer than the VNID.
         while (true) {
@@ -191,7 +191,7 @@ export function stringValueToSlateDoc(value: string): NeolaceSlateElement[] {
                 // First add any text that comes before the prop/entry/entryType void. This may be an empty string but
                 // we still need that so that the user can position their cursor before the void.
                 parts.push({ type: "text", text: line.substring(0, nextProp.index) });
-                const type = nextProp[2], id = nextProp[3] as api.VNID;
+                const type = nextProp[2], id = nextProp[3] as SDK.VNID;
                 if (type === "entry") {
                     parts.push({ type: "custom-void-entry", entryId: id, children: [{ type: "text", text: "" }] });
                 } else if (type === "prop") {
@@ -316,7 +316,7 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
                     }
                 }
                 // Now add the escaped text:
-                result += api.MDT.escapeText(n.text);
+                result += SDK.MDT.escapeText(n.text);
             } else {
                 // In "Plain Text" escape mode, we ignore all marks and don't do any escaping.
                 result += n.text;
@@ -372,7 +372,7 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
  * structure), so this function converts from our MDT tree to a Slate.js document tree. Note that Slate.js itself
  * might modify the tree even more, e.g. to insert 'text' nodes before/after/between inline elements.
  */
-function cleanMdtNodeForSlate(node: api.MDT.Node|api.MDT.RootNode, marks: Omit<ExtendedTextNode, "text"|"type"> = {}): api.MDT.Node[] {
+function cleanMdtNodeForSlate(node: SDK.MDT.Node|SDK.MDT.RootNode, marks: Omit<ExtendedTextNode, "text"|"type"> = {}): SDK.MDT.Node[] {
     let removeNode = false;
     marks = {...marks};
     if (node.type === "inline") {
@@ -420,7 +420,7 @@ function cleanMdtNodeForSlate(node: api.MDT.Node|api.MDT.RootNode, marks: Omit<E
 
 export function parseMdtStringToSlateDoc(mdt: string, inline?: boolean): NeolaceSlateElement[] {
     if (inline) {
-        let children = cleanMdtNodeForSlate(api.MDT.tokenizeInlineMDT(mdt));
+        let children = cleanMdtNodeForSlate(SDK.MDT.tokenizeInlineMDT(mdt));
         if (children.length === 0) {
             // We always have to have at least one text child:
             children = [{ type: "text", text: "" }];
@@ -431,7 +431,7 @@ export function parseMdtStringToSlateDoc(mdt: string, inline?: boolean): Neolace
             children,
         }];
     } else {
-        return cleanMdtNodeForSlate(api.MDT.tokenizeMDT(mdt));
+        return cleanMdtNodeForSlate(SDK.MDT.tokenizeMDT(mdt));
     }
 }
 

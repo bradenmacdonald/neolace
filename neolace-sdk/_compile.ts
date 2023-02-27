@@ -17,7 +17,7 @@ await build({
     },
     package: {
         // package.json properties
-        name: "neolace-api",
+        name: "neolace-sdk",
         version: "0.0.0",
         description: "Neolace API Client, type definitions, and Markdown library.",
         license: "MIT",

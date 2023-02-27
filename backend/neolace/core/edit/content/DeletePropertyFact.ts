@@ -1,5 +1,5 @@
 import { C, Field } from "neolace/deps/vertex-framework.ts";
-import { DeletePropertyFact, InvalidEdit } from "neolace/deps/neolace-api.ts";
+import { DeletePropertyFact, InvalidEdit } from "neolace/deps/neolace-sdk.ts";
 import { defineImplementation, EditHadNoEffect } from "neolace/core/edit/implementations.ts";
 import { Entry, EntryType, PropertyFact, Site } from "neolace/core/mod.ts";
 

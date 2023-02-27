@@ -1,5 +1,5 @@
 import { C } from "neolace/deps/vertex-framework.ts";
-import { CreateEntry, InvalidEdit } from "neolace/deps/neolace-api.ts";
+import { CreateEntry, InvalidEdit } from "neolace/deps/neolace-sdk.ts";
 import { defineImplementation } from "neolace/core/edit/implementations.ts";
 import { Entry, EntryType } from "neolace/core/mod.ts";
 

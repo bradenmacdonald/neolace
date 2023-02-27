@@ -1,10 +1,10 @@
 import {
-    api,
     assertEquals,
     assertRejects,
     getClient,
     getSystemClient,
     group,
+    SDK,
     setTestIsolation,
     test,
 } from "neolace/rest-api/tests.ts";
@@ -62,7 +62,7 @@ group("entry/index.ts", () => {
             const client = await getSystemClient();
             await assertRejects(
                 () => client.eraseAllEntriesDangerously({ siteKey }), // Missing "confirm: danger",
-                api.InvalidRequest,
+                SDK.InvalidRequest,
             );
             assertEquals((await client.getEntries({ siteKey })).totalCount, Object.keys(defaultData.entries).length);
         });

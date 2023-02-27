@@ -1,6 +1,6 @@
 import { C, Field } from "neolace/deps/vertex-framework.ts";
 
-import { api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { BotUser, User } from "neolace/core/User.ts";
 import { makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { Group, GroupMaxDepth } from "neolace/core/permissions/Group.ts";
@@ -10,7 +10,7 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/user"];
 
     GET = this.method({
-        responseSchema: api.schemas.PaginatedResult(api.SiteUserSummary),
+        responseSchema: SDK.schemas.PaginatedResult(SDK.SiteUserSummary),
         description: "List users of this site",
         notes: "This lists all of the users that have been added as members of this site.",
     }, async ({ request }) => {
@@ -20,9 +20,9 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
         // Permissions and parameters:
         // First of all, the "site admin" permission is required to use this API at all.
         const permSubject = await this.getPermissionSubject(request);
-        await this.requirePermission(request, api.CorePerm.siteAdmin);
+        await this.requirePermission(request, SDK.CorePerm.siteAdmin);
         const page = BigInt(request.queryParam("page") ?? 1n);
-        if (page < 1n) throw new api.InvalidFieldValue([{ fieldPath: "page", message: "Invalid page number" }]);
+        if (page < 1n) throw new SDK.InvalidFieldValue([{ fieldPath: "page", message: "Invalid page number" }]);
         const limit = 25n; // Hard-coded page size for now.
         const skip = (page - 1n) * limit;
 
@@ -32,14 +32,14 @@ export class SiteUserIndexResource extends NeolaceHttpResource {
          */
         const viewSiteUserPermissionPredicate = await makeCypherCondition(
             permSubject,
-            api.CorePerm.siteAdminViewUser,
+            SDK.CorePerm.siteAdminViewUser,
             {},
             ["user", "group"],
         );
         /** This represents whether or not the user has permission to view the groups that each user is in. */
         const viewSiteUserGroupsPermissionPredicate = await makeCypherCondition(
             permSubject,
-            api.CorePerm.siteAdminViewGroup,
+            SDK.CorePerm.siteAdminViewGroup,
             {},
             ["user", "group"],
         );

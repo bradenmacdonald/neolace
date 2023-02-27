@@ -2,7 +2,7 @@ import React from "react";
 import { NextPage } from "next";
 import { FormattedMessage, useIntl } from "react-intl";
 import {
-    api,
+    SDK,
     client,
     NEW,
     useSiteData,
@@ -13,7 +13,7 @@ import {
     DraftContext,
     UserStatus,
     useUser,
-} from "lib/api";
+} from "lib/sdk";
 
 import { SitePage } from "components/SitePage";
 import FourOhFour from "pages/404";
@@ -39,7 +39,7 @@ interface PageUrlQuery extends ParsedUrlQuery {
     entryId: string;
 }
 
-const emptyArray: api.AnyEdit[] = []; // Declare this out here so it doesn't change on every render of DraftEntrypage
+const emptyArray: SDK.AnyEdit[] = []; // Declare this out here so it doesn't change on every render of DraftEntrypage
 
 const DraftEntryEditPage: NextPage = function (_props) {
     const intl = useIntl();
@@ -52,14 +52,14 @@ const DraftEntryEditPage: NextPage = function (_props) {
 
     // *IF* we are creating a new entry from scratch, this will be its new VNID. Note that VNID() only works on the
     // client in this case, and generating it on the server wouldn't make sense anyways.
-    const [newEntryId] = React.useState(() => IN_BROWSER ? api.VNID() : api.VNID("_tbd"));
+    const [newEntryId] = React.useState(() => IN_BROWSER ? SDK.VNID() : SDK.VNID("_tbd"));
     const isNewEntry = query.entryId === "_";
-    const entryId: api.VNID = isNewEntry ? newEntryId : query.entryId as api.VNID;
+    const entryId: SDK.VNID = isNewEntry ? newEntryId : query.entryId as SDK.VNID;
 
     // Any edits that the user has made on this page now, but hasn't yet saved to a draft:
-    const [unsavedEdits, setUnsavedEdits] = React.useState<api.AnyEdit[]>([]);
-    const addUnsavedEdit = React.useCallback((newEdit: api.AnyEdit) => {
-        setUnsavedEdits((existingEdits) => api.consolidateEdits([...existingEdits, newEdit]));
+    const [unsavedEdits, setUnsavedEdits] = React.useState<SDK.AnyEdit[]>([]);
+    const addUnsavedEdit = React.useCallback((newEdit: SDK.AnyEdit) => {
+        setUnsavedEdits((existingEdits) => SDK.consolidateEdits([...existingEdits, newEdit]));
     }, []);
 
     const draftContext: DraftContextData = {
@@ -148,7 +148,7 @@ const DraftEntryEditPage: NextPage = function (_props) {
     const [schema] = useSchema({draftContext});
     const entryType = entry ? schema?.entryTypes[entry.entryType.key] : undefined;
 
-    if (siteError instanceof api.NotFound) {
+    if (siteError instanceof SDK.NotFound) {
         return <FourOhFour />;
     } else if (siteError) {
         return <ErrorMessage>{String(siteError)}</ErrorMessage>;
@@ -158,13 +158,13 @@ const DraftEntryEditPage: NextPage = function (_props) {
     // Are there any other errors?
     if (user.status === UserStatus.Anonymous) {
         content = <ErrorMessage>You need to log in before you can edit or create entries.</ErrorMessage>;
-    } else if (entryError instanceof api.NotFound) {
+    } else if (entryError instanceof SDK.NotFound) {
         content = <FourOhFour />;
     } else if (draftError) {
         content = <ErrorMessage>Draft error: {String(draftError)}</ErrorMessage>;
     } else if (entryError) {
         content = <ErrorMessage>Entry error: {String(entryError)}</ErrorMessage>;
-    } else if (draft?.status === api.DraftStatus.Accepted || draft?.status === api.DraftStatus.Cancelled) {
+    } else if (draft?.status === SDK.DraftStatus.Accepted || draft?.status === SDK.DraftStatus.Cancelled) {
         content = <ErrorMessage>This draft is no longer editable.</ErrorMessage>;
     } else {
         content = (

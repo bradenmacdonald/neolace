@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { api, getGraph, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { LookupContext } from "neolace/core/lookup/context.ts";
 import { getEntry } from "./entry/[entryId]/_helpers.ts";
 import { ReferenceCache } from "neolace/core/entry/reference-cache.ts";
@@ -10,7 +10,7 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/lookup"];
 
     GET = this.method({
-        responseSchema: api.EvaluateLookupSchema,
+        responseSchema: SDK.EvaluateLookupSchema,
         description: "Evaluate a lookup expression and return the result",
     }, async ({ request }) => {
         // Permissions and parameters:
@@ -19,7 +19,7 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
 
         const lookupString = request.queryParam("expression");
         if (!lookupString || lookupString.trim() === "") {
-            throw new api.InvalidFieldValue([{
+            throw new SDK.InvalidFieldValue([{
                 fieldPath: `expression`,
                 message: `Missing or empty lookup string`,
             }]);
@@ -31,7 +31,7 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
             try {
                 defaultPageSize = BigInt(pageSizeParam);
             } catch (_err: unknown) {
-                throw new api.InvalidFieldValue([{ fieldPath: "pageSize", message: "Invalid page size." }]);
+                throw new SDK.InvalidFieldValue([{ fieldPath: "pageSize", message: "Invalid page size." }]);
             }
             if (defaultPageSize < 1n || defaultPageSize > 100n) {
                 defaultPageSize = 20n;
@@ -47,12 +47,12 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
 
         // Check permissions:
         if (entry) {
-            await this.requirePermission(request, api.CorePerm.viewEntry, {
+            await this.requirePermission(request, SDK.CorePerm.viewEntry, {
                 entryId: entry.id,
                 entryTypeKey: entry.entryType.key,
             });
         } else {
-            await this.requirePermission(request, api.CorePerm.viewSite);
+            await this.requirePermission(request, SDK.CorePerm.viewSite);
         }
 
         const userId = request.user?.id;
@@ -61,8 +61,8 @@ export class EvaluateLookupResource extends NeolaceHttpResource {
             // Evaluate the expression. On LookupEvaluationError, this will return an ErrorValue.
             const value = await context.evaluateExpr(lookupString);
             if (value instanceof ErrorValue && value.error instanceof LookupParseError) {
-                throw new api.InvalidRequest(
-                    api.InvalidRequestReason.LookupExpressionParseError,
+                throw new SDK.InvalidRequest(
+                    SDK.InvalidRequestReason.LookupExpressionParseError,
                     value.error.message,
                 );
             }

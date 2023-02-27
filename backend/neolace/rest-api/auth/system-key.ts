@@ -1,4 +1,4 @@
-import { api, NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { createRandomToken } from "neolace/lib/secure-token.ts";
 import { hashSystemKey } from "neolace/rest-api/auth-middleware.ts";
 
@@ -6,9 +6,9 @@ export class SystemKeyResource extends NeolaceHttpResource {
     public paths = ["/auth/system-key"];
 
     GET = this.method({
-        responseSchema: api.schemas.Schema({
-            systemKey: api.schemas.string,
-            systemKeyHash: api.schemas.string,
+        responseSchema: SDK.schemas.Schema({
+            systemKey: SDK.schemas.string,
+            systemKeyHash: SDK.schemas.string,
         }),
         description:
             "Generate a secure system API key (you must still update the configuration manually before it will work though)",
