@@ -5,7 +5,7 @@ import { ParsedUrlQuery } from "querystring";
 import { api, getSiteData } from "lib/api";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { LookupExpressionInput } from "components/form-input";
+import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
 import { useRouter } from "next/router";
 import { LookupEvaluatorWithPagination } from "components/widgets/LookupEvaluator";
 import { MDTContext } from "components/markdown-mdt/mdt";

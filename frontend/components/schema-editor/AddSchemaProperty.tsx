@@ -3,7 +3,9 @@ import { FormattedMessage } from "react-intl";
 
 import { api, useSchema } from "lib/api";
 import { defineMessage } from "components/utils/i18n";
-import { Control, SelectBox, TextInput } from "components/form-input";
+import { Control } from "components/form-input/Control";
+import { SelectBox } from "components/form-input/SelectBox";
+import { TextInput } from "components/form-input/TextInput";
 import { slugify } from "lib/slugify";
 import { Button } from "components/widgets/Button";
 

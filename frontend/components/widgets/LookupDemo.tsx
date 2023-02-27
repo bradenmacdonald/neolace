@@ -3,7 +3,8 @@ import { api } from "lib/api";
 
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { LookupValue } from "./LookupValue";
-import { Control, LookupExpressionInput } from "components/form-input";
+import { Control } from "components/form-input/Form";
+import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
 import { defineMessage } from "components/utils/i18n";
 import { Frame, FrameBody, FrameHeader } from "./Frame";
 

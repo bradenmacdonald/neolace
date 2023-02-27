@@ -1,8 +1,8 @@
 import React, { ChangeEvent } from "react";
+import { useIntl } from "react-intl";
 import { useSearchBox, type UseSearchBoxProps } from "react-instantsearch-hooks-web";
-import { FormattedMessage, useIntl } from "react-intl";
 
-import { TextInput } from "components/form-input";
+import { TextInput } from "components/form-input/TextInput";
 import { useRouter } from "next/router";
 
 export const SearchBox: React.FunctionComponent<UseSearchBoxProps> = (props) => {

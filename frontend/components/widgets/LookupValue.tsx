@@ -14,7 +14,7 @@ import { EntryValue } from "./EntryValue";
 import { UiPluginsContext } from "../utils/ui-plugins";
 import { Icon } from "./Icon";
 import { LookupQuantityValue } from "./LookupQuantityValue";
-import { LookupExpressionInput } from "components/form-input";
+import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
 import { LookupDemo } from "./LookupDemo";
 
 interface LookupValueProps {

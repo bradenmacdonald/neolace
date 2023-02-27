@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from "react";
 import { useIntl } from "react-intl";
 
-import { TextInput } from "components/form-input";
+import { TextInput } from "components/form-input/TextInput";
 import { useRouter } from "next/router";
 
 // Note: The InstantSearch + TypeSense API code uses about 40kB gzipped so to keep our JS size small,

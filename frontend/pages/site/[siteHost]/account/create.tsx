@@ -5,13 +5,14 @@ import { FormattedMessage, useIntl } from "react-intl";
 
 import { api, client, getSiteData, SiteData, UserStatus, useUser } from "lib/api";
 import { SiteDataProvider, SitePage } from "components/SitePage";
-import { Control, Form, TextInput } from "components/form-input";
+import { Control, Form } from "components/form-input/Form";
 import { Button } from "components/widgets/Button";
 import { Redirect } from "components/utils/Redirect";
 import { Spinner } from "components/widgets/Spinner";
 import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { defineMessage } from "components/utils/i18n";
+import { TextInput } from "components/form-input/TextInput";
 
 interface PageProps {
     site: SiteData;

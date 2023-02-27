@@ -21,7 +21,7 @@ import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
 import { useRouter } from "next/router";
 import { ParsedUrlQuery } from "querystring";
-import { Control, Form, TextInput } from "components/form-input";
+import { Control, Form } from "components/form-input/Form";
 import { Button } from "components/widgets/Button";
 import { IN_BROWSER } from "lib/config";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
@@ -31,6 +31,7 @@ import { MainEditor } from "components/entry-editor/MainEditor";
 import { EditDescription } from "components/widgets/EditDescription";
 import { FilesEditor } from "components/entry-editor/FilesEditor";
 import { ArticleEditor } from "components/entry-editor/ArticleEditor";
+import { TextInput } from "components/form-input/TextInput";
 
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;

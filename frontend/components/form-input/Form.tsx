@@ -16,10 +16,8 @@ export const Form: React.FunctionComponent<FormProps> = (props) => {
     );
 };
 
+// Import helpers:
 import { Control as _Control } from "./Control";
-/** @deprecated Use import { Control } from "components/form-input" */
 export const Control = _Control;
-
 import { AutoControl as _AutoControl } from "./AutoControl";
-/** @deprecated Use import { AutoControl } from "components/form-input" */
 export const AutoControl = _AutoControl;

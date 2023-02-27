@@ -10,15 +10,7 @@ import { Tooltip } from "components/widgets/Tooltip";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { SuccessMessage } from "components/widgets/SuccessMessage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
-import {
-    AutoControl,
-    Control,
-    Form,
-    LookupExpressionInput,
-    MDTEditor,
-    SelectBox,
-    TextInput,
-} from "components/form-input";
+import { AutoControl, Control, Form } from "components/form-input/Form";
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { LookupValue } from "components/widgets/LookupValue";
@@ -26,6 +18,10 @@ import { api, RefCacheContext } from "lib/api";
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { DEVELOPMENT_MODE } from "lib/config";
 import { Frame, FrameBody, FrameHeader } from "components/widgets/Frame";
+import { TextInput } from "components/form-input/TextInput";
+import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
+import { MDTEditor } from "components/form-input/MDTEditor";
+import { SelectBox } from "components/form-input/SelectBox";
 
 const UIDemo = (props: { label: string; children: React.ReactNode }) => {
     return (

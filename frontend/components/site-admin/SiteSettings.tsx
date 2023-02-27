@@ -5,7 +5,9 @@ import type { AdminComponentProps } from "./site-admin";
 import { useSiteData } from "lib/api";
 import { Tab, TabBar } from "components/widgets/Tabs";
 import { defineMessage } from "components/utils/i18n";
-import { AutoControl, Form, MDTEditor, TextInput } from "components/form-input";
+import { AutoControl, Form } from "components/form-input/Form";
+import { TextInput } from "components/form-input/TextInput";
+import { MDTEditor } from "components/form-input/MDTEditor";
 
 function rgbTripleToHex(value: [r: number, g: number, b: number]): string {
     return '#' + value.map(component => component.toString(16).padStart(2, "0")).join("");
