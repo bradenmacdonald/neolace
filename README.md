@@ -1,6 +1,6 @@
 # neolace
 
-This monorepo contains the code for [neolace](https://neolace.com).
+This monorepo contains the code for [Neolace](https://neolace.com).
 
 Neolace is a tool for managing knowledge collaboratively - either privately
 within an organization or publicly online. It's a combination of a wiki, a
@@ -8,6 +8,16 @@ knowledge graph, a content management system, and a version control system. The
 focus is on making it easy to input, connect, and organize, and explore
 knowledge. Knowledge is not just facts or data, but also articles, explanations,
 discussions, and images.
+
+## Screenshots
+
+Viewing an entry:
+
+![a screenshot of reading an entry](./readme-screenshot-viewing.png)
+
+Creating a new entry using the UI:
+
+![a screenshot of the editor interface](./readme-screenshot-editor.png)
 
 ## What's in the monorepo
 
@@ -53,13 +63,15 @@ production deployment kit that includes Terraform code, best practices, and
 support. Whatever path you pick, please get in touch with us at team@neolace.com
 and we'll give you a hand.
 
-## Troubleshooting
+## Troubleshooting (Development Issues)
 
 ### Neo4j fails to start: `Neo4j is already running`
 
-If you see this error, you can fix by running `docker compose up neo4j --force-recreate`.
+If you see this error, you can fix by running `docker compose up neo4j --force-recreate`
 
-## Other howtos
+(Or `neo4j-test` if it's the test database server that failed.)
+
+## Other How-To Guides for Developers
 
 ### How to analyze the frontend bundle's size
 
