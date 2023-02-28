@@ -1,0 +1,459 @@
+entryTypes:
+  - key: theme
+    name: Theme
+    description: ''
+    keyPrefix: theme-
+    color: lime
+    abbreviation: TH
+    enabledFeatures: {}
+  - key: set
+    name: Set
+    description: >-
+      A LEGO set is a collection of interlocking plastic building blocks and
+      various other parts, such as wheels, windows, and doors, that are designed
+      to be assembled together to create a specific model or structure. Lego
+      sets come with instructions that guide users in building the model, and
+      they typically include all the necessary pieces needed to construct it.
+    keyPrefix: set-
+    color: blue
+    abbreviation: S
+    enabledFeatures: {}
+  - key: theme-group
+    name: Theme Group
+    description: >-
+      A group of related themes, usually themes which have the same name but
+      different parent themes.
+    keyPrefix: group-
+    color: emerald
+    abbreviation: TG
+    enabledFeatures: {}
+  - key: color
+    name: Color
+    description: ''
+    keyPrefix: color-
+    color: rose
+    abbreviation: C
+    enabledFeatures: {}
+  - key: part-category
+    name: Part Category
+    description: ''
+    keyPrefix: pc-
+    color: ''
+    abbreviation: PC
+    enabledFeatures: {}
+  - key: part
+    name: Part
+    description: ''
+    keyPrefix: part-
+    color: blue
+    abbreviation: ''
+    enabledFeatures: {}
+  - key: minifig
+    name: Minifig
+    description: 'A minifig is a small posable figure, usually a human.'
+    keyPrefix: fig-
+    color: red
+    abbreviation: F
+    enabledFeatures: {}
+  - key: inventory
+    name: Inventory
+    description: >-
+      An inventory is a list of all the parts, minifigs, and even other sets
+      that comprise a set. Usually each set has one inventory, but if there were
+      different versions of the set available, it will have multiple
+      inventories.
+    keyPrefix: inv-
+    color: ''
+    abbreviation: IN
+    enabledFeatures: {}
+  - key: element
+    name: Element
+    description: An element is a specific color of a part.
+    keyPrefix: el-
+    color: ''
+    abbreviation: E
+    enabledFeatures: {}
+properties:
+  - key: parent-theme
+    name: Parent theme
+    description: ''
+    type: IS_A
+    mode: REC
+    rank: 5
+    appliesTo:
+      - entryTypeKey: theme
+  - key: child-themes
+    name: Child themes
+    description: ''
+    type: RELATES_TO
+    mode: AUTO
+    rank: 15
+    appliesTo:
+      - entryTypeKey: theme
+    default: this.reverse(prop=prop("parent-theme"))
+  - key: theme
+    name: Theme
+    description: The thematic category of this set.
+    type: RELATES_TO
+    mode: REC
+    rank: 10
+    appliesTo:
+      - entryTypeKey: set
+  - key: year
+    name: Year
+    description: The year this set was first released.
+    type: VALUE
+    mode: REC
+    rank: 8
+    appliesTo:
+      - entryTypeKey: set
+  - key: image-url
+    name: Image URL
+    description: ''
+    type: VALUE
+    mode: REC
+    rank: 80
+    appliesTo:
+      - entryTypeKey: minifig
+      - entryTypeKey: set
+      - entryTypeKey: element
+  - key: theme-sets
+    name: Sets
+    description: ''
+    type: RELATES_TO
+    mode: AUTO
+    rank: 10
+    appliesTo:
+      - entryTypeKey: theme
+    default: this.andDescendants().reverse(prop=prop("theme"))
+  - key: set-num
+    name: 'Set #'
+    description: ''
+    type: VALUE
+    mode: REQ
+    rank: 1
+    appliesTo:
+      - entryTypeKey: set
+  - key: image
+    name: Image
+    description: ''
+    type: VALUE
+    mode: AUTO
+    rank: 10
+    appliesTo:
+      - entryTypeKey: minifig
+      - entryTypeKey: set
+      - entryTypeKey: element
+    default: 'externalImage(this.get(prop=prop("image-url")), alt="Image of this set")'
+  - key: theme-group
+    name: Theme Group
+    description: 'The group of related themes that this theme belongs to, if any.'
+    type: RELATES_TO
+    mode: REC
+    rank: 70
+    appliesTo:
+      - entryTypeKey: theme
+  - key: related-themes
+    name: Related themes
+    description: ''
+    type: RELATES_TO
+    mode: AUTO
+    rank: 15
+    appliesTo:
+      - entryTypeKey: theme
+    default: >-
+      this.get(prop=prop("theme-group")).reverse(prop=prop("theme-group")).filter(exclude=[this]).map(apply=(t
+      -> t.annotate(detail=t.get(prop=prop("parent-theme")).first().name)))
+  - key: rgb
+    name: RGB
+    description: ''
+    type: VALUE
+    mode: REQ
+    rank: 10
+    appliesTo:
+      - entryTypeKey: color
+  - key: is-transparent
+    name: Is transparent
+    description: ''
+    type: VALUE
+    mode: REQ
+    rank: 15
+    appliesTo:
+      - entryTypeKey: color
+  - key: part-category
+    name: Category
+    description: ''
+    type: IS_A
+    mode: REQ
+    rank: 5
+    appliesTo:
+      - entryTypeKey: part
+  - key: material
+    name: Material
+    description: ''
+    type: VALUE
+    mode: REQ
+    rank: 40
+    appliesTo:
+      - entryTypeKey: part
+  - key: pc-parts
+    name: Parts in this category
+    description: ''
+    type: RELATES_TO
+    mode: AUTO
+    rank: 15
+    appliesTo:
+      - entryTypeKey: part-category
+    default: this.reverse(prop=prop("part-category"))
+  - key: part-num
+    name: 'Part #'
+    description: ''
+    type: VALUE
+    mode: REQ
+    rank: 1
+    appliesTo:
+      - entryTypeKey: part
+  - key: inv-set
+    name: Is version of set
+    description: The set that this inventory describes.
+    type: RELATES_TO
+    mode: REQ
+    rank: 5
+    appliesTo:
+      - entryTypeKey: inventory
+  - key: version
+    name: Version
+    description: The version number of this inventory.
+    type: VALUE
+    mode: REQ
+    rank: 8
+    appliesTo:
+      - entryTypeKey: inventory
+  - key: current-inventory
+    name: Inventory
+    description: The most recent version of the inventory of this set.
+    type: RELATES_TO
+    mode: AUTO
+    rank: 10
+    appliesTo:
+      - entryTypeKey: set
+    default: |-
+      this.reverse(prop=prop("inv-set")).sort(by=(i -> i.get(prop=prop("version"))), reverse=true).first()
+  - key: set-elements
+    name: Elements
+    description: The elements in this set('s most recent inventory).
+    type: RELATES_TO
+    mode: AUTO
+    rank: 11
+    appliesTo:
+      - entryTypeKey: set
+    default: |-
+      this.get(prop=prop("current-inventory")).get(prop=prop("has-element"))
+  - key: set-elements-count
+    name: "# of Unique Elements"
+    description: The number of unique elements in this set('s most recent inventory).
+    type: RELATES_TO
+    mode: AUTO
+    rank: 12
+    appliesTo:
+      - entryTypeKey: set
+    default: |-
+      this.get(prop=prop("set-elements")).count()
+  - key: set-minifigs
+    name: Minifigs
+    description: The minifigs in this set('s most recent inventory).
+    type: RELATES_TO
+    mode: AUTO
+    rank: 13
+    appliesTo:
+      - entryTypeKey: set
+    default: |-
+      this.get(prop=prop("current-inventory")).get(prop=prop("has-minifig"))
+  - key: set-sets
+    name: Sets
+    description: The sets used within this set('s most recent inventory).
+    type: RELATES_TO
+    mode: AUTO
+    rank: 14
+    appliesTo:
+      - entryTypeKey: set
+    default: |-
+      this.get(prop=prop("current-inventory")).get(prop=prop("has-set"))
+  - key: inventory-versions
+    name: Other inventory versions
+    description: ''
+    type: RELATES_TO
+    mode: AUTO
+    rank: 40
+    appliesTo:
+      - entryTypeKey: set
+    default: |-
+      this.reverse(prop=prop("inv-set")).sort(by=(i -> i.get(prop=prop("version")))).filter(exclude=this.get(prop=prop("current-inventory")))
+  - key: is-print-of
+    name: Is print of
+    description: ''
+    type: IS_A
+    mode: OPT
+    rank: 15
+    appliesTo:
+      - entryTypeKey: part
+  - key: prints
+    name: Prints
+    description: ''
+    type: RELATES_TO
+    mode: AUTO
+    rank: 20
+    appliesTo:
+      - entryTypeKey: part
+    default: this.reverse(prop=prop("is-print-of"))
+  - key: pairs-with
+    name: Pairs with
+    description: ''
+    type: RELATES_TO
+    mode: OPT
+    rank: 18
+    appliesTo:
+      - entryTypeKey: part
+  - key: pairs-with-reverse
+    name: Pairs with
+    description: ''
+    type: RELATES_TO
+    mode: AUTO
+    rank: 20
+    appliesTo:
+      - entryTypeKey: part
+    default: this.reverse(prop=prop("pairs-with"))
+  - key: sub-part-of
+    name: Is sub-part of
+    description: ''
+    type: RELATES_TO
+    mode: OPT
+    rank: 15
+    appliesTo:
+      - entryTypeKey: part
+  - key: sub-parts
+    name: Has sub-parts
+    description: ''
+    type: RELATES_TO
+    mode: AUTO
+    rank: 15
+    appliesTo:
+      - entryTypeKey: part
+    default: this.reverse(prop=prop("sub-part-of"))
+  - key: mold-var-of
+    name: Is mold variant of
+    description: ''
+    type: RELATES_TO
+    mode: OPT
+    rank: 15
+    appliesTo:
+      - entryTypeKey: part
+  - key: has-mold-var
+    name: Has mold variant
+    description: ''
+    type: RELATES_TO
+    mode: AUTO
+    rank: 15
+    appliesTo:
+      - entryTypeKey: part
+    default: this.reverse(prop=prop("mold-var-of"))
+  - key: pattern-of
+    name: Is pattern of
+    description: A "Pattern" refers to multi-color injected parts like marbled parts.
+    type: IS_A
+    mode: OPT
+    rank: 15
+    appliesTo:
+      - entryTypeKey: part
+  - key: patterns
+    name: Has patterns
+    description: A "Pattern" refers to multi-color injected parts like marbled parts.
+    type: RELATES_TO
+    mode: AUTO
+    rank: 15
+    appliesTo:
+      - entryTypeKey: part
+    default: this.reverse(prop=prop("pattern-of"))
+  - key: alternate-of
+    name: Is alternate of
+    description: ''
+    type: RELATES_TO
+    mode: OPT
+    rank: 15
+    appliesTo:
+      - entryTypeKey: part
+  - key: alternate-parts
+    name: Has alternate parts
+    description: ''
+    type: RELATES_TO
+    mode: OPT
+    rank: 15
+    appliesTo:
+      - entryTypeKey: part
+    default: this.reverse(prop=prop("alternate-of"))
+  - key: has-element
+    name: Has element
+    description: ''
+    type: RELATES_TO
+    mode: REC
+    rank: 10
+    appliesTo:
+      - entryTypeKey: inventory
+  - key: has-minifig
+    name: Has minifig
+    description: ''
+    type: RELATES_TO
+    mode: REC
+    rank: 11
+    appliesTo:
+      - entryTypeKey: inventory
+  - key: has-set
+    name: Has set
+    description: Other sets used within this set's inventory
+    type: RELATES_TO
+    mode: REC
+    rank: 12
+    appliesTo:
+      - entryTypeKey: inventory
+  - key: is-part
+    name: Is part
+    description: Which part this element is
+    type: IS_A
+    mode: OPT
+    rank: 1
+    appliesTo:
+      - entryTypeKey: element
+  - key: is-color
+    name: Is color
+    description: Which color this element is
+    type: IS_A
+    mode: OPT
+    rank: 2
+    appliesTo:
+      - entryTypeKey: element
+  - key: element-ids
+    name: Element ID(s)
+    description: Official LEGO Element IDs for this combination of part+color
+    type: VALUE
+    mode: REC
+    rank: 10
+    appliesTo:
+      - entryTypeKey: element
+  - key: colors
+    name: Colors
+    description: Available elements of this part, and their colors
+    type: RELATES_TO
+    mode: AUTO
+    rank: 5
+    appliesTo:
+      - entryTypeKey: part
+    default: this.reverse(prop=prop("is-part")).map(apply=(e -> e.link(text=e.get(prop=prop("is-color")).first().name)))
+  - key: part-example-image
+    name: Image
+    description: An image of one of the available colors of this part
+    type: VALUE
+    mode: AUTO
+    rank: 10
+    appliesTo:
+      - entryTypeKey: part
+    default: this.reverse(prop=prop("is-part")).first().get(prop=prop("image"))

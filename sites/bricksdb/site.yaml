@@ -1,0 +1,62 @@
+key: bricksdb
+name: BricksDB
+description: "The LEGO bricks/sets database from Rebrickable - https://rebrickable.com/downloads/"
+domain: bricksdb.local.neolace.net
+# Public (readonly): read-only
+accessMode: readonly
+# TODO: add '{ entry("set-10255-1").withDetail(prop=prop("year")) } - a huge set with thousands of elements' to the
+# example sets listed below once we are able to import it correctly.
+homePageContent: |
+  # LEGO Brick Database Example
+
+  This Neolace example lets you explore the
+  [Rebrickable LEGO parts/sets dataset](https://rebrickable.com/downloads/).
+
+  ## Themes
+
+  * { entry("theme-50") }
+  * { entry("theme-126") }
+  * { entry("theme-158") }
+  * { entry("theme-186") }
+  * { entry("theme-246") }
+  * [More...](/lookup?e=allEntries().filter(entryType%3DentryType("theme")))
+
+  ## Sets
+
+  * { entry("set-8833-7").withDetail(prop=prop("year")) } - a simple, tiny set
+  * { entry("set-76956-1").withDetail(prop=prop("year")) }
+  * { entry("set-75978-1").withDetail(prop=prop("year")) }
+  * { entry("set-76405-1").withDetail(prop=prop("year")) }
+  * { entry("set-8899-1").withDetail(prop=prop("year")) }
+  * [More...](/lookup?e=allEntries().filter(entryType%3DentryType("set")))
+
+  ## Minifigs
+
+  * { entry("fig-000001") }
+  * { entry("fig-000018") }
+  * { entry("fig-000021") }
+  * { entry("fig-006185") }
+  * { entry("fig-011602") }
+  * [More...](/lookup?e=allEntries().filter(entryType%3DentryType("minifig")))
+
+  ## Parts
+
+  * { entry("part-3865") } - a common baseplate
+    { entry("part-3865").get(prop=prop("part-example-image")) }
+  * { entry("part-3795") }
+    { entry("part-3795").get(prop=prop("part-example-image")) }
+  * { entry("part-3189") }
+    { entry("part-3189").get(prop=prop("part-example-image")) }
+
+  ## Notes
+
+  For an explanation of some of the nuances of IDs and how things relate to each other, read
+  ["Part Numbering"](https://rebrickable.com/help/part-numbering/).
+footerContent: |
+  Data from [Rebrickable](https://rebrickable.com/).
+  This is not an official site and is not affiliated with the LEGO group or Rebrickable.
+frontendConfig:
+  plugins:
+    search: {}
+    external-image: {}
+# publicGrantStrings are left at defaults

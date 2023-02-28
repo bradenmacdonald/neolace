@@ -1,4 +1,4 @@
-import { getApiClientFromEnv, SDK } from "../deps.ts";
+import { getApiClientFromEnv, log, SDK } from "../deps.ts";
 import { yamlToSchema } from "../lib/schema-yaml.ts";
 
 /**
@@ -9,6 +9,7 @@ export async function syncSchema(
     siteKey: string,
     schemaString: string,
 ): Promise<SDK.SiteSchemaData> {
+    log.info("Updating schema of site", siteKey);
     const client = await getApiClientFromEnv();
     const schema = yamlToSchema(schemaString);
     await client.replaceSiteSchema(schema, { siteKey });
