@@ -143,7 +143,7 @@ export class NeolaceApiClient {
     }
 
     /** Helper method to get a siteKey, either as given to the current method or falling back to the default. */
-    private getSiteId(methodOptions?: { siteKey?: string }): string {
+    private getSiteKey(methodOptions?: { siteKey?: string }): string {
         if (methodOptions?.siteKey) {
             return methodOptions.siteKey;
         }
@@ -229,18 +229,18 @@ export class NeolaceApiClient {
     }
 
     public async getSiteHomePage(options?: { siteKey?: string }): Promise<SiteHomePageData> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         return await this.call(`/site/${siteKey}/home`, { method: "GET" });
     }
 
     public async getSiteSchema(options?: { siteKey?: string }): Promise<SiteSchemaData> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         return await this.call(`/site/${siteKey}/schema`, { method: "GET" });
     }
 
     /** Replace a site's schema with the provided schema */
     public async replaceSiteSchema(schema: SiteSchemaData, options?: { siteKey?: string }): Promise<void> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         await this.call(`/site/${siteKey}/schema`, { method: "PUT", data: schema });
     }
 
@@ -255,7 +255,7 @@ export class NeolaceApiClient {
             pageSize?: number;
         } = {},
     ): Promise<EvaluateLookupData> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         const query = new URLSearchParams({ expression });
         if (options.entryKey) {
             query.set("entryKey", options.entryKey);
@@ -282,7 +282,7 @@ export class NeolaceApiClient {
     public async listDrafts(
         options?: { siteKey?: string; page?: number; status?: DraftStatus },
     ): Promise<schemas.PaginatedResultData<DraftData>> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         const args = new URLSearchParams();
         if (options?.page !== undefined) {
             args.set("page", options.page.toString());
@@ -299,7 +299,7 @@ export class NeolaceApiClient {
         draftNum: number,
         options?: { flags: Flags; siteKey?: string },
     ): Promise<ApplyFlags<typeof GetDraftFlags, Flags, DraftData>> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         return this._parseDraft(
             await this.call(
                 `/site/${siteKey}/draft/${draftNum}` +
@@ -313,7 +313,7 @@ export class NeolaceApiClient {
         data: schemas.Type<typeof CreateDraftSchema>,
         options?: { siteKey?: string },
     ): Promise<DraftData> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         const result = await this.call(`/site/${siteKey}/draft`, {
             method: "POST",
             data: {
@@ -329,7 +329,7 @@ export class NeolaceApiClient {
         edit: AnySchemaEdit | AnyContentEdit,
         options: { draftNum: number; siteKey?: string },
     ): Promise<void> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         await this.call(`/site/${siteKey}/draft/${options.draftNum}/edit`, { method: "POST", data: edit });
     }
 
@@ -338,7 +338,7 @@ export class NeolaceApiClient {
         fileData: Blob,
         options: { siteKey?: string },
     ): Promise<TempFileData> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         const formData = new FormData();
         formData.append("file", fileData);
         let hashParam = "";
@@ -359,7 +359,7 @@ export class NeolaceApiClient {
     }
 
     public async acceptDraft(draftNum: number, options?: { siteKey?: string }): Promise<void> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         await this.call(`/site/${siteKey}/draft/${draftNum}/accept`, { method: "POST" });
     }
 
@@ -370,7 +370,7 @@ export class NeolaceApiClient {
         key: string,
         options: { flags?: Flags; siteKey?: string } = {},
     ): Promise<ApplyFlags<typeof GetEntryFlags, Flags, EntryData>> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         return this.call(
             `/site/${siteKey}/entry/${encodeURIComponent(key)}` +
                 (options?.flags?.length ? `?include=${options.flags.join(",")}` : ""),
@@ -386,7 +386,7 @@ export class NeolaceApiClient {
     public async getEntries(
         options: { ofEntryType?: string; siteKey?: string } = {},
     ): Promise<{ totalCount: number } & AsyncIterable<EntrySummaryData>> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         const firstPage: schemas.StreamedResultData<EntrySummaryData> = await this.call(
             `/site/${siteKey}/entry/` + (options.ofEntryType ? `?entryType=${options.ofEntryType}` : ""),
         );
@@ -433,7 +433,7 @@ export class NeolaceApiClient {
             siteKey?: string;
         } = {},
     ): Promise<SiteUserMyPermissionsData> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
 
         const objectFields: Record<string, string> = {};
         for (const [k, v] of Object.entries(options)) {
@@ -452,7 +452,7 @@ export class NeolaceApiClient {
     public async getSiteUsers(
         options?: { page?: number; siteKey?: string },
     ): Promise<schemas.PaginatedResultData<SiteUserSummaryData>> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         return await this.call(`/site/${siteKey}/user` + (options?.page ? `?page=${options.page}` : ""), {
             method: "GET",
         });
@@ -462,7 +462,7 @@ export class NeolaceApiClient {
      * Erase all entries on the site. This is dangerous! Mostly useful for development.
      */
     public async eraseAllEntriesDangerously(options: { confirm?: "danger"; siteKey?: string } = {}): Promise<void> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         await this.call(`/site/${siteKey}/entry/?confirm=${options.confirm}`, { method: "DELETE" });
     }
 
@@ -470,7 +470,7 @@ export class NeolaceApiClient {
     // Built-in plugin methods
 
     public getSearchConnection(options?: { siteKey?: string }): Promise<SiteSearchConnectionData> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         return this.call(`/site/${siteKey}/search/connection`);
     }
 
@@ -478,7 +478,7 @@ export class NeolaceApiClient {
         edits: AnyBulkEdit[],
         options: { siteKey?: string; connectionId: string; createConnection?: boolean },
     ): Promise<{ appliedEditIds: string[] }> {
-        const siteKey = this.getSiteId(options);
+        const siteKey = this.getSiteKey(options);
         return this.call(
             `/site/${siteKey}/connection/push/${options.connectionId}/edit/?${
                 options.createConnection ? "create=true" : ""
