@@ -40,6 +40,12 @@ const data = {
             email: "jamie@example.com",
             fullName: "Jamie User",
             username: "jamie",
+            bot: {
+                username: "regular-bot",
+                fullName: "Regular Bot",
+                id: undefined as any as VNID, // will be set once created.
+                authToken: undefined as any as string, // will be set once created.
+            },
         },
     },
     // A Site, with Alex as the admin and Jamie as a regular user
@@ -121,6 +127,16 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
         username: data.users.regularUser.username,
         authnId: -2,
     }));
+
+    await graph.runAsSystem(CreateBot({
+        ownedByUser: data.users.regularUser.id,
+        username: data.users.regularUser.bot.username,
+        fullName: data.users.regularUser.bot.fullName,
+        inheritPermissions: true,
+    })).then((result) => {
+        data.users.regularUser.bot.id = result.id;
+        data.users.regularUser.bot.authToken = result.authToken;
+    });
 
     await graph.runAsSystem(CreateSite({
         name: "Neolace Development",

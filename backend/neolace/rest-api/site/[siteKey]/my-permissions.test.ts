@@ -1,6 +1,4 @@
 import { assert, assertEquals, getClient, group, SDK, setTestIsolation, test } from "neolace/rest-api/tests.ts";
-import { CreateBot } from "neolace/core/User.ts";
-import { getGraph } from "neolace/rest-api/mod.ts";
 
 group("my-permissions.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);
@@ -19,14 +17,7 @@ group("my-permissions.ts", () => {
     });
 
     test("It can get the permissions of a regular user", async () => {
-        const graph = await getGraph();
-        const regularUserBot = await graph.runAsSystem(CreateBot({
-            ownedByUser: defaultData.users.regularUser.id,
-            username: "regularBot",
-            fullName: "Regular User's Bot",
-            inheritPermissions: true,
-        }));
-        const client = await getClient({ bot: { authToken: regularUserBot.authToken } }, defaultData.site.key);
+        const client = await getClient(defaultData.users.regularUser, defaultData.site.key);
 
         const result = await client.getMyPermissions();
 

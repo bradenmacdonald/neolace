@@ -3,7 +3,7 @@ import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
 import { getHomeSite, Site } from "neolace/core/Site.ts";
 
 export class SiteFindByDomainResource extends NeolaceHttpResource {
-    public paths = ["/site/find"];
+    public paths = ["/find-site"];
 
     GET = this.method({
         responseSchema: SDK.SiteDetailsSchema,

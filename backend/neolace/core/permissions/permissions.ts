@@ -140,6 +140,12 @@ export const corePerm = definePermissions({
         requires: [CorePerm.siteAdminManageGroup],
         requiresObjectFields: [],
     },
+    siteAdminManageCoreSettings: {
+        name: CorePerm.siteAdminManageCoreSettings,
+        description: "Update a site's core settings like its domain name, plugins, etc.",
+        requires: [CorePerm.siteAdmin],
+        requiresObjectFields: [],
+    },
 
     /** Actions that can only take place from the home site: */
     createSite: {

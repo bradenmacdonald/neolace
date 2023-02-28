@@ -38,6 +38,8 @@ export enum CorePerm {
     siteAdminManageGroup = "admin.manage.group",
     /** Add/remove users to groups. This is how they are added/removed from the site as a whole. */
     siteAdminManageGroupMembership = "admin.manage.groupMembership",
+    /** Update a site's core settings like its domain name, plugins, etc. */
+    siteAdminManageCoreSettings = "admin.manage.coreSettings",
     /** Create a new site in this realm. */
     createSite = "createSite",
 }

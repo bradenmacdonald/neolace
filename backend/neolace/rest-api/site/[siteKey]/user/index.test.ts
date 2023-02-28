@@ -34,6 +34,18 @@ group("index.ts", () => {
         ],
         isBot: false,
     };
+    const regularUserBotExpected = {
+        fullName: defaultData.users.regularUser.bot.fullName,
+        username: defaultData.users.regularUser.bot.username,
+        groups: [
+            { id: defaultData.site.usersGroupId, name: "Users" },
+        ],
+        isBot: true,
+        ownedBy: {
+            username: defaultData.users.regularUser.username,
+            fullName: defaultData.users.regularUser.fullName,
+        },
+    };
 
     test("An administrator with permissions can get a list of users associated with a site", async () => {
         const client = await getClient(defaultData.users.admin, defaultData.site.key);
@@ -44,6 +56,7 @@ group("index.ts", () => {
             adminUserExpected,
             adminBotExpected,
             regularUserExpected,
+            regularUserBotExpected,
         ]);
         assertEquals(result.totalCount, result.values.length);
     });
@@ -104,6 +117,7 @@ group("index.ts", () => {
                 },
             },
             regularUserExpected,
+            regularUserBotExpected,
         ]);
         assertEquals(result.totalCount, result.values.length);
 
@@ -112,18 +126,7 @@ group("index.ts", () => {
     });
 
     test("A user without permissions can NOT get a list of users associated with a site", async () => {
-        const graph = await getGraph();
-
-        // Create a "bot" so that we can access the API as a regular user:
-        // TODO: this should be an API call to create the bot, not an action.
-        const bot = await graph.runAsSystem(CreateBot({
-            ownedByUser: defaultData.users.regularUser.id,
-            username: "regularBot",
-            fullName: "Regular Bot",
-            inheritPermissions: true,
-        }));
-
-        const client = await getClient({ bot }, defaultData.site.key);
+        const client = await getClient(defaultData.users.regularUser, defaultData.site.key);
 
         await assertRejects(
             () => client.getSiteUsers(),

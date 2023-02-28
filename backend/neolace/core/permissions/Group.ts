@@ -156,14 +156,11 @@ export const UpdateGroup = defaultUpdateFor(Group, (g) => g.name, {
 
         if (args.removeUsers) {
             // Remove some users from this group:
-            const removed = await tx.query(C`
+            await tx.query(C`
                 MATCH (g:${Group} {id: ${id}})-[rel:${Group.rel.HAS_USER}]->(u:${User})
                 WHERE u.id IN ${args.removeUsers}
                 DELETE rel
-                `.RETURN({ "u.id": Field.VNID }));
-            if (removed.length !== args.removeUsers.length) {
-                throw new ValidationError("Invalid user VNID given to addUser.");
-            }
+            `.RETURN({ "u.id": Field.VNID }));
         }
 
         return {};

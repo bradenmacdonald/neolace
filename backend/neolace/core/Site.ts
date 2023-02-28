@@ -1,4 +1,4 @@
-import { FrontendConfigData, FrontendConfigSchema } from "neolace/deps/neolace-sdk.ts";
+import { FrontendConfigData, FrontendConfigSchema, SiteAccessMode } from "neolace/deps/neolace-sdk.ts";
 import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
@@ -22,18 +22,11 @@ export const SiteRef: typeof Site = VNodeTypeRef();
 
 import { CreateGroup, Group, GroupMaxDepth } from "./permissions/Group.ts";
 
+export { SiteAccessMode as AccessMode };
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Site model
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export enum AccessMode {
-    /** on a private site, access to entries is restricted to invited users */
-    Private = "private",
-    /** Public (contributions): anyone can read all entries and propose edits (default) */
-    PublicContributions = "pubcont",
-    /** Public (read only): anyone can read all entries but only those with permission can propose edits */
-    PublicReadOnly = "readonly",
-}
 
 /**
  * Neolace is designed to support multi-tenant use cases (so lots of small sites can share a single large installation).
@@ -79,7 +72,7 @@ export class Site extends VNodeType {
         footerContent: Field.String.Check(check.string.max(10_000)),
 
         /** Access Mode: Determines what parts of the site are usable without logging in */
-        accessMode: Field.String.Check(check.Schema.enum(AccessMode)),
+        accessMode: Field.String.Check(check.Schema.enum(SiteAccessMode)),
 
         /** Additional permissions that apply to everyone, including users who aren't logged in */
         publicGrantStrings: Field.NullOr.List(Field.String),
@@ -205,7 +198,7 @@ export async function getHomeSite(): Promise<Readonly<HomeSiteData>> {
 // Action to make changes to an existing Site:
 export const UpdateSite = defaultUpdateFor(
     Site,
-    (s) => s.key.description.homePageContent.footerContent.domain.accessMode.publicGrantStrings,
+    (s) => s.key.name.description.homePageContent.footerContent.domain.accessMode.publicGrantStrings,
     {
         otherUpdates: async (args: { frontendConfig?: FrontendConfigData }, tx, nodeSnapshot) => {
             if (args.frontendConfig) {
@@ -232,7 +225,7 @@ export const CreateSite = defineAction({
         homePageContent?: string;
         footerContent?: string;
         adminUser?: VNID;
-        accessMode?: AccessMode;
+        accessMode?: SiteAccessMode;
         frontendConfig?: FrontendConfigData;
         publicGrantStrings?: string[];
     },
@@ -256,7 +249,7 @@ export const CreateSite = defineAction({
                 homePageContent: ${data.homePageContent || ""},
                 footerContent: ${data.footerContent || ""},
                 domain: ${data.domain},
-                accessMode: ${data.accessMode ?? AccessMode.PublicContributions},
+                accessMode: ${data.accessMode ?? SiteAccessMode.PublicContributions},
                 frontendConfig: ${JSON.stringify(data.frontendConfig ?? {})},
                 publicGrantStrings: ${data.publicGrantStrings ?? []}
             })
