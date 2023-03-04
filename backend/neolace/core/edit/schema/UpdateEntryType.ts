@@ -1,5 +1,5 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { InvalidEdit, UpdateEntryType } from "neolace/deps/neolace-api.ts";
+import { InvalidEdit, UpdateEntryType } from "neolace/deps/neolace-sdk.ts";
 import { defineImplementation, EditHadNoEffect } from "neolace/core/edit/implementations.ts";
 import { EntryType } from "neolace/core/mod.ts";
 

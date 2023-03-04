@@ -1,6 +1,6 @@
 import React from "react";
 
-import { api, DraftContext, DraftContextData, useDraft } from "lib/api";
+import { SDK, DraftContext, DraftContextData, useDraft } from "lib/sdk";
 import { Modal } from "components/widgets/Modal";
 import { Button } from "components/widgets/Button";
 import { FormattedMessage } from "react-intl";
@@ -11,7 +11,7 @@ import { EditSchemaProperty } from "./EditSchemaProperty";
 import { AddSchemaProperty } from "./AddSchemaProperty";
 
 interface Props {
-    onSaveChanges: (newEdits: api.AnySchemaEdit[]) => void;
+    onSaveChanges: (newEdits: SDK.AnySchemaEdit[]) => void;
     onCancel: () => void;
 }
 
@@ -23,16 +23,16 @@ const NEW_PROPERTY = Symbol("new-prop");
 export const EditSchemaPropertiesModal: React.FunctionComponent<Props> = ({ onSaveChanges, onCancel }) => {
 
     const [draft, unsavedEditsInDraft] = useDraft();
-    const [unsavedEditsInModal, setUnsavedEditsInModal] = React.useState([] as api.AnySchemaEdit[]);
+    const [unsavedEditsInModal, setUnsavedEditsInModal] = React.useState([] as SDK.AnySchemaEdit[]);
     const saveChanges = React.useCallback(() => {
         onSaveChanges(unsavedEditsInModal);
     }, [onSaveChanges, unsavedEditsInModal]);
 
     /** Add a new edit */
-    const addSchemaEdit = React.useCallback((newEdit: api.AnySchemaEdit) => {
+    const addSchemaEdit = React.useCallback((newEdit: SDK.AnySchemaEdit) => {
         setUnsavedEditsInModal((edits) => {
             console.log(newEdit, edits);
-            return api.consolidateEdits([...edits, newEdit]);
+            return SDK.consolidateEdits([...edits, newEdit]);
         });
     }, []);
 

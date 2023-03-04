@@ -1,5 +1,5 @@
 import * as log from "std/log/mod.ts";
-import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { SiteSchemaData } from "neolace/deps/neolace-sdk.ts";
 import { Schema } from "neolace/deps/computed-types.ts";
 import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 

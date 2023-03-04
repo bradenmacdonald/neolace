@@ -5,7 +5,7 @@ import { FormattedMessage } from "react-intl";
 import { Highlight, useInfiniteHits, UseInfiniteHitsProps, useSearchBox } from "react-instantsearch-hooks-web";
 import { Button } from "components/widgets/Button";
 import { Hit } from "./Hit";
-import { useSchema } from "lib/api";
+import { useSchema } from "lib/sdk";
 
 const highlightClasses = {
     // Override the color used to highlight matching terms in the result:

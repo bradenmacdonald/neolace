@@ -1,4 +1,4 @@
-import { AnyEdit, EditChangeType, EditList, EditType, getEditType } from "neolace/deps/neolace-api.ts";
+import { AnyEdit, EditChangeType, EditList, EditType, getEditType } from "neolace/deps/neolace-sdk.ts";
 import { C, defineAction, isVNID, VNID } from "neolace/deps/vertex-framework.ts";
 import { Entry, EntryType, Site } from "neolace/core/mod.ts";
 import { EditHadNoEffect, EditImplementation } from "./implementations.ts";

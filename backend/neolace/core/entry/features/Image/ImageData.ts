@@ -1,6 +1,6 @@
 import * as check from "neolace/deps/computed-types.ts";
 import { C, Field, VirtualPropType, VNodeType } from "neolace/deps/vertex-framework.ts";
-import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
+import { ImageSizingMode } from "neolace/deps/neolace-sdk.ts";
 import { EntryFeatureData } from "neolace/core/entry/features/EntryFeatureData.ts";
 import { DataFile } from "neolace/core/objstore/DataFile.ts";
 

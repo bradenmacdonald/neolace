@@ -2,7 +2,7 @@ import React from "react";
 import { FormattedMessage } from "react-intl";
 
 import { defineMessage } from "components/utils/i18n";
-import { api, client, useSiteData } from "lib/api";
+import { SDK, client, useSiteData } from "lib/sdk";
 import { Spinner } from "components/widgets/Spinner";
 import { ToolbarButton } from "components/widgets/Button";
 import { ErrorMessage } from "components/widgets/ErrorMessage";
@@ -11,11 +11,11 @@ import { Table, TableRow } from "components/widgets/Table";
 import { FileDropzone } from "components/widgets/Dropzone";
 
 // We have to declare this empty object outside of the function below so it doesn't change on every call.
-const emptyPropsRawArray: api.EditableEntryData["propertiesRaw"] = [];
+const emptyPropsRawArray: SDK.EditableEntryData["propertiesRaw"] = [];
 
 interface Props {
-    entry: api.EditableEntryData | undefined;
-    addUnsavedEdit: (newEdit: api.AnyEdit) => void;
+    entry: SDK.EditableEntryData | undefined;
+    addUnsavedEdit: (newEdit: SDK.AnyEdit) => void;
 }
 
 /**

@@ -1,7 +1,7 @@
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { api, useSchema } from "lib/api";
+import { SDK, useSchema } from "lib/sdk";
 import { Spinner } from "components/widgets/Spinner";
 import { AutoControl, Control, Form } from "components/form-input/Form";
 import { MDTEditor } from "components/form-input/MDTEditor";
@@ -12,9 +12,9 @@ import { EntryTypeModal } from "components/schema-editor/EntryTypeModal";
 import { ToolbarButton } from "components/widgets/Button";
 
 interface Props {
-    entry?: api.EditableEntryData;
+    entry?: SDK.EditableEntryData;
     isNewEntry: boolean;
-    addUnsavedEdit: (newEdit: api.AnyEdit) => void;
+    addUnsavedEdit: (newEdit: SDK.AnyEdit) => void;
 }
 
 const NEW_ENTRY_TYPE = Symbol("newET");
@@ -32,13 +32,13 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
 
     const updateEntryName = React.useCallback((name: string) => {
         if (!entry) return;
-        addUnsavedEdit({ code: api.SetEntryName.code, data: { entryId: entry.id, name } });
+        addUnsavedEdit({ code: SDK.SetEntryName.code, data: { entryId: entry.id, name } });
     }, [entry, addUnsavedEdit]);
 
     const updateEntryType = React.useCallback((entryTypeKey: string) => {
         if (!entry) return;
         addUnsavedEdit({
-            code: api.CreateEntry.code,
+            code: SDK.CreateEntry.code,
             data: {
                 entryId: entry.id,
                 entryTypeKey,
@@ -51,12 +51,12 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
 
     const updateEntryKey = React.useCallback((key: string) => {
         if (!entry) return;
-        addUnsavedEdit({ code: api.SetEntryKey.code, data: { entryId: entry.id, key } });
+        addUnsavedEdit({ code: SDK.SetEntryKey.code, data: { entryId: entry.id, key } });
     }, [entry, addUnsavedEdit]);
 
     const updateEntryDescription = React.useCallback((description: string) => {
         if (!entry) return;
-        addUnsavedEdit({ code: api.SetEntryDescription.code, data: { entryId: entry.id, description } });
+        addUnsavedEdit({ code: SDK.SetEntryDescription.code, data: { entryId: entry.id, description } });
     }, [entry, addUnsavedEdit]);
 
     // Show a modal (popup) that allows the user to create a new entry type
@@ -65,7 +65,7 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
     const showEditEntryTypeModal = React.useCallback(() => { editEntryTypeWithKey(entry?.entryType.key); }, [entry?.entryType.key]);
     const cancelEditEntryTypeModal = React.useCallback(() => { editEntryTypeWithKey(undefined); }, []);
 
-    const doneEditingEntryType = React.useCallback((editedEntryTypeKey: string, edits: api.AnySchemaEdit[]) => {
+    const doneEditingEntryType = React.useCallback((editedEntryTypeKey: string, edits: SDK.AnySchemaEdit[]) => {
         // Create the new entry type, by adding the edits to unsavedEdits:
         for (const edit of edits) { addUnsavedEdit(edit); }
         // Select the new entry type in the "Edit Entry" form:

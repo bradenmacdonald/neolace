@@ -2,7 +2,7 @@ import { assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.t
 import { getGraph } from "neolace/core/graph.ts";
 import { getCurrentSchema } from "neolace/core/schema/get-schema.ts";
 import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
-import { EntryTypeColor, SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { EntryTypeColor, SiteSchemaData } from "neolace/deps/neolace-sdk.ts";
 
 group("schema.ts", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_ISOLATED);

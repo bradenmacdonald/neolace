@@ -1,5 +1,5 @@
 import { C, defineAction, EmptyResultError } from "neolace/deps/vertex-framework.ts";
-import { VNID } from "neolace/deps/neolace-api.ts";
+import { VNID } from "neolace/deps/neolace-sdk.ts";
 import { Connection, getGraph, Site } from "neolace/core/mod.ts";
 import { EditSource } from "./EditSource.ts";
 

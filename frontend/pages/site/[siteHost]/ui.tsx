@@ -14,7 +14,7 @@ import { AutoControl, Control, Form } from "components/form-input/Form";
 import { defineMessage, noTranslationNeeded } from "components/utils/i18n";
 import { Tab, TabBarRouter } from "components/widgets/Tabs";
 import { LookupValue } from "components/widgets/LookupValue";
-import { api, RefCacheContext } from "lib/api";
+import { SDK, RefCacheContext } from "lib/sdk";
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { DEVELOPMENT_MODE } from "lib/config";
 import { Frame, FrameBody, FrameHeader } from "components/widgets/Frame";
@@ -45,10 +45,10 @@ const UiDemoPage: NextPage = function (props) {
     }
 
     const demoMDTContext = new MDTContext({});
-    const demoRefCache: api.ReferenceCacheData = {
+    const demoRefCache: SDK.ReferenceCacheData = {
         entries: {
             "_12345": {
-                id: api.VNID("_12345"),
+                id: SDK.VNID("_12345"),
                 description: "Description of the entry goes here.",
                 entryType: { key: "demo-type" },
                 key: "demo-entry",
@@ -60,7 +60,7 @@ const UiDemoPage: NextPage = function (props) {
                 key: "demo-type",
                 name: "Type goes here",
                 abbreviation: "D",
-                color: api.EntryTypeColor.Cyan,
+                color: SDK.EntryTypeColor.Cyan,
             },
         },
         properties: {
@@ -68,7 +68,7 @@ const UiDemoPage: NextPage = function (props) {
                 name: "Demoness",
                 description: "To what extent this is a demo.",
                 key: "demo-prop",
-                type: api.PropertyType.Value,
+                type: SDK.PropertyType.Value,
                 standardURL: "",
                 rank: 1,
                 displayAs: "",
@@ -317,7 +317,7 @@ const UiDemoPage: NextPage = function (props) {
             <table>
                 <tbody>
                     <UIDemo label="Entry Type">
-                        <LookupValue value={{ type: "Entry", id: api.VNID("_12345") }} mdtContext={demoMDTContext} />
+                        <LookupValue value={{ type: "Entry", id: SDK.VNID("_12345") }} mdtContext={demoMDTContext} />
                     </UIDemo>
                     <UIDemo label="Property Type">
                         <LookupExpressionInput value={`this.reverse(prop=prop("_demoProp"))`} onChange={() => null} />

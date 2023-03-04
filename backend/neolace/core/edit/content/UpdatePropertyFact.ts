@@ -1,5 +1,5 @@
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
-import { InvalidEdit, PropertyType, UpdatePropertyFact } from "neolace/deps/neolace-api.ts";
+import { InvalidEdit, PropertyType, UpdatePropertyFact } from "neolace/deps/neolace-sdk.ts";
 import { defineImplementation, EditHadNoEffect } from "neolace/core/edit/implementations.ts";
 import { Entry, EntryType, Property, PropertyFact, Site } from "neolace/core/mod.ts";
 import { directRelTypeForPropertyType, parseLookupExpressionToEntryId } from "neolace/core/entry/PropertyFact.ts";

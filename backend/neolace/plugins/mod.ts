@@ -1,4 +1,4 @@
-import { NeolaceHttpResource } from "neolace/api/mod.ts";
+import { NeolaceHttpResource } from "neolace/rest-api/mod.ts";
 import { VNID, VNodeType } from "../deps/vertex-framework.ts";
 
 const _isPluginSymbol = Symbol("isNeolacePlugin");

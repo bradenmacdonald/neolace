@@ -1,4 +1,4 @@
-import { ImageSizingMode, SiteSchemaData, UpdateEntryImageSchema } from "neolace/deps/neolace-api.ts";
+import { ImageSizingMode, SiteSchemaData, UpdateEntryImageSchema } from "neolace/deps/neolace-sdk.ts";
 import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
 import { EntryTypeFeature } from "../feature.ts";

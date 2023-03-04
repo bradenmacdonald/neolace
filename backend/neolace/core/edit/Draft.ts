@@ -1,5 +1,5 @@
 import * as check from "neolace/deps/computed-types.ts";
-import { DraftStatus, EditChangeType, getEditType } from "neolace/deps/neolace-api.ts";
+import { DraftStatus, EditChangeType, getEditType } from "neolace/deps/neolace-sdk.ts";
 import {
     C,
     DerivedProperty,

@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
 
-import { getSiteData, SiteData, UserStatus, useUser } from "lib/api";
+import { getSiteData, SiteData, UserStatus, useUser } from "lib/sdk";
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { Redirect } from "components/utils/Redirect";
 

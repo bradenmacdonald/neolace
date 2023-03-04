@@ -1,9 +1,9 @@
 import { ErrorMessage } from "components/widgets/ErrorMessage";
-import { api, UserStatus, useUser } from "lib/api";
+import { SDK, UserStatus, useUser } from "lib/sdk";
 import Link from "next/link";
 import React from "react";
 
-export const MembersOnlyNotice: React.FunctionComponent<{ entry: api.EntryData }> = ({ entry }) => {
+export const MembersOnlyNotice: React.FunctionComponent<{ entry: SDK.EntryData }> = ({ entry }) => {
     const user = useUser();
     // TODO: change this to check the user's permission on the returned entry
     if (

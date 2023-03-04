@@ -1,12 +1,12 @@
 import React from 'react';
 import { Portal } from 'components/utils/Portal';
-import { api, RefCacheContext, useDraft, useLookupExpression } from 'lib/api';
+import { SDK, RefCacheContext, useDraft, useLookupExpression } from 'lib/sdk';
 import { InlineMDT, MDTContext } from 'components/markdown-mdt/mdt';
 import { EntitySymbol } from "../widgets/EntitySymbol";
 import { IncreaseZIndex, useZIndex } from "lib/hooks/useZIndex";
 
 
-type EntityValue = api.EntryValue | api.PropertyValue | api.EntryTypeValue;
+type EntityValue = SDK.EntryValue | SDK.PropertyValue | SDK.EntryTypeValue;
 
 
 interface Props {
@@ -31,7 +31,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
 
     // We store the results in a state so that we can display the previous values while new ones are loading.
     const [items, setItems] = React.useState<Array<EntityValue>>([]);
-    const [refCache, setRefCache] = React.useState<api.ReferenceCacheData>({
+    const [refCache, setRefCache] = React.useState<SDK.ReferenceCacheData>({
         entries: {},
         entryTypes: {},
         lookups: [],
@@ -45,7 +45,7 @@ export const AutocompletionMenu: React.FunctionComponent<Props> = ({ searchTerm,
         let referenceCache = newReferenceCache;
         // IF we are in the context of a draft, update the result with edits from the draft:
         if (draft || unsavedEdits) {
-            referenceCache = api.applyEditsToReferenceCache(referenceCache, [...(draft?.edits ?? []), ...unsavedEdits]);
+            referenceCache = SDK.applyEditsToReferenceCache(referenceCache, [...(draft?.edits ?? []), ...unsavedEdits]);
         }
         const { entries, entryTypes, properties } = referenceCache;
 

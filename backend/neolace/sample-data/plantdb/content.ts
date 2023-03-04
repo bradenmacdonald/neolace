@@ -1,5 +1,5 @@
 import { VNID } from "neolace/deps/vertex-framework.ts";
-import { EditList } from "neolace/deps/neolace-api.ts";
+import { EditList } from "neolace/deps/neolace-sdk.ts";
 import { dedent } from "neolace/lib/dedent.ts";
 import { schema } from "./schema.ts";
 

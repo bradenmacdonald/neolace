@@ -1,6 +1,6 @@
 import { C, Field } from "neolace/deps/vertex-framework.ts";
 import { assertArrayIncludes, assertEquals, assertRejects, group, test } from "neolace/lib/tests.ts";
-import { CorePerm } from "neolace/deps/neolace-api.ts";
+import { CorePerm } from "neolace/deps/neolace-sdk.ts";
 import { _forTests } from "./check.ts";
 import { AllOfCondition, Always, IfLoggedIn, OneOfCondition, PermissionGrant, TestCondition } from "./grant.ts";
 import { type PermissionName } from "./permissions.ts";

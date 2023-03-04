@@ -1,6 +1,6 @@
 import React from "react";
 
-import { api, client, useSiteData } from "lib/api";
+import { SDK, client, useSiteData } from "lib/sdk";
 import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
 import { InstantSearch } from "react-instantsearch-hooks-web";
 import { InfiniteHits } from "../components/Hits";
@@ -12,8 +12,8 @@ import { PluginPageProps } from "components/utils/ui-plugins";
 
 const SiteSearchPage: React.FunctionComponent<PluginPageProps> = function (props) {
     const { site, siteError } = useSiteData();
-    const [connectionData, setConnectionData] = React.useState<api.SiteSearchConnectionData | undefined>();
-    const [connectionError, setConnectionError] = React.useState<api.ApiError | undefined>();
+    const [connectionData, setConnectionData] = React.useState<SDK.SiteSearchConnectionData | undefined>();
+    const [connectionError, setConnectionError] = React.useState<SDK.ApiError | undefined>();
 
     React.useEffect(() => {
         if (!site.key) {
@@ -26,7 +26,7 @@ const SiteSearchPage: React.FunctionComponent<PluginPageProps> = function (props
                 setConnectionData(sc);
             }
         }, (err) => {
-            if (err instanceof api.ApiError) setConnectionError(err);
+            if (err instanceof SDK.ApiError) setConnectionError(err);
             else throw err;
         });
         return function cleanup() {

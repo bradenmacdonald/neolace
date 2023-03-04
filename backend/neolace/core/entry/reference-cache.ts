@@ -1,6 +1,6 @@
-import { api } from "neolace/api/mod.ts";
+import { AnyLookupValue, MDT } from "neolace/deps/neolace-sdk.ts";
 import { C, Field, isVNID, VNID } from "neolace/deps/vertex-framework.ts";
-import { EntryTypeColor, PropertyType, ReferenceCacheData } from "neolace/deps/neolace-api.ts";
+import { EntryTypeColor, PropertyType, ReferenceCacheData } from "neolace/deps/neolace-sdk.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { Property } from "neolace/core/schema/Property.ts";
 import type { LookupContext } from "neolace/core/lookup/context.ts";
@@ -205,7 +205,7 @@ export class ReferenceCache {
      * Given a serialized "Lookup Value" that is the result of evaluating a Graph Lookup expression, find all unique entry
      * IDs that are present in the value (recursively). Adds to the set(s) passed as a parameter
      */
-    public extractLookupReferences(value: api.AnyLookupValue, args: { currentEntryId?: VNID }) {
+    public extractLookupReferences(value: AnyLookupValue, args: { currentEntryId?: VNID }) {
         if (value.annotations) {
             for (const annotatedValue of Object.values(value.annotations)) {
                 this.extractLookupReferences(annotatedValue, args);
@@ -234,13 +234,13 @@ export class ReferenceCache {
             case "Image": {
                 this._entryIdsUsed.add(value.entryId);
                 if (value.caption?.type === "InlineMarkdownString") {
-                    this.extractMarkdownReferences(api.MDT.tokenizeMDT(value.caption.value, { inline: true }), args);
+                    this.extractMarkdownReferences(MDT.tokenizeMDT(value.caption.value, { inline: true }), args);
                 }
                 return;
             }
             case "InlineMarkdownString": {
                 // Extract any references to entries linked from this inline string.
-                this.extractMarkdownReferences(api.MDT.tokenizeMDT(value.value, { inline: true }), args);
+                this.extractMarkdownReferences(MDT.tokenizeMDT(value.value, { inline: true }), args);
                 return;
             }
             case "Graph": {
@@ -278,11 +278,11 @@ export class ReferenceCache {
      * IDs that are mentioned.
      */
     public extractMarkdownReferences(
-        markdown: string | api.MDT.RootNode | api.MDT.Node,
+        markdown: string | MDT.RootNode | MDT.Node,
         args: { currentEntryId?: VNID; inline?: boolean },
     ) {
         if (typeof markdown === "string") {
-            markdown = api.MDT.tokenizeMDT(markdown, { inline: args.inline ?? false });
+            markdown = MDT.tokenizeMDT(markdown, { inline: args.inline ?? false });
         }
 
         const node = markdown;

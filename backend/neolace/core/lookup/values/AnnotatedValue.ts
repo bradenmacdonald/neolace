@@ -1,5 +1,5 @@
 import type { VNID } from "neolace/deps/vertex-framework.ts";
-import type * as api from "neolace/deps/neolace-api.ts";
+import type * as api from "neolace/deps/neolace-sdk.ts";
 import { LookupContext } from "../context.ts";
 import { ClassOf, ConcreteValue, LookupValue } from "./base.ts";
 import { EntryValue } from "./EntryValue.ts";

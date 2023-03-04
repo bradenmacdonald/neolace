@@ -1,5 +1,5 @@
 import { assertEquals, assertInstanceOf, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
-import { InvalidEdit, VNID } from "neolace/deps/neolace-api.ts";
+import { InvalidEdit, VNID } from "neolace/deps/neolace-sdk.ts";
 import { testHelpers } from "./test-helpers.test.ts";
 
 group("SetRelationships bulk edit implementation", () => {

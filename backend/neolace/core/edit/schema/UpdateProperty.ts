@@ -1,5 +1,5 @@
 import { C, Field } from "neolace/deps/vertex-framework.ts";
-import { UpdateProperty } from "neolace/deps/neolace-api.ts";
+import { UpdateProperty } from "neolace/deps/neolace-sdk.ts";
 import { defineImplementation } from "neolace/core/edit/implementations.ts";
 import { EntryType, Property } from "neolace/core/mod.ts";
 

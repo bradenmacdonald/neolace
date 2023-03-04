@@ -1,4 +1,4 @@
-import { SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { SiteSchemaData } from "neolace/deps/neolace-sdk.ts";
 import { defineAction, VNID } from "neolace/deps/vertex-framework.ts";
 import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
 import { diffSchema, getCurrentSchema } from "neolace/core/schema/get-schema.ts";

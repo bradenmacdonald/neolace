@@ -1,4 +1,4 @@
-import { SiteData, useSiteData } from "lib/api";
+import { SiteData, useSiteData } from "lib/sdk";
 import { SWRConfig } from "swr";
 import { UiPluginsProvider } from "./utils/ui-plugins";
 

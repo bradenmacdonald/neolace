@@ -1,8 +1,8 @@
 import React from "react";
 import { Icon } from "components/widgets/Icon";
 import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
-import { api, useEntrySummary, useSchema } from "lib/api";
-import { type MDT } from "neolace-api";
+import { SDK, useEntrySummary, useSchema } from "lib/sdk";
+import { type MDT } from "neolace-sdk";
 import { Transforms } from "slate";
 import { ReactEditor, RenderElementProps, useFocused, useSelected, useSlate } from "slate-react";
 import type { VoidEntryNode, VoidEntryTypeNode, VoidPropNode } from "./slate";
@@ -62,7 +62,7 @@ export const EntryTypeVoid = (
     const [selected] = useVoidSelectionStatus();
     const [schema] = useSchema();
     const entryTypeName = schema ? (schema.entryTypes[entryTypeKey]?.name ?? `Unknown entry type (${entryTypeKey})`) : "Loading...";
-    const entryTypeColor = api.getEntryTypeColor(schema?.entryTypes[entryTypeKey]);
+    const entryTypeColor = SDK.getEntryTypeColor(schema?.entryTypes[entryTypeKey]);
     return <span contentEditable={false} {...attributes} className="text-sm font-medium font-sans">
         <span className={`rounded-l-md py-[3px] px-2 bg-gray-200 ${selected ? '!bg-sky-300' : ''}`} style={{color: entryTypeColor.textColor}}>
             <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>
@@ -79,7 +79,7 @@ export const EntryTypeVoid = (
  */
 export const EntryVoid = (
     { entryId, attributes, children }: {
-        entryId: api.VNID;
+        entryId: SDK.VNID;
         attributes: Record<string, unknown>;
         children: React.ReactNode;
     },
@@ -88,7 +88,7 @@ export const EntryVoid = (
     const [entryData, referenceCache, _error] = useEntrySummary(entryId);
     const entryName = entryData?.name ?? `Entry ${entryId}`;
     const entryTypeData = referenceCache?.entryTypes[entryData?.entryType.key ?? ""];
-    const color = api.getEntryTypeColor(entryTypeData);
+    const color = SDK.getEntryTypeColor(entryTypeData);
     const abbrev = entryTypeData?.abbreviation ?? "";
     return (
         <span

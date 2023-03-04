@@ -1,1 +1,1 @@
-export * from "../../../neolace-api/src/deps/computed-types.ts";
+export * from "../../../neolace-sdk/src/deps/computed-types.ts";

@@ -18,7 +18,7 @@ import {
 import { EntryTypeVoid, EntryVoid, PropertyVoid } from "components/slate-editor/slate-mdt";
 import { displayString, TranslatableString } from "components/utils/i18n";
 import { AutocompletionMenu } from "components/form-input/AutocompletionMenu";
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 
 interface Props {
     /** The lookup value that is currently being edited */
@@ -89,7 +89,7 @@ export const LookupExpressionInput: React.FunctionComponent<Props> = (
         }
     }, [autocompletion.type, editor.children, onFinishedEdits]);
 
-    const handleAutoCompleteSelection = React.useCallback((item: api.EntryValue|api.EntryTypeValue|api.PropertyValue) => {
+    const handleAutoCompleteSelection = React.useCallback((item: SDK.EntryValue|SDK.EntryTypeValue|SDK.PropertyValue) => {
         if (autocompletion.target === undefined) {
             return;
         }

@@ -1,4 +1,4 @@
-import { AnyEdit, consolidateEdits, DraftStatus, EditList, getEditType } from "neolace/deps/neolace-api.ts";
+import { AnyEdit, consolidateEdits, DraftStatus, EditList, getEditType } from "neolace/deps/neolace-sdk.ts";
 import { C, defaultUpdateFor, defineAction, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { Site } from "neolace/core/Site.ts";
 import { User } from "neolace/core/User.ts";

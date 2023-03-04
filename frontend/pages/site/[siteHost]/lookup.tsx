@@ -2,7 +2,7 @@ import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
-import { api, getSiteData } from "lib/api";
+import { SDK, getSiteData } from "lib/sdk";
 
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
@@ -13,7 +13,7 @@ import { defineMessage } from "components/utils/i18n";
 import Link from "next/link";
 
 interface PageProps {
-    sitePreloaded: api.SiteDetailsData;
+    sitePreloaded: SDK.SiteDetailsData;
 }
 interface PageUrlQuery extends ParsedUrlQuery {
     siteHost: string;

@@ -1,5 +1,5 @@
 import React, { useId } from "react";
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { LookupValue } from "./LookupValue";
@@ -11,7 +11,7 @@ import { Frame, FrameBody, FrameHeader } from "./Frame";
 interface Props {
     expr: string;
     mdtContext: MDTContext;
-    value: api.AnyLookupValue;
+    value: SDK.AnyLookupValue;
 }
 
 /**

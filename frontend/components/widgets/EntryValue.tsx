@@ -1,13 +1,13 @@
 import React from "react";
 import Link from "next/link";
-import { api, useRefCache, useSiteData } from "lib/api";
+import { SDK, useRefCache, useSiteData } from "lib/sdk";
 import { DEVELOPMENT_MODE } from "lib/config";
 import { Tooltip } from "components/widgets/Tooltip";
 import { MDTContext } from "components/markdown-mdt/mdt";
 import { EntryTooltipContent } from "components/widgets/EntryTooltipContent";
 
 interface Props {
-    entryId: api.VNID;
+    entryId: SDK.VNID;
     mdtContext: MDTContext;
     children?: never;
 }
@@ -19,7 +19,7 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
     const { site } = useSiteData();
     const refCache = useRefCache();
 
-    const entry: undefined | (NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) =
+    const entry: undefined | (NonNullable<SDK.EntryData["referenceCache"]>["entries"]["entryId"]) =
         refCache.entries[props.entryId];
     if (entry === undefined) {
         // This entry is not in the reference cache! It should have been though...
@@ -33,7 +33,7 @@ export const EntryValue: React.FunctionComponent<Props> = (props) => {
         );
     }
 
-    const color = api.getEntryTypeColor(refCache.entryTypes[entry.entryType.key]);
+    const color = SDK.getEntryTypeColor(refCache.entryTypes[entry.entryType.key]);
     const abbrev = refCache.entryTypes[entry.entryType.key]?.abbreviation ?? "";
 
     const widget = (

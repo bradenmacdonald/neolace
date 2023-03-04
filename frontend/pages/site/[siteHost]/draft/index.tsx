@@ -1,7 +1,7 @@
 import React from "react";
 import { NextPage } from "next";
 import { FormattedMessage, FormattedRelativeTime, useIntl } from "react-intl";
-import { api, client, useSiteData, useUser } from "lib/api";
+import { SDK, client, useSiteData, useUser } from "lib/sdk";
 
 import { SitePage } from "components/SitePage";
 import { Breadcrumb, Breadcrumbs } from "components/widgets/Breadcrumbs";
@@ -32,20 +32,20 @@ const DraftDetailsPage: NextPage = function (_props) {
 
             <TabBarRouter queryParam="status">
                 <Tab id="open" name={defineMessage({ defaultMessage: "Open", id: "JfG49w" })}>
-                    <ListOfDrafts status={api.DraftStatus.Open} />
+                    <ListOfDrafts status={SDK.DraftStatus.Open} />
                 </Tab>
                 <Tab id="accepted" name={defineMessage({ defaultMessage: "Accepted", id: "aFyFm0" })}>
-                    <ListOfDrafts status={api.DraftStatus.Accepted} />
+                    <ListOfDrafts status={SDK.DraftStatus.Accepted} />
                 </Tab>
                 <Tab id="cancelled" name={defineMessage({ defaultMessage: "Cancelled", id: "3wsVWF" })}>
-                    <ListOfDrafts status={api.DraftStatus.Cancelled} />
+                    <ListOfDrafts status={SDK.DraftStatus.Cancelled} />
                 </Tab>
             </TabBarRouter>
         </SitePage>
     );
 };
 
-const ListOfDrafts: React.FunctionComponent<{ status: api.DraftStatus }> = ({ status }) => {
+const ListOfDrafts: React.FunctionComponent<{ status: SDK.DraftStatus }> = ({ status }) => {
     const { site } = useSiteData();
     const user = useUser();
     const userKey = user.username ?? "";

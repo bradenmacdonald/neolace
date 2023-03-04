@@ -2,9 +2,9 @@
  * A graph that is displayed as the result of the .graph() lookup function.
  */
 import React from "react";
-import { api, client, useRefCache, useSiteData } from "lib/api";
+import { SDK, client, useRefCache, useSiteData } from "lib/sdk";
 import { MDTContext } from "../markdown-mdt/mdt";
-import { ReferenceCacheData } from "neolace-api";
+import { ReferenceCacheData } from "neolace-sdk";
 import { debugLog } from "lib/config";
 import { GraphData, NodeType } from "./graph-data";
 import { GraphViewer } from "./GraphViewer";
@@ -18,11 +18,11 @@ export interface Props {
      * However, if the parent component does change this value, all the extra "streamed" data added by the user will be
      * reset.
      */
-    value: api.GraphValue;
+    value: SDK.GraphValue;
     mdtContext: MDTContext;
 }
 
-const idForPlaceholder = (p: { entryId: api.VNID; relTypeKey: string; isOutbound: boolean }) => `ph${p.entryId}_${p.relTypeKey}_${p.isOutbound?"o":"i"}`;
+const idForPlaceholder = (p: { entryId: SDK.VNID; relTypeKey: string; isOutbound: boolean }) => `ph${p.entryId}_${p.relTypeKey}_${p.isOutbound?"o":"i"}`;
 
 /**
  * Render a graph of entries, starting with some initial set of entries (a GraphValue returned from the x.graph()
@@ -46,8 +46,8 @@ export const GraphDataStreamer: React.FunctionComponent<Props> = (props) => {
          * particular group/page of additional nodes.
          */
         fromPlaceholder: string,
-        value: api.GraphValue,
-        refCache: api.ReferenceCacheData,
+        value: SDK.GraphValue,
+        refCache: SDK.ReferenceCacheData,
     }[]>([]);
 
     // This is the same as props.value, except it won't change unless the value (not just the reference) has changed.
@@ -97,7 +97,7 @@ export const GraphDataStreamer: React.FunctionComponent<Props> = (props) => {
     // Combine 'baseData' (props.value) with 'additionalGraphData', and convert to Graphology format:
     const data: GraphData = React.useMemo(() => {
 
-        const allData: {value: api.GraphValue, refCache: api.ReferenceCacheData, fromPlaceholder?: string}[] = [
+        const allData: {value: SDK.GraphValue, refCache: SDK.ReferenceCacheData, fromPlaceholder?: string}[] = [
             {value: baseData, refCache: baseRefCache},
             ...additionalDataLoaded,
         ];

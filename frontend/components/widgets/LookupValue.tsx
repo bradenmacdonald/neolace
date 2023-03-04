@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { FormattedListParts, FormattedMessage } from "react-intl";
 
-import { api, useRefCache } from "lib/api";
+import { SDK, useRefCache } from "lib/sdk";
 import { Tooltip } from "components/widgets/Tooltip";
 import { InlineMDT, MDTContext } from "../markdown-mdt/mdt";
 import { LookupImage } from "./LookupImage";
@@ -18,7 +18,7 @@ import { LookupExpressionInput } from "components/form-input/LookupExpressionInp
 import { LookupDemo } from "./LookupDemo";
 
 interface LookupValueProps {
-    value: api.AnyLookupValue;
+    value: SDK.AnyLookupValue;
     mdtContext: MDTContext;
     /**
      * By default, for any paginated values, we'll show the first few values and link to a results page where more
@@ -140,7 +140,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 </span>;
             } else if (value.values.every((v) => v.type === "Image")) {
                 // This is a list of images. Display them in a larger, more useful way:
-                const images = value.values as api.ImageValue[];
+                const images = value.values as SDK.ImageValue[];
                 return (
                     <ul className="unstyled flex flex-row flex-wrap">
                         {images.map((v, idx) => (
@@ -165,7 +165,7 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         }
         case "EntryType": {
             const entryTypeName = refCache.entryTypes[value.key]?.name ?? value.key;
-            const entryTypeColor = api.getEntryTypeColor(refCache.entryTypes[value.key]);
+            const entryTypeColor = SDK.getEntryTypeColor(refCache.entryTypes[value.key]);
             return <span className="text-sm font-medium font-sans">
                 <span className={`rounded-l-md py-[3px] px-2 bg-gray-200`} style={{color: entryTypeColor.textColor, backgroundColor: entryTypeColor.backgroundColor}}>
                     <span className="text-xs inline-block min-w-[1.4em] text-center"><Icon icon="square-fill"/></span>

@@ -1,6 +1,6 @@
 import { getPlugins } from "neolace/plugins/loader.ts";
-import { CorePerm, PermissionName } from "neolace/deps/neolace-api.ts";
-export { type PermissionName } from "neolace/deps/neolace-api.ts";
+import { CorePerm, PermissionName } from "neolace/deps/neolace-sdk.ts";
+export { type PermissionName } from "neolace/deps/neolace-sdk.ts";
 import { ActionObject } from "./action.ts";
 
 export interface Permission {

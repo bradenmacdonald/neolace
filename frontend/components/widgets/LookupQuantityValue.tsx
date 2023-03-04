@@ -1,12 +1,12 @@
 import React from "react";
 
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 import { Tooltip } from "components/widgets/Tooltip";
 import { FormattedMessage } from "react-intl";
 import { defineMessage, displayText, TranslatableText } from "components/utils/i18n";
 
 interface Props {
-    value: api.QuantityValue;
+    value: SDK.QuantityValue;
     hideUnits?: boolean;
 }
 

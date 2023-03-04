@@ -1,4 +1,4 @@
-import { EntryFeaturesData, SiteSchemaData } from "neolace/deps/neolace-api.ts";
+import { EntryFeaturesData, SiteSchemaData } from "neolace/deps/neolace-sdk.ts";
 import { Type } from "neolace/deps/computed-types.ts";
 import { RawVNode, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import type { EnabledFeature } from "./EnabledFeature.ts";

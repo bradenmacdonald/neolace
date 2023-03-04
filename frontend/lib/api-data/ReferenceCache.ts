@@ -1,6 +1,6 @@
 import React from "react";
 
-import * as api from "neolace-api";
+import * as SDK from "neolace-sdk";
 import { useDraft } from "./DraftData";
 
 /**
@@ -12,7 +12,7 @@ import { useDraft } from "./DraftData";
  * For advanced or complex use cases, <MergeRefCache> can be used to combine multiple reference caches together.
  */
 export const RefCacheContext = React.createContext<
-    { refCache?: api.ReferenceCacheData }
+    { refCache?: SDK.ReferenceCacheData }
 >({
     // Default values for this context:
     refCache: undefined,
@@ -22,7 +22,7 @@ export const RefCacheContext = React.createContext<
  * React hook to get the reference cache data, if available in this context
  * @returns
  */
-export function useRefCache(options: Record<string, unknown> = {}): api.ReferenceCacheData {
+export function useRefCache(options: Record<string, unknown> = {}): SDK.ReferenceCacheData {
     const context = React.useContext(RefCacheContext);
     const [draft, unsavedEdits] = useDraft();
 
@@ -36,7 +36,7 @@ export function useRefCache(options: Record<string, unknown> = {}): api.Referenc
         if (draft?.edits || unsavedEdits.length > 0) {
             // If we're in some context where there are edits from the draft or an editor,
             // apply those edits to the reference cache too.
-            const newRefCache = api.applyEditsToReferenceCache(base, [...(draft?.edits ?? []), ...unsavedEdits]);
+            const newRefCache = SDK.applyEditsToReferenceCache(base, [...(draft?.edits ?? []), ...unsavedEdits]);
             return newRefCache;
         }
         return base;

@@ -10,7 +10,7 @@ import {
 import { Vertex } from "neolace/deps/vertex-framework.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
-import { InvalidEdit, VNID } from "neolace/deps/neolace-api.ts";
+import { InvalidEdit, VNID } from "neolace/deps/neolace-sdk.ts";
 import { AppliedEdit } from "../AppliedEdit.ts";
 import { getEntryFeaturesData } from "neolace/core/entry/features/get-feature-data.ts";
 

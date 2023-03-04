@@ -3,7 +3,7 @@ import { GetStaticPaths, GetStaticProps, NextPage } from "next";
 import { ParsedUrlQuery } from "querystring";
 import { FormattedMessage, useIntl } from "react-intl";
 
-import { api, client, getSiteData, SiteData, UserStatus, useUser } from "lib/api";
+import { SDK, client, getSiteData, SiteData, UserStatus, useUser } from "lib/sdk";
 import { SiteDataProvider, SitePage } from "components/SitePage";
 import { Control, Form } from "components/form-input/Form";
 import { Button } from "components/widgets/Button";
@@ -52,7 +52,7 @@ const LoginPage: NextPage<PageProps> = function (props) {
             });
             setSubmittedSuccessfully(true);
         } catch (err) {
-            if (err instanceof api.ApiError) {
+            if (err instanceof SDK.ApiError) {
                 setSubmissionError(err.message);
             } else {
                 throw err;

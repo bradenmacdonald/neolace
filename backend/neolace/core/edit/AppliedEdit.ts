@@ -1,5 +1,5 @@
 import * as check from "neolace/deps/computed-types.ts";
-import { EditChangeType, getEditType } from "neolace/deps/neolace-api.ts";
+import { EditChangeType, getEditType } from "neolace/deps/neolace-sdk.ts";
 import { Field, FieldValidationError, RawVNode, VNodeType } from "neolace/deps/vertex-framework.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { EditSource } from "./EditSource.ts";

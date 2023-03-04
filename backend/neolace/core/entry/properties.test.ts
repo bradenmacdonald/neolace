@@ -1,5 +1,5 @@
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
-import { EditList, PropertyMode, PropertyType } from "neolace/deps/neolace-api.ts";
+import { EditList, PropertyMode, PropertyType } from "neolace/deps/neolace-sdk.ts";
 
 import { assertEquals, beforeAll, group, resetDBToBlankSnapshot, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";

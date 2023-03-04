@@ -1,4 +1,4 @@
-import type * as api from "neolace/deps/neolace-api.ts";
+import type * as api from "neolace/deps/neolace-sdk.ts";
 import { IntegerValue, StringValue } from "../values.ts";
 import { ConcreteValue, LookupValue } from "./base.ts";
 

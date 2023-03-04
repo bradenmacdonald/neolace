@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { api, useRefCache, useSiteData } from "lib/api";
+import { SDK, useRefCache, useSiteData } from "lib/sdk";
 import { DEVELOPMENT_MODE } from "lib/config";
 import { Tooltip } from "components/widgets/Tooltip";
 import { MDTContext } from "components/markdown-mdt/mdt";
@@ -21,8 +21,8 @@ export const EntryLink: React.FunctionComponent<Props> = (props) => {
     const refCache = useRefCache();
     const currentEntryId = props.mdtContext.entryId;
 
-    const entry: undefined|(NonNullable<api.EntryData["referenceCache"]>["entries"]["entryId"]) =
-        api.isVNID(props.entryKey) ? refCache.entries[props.entryKey]
+    const entry: undefined|(NonNullable<SDK.EntryData["referenceCache"]>["entries"]["entryId"]) =
+        SDK.isVNID(props.entryKey) ? refCache.entries[props.entryKey]
         : Object.values(refCache.entries).find(e => e.key === props.entryKey);
     if (entry === undefined) {
         // This entry is not in the reference cache! It should have been though...

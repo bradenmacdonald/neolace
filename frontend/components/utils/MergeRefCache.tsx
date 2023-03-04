@@ -1,5 +1,5 @@
 import React from "react";
-import { api } from "lib/api";
+import { SDK } from "lib/sdk";
 import { RefCacheContext, useRefCache } from "lib/api-data/ReferenceCache";
 
 /**
@@ -7,7 +7,7 @@ import { RefCacheContext, useRefCache } from "lib/api-data/ReferenceCache";
  * available to all child components in the React tree.
  */
 export const MergeRefCache: React.FunctionComponent<{
-    mergeCaches: api.ReferenceCacheData[],
+    mergeCaches: SDK.ReferenceCacheData[],
     children: React.ReactNode,
 }> = ({mergeCaches, children}) => {
     const existingRefCache = useRefCache();

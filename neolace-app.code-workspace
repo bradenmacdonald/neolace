@@ -7,10 +7,13 @@
 			"path": "frontend"
 		},
 		{
-			"path": "neolace-api"
+			"path": "neolace-sdk"
 		},
 		{
 			"path": "arch-decisions"
+		},
+		{
+			"path": "."
 		}
 	],
 	"settings": {
@@ -22,7 +25,7 @@
 			"backend/": true,
 			"frontend/": true,
 			"arch-decisions/": true,
-			"neolace-api/": true,
+			"neolace-sdk/": true,
 		},
 		"deno.lint": true,
 		"deno.suggest.imports.hosts": {

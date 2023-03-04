@@ -1,6 +1,6 @@
 import { assert, assertEquals, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { entryToIndexDocument, preloadDataForIndexingEntries } from "./entry-to-index-doc.ts";
-import * as api from "neolace/deps/neolace-api.ts";
+import * as api from "neolace/deps/neolace-sdk.ts";
 
 group("entryToIndexDocument", () => {
     const defaultData = setTestIsolation(setTestIsolation.levels.DEFAULT_NO_ISOLATION);

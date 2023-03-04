@@ -5,7 +5,7 @@ import { files } from "./datafiles.ts";
 import { AcceptDraft, CreateDraft, UpdateDraft } from "neolace/core/edit/Draft-actions.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { entryData } from "./content.ts";
-import { ImageSizingMode } from "neolace/deps/neolace-api.ts";
+import { ImageSizingMode } from "neolace/deps/neolace-sdk.ts";
 import { RecordTempFile } from "neolace/core/edit/TempFile-actions.ts";
 
 export async function createImages(siteId: VNID) {

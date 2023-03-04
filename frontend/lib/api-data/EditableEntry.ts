@@ -1,5 +1,5 @@
 import React from "react";
-import * as api from "neolace-api";
+import * as SDK from "neolace-sdk";
 import useSWR from "swr";
 
 import { client } from "lib/api-client";
@@ -14,7 +14,7 @@ import { useSchema } from "./Schema";
  */
 export function useEditableEntry(
     /** The ID of the entry. May be a new entry if the draft context contains a 'CreateEntry' edit. */
-    entryId: api.VNID,
+    entryId: SDK.VNID,
     /** Is this a new entry? If so we won't try to load the "base version" from the server. */
     isNewEntry: boolean,
     /**
@@ -24,8 +24,8 @@ export function useEditableEntry(
      */
     context: { draftContext?: DraftContextData },
 ): [
-    data: api.EditableEntryData | undefined,
-    error: api.ApiError | undefined,
+    data: SDK.EditableEntryData | undefined,
+    error: SDK.ApiError | undefined,
     // mutate: KeyedMutator<api.EditableEntryData | undefined>,
 ] {
     const { site, siteError } = useSiteData();
@@ -39,15 +39,15 @@ export function useEditableEntry(
     const key = `entry-edit:${site.key}:${entryId}`;
     const { data: baseEntry, error } = useSWR(key, async () => {
         if (siteError) {
-            throw new api.ApiError("Site Error", 500);
+            throw new SDK.ApiError("Site Error", 500);
         }
-        if (!api.isVNID(entryId)) {
-            throw new api.ApiError(`"${entryId}" is not a valid VNID`, 500);
+        if (!SDK.isVNID(entryId)) {
+            throw new SDK.ApiError(`"${entryId}" is not a valid VNID`, 500);
         }
         if (!site.key) {
             return undefined; // We need to wait for the siteKey before we can load the entry
         }
-        let data: api.EditableEntryData = {
+        let data: SDK.EditableEntryData = {
             // Start with blank entry data:
             id: entryId,
             key: "",
@@ -61,13 +61,13 @@ export function useEditableEntry(
             try {
                 data = await client.getEntry(entryId, {
                     flags: [
-                        api.GetEntryFlags.IncludeFeatures,
-                        api.GetEntryFlags.IncludeRawProperties,
+                        SDK.GetEntryFlags.IncludeFeatures,
+                        SDK.GetEntryFlags.IncludeRawProperties,
                     ] as const,
                     siteKey: site.key,
                 });
             } catch (err) {
-                if (err instanceof api.NotFound) {
+                if (err instanceof SDK.NotFound) {
                     // No such entry exists. But it may exist within the draft, if it was previously created and saved
                     // to this draft. So for now we just return a blank entry. We can't check if it exists within the
                     // draft here because this useSWR fetcher is not keyed to the draft's edits so shouldn't use them.
@@ -88,8 +88,8 @@ export function useEditableEntry(
         // The previously published version of the entry (if any),
         // PLUS any edits previously made to it in the current draft (if any),
         // PLUS any edits currently made on this page now, but not yet saved to the draft (if any)
-        const edits: api.AnyEdit[] = [...(draft?.edits ?? []), ...unsavedEdits];
-        return baseEntry && baseSchema ? api.applyEditsToEntry(baseEntry, baseSchema, edits) : undefined;
+        const edits: SDK.AnyEdit[] = [...(draft?.edits ?? []), ...unsavedEdits];
+        return baseEntry && baseSchema ? SDK.applyEditsToEntry(baseEntry, baseSchema, edits) : undefined;
     }, [baseEntry, baseSchema, draft?.edits, unsavedEdits]);
 
     return [entry, error];

@@ -1,7 +1,7 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
 
-import { api, useSchema } from "lib/api";
+import { SDK, useSchema } from "lib/sdk";
 import { Spinner } from "components/widgets/Spinner";
 import { InlineMDT, MDTContext } from "components/markdown-mdt/mdt";
 import { defineMessage } from "components/utils/i18n";
@@ -25,7 +25,7 @@ export const ListSchemaProperties: React.FunctionComponent<Props> = (props) => {
     const [searchKeyword, setSearchKeyword] = React.useState("");
 
     const filteredProps = React.useMemo(() => {
-        let props: api.PropertyData[] = [];
+        let props: SDK.PropertyData[] = [];
         if (!schema) {
             return props;
         }
@@ -87,7 +87,7 @@ export const ListSchemaProperties: React.FunctionComponent<Props> = (props) => {
                                     <strong>{prop.name || "[??]"}</strong>
                             }
                             {' '}
-                            {prop.type !== api.PropertyType.Value ? <span className="text-xs rounded-lg bg-yellow-100 py-[2px] px-[4px] mr-1 cursor-default">
+                            {prop.type !== SDK.PropertyType.Value ? <span className="text-xs rounded-lg bg-yellow-100 py-[2px] px-[4px] mr-1 cursor-default">
                                 <FormattedMessage defaultMessage="Relationship" id="/OEORY"/>
                             </span> : null}
                             {/* Display a little icon for each entry type this property applies to: */}
@@ -97,8 +97,8 @@ export const ListSchemaProperties: React.FunctionComponent<Props> = (props) => {
                                     className="text-xs rounded-lg py-[2px] px-[4px] mx-1 inline-block min-w-[1.5em] text-center cursor-default"
                                     title={schema.entryTypes[entryTypeKey]?.name}
                                     style={{
-                                        backgroundColor: api.getEntryTypeColor(schema.entryTypes[entryTypeKey]).backgroundColor,
-                                        color: api.getEntryTypeColor(schema.entryTypes[entryTypeKey]).textColor,
+                                        backgroundColor: SDK.getEntryTypeColor(schema.entryTypes[entryTypeKey]).backgroundColor,
+                                        color: SDK.getEntryTypeColor(schema.entryTypes[entryTypeKey]).textColor,
                                     }}
                                 >{schema.entryTypes[entryTypeKey]?.abbreviation || "\u2003"}</span>
                             ))}

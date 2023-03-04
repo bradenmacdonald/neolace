@@ -2,7 +2,7 @@ import { C } from "neolace/deps/vertex-framework.ts";
 import { assertInstanceOf, assertRejects, TestLookupContext } from "neolace/lib/tests.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { AnnotatedValue, EntryValue, PageValue, StringValue } from "neolace/core/lookup/values.ts";
-import { AnyBulkEdit, VNID } from "neolace/deps/neolace-api.ts";
+import { AnyBulkEdit, VNID } from "neolace/deps/neolace-sdk.ts";
 import { LookupEvaluationError } from "neolace/core/lookup/errors.ts";
 import { getConnection } from "../connections.ts";
 import { ApplyBulkEdits } from "../ApplyBulkEdits.ts";

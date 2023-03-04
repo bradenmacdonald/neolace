@@ -1,4 +1,4 @@
-import { api, SiteData } from "lib/api";
+import { SDK, SiteData } from "lib/sdk";
 import React, { useContext } from "react";
 import type { UiSlotChange } from "components/widgets/UISlot";
 
@@ -27,10 +27,10 @@ export interface PluginPageProps {
 export interface PluginDefinition {
     id: string;
     getUiSlotChanges?: (siteConfig: Record<string, unknown>) => Partial<Record<UiSlotId, UiSlotChange[]>>;
-    getPageForPath?: (site: api.SiteDetailsData, path: string) => string | undefined;
+    getPageForPath?: (site: SDK.SiteDetailsData, path: string) => string | undefined;
     overrideLookupValue?: (
         siteConfig: Record<string, unknown>,
-        value: api.StringValue,
+        value: SDK.StringValue,
     ) => React.ReactElement | undefined;
 }
 
@@ -42,7 +42,7 @@ export interface EnabledPluginsConfig {
         uiSlotChanges: Partial<Record<UiSlotId, UiSlotChange[]>>;
         overrideLookupValue?: (
             siteConfig: Record<string, unknown>,
-            value: api.StringValue,
+            value: SDK.StringValue,
         ) => React.ReactElement | undefined;
     }[];
     loaded: boolean;

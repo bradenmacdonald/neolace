@@ -1,4 +1,4 @@
-import { FrontendConfigData, FrontendConfigSchema } from "neolace/deps/neolace-api.ts";
+import { FrontendConfigData, FrontendConfigSchema } from "neolace/deps/neolace-sdk.ts";
 import * as check from "neolace/deps/computed-types.ts";
 import {
     C,

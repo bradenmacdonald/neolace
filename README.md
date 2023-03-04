@@ -1,6 +1,6 @@
 # neolace
 
-This monorepo contains the code for [neolace](https://neolace.com).
+This monorepo contains the code for [Neolace](https://neolace.com).
 
 Neolace is a tool for managing knowledge collaboratively - either privately
 within an organization or publicly online. It's a combination of a wiki, a
@@ -9,19 +9,29 @@ focus is on making it easy to input, connect, and organize, and explore
 knowledge. Knowledge is not just facts or data, but also articles, explanations,
 discussions, and images.
 
+## Screenshots
+
+Viewing an entry:
+
+![a screenshot of reading an entry](./readme-screenshot-viewing.png)
+
+Creating a new entry using the UI:
+
+![a screenshot of the editor interface](./readme-screenshot-editor.png)
+
 ## What's in the monorepo
 
 Neolace is 100% written in TypeScript. Here's how the code is organized:
 
 * __backend__ - The Neolace backend, a Deno server that implements Neolace. The
   backend persists all of its data using Neo4j.
-  - `backend/neolace/api` - The REST API, which exposes the `core` and its `plugins` via REST.
   - `backend/neolace/core` - Core data models and functionality used by all other parts of the code. This defines the key entities like `Site`, `Entry`, `EntryType`, `Property`, and how they relate to each other. The core provides permissions-related functionality but generally doesn't enforce permissions. Permissions are enforced in the `api` and `lookup` code.
   - `backend/neolace/core/lookup` - The implementation of our lookup language, used to query data.
   - `backend/neolace/deps` - Dependencies used by our backend. We try to keep this fairly minimal to avoid the problems that come with having too many dependencies. The "main" dependency is [Vertex Framework](https://github.com/neolace-dev/vertex-framework) which provides a type-safe interface to the Neo4j database.
   - `backend/neolace/plugins` - Backend plugins which can extend neolace's functionality. For example, our search experience (powered by TypeSense) is implemented as a plugin.
+  - `backend/neolace/rest-api` - The REST API, which exposes the `core` and its `plugins` via REST.
 * __frontend__ - The Neolace frontend, a Next.js React application that implements our standard user interface. Plugins and theme settings can be used to customize the UI, or you can replace it entirely with a custom frontend.
-* __neolace-api__ - The Neolace API, which provides TypeScript interfaces for all of the Neolace entities. This code is shared by the frontend and the backend. It also contains an API client and an admin script, which can be used to connect to the REST API.
+* __neolace-sdk__ - The Neolace Software Development Kit (SDK), which provides TypeScript interfaces for all of the Neolace entities. This code is shared by the frontend and the backend. It also contains an API client and an admin script, which can be used to connect to the REST API.
 
 ## Developer quickstart
 
@@ -53,13 +63,15 @@ production deployment kit that includes Terraform code, best practices, and
 support. Whatever path you pick, please get in touch with us at team@neolace.com
 and we'll give you a hand.
 
-## Troubleshooting
+## Troubleshooting (Development Issues)
 
 ### Neo4j fails to start: `Neo4j is already running`
 
-If you see this error, you can fix by running `docker compose up neo4j --force-recreate`.
+If you see this error, you can fix by running `docker compose up neo4j --force-recreate`
 
-## Other howtos
+(Or `neo4j-test` if it's the test database server that failed.)
+
+## Other How-To Guides for Developers
 
 ### How to analyze the frontend bundle's size
 
