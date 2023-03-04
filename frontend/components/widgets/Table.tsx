@@ -18,7 +18,7 @@ export const Table: React.FunctionComponent<Props> = (props: Props) => {
             <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
                 <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
                     <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                        <table className="min-w-full divide-y divide-gray-300">
+                        <table className="min-w-full max-w-full divide-y divide-gray-300">
                             <thead className="bg-gray-50">
                                 <tr>
                                     {props.headings.map((h, idx) =>
@@ -52,7 +52,7 @@ export const TableRow: React.FunctionComponent<TableRowProps> = (props: TableRow
     return (
         // first 
         // last sm:pr-6
-        <tr className="[&>td]:relative [&>td]:whitespace-nowrap [&>td]:py-4 [&>td]:pl-3 [&>td]:pr-4 [&>td]:text-sm [&>td]:font-medium [&>td:first-child]:sm:pl-6 [&>td:last-child]:sm:pr-6">
+        <tr className="[&>td]:relative [&>td]:py-4 [&>td]:pl-3 [&>td]:pr-4 [&>td]:text-sm [&>td]:font-medium [&>td:first-child]:sm:pl-6 [&>td:last-child]:sm:pr-6">
             {props.children}
         </tr>
     );
