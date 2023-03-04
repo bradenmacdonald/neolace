@@ -15,11 +15,11 @@ import {
     DraftData,
     DraftStatus,
     GetDraftFlags,
-TempFileData,
+    TempFileData,
 } from "./edit/index.ts";
 import { EntryData, EntrySummaryData, EvaluateLookupData, GetEntryFlags } from "./content/index.ts";
-import { SiteDetailsData, SiteHomePageData, SiteSearchConnectionData, SiteUserMyPermissionsData } from "./site/Site.ts";
-import { SiteUserSummaryData } from "./site/SiteAdmin.ts";
+import { CreateOrUpdateSiteSchema, SiteDetailsData, SiteHomePageData, SiteSearchConnectionData, SiteUserMyPermissionsData } from "./site/Site.ts";
+import { CreateGroupData, GroupDetailsData, GroupSummaryData, SiteUserSummaryData } from "./site/SiteAdmin.ts";
 import * as schemas from "./api-schemas.ts";
 import { VNID } from "./types.ts";
 
@@ -225,7 +225,7 @@ export class NeolaceApiClient {
     // Site API Methods
 
     public async getSite(criteria: { domain: string }): Promise<SiteDetailsData> {
-        return await this.call(`/site/find?domain=${encodeURIComponent(criteria.domain)}`, { method: "GET" });
+        return await this.call(`/find-site?domain=${encodeURIComponent(criteria.domain)}`, { method: "GET" });
     }
 
     public async getSiteHomePage(options?: { siteKey?: string }): Promise<SiteHomePageData> {
@@ -242,6 +242,18 @@ export class NeolaceApiClient {
     public async replaceSiteSchema(schema: SiteSchemaData, options?: { siteKey?: string }): Promise<void> {
         const siteKey = this.getSiteKey(options);
         await this.call(`/site/${siteKey}/schema`, { method: "PUT", data: schema });
+    }
+
+    /**
+     * Create or update a site, setting all of its core configuration.
+     * This API is mostly meant for realm admins and developers, as it can change very critical settings including
+     * permissions, domain name, and the home page content.
+     * There are other, safer APIs that can be used for more limited changes like updating the home page or even
+     * creating a site (depending on plugins).
+     */
+    public async createOrUpdateSite(data: schemas.Type<typeof CreateOrUpdateSiteSchema> & { siteKey?: string }) {
+        const siteKey = this.getSiteKey(data);
+        await this.call(`/site/${siteKey}`, { method: "PUT", data });
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -455,6 +467,48 @@ export class NeolaceApiClient {
         const siteKey = this.getSiteKey(options);
         return await this.call(`/site/${siteKey}/user` + (options?.page ? `?page=${options.page}` : ""), {
             method: "GET",
+        });
+    }
+
+    public async getSiteGroups(
+        options?: { siteKey?: string },
+    ): Promise<GroupSummaryData[]> {
+        const siteKey = this.getSiteKey(options);
+        // This API may support pagination in the future but is currently un-paginated.
+        const response = await this.call(`/site/${siteKey}/group`, { method: "GET" });
+        return response.values;
+    }
+
+    public async createGroup(
+        data_: CreateGroupData & { siteKey?: string },
+    ): Promise<GroupDetailsData> {
+        const {siteKey: _, ...data} = data_;
+        const siteKey = this.getSiteKey(data_);
+        const response = await this.call(`/site/${siteKey}/group`, { method: "POST", data });
+        return response;
+    }
+
+    /** Add the specified user to the specified group. This is a no-op if the user is already in the group. */
+    public async addGroupMember(
+        groupId: VNID,
+        username: string,
+        options?: { siteKey?: string },
+    ): Promise<void> {
+        const siteKey = this.getSiteKey(options);
+        await this.call(`/site/${siteKey}/group/${groupId}/user/${encodeURIComponent(username)}`, {
+            method: "PUT",
+        });
+    }
+
+    /** Remove the specified user from the specified group. This is a no-op if the user is not in the group. */
+    public async removeGroupMember(
+        groupId: VNID,
+        username: string,
+        options?: { siteKey?: string },
+    ): Promise<void> {
+        const siteKey = this.getSiteKey(options);
+        await this.call(`/site/${siteKey}/group/${groupId}/user/${encodeURIComponent(username)}`, {
+            method: "DELETE",
         });
     }
 

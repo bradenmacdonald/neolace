@@ -3,7 +3,7 @@ import { HealthCheckResource } from "./health.ts";
 import { RequestLoginResource } from "./auth/request-login.ts";
 import { PasswordlessLoginWebhookResource } from "./auth/hooks/passwordless-login.ts";
 import { SystemKeyResource } from "./auth/system-key.ts";
-import { SiteFindByDomainResource } from "./site/find.ts";
+import { SiteFindByDomainResource } from "./find-site.ts";
 import { SiteHomeResource } from "./site/[siteKey]/home.ts";
 import { EvaluateLookupResource } from "./site/[siteKey]/lookup.ts";
 import { SchemaIndexResource } from "./site/[siteKey]/schema/index.ts";
@@ -14,6 +14,9 @@ import { TempFileResource } from "./site/[siteKey]/file.ts";
 import { AcceptDraftResource } from "./site/[siteKey]/draft/[draftNum]/accept.ts";
 import { EntryListResource } from "./site/[siteKey]/entry/index.ts";
 import { EntryResource } from "./site/[siteKey]/entry/[entryId]/index.ts";
+import { SiteResource } from "./site/[siteKey]/index.ts";
+import { SiteGroupsResource } from "./site/[siteKey]/group/index.ts";
+import { SiteGroupMemberResource } from "./site/[siteKey]/group/[groupId]/user/[username]/index.ts";
 import { SiteUserIndexResource } from "./site/[siteKey]/user/index.ts";
 import { SiteUserMyPermissionsResource } from "./site/[siteKey]/my-permissions.ts";
 import { UserIndexResource } from "./user/index.ts";
@@ -38,6 +41,9 @@ export const builtInRestApiResources: (typeof Drash.Resource)[] = [
     AcceptDraftResource,
     EntryListResource,
     EntryResource,
+    SiteResource,
+    SiteGroupsResource,
+    SiteGroupMemberResource,
     SiteUserIndexResource,
     SiteUserMyPermissionsResource,
     UserIndexResource,

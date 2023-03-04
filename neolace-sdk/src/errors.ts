@@ -117,6 +117,8 @@ export enum InvalidRequestReason {
     ValidationTokenInvalid = "400_VAL_TOKEN_INVALID",
     /** Tried to register a user account, but another account already exists with the same username */
     UsernameAlreadyRegistered = "400_USERNAME_EXISTS",
+    /** Cannot create a new site because it already exists */
+    SiteAlreadyExists = "400_SITE_EXISTS",
     /** Tried to accept a draft that contains no edits */
     DraftIsEmpty = "400_DRAFT_EMPTY",
     /** The server returned a 400 bad request code without a 'reason' that this API client understands. */

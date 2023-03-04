@@ -14,6 +14,7 @@ import * as log from "https://deno.land/std@0.170.0/log/mod.ts";
 import { parse as parseYaml, stringify as stringifyYaml } from "https://deno.land/std@0.170.0/encoding/yaml.ts";
 import { readAll } from "https://deno.land/std@0.170.0/streams/read_all.ts";
 import { assertEquals } from "https://deno.land/std@0.170.0/testing/asserts.ts";
+import { getApiClientFromEnv } from "./src/cli-client.ts";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Usage instructions
@@ -39,44 +40,6 @@ Where command is one of:
         Erase all content on the specified site. This is dangerous!
 `);
     Deno.exit(code);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Get the API client
-
-let _apiClientPromise: Promise<api.NeolaceApiClient> | undefined = undefined;
-
-async function getApiClient(): Promise<api.NeolaceApiClient> {
-    if (_apiClientPromise !== undefined) {
-        return _apiClientPromise;
-    }
-    return _apiClientPromise = (async () => {
-        const apiEndpoint = Deno.env.get("NEOLACE_API_ENDPOINT") ?? "http://local.neolace.net:5554";
-        if (!apiEndpoint.startsWith("http")) {
-            log.error("You must set NEOLACE_API_ENDPOINT to a valid http:// or https:// URL for the Neolace realm.");
-            Deno.exit(1);
-        }
-        const apiKey = Deno.env.get("NEOLACE_API_KEY") ?? "SYS_KEY_INSECURE_DEV_KEY";
-
-        const client = new api.NeolaceApiClient({
-            basePath: apiEndpoint,
-            fetchApi: fetch,
-            authToken: apiKey,
-        });
-
-        try {
-            await client.checkHealth();
-        } catch (err) {
-            if (err instanceof api.NotAuthenticated) {
-                log.error(`unable to authenticate with Neolace API server ${apiEndpoint}. Check your API key.`);
-                Deno.exit(1);
-            } else {
-                log.error(`Neolace API server ${apiEndpoint} is not accessible or not healthy.`);
-                throw err;
-            }
-        }
-        return client;
-    })();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +87,7 @@ function yamlToSchema(yamlString: string): api.SiteSchemaData {
 }
 
 async function exportSchema(siteKey: string): Promise<string> {
-    const client = await getApiClient();
+    const client = await getApiClientFromEnv();
     const schema = await client.getSiteSchema({ siteKey });
     const yamlSchema = schemaToYaml(schema);
     // Do a quick validation:
@@ -144,7 +107,7 @@ async function syncSchema(
     siteKey: string,
     schemaString: string,
 ): Promise<api.SiteSchemaData> {
-    const client = await getApiClient();
+    const client = await getApiClientFromEnv();
     const schema = yamlToSchema(schemaString);
     await client.replaceSiteSchema(schema, { siteKey });
     return schema;
@@ -206,7 +169,7 @@ async function exportCommand(
     }
     // Export the content:
     if (options.exportContent) {
-        const client = await getApiClient();
+        const client = await getApiClientFromEnv();
         const schema = await client.getSiteSchema({ siteKey });
         // Map from VNID to a friendlier entry/property ID used for export purposes only:
         const keys: Record<VNID, string> = {};
@@ -316,7 +279,7 @@ async function exportCommand(
  * Import schema and content from a folder
  */
 async function importSchemaAndContent({ siteKey, sourceFolder }: { siteKey: string; sourceFolder: string }) {
-    const client = await getApiClient();
+    const client = await getApiClientFromEnv();
     // First, sync the schema
     const schemaYaml = await Deno.readTextFile(sourceFolder + "/schema.yaml").catch(() => {
         log.error(`Required file "${sourceFolder}/schema.yaml" not found. Did you specify the wrong directory name?`);
@@ -656,7 +619,7 @@ if (import.meta.main) {
                     Deno.exit(0);
                 }
             }
-            const client = await getApiClient();
+            const client = await getApiClientFromEnv();
             log.warning("Deleting all entries");
             await client.eraseAllEntriesDangerously({ siteKey, confirm: "danger" });
             log.info("All entries deleted.");

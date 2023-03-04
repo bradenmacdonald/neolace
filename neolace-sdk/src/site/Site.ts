@@ -3,6 +3,15 @@ import { ReferenceCacheSchema } from "../content/reference-cache.ts";
 import { PermissionName } from "../permissions.ts";
 import { VNID } from "../types.ts";
 
+export enum SiteAccessMode {
+    /** on a private site, access to entries is restricted to invited users */
+    Private = "private",
+    /** Public (contributions): anyone can read all entries and propose edits (default) */
+    PublicContributions = "pubcont",
+    /** Public (read only): anyone can read all entries but only those with permission can propose edits */
+    PublicReadOnly = "readonly",
+}
+
 const rgbTuple = array.min(3).max(3).of(number).transform((x) => x as [number, number, number]);
 
 export const FrontendConfigSchema = Schema({
@@ -25,6 +34,36 @@ export const FrontendConfigSchema = Schema({
 export type FrontendConfigData = Type<typeof FrontendConfigSchema>;
 
 /**
+ * Parameters for the API call used to create or update a site.
+ * Any fields which are left undefined will be unchanged if the site already exists.
+ */
+export const CreateOrUpdateSiteSchema = Schema({
+    /** Should the site be created if it doesn't exist? */
+    create: boolean.strictOptional(),
+    /** If this is true and the site already exists, an error will be thrown and no changes will be made. */
+    createOnly: boolean.strictOptional(),
+    /** Name of this site (always public) */
+    name: string.min(2).strictOptional(),
+    /** Canonical domain name of this site, e.g. "plantdb.neolace.com" */
+    domain: string.strictOptional(),
+    /**
+     * Description: a public description of the website, displayed to users in a few different places as well as to
+     * search engines.
+     */
+    description: string.strictOptional(),
+    /** Access mode: defines the base level of permissions for the site, e.g. if the content is public or private. */
+    accessMode: Schema.enum(SiteAccessMode).strictOptional(),
+    /** Markdown content for the site's home page. */
+    homePageContent: string.strictOptional(),
+    /** Markdown content for the site's footer, seen on every page. */
+    footerContent: string.strictOptional(),
+    /** Configuration for the frontend, like colors, plugins, etc. */
+    frontendConfig: FrontendConfigSchema.strictOptional(),
+    /** Permissions scheme for the site. This allows customizing the defaults that are set by 'accessMode' */
+    publicGrantStrings: array.of(string).strictOptional(),
+});
+
+/**
  * Data type that gives information about a Site
  */
 export const SiteDetailsSchema = Schema({
@@ -40,8 +79,8 @@ export const SiteDetailsSchema = Schema({
      */
     description: string,
     /**
-     * The friendly ID is a slug-like string identifier that uniquely identifies this site and must be used to specify
-     * the site in any site-specific API requests.
+     * The key is a slug-like string identifier that uniquely identifies this site and must be used to specify the site
+     * in any site-specific API requests.
      */
     key: string,
     /**
