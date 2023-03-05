@@ -74,7 +74,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 hideShowMoreLink={props.hideShowMoreLink}
             />
             {
-                detail && detail.type !== "Page" && detail.type !== "Graph" && detail.type !== "Image" ?
+                detail && detail.type === "Null" ? null
+                : detail && detail.type !== "Page" && detail.type !== "Graph" && detail.type !== "Image" ?
                     <div className="text-sm inline mx-1">
                         (<LookupValue value={detail} mdtContext={props.mdtContext} hideShowMoreLink={props.hideShowMoreLink} />)
                     </div>
