@@ -77,7 +77,7 @@ group("lookup.ts", () => {
         assertEquals(result.resultValue, {
             type: "Error",
             errorClass: "LookupEvaluationError",
-            message: "Date values should be in the format YYYY-MM-DD.",
+            message: "Date values should be in the format YYYY-MM-DD (or YYYY, YYYY-MM, MM-DD, or MM).",
         });
     });
 

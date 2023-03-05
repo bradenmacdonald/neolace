@@ -1,11 +1,11 @@
 import { LookupExpression } from "../base.ts";
-import { DateValue, StringValue } from "../../values.ts";
+import { DatePartialValue, DateValue, StringValue } from "../../values.ts";
 import { LookupEvaluationError } from "../../errors.ts";
 import { LookupContext } from "../../context.ts";
 import { LookupFunctionOneArg } from "./base.ts";
 
 /**
- * date("YYYY-MM-DD"): parse a string into a date value
+ * date("YYYY-MM-DD" or "YYYY" or "YYYY-MM" or "MM-DD" or "--MM-DD" or "MM" or "--MM"): parse a string into a date value
  */
 export class DateExpression extends LookupFunctionOneArg {
     static functionName = "date";
@@ -16,25 +16,47 @@ export class DateExpression extends LookupFunctionOneArg {
 
     public async getValue(context: LookupContext) {
         const strValueObj = await this.stringDateArg.getValueAs(StringValue, context);
-        let strValue = strValueObj.value;
+        const strValue = strValueObj.value;
+        const format = strValue.replaceAll(/N/g, "x").replaceAll(/\d/g, "N");
 
-        const stdErrorMessage = "Date values should be in the format YYYY-MM-DD.";
+        const stdErrorMessage = "Date values should be in the format YYYY-MM-DD (or YYYY, YYYY-MM, MM-DD, or MM).";
 
-        if (strValue.length === 10) {
-            // This is a string like "YYYY-MM-DD"
-            if (strValue.charAt(4) !== "-" || strValue.charAt(7) !== "-") {
-                throw new LookupEvaluationError(stdErrorMessage);
-            }
-        } else if (strValue.length === 8) {
+        if (format === "NNNN-NN-NN") { // normal date format: "YYYY-MM-DD"
+            return this.parseToDate(strValue);
+        } else if (format === "NNNNNNNN") {
             // This is a string like "YYYYMMDD". It's supported but discouraged in favor of YYYY-MM-DD
-            if (String(BigInt(strValue)) !== strValue) {
-                throw new LookupEvaluationError("Date values should be in the format YYYY-MM-DD or YYYYMMDD");
-            }
-            strValue = strValue.substring(0, 4) + "-" + strValue.substring(4, 6) + "-" + strValue.substring(6, 8);
+            return this.parseToDate(
+                strValue.substring(0, 4) + "-" + strValue.substring(4, 6) + "-" + strValue.substring(6, 8),
+            );
+        } else if (format === "NNNN") { // "YYYY"
+            return new DatePartialValue({ year: Number(strValue) });
+        } else if (format === "NNNN-NN") { // "YYYY-MM"
+            const year = parseInt(strValue.substring(0, 4), 10);
+            const month = parseInt(strValue.substring(5, 7), 10);
+            return new DatePartialValue({ year, month });
+        } else if (format === "NN-NN") { // "MM-DD"
+            const month = parseInt(strValue.substring(0, 2), 10);
+            const day = parseInt(strValue.substring(3, 5), 10);
+            return new DatePartialValue({ month, day });
+        } else if (format === "--NN-NN") { // "--MM-DD"
+            // We don't like this format but it's defined in a previous ISO 8601 standard.
+            const month = parseInt(strValue.substring(2, 4), 10);
+            const day = parseInt(strValue.substring(5, 7), 10);
+            return new DatePartialValue({ month, day });
+        } else if (format === "NN") { // "MM"
+            const month = parseInt(strValue.substring(0, 2), 10);
+            return new DatePartialValue({ month });
+        } else if (format === "--NN") { // "--MM"
+            // We don't like this format but it's defined in a previous ISO 8601 standard.
+            const month = parseInt(strValue.substring(2, 4), 10);
+            return new DatePartialValue({ month });
         } else {
             throw new LookupEvaluationError(stdErrorMessage);
         }
+    }
 
+    /** Given a string in exactly the format "YYYY-MM-DD", parse it to a Datevalue */
+    protected parseToDate(strValue: string): DateValue {
         // Validate the date
         let parsedDate: Date;
         try {
@@ -55,7 +77,7 @@ export class DateExpression extends LookupFunctionOneArg {
             parsedDate.getUTCDate(),
         );
 
-        if (strValue !== newDateValue.asIsoString() && strValue !== newDateValue.asIsoString().replace("-", "")) {
+        if (strValue !== newDateValue.asIsoString()) {
             // This is an invalid date like February 30, which has rolled over into March
             throw new LookupEvaluationError("Invalid date.");
         }

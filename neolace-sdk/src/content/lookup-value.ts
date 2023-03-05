@@ -151,6 +151,15 @@ export interface DateValue extends LookupValue {
     value: string;
 }
 
+export interface DatePartialValue extends LookupValue {
+    type: "DatePartial";
+    year: number|undefined;
+    month: number|undefined;
+    day: number|undefined;
+    /** ISO 8601 date string (YYYY, YYYY-MM, --MM, --MM-DD) */
+    value: string;
+}
+
 export interface StringValue extends LookupValue {
     type: "String";
     value: string;
@@ -184,6 +193,7 @@ export type AnyLookupValue =
     | QuantityValue
     | RangeValue
     | DateValue
+    | DatePartialValue
     | StringValue
     | InlineMarkdownString
     | NullValue
