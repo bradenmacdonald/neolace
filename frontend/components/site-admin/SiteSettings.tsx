@@ -87,6 +87,15 @@ export const SiteSettingsAdminTool: React.FunctionComponent<AdminComponentProps>
                 <p>Link color: <input type="color" value={rgbTripleToHex(site.frontendConfig.theme?.linkColor ?? [0, 0, 0])} readOnly={true} /></p>
                 <p>Heading color: <input type="color" value={rgbTripleToHex(site.frontendConfig.theme?.headingColor ?? [0, 0, 0])} readOnly={true} /></p>
             </Tab>
+
+            <Tab id="plugins" name={defineMessage({defaultMessage: "Plugins", id: 'QJAllU', })}>
+                <p>Enabled frontend plugins:</p>
+                <ul>
+                    {Object.entries(site.frontendConfig.plugins??{}).map(([pluginId, pluginConfig]) =>
+                        <li key={pluginId}>{pluginId} {Object.keys(pluginConfig).length > 0 ? <code>{JSON.stringify(pluginConfig)}</code> : null}</li>
+                    )}
+                </ul>
+            </Tab>
         </TabBar>
     </>);
 };
