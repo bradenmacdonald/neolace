@@ -264,6 +264,7 @@ export class ReferenceCache {
             case "Null":
             case "Error":
             case "File":
+            case "PluginValue":
                 return;
             default:
                 throw new Error(

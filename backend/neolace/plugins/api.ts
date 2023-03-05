@@ -25,3 +25,13 @@ export { getConnection } from "neolace/core/edit/connections.ts";
 
 // Neolace lib functions
 export { createRandomToken } from "neolace/lib/secure-token.ts";
+
+// Lookup
+export * as LookupValues from "neolace/core/lookup/values.ts";
+export { LookupExpression } from "neolace/core/lookup/expressions/base.ts";
+export {
+    LookupFunction,
+    LookupFunctionOneArg,
+    LookupFunctionWithArgs,
+} from "neolace/core/lookup/expressions/functions/base.ts";
+export { LookupContext } from "neolace/core/lookup/context.ts";

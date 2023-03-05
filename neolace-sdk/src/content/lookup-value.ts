@@ -165,6 +165,12 @@ export interface NullValue extends LookupValue {
     type: "Null";
 }
 
+export interface PluginValue extends LookupValue {
+    type: "PluginValue";
+    plugin: string;
+    value: unknown;
+}
+
 export interface ErrorValue extends LookupValue {
     type: "Error";
     errorClass: string;
@@ -187,6 +193,7 @@ export type AnyLookupValue =
     | StringValue
     | InlineMarkdownString
     | NullValue
+    | PluginValue
     | ErrorValue;
 
 export const LookupValueSchema = object.transform((v) => v as AnyLookupValue);

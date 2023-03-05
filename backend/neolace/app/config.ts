@@ -98,6 +98,7 @@ export const config = (() => {
         }),
 
         plugins: [
+            { mod: "external-image" },
             { mod: "search" },
             { mod: "push-connection" },
         ],
