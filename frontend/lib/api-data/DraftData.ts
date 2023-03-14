@@ -82,7 +82,7 @@ export function useDraft(
      */
     context: { draftContext?: DraftContextData } = {},
 ): SDK.AnyEdit[] {
-    const [draft, unsavedEdits] = useDraft();
+    const [draft, unsavedEdits] = useDraft(context);
 
     const result: SDK.AnyEdit[] = React.useMemo(() => {
         if (draft && draft.status === SDK.DraftStatus.Open) {
