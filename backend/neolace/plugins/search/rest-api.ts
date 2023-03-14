@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import { api, NeolaceHttpResource, realmConfig } from "neolace/plugins/api.ts";
 import { thisPlugin } from "./mod.ts";
 import { getSiteCollectionAlias, getSiteSpecificApiKey } from "./site-collection.ts";

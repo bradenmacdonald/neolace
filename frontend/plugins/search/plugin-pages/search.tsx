@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import React from "react";
 
 import { SDK, client, useSiteData } from "lib/sdk";

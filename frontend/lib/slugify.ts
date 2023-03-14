@@ -1,3 +1,8 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
+
 /** regex to match any character that is not allowed as a slug (but allows uppercase) */
 // deno-lint-ignore no-invalid-regexp
 const notSlugRegex = /[^-\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Join_Control}]/ug;

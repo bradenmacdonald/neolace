@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import React from "react";
 
 /** A general click event handler to watch for "click outside of an element" events */

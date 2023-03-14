@@ -1,6 +1,7 @@
-// Resize an image in memory.
-// Adapted from https://github.com/MariusVatasoiu/deno-image (MIT licensed)
-
+/**
+ * @file Resize an image in memory. Adapted from https://github.com/MariusVatasoiu/deno-image (MIT licensed)
+ * @license MIT
+ */
 // We need this in order to speed up the blurhash algorithm, which is extremely slow to use on large images.
 
 import { Resize } from "https://deno.land/x/deno_image@0.0.4/lib/resize/resize.js";

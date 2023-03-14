@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import { C, EmptyResultError, Field, VNID } from "neolace/deps/vertex-framework.ts";
 import { getGraph, Site, siteKeyFromId } from "neolace/plugins/api.ts";
 import { getTypeSenseClient } from "./typesense-client.ts";

@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import { getConnection, getGraph, NeolaceHttpResource, SDK } from "neolace/plugins/api.ts";
 import { ApplyBulkEdits } from "neolace/core/edit/ApplyBulkEdits.ts";
 import { FieldValidationError } from "neolace/deps/vertex-framework.ts";

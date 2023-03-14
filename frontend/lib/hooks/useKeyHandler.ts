@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import React from "react";
 
 // A listener to handle for Pressing a certain button, usually ESC key press events

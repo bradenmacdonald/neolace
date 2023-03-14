@@ -1,3 +1,13 @@
+/**
+ * @file Tests for bulk upserts (by entry VNID)
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license
+ * Use of this software is governed by the Business Source License included in the LICENSE file and at
+ * www.mariadb.com/bsl11.
+ *
+ * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
+ * governed by the Mozilla Public License, Version 2.
+ */
 import { assertEquals, assertInstanceOf, assertRejects, group, setTestIsolation, test } from "neolace/lib/tests.ts";
 import { InvalidEdit, VNID } from "neolace/deps/neolace-sdk.ts";
 import { testHelpers } from "./test-helpers.test.ts";

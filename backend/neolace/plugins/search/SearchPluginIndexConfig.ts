@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import { C, defineAction, Field, VNID, VNodeType } from "neolace/deps/vertex-framework.ts";
 import { Site } from "neolace/plugins/api.ts";
 

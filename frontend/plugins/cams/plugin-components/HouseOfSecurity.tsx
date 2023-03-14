@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license All Rights reserved.
+ */
 import { useRouter } from "next/router";
 import React from "react";
 

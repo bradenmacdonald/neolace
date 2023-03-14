@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import React, { ChangeEvent } from "react";
 import { useIntl } from "react-intl";
 import { useSearchBox, type UseSearchBoxProps } from "react-instantsearch-hooks-web";

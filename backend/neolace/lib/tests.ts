@@ -1,3 +1,7 @@
+/**
+ * @author MacDonald Thoughtstuff Inc.
+ * @license public domain
+ */
 import * as log from "std/log/mod.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";
 

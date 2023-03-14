@@ -1,3 +1,8 @@
+/**
+ * @file Email sending abstraction for Deno
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import * as log from "std/log/mod.ts";
 import * as SendGrid from "https://deno.land/x/sendgrid@0.0.3/mod.ts";
 

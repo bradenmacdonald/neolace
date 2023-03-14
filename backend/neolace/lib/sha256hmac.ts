@@ -1,4 +1,9 @@
 /**
+ * @author MacDonald Thoughtstuff Inc.
+ * @license public domain
+ */
+
+/**
  * Given a secret key and some data, generate a HMAC of the data using SHA-256.
  */
 export async function sha256hmac(

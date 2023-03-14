@@ -1,3 +1,7 @@
+/**
+ * @author MacDonald Thoughtstuff Inc.
+ * @license public domain
+ */
 import { assertEquals } from "neolace/lib/tests.ts";
 import { createRandomToken } from "./secure-token.ts";
 

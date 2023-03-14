@@ -1,4 +1,9 @@
 /**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
+
+/**
  * A simple in-memory cache that can be used server-side or client side.
  *
  * Give it a function that can fetch any value based on its key.

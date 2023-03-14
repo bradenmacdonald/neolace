@@ -1,4 +1,9 @@
 /**
+ * @author MacDonald Thoughtstuff Inc.
+ * @license public domain
+ */
+
+/**
  * Create a cryptographically secure random string which can be used as an auth token.
  *
  * Example: sJ7a9Mj5xtxmaVkCRrP7Zg7HfcQ8aIpqRChE0AqLhF2Y5DnHzlOKuZdHJofE2Msn

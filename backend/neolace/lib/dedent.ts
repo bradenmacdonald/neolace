@@ -1,6 +1,7 @@
 /**
- * Template string helper for dedenting a multiline string.
+ * @file Template string helper for dedenting a multiline string.
  * This is modified from Desmond Brand's MIT licensed implementation https://github.com/dmnd/dedent
+ * @license MIT
  */
 export function dedent(strings: TemplateStringsArray, ...values: string[]): string {
     const raw = typeof strings === "string" ? [strings] : strings.raw;

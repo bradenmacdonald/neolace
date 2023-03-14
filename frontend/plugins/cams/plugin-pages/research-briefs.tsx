@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license All Rights reserved.
+ */
 import React from "react";
 
 import { PluginPageProps } from "components/utils/ui-plugins";
