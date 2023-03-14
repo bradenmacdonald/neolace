@@ -100,8 +100,10 @@ export class LookupContext {
      */
     public async parseLookupString(lookupExpression: string): Promise<LookupExpression> {
         const extraFunctionsForSite: LookupFunctionClass[] = [];
-        for (const _plugin of await getPluginsForSite(this.siteId)) {
-            // TODO: if the plugin implements a lookup function, push it.
+        for (const plugin of await getPluginsForSite(this.siteId)) {
+            if (plugin.lookupFunctions) {
+                extraFunctionsForSite.push(...plugin.lookupFunctions);
+            }
         }
         return parseLookupString(lookupExpression, extraFunctionsForSite);
     }

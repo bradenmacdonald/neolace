@@ -25,6 +25,7 @@ export { LazyEntrySetValue } from "./values/LazyEntrySetValue.ts";
 export { LazyIterableValue } from "./values/LazyIterableValue.ts";
 export { NullValue } from "./values/NullValue.ts";
 export { PageValue } from "./values/PageValue.ts";
+export { PluginValue } from "./values/PluginValue.ts";
 export { PropertyValue } from "./values/PropertyValue.ts";
 export { QuantityValue } from "./values/QuantityValue.ts";
 export { RangeValue } from "./values/RangeValue.ts";

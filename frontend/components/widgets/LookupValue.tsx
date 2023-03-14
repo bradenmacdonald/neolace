@@ -74,7 +74,8 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
                 hideShowMoreLink={props.hideShowMoreLink}
             />
             {
-                detail && detail.type !== "Page" && detail.type !== "Graph" && detail.type !== "Image" ?
+                detail && detail.type === "Null" ? null
+                : detail && detail.type !== "Page" && detail.type !== "Graph" && detail.type !== "Image" ?
                     <div className="text-sm inline mx-1">
                         (<LookupValue value={detail} mdtContext={props.mdtContext} hideShowMoreLink={props.hideShowMoreLink} />)
                     </div>
@@ -240,6 +241,27 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             );
         case "Null":
             return <></>;
+        case "PluginValue":
+            const enabledPlugin = pluginsData.plugins.find((p) => p.id === value.plugin);
+            if (enabledPlugin) {
+                return enabledPlugin.renderLookupPluginValue?.(enabledPlugin.siteConfig, value) ?? (
+                    <ErrorMessage>
+                        <FormattedMessage
+                            id="Ar4wsn"
+                            defaultMessage="Plugin &quot;{plugin}&quot; is not able to display this value."
+                            values={{ plugin: value.plugin }}
+                        />
+                    </ErrorMessage>
+                );
+            } else {
+                return <ErrorMessage>
+                    <FormattedMessage
+                        id="l6nk4U"
+                        defaultMessage="Required plugin &quot;{plugin}&quot; is not enabled."
+                        values={{ plugin: value.plugin }}
+                    />
+                </ErrorMessage>;
+            }
         default: {
             return <code>{JSON.stringify(value)}</code>;
         }

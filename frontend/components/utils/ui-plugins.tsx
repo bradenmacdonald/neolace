@@ -32,6 +32,10 @@ export interface PluginDefinition {
         siteConfig: Record<string, unknown>,
         value: SDK.StringValue,
     ) => React.ReactElement | undefined;
+    renderLookupPluginValue?:  (
+        siteConfig: Record<string, unknown>,
+        value: SDK.PluginValue,
+    ) => React.ReactElement | undefined;
 }
 
 export interface EnabledPluginsConfig {
@@ -43,6 +47,10 @@ export interface EnabledPluginsConfig {
         overrideLookupValue?: (
             siteConfig: Record<string, unknown>,
             value: SDK.StringValue,
+        ) => React.ReactElement | undefined;
+        renderLookupPluginValue?:  (
+            siteConfig: Record<string, unknown>,
+            value: SDK.PluginValue,
         ) => React.ReactElement | undefined;
     }[];
     loaded: boolean;
@@ -73,6 +81,7 @@ export const UiPluginsProvider = (props: { site: SiteData; children: React.React
                     siteConfig,
                     uiSlotChanges: plugin.getUiSlotChanges?.(siteConfig) ?? {},
                     overrideLookupValue: plugin.overrideLookupValue,
+                    renderLookupPluginValue: plugin.renderLookupPluginValue,
                 });
             }
         }

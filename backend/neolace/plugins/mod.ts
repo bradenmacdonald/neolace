@@ -1,4 +1,5 @@
 import { NeolaceHttpResource } from "neolace/rest-api/mod.ts";
+import { LookupFunctionClass } from "../core/lookup/expressions/functions/base.ts";
 import { VNID, VNodeType } from "../deps/vertex-framework.ts";
 
 const _isPluginSymbol = Symbol("isNeolacePlugin");
@@ -10,6 +11,7 @@ export interface NeolacePluginDefinition {
     version: string;
     restApiResources?: (typeof NeolaceHttpResource)[];
     dataVNodeClasses?: VNodeType[];
+    lookupFunctions?: LookupFunctionClass[];
 }
 
 /**
