@@ -2,6 +2,7 @@ import * as check from "neolace/deps/computed-types.ts";
 import {
     C,
     Field,
+    FieldValidationError,
     ValidationError,
     VirtualPropType,
     VNID,
@@ -99,7 +100,7 @@ export class Entry extends VNodeType {
             // Check the keyPrefix:
             const keyPrefix = entryData.type?.keyPrefix;
             if (keyPrefix && !entryData.key.startsWith(keyPrefix)) {
-                throw new ValidationError(`Invalid key; expected it to start with ${keyPrefix}`);
+                throw new FieldValidationError("key", `Invalid key; expected it to start with ${keyPrefix}`);
             }
         }
 

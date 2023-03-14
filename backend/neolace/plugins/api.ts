@@ -1,6 +1,8 @@
 /** Public API that plugins can use */
 
 export * as log from "std/log/mod.ts";
+export * as SDK from "neolace/deps/neolace-sdk.ts";
+/** @deprecated */
 export * as api from "neolace/deps/neolace-sdk.ts";
 
 export { config as realmConfig } from "neolace/app/config.ts";

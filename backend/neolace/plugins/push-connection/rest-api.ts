@@ -1,5 +1,6 @@
-import { api, getConnection, getGraph, NeolaceHttpResource } from "neolace/plugins/api.ts";
-import { ApplyBulkEdits } from "../../core/edit/ApplyBulkEdits.ts";
+import { getConnection, getGraph, NeolaceHttpResource, SDK } from "neolace/plugins/api.ts";
+import { ApplyBulkEdits } from "neolace/core/edit/ApplyBulkEdits.ts";
+import { FieldValidationError } from "neolace/deps/vertex-framework.ts";
 import { thisPlugin } from "./mod.ts";
 
 /**
@@ -13,29 +14,29 @@ export class PushEditResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/connection/push/:connectionKey/edit/"];
 
     POST = this.method({
-        requestBodySchema: api.schemas.Schema({
+        requestBodySchema: SDK.schemas.Schema({
             /** A single edit to apply */
-            edits: api.schemas.array.of(api.BulkEditSchema),
+            edits: SDK.schemas.array.of(SDK.BulkEditSchema),
         }),
-        responseSchema: api.schemas.Schema({
-            appliedEditIds: api.schemas.array.of(api.schemas.vnidString),
+        responseSchema: SDK.schemas.Schema({
+            appliedEditIds: SDK.schemas.array.of(SDK.schemas.vnidString),
         }),
         description: "Push entry data into a Neolace site",
     }, async ({ request, bodyData }) => {
         // Permissions and parameters:
         const user = await this.requireUser(request);
         await this.requirePermission(request, [
-            api.CorePerm.applyEditsToEntries,
-            api.CorePerm.proposeEditToEntry,
-            api.CorePerm.proposeNewEntry,
+            SDK.CorePerm.applyEditsToEntries,
+            SDK.CorePerm.proposeEditToEntry,
+            SDK.CorePerm.proposeNewEntry,
         ]);
         const { siteId } = await this.getSiteDetails(request);
         if (!(await thisPlugin.isEnabledForSite(siteId))) {
-            throw new api.NotFound("Push connection is not enabled for that site");
+            throw new SDK.NotFound("Push connection is not enabled for that site");
         }
         const key = request.pathParam("connectionKey");
         if (typeof key !== "string") {
-            throw new api.InvalidFieldValue([{
+            throw new SDK.InvalidFieldValue([{
                 fieldPath: "connectionKey",
                 message: "Connection key missing/invalid.",
             }]);
@@ -50,16 +51,16 @@ export class PushEditResource extends NeolaceHttpResource {
             });
         } catch (err) {
             if (err instanceof Error && err.message.includes("not found")) {
-                throw new api.NotFound(err.message);
+                throw new SDK.NotFound(err.message);
             }
             throw err;
         }
 
         // Validate the edits
         for (const edit of bodyData.edits) {
-            const editType = api.getEditType(edit.code);
-            if (editType.changeType !== api.EditChangeType.Bulk) {
-                throw new api.InvalidFieldValue([{
+            const editType = SDK.getEditType(edit.code);
+            if (editType.changeType !== SDK.EditChangeType.Bulk) {
+                throw new SDK.InvalidFieldValue([{
                     fieldPath: "edit.code",
                     message: "Only bulk edits can be used with the Push connection REST API.",
                 }]);
@@ -68,14 +69,32 @@ export class PushEditResource extends NeolaceHttpResource {
         }
 
         const graph = await getGraph();
-        const result = await graph.runAs(
-            user.id,
-            ApplyBulkEdits({
-                siteId,
-                connectionId: connection.id,
-                edits: bodyData.edits,
-            }),
-        );
+        let result;
+        try {
+            result = await graph.runAs(
+                user.id,
+                ApplyBulkEdits({
+                    siteId,
+                    connectionId: connection.id,
+                    edits: bodyData.edits,
+                }),
+            );
+        } catch (err) {
+            if (err instanceof Error && err.cause instanceof SDK.InvalidEdit) {
+                throw err.cause;
+            } else if (err instanceof Error && err.cause instanceof FieldValidationError) {
+                throw new SDK.InvalidFieldValue([{
+                    fieldPath: `edits.*.${err.cause.field}`,
+                    message: err.cause.message,
+                }]);
+            } else if (err instanceof FieldValidationError) {
+                throw new SDK.InvalidFieldValue([{
+                    fieldPath: `edits.*.${err.field}`,
+                    message: err.message,
+                }]);
+            }
+            throw err;
+        }
 
         // Response:
         return {
