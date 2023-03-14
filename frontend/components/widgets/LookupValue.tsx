@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { FormattedListParts, FormattedMessage } from "react-intl";
+import { FormattedDate, FormattedListParts, FormattedMessage } from "react-intl";
 
 import { SDK, useRefCache } from "lib/sdk";
 import { Tooltip } from "components/widgets/Tooltip";
@@ -14,7 +14,6 @@ import { EntryValue } from "./EntryValue";
 import { UiPluginsContext } from "../utils/ui-plugins";
 import { Icon } from "./Icon";
 import { LookupQuantityValue } from "./LookupQuantityValue";
-import { LookupExpressionInput } from "components/form-input/LookupExpressionInput";
 import { LookupDemo } from "./LookupDemo";
 
 interface LookupValueProps {
@@ -228,7 +227,38 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
         case "InlineMarkdownString":
             return <InlineMDT mdt={value.value} context={props.mdtContext} />;
         case "Date":
-            return <>{value.value}</>;
+            return (
+                <FormattedDate
+                    value={new Date(value.value)}
+                    // Use "medium" because it's nice, and fuck the "2/2/2022" default 🤮
+                    dateStyle="medium"
+                    // The timeZone MUST be UTC or the date may appear wrong, depending on the user's actual timzone.
+                    // (The Date constructor's parsing is messy, but passing an ISO8601 date string with no timezone
+                    // should always result in a UTC date object.) Generally I try to avoid ever using Date() objects
+                    // for calendar dates (that don't have times), because it sucks for that, but we can't avoid it
+                    // here because the Intl API requires a Date object.
+                    timeZone="UTC"
+                />
+            );
+        case "DatePartial":
+            const hasYear = value.year !== undefined, hasMonth = value.month !== undefined, hasDay = value.day !== undefined;
+            // With this constructor, the date is in the user's local time so we must NOT use UTC
+            // (see what I mean? This sucks...)
+            const dateValue = new Date(value.year ?? 3000, (value.month ?? 1) - 1, value.day ?? 1);
+            if (hasYear) {
+                if (hasMonth) {
+                    return <FormattedDate value={dateValue} year="numeric" month="long" />
+                } else {
+                    return <FormattedDate value={dateValue} year="numeric" />
+                }
+            } else {
+                // It's either Month and day, or just month:
+                if (hasDay) {
+                    return <FormattedDate value={dateValue} month="long" day="numeric" />
+                } else {
+                    return <FormattedDate value={dateValue} month="long" />
+                }
+            }
         case "Error":
             return (
                 <ErrorMessage>

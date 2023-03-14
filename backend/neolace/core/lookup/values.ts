@@ -11,6 +11,7 @@ export {
 export { AnnotatedValue, MakeAnnotatedEntryValue } from "./values/AnnotatedValue.ts";
 export { BooleanValue } from "./values/BooleanValue.ts";
 export { DateValue } from "./values/DateValue.ts";
+export { DatePartialValue } from "./values/DatePartialValue.ts";
 export { EntryTypeValue } from "./values/EntryTypeValue.ts";
 export { EntryValue } from "./values/EntryValue.ts";
 export { ErrorValue } from "./values/ErrorValue.ts";

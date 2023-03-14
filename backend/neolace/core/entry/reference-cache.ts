@@ -261,6 +261,7 @@ export class ReferenceCache {
             case "Range":
             case "String":
             case "Date":
+            case "DatePartial":
             case "Null":
             case "Error":
             case "File":

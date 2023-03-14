@@ -1,7 +1,6 @@
 import { LookupContext } from "../context.ts";
 import { LookupEvaluationError } from "../errors.ts";
 import { ClassOf, ConcreteValue, LookupValue } from "./base.ts";
-import { BooleanValue } from "./BooleanValue.ts";
 
 /**
  * A value that respresents a calendar date (no time)
@@ -38,7 +37,6 @@ export class DateValue extends ConcreteValue {
      * This string should parse to an expression that yields the same value.
      */
     public override asLiteral(): string {
-        // An integer literal just looks like a plain integer, e.g. 5
         return `date("${this.asIsoString()}")`;
     }
 
@@ -53,10 +51,7 @@ export class DateValue extends ConcreteValue {
         return { type: "Date" as const, value: this.asIsoString() };
     }
 
-    protected override doCastTo(newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {
-        if (newType === BooleanValue) {
-            return new BooleanValue(true);
-        }
+    protected override doCastTo(_newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {
         return undefined;
     }
 
