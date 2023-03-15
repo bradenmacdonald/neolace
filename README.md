@@ -50,7 +50,8 @@ on GitHub and let us know.
 1. Open this project (`neolace-app.code-workspace`) in VS Code
 1. Terminal > Run Task > 🗄️ Run Neolace Database Servers
 1. Terminal > Run Task > ♻️ Erase Database and create default sites (you only need to run this the first time you start Neolace)
-1. Terminal > Run Task > 🚀 Run Backend
+1. Terminal > Run Task > 🚀 Run Backend  
+   Note: due to [Deno bug #17733](https://github.com/denoland/deno/issues/17733), if you get an error you'll need to use "Run backend (without watch mode)" instead.
 1. Terminal > Run Task > 🚀 Run Frontend
 1. See it at http://home.local.neolace.net:5555/
 
