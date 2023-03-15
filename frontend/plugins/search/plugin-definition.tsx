@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import type { PluginDefinition } from "components/utils/ui-plugins";
 import { UiChangeOperation } from "components/widgets/UISlot";
 import { QuickSearchBox } from "./components/QuickSearchBox";

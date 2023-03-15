@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import { LookupContext, LookupExpression, LookupFunctionWithArgs, LookupValues } from "neolace/plugins/api.ts";
 
 /**

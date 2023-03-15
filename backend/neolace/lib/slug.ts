@@ -1,3 +1,8 @@
+/**
+ * @author MacDonald Thoughtstuff Inc.
+ * @license public domain
+ */
+
 /** regex for validating that a string is a slug (allows uppercase) */
 export const slugRegex = /^[-\p{Alphabetic}\p{Mark}\p{Decimal_Number}\p{Join_Control}]+$/u;
 /** regex to match any character that is not allowed as a slug (but allows uppercase) */

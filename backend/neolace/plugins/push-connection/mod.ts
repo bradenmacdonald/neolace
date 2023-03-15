@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import { definePlugin } from "neolace/plugins/mod.ts";
 import { PushEditResource } from "./rest-api.ts";
 

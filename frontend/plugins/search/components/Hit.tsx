@@ -1,4 +1,9 @@
 /**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
+
+/**
  * The data returned from TypeSense for each search result.
  */
 export interface Hit extends Record<string, unknown> {

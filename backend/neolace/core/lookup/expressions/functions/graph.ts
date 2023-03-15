@@ -1,3 +1,12 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license
+ * Use of this software is governed by the Business Source License included in the LICENSE file and at
+ * www.mariadb.com/bsl11.
+ *
+ * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
+ * governed by the Mozilla Public License, Version 2.
+ */
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { PropertyFact } from "neolace/core/entry/PropertyFact.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";

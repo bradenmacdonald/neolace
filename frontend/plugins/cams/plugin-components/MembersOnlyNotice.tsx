@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license All Rights reserved.
+ */
 import { ErrorMessage } from "components/widgets/ErrorMessage";
 import { SDK, UserStatus, useUser } from "lib/sdk";
 import Link from "next/link";

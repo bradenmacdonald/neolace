@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import { TypeSense } from "neolace/deps/typesense.ts";
 import { realmConfig } from "neolace/plugins/api.ts";
 

@@ -9,6 +9,9 @@ focus is on making it easy to input, connect, and organize, and explore
 knowledge. Knowledge is not just facts or data, but also articles, explanations,
 discussions, and images.
 
+Neolace uses the [Neo4j Graph Database](https://neo4j.com/) as its primary
+datastore.
+
 ## Screenshots
 
 Viewing an entry:
@@ -23,8 +26,7 @@ Creating a new entry using the UI:
 
 Neolace is 100% written in TypeScript. Here's how the code is organized:
 
-* __backend__ - The Neolace backend, a Deno server that implements Neolace. The
-  backend persists all of its data using Neo4j.
+* __backend__ - The Neolace backend, a Deno server that implements Neolace.
   - `backend/neolace/core` - Core data models and functionality used by all other parts of the code. This defines the key entities like `Site`, `Entry`, `EntryType`, `Property`, and how they relate to each other. The core provides permissions-related functionality but generally doesn't enforce permissions. Permissions are enforced in the `api` and `lookup` code.
   - `backend/neolace/core/lookup` - The implementation of our lookup language, used to query data.
   - `backend/neolace/deps` - Dependencies used by our backend. We try to keep this fairly minimal to avoid the problems that come with having too many dependencies. The "main" dependency is [Vertex Framework](https://github.com/neolace-dev/vertex-framework) which provides a type-safe interface to the Neo4j database.
@@ -52,16 +54,34 @@ on GitHub and let us know.
 1. Terminal > Run Task > 🚀 Run Frontend
 1. See it at http://home.local.neolace.net:5555/
 
+## Is Neolace open source?
+
+Neolace is _partially_ open source. The SDK and most plugins are open source
+under the MIT license. Many parts of the code, including the entire
+[Vertex Framework](https://github.com/neolace-dev/vertex-framework), are also
+open source under the MIT license. However, the majority of the code for Neolace
+itself (backend and frontend) is not technically open source -- rather, the
+source code is available under the
+[Business Source License](https://mariadb.com/bsl11/). Under the BSL, you may
+"copy, modify, create derivative works, redistribute, and make non-production
+use of the Licensed Work"; we also allow limited personal use in production.
+What's more, any given version of it is guaranteed to become fully open source
+(under the Mozilla Public License) after four years, so you can be certain that
+the Neolace platform cannot ultimately disappear or fundamentally change in ways
+that jeoparize your business. However, you may not use Neolace in production
+without a license from us. (Free licenses may be available for startups,
+non-profits, or other similar situations - please don't hesitate to contact us.)
+
 ## Hosting in production
 
 For production use, we recommend using our cloud hosting on neolace.com. We can
 set you up with affordable shared-database hosting that will be _much_ better
 value than hosting it yourself, or enterprise hosting (dedicated DB, private
 cloud, on premises, etc.). But if you like to go it your own, or you want to
-_sell_ Neolace hosting as a service, we're happy to support you with our
-production deployment kit that includes Terraform code, best practices, and
-support. Whatever path you pick, please get in touch with us at team@neolace.com
-and we'll give you a hand.
+_sell_ Neolace hosting as a service, we're happy to sell you a license and
+support you with our production deployment kit that includes Terraform code,
+best practices, and support. Whatever path you pick, please get in touch with us
+at team@neolace.com and we'll give you a hand.
 
 ## Troubleshooting (Development Issues)
 

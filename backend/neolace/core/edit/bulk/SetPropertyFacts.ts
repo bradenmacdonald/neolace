@@ -1,3 +1,13 @@
+/**
+ * @file Bulk edit operation to set property facts of an entry
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license
+ * Use of this software is governed by the Business Source License included in the LICENSE file and at
+ * www.mariadb.com/bsl11.
+ *
+ * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
+ * governed by the Mozilla Public License, Version 2.
+ */
 import { C, Field } from "neolace/deps/vertex-framework.ts";
 import { InvalidEdit, PropertyType, SetPropertyFacts, VNID } from "neolace/deps/neolace-sdk.ts";
 import { BulkAppliedEditData, defineBulkImplementation } from "neolace/core/edit/implementations.ts";

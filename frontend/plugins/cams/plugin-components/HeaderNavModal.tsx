@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license All Rights reserved.
+ */
 import { Portal } from "components/utils/Portal";
 import { Icon } from "components/widgets/Icon";
 import React from "react";

@@ -1,5 +1,9 @@
-// ISO 3166-1 two-letter country codes
-// Adapted from https://github.com/michaelwittig/node-i18n-iso-countries/blob/master/langs/en.json (MIT license)
+/**
+ * @file ISO 3166-1 two-letter country codes
+ * @copyright Copyright (c) 2016 widdix GmbH
+ * @license MIT
+ */
+// Adapted from https://github.com/michaelwittig/node-i18n-iso-countries/blob/master/langs/en.json
 export const countryCodes: ReadonlyArray<string> = [
     "AF", // Afghanistan
     "AL", // Albania

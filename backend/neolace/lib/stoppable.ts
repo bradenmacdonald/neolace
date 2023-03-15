@@ -1,3 +1,7 @@
+/**
+ * @author MacDonald Thoughtstuff Inc.
+ * @license public domain
+ */
 import { onShutDown } from "neolace/app/shutdown.ts";
 
 type ResourceHandle<Resource> = { resource: Resource; stopFn: () => Promise<void> };

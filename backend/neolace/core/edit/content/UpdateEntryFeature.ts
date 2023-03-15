@@ -1,3 +1,13 @@
+/**
+ * @file Edit operation to update an entry's content feature (article, image, files, etc.)
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license
+ * Use of this software is governed by the Business Source License included in the LICENSE file and at
+ * www.mariadb.com/bsl11.
+ *
+ * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
+ * governed by the Mozilla Public License, Version 2.
+ */
 import { C, EmptyResultError } from "neolace/deps/vertex-framework.ts";
 import { InvalidEdit, UpdateEntryFeature } from "neolace/deps/neolace-sdk.ts";
 import { defineImplementation, EditHadNoEffect } from "neolace/core/edit/implementations.ts";

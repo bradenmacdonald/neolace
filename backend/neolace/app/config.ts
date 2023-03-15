@@ -1,8 +1,15 @@
 /**
- * Configuration of the Neolace backend application
+ * @file Configuration of the Neolace backend application
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license
+ * Use of this software is governed by the Business Source License included in the LICENSE file and at
+ * www.mariadb.com/bsl11.
+ *
+ * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
+ * governed by the Mozilla Public License, Version 2.
  */
 
-// What type of environment this is: development, production, or testing
+/** What type of environment this is: development, production, or testing */
 export const environment = (Deno.env.get("ENV_TYPE") as "production" | "development" | "test" | undefined) ||
     "development";
 if (!["production", "development", "test"].includes(environment)) {

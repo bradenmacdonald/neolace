@@ -1,3 +1,7 @@
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
 import React from "react";
 import Link from "next/link";
 import { FormattedMessage } from "react-intl";
