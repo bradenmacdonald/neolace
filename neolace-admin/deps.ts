@@ -7,10 +7,12 @@ export * as SDK from "../neolace-sdk/src/index.ts";
 export { VNID } from "../neolace-sdk/src/index.ts";
 
 // Parts of the std library that we use:
-import { getLogger, setup, handlers } from "https://deno.land/std@0.175.0/log/mod.ts";
+import { getLogger, handlers, setup } from "https://deno.land/std@0.175.0/log/mod.ts";
 export { parse as parseYaml, stringify as stringifyYaml } from "https://deno.land/std@0.175.0/encoding/yaml.ts";
+export { parse as parseArgs } from "https://deno.land/std@0.175.0/flags/mod.ts";
 export { readAll } from "https://deno.land/std@0.175.0/streams/read_all.ts";
 export { assertEquals } from "https://deno.land/std@0.175.0/testing/asserts.ts";
+export { deepMerge } from "https://deno.land/std@0.175.0/collections/deep_merge.ts";
 export { getApiClientFromEnv } from "../neolace-sdk/utils/cli-client.ts";
 
 // Logging:
@@ -36,3 +38,9 @@ export const log = {
     setup,
     handlers,
 };
+
+export class InvalidUsageError extends Error {
+    constructor() {
+        super("Invalid usage");
+    }
+}

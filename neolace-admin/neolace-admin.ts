@@ -12,9 +12,10 @@
  * @license MIT
  */
 import { exportCommand } from "./commands/export.ts";
+import { importSiteConfigCommand } from "./commands/import-site-config.ts";
 import { importSchemaAndContent } from "./commands/import.ts";
 import { syncSchema } from "./commands/sync-schema.ts";
-import { getApiClientFromEnv, log, readAll } from "./deps.ts";
+import { getApiClientFromEnv, InvalidUsageError, log, readAll } from "./deps.ts";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Usage instructions
@@ -29,13 +30,18 @@ Where command is one of:
     export site_id [folder_name]
         Export all of a site's schema and content to the specified folder; if not specified, a folder in the current
         directory with the same name as the site ID will be used.
-    sync-schema site_id
-        Import a site schema from YAML (on stdin). This can be dangerous as it will erase any parts of the existing
-        schema that aren't part of the imported schema (in other words, it overwrites the schema).
+
+    import-site-config site_id [--create] [--create-only] [site.yaml] [site.staging.yaml]
+        Import a site's configuration from a YAML file(s) or stdin. This can create the site, set the home page,
+        configuration, etc. If multiple YAML files are specified, they will be merged together.
     import site_id [folder_name]
         Import the schema and content from a folder into the site with the specified ID. The site must already exist but
         should not have any entries. If a folder name is not given, it will be assumed to be a folder in the current
         directory with the same name as the site ID.
+    sync-schema site_id
+        Import a site schema from YAML (on stdin). This can be dangerous as it will erase any parts of the existing
+        schema that aren't part of the imported schema (in other words, it overwrites the schema).
+
     erase-content site_id [--skip-prompt-and-dangerously-delete]
         Erase all content on the specified site. This is dangerous!
 `);
@@ -56,66 +62,78 @@ if (import.meta.main) {
             "neolace-admin": { level: "INFO", handlers: ["console"] },
         },
     });
-    // Parse arguments:
-    switch (Deno.args[0]) {
-        case "export-schema": {
-            const siteKey = Deno.args[1];
-            if (!siteKey) {
-                dieUsage();
-            }
-            await exportCommand({ siteKey, exportSchema: true, exportContent: false });
-            break;
-        }
-        case "export": {
-            const siteKey = Deno.args[1];
-            if (!siteKey) {
-                dieUsage();
-            }
-            const outFolder = Deno.args[2] ?? siteKey;
-            await exportCommand({ siteKey, exportSchema: true, exportContent: true, outFolder });
-            break;
-        }
-        case "sync-schema": {
-            const siteKey = Deno.args[1];
-            if (!siteKey) {
-                dieUsage();
-            }
-            const stdinContent = await readAll(Deno.stdin);
-            const schemaYaml = new TextDecoder().decode(stdinContent);
-            await syncSchema(siteKey, schemaYaml);
-            break;
-        }
-        case "import": {
-            const siteKey = Deno.args[1];
-            if (!siteKey) {
-                dieUsage();
-            }
-            const sourceFolder = Deno.args[2] ?? siteKey;
-            await importSchemaAndContent({ siteKey, sourceFolder });
-            break;
-        }
-        case "erase-content": {
-            const siteKey = Deno.args[1];
-            if (!siteKey) {
-                dieUsage();
-            }
-            if (Deno.args[2]) {
-                if (Deno.args[2] !== "--skip-prompt-and-dangerously-delete") {
+    // Run the command:
+    try {
+        switch (Deno.args[0]) {
+            case "export-schema": {
+                const siteKey = Deno.args[1];
+                if (!siteKey) {
                     dieUsage();
                 }
-                // Skip the confirmation prompt
-            } else {
-                if (!confirm("Are you sure you want to delete all content on this site? This is very dangerous.")) {
-                    Deno.exit(0);
-                }
+                await exportCommand({ siteKey, exportSchema: true, exportContent: false });
+                break;
             }
-            const client = await getApiClientFromEnv();
-            log.warning("Deleting all entries");
-            await client.eraseAllEntriesDangerously({ siteKey, confirm: "danger" });
-            log.info("All entries deleted.");
-            break;
+            case "export": {
+                const siteKey = Deno.args[1];
+                if (!siteKey) {
+                    dieUsage();
+                }
+                const outFolder = Deno.args[2] ?? siteKey;
+                await exportCommand({ siteKey, exportSchema: true, exportContent: true, outFolder });
+                break;
+            }
+            case "sync-schema": {
+                const siteKey = Deno.args[1];
+                if (!siteKey) {
+                    dieUsage();
+                }
+                const stdinContent = await readAll(Deno.stdin);
+                const schemaYaml = new TextDecoder().decode(stdinContent);
+                await syncSchema(siteKey, schemaYaml);
+                break;
+            }
+            case "import-site-config": {
+                await importSiteConfigCommand.run(Deno.args.slice(1));
+                break;
+            }
+            case "import": {
+                const siteKey = Deno.args[1];
+                if (!siteKey) {
+                    dieUsage();
+                }
+                const sourceFolder = Deno.args[2] ?? siteKey;
+                await importSchemaAndContent({ siteKey, sourceFolder });
+                break;
+            }
+            case "erase-content": {
+                const siteKey = Deno.args[1];
+                if (!siteKey) {
+                    dieUsage();
+                }
+                if (Deno.args[2]) {
+                    if (Deno.args[2] !== "--skip-prompt-and-dangerously-delete") {
+                        dieUsage();
+                    }
+                    // Skip the confirmation prompt
+                } else {
+                    if (!confirm("Are you sure you want to delete all content on this site? This is very dangerous.")) {
+                        Deno.exit(0);
+                    }
+                }
+                const client = await getApiClientFromEnv();
+                log.warning("Deleting all entries");
+                await client.eraseAllEntriesDangerously({ siteKey, confirm: "danger" });
+                log.info("All entries deleted.");
+                break;
+            }
+            default:
+                dieUsage(0);
         }
-        default:
-            dieUsage(0);
+    } catch (err) {
+        if (err instanceof InvalidUsageError) {
+            dieUsage();
+        } else {
+            throw err;
+        }
     }
 }
