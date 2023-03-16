@@ -4,8 +4,7 @@ This is the frontend for Neolace.
 
 In a development environment, once the server is running, you can view examples at:
 
-* http://local.neolace.net:5555/
-* http://technotes.local.neolace.net:5555/
+* http://home.local.neolace.net:5555/
 * http://plantdb.local.neolace.net:5555/
 
 The Neolace frontend is built using:
