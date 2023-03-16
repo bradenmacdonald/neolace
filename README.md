@@ -33,7 +33,8 @@ Neolace is 100% written in TypeScript. Here's how the code is organized:
   - `backend/neolace/plugins` - Backend plugins which can extend neolace's functionality. For example, our search experience (powered by TypeSense) is implemented as a plugin.
   - `backend/neolace/rest-api` - The REST API, which exposes the `core` and its `plugins` via REST.
 * __frontend__ - The Neolace frontend, a Next.js React application that implements our standard user interface. Plugins and theme settings can be used to customize the UI, or you can replace it entirely with a custom frontend.
-* __neolace-sdk__ - The Neolace Software Development Kit (SDK), which provides TypeScript interfaces for all of the Neolace entities. This code is shared by the frontend and the backend. It also contains an API client and an admin script, which can be used to connect to the REST API.
+* __neolace-admin__ - The Neolace Admin Tool, a command-line script that you can use for administrative purposes like importing or exporting data.
+* __neolace-sdk__ - The Neolace Software Development Kit (SDK), which provides TypeScript interfaces for all of the Neolace entities. This code is shared by the frontend and the backend. It also contains an API client which makes it really easy to use the REST API.
 
 ## Developer quickstart
 
