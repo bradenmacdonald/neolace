@@ -1,8 +1,15 @@
-import { NeolaceApiClient } from "./client.ts";
-import { NotAuthenticated } from "./errors.ts";
-import * as log from "https://deno.land/std@0.170.0/log/mod.ts";
+/**
+ * @copyright (c) MacDonald Thoughtstuff Inc.
+ * @license MIT
+ */
+import { NeolaceApiClient } from "../src/client.ts";
+import { NotAuthenticated } from "../src/errors.ts";
+// Code in the "utils" folder can import from Deno std:
+import { getLogger } from "https://deno.land/std@0.175.0/log/mod.ts";
 
 let _apiClientPromise: Promise<NeolaceApiClient> | undefined = undefined;
+
+const getLog = () => getLogger("neolace-sdk");
 
 /**
  * This is a helper for Deno command line applications, to get an API client that can connect to whatever instance of
@@ -16,7 +23,7 @@ export async function getApiClientFromEnv(): Promise<NeolaceApiClient> {
     return _apiClientPromise = (async () => {
         const apiEndpoint = Deno.env.get("NEOLACE_API_ENDPOINT") ?? "http://local.neolace.net:5554";
         if (!apiEndpoint.startsWith("http")) {
-            log.error("You must set NEOLACE_API_ENDPOINT to a valid http:// or https:// URL for the Neolace realm.");
+            getLog().error("You must set NEOLACE_API_ENDPOINT to a valid http:// or https:// URL for the Neolace realm.");
             Deno.exit(1);
         }
         const apiKey = Deno.env.get("NEOLACE_API_KEY") ?? "SYS_KEY_INSECURE_DEV_KEY";
@@ -31,10 +38,10 @@ export async function getApiClientFromEnv(): Promise<NeolaceApiClient> {
             await client.checkHealth();
         } catch (err) {
             if (err instanceof NotAuthenticated) {
-                log.error(`unable to authenticate with Neolace API server ${apiEndpoint}. Check your API key.`);
+                getLog().error(`unable to authenticate with Neolace API server ${apiEndpoint}. Check your API key.`);
                 Deno.exit(1);
             } else {
-                log.error(`Neolace API server ${apiEndpoint} is not accessible or not healthy.`);
+                getLog().error(`Neolace API server ${apiEndpoint} is not accessible or not healthy.`);
                 throw err;
             }
         }

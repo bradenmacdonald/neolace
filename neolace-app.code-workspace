@@ -7,6 +7,9 @@
 			"path": "frontend"
 		},
 		{
+			"path": "neolace-admin"
+		},
+		{
 			"path": "neolace-sdk"
 		},
 		{
@@ -25,6 +28,7 @@
 			"backend/": true,
 			"frontend/": true,
 			"arch-decisions/": true,
+			"neolace-admin/": true,
 			"neolace-sdk/": true,
 		},
 		"deno.lint": true,
