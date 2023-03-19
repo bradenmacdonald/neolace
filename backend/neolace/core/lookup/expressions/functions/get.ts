@@ -7,6 +7,7 @@
  * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
  * governed by the Mozilla Public License, Version 2.
  */
+import * as log from "std/log/mod.ts";
 import { C, EmptyResultError, Field } from "neolace/deps/vertex-framework.ts";
 import { CorePerm, PropertyMode, PropertyType } from "neolace/deps/neolace-sdk.ts";
 
@@ -33,7 +34,7 @@ import { LookupContext } from "../../context.ts";
 import { LookupFunctionWithArgs } from "./base.ts";
 import { hasPermission, makeCypherCondition } from "neolace/core/permissions/check.ts";
 import { corePerm } from "neolace/core/permissions/permissions.ts";
-import { hasSourceExpression } from "../../values/base.ts";
+import { hasSourceExpression, isIterableValue } from "../../values/base.ts";
 import { EntryTypeFunction } from "./entryType.ts";
 import { LiteralExpression } from "../literal-expr.ts";
 import { LazyCypherIterableValue } from "../../values/LazyCypherIterableValue.ts";
@@ -134,7 +135,8 @@ export class GetProperty extends LookupFunctionWithArgs {
         if (propMode === PropertyMode.Auto) {
             // This is an "auto" property, which means its value is determined by evaluating another lookup expression.
             // Are we retieving it for one entry or many?
-            const forEntry = await (await this.fromEntriesExpr.getValue(context)).castTo(EntryValue, context);
+            const forEntryValue = await this.fromEntriesExpr.getValue(context);
+            const forEntry = await forEntryValue.castTo(EntryValue, context);
             if (forEntry !== undefined) {
                 // Yes, we are looking up this value for a single entry.
                 // Look up the entry type for this entry; the entry type is required to check permissions.
@@ -155,12 +157,16 @@ export class GetProperty extends LookupFunctionWithArgs {
                     value = value.cloneWithSourceExpression(this, context.entryId);
                 }
                 return value;
-            } else {
-                // We are lookup up this AUTO property for many entries.
-                // To support this probably requires changing context.entryId to context.thisValue so that we can make
-                // 'this' into an entry set, and not just a single entry, while we evaluate this.
+            } else if (isIterableValue(forEntryValue)) {
+                // TODO: To support this probably requires changing context.entryId to context.thisValue so that we can
+                // make 'this' into an entry set, and not just a single entry, while we evaluate this.
+                log.warning(`Lookup: .get(...): Unable to cast ${forEntryValue.constructor.name} value to EntryValue`);
                 throw new LookupEvaluationError(
                     "Getting a property from multiple entries is not yet supported by get()",
+                );
+            } else {
+                throw new LookupEvaluationError(
+                    `A ${forEntryValue.constructor.name} value does not have properties that can be used with .get()`,
                 );
             }
         } else if (propType === PropertyType.RelIsA || propType === PropertyType.RelOther) {
