@@ -7,10 +7,10 @@
  * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
  * governed by the Mozilla Public License, Version 2.
  */
-import * as log from "std/log/mod.ts";
-import { generateTestFixtures, testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
-import { shutdown } from "neolace/app/shutdown.ts";
 import { environment } from "neolace/app/config.ts";
+import { log } from "neolace/app/log.ts";
+import { shutdown } from "neolace/app/shutdown.ts";
+import { generateTestFixtures, testDataFile, TestSetupData } from "neolace/lib/tests-default-data.ts";
 
 log.info("Seting up test environment");
 if (environment !== "test") {

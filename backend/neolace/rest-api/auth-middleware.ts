@@ -7,11 +7,11 @@
  * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
  * governed by the Mozilla Public License, Version 2.
  */
-import * as log from "std/log/mod.ts";
 import { authClient } from "neolace/core/authn-client.ts";
 import { EmptyResultError, SYSTEM_VNID } from "neolace/deps/vertex-framework.ts";
 
 import { config } from "neolace/app/config.ts";
+import { log } from "neolace/app/log.ts";
 import { Drash, getGraph, NeolaceHttpRequest } from "./mod.ts";
 import { BotUser, HumanUser } from "neolace/core/User.ts";
 import { bin2hex } from "neolace/lib/bin2hex.ts";

@@ -8,7 +8,7 @@
  * governed by the Mozilla Public License, Version 2.
  */
 // deno-lint-ignore-file no-explicit-any
-import * as log from "std/log/mod.ts";
+import { log } from "neolace/app/log.ts";
 import { C, Field, VertexTestDataSnapshot, VNID } from "neolace/deps/vertex-framework.ts";
 import { PropertyType } from "neolace/deps/neolace-sdk.ts";
 

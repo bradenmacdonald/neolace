@@ -7,7 +7,7 @@
  * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
  * governed by the Mozilla Public License, Version 2.
  */
-import * as log from "std/log/mod.ts";
+import { log, NiceConsoleHandler } from "neolace/app/log.ts";
 import { Drash } from "neolace/deps/drash.ts";
 import { config } from "neolace/app/config.ts";
 import { NeolaceAuthService } from "neolace/rest-api/auth-middleware.ts";
@@ -44,5 +44,17 @@ export const [startServer, stopServer] = defineStoppableResource(async () => {
 });
 
 if (import.meta.main) {
+    // Configure logging:
+    await log.setup({
+        handlers: {
+            console: new NiceConsoleHandler(config.debugLogging ? "DEBUG" : "INFO"),
+        },
+        loggers: {
+            "default": { level: "DEBUG", handlers: ["console"] },
+            "neolace-sdk": { level: "DEBUG", handlers: ["console"] },
+            "vertex-framework": { level: "DEBUG", handlers: ["console"] },
+        },
+    });
+    // Start the REST API server
     await startServer();
 }

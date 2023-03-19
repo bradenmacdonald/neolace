@@ -7,7 +7,7 @@
  * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
  * governed by the Mozilla Public License, Version 2.
  */
-import * as log from "std/log/mod.ts";
+import { log } from "neolace/app/log.ts";
 import { C, EmptyResultError, Field, VNID } from "neolace/deps/vertex-framework.ts";
 
 import { getGraph, NeolaceHttpResource, SDK } from "neolace/rest-api/mod.ts";
@@ -90,7 +90,7 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
         const startTime = performance.now();
         const permResults = await checkPermissions(subject, permsToCheck, object);
         const checkTook = performance.now() - startTime;
-        log.info(`Took ${checkTook}ms to check permissions`);
+        log.debug(`Took ${checkTook}ms to check permissions`);
 
         for (let i = 0; i < permsToCheck.length; i++) {
             const permName = permsToCheck[i];
