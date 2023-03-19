@@ -12,5 +12,8 @@
             "lineWidth": 120
         }
     },
-    "importMap": "import_map.json"
+    "imports": {
+        "neolace/": "./neolace/",
+        "std/": "https://deno.land/std@0.175.0/"
+    }
 }
