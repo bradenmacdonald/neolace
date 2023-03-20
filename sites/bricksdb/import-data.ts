@@ -1,4 +1,8 @@
 #!/usr/bin/env deno run --allow-net --allow-read --allow-write --allow-env
+/**
+ * @author MacDonald Thoughtstuff Inc.
+ * @license Unlicense (see https://unlicense.org/ - public domain, use as you will, but no warranty of any kind)
+ */
 import * as path from "std/path/mod.ts";
 import * as log from "std/log/mod.ts";
 import * as CSV from "std/encoding/csv.ts";

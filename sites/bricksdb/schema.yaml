@@ -1,3 +1,4 @@
+# Schema for BricksDB, by MacDonald Thoughtstuff Inc.
 entryTypes:
   - key: theme
     name: Theme
