@@ -51,6 +51,7 @@ if (import.meta.main) {
         },
         loggers: {
             "default": { level: "DEBUG", handlers: ["console"] },
+            "authn-deno": { level: "DEBUG", handlers: ["console"] },
             "neolace-sdk": { level: "DEBUG", handlers: ["console"] },
             "vertex-framework": { level: "DEBUG", handlers: ["console"] },
         },
