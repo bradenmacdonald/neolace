@@ -165,6 +165,12 @@ export async function generateTestFixtures(): Promise<TestSetupData> {
             realm:
 
             * [**PlantDB**](http://plantdb.local.neolace.net:5555): A site showing an example of botany/biology content.
+              This site is intentionally kept very small and doesn't change often, because its content is used in many
+              of the backend's test cases, which expect a specific set of entries and relationships.
+            * [**BricksDB**](http://bricksdb.local.neolace.net:5555): A site that lets you browse the Rebrickable
+              dataset (LEGO bricks, sets, etc.). This site contains over 200,000 entries and is highly inter-connected.
+              - This site is not installed by default. To create it, open \`sites/bricksdb\` and run
+                \`./create-bricksdb.sh\` and \`./import-data.ts\`.
 
             ## Default user accounts
 
