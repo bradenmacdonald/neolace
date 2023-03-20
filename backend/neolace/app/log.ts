@@ -1,6 +1,6 @@
 /**
  * @author MacDonald Thoughtstuff Inc.
- * @license public domain
+ * @license Unlicense (see https://unlicense.org/ - public domain, use as you will, but no warranty of any kind)
  */
 import * as stdLog from "std/log/mod.ts";
 import { bold, gray, red, yellow } from "std/fmt/colors.ts";

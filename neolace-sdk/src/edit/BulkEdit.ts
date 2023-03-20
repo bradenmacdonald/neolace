@@ -92,8 +92,6 @@ export const SetPropertyFacts = BulkEditType({
     code: "SetPropertyFacts",
     dataSchema: Schema({
         entryWith: BulkEditEntryLookup,
-        // If the entry doesn't yet exist, create it and set the following fields. If it does exist, ignore
-        // these fields.
         set: array.of(Schema({
             propertyKey: string,
             facts: array.of(Schema({
@@ -111,8 +109,6 @@ export const SetRelationships = BulkEditType({
     code: "SetRelationships",
     dataSchema: Schema({
         entryWith: BulkEditEntryLookup,
-        // If the entry doesn't yet exist, create it and set the following fields. If it does exist, ignore
-        // these fields.
         set: array.of(Schema({
             propertyKey: string,
             toEntries: array.of(Schema({

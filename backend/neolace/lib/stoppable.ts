@@ -1,6 +1,6 @@
 /**
  * @author MacDonald Thoughtstuff Inc.
- * @license public domain
+ * @license Unlicense (see https://unlicense.org/ - public domain, use as you will, but no warranty of any kind)
  */
 import { onShutDown } from "neolace/app/shutdown.ts";
 

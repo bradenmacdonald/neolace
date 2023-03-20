@@ -1,6 +1,6 @@
 /**
  * @author MacDonald Thoughtstuff Inc.
- * @license public domain
+ * @license Unlicense (see https://unlicense.org/ - public domain, use as you will, but no warranty of any kind)
  */
 import { log } from "neolace/app/log.ts";
 import { VNID } from "neolace/deps/vertex-framework.ts";

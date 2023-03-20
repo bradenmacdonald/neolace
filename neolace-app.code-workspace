@@ -13,6 +13,9 @@
 			"path": "neolace-sdk"
 		},
 		{
+			"path": "sites"
+		},
+		{
 			"path": "arch-decisions"
 		},
 		{
@@ -30,7 +33,9 @@
 			"arch-decisions/": true,
 			"neolace-admin/": true,
 			"neolace-sdk/": true,
+			"sites/": true,
 		},
+		"deno.enable": true,
 		"deno.lint": true,
 		"deno.suggest.imports.hosts": {
 			"https://deno.land": false,
