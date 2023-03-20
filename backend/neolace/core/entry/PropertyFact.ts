@@ -120,18 +120,21 @@ export class PropertyFact extends VNodeType {
     static override async validateExt(vnodeIds: VNID[], tx: WrappedTransaction): Promise<void> {
         // This whole function is just extra assertions to help catch bugs in our code (specifically in the core Actions
         // which modify properties or relationships). We definitely want it on in dev and test modes, but in production
-        // it is not as useful, and disabling it speeds bulk import up by approximately 25% (e.g. 300s not 400s).
+        // it is not as useful, and disabling it speeds bulk import up significantly.
         if (environment === "production") {
             return;
         }
         // Start validation, making sure that this PropertyFact's Entry, Property, and EntryType are from the same site:
         // Note: we have carefully written and tested this query in a way that its performance doesn't get too much
-        // worse as the size of the database grows, which can otherwise happen. However, this is still relatively slow.
+        // worse as the size of the database grows, which can otherwise happen.
         const rows = await tx.query(C`
             MATCH (pf:${PropertyFact})
                 WHERE pf.id IN ${vnodeIds}
-            MATCH (pf)<-[:${Entry.rel.PROP_FACT}]-(entry:${Entry})
-            MATCH (entry)-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site})
+            CALL {
+                WITH pf
+                MATCH (pf)<-[:${Entry.rel.PROP_FACT}]-(entry:${Entry})-[:${Entry.rel.IS_OF_TYPE}]->(et:${EntryType})-[:${EntryType.rel.FOR_SITE}]->(site:${Site})
+                RETURN entry, et, site LIMIT 1
+            }
             MATCH (pf)-[:${PropertyFact.rel.FOR_PROP}]->(property:${Property})
                 WHERE exists( (property)-[:${Property.rel.APPLIES_TO_TYPE}]->(et) )
                 AND   exists( (property)-[:${Property.rel.FOR_SITE}]->(site) )
