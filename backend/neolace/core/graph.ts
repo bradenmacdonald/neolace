@@ -19,7 +19,6 @@ export const [getGraph, stopGraphDatabaseConnection] = defineStoppableResource(a
         neo4jDatabase: config.neo4jDatabase,
         neo4jUser: config.neo4jUser,
         neo4jPassword: config.neo4jPassword,
-        debugLogging: false,
         extraMigrations: {
             // Users have unique usernames:
             usernameUnique: {

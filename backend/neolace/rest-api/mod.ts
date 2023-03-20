@@ -11,12 +11,12 @@
 /**
  * This file contains all the common imports and helper methods needed to implement REST API endpoints.
  */
-import * as log from "std/log/mod.ts";
 import { Drash } from "neolace/deps/drash.ts";
 import { EmptyResultError, FieldValidationError, SYSTEM_VNID, VNID } from "neolace/deps/vertex-framework.ts";
 import * as SDK from "neolace/deps/neolace-sdk.ts";
 import { PathError } from "neolace/deps/computed-types.ts";
 
+import { log } from "neolace/app/log.ts";
 import { getGraph } from "neolace/core/graph.ts";
 import { ActionObject, ActionSubject } from "neolace/core/permissions/action.ts";
 import { hasPermission } from "neolace/core/permissions/check.ts";

@@ -7,7 +7,7 @@
  * Change Date: 2027-03-14. On this date, in accordance with the Business Source License, use of this software will be
  * governed by the Mozilla Public License, Version 2.
  */
-import * as log from "std/log/mod.ts";
+import { log } from "neolace/app/log.ts";
 import { MDT, SiteSchemaData, UpdateEntryArticleSchema } from "neolace/deps/neolace-sdk.ts";
 import { C, Field, VNID, WrappedTransaction } from "neolace/deps/vertex-framework.ts";
 import { EntryType } from "neolace/core/schema/EntryType.ts";
