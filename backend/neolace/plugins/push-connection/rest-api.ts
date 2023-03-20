@@ -4,7 +4,7 @@
  */
 import { getConnection, getGraph, NeolaceHttpResource, SDK } from "neolace/plugins/api.ts";
 import { ApplyBulkEdits } from "neolace/core/edit/ApplyBulkEdits.ts";
-import { FieldValidationError } from "neolace/deps/vertex-framework.ts";
+import { FieldValidationError, Neo4jError } from "neolace/deps/vertex-framework.ts";
 import { thisPlugin } from "./mod.ts";
 
 /**
@@ -84,7 +84,16 @@ export class PushEditResource extends NeolaceHttpResource {
                 }),
             );
         } catch (err) {
-            if (err instanceof Error && err.cause instanceof SDK.InvalidEdit) {
+            if (err instanceof Error && err.cause instanceof Neo4jError) {
+                if (err.cause.message.includes("dbms.memory.transaction.total.max threshold reached")) {
+                    throw new SDK.InvalidFieldValue([{
+                        fieldPath: `edits`,
+                        message: "The specified bulk edits require too much memory to execute in a single transaction.",
+                    }]);
+                } else {
+                    throw err;
+                }
+            } else if (err instanceof Error && err.cause instanceof SDK.InvalidEdit) {
                 throw err.cause;
             } else if (err instanceof Error && err.cause instanceof FieldValidationError) {
                 throw new SDK.InvalidFieldValue([{
