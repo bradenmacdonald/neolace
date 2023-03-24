@@ -332,7 +332,7 @@ export function slateDocToStringValue(node: NeolaceSlateElement[], escape: Escap
             }
         } else if (n.type === "paragraph") {
             if (result.length > 0) {
-                result += "\n\n";
+                result += "\n";
             }
             result += slateDocToStringValue(n.children, escape);
         } else if (n.type === "link") {
