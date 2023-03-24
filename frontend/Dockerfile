@@ -8,9 +8,9 @@ COPY ./neolace-sdk/ /build/neolace-sdk/
 RUN apk add --update nodejs npm
 RUN deno run --allow-read --allow-run --allow-write --allow-env --allow-net _compile.ts
 ################################################################
-# Stage 2: Intall our Next.js frontend
+# Stage 2: Build our Next.js frontend
 ################################################################
-FROM node:18-alpine
+FROM node:18-alpine AS build
 WORKDIR /neolace/frontend
 ENV NODE_ENV production
 ENV PATH /neolace/frontend/node_modules/.bin:$PATH
@@ -29,6 +29,20 @@ RUN ./next-prebuild.sh
 
 # Now install only runtime dependencies
 RUN npm ci --omit=dev
+
+# Delete the build cache, which we don't want in the final production build
+RUN rm -rf /neolace/frontend/.next/cache
+
+################################################################
+# Stage 3: Create an optimized image
+################################################################
+FROM node:18-alpine
+WORKDIR /neolace/frontend
+ENV NODE_ENV production
+ENV PATH /neolace/frontend/node_modules/.bin:$PATH
+
+COPY --from=build /neolace/frontend /neolace/frontend
+COPY --from=transpile /build/neolace-sdk /neolace/neolace-sdk
 
 # The frontend runs on port 5555
 EXPOSE 5555
