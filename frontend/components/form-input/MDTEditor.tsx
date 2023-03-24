@@ -282,7 +282,8 @@ const MarkButton = ({mark, removeMark, ...props}: {
     disabled?: boolean;
 }) => {
     const editor = useSlate();
-    const clickCallback = React.useCallback(() => {
+    const clickCallback = React.useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
         if (isMarkActive(editor, mark)) {
             Editor.removeMark(editor, mark)
         } else {
@@ -297,7 +298,7 @@ const MarkButton = ({mark, removeMark, ...props}: {
     return <ToolbarButton
         icon={props.icon}
         toggled={props.disabled ? false : isMarkActive(editor, mark)}
-        onClick={clickCallback}
+        onMouseDown={clickCallback}
         tooltip={props.tooltip}
         disabled={props.disabled}
     />;
