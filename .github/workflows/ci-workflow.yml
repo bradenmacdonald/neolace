@@ -12,7 +12,7 @@ on:
 
 env:
   # deno-version: ">=1.26.0 <1.27.0" - no longer using this format for version spec, because often the docker images are published days after the release, causing a build error
-  deno-version: "1.31.2"
+  deno-version: "1.32.1"
   docker-registry: ghcr.io
 
 jobs:
