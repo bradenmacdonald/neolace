@@ -15,7 +15,7 @@
     "test": "jest --watch"
   },
   "dependencies": {
-    "@antv/g6": "4.8.7",
+    "@antv/g6": "4.8.8",
     "@popperjs/core": "2.11.6",
     "blurhash": "2.0.5",
     "graphology": "0.25.1",
@@ -30,13 +30,13 @@
     "react-blurhash": "0.3.0",
     "react-dom": "18.2.0",
     "react-dropzone": "14.2.3",
-    "react-intl": "6.2.10",
+    "react-intl": "6.3.2",
     "react-popper": "2.3.0",
     "scheduler": "0.23.0",
     "slate": "0.91.4",
     "slate-history": "0.86.0",
-    "slate-react": "0.91.10",
-    "swr": "2.1.0"
+    "slate-react": "0.92.0",
+    "swr": "2.1.1"
   },
   "devDependencies": {
     "@formatjs/cli": "6.0.4",
