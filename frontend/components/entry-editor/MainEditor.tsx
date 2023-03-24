@@ -148,12 +148,12 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
                 />
             </Control>
 
-            {/* Friendly ID */}
+            {/* Key (friendly ID that's used in the URL) */}
             <AutoControl
                 value={entry?.key ?? ""}
                 onChangeFinished={updateEntryKey}
-                id="id"
-                label={defineMessage({ defaultMessage: "ID",  id: 'qlcuNQ' })}
+                id="key"
+                label={defineMessage({ defaultMessage: "Key",  id: 'EcglP9' })}
                 hint={{custom: (intl.formatMessage({
                     id: '6hE8SS',
                     defaultMessage: "Shown in the URL.",
@@ -170,8 +170,8 @@ export const MainEditor: React.FunctionComponent<Props> = ({ entry, addUnsavedEd
                         defaultMessage: "Must be unique.",
                     }) + " " +
                     intl.formatMessage({
-                        id: '05LayV',
-                        defaultMessage: "You cannot re-use an ID that was previously used for a different entry.",
+                        id: 'Q3ZeFn',
+                        defaultMessage: "You cannot re-use a key that was previously used for a different entry.",
                     }))}}
                 isRequired={true}
             >
