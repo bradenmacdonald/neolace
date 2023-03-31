@@ -15,7 +15,7 @@ import { ActionObject } from "neolace/core/permissions/action.ts";
 import { getAllPerms, PermissionName } from "neolace/core/permissions/permissions.ts";
 import { Entry } from "neolace/core/entry/Entry.ts";
 import { checkPermissions } from "neolace/core/permissions/check.ts";
-import { EntryType } from "neolace/core/mod.ts";
+import { Draft, EntryType } from "neolace/core/mod.ts";
 
 export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
     public paths = ["/site/:siteKey/my-permissions"];
@@ -26,13 +26,14 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
         notes: "This lists all the permissions that the current user has on the current site, in a given context.",
     }, async ({ request }) => {
         const { siteId } = await this.getSiteDetails(request);
+        const graph = await getGraph();
         // Permissions and parameters:
 
         const object: ActionObject = {};
 
         // Check what parameters were specified in the query string:
         for (const [key, value] of new URL(request.url).searchParams.entries()) {
-            if (["entryId", "entryTypeKey", "draftId"].includes(key)) {
+            if (["entryId", "entryTypeKey"].includes(key)) {
                 try {
                     object[key as keyof ActionObject] = VNID(value);
                 } catch {
@@ -43,9 +44,29 @@ export class SiteUserMyPermissionsResource extends NeolaceHttpResource {
             }
         }
 
+        const draftNumParam = request.queryParam("draftNum");
+        if (draftNumParam) {
+            // We need to convert from the site-specific draft num to the absolute draft VNID
+            try {
+                const draft = await graph.pullOne(Draft, (d) => d.id, {
+                    with: {
+                        num: parseInt(draftNumParam, 10),
+                        siteNamespace: siteId,
+                    },
+                });
+                // Set the draftId for permissions checks:
+                object.draftId = draft.id;
+            } catch (err) {
+                if (err instanceof EmptyResultError) {
+                    throw new SDK.NotFound("Invalid draft number.");
+                } else {
+                    throw err;
+                }
+            }
+        }
+
         if (object.entryId !== undefined && object.entryTypeKey === undefined) {
             // Compute entryTypeKey automatically, if entryId is specified:
-            const graph = await getGraph();
             try {
                 const etData = await graph.read((tx) =>
                     tx.queryOne(C`
