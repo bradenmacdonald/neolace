@@ -67,9 +67,7 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
     } else {
         return (
             <>
-                {facts.map((fact, idx) => {
-                    // const isLast = (idx === facts.length - 1);
-                    const currentValue = fact.valueExpression;
+                {facts.map((fact) => {
                     return (
                         <div key={fact.id} className="flex w-full min-w-0 flex-wrap">
                             {
@@ -123,6 +121,12 @@ export const SinglePropertyEditor: React.FunctionComponent<Props> = (
                         </div>
                     );
                 })}
+                {prop.description ?
+                    <div className="text-sm mt-2 text-gray-600"><InlineMDT mdt={prop.description} context={new MDTContext({})} /></div>
+                : null}
+                {prop.editNote ?
+                    <div className="text-sm mt-2 text-gray-600"><InlineMDT mdt={prop.editNote} context={new MDTContext({})} /></div>
+                : null}
             </>
         );
     }
