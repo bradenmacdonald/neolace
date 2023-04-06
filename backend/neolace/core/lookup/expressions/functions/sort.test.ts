@@ -178,4 +178,96 @@ group("sort.ts", () => {
             ]`,
         );
     });
+
+    // Some data for the tests below:
+    const dataStr = `[
+        "A".annotate(strength=2),
+        "B".annotate(strength=2),
+        "C".annotate(strength=10),
+        "D".annotate(strength=5),
+        "E".annotate(strength=20),
+        "F".annotate(strength=30),
+        "G".annotate(strength=5),
+    ]`;
+
+    test("The sort() function should be stable (keep the order of identical items)", async () => {
+        // Basic sort, ignoring the "strength", should preserve the original order perfectly:
+        await checkSort(
+            `sort(${dataStr})`,
+            dataStr,
+        );
+    });
+
+    test("The sort() function works with first()", async () => {
+        // We had a bug where using first() would slice the sort differently and return a different value.
+        assertEquals(
+            // Since dataStr is already in order, this should always be true:
+            await context.evaluateExprConcrete(`sort(${dataStr}).first()`),
+            await context.evaluateExprConcrete(`${dataStr}.first()`),
+        );
+    });
+
+    test("The sort() function can sort by an annotated value, and the result is stable", async () => {
+        await checkSort(
+            `sort(${dataStr}, by=(x -> x.strength))`,
+            // These should be first ordered by strength, then by alphabet because the sort is stable
+            `[
+                "A".annotate(strength=2),
+                "B".annotate(strength=2),
+                "D".annotate(strength=5),
+                "G".annotate(strength=5),
+                "C".annotate(strength=10),
+                "E".annotate(strength=20),
+                "F".annotate(strength=30),
+            ]`,
+        );
+    });
+
+    test("The sort() function can sort by an annotated value, and the result is stable when sliced", async () => {
+        await checkSort(
+            `sort(${dataStr}, by=(x -> x.strength)).slice(start=1, size=4)`,
+            // These should be first ordered by strength, then by alphabet because the sort is stable.
+            // The zero values below are ignored because we're taking a slice.
+            `[
+                0,
+                "B".annotate(strength=2),
+                "D".annotate(strength=5),
+                "G".annotate(strength=5),
+                "C".annotate(strength=10),
+                0,
+                0,
+            ].slice(start=1, size=4)`,
+        );
+    });
+
+    test("The sort() function can REVERSE sort by an annotated value, and the result is stable", async () => {
+        await checkSort(
+            `sort(${dataStr}, by=(x -> x.strength), reverse=true)`,
+            `[
+                "F".annotate(strength=30),
+                "E".annotate(strength=20),
+                "C".annotate(strength=10),
+                "G".annotate(strength=5),
+                "D".annotate(strength=5),
+                "B".annotate(strength=2),
+                "A".annotate(strength=2),
+            ]`,
+        );
+    });
+
+    test("The sort() function can REVERSE sort by an annotated value, and the result is stable when sliced", async () => {
+        await checkSort(
+            `sort(${dataStr}, by=(x -> x.strength), reverse=true).slice(start=2, size=4)`,
+            // Since we're slicing the following list too, the zero values are ignored:
+            `[
+                0,
+                0,
+                "C".annotate(strength=10),
+                "G".annotate(strength=5),
+                "D".annotate(strength=5),
+                "B".annotate(strength=2),
+                0,
+            ].slice(start=2, size=4)`,
+        );
+    });
 });

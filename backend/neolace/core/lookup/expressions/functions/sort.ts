@@ -96,8 +96,18 @@ export class Sort extends LookupFunctionWithArgs {
                     }
 
                     if (slicedValues.length < lengthNeeded) {
-                        slicedValues.push({ value, sortValue });
-                        slicedValues.sort(compare);
+                        // Add this value into the array at the right place. The array may be empty.
+                        let idx = 0;
+                        while (
+                            idx <= slicedValues.length - 1 && (
+                                reverse // We need a slightly different comparison here to make this stable in reverse (preserve order of entries)
+                                    ? compare({ sortValue }, slicedValues[idx]) > 0
+                                    : compare({ sortValue }, slicedValues[idx]) >= 0
+                            )
+                        ) {
+                            idx++;
+                        }
+                        slicedValues.splice(idx, 0, { value, sortValue });
                     } else if (compare({ sortValue }, slicedValues[0]) < 0) {
                         // This comes before the current first value in slicedValues.
                         slicedValues.unshift({ value, sortValue });
@@ -107,10 +117,17 @@ export class Sort extends LookupFunctionWithArgs {
                         // We can ignore this value - it definitely won't be included in the result set.
                     } else {
                         // This value needs to be inserted into 'slicedValues' at the right place:
-                        let idx = 0;
-                        while (compare({ sortValue }, slicedValues[idx]) >= 0 && idx < slicedValues.length - 1) idx++;
-                        slicedValues.splice(idx, 0, { value, sortValue });
-                        slicedValues.pop(); // Keep the same length.
+                        for (let idx = 0; idx < slicedValues.length - 1; idx++) {
+                            if (
+                                reverse
+                                    ? compare({ sortValue }, slicedValues[idx]) <= 0
+                                    : compare({ sortValue }, slicedValues[idx]) < 0
+                            ) {
+                                slicedValues.splice(idx, 0, { value, sortValue });
+                                slicedValues.pop(); // Keep the same length.
+                                break;
+                            }
+                        }
                     }
                 }
                 cachedTotalCount = BigInt(totalSeen);
