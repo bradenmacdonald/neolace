@@ -11,7 +11,6 @@ import * as check from "neolace/deps/computed-types.ts";
 import { C, defineAction, DerivedProperty, Field, RawVNode, VNID, VNodeType } from "neolace/deps/vertex-framework.ts";
 import { config } from "neolace/app/config.ts";
 import { FileMetadata, FileMetadataSchema } from "./detect-metadata.ts";
-import { getSignedDownloadUrl } from "./objstore.ts";
 
 /**
  * A data file uploaded to Neolace, such as an image, PDF, CSV file, etc.
@@ -100,7 +99,7 @@ export function publicUrl(): DerivedProperty<string> {
             if (config.objStorePublicUrlPrefixForImages && data.contentType.startsWith("image/")) {
                 return `${config.objStorePublicUrlPrefixForImages}/${data.filename}`;
             }
-            return `${config.objStorePublicUrlPrefix}/${data.filename}`; // This doesn't use publicUrlForDataFile below because this is synchronous.
+            return publicUrlForDataFile(data.filename);
         },
     );
 }
@@ -110,10 +109,12 @@ export function publicUrl(): DerivedProperty<string> {
  * @param filename The underlying filename of the DataFile object
  * @param displayFilename The friendly filename that users should see if they save the file
  */
-export async function publicUrlForDataFile(filename: string, displayFilename?: string): Promise<string> {
+export function publicUrlForDataFile(filename: string, displayFilename?: string): string {
     if (!displayFilename) {
         return `${config.objStorePublicUrlPrefix}/${filename}`;
     } else {
-        return getSignedDownloadUrl(filename, displayFilename);
+        const queryParam = new URLSearchParams();
+        queryParam.set("response-content-disposition", `inline; filename=${displayFilename}`);
+        return `${config.objStorePublicUrlPrefix}/${filename}?${queryParam.toString()}`;
     }
 }
