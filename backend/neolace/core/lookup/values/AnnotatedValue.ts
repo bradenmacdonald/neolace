@@ -67,6 +67,13 @@ export class AnnotatedValue extends ConcreteValue {
         // Then check annotation values:
         return this.annotations[attrName]; // May be undefined
     }
+
+    public override compareTo(otherValue: LookupValue): number {
+        if (otherValue instanceof AnnotatedValue) {
+            return this.value.compareTo(otherValue.value);
+        }
+        return this.value.compareTo(otherValue);
+    }
 }
 
 /** A helper function to create an annotated entry value */
