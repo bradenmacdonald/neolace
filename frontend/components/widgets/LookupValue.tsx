@@ -9,7 +9,7 @@
  */
 import React from "react";
 import Link from "next/link";
-import { FormattedDate, FormattedListParts, FormattedMessage } from "react-intl";
+import { FormattedDate, FormattedDateTimeRange, FormattedListParts, FormattedMessage } from "react-intl";
 
 import { SDK, useRefCache } from "lib/sdk";
 import { Tooltip } from "components/widgets/Tooltip";
@@ -221,8 +221,22 @@ export const LookupValue: React.FunctionComponent<LookupValueProps> = (props) =>
             return <LookupQuantityValue value={value} />
         case "Range":
             if (value.min.type === "Quantity" && value.max.type === "Quantity" && value.min.units === value.max.units) {
-                // Special case:
+                // Special case for quantities with the same units:
                 return <><LookupQuantityValue value={value.min} hideUnits={true} /> - <LookupQuantityValue value={value.max} /></>
+            } else if (value.min.type === "Date" && value.max.type === "Date") {
+                // Special case to format a date range as e.g. "Mar 4-5, 2020" not "Mar 4, 2020 - Mar 5, 2020"
+                return <FormattedDateTimeRange
+                    from={new Date(value.min.value)}
+                    to={new Date(value.max.value)}
+                    // Use "medium" because it's nice, and fuck the "2/2/2022" default 🤮
+                    dateStyle="medium"
+                    // The timeZone MUST be UTC or the date may appear wrong, depending on the user's actual timzone.
+                    // (The Date constructor's parsing is messy, but passing an ISO8601 date string with no timezone
+                    // should always result in a UTC date object.) Generally I try to avoid ever using Date() objects
+                    // for calendar dates (that don't have times), because it sucks for that, but we can't avoid it
+                    // here because the Intl API requires a Date object.
+                    timeZone="UTC"
+                />
             }
             return <><LookupValue value={value.min} mdtContext={props.mdtContext} /> - <LookupValue value={value.max} mdtContext={props.mdtContext} /></>
         case "String":
