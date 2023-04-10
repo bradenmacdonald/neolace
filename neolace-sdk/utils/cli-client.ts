@@ -16,7 +16,7 @@ const getLog = () => getLogger("neolace-sdk");
  * Neolace is configured by the NEOLACE_API_ENDPOINT and NEOLACE_API_KEY environment variables.
  * @returns 
  */
-export async function getApiClientFromEnv(): Promise<NeolaceApiClient> {
+export async function getApiClientFromEnv(options: {siteKey?: string} = {}): Promise<NeolaceApiClient> {
     if (_apiClientPromise !== undefined) {
         return _apiClientPromise;
     }
@@ -32,6 +32,7 @@ export async function getApiClientFromEnv(): Promise<NeolaceApiClient> {
             basePath: apiEndpoint,
             fetchApi: fetch,
             authToken: apiKey,
+            siteKey: options.siteKey,
         });
 
         try {
