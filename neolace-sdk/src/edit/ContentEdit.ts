@@ -334,6 +334,7 @@ export const UpdatePropertyFact = ContentEditType({
             if (data.note !== undefined) newFacts[factIndex].note = data.note;
             if (data.rank !== undefined) newFacts[factIndex].rank = data.rank;
             if (data.slot !== undefined) newFacts[factIndex].slot = data.slot;
+            updatedEntry.propertiesRaw[propertyIndex].facts = newFacts;
         }
         return updatedEntry;
     },
