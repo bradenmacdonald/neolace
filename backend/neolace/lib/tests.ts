@@ -308,12 +308,13 @@ export async function createManyEntries(siteId: VNID, entryTypeKey: string, numE
     /** For now, BulkUpdateEntries only works as part of a Connection, not via Drafts or anything else. */
     const connection = await getConnection({ key: "test-bulk-helper", siteId, create: true, plugin: "none" });
     const stepSize = 500;
+    let n = 0;
     for (let i = 0; i < numEntries; i += stepSize) {
         const edits: SDK.AnyBulkEdit[] = [];
         for (let j = 0; j < stepSize; j++) {
             const entryId = VNID();
-            const entryKey = "s-" + entryId.slice(1);
-            const name = `Entry ${entryId.slice(1)}`;
+            const entryKey = "s-" + entryId.slice(1); // Remove the underscore from the VNID
+            const name = `Entry ${(n++).toString().padStart(5, "0")}`;
             edits.push({
                 code: "UpsertEntryByKey",
                 data: { where: { entryKey, entryTypeKey }, setOnCreate: { name } },

@@ -8,12 +8,12 @@
  * governed by the Mozilla Public License, Version 2.
  */
 import { C, Field, VNID } from "neolace/deps/vertex-framework.ts";
-import * as SDK from "neolace/deps/neolace-sdk.ts";
 import {
     assert,
     assertEquals,
     assertInstanceOf,
     beforeAll,
+    createManyEntries,
     group,
     setTestIsolation,
     test,
@@ -22,8 +22,6 @@ import {
 import { getGraph } from "neolace/core/graph.ts";
 import { CreateSite } from "neolace/core/Site.ts";
 import { ApplyEdits, UseSystemSource } from "neolace/core/edit/ApplyEdits.ts";
-import { getConnection } from "../edit/connections.ts";
-import { ApplyBulkEdits } from "../edit/ApplyBulkEdits.ts";
 import { EntryValue, IntegerValue, PageValue } from "./values.ts";
 import { ReferenceCache } from "../entry/reference-cache.ts";
 import { LookupContext } from "./context.ts";
@@ -66,23 +64,8 @@ group("performance.test.ts", () => {
         }));
 
         // Bulk load some data:
-        const connection = await getConnection({ key: "perf", siteId, create: true, plugin: "none" });
         for (const entryTypeKey of [entryTypeA, entryTypeB, entryTypeC]) {
-            const stepSize = 200;
-            for (let i = 0; i < numEntriesEachType; i += stepSize) {
-                const edits: SDK.AnyBulkEdit[] = [];
-                for (let j = 0; j < stepSize; j++) {
-                    const entryNum = i * stepSize + j;
-                    edits.push({
-                        code: "UpsertEntryByKey",
-                        data: {
-                            where: { entryTypeKey, entryKey: `${entryTypeKey}-e-${entryNum}` },
-                            set: { name: `Entry ${entryNum}`, description: "This is an entry." },
-                        },
-                    });
-                }
-                await graph.runAsSystem(ApplyBulkEdits({ siteId, edits, connectionId: connection.id }));
-            }
+            await createManyEntries(siteId, entryTypeKey, numEntriesEachType);
         }
 
         // Create another site so there's additional, unused data that we need to be sure to exclude:
@@ -97,23 +80,7 @@ group("performance.test.ts", () => {
             editSource: UseSystemSource,
         }));
 
-        // Bulk load some data:
-        const otherConnection = await getConnection({ key: "perf", siteId: otherSiteId, create: true, plugin: "none" });
-        const stepSize = 200;
-        for (let i = 0; i < 5_000; i += stepSize) {
-            const edits: SDK.AnyBulkEdit[] = [];
-            for (let j = 0; j < stepSize; j++) {
-                const entryNum = i * stepSize + j;
-                edits.push({
-                    code: "UpsertEntryByKey",
-                    data: {
-                        where: { entryTypeKey: otherTypeKey, entryKey: `x-e-${entryNum}` },
-                        set: { name: `Entry ${entryNum}`, description: "This is an entry." },
-                    },
-                });
-            }
-            await graph.runAsSystem(ApplyBulkEdits({ siteId: otherSiteId, edits, connectionId: otherConnection.id }));
-        }
+        await createManyEntries(otherSiteId, otherTypeKey, 5_000);
     });
 
     test("Perf - get the count of all entries from a site", async () => {
@@ -234,6 +201,7 @@ group("performance.test.ts", () => {
         );
         assertInstanceOf(lookupResult, PageValue);
         assertInstanceOf(lookupResult.values[0], EntryValue);
+        assertInstanceOf(lookupResult.values[1], EntryValue);
         assertEquals(lookupResult.values.length, 10);
 
         const refCache = new ReferenceCache({ siteId });
@@ -247,10 +215,20 @@ group("performance.test.ts", () => {
         const lookupProfile = graph.finishProfile();
 
         assertEquals(Object.keys(result.entries).length, lookupResult.values.length);
-        assertEquals(result.entries[lookupResult.values[0].id].name, "Entry 0");
+        assertEquals(result.entries[lookupResult.values[0].id].name, `Entry 00000`);
+        assertEquals(result.entries[lookupResult.values[1].id].name, `Entry 00001`);
+        const maxQueries = 3;
+        // 1) query to load the ID, key, name, description, entryType Key for the ten given entries (170 dbHits)
+        // 2) query to load data about the entry type(s) used - key, name, color, colorCustom, abbreviation (8 dbHits)
+        // 3) query to load schema data about any properties mentioned (0 dbHits)
         assert(
-            lookupProfile.dbHits < 200,
-            `Expected refCache getData() to take < 200 dbHits, but it took ${lookupProfile.dbHits}`,
+            lookupProfile.numQueries <= maxQueries,
+            `Expected refCache getData() to take ≤ ${maxQueries} queries, but it took ${lookupProfile.numQueries}`,
+        );
+        const maxHits = 200;
+        assert(
+            lookupProfile.dbHits <= maxHits,
+            `Expected refCache getData() to take ≤ ${maxHits} dbHits, but it took ${lookupProfile.dbHits}`,
         );
     });
 });
