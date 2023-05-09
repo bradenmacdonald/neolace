@@ -85,13 +85,14 @@ export class DatePartialValue extends ConcreteValue {
     }
 
     protected serialize() {
-        return {
+        const v: { type: "DatePartial"; value: string; year?: number; month?: number; day?: number } = {
             type: "DatePartial" as const,
-            year: this.year,
-            month: this.month,
-            day: this.day,
             value: this.asIsoString(),
         };
+        if (this.year) v.year = this.year;
+        if (this.month) v.month = this.month;
+        if (this.day) v.day = this.day;
+        return v;
     }
 
     protected override doCastTo(_newType: ClassOf<LookupValue>, _context: LookupContext): LookupValue | undefined {
@@ -104,12 +105,12 @@ export class DatePartialValue extends ConcreteValue {
         return new DateValue(this.year ?? 9999, this.month ?? 1, this.day ?? 1);
     }
 
-    public override compareTo(otherValue: LookupValue) {
+    protected override doCompareTo(otherValue: LookupValue) {
         if (otherValue instanceof DateValue || otherValue instanceof DatePartialValue) {
             const asDate: DateValue = this.forceToDate();
             const otherDate: DateValue = otherValue instanceof DateValue ? otherValue : otherValue.forceToDate();
             return asDate.compareTo(otherDate);
         }
-        return super.compareTo(otherValue); // This will throw
+        return super.doCompareTo(otherValue); // This will throw
     }
 }

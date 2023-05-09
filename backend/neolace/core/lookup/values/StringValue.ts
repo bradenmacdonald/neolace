@@ -58,11 +58,11 @@ export class StringValue extends ConcreteValue implements IHasLiteralExpression,
         return BigInt(this.value.length);
     }
 
-    public override compareTo(otherValue: LookupValue) {
+    protected override doCompareTo(otherValue: LookupValue) {
         if (otherValue instanceof StringValue) {
             return this.value.localeCompare(otherValue.value);
         }
-        return super.compareTo(otherValue); // This will throw
+        return super.doCompareTo(otherValue); // This will throw
     }
 
     /** Get an attribute of this value, if any, e.g. value.name or value.length */

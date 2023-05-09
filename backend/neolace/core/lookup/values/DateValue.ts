@@ -64,7 +64,7 @@ export class DateValue extends ConcreteValue {
         return undefined;
     }
 
-    public override compareTo(otherValue: LookupValue) {
+    protected override doCompareTo(otherValue: LookupValue) {
         if (otherValue instanceof DateValue) {
             const yearDiff = this.year - otherValue.year;
             if (yearDiff > 0) return 1;
@@ -81,6 +81,6 @@ export class DateValue extends ConcreteValue {
                 }
             }
         }
-        return super.compareTo(otherValue); // This will throw
+        return super.doCompareTo(otherValue); // This will throw
     }
 }
