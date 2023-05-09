@@ -68,7 +68,7 @@ export class AnnotatedValue extends ConcreteValue {
         return this.annotations[attrName]; // May be undefined
     }
 
-    public override compareTo(otherValue: LookupValue): number {
+    protected override doCompareTo(otherValue: LookupValue): number {
         if (otherValue instanceof AnnotatedValue) {
             return this.value.compareTo(otherValue.value);
         }

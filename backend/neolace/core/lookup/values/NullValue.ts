@@ -34,10 +34,10 @@ export class NullValue extends ConcreteValue implements IHasLiteralExpression {
         return undefined;
     }
 
-    public override compareTo(otherValue: LookupValue): number {
+    protected override doCompareTo(otherValue: LookupValue): number {
         if (otherValue instanceof NullValue) {
             return 0; // Should we make null not equal to null?
         }
-        return super.compareTo(otherValue); // This will throw
+        return super.doCompareTo(otherValue); // This will throw
     }
 }

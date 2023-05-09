@@ -33,10 +33,10 @@ export class BooleanValue extends ConcreteValue {
         return { type: "Boolean" as const, value: this.value };
     }
 
-    public override compareTo(otherValue: LookupValue): number {
+    protected override doCompareTo(otherValue: LookupValue): number {
         if (otherValue instanceof BooleanValue) {
             return otherValue.value === this.value ? 0 : (otherValue.value ? -1 : 1);
         }
-        return super.compareTo(otherValue); // This will throw
+        return super.doCompareTo(otherValue); // This will throw
     }
 }

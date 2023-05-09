@@ -153,9 +153,9 @@ export interface DateValue extends LookupValue {
 
 export interface DatePartialValue extends LookupValue {
     type: "DatePartial";
-    year: number|undefined;
-    month: number|undefined;
-    day: number|undefined;
+    year?: number;
+    month?: number;
+    day?: number;
     /** ISO 8601 date string (YYYY, YYYY-MM, --MM, --MM-DD) */
     value: string;
 }

@@ -100,7 +100,7 @@ export class QuantityValue extends ConcreteValue {
         return undefined;
     }
 
-    public override compareTo(otherValue: LookupValue): number {
+    protected override doCompareTo(otherValue: LookupValue): number {
         if (otherValue instanceof QuantityValue) {
             // We always compare in terms of base units (which parsedQuantity has). This may not make sense if the
             // dimensions are different (comparing kg and m for example), but it will at least always give consistent
@@ -109,6 +109,6 @@ export class QuantityValue extends ConcreteValue {
         } else if (otherValue instanceof IntegerValue) {
             return this.parsedQuantity.magnitude - Number(otherValue.value);
         }
-        return super.compareTo(otherValue); // This will throw
+        return super.doCompareTo(otherValue); // This will throw
     }
 }

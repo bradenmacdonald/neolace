@@ -90,12 +90,38 @@ export abstract class LookupValue {
 
     /**
      * For sorting or equality testing purposes, compare this to another value.
+     * Subclasses should override this to implement comparisons.
      * Return 0 if the values are equal (BY VALUE!) or -1/+1 if they are different.
      */
-    public compareTo(otherValue: LookupValue): number {
+    protected doCompareTo(otherValue: LookupValue): number {
         throw new LookupEvaluationError(
             `Comparing ${this.constructor.name} with ${otherValue.constructor.name} is not supported.`,
         );
+    }
+
+    /**
+     * For sorting or equality testing purposes, compare this to another value.
+     * Return 0 if the values are equal (BY VALUE!) or -1/+1 if they are different.
+     */
+    public compareTo(otherValue: LookupValue): number {
+        try {
+            return this.doCompareTo(otherValue);
+        } catch (err) {
+            if (err instanceof LookupEvaluationError) {
+                try {
+                    // Sometimes comparisons with different types are only implemented in one direction
+                    // e.g. DatePartialValue can compare with Date but not vice versa. So we support both directions.
+                    return -1 * otherValue.doCompareTo(this);
+                } catch (secondErr) {
+                    if (secondErr instanceof LookupEvaluationError) {
+                        // Throw the original error from the initial comaprison
+                        throw err;
+                    }
+                    throw secondErr;
+                }
+            }
+            throw err;
+        }
     }
 
     /** Get an attribute of this value, if any, e.g. value.name or value.length */

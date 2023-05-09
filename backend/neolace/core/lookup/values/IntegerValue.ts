@@ -47,13 +47,13 @@ export class IntegerValue extends ConcreteValue {
         return undefined;
     }
 
-    public override compareTo(otherValue: LookupValue): number {
+    protected override doCompareTo(otherValue: LookupValue): number {
         if (otherValue instanceof IntegerValue) {
             const diff = this.value - otherValue.value;
             return diff === 0n ? 0 : diff > 0n ? 1 : -1;
         } else if (otherValue instanceof QuantityValue) {
             return new QuantityValue(Number(this.value)).compareTo(otherValue);
         }
-        return super.compareTo(otherValue); // This will throw
+        return super.doCompareTo(otherValue); // This will throw
     }
 }
