@@ -40,7 +40,7 @@ interface CustomMessage extends MessageDescriptor {
  */
 export type TranslatableText =
     | CustomMessage
-    | { msg: CustomMessage; values: Record<string, React.ReactNode> }
+    | { msg: CustomMessage; values: Record<string, React.ReactElement|string> }
     | { custom: React.ReactNode };
 
 /**
@@ -74,7 +74,7 @@ export function noTranslationNeeded(text: string): CustomMessage {
  * Or if you have a TranslatableText object and you need to access it as a string (not a React element), use
  * displayString()
  */
-export function displayText(message: TranslatableText, values?: Record<string, React.ReactNode>): React.ReactNode {
+export function displayText(message: TranslatableText, values?: Record<string, React.ReactElement|string>): React.ReactNode {
     if ("custom" in message) {
         return message.custom;
     } else if ("msg" in message) {
