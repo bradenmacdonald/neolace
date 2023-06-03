@@ -15,7 +15,7 @@ import { type MDT } from "neolace-sdk";
 import { Transforms } from "slate";
 import { ReactEditor, RenderElementProps, useFocused, useSelected, useSlate } from "slate-react";
 import type { VoidEntryNode, VoidEntryTypeNode, VoidPropNode } from "./slate";
-import "./slate.ts";
+import "./slate";
 
 const useVoidSelectionStatus = () => {
     const _selected = useSelected();

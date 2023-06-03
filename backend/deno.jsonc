@@ -7,13 +7,11 @@
         }
     },
     "fmt": {
-        "options": {
-            "indentWidth": 4,
-            "lineWidth": 120
-        }
+        "indentWidth": 4,
+        "lineWidth": 120
     },
     "imports": {
         "neolace/": "./neolace/",
-        "std/": "https://deno.land/std@0.175.0/"
+        "std/": "https://deno.land/std@0.190.0/"
     }
 }
